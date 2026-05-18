@@ -11,6 +11,7 @@ import OrderLineItem from "#models/order_line_item";
 import OrderShippingLine from "#models/order_shipping_line";
 import OrderStatusHistory from "#models/order_status_history";
 import OrderTaxLine from "#models/order_tax_line";
+import PaymentAttempt from "#models/payment_attempt";
 import PaymentGateway from "#models/payment_gateway";
 
 /**
@@ -74,4 +75,10 @@ export default class Order extends OrderSchema {
         onQuery: (q) => q.where("kind", "shipping"),
     })
     declare shippingAddress: HasOne<typeof OrderAddress>;
+
+    @hasMany(() => PaymentAttempt, { foreignKey: "orderId" })
+    declare paymentAttempts: HasMany<typeof PaymentAttempt>;
+
+    @belongsTo(() => PaymentAttempt, { foreignKey: "lastPaymentAttemptId" })
+    declare lastPaymentAttempt: BelongsTo<typeof PaymentAttempt>;
 }
