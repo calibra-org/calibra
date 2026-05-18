@@ -11,6 +11,7 @@
         "#models/*": "./app/models/*.js",
         "#services/*": "./app/services/*.js",
         "#middleware/*": "./app/middleware/*.js",
+        "#enums/*": "./app/enums/*.js",
         "#validators/*": "./app/validators/*.js",
         "#transformers/*": "./app/transformers/*.js",
         "#providers/*": "./providers/*.js",

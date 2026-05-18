@@ -40,20 +40,30 @@ export interface InventorySnapshot {
  * parent (e.g. a clothing item with one-stock-pool-per-style).
  */
 export default class InventoryService {
-    async reserve(target: InventoryTarget, quantity: number, ref: InventoryRef): Promise<void> {
-        await this.mutate(target, "reservation", -Math.abs(quantity), ref);
+    async reserve(target: InventoryTarget, quantity: number, ref: InventoryRef, trx?: TransactionClientContract): Promise<void> {
+        await this.mutate(target, "reservation", -Math.abs(quantity), ref, trx);
     }
 
-    async release(target: InventoryTarget, quantity: number, ref: InventoryRef): Promise<void> {
-        await this.mutate(target, "release", Math.abs(quantity), ref);
+    async release(target: InventoryTarget, quantity: number, ref: InventoryRef, trx?: TransactionClientContract): Promise<void> {
+        await this.mutate(target, "release", Math.abs(quantity), ref, trx);
     }
 
-    async decrement(target: InventoryTarget, quantity: number, ref: InventoryRef): Promise<void> {
-        await this.mutate(target, "sale", -Math.abs(quantity), ref);
+    async decrement(
+        target: InventoryTarget,
+        quantity: number,
+        ref: InventoryRef,
+        trx?: TransactionClientContract,
+    ): Promise<void> {
+        await this.mutate(target, "sale", -Math.abs(quantity), ref, trx);
     }
 
-    async increment(target: InventoryTarget, quantity: number, ref: InventoryRef): Promise<void> {
-        await this.mutate(target, "restock", Math.abs(quantity), ref);
+    async increment(
+        target: InventoryTarget,
+        quantity: number,
+        ref: InventoryRef,
+        trx?: TransactionClientContract,
+    ): Promise<void> {
+        await this.mutate(target, "restock", Math.abs(quantity), ref, trx);
     }
 
     async snapshot(target: InventoryTarget): Promise<InventorySnapshot> {
@@ -85,8 +95,19 @@ export default class InventoryService {
             .first();
     }
 
-    private async mutate(target: InventoryTarget, kind: InventoryMovementKind, delta: number, ref: InventoryRef) {
-        await db.transaction(async (trx) => {
+    private async mutate(
+        target: InventoryTarget,
+        kind: InventoryMovementKind,
+        delta: number,
+        ref: InventoryRef,
+        externalTrx?: TransactionClientContract,
+    ) {
+        /**
+         * When the caller already owns a transaction (e.g. the order finalizer wrapping the entire
+         * draft → pending flow) the mutation joins it so a rollback unwinds the stock change. With
+         * no caller trx the service opens its own — the original single-op contract.
+         */
+        const run = async (trx: TransactionClientContract): Promise<void> => {
             const item = await this.resolveItemForUpdate(target, trx);
             if (!item) {
                 throw new InventoryItemMissingError(target);
@@ -114,7 +135,13 @@ export default class InventoryService {
             movement.refKind = ref.kind;
             movement.refId = ref.id ?? null;
             await movement.save();
-        });
+        };
+
+        if (externalTrx) {
+            await run(externalTrx);
+        } else {
+            await db.transaction(run);
+        }
     }
 
     private async resolveItemForUpdate(target: InventoryTarget, trx: TransactionClientContract) {
