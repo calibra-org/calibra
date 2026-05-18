@@ -2,25 +2,21 @@ import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
 
-import { noopDiscounter } from "#contracts/discounter";
 import type Cart from "#models/cart";
 import CartItem from "#models/cart_item";
 import Product from "#models/product";
 import ProductVariation from "#models/product_variation";
-import { type CartTotalsItem, type CartTotalsResult, computeCartTotals } from "#services/cart_totals_service";
+import { buildCartView, resolveCustomerContext } from "#services/cart_view_builder";
 import { defaultValidationContext, rulesFor } from "#services/country_address_rules/index";
 import { resolvePrice } from "#services/price_resolver";
-import SettingsService from "#services/settings_service";
-import { enumerateShippingRates, findEligibleRate } from "#services/shipping_rate_service";
-import CartTransformer, { type CartView } from "#transformers/cart_transformer";
+import { findEligibleRate } from "#services/shipping_rate_service";
+import CartTransformer from "#transformers/cart_transformer";
 import {
     addItemValidator,
     selectShippingRateValidator,
     updateCustomerValidator,
     updateItemValidator,
 } from "#validators/cart/cart_validator";
-
-const settingsService = new SettingsService();
 
 /**
  * Single resource controller for `/api/v1/cart/*`. Every action returns the same
@@ -282,98 +278,9 @@ export default class CartController {
      * envelope is reassembled rather than cached so totals always reflect the post-mutation state.
      */
     private async respond(ctx: HttpContext) {
-        const view = await this.buildView(ctx.cart, ctx.i18n.locale);
+        const customer = await resolveCustomerContext(ctx);
+        const view = await buildCartView(ctx.cart, ctx.i18n.locale, customer);
         return { data: new CartTransformer(view).toObject() };
-    }
-
-    private async buildView(cart: Cart, locale: string): Promise<CartView> {
-        await cart.load("items", (q) => {
-            q.orderBy("id", "asc")
-                .preload("product", (productQuery) => {
-                    productQuery.preload("translations").preload("images", (img) => {
-                        img.orderBy("position", "asc").preload("media");
-                    });
-                })
-                .preload("variation");
-        });
-
-        const pricesIncludeTax = await settingsService.get<boolean>("tax", "prices_include_tax", true);
-        const currency = await settingsService.get<string>("general", "currency", "IRR");
-        if (cart.currency !== currency) {
-            cart.currency = currency;
-            await cart.save();
-        }
-
-        const items = cart.items.map<CartTotalsItem>((line) => {
-            const product = line.product;
-            const variation = line.variationId === null ? null : line.variation;
-            const requiresShipping = product ? !product.virtual : true;
-            const taxStatus = (product?.taxStatus ?? "taxable") as CartTotalsItem["taxStatus"];
-            const taxClassId = this.resolveTaxClassId(product, variation);
-            return {
-                lineKey: String(line.id),
-                id: Number(line.id),
-                productId: Number(line.productId),
-                variationId: line.variationId === null ? null : Number(line.variationId),
-                quantity: line.quantity,
-                priceSnapshot: Number(line.priceSnapshot),
-                taxClassId,
-                taxStatus,
-                requiresShipping,
-            };
-        });
-
-        const address = cart.country
-            ? {
-                  country: cart.country,
-                  regionId: cart.regionId === null ? null : Number(cart.regionId),
-              }
-            : null;
-
-        const itemsTotalGross = items.reduce((sum, item) => sum + item.priceSnapshot * item.quantity, 0);
-        const shippingAddress = cart.country
-            ? {
-                  country: cart.country,
-                  regionId: cart.regionId === null ? null : Number(cart.regionId),
-                  postcode: cart.postcode,
-              }
-            : null;
-        const shippingOptions = shippingAddress ? await enumerateShippingRates(shippingAddress, itemsTotalGross) : [];
-
-        let selectedRateId = cart.shippingZoneMethodId === null ? null : Number(cart.shippingZoneMethodId);
-        if (selectedRateId !== null && !shippingOptions.some((option) => option.id === selectedRateId)) {
-            cart.shippingZoneMethodId = null;
-            await cart.save();
-            selectedRateId = null;
-        }
-
-        const totals: CartTotalsResult = await computeCartTotals({
-            items,
-            address,
-            selectedRateId,
-            discounter: noopDiscounter,
-            pricesIncludeTax,
-            shippingOptions,
-        });
-
-        return {
-            cart,
-            items: cart.items,
-            totals,
-            shippingOptions,
-            locale,
-        };
-    }
-
-    private resolveTaxClassId(
-        product: { taxClassId?: bigint | number | null } | null | undefined,
-        variation: { taxClassId?: bigint | number | null } | null | undefined,
-    ): number | null {
-        const variationClass = variation?.taxClassId;
-        if (variationClass !== undefined && variationClass !== null) return Number(variationClass);
-        const productClass = product?.taxClassId;
-        if (productClass !== undefined && productClass !== null) return Number(productClass);
-        return null;
     }
 
     private validationError(field: string, rule: string, message: string): Exception {

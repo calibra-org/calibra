@@ -1,4 +1,10 @@
-import type { Discounter, DiscounterItem, DiscounterResult } from "#contracts/discounter";
+import type {
+    Discounter,
+    DiscounterCouponContext,
+    DiscounterCustomerContext,
+    DiscounterItem,
+    DiscounterResult,
+} from "#contracts/discounter";
 import type { ShippingRateOption } from "#services/shipping_rate_service";
 import { calculateTax, fetchRates, type TaxAddress, type TaxRateInput } from "#services/tax_calculator";
 
@@ -26,6 +32,8 @@ export interface CartTotalsItem {
     categoryIds?: number[];
     /** Optional tag ids — passed through to the discounter only. */
     tagIds?: number[];
+    /** True when the snapshot price reflects an active sale — passed through to the discounter. */
+    onSale?: boolean;
 }
 
 export interface CartLineTotals {
@@ -189,8 +197,16 @@ export async function computeCartTotals(args: {
     discounter: Discounter;
     pricesIncludeTax: boolean;
     shippingOptions: ShippingRateOption[];
+    /**
+     * Coupons the customer has on the cart. Phase 04 left this empty; phase 06's controller passes
+     * the loaded `cart_applied_coupons` rows so the engine can re-evaluate eligibility on every
+     * recomputation (a newly-added line might disqualify a previously-applied coupon).
+     */
+    appliedCoupons?: DiscounterCouponContext[];
+    /** Viewer context for per-user limits and email restrictions. */
+    customer?: DiscounterCustomerContext | null;
 }): Promise<CartTotalsResult> {
-    const discounterInput = buildDiscounterInput(args.items);
+    const discounterInput = buildDiscounterInput(args.items, args.appliedCoupons ?? [], args.customer ?? null);
     const discounterResult = await args.discounter.calculate(discounterInput);
 
     const rateCache = new Map<number, ReadonlyArray<TaxRateInput>>();
@@ -220,7 +236,11 @@ export async function computeCartTotals(args: {
     });
 }
 
-function buildDiscounterInput(items: CartTotalsItem[]) {
+function buildDiscounterInput(
+    items: CartTotalsItem[],
+    appliedCoupons: DiscounterCouponContext[],
+    customer: DiscounterCustomerContext | null,
+) {
     const lines: DiscounterItem[] = items.map((item) => ({
         lineKey: item.lineKey,
         productId: item.productId,
@@ -230,11 +250,13 @@ function buildDiscounterInput(items: CartTotalsItem[]) {
         lineSubtotal: item.priceSnapshot * item.quantity,
         categoryIds: item.categoryIds ?? [],
         tagIds: item.tagIds ?? [],
+        onSale: item.onSale ?? false,
     }));
     return {
         items: lines,
         itemsTotal: lines.reduce((sum, line) => sum + line.lineSubtotal, 0),
-        appliedCoupons: [],
+        appliedCoupons,
+        customer,
     };
 }
 
