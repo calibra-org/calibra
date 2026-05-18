@@ -1,13 +1,24 @@
-import { locales } from "@calibra/shared/i18n";
+import { isLocale, type Locale, locales } from "@calibra/shared/i18n";
 import { defineRouting } from "next-intl/routing";
 
+const FALLBACK_DEFAULT: Locale = "fa";
+
+function resolveDefaultLocale(): Locale {
+    const fromEnv = process.env.NEXT_PUBLIC_DEFAULT_LOCALE;
+    return fromEnv && isLocale(fromEnv) ? fromEnv : FALLBACK_DEFAULT;
+}
+
 /**
- * Locale-aware routing for the admin panel. Persian is the default — both customers and operators
- * are Persian-speaking; English is a secondary toggle. `localePrefix: "as-needed"` keeps `/` /
- * `/dashboard` etc. as Persian routes, English lives under `/en/dashboard`.
+ * Locale-aware routing for the admin panel. The default locale is sourced from
+ * `NEXT_PUBLIC_DEFAULT_LOCALE` (validated against the shared locales list) and falls back to
+ * Persian. `localePrefix: "as-needed"` keeps the default locale's routes at `/dashboard` etc. while
+ * non-default locales live under their prefix (e.g. `/en/dashboard`). `localeDetection: false`
+ * ensures the configured default wins regardless of the operator's browser `Accept-Language`; the
+ * in-app LocaleSwitch is the only way to leave the default.
  */
 export const routing = defineRouting({
     locales,
-    defaultLocale: "fa",
+    defaultLocale: resolveDefaultLocale(),
     localePrefix: "as-needed",
+    localeDetection: false,
 });
