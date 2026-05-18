@@ -32,6 +32,81 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime
 }
 
+export class CartAppliedCouponSchema extends BaseModel {
+  static $columns = ['cartId', 'codeSnapshot', 'couponId', 'createdAt', 'id', 'updatedAt'] as const
+  $columns = CartAppliedCouponSchema.$columns
+  @column()
+  declare cartId: bigint | number
+  @column()
+  declare codeSnapshot: string
+  @column()
+  declare couponId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CartItemSchema extends BaseModel {
+  static $columns = ['attributesSnapshot', 'cartId', 'createdAt', 'id', 'priceSnapshot', 'productId', 'quantity', 'updatedAt', 'variationId'] as const
+  $columns = CartItemSchema.$columns
+  @column()
+  declare attributesSnapshot: any
+  @column()
+  declare cartId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare priceSnapshot: bigint | number
+  @column()
+  declare productId: bigint | number
+  @column()
+  declare quantity: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare variationId: bigint | number | null
+}
+
+export class CartSchema extends BaseModel {
+  static $columns = ['abandonedAt', 'attributes', 'country', 'createdAt', 'currency', 'customerId', 'id', 'ipAddress', 'lastActivityAt', 'postcode', 'regionId', 'shippingZoneMethodId', 'token', 'updatedAt', 'userAgent'] as const
+  $columns = CartSchema.$columns
+  @column.dateTime()
+  declare abandonedAt: DateTime | null
+  @column()
+  declare attributes: any
+  @column()
+  declare country: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare currency: string
+  @column()
+  declare customerId: bigint | number | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare ipAddress: string | null
+  @column.dateTime()
+  declare lastActivityAt: DateTime
+  @column()
+  declare postcode: string | null
+  @column()
+  declare regionId: bigint | number | null
+  @column()
+  declare shippingZoneMethodId: bigint | number | null
+  @column()
+  declare token: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userAgent: string | null
+}
+
 export class CustomerAddressSchema extends BaseModel {
   static $columns = ['addressLine1', 'addressLine2', 'attributes', 'city', 'company', 'country', 'createdAt', 'customerId', 'firstName', 'id', 'isDefault', 'kind', 'label', 'lastName', 'phone', 'postcode', 'regionId', 'regionText', 'updatedAt'] as const
   $columns = CustomerAddressSchema.$columns

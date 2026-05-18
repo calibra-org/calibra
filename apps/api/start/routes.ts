@@ -14,7 +14,7 @@ router.get("/health", async () => ({ status: "ok" }));
 await import("./routes/catalog.js");
 await import("./routes/auth.js");
 await import("./routes/account.js");
-/** await import("./routes/cart.js");               phase 04 */
+await import("./routes/cart.js");
 /** await import("./routes/checkout.js");           phase 05 */
 /** await import("./routes/account_orders.js");     phase 05 */
 await import("./routes/admin_catalog.js");
