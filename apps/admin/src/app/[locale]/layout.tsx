@@ -42,11 +42,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
     setRequestLocale(locale);
 
     return (
-        <html
-            lang={locale}
-            dir={directionFor(locale)}
-            className={`${inter.variable} ${vazirmatn.variable}`}
-        >
+        <html lang={locale} dir={directionFor(locale)} className={`${inter.variable} ${vazirmatn.variable}`}>
             <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
                 <NextIntlClientProvider>{children}</NextIntlClientProvider>
             </body>
