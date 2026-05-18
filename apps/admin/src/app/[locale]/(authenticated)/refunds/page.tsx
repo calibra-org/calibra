@@ -52,12 +52,18 @@ export default async function RefundsPage({ params }: PageProps) {
                         cell: (row) => <span className="font-medium">{formatMoney(row.amount, locale)}</span>,
                         className: "text-end",
                     },
-                    { id: "reason", header: cols.reason, cell: (row) => <span className="text-muted-foreground text-sm">{row.reason ?? "—"}</span> },
+                    {
+                        id: "reason",
+                        header: cols.reason,
+                        cell: (row) => <span className="text-muted-foreground text-sm">{row.reason ?? "—"}</span>,
+                    },
                     { id: "by", header: cols.refundedBy, cell: (row) => row.refundedByName },
                     {
                         id: "processedAt",
                         header: cols.processedAt,
-                        cell: (row) => <span className="text-muted-foreground text-xs">{formatDateTime(row.processedAt, locale)}</span>,
+                        cell: (row) => (
+                            <span className="text-muted-foreground text-xs">{formatDateTime(row.processedAt, locale)}</span>
+                        ),
                     },
                 ]}
                 rows={data}

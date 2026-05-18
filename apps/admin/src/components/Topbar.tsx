@@ -3,9 +3,9 @@ import { useTranslations } from "next-intl";
 
 import { LocaleSwitch } from "./LocaleSwitch";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { UserMenu } from "./UserMenu";
 
 interface TopbarProps {
     user: { email: string; displayName: string };

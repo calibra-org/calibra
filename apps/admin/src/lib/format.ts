@@ -49,7 +49,11 @@ export function formatPercent(value: number, locale: Locale, fractionDigits = 1)
  * Render an ISO timestamp as a calendar date in the active locale. Persian uses Jalali (`fa-IR-u-ca-persian`),
  * English uses Gregorian. We deliberately don't show seconds — the panel never needs them.
  */
-export function formatDate(iso: string, locale: Locale, options: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" }): string {
+export function formatDate(
+    iso: string,
+    locale: Locale,
+    options: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" },
+): string {
     const date = new Date(iso);
     const formatter = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR-u-ca-persian" : "en-US", options);
     return formatter.format(date);

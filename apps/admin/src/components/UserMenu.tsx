@@ -35,7 +35,7 @@ export function UserMenu({ displayName, email }: UserMenuProps) {
                     <button
                         {...props}
                         type="button"
-                        className="flex items-center gap-2 rounded-full bg-accent/60 ps-1 pe-3 py-1 outline-none transition hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/40"
+                        className="flex items-center gap-2 rounded-full bg-accent/60 py-1 ps-1 pe-3 outline-none transition hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/40"
                     >
                         <span className="grid size-7 place-items-center rounded-full bg-primary font-semibold text-primary-foreground text-xs">
                             {initials || "A"}

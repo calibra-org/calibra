@@ -28,7 +28,7 @@ export default async function LoginPage({ params }: PageProps) {
             <section className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-12 text-white lg:flex">
                 <div className="absolute inset-0 opacity-20" aria-hidden="true">
                     <div className="absolute -end-32 -top-32 size-96 rounded-full bg-white blur-3xl" />
-                    <div className="absolute -bottom-32 -start-32 size-96 rounded-full bg-fuchsia-300 blur-3xl" />
+                    <div className="absolute -start-32 -bottom-32 size-96 rounded-full bg-fuchsia-300 blur-3xl" />
                 </div>
                 <div className="relative flex items-center gap-3">
                     <div className="grid size-10 place-items-center rounded-xl bg-white/15 backdrop-blur">
@@ -42,12 +42,16 @@ export default async function LoginPage({ params }: PageProps) {
 
                 <div className="relative flex flex-col gap-8">
                     <h2 className="max-w-md font-semibold text-4xl leading-tight">
-                        {locale === "fa" ? "تجربه‌ای مدرن برای مدیریت فروشگاه ایرانی." : "A modern admin built for Iranian commerce."}
+                        {locale === "fa"
+                            ? "تجربه‌ای مدرن برای مدیریت فروشگاه ایرانی."
+                            : "A modern admin built for Iranian commerce."}
                     </h2>
                     <ul className="flex flex-col gap-3 text-sm">
                         <li className="flex items-center gap-2 text-white/85">
                             <Zap className="size-4" aria-hidden="true" />
-                            {locale === "fa" ? "پشتیبانی کامل از تومان، ریال و مالیات بر ارزش افزوده" : "Full Toman, Rial and VAT support"}
+                            {locale === "fa"
+                                ? "پشتیبانی کامل از تومان، ریال و مالیات بر ارزش افزوده"
+                                : "Full Toman, Rial and VAT support"}
                         </li>
                         <li className="flex items-center gap-2 text-white/85">
                             <Shield className="size-4" aria-hidden="true" />
@@ -55,7 +59,9 @@ export default async function LoginPage({ params }: PageProps) {
                         </li>
                         <li className="flex items-center gap-2 text-white/85">
                             <Sparkles className="size-4" aria-hidden="true" />
-                            {locale === "fa" ? "حالت روشن، تاریک و دو زبان فارسی + انگلیسی" : "Light, dark and bilingual fa + en out of the box"}
+                            {locale === "fa"
+                                ? "حالت روشن، تاریک و دو زبان فارسی + انگلیسی"
+                                : "Light, dark and bilingual fa + en out of the box"}
                         </li>
                     </ul>
                 </div>

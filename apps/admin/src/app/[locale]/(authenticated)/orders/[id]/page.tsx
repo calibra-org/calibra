@@ -89,7 +89,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
                                                     <div className="flex items-center gap-3">
                                                         {line.imageUrl !== null ? (
                                                             // biome-ignore lint/performance/noImgElement: mock CDN
-                                                            <img src={line.imageUrl} alt="" className="size-10 rounded-md object-cover" />
+                                                            <img
+                                                                src={line.imageUrl}
+                                                                alt=""
+                                                                className="size-10 rounded-md object-cover"
+                                                            />
                                                         ) : (
                                                             <div className="size-10 rounded-md bg-muted" aria-hidden="true" />
                                                         )}
@@ -104,9 +108,13 @@ export default async function OrderDetailPage({ params }: PageProps) {
                                                         </div>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-end text-muted-foreground">× {formatNumber(line.quantity, locale)}</TableCell>
+                                                <TableCell className="text-end text-muted-foreground">
+                                                    × {formatNumber(line.quantity, locale)}
+                                                </TableCell>
                                                 <TableCell className="text-end">{formatMoney(line.unitPrice, locale)}</TableCell>
-                                                <TableCell className="px-5 text-end font-medium">{formatMoney(line.total, locale)}</TableCell>
+                                                <TableCell className="px-5 text-end font-medium">
+                                                    {formatMoney(line.total, locale)}
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -131,12 +139,17 @@ export default async function OrderDetailPage({ params }: PageProps) {
                                 <ol className="relative flex flex-col gap-4 ps-6">
                                     {order.history.map((entry) => (
                                         <li key={entry.id} className="relative">
-                                            <span className="absolute -start-6 top-1 grid size-3 place-items-center rounded-full bg-primary" aria-hidden="true">
+                                            <span
+                                                className="absolute -start-6 top-1 grid size-3 place-items-center rounded-full bg-primary"
+                                                aria-hidden="true"
+                                            >
                                                 <span className="size-1.5 rounded-full bg-primary-foreground" />
                                             </span>
                                             <div className="flex items-center gap-2 text-sm">
                                                 <OrderStatusBadge status={entry.toStatus} />
-                                                <span className="text-muted-foreground text-xs">{formatDateTime(entry.occurredAt, locale)}</span>
+                                                <span className="text-muted-foreground text-xs">
+                                                    {formatDateTime(entry.occurredAt, locale)}
+                                                </span>
                                             </div>
                                             {entry.changedBy !== null && (
                                                 <div className="text-muted-foreground text-xs">
@@ -155,7 +168,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
                         <Card>
                             <CardHeader className="flex items-center justify-between border-b pb-4">
                                 <CardTitle className="text-sm">{t("notes")}</CardTitle>
-                                <Button variant="outline" size="sm">{t("addNote")}</Button>
+                                <Button variant="outline" size="sm">
+                                    {t("addNote")}
+                                </Button>
                             </CardHeader>
                             <CardContent className="flex flex-col gap-4 pt-5">
                                 {order.notes.length === 0 ? (
@@ -235,12 +250,17 @@ export default async function OrderDetailPage({ params }: PageProps) {
                         </CardHeader>
                         <CardContent className="pt-4 text-sm">
                             <ol className="flex flex-col gap-2">
-                                {order.history.slice(-3).reverse().map((entry) => (
-                                    <li key={`mini-${entry.id}`} className="flex items-center justify-between gap-2">
-                                        <OrderStatusBadge status={entry.toStatus} />
-                                        <span className="text-muted-foreground text-xs">{formatDateTime(entry.occurredAt, locale)}</span>
-                                    </li>
-                                ))}
+                                {order.history
+                                    .slice(-3)
+                                    .reverse()
+                                    .map((entry) => (
+                                        <li key={`mini-${entry.id}`} className="flex items-center justify-between gap-2">
+                                            <OrderStatusBadge status={entry.toStatus} />
+                                            <span className="text-muted-foreground text-xs">
+                                                {formatDateTime(entry.occurredAt, locale)}
+                                            </span>
+                                        </li>
+                                    ))}
                             </ol>
                         </CardContent>
                     </Card>

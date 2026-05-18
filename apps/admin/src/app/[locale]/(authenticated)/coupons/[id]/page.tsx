@@ -69,8 +69,14 @@ export default async function CouponDetailPage({ params }: PageProps) {
                             label={couponT("table.expiresAt")}
                             value={coupon.expiresAt === null ? couponT("neverExpires") : formatDate(coupon.expiresAt, locale)}
                         />
-                        <InfoRow label={t("globalLimit")} value={coupon.usageLimitGlobal === null ? "∞" : formatNumber(coupon.usageLimitGlobal, locale)} />
-                        <InfoRow label={t("perUserLimit")} value={coupon.usageLimitPerUser === null ? "∞" : formatNumber(coupon.usageLimitPerUser, locale)} />
+                        <InfoRow
+                            label={t("globalLimit")}
+                            value={coupon.usageLimitGlobal === null ? "∞" : formatNumber(coupon.usageLimitGlobal, locale)}
+                        />
+                        <InfoRow
+                            label={t("perUserLimit")}
+                            value={coupon.usageLimitPerUser === null ? "∞" : formatNumber(coupon.usageLimitPerUser, locale)}
+                        />
                     </CardContent>
                 </Card>
 

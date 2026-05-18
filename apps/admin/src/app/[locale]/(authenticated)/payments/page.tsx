@@ -46,7 +46,11 @@ export default async function PaymentsPage({ params }: PageProps) {
                             </div>
                         ),
                     },
-                    { id: "code", header: cols.code, cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.code}</span> },
+                    {
+                        id: "code",
+                        header: cols.code,
+                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.code}</span>,
+                    },
                     {
                         id: "status",
                         header: cols.status,
@@ -61,7 +65,12 @@ export default async function PaymentsPage({ params }: PageProps) {
                         header: cols.supportsRefunds,
                         cell: (row) => (row.supportsRefunds ? commonT("yes") : commonT("no")),
                     },
-                    { id: "ordering", header: cols.ordering, cell: (row) => formatNumber(row.ordering, locale), className: "text-end" },
+                    {
+                        id: "ordering",
+                        header: cols.ordering,
+                        cell: (row) => formatNumber(row.ordering, locale),
+                        className: "text-end",
+                    },
                     {
                         id: "actions",
                         header: cols.actions,

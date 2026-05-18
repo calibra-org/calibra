@@ -46,7 +46,11 @@ export default async function AttributeTermsPage({ params }: PageProps) {
             <DataTable<AdminAttributeTerm>
                 columns={[
                     { id: "name", header: cols.name, cell: (row) => <span className="font-medium">{row.name[locale]}</span> },
-                    { id: "slug", header: cols.slug, cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug}</span> },
+                    {
+                        id: "slug",
+                        header: cols.slug,
+                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug}</span>,
+                    },
                 ]}
                 rows={terms}
                 getRowKey={(row) => row.id}

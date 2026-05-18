@@ -80,9 +80,18 @@ export default async function TopSellersPage({ params }: PageProps) {
                             </Link>
                         ),
                     },
-                    { id: "sku", header: cols.sku, cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.sku}</span> },
+                    {
+                        id: "sku",
+                        header: cols.sku,
+                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.sku}</span>,
+                    },
                     { id: "units", header: cols.units, cell: (row) => formatNumber(row.units, locale), className: "text-end" },
-                    { id: "revenue", header: cols.revenue, cell: (row) => <span className="font-medium">{formatMoney(row.revenue, locale)}</span>, className: "text-end" },
+                    {
+                        id: "revenue",
+                        header: cols.revenue,
+                        cell: (row) => <span className="font-medium">{formatMoney(row.revenue, locale)}</span>,
+                        className: "text-end",
+                    },
                 ]}
                 rows={report.rows}
                 getRowKey={(row) => row.productId}

@@ -57,13 +57,18 @@ export default async function CouponsPage({ params }: PageProps) {
                         header: cols.code,
                         cell: (row) => (
                             <Link href={`/coupons/${row.id}` as never} className="flex flex-col hover:underline">
-                                <span className="font-mono font-medium">{row.code}</span>
+                                <span className="font-medium font-mono">{row.code}</span>
                                 <span className="text-muted-foreground text-xs">{row.description[locale]}</span>
                             </Link>
                         ),
                     },
                     { id: "type", header: cols.type, cell: (row) => typeT[row.discountType] },
-                    { id: "value", header: cols.value, cell: (row) => <span className="font-medium">{valueLabel(row, locale)}</span>, className: "text-end" },
+                    {
+                        id: "value",
+                        header: cols.value,
+                        cell: (row) => <span className="font-medium">{valueLabel(row, locale)}</span>,
+                        className: "text-end",
+                    },
                     {
                         id: "usage",
                         header: cols.usage,

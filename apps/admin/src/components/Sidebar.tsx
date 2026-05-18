@@ -105,7 +105,7 @@ export function Sidebar() {
             <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4 text-sm">
                 {groups.map((group) => (
                     <div key={group.titleKey} className="flex flex-col gap-1">
-                        <div className="px-3 pb-1 font-medium text-sidebar-foreground/50 text-[0.65rem] uppercase tracking-wider">
+                        <div className="px-3 pb-1 font-medium text-[0.65rem] text-sidebar-foreground/50 uppercase tracking-wider">
                             {navT(group.titleKey)}
                         </div>
                         {group.items.map(({ href, labelKey, icon: Icon }) => {

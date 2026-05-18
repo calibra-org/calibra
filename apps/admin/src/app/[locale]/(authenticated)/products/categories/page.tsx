@@ -44,13 +44,27 @@ export default async function CategoriesPage({ params }: PageProps) {
             <DataTable<AdminCategory>
                 columns={[
                     { id: "name", header: cols.name, cell: (row) => <span className="font-medium">{row.name[locale]}</span> },
-                    { id: "slug", header: cols.slug, cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug[locale]}</span> },
+                    {
+                        id: "slug",
+                        header: cols.slug,
+                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug[locale]}</span>,
+                    },
                     {
                         id: "parent",
                         header: cols.parent,
-                        cell: (row) => row.parentId === null ? <span className="text-muted-foreground">{t("noParent")}</span> : byId.get(row.parentId)?.name[locale] ?? "—",
+                        cell: (row) =>
+                            row.parentId === null ? (
+                                <span className="text-muted-foreground">{t("noParent")}</span>
+                            ) : (
+                                (byId.get(row.parentId)?.name[locale] ?? "—")
+                            ),
                     },
-                    { id: "products", header: cols.productCount, cell: (row) => formatNumber(row.productCount, locale), className: "text-end" },
+                    {
+                        id: "products",
+                        header: cols.productCount,
+                        cell: (row) => formatNumber(row.productCount, locale),
+                        className: "text-end",
+                    },
                 ]}
                 rows={data}
                 getRowKey={(row) => row.id}

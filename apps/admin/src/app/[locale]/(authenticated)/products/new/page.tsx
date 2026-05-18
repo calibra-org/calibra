@@ -30,7 +30,11 @@ export default async function NewProductPage({ params }: PageProps) {
             <PageHeader
                 title={t("newTitle")}
                 subtitle={t("newSubtitle")}
-                actions={<Button type="submit" form="new-product-form">{form.submit}</Button>}
+                actions={
+                    <Button type="submit" form="new-product-form">
+                        {form.submit}
+                    </Button>
+                }
             />
 
             <form id="new-product-form" className="grid grid-cols-1 gap-6 lg:grid-cols-3">

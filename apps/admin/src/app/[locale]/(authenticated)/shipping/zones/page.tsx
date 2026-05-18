@@ -55,9 +55,19 @@ export default async function ShippingZonesPage({ params }: PageProps) {
                     {
                         id: "countries",
                         header: cols.countries,
-                        cell: (row) => row.countries.length === 0 ? <span className="text-muted-foreground">{zonesT("noCountries")}</span> : row.countries.join(", "),
+                        cell: (row) =>
+                            row.countries.length === 0 ? (
+                                <span className="text-muted-foreground">{zonesT("noCountries")}</span>
+                            ) : (
+                                row.countries.join(", ")
+                            ),
                     },
-                    { id: "methods", header: cols.methodCount, cell: (row) => formatNumber(row.methodCount, locale), className: "text-end" },
+                    {
+                        id: "methods",
+                        header: cols.methodCount,
+                        cell: (row) => formatNumber(row.methodCount, locale),
+                        className: "text-end",
+                    },
                 ]}
                 rows={rows}
                 getRowKey={(row) => row.id}

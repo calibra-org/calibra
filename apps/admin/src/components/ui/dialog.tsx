@@ -26,7 +26,7 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
             <BaseDialog.Backdrop
                 className={cn(
                     "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
-                    "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 transition-opacity duration-150",
+                    "transition-opacity duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
                 )}
             />
             <BaseDialog.Popup
@@ -67,11 +67,29 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function DialogTitle({ className, ...props }: React.ComponentProps<typeof BaseDialog.Title>) {
-    return <BaseDialog.Title data-slot="dialog-title" className={cn("font-semibold text-lg leading-none", className)} {...props} />;
+    return (
+        <BaseDialog.Title data-slot="dialog-title" className={cn("font-semibold text-lg leading-none", className)} {...props} />
+    );
 }
 
 function DialogDescription({ className, ...props }: React.ComponentProps<typeof BaseDialog.Description>) {
-    return <BaseDialog.Description data-slot="dialog-description" className={cn("text-muted-foreground text-sm", className)} {...props} />;
+    return (
+        <BaseDialog.Description
+            data-slot="dialog-description"
+            className={cn("text-muted-foreground text-sm", className)}
+            {...props}
+        />
+    );
 }
 
-export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogPortal, DialogTitle, DialogTrigger };
+export {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogPortal,
+    DialogTitle,
+    DialogTrigger,
+};

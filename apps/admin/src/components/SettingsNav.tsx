@@ -4,8 +4,8 @@ import type { Locale } from "@calibra/shared/i18n";
 import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "#/lib/i18n/navigation";
-import { cn } from "#/lib/utils";
 import type { AdminSettingsGroup } from "#/lib/mock/types";
+import { cn } from "#/lib/utils";
 
 interface SettingsNavProps {
     groups: AdminSettingsGroup[];

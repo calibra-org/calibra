@@ -54,7 +54,7 @@ export function ThemeToggle() {
                     <Menu.Popup
                         className={cn(
                             "min-w-40 origin-[var(--transform-origin)] rounded-md border border-border bg-popover p-1 text-popover-foreground text-sm shadow-md outline-none",
-                            "data-[starting-style]:scale-95 data-[starting-style]:opacity-0 data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
+                            "data-[ending-style]:scale-95 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
                             "transition-[opacity,transform] duration-150",
                         )}
                     >

@@ -45,10 +45,24 @@ export default async function TaxRatesPage({ params }: PageProps) {
                     { id: "label", header: cols.label, cell: (row) => <span className="font-medium">{row.label[locale]}</span> },
                     { id: "country", header: cols.country, cell: (row) => row.country ?? ratesT("anywhere") },
                     { id: "province", header: cols.province, cell: (row) => row.provinceCode ?? "—" },
-                    { id: "rate", header: cols.rate, cell: (row) => formatPercent(row.ratePercent, locale, 2), className: "text-end" },
-                    { id: "priority", header: cols.priority, cell: (row) => formatNumber(row.priority, locale), className: "text-end" },
+                    {
+                        id: "rate",
+                        header: cols.rate,
+                        cell: (row) => formatPercent(row.ratePercent, locale, 2),
+                        className: "text-end",
+                    },
+                    {
+                        id: "priority",
+                        header: cols.priority,
+                        cell: (row) => formatNumber(row.priority, locale),
+                        className: "text-end",
+                    },
                     { id: "compound", header: cols.compound, cell: (row) => <Checkbox checked={row.compound} disabled /> },
-                    { id: "shipping", header: cols.appliesToShipping, cell: (row) => <Checkbox checked={row.appliesToShipping} disabled /> },
+                    {
+                        id: "shipping",
+                        header: cols.appliesToShipping,
+                        cell: (row) => <Checkbox checked={row.appliesToShipping} disabled />,
+                    },
                 ]}
                 rows={rows}
                 getRowKey={(row) => row.id}

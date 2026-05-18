@@ -21,7 +21,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { locale, id } = await params;
+    const { id } = await params;
     const customer = await getCustomer(Number(id));
     if (customer === null) return { title: "—" };
     return { title: `${customer.firstName} ${customer.lastName}` };
@@ -48,11 +48,17 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                 subtitle={t("subtitle", { since: formatDate(customer.createdAt, locale) })}
                 actions={
                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <a href={`mailto:${customer.email}`} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-accent-foreground hover:bg-accent/80">
+                        <a
+                            href={`mailto:${customer.email}`}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-accent-foreground hover:bg-accent/80"
+                        >
                             <Mail className="size-3.5" aria-hidden="true" />
                             {customer.email}
                         </a>
-                        <a href={`tel:${customer.phone}`} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-accent-foreground hover:bg-accent/80">
+                        <a
+                            href={`tel:${customer.phone}`}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-accent-foreground hover:bg-accent/80"
+                        >
                             <Phone className="size-3.5" aria-hidden="true" />
                             <span dir="ltr">{customer.phone}</span>
                         </a>
@@ -65,7 +71,10 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                 <StatCard label={t("totalSpent")} value={formatMoney(customer.totalSpent, locale)} />
                 <StatCard
                     label={t("averageOrder")}
-                    value={formatMoney(customer.ordersCount === 0 ? 0 : Math.round(customer.totalSpent / customer.ordersCount), locale)}
+                    value={formatMoney(
+                        customer.ordersCount === 0 ? 0 : Math.round(customer.totalSpent / customer.ordersCount),
+                        locale,
+                    )}
                 />
             </div>
 
@@ -103,11 +112,15 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                                     {address.isDefault && <CardDescription>★ default</CardDescription>}
                                 </CardHeader>
                                 <CardContent className="flex flex-col gap-0.5 pt-4 text-sm">
-                                    <div className="font-medium">{address.firstName} {address.lastName}</div>
+                                    <div className="font-medium">
+                                        {address.firstName} {address.lastName}
+                                    </div>
                                     {address.company !== null && <div className="text-muted-foreground">{address.company}</div>}
                                     <div>{address.addressLine1}</div>
                                     {address.addressLine2 !== null && <div>{address.addressLine2}</div>}
-                                    <div className="text-muted-foreground">{address.city}, {address.provinceCode} · {address.postcode}</div>
+                                    <div className="text-muted-foreground">
+                                        {address.city}, {address.provinceCode} · {address.postcode}
+                                    </div>
                                     <div className="text-muted-foreground">{address.country}</div>
                                 </CardContent>
                             </Card>
@@ -137,7 +150,9 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                             {
                                 id: "placedAt",
                                 header: ordersCols.placedAt,
-                                cell: (row) => <span className="text-muted-foreground text-xs">{formatDate(row.createdAt, locale)}</span>,
+                                cell: (row) => (
+                                    <span className="text-muted-foreground text-xs">{formatDate(row.createdAt, locale)}</span>
+                                ),
                             },
                         ]}
                         rows={customerOrders}
@@ -156,12 +171,38 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                     ) : (
                         <DataTable<AdminCustomerDownload>
                             columns={[
-                                { id: "product", header: downloadsCols.product, cell: (row) => <span className="font-medium">{row.productName[locale]}</span> },
-                                { id: "order", header: downloadsCols.order, cell: (row) => `#${formatNumber(row.orderNumber, locale)}` },
-                                { id: "granted", header: downloadsCols.granted, cell: (row) => formatDate(row.grantedAt, locale) },
-                                { id: "expires", header: downloadsCols.expires, cell: (row) => row.expiresAt === null ? "—" : formatDate(row.expiresAt, locale) },
-                                { id: "used", header: downloadsCols.downloadsUsed, cell: (row) => formatNumber(row.downloadsUsed, locale), className: "text-end" },
-                                { id: "limit", header: downloadsCols.limit, cell: (row) => row.downloadLimit === null ? "∞" : formatNumber(row.downloadLimit, locale), className: "text-end" },
+                                {
+                                    id: "product",
+                                    header: downloadsCols.product,
+                                    cell: (row) => <span className="font-medium">{row.productName[locale]}</span>,
+                                },
+                                {
+                                    id: "order",
+                                    header: downloadsCols.order,
+                                    cell: (row) => `#${formatNumber(row.orderNumber, locale)}`,
+                                },
+                                {
+                                    id: "granted",
+                                    header: downloadsCols.granted,
+                                    cell: (row) => formatDate(row.grantedAt, locale),
+                                },
+                                {
+                                    id: "expires",
+                                    header: downloadsCols.expires,
+                                    cell: (row) => (row.expiresAt === null ? "—" : formatDate(row.expiresAt, locale)),
+                                },
+                                {
+                                    id: "used",
+                                    header: downloadsCols.downloadsUsed,
+                                    cell: (row) => formatNumber(row.downloadsUsed, locale),
+                                    className: "text-end",
+                                },
+                                {
+                                    id: "limit",
+                                    header: downloadsCols.limit,
+                                    cell: (row) => (row.downloadLimit === null ? "∞" : formatNumber(row.downloadLimit, locale)),
+                                    className: "text-end",
+                                },
                             ]}
                             rows={customer.downloads}
                             getRowKey={(row) => row.id}

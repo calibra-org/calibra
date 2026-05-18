@@ -42,8 +42,17 @@ export default async function TaxClassesPage({ params }: PageProps) {
             <DataTable<AdminTaxClass>
                 columns={[
                     { id: "name", header: cols.name, cell: (row) => <span className="font-medium">{row.name[locale]}</span> },
-                    { id: "slug", header: cols.slug, cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug}</span> },
-                    { id: "rates", header: cols.rateCount, cell: (row) => formatNumber(row.rateCount, locale), className: "text-end" },
+                    {
+                        id: "slug",
+                        header: cols.slug,
+                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug}</span>,
+                    },
+                    {
+                        id: "rates",
+                        header: cols.rateCount,
+                        cell: (row) => formatNumber(row.rateCount, locale),
+                        className: "text-end",
+                    },
                 ]}
                 rows={rows}
                 getRowKey={(row) => row.id}

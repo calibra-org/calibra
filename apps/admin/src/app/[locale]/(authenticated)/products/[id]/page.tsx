@@ -96,11 +96,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                             </div>
                             <div className="flex flex-col gap-1.5 md:col-span-2">
                                 <Label htmlFor={`desc-${product.id}`}>{form.shortDescription}</Label>
-                                <Textarea
-                                    id={`desc-${product.id}`}
-                                    defaultValue={product.shortDescription[locale]}
-                                    rows={3}
-                                />
+                                <Textarea id={`desc-${product.id}`} defaultValue={product.shortDescription[locale]} rows={3} />
                             </div>
                         </CardContent>
                     </Card>
@@ -143,11 +139,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                             </div>
                             <div className="flex flex-col gap-1.5">
                                 <Label htmlFor={`stock-status-${product.id}`}>{form.stockStatus}</Label>
-                                <Input
-                                    id={`stock-status-${product.id}`}
-                                    defaultValue={stockT(product.stockStatus)}
-                                    readOnly
-                                />
+                                <Input id={`stock-status-${product.id}`} defaultValue={stockT(product.stockStatus)} readOnly />
                             </div>
                         </CardContent>
                     </Card>

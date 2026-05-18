@@ -22,9 +22,9 @@ import type {
     AdminShippingMethod,
     AdminShippingZone,
     AdminShippingZoneMethod,
+    AdminTag,
     AdminTaxClass,
     AdminTaxRate,
-    AdminTag,
     OrderStatus,
 } from "./types";
 
@@ -33,14 +33,70 @@ import type {
 /* -------------------------------------------------------------------------- */
 
 export const categories: AdminCategory[] = [
-    { id: 1, parentId: null, name: { fa: "پوشاک", en: "Apparel" }, slug: { fa: "apparel", en: "apparel" }, productCount: 18, imageUrl: null },
-    { id: 2, parentId: 1, name: { fa: "تی‌شرت", en: "T-Shirts" }, slug: { fa: "tshirts", en: "tshirts" }, productCount: 8, imageUrl: null },
-    { id: 3, parentId: 1, name: { fa: "هودی", en: "Hoodies" }, slug: { fa: "hoodies", en: "hoodies" }, productCount: 4, imageUrl: null },
-    { id: 4, parentId: null, name: { fa: "الکترونیک", en: "Electronics" }, slug: { fa: "electronics", en: "electronics" }, productCount: 14, imageUrl: null },
-    { id: 5, parentId: 4, name: { fa: "هدفون", en: "Headphones" }, slug: { fa: "headphones", en: "headphones" }, productCount: 6, imageUrl: null },
-    { id: 6, parentId: 4, name: { fa: "موس و کیبورد", en: "Mice & Keyboards" }, slug: { fa: "mice-keyboards", en: "mice-keyboards" }, productCount: 5, imageUrl: null },
-    { id: 7, parentId: null, name: { fa: "لوازم خانه", en: "Home Goods" }, slug: { fa: "home", en: "home" }, productCount: 11, imageUrl: null },
-    { id: 8, parentId: null, name: { fa: "کتاب", en: "Books" }, slug: { fa: "books", en: "books" }, productCount: 9, imageUrl: null },
+    {
+        id: 1,
+        parentId: null,
+        name: { fa: "پوشاک", en: "Apparel" },
+        slug: { fa: "apparel", en: "apparel" },
+        productCount: 18,
+        imageUrl: null,
+    },
+    {
+        id: 2,
+        parentId: 1,
+        name: { fa: "تی‌شرت", en: "T-Shirts" },
+        slug: { fa: "tshirts", en: "tshirts" },
+        productCount: 8,
+        imageUrl: null,
+    },
+    {
+        id: 3,
+        parentId: 1,
+        name: { fa: "هودی", en: "Hoodies" },
+        slug: { fa: "hoodies", en: "hoodies" },
+        productCount: 4,
+        imageUrl: null,
+    },
+    {
+        id: 4,
+        parentId: null,
+        name: { fa: "الکترونیک", en: "Electronics" },
+        slug: { fa: "electronics", en: "electronics" },
+        productCount: 14,
+        imageUrl: null,
+    },
+    {
+        id: 5,
+        parentId: 4,
+        name: { fa: "هدفون", en: "Headphones" },
+        slug: { fa: "headphones", en: "headphones" },
+        productCount: 6,
+        imageUrl: null,
+    },
+    {
+        id: 6,
+        parentId: 4,
+        name: { fa: "موس و کیبورد", en: "Mice & Keyboards" },
+        slug: { fa: "mice-keyboards", en: "mice-keyboards" },
+        productCount: 5,
+        imageUrl: null,
+    },
+    {
+        id: 7,
+        parentId: null,
+        name: { fa: "لوازم خانه", en: "Home Goods" },
+        slug: { fa: "home", en: "home" },
+        productCount: 11,
+        imageUrl: null,
+    },
+    {
+        id: 8,
+        parentId: null,
+        name: { fa: "کتاب", en: "Books" },
+        slug: { fa: "books", en: "books" },
+        productCount: 9,
+        imageUrl: null,
+    },
 ];
 
 export const tags: AdminTag[] = [
@@ -52,7 +108,13 @@ export const tags: AdminTag[] = [
 
 export const brands: AdminBrand[] = [
     { id: 1, name: { fa: "کالیبرا", en: "Calibra" }, slug: { fa: "calibra", en: "calibra" }, productCount: 12, logoUrl: null },
-    { id: 2, name: { fa: "نوین‌گستر", en: "Novin Gostar" }, slug: { fa: "novin-gostar", en: "novin-gostar" }, productCount: 8, logoUrl: null },
+    {
+        id: 2,
+        name: { fa: "نوین‌گستر", en: "Novin Gostar" },
+        slug: { fa: "novin-gostar", en: "novin-gostar" },
+        productCount: 8,
+        logoUrl: null,
+    },
     { id: 3, name: { fa: "آرا", en: "Ara" }, slug: { fa: "ara", en: "ara" }, productCount: 5, logoUrl: null },
     { id: 4, name: { fa: "پاسارگاد", en: "Pasargad" }, slug: { fa: "pasargad", en: "pasargad" }, productCount: 4, logoUrl: null },
 ];
@@ -164,11 +226,66 @@ export const products: AdminProduct[] = productNamesFa.map((nameFa, index) => {
 });
 
 export const reviews: AdminReview[] = [
-    { id: 1, productId: 1, productName: products[0]!.name, reviewerName: "سارا م.", reviewerEmail: "sara.m@example.ir", rating: 5, body: "کیفیت پارچه عالی بود، اندازه دقیق و رنگ کاملاً مطابق تصویر.", status: "approved", verified: true, createdAt: "2026-05-12T09:24:00Z" },
-    { id: 2, productId: 3, productName: products[2]!.name, reviewerName: "رضا ک.", reviewerEmail: "reza.k@example.ir", rating: 4, body: "کیفیت صدا عالی، فقط جای نگه دارنده هد می‌توانست راحت‌تر باشد.", status: "approved", verified: true, createdAt: "2026-05-11T18:02:00Z" },
-    { id: 3, productId: 5, productName: products[4]!.name, reviewerName: "نیلوفر ر.", reviewerEmail: "niloo.r@example.ir", rating: 5, body: "بسیار حرفه‌ای و خوش‌دست. هدیه فوق‌العاده‌ای شد.", status: "pending", verified: false, createdAt: "2026-05-15T07:10:00Z" },
-    { id: 4, productId: 7, productName: products[6]!.name, reviewerName: "Mahdi A.", reviewerEmail: "mahdi.a@example.com", rating: 3, body: "خوب است، اما با تصویر سایت کمی تفاوت رنگ دارد.", status: "pending", verified: true, createdAt: "2026-05-14T11:32:00Z" },
-    { id: 5, productId: 9, productName: products[8]!.name, reviewerName: "Spam Bot", reviewerEmail: "noise@spam.example", rating: 1, body: "Click here for free crypto.", status: "spam", verified: false, createdAt: "2026-05-10T03:01:00Z" },
+    {
+        id: 1,
+        productId: 1,
+        productName: products[0]!.name,
+        reviewerName: "سارا م.",
+        reviewerEmail: "sara.m@example.ir",
+        rating: 5,
+        body: "کیفیت پارچه عالی بود، اندازه دقیق و رنگ کاملاً مطابق تصویر.",
+        status: "approved",
+        verified: true,
+        createdAt: "2026-05-12T09:24:00Z",
+    },
+    {
+        id: 2,
+        productId: 3,
+        productName: products[2]!.name,
+        reviewerName: "رضا ک.",
+        reviewerEmail: "reza.k@example.ir",
+        rating: 4,
+        body: "کیفیت صدا عالی، فقط جای نگه دارنده هد می‌توانست راحت‌تر باشد.",
+        status: "approved",
+        verified: true,
+        createdAt: "2026-05-11T18:02:00Z",
+    },
+    {
+        id: 3,
+        productId: 5,
+        productName: products[4]!.name,
+        reviewerName: "نیلوفر ر.",
+        reviewerEmail: "niloo.r@example.ir",
+        rating: 5,
+        body: "بسیار حرفه‌ای و خوش‌دست. هدیه فوق‌العاده‌ای شد.",
+        status: "pending",
+        verified: false,
+        createdAt: "2026-05-15T07:10:00Z",
+    },
+    {
+        id: 4,
+        productId: 7,
+        productName: products[6]!.name,
+        reviewerName: "Mahdi A.",
+        reviewerEmail: "mahdi.a@example.com",
+        rating: 3,
+        body: "خوب است، اما با تصویر سایت کمی تفاوت رنگ دارد.",
+        status: "pending",
+        verified: true,
+        createdAt: "2026-05-14T11:32:00Z",
+    },
+    {
+        id: 5,
+        productId: 9,
+        productName: products[8]!.name,
+        reviewerName: "Spam Bot",
+        reviewerEmail: "noise@spam.example",
+        rating: 1,
+        body: "Click here for free crypto.",
+        status: "spam",
+        verified: false,
+        createdAt: "2026-05-10T03:01:00Z",
+    },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -176,14 +293,78 @@ export const reviews: AdminReview[] = [
 /* -------------------------------------------------------------------------- */
 
 const customerSeed: Pick<AdminCustomer, "id" | "firstName" | "lastName" | "email" | "phone" | "nationalId" | "companyName">[] = [
-    { id: 1, firstName: "سارا", lastName: "محمدی", email: "sara.mohammadi@example.ir", phone: "+989121234567", nationalId: "0079876543", companyName: null },
-    { id: 2, firstName: "رضا", lastName: "کریمی", email: "reza.karimi@example.ir", phone: "+989124445566", nationalId: "0066123456", companyName: null },
-    { id: 3, firstName: "نیلوفر", lastName: "رضایی", email: "niloofar.r@example.ir", phone: "+989122223344", nationalId: "0064523456", companyName: "آرا دیزاین" },
-    { id: 4, firstName: "Mahdi", lastName: "Akbari", email: "mahdi.akbari@example.com", phone: "+989125556677", nationalId: null, companyName: null },
-    { id: 5, firstName: "زهرا", lastName: "حسینی", email: "zahra.h@example.ir", phone: "+989128887766", nationalId: "0071234567", companyName: null },
-    { id: 6, firstName: "علی", lastName: "صادقی", email: "ali.s@example.ir", phone: "+989121119988", nationalId: "0062345678", companyName: "پاسارگاد تجارت" },
-    { id: 7, firstName: "Yasamin", lastName: "Tehrani", email: "yasamin.t@example.com", phone: "+989353332211", nationalId: null, companyName: null },
-    { id: 8, firstName: "حمید", lastName: "نجفی", email: "hamid.n@example.ir", phone: "+989357776655", nationalId: "0072345678", companyName: null },
+    {
+        id: 1,
+        firstName: "سارا",
+        lastName: "محمدی",
+        email: "sara.mohammadi@example.ir",
+        phone: "+989121234567",
+        nationalId: "0079876543",
+        companyName: null,
+    },
+    {
+        id: 2,
+        firstName: "رضا",
+        lastName: "کریمی",
+        email: "reza.karimi@example.ir",
+        phone: "+989124445566",
+        nationalId: "0066123456",
+        companyName: null,
+    },
+    {
+        id: 3,
+        firstName: "نیلوفر",
+        lastName: "رضایی",
+        email: "niloofar.r@example.ir",
+        phone: "+989122223344",
+        nationalId: "0064523456",
+        companyName: "آرا دیزاین",
+    },
+    {
+        id: 4,
+        firstName: "Mahdi",
+        lastName: "Akbari",
+        email: "mahdi.akbari@example.com",
+        phone: "+989125556677",
+        nationalId: null,
+        companyName: null,
+    },
+    {
+        id: 5,
+        firstName: "زهرا",
+        lastName: "حسینی",
+        email: "zahra.h@example.ir",
+        phone: "+989128887766",
+        nationalId: "0071234567",
+        companyName: null,
+    },
+    {
+        id: 6,
+        firstName: "علی",
+        lastName: "صادقی",
+        email: "ali.s@example.ir",
+        phone: "+989121119988",
+        nationalId: "0062345678",
+        companyName: "پاسارگاد تجارت",
+    },
+    {
+        id: 7,
+        firstName: "Yasamin",
+        lastName: "Tehrani",
+        email: "yasamin.t@example.com",
+        phone: "+989353332211",
+        nationalId: null,
+        companyName: null,
+    },
+    {
+        id: 8,
+        firstName: "حمید",
+        lastName: "نجفی",
+        email: "hamid.n@example.ir",
+        phone: "+989357776655",
+        nationalId: "0072345678",
+        companyName: null,
+    },
 ];
 
 export const customers: AdminCustomer[] = customerSeed.map((seed, index) => {
@@ -343,15 +524,27 @@ function buildOrderHistory(
     placedAt: string,
     actorName: string,
 ): { id: number; fromStatus: OrderStatus | null; toStatus: OrderStatus; occurredAt: string; changedBy: string; reason: null }[] {
-    const entries: { id: number; fromStatus: OrderStatus | null; toStatus: OrderStatus; occurredAt: string; changedBy: string; reason: null }[] = [
-        { id: 1, fromStatus: null, toStatus: "pending", occurredAt: placedAt, changedBy: actorName, reason: null },
-    ];
+    const entries: {
+        id: number;
+        fromStatus: OrderStatus | null;
+        toStatus: OrderStatus;
+        occurredAt: string;
+        changedBy: string;
+        reason: null;
+    }[] = [{ id: 1, fromStatus: null, toStatus: "pending", occurredAt: placedAt, changedBy: actorName, reason: null }];
     if (status !== "pending") {
         const second: OrderStatus = status === "failed" || status === "cancelled" ? status : "processing";
         entries.push({ id: 2, fromStatus: "pending", toStatus: second, occurredAt: placedAt, changedBy: "system", reason: null });
     }
     if (status === "completed") {
-        entries.push({ id: 3, fromStatus: "processing", toStatus: "completed", occurredAt: placedAt, changedBy: "admin", reason: null });
+        entries.push({
+            id: 3,
+            fromStatus: "processing",
+            toStatus: "completed",
+            occurredAt: placedAt,
+            changedBy: "admin",
+            reason: null,
+        });
     }
     return entries;
 }
@@ -392,11 +585,96 @@ export const refunds: AdminRefund[] = orders
 /* -------------------------------------------------------------------------- */
 
 export const coupons: AdminCoupon[] = [
-    { id: 1, code: "WELCOME10", discountType: "percent", amountMinor: null, amountPercent: 10, description: { fa: "تخفیف خوش‌آمدگویی ۱۰٪", en: "Welcome 10% discount" }, expiresAt: "2026-12-31T00:00:00Z", individualUse: true, excludeSaleItems: false, minimumAmount: 500_000_0, maximumAmount: null, usageLimitGlobal: 1000, usageLimitPerUser: 1, freeShipping: false, status: "active", usageCount: 124 },
-    { id: 2, code: "NOWRUZ", discountType: "fixed_cart", amountMinor: 500_000_0, amountPercent: null, description: { fa: "تخفیف نوروزی ثابت", en: "Nowruz fixed-cart discount" }, expiresAt: "2026-04-15T00:00:00Z", individualUse: false, excludeSaleItems: true, minimumAmount: 1_000_000_0, maximumAmount: null, usageLimitGlobal: null, usageLimitPerUser: 3, freeShipping: false, status: "disabled", usageCount: 412 },
-    { id: 3, code: "FREESHIP", discountType: "free_shipping", amountMinor: null, amountPercent: null, description: { fa: "ارسال رایگان برای سفارش‌های بالای ۵۰۰ هزار تومان", en: "Free shipping for orders above 500k Toman" }, expiresAt: null, individualUse: false, excludeSaleItems: false, minimumAmount: 5_000_000_0, maximumAmount: null, usageLimitGlobal: null, usageLimitPerUser: null, freeShipping: true, status: "active", usageCount: 286 },
-    { id: 4, code: "VIP25", discountType: "percent", amountMinor: null, amountPercent: 25, description: { fa: "تخفیف ویژه مشتریان وفادار", en: "Loyalty 25% off" }, expiresAt: "2026-08-30T00:00:00Z", individualUse: true, excludeSaleItems: true, minimumAmount: 3_000_000_0, maximumAmount: 50_000_000_0, usageLimitGlobal: 200, usageLimitPerUser: 1, freeShipping: false, status: "active", usageCount: 38 },
-    { id: 5, code: "FIRSTBUY", discountType: "fixed_product", amountMinor: 200_000_0, amountPercent: null, description: { fa: "اولین خرید مشتریان جدید", en: "First-purchase discount" }, expiresAt: null, individualUse: false, excludeSaleItems: false, minimumAmount: null, maximumAmount: null, usageLimitGlobal: null, usageLimitPerUser: 1, freeShipping: false, status: "active", usageCount: 92 },
+    {
+        id: 1,
+        code: "WELCOME10",
+        discountType: "percent",
+        amountMinor: null,
+        amountPercent: 10,
+        description: { fa: "تخفیف خوش‌آمدگویی ۱۰٪", en: "Welcome 10% discount" },
+        expiresAt: "2026-12-31T00:00:00Z",
+        individualUse: true,
+        excludeSaleItems: false,
+        minimumAmount: 500_000_0,
+        maximumAmount: null,
+        usageLimitGlobal: 1000,
+        usageLimitPerUser: 1,
+        freeShipping: false,
+        status: "active",
+        usageCount: 124,
+    },
+    {
+        id: 2,
+        code: "NOWRUZ",
+        discountType: "fixed_cart",
+        amountMinor: 500_000_0,
+        amountPercent: null,
+        description: { fa: "تخفیف نوروزی ثابت", en: "Nowruz fixed-cart discount" },
+        expiresAt: "2026-04-15T00:00:00Z",
+        individualUse: false,
+        excludeSaleItems: true,
+        minimumAmount: 1_000_000_0,
+        maximumAmount: null,
+        usageLimitGlobal: null,
+        usageLimitPerUser: 3,
+        freeShipping: false,
+        status: "disabled",
+        usageCount: 412,
+    },
+    {
+        id: 3,
+        code: "FREESHIP",
+        discountType: "free_shipping",
+        amountMinor: null,
+        amountPercent: null,
+        description: { fa: "ارسال رایگان برای سفارش‌های بالای ۵۰۰ هزار تومان", en: "Free shipping for orders above 500k Toman" },
+        expiresAt: null,
+        individualUse: false,
+        excludeSaleItems: false,
+        minimumAmount: 5_000_000_0,
+        maximumAmount: null,
+        usageLimitGlobal: null,
+        usageLimitPerUser: null,
+        freeShipping: true,
+        status: "active",
+        usageCount: 286,
+    },
+    {
+        id: 4,
+        code: "VIP25",
+        discountType: "percent",
+        amountMinor: null,
+        amountPercent: 25,
+        description: { fa: "تخفیف ویژه مشتریان وفادار", en: "Loyalty 25% off" },
+        expiresAt: "2026-08-30T00:00:00Z",
+        individualUse: true,
+        excludeSaleItems: true,
+        minimumAmount: 3_000_000_0,
+        maximumAmount: 50_000_000_0,
+        usageLimitGlobal: 200,
+        usageLimitPerUser: 1,
+        freeShipping: false,
+        status: "active",
+        usageCount: 38,
+    },
+    {
+        id: 5,
+        code: "FIRSTBUY",
+        discountType: "fixed_product",
+        amountMinor: 200_000_0,
+        amountPercent: null,
+        description: { fa: "اولین خرید مشتریان جدید", en: "First-purchase discount" },
+        expiresAt: null,
+        individualUse: false,
+        excludeSaleItems: false,
+        minimumAmount: null,
+        maximumAmount: null,
+        usageLimitGlobal: null,
+        usageLimitPerUser: 1,
+        freeShipping: false,
+        status: "active",
+        usageCount: 92,
+    },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -430,19 +708,73 @@ export const shippingZones: AdminShippingZone[] = [
 ];
 
 export const shippingMethods: AdminShippingMethod[] = [
-    { id: 1, code: "flat_rate", titleDefault: { fa: "نرخ ثابت", en: "Flat rate" }, descriptionDefault: { fa: "ارسال با هزینه ثابت در هر زون.", en: "Fixed-cost shipping per zone." } },
-    { id: 2, code: "free_shipping", titleDefault: { fa: "ارسال رایگان", en: "Free shipping" }, descriptionDefault: { fa: "بدون هزینه ارسال.", en: "Zero cost shipping." } },
-    { id: 3, code: "local_pickup", titleDefault: { fa: "تحویل حضوری", en: "Local pickup" }, descriptionDefault: { fa: "مشتری شخصاً سفارش را تحویل می‌گیرد.", en: "Customer picks up in-store." } },
-    { id: 4, code: "post_pishtaz", titleDefault: { fa: "پست پیشتاز", en: "Post Pishtaz" }, descriptionDefault: { fa: "ارسال با پست پیشتاز شرکت پست.", en: "Domestic priority post." } },
-    { id: 5, code: "post_sefareshi", titleDefault: { fa: "پست سفارشی", en: "Post Sefareshi" }, descriptionDefault: { fa: "ارسال اقتصادی با پست سفارشی.", en: "Standard domestic mail." } },
-    { id: 6, code: "tipax", titleDefault: { fa: "تیپاکس", en: "Tipax" }, descriptionDefault: { fa: "ارسال با شرکت تیپاکس.", en: "Tipax courier." } },
+    {
+        id: 1,
+        code: "flat_rate",
+        titleDefault: { fa: "نرخ ثابت", en: "Flat rate" },
+        descriptionDefault: { fa: "ارسال با هزینه ثابت در هر زون.", en: "Fixed-cost shipping per zone." },
+    },
+    {
+        id: 2,
+        code: "free_shipping",
+        titleDefault: { fa: "ارسال رایگان", en: "Free shipping" },
+        descriptionDefault: { fa: "بدون هزینه ارسال.", en: "Zero cost shipping." },
+    },
+    {
+        id: 3,
+        code: "local_pickup",
+        titleDefault: { fa: "تحویل حضوری", en: "Local pickup" },
+        descriptionDefault: { fa: "مشتری شخصاً سفارش را تحویل می‌گیرد.", en: "Customer picks up in-store." },
+    },
+    {
+        id: 4,
+        code: "post_pishtaz",
+        titleDefault: { fa: "پست پیشتاز", en: "Post Pishtaz" },
+        descriptionDefault: { fa: "ارسال با پست پیشتاز شرکت پست.", en: "Domestic priority post." },
+    },
+    {
+        id: 5,
+        code: "post_sefareshi",
+        titleDefault: { fa: "پست سفارشی", en: "Post Sefareshi" },
+        descriptionDefault: { fa: "ارسال اقتصادی با پست سفارشی.", en: "Standard domestic mail." },
+    },
+    {
+        id: 6,
+        code: "tipax",
+        titleDefault: { fa: "تیپاکس", en: "Tipax" },
+        descriptionDefault: { fa: "ارسال با شرکت تیپاکس.", en: "Tipax courier." },
+    },
 ];
 
 export const shippingZoneMethods: AdminShippingZoneMethod[] = [
-    { id: 1, zoneId: 1, methodCode: "post_pishtaz", title: { fa: "پست پیشتاز", en: "Post Pishtaz" }, cost: 500_000, enabled: true, ordering: 0 },
+    {
+        id: 1,
+        zoneId: 1,
+        methodCode: "post_pishtaz",
+        title: { fa: "پست پیشتاز", en: "Post Pishtaz" },
+        cost: 500_000,
+        enabled: true,
+        ordering: 0,
+    },
     { id: 2, zoneId: 1, methodCode: "tipax", title: { fa: "تیپاکس", en: "Tipax" }, cost: 800_000, enabled: true, ordering: 1 },
-    { id: 3, zoneId: 1, methodCode: "free_shipping", title: { fa: "ارسال رایگان (بالای ۵۰۰ هزار تومان)", en: "Free shipping (over 500k Toman)" }, cost: 0, enabled: true, ordering: 2 },
-    { id: 4, zoneId: 2, methodCode: "flat_rate", title: { fa: "ارسال بین‌المللی نرخ ثابت", en: "International flat rate" }, cost: 5_000_000, enabled: false, ordering: 0 },
+    {
+        id: 3,
+        zoneId: 1,
+        methodCode: "free_shipping",
+        title: { fa: "ارسال رایگان (بالای ۵۰۰ هزار تومان)", en: "Free shipping (over 500k Toman)" },
+        cost: 0,
+        enabled: true,
+        ordering: 2,
+    },
+    {
+        id: 4,
+        zoneId: 2,
+        methodCode: "flat_rate",
+        title: { fa: "ارسال بین‌المللی نرخ ثابت", en: "International flat rate" },
+        cost: 5_000_000,
+        enabled: false,
+        ordering: 0,
+    },
 ];
 
 export const paymentGateways: AdminPaymentGateway[] = [
@@ -451,7 +783,10 @@ export const paymentGateways: AdminPaymentGateway[] = [
         code: "zarinpal",
         title: { fa: "زرین‌پال", en: "ZarinPal" },
         description: { fa: "پرداخت آنلاین از طریق درگاه زرین‌پال.", en: "Online payment via ZarinPal." },
-        customerInstructions: { fa: "پس از کلیک روی ثبت سفارش به درگاه زرین‌پال هدایت می‌شوید.", en: "You will be redirected to ZarinPal after placing the order." },
+        customerInstructions: {
+            fa: "پس از کلیک روی ثبت سفارش به درگاه زرین‌پال هدایت می‌شوید.",
+            en: "You will be redirected to ZarinPal after placing the order.",
+        },
         enabled: true,
         ordering: 0,
         supportsRefunds: true,
@@ -462,7 +797,10 @@ export const paymentGateways: AdminPaymentGateway[] = [
         code: "idpay",
         title: { fa: "آیدی‌پی", en: "IDPay" },
         description: { fa: "درگاه پرداخت آیدی‌پی.", en: "IDPay gateway." },
-        customerInstructions: { fa: "پس از ثبت سفارش به آیدی‌پی منتقل می‌شوید.", en: "Redirected to IDPay after order submission." },
+        customerInstructions: {
+            fa: "پس از ثبت سفارش به آیدی‌پی منتقل می‌شوید.",
+            en: "Redirected to IDPay after order submission.",
+        },
         enabled: false,
         ordering: 1,
         supportsRefunds: false,
@@ -473,7 +811,10 @@ export const paymentGateways: AdminPaymentGateway[] = [
         code: "nextpay",
         title: { fa: "نکست‌پی", en: "NextPay" },
         description: { fa: "درگاه نکست‌پی.", en: "NextPay gateway." },
-        customerInstructions: { fa: "پس از ثبت سفارش به نکست‌پی منتقل می‌شوید.", en: "Redirected to NextPay after order submission." },
+        customerInstructions: {
+            fa: "پس از ثبت سفارش به نکست‌پی منتقل می‌شوید.",
+            en: "Redirected to NextPay after order submission.",
+        },
         enabled: false,
         ordering: 2,
         supportsRefunds: false,
@@ -484,7 +825,10 @@ export const paymentGateways: AdminPaymentGateway[] = [
         code: "payir",
         title: { fa: "پی.آی‌آر", en: "Pay.ir" },
         description: { fa: "درگاه پرداخت پی.آی‌آر.", en: "Pay.ir gateway." },
-        customerInstructions: { fa: "پس از ثبت سفارش به پی.آی‌آر منتقل می‌شوید.", en: "Redirected to Pay.ir after order submission." },
+        customerInstructions: {
+            fa: "پس از ثبت سفارش به پی.آی‌آر منتقل می‌شوید.",
+            en: "Redirected to Pay.ir after order submission.",
+        },
         enabled: false,
         ordering: 3,
         supportsRefunds: false,
@@ -517,7 +861,10 @@ export const paymentGateways: AdminPaymentGateway[] = [
         code: "bank_transfer",
         title: { fa: "کارت‌به‌کارت", en: "Bank transfer" },
         description: { fa: "پرداخت از طریق کارت‌به‌کارت یا واریز به حساب.", en: "Pay by direct bank transfer." },
-        customerInstructions: { fa: "پس از ثبت سفارش شماره کارت / IBAN به ایمیل ارسال می‌شود.", en: "Card / IBAN details emailed after submission." },
+        customerInstructions: {
+            fa: "پس از ثبت سفارش شماره کارت / IBAN به ایمیل ارسال می‌شود.",
+            en: "Card / IBAN details emailed after submission.",
+        },
         enabled: true,
         ordering: 6,
         supportsRefunds: false,
@@ -581,7 +928,10 @@ export const settingsGroups: AdminSettingsGroup[] = [
             {
                 key: "low_stock_threshold",
                 label: { fa: "آستانه موجودی کم", en: "Low-stock threshold" },
-                description: { fa: "موجودی کمتر از این مقدار، در داشبورد به‌عنوان «موجودی کم» علامت‌گذاری می‌شود.", en: "Below this, items are flagged on the dashboard." },
+                description: {
+                    fa: "موجودی کمتر از این مقدار، در داشبورد به‌عنوان «موجودی کم» علامت‌گذاری می‌شود.",
+                    en: "Below this, items are flagged on the dashboard.",
+                },
                 type: "number",
                 value: 3,
             },
@@ -609,7 +959,10 @@ export const settingsGroups: AdminSettingsGroup[] = [
             {
                 key: "tax_display_shop",
                 label: { fa: "نمایش قیمت در فروشگاه", en: "Shop price display" },
-                description: { fa: "قیمت‌های صفحه محصول با یا بدون مالیات نمایش داده شوند.", en: "Show shop prices including or excluding tax." },
+                description: {
+                    fa: "قیمت‌های صفحه محصول با یا بدون مالیات نمایش داده شوند.",
+                    en: "Show shop prices including or excluding tax.",
+                },
                 type: "select",
                 value: "incl",
                 options: [
@@ -627,14 +980,20 @@ export const settingsGroups: AdminSettingsGroup[] = [
             {
                 key: "hold_stock_minutes",
                 label: { fa: "زمان رزرو موجودی (دقیقه)", en: "Stock reservation (minutes)" },
-                description: { fa: "حداکثر زمان نگه‌داری موجودی برای سفارش‌های در انتظار پرداخت.", en: "Maximum hold time for pending-payment orders." },
+                description: {
+                    fa: "حداکثر زمان نگه‌داری موجودی برای سفارش‌های در انتظار پرداخت.",
+                    en: "Maximum hold time for pending-payment orders.",
+                },
                 type: "number",
                 value: 60,
             },
             {
                 key: "calculate_per_address",
                 label: { fa: "محاسبه بر اساس آدرس مشتری", en: "Calculate per shipping address" },
-                description: { fa: "هزینه ارسال بر اساس آدرس واردشده محاسبه می‌شود.", en: "Compute shipping based on the entered destination." },
+                description: {
+                    fa: "هزینه ارسال بر اساس آدرس واردشده محاسبه می‌شود.",
+                    en: "Compute shipping based on the entered destination.",
+                },
                 type: "switch",
                 value: true,
             },
@@ -676,14 +1035,20 @@ export const settingsGroups: AdminSettingsGroup[] = [
             {
                 key: "sender_address",
                 label: { fa: "آدرس فرستنده", en: "Sender address" },
-                description: { fa: "آدرس از ایمیلی که برای ارسال استفاده می‌شود.", en: "Address used as the from-header on outbound mail." },
+                description: {
+                    fa: "آدرس از ایمیلی که برای ارسال استفاده می‌شود.",
+                    en: "Address used as the from-header on outbound mail.",
+                },
                 type: "text",
                 value: "no-reply@calibra.example",
             },
             {
                 key: "order_completed_email",
                 label: { fa: "ایمیل تکمیل سفارش", en: "Order-completed email" },
-                description: { fa: "ارسال ایمیل به مشتری در زمان تکمیل سفارش.", en: "Email the customer when an order completes." },
+                description: {
+                    fa: "ارسال ایمیل به مشتری در زمان تکمیل سفارش.",
+                    en: "Email the customer when an order completes.",
+                },
                 type: "switch",
                 value: true,
             },
@@ -704,7 +1069,10 @@ export const settingsGroups: AdminSettingsGroup[] = [
             {
                 key: "api_base_url",
                 label: { fa: "آدرس پایه API", en: "API base URL" },
-                description: { fa: "این آدرس را فقط در محیط‌های توسعه تغییر دهید.", en: "Change only in development environments." },
+                description: {
+                    fa: "این آدرس را فقط در محیط‌های توسعه تغییر دهید.",
+                    en: "Change only in development environments.",
+                },
                 type: "text",
                 value: "https://api.calibra.example",
             },
@@ -743,21 +1111,21 @@ export const dashboard = {
     pendingFulfilments: orders.filter((o) => o.status === "processing").length,
     newCustomersToday: 6,
     salesSeries: buildSalesSeries(14, 1_800_000).map(({ date, revenue, orders }) => ({ date, revenue, orders })),
-    ordersByStatus: (Object.entries(
-        orders.reduce<Record<string, number>>((acc, order) => {
-            acc[order.status] = (acc[order.status] ?? 0) + 1;
-            return acc;
-        }, {}),
-    ) as [OrderStatus, number][]).map(([status, count]) => ({ status, count })),
-    topProducts: products
-        .slice(0, 6)
-        .map((p, index) => ({
-            productId: p.id,
-            name: p.name,
-            sku: p.sku,
-            revenue: (p.salePrice ?? p.regularPrice) * (12 - index),
-            units: 12 - index,
-        })),
+    ordersByStatus: (
+        Object.entries(
+            orders.reduce<Record<string, number>>((acc, order) => {
+                acc[order.status] = (acc[order.status] ?? 0) + 1;
+                return acc;
+            }, {}),
+        ) as [OrderStatus, number][]
+    ).map(([status, count]) => ({ status, count })),
+    topProducts: products.slice(0, 6).map((p, index) => ({
+        productId: p.id,
+        name: p.name,
+        sku: p.sku,
+        revenue: (p.salePrice ?? p.regularPrice) * (12 - index),
+        units: 12 - index,
+    })),
     recentOrders: orders.slice(0, 5),
 };
 

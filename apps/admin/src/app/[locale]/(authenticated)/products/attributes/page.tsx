@@ -46,13 +46,22 @@ export default async function AttributesPage({ params }: PageProps) {
             <DataTable<AdminAttribute>
                 columns={[
                     { id: "name", header: cols.name, cell: (row) => <span className="font-medium">{row.name[locale]}</span> },
-                    { id: "code", header: cols.code, cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.code}</span> },
-                    { id: "terms", header: cols.termCount, cell: (row) => formatNumber(row.termCount, locale), className: "text-end" },
+                    {
+                        id: "code",
+                        header: cols.code,
+                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.code}</span>,
+                    },
+                    {
+                        id: "terms",
+                        header: cols.termCount,
+                        cell: (row) => formatNumber(row.termCount, locale),
+                        className: "text-end",
+                    },
                     { id: "orderBy", header: cols.orderBy, cell: (row) => orderByT[row.orderBy] },
                     {
                         id: "archives",
                         header: cols.hasArchives,
-                        cell: (row) => row.hasArchives ? commonT("yes") : commonT("no"),
+                        cell: (row) => (row.hasArchives ? commonT("yes") : commonT("no")),
                     },
                     {
                         id: "actions",

@@ -73,7 +73,9 @@ export default async function ReviewsPage({ params }: PageProps) {
                                     <Star
                                         // biome-ignore lint/suspicious/noArrayIndexKey: rating stars rendered in fixed order
                                         key={index}
-                                        className={index < row.rating ? "size-3.5 fill-current" : "size-3.5 stroke-current opacity-25"}
+                                        className={
+                                            index < row.rating ? "size-3.5 fill-current" : "size-3.5 stroke-current opacity-25"
+                                        }
                                         aria-hidden="true"
                                     />
                                 ))}
@@ -83,7 +85,9 @@ export default async function ReviewsPage({ params }: PageProps) {
                     {
                         id: "body",
                         header: cols.body,
-                        cell: (row) => <span className="line-clamp-2 max-w-[28rem] text-muted-foreground text-sm">{row.body}</span>,
+                        cell: (row) => (
+                            <span className="line-clamp-2 max-w-[28rem] text-muted-foreground text-sm">{row.body}</span>
+                        ),
                     },
                     {
                         id: "status",

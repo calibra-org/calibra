@@ -63,11 +63,7 @@ export default async function DashboardPage({ params }: PageProps) {
                     delta={{ percent: stats.activeProductsDeltaPercent, comparison }}
                     icon={Package}
                 />
-                <StatCard
-                    label={t("pendingFulfilments")}
-                    value={formatNumber(stats.pendingFulfilments, locale)}
-                    icon={Truck}
-                />
+                <StatCard label={t("pendingFulfilments")} value={formatNumber(stats.pendingFulfilments, locale)} icon={Truck} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -162,9 +158,7 @@ export default async function DashboardPage({ params }: PageProps) {
                                         >
                                             {product.name[locale]}
                                         </Link>
-                                        <span className="font-medium tabular-nums">
-                                            {formatMoney(product.revenue, locale)}
-                                        </span>
+                                        <span className="font-medium tabular-nums">{formatMoney(product.revenue, locale)}</span>
                                     </div>
                                     <Progress value={percent} />
                                     <div className="flex items-center justify-between text-muted-foreground text-xs">

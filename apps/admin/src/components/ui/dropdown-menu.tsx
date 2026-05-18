@@ -28,7 +28,7 @@ function DropdownMenuContent({ className, sideOffset = 6, align = "end", childre
                     data-slot="dropdown-menu-content"
                     className={cn(
                         "min-w-44 origin-[var(--transform-origin)] rounded-md border border-border bg-popover p-1 text-popover-foreground text-sm shadow-md outline-none",
-                        "data-[starting-style]:scale-95 data-[starting-style]:opacity-0 data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
+                        "data-[ending-style]:scale-95 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
                         "transition-[opacity,transform] duration-150",
                         className,
                     )}
@@ -67,7 +67,7 @@ function DropdownMenuLabel({ className, ...props }: React.ComponentProps<typeof 
 }
 
 function DropdownMenuSeparator({ className }: { className?: string }) {
-    return <div role="separator" className={cn("my-1 h-px bg-border", className)} />;
+    return <hr className={cn("my-1 h-px border-0 bg-border", className)} />;
 }
 
 function DropdownMenuGroup(props: React.ComponentProps<typeof Menu.Group>) {

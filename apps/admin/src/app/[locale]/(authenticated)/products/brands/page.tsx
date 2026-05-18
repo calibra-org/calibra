@@ -54,8 +54,17 @@ export default async function BrandsPage({ params }: PageProps) {
                             </div>
                         ),
                     },
-                    { id: "slug", header: cols.slug, cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug[locale]}</span> },
-                    { id: "products", header: cols.productCount, cell: (row) => formatNumber(row.productCount, locale), className: "text-end" },
+                    {
+                        id: "slug",
+                        header: cols.slug,
+                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug[locale]}</span>,
+                    },
+                    {
+                        id: "products",
+                        header: cols.productCount,
+                        cell: (row) => formatNumber(row.productCount, locale),
+                        className: "text-end",
+                    },
                 ]}
                 rows={data}
                 getRowKey={(row) => row.id}

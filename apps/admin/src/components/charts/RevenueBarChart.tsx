@@ -18,7 +18,12 @@ export function RevenueBarChart({ data, height = 280, asMoney = true }: RevenueB
         <ResponsiveContainer width="100%" height={height}>
             <BarChart data={data} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                <XAxis
+                    dataKey="label"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                />
                 <YAxis
                     tickFormatter={(value: number) =>
                         asMoney ? formatMoney(value, locale, { withSymbol: false }) : formatNumber(value, locale)

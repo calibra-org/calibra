@@ -108,7 +108,9 @@ export async function getProduct(id: number): Promise<AdminProduct | null> {
 }
 
 export async function listCategories(params: ListParams = {}): Promise<Paginated<AdminCategory>> {
-    const filtered = categories.filter((category) => matchesText([category.name.fa, category.name.en, category.slug.fa, category.slug.en], params.search));
+    const filtered = categories.filter((category) =>
+        matchesText([category.name.fa, category.name.en, category.slug.fa, category.slug.en], params.search),
+    );
     return paginate(filtered, params);
 }
 
@@ -118,7 +120,9 @@ export async function listTags(params: ListParams = {}): Promise<Paginated<Admin
 }
 
 export async function listBrands(params: ListParams = {}): Promise<Paginated<AdminBrand>> {
-    const filtered = brands.filter((brand) => matchesText([brand.name.fa, brand.name.en, brand.slug.fa, brand.slug.en], params.search));
+    const filtered = brands.filter((brand) =>
+        matchesText([brand.name.fa, brand.name.en, brand.slug.fa, brand.slug.en], params.search),
+    );
     return paginate(filtered, params);
 }
 
@@ -153,7 +157,10 @@ export async function listReviews(params: ReviewListParams = {}): Promise<Pagina
 
 export async function listCustomers(params: ListParams = {}): Promise<Paginated<AdminCustomer>> {
     const filtered = customers.filter((customer) =>
-        matchesText([customer.firstName, customer.lastName, customer.email, customer.phone, customer.companyName ?? ""], params.search),
+        matchesText(
+            [customer.firstName, customer.lastName, customer.email, customer.phone, customer.companyName ?? ""],
+            params.search,
+        ),
     );
     return paginate(filtered, params);
 }

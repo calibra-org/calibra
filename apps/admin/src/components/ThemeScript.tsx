@@ -19,5 +19,6 @@ export function ThemeScript() {
         document.documentElement.style.colorScheme = theme;
     } catch (_) {}
 })();`;
+    // biome-ignore lint/security/noDangerouslySetInnerHtml: inline boot script is the documented Next.js FOUC-mitigation pattern for dark mode; content is a string literal compiled into the module (no user input flows in).
     return <script dangerouslySetInnerHTML={{ __html: script }} />;
 }

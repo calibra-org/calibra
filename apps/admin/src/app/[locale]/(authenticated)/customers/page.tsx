@@ -57,9 +57,18 @@ export default async function CustomersPage({ params }: PageProps) {
                             );
                         },
                     },
-                    { id: "email", header: cols.email, cell: (row) => <span className="text-muted-foreground text-sm">{row.email}</span> },
+                    {
+                        id: "email",
+                        header: cols.email,
+                        cell: (row) => <span className="text-muted-foreground text-sm">{row.email}</span>,
+                    },
                     { id: "phone", header: cols.phone, cell: (row) => <span className="font-mono text-xs">{row.phone}</span> },
-                    { id: "orders", header: cols.orders, cell: (row) => formatNumber(row.ordersCount, locale), className: "text-end" },
+                    {
+                        id: "orders",
+                        header: cols.orders,
+                        cell: (row) => formatNumber(row.ordersCount, locale),
+                        className: "text-end",
+                    },
                     {
                         id: "spent",
                         header: cols.spent,
@@ -69,7 +78,11 @@ export default async function CustomersPage({ params }: PageProps) {
                     {
                         id: "lastOrder",
                         header: cols.lastOrder,
-                        cell: (row) => <span className="text-muted-foreground text-xs">{row.lastOrderAt === null ? "—" : formatDate(row.lastOrderAt, locale)}</span>,
+                        cell: (row) => (
+                            <span className="text-muted-foreground text-xs">
+                                {row.lastOrderAt === null ? "—" : formatDate(row.lastOrderAt, locale)}
+                            </span>
+                        ),
                     },
                 ]}
                 rows={data}

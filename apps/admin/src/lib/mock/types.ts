@@ -96,15 +96,7 @@ export interface AdminReview {
     createdAt: string;
 }
 
-export type OrderStatus =
-    | "draft"
-    | "pending"
-    | "on_hold"
-    | "processing"
-    | "completed"
-    | "cancelled"
-    | "refunded"
-    | "failed";
+export type OrderStatus = "draft" | "pending" | "on_hold" | "processing" | "completed" | "cancelled" | "refunded" | "failed";
 
 export interface AdminOrderAddress {
     firstName: string;
@@ -321,14 +313,7 @@ export interface AdminShippingZoneMethod {
     ordering: number;
 }
 
-export type PaymentGatewayCode =
-    | "zarinpal"
-    | "idpay"
-    | "nextpay"
-    | "payir"
-    | "zibal"
-    | "cod"
-    | "bank_transfer";
+export type PaymentGatewayCode = "zarinpal" | "idpay" | "nextpay" | "payir" | "zibal" | "cod" | "bank_transfer";
 
 export interface AdminPaymentGateway {
     id: number;
@@ -342,14 +327,7 @@ export interface AdminPaymentGateway {
     settings: Record<string, string>;
 }
 
-export type SettingsGroupKey =
-    | "general"
-    | "products"
-    | "tax"
-    | "shipping"
-    | "account"
-    | "email"
-    | "advanced";
+export type SettingsGroupKey = "general" | "products" | "tax" | "shipping" | "account" | "email" | "advanced";
 
 export interface AdminSettingField {
     key: string;

@@ -76,7 +76,9 @@ export default async function OrdersPage({ params }: PageProps) {
                     {
                         id: "placedAt",
                         header: cols.placedAt,
-                        cell: (row) => <span className="text-muted-foreground text-xs">{formatDateTime(row.createdAt, locale)}</span>,
+                        cell: (row) => (
+                            <span className="text-muted-foreground text-xs">{formatDateTime(row.createdAt, locale)}</span>
+                        ),
                     },
                 ]}
                 rows={data}

@@ -40,9 +40,21 @@ export default async function ShippingMethodsPage({ params }: PageProps) {
 
             <DataTable<AdminShippingMethod>
                 columns={[
-                    { id: "title", header: cols.title, cell: (row) => <span className="font-medium">{row.titleDefault[locale]}</span> },
-                    { id: "code", header: cols.code, cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.code}</span> },
-                    { id: "description", header: cols.description, cell: (row) => <span className="text-muted-foreground text-sm">{row.descriptionDefault[locale]}</span> },
+                    {
+                        id: "title",
+                        header: cols.title,
+                        cell: (row) => <span className="font-medium">{row.titleDefault[locale]}</span>,
+                    },
+                    {
+                        id: "code",
+                        header: cols.code,
+                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.code}</span>,
+                    },
+                    {
+                        id: "description",
+                        header: cols.description,
+                        cell: (row) => <span className="text-muted-foreground text-sm">{row.descriptionDefault[locale]}</span>,
+                    },
                 ]}
                 rows={rows}
                 getRowKey={(row) => row.id}

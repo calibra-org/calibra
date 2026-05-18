@@ -15,7 +15,12 @@ function TooltipTrigger(props: React.ComponentProps<typeof BaseTooltip.Trigger>)
     return <BaseTooltip.Trigger {...props} />;
 }
 
-function TooltipContent({ className, sideOffset = 6, children, ...props }: React.ComponentProps<typeof BaseTooltip.Popup> & { sideOffset?: number }) {
+function TooltipContent({
+    className,
+    sideOffset = 6,
+    children,
+    ...props
+}: React.ComponentProps<typeof BaseTooltip.Popup> & { sideOffset?: number }) {
     return (
         <BaseTooltip.Portal>
             <BaseTooltip.Positioner sideOffset={sideOffset}>
@@ -23,7 +28,7 @@ function TooltipContent({ className, sideOffset = 6, children, ...props }: React
                     data-slot="tooltip-content"
                     className={cn(
                         "z-50 rounded-md bg-foreground px-2 py-1 text-background text-xs shadow-md",
-                        "data-[starting-style]:scale-95 data-[starting-style]:opacity-0 data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
+                        "data-[ending-style]:scale-95 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
                         "transition-[opacity,transform] duration-100",
                         className,
                     )}

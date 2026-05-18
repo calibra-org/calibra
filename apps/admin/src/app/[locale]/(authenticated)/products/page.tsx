@@ -71,11 +71,10 @@ export default async function ProductsPage({ params }: PageProps) {
                         cell: (row) => (
                             <Link href={`/products/${row.id}` as never} className="flex items-center gap-3 hover:underline">
                                 {row.imageUrl !== null ? (
-                                    /** biome-ignore lint/performance/noImgElement: mock CDN avoids `next/image` remote-patterns config */
-                                    // biome-ignore lint/a11y/useAltText: alt is the product name, set on the wrapping link
+                                    // biome-ignore lint/performance/noImgElement: mock CDN avoids `next/image` remote-patterns config
                                     <img
                                         src={row.imageUrl}
-                                        alt=""
+                                        alt={row.name[locale]}
                                         className="size-9 rounded-md object-cover"
                                         loading="lazy"
                                     />

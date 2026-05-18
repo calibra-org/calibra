@@ -43,8 +43,17 @@ export default async function TagsPage({ params }: PageProps) {
             <DataTable<AdminTag>
                 columns={[
                     { id: "name", header: cols.name, cell: (row) => <span className="font-medium">{row.name[locale]}</span> },
-                    { id: "slug", header: cols.slug, cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug[locale]}</span> },
-                    { id: "products", header: cols.productCount, cell: (row) => formatNumber(row.productCount, locale), className: "text-end" },
+                    {
+                        id: "slug",
+                        header: cols.slug,
+                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug[locale]}</span>,
+                    },
+                    {
+                        id: "products",
+                        header: cols.productCount,
+                        cell: (row) => formatNumber(row.productCount, locale),
+                        className: "text-end",
+                    },
                 ]}
                 rows={data}
                 getRowKey={(row) => row.id}
