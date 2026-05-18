@@ -15,11 +15,11 @@ await import("./routes/catalog.js");
 await import("./routes/auth.js");
 await import("./routes/account.js");
 await import("./routes/cart.js");
-/** await import("./routes/checkout.js");           phase 05 */
-/** await import("./routes/account_orders.js");     phase 05 */
+await import("./routes/checkout.js");
+await import("./routes/account_orders.js");
 await import("./routes/admin_catalog.js");
 await import("./routes/admin_customers.js");
-/** await import("./routes/admin_orders.js");       phase 05 */
+await import("./routes/admin_orders.js");
 /** await import("./routes/admin_coupons.js");      phase 06 */
 /** await import("./routes/admin_refunds.js");      phase 07 */
 /** await import("./routes/admin_notes.js");        phase 07 */
