@@ -1,6 +1,6 @@
 import { defineConfig } from "@adonisjs/auth";
 import { tokensGuard, tokensUserProvider } from "@adonisjs/auth/access_tokens";
-import type { InferAuthenticators, InferAuthEvents, Authenticators } from "@adonisjs/auth/types";
+import type { Authenticators, InferAuthEvents, InferAuthenticators } from "@adonisjs/auth/types";
 
 /**
  * Auth configuration. A single `api` guard backed by opaque `access_tokens` covers both the

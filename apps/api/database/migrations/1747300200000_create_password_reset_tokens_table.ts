@@ -6,13 +6,7 @@ export default class extends BaseSchema {
     async up() {
         this.schema.createTable(this.tableName, (table) => {
             table.bigIncrements("id").notNullable();
-            table
-                .bigInteger("user_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("CASCADE");
+            table.bigInteger("user_id").unsigned().notNullable().references("id").inTable("users").onDelete("CASCADE");
             /**
              * Store the SHA-256 hex digest of the issued token, never the plaintext. Verification
              * recomputes the digest from the submitted token before lookup so a database leak does

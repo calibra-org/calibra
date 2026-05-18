@@ -19,9 +19,7 @@ test.group("POST /api/v1/auth/login", (group) => {
         });
         await Customer.create({ userId: user.id, firstName: "X", lastName: "Y", countryDefault: "IR" });
 
-        const response = await client
-            .post("/api/v1/auth/login")
-            .json({ email: "login@calibra.dev", password: "Passw0rd1!" });
+        const response = await client.post("/api/v1/auth/login").json({ email: "login@calibra.dev", password: "Passw0rd1!" });
 
         response.assertStatus(200);
         response.assertBodyContains({ user: { email: "login@calibra.dev" }, token: { type: "bearer" } });
@@ -36,16 +34,12 @@ test.group("POST /api/v1/auth/login", (group) => {
             role: "customer",
             locale: "fa",
         });
-        const response = await client
-            .post("/api/v1/auth/login")
-            .json({ email: "wrongpw@calibra.dev", password: "BadPassw0rd!" });
+        const response = await client.post("/api/v1/auth/login").json({ email: "wrongpw@calibra.dev", password: "BadPassw0rd!" });
         response.assertStatus(400);
     });
 
     test("rejects an unknown email", async ({ client }) => {
-        const response = await client
-            .post("/api/v1/auth/login")
-            .json({ email: "ghost@calibra.dev", password: "Passw0rd1!" });
+        const response = await client.post("/api/v1/auth/login").json({ email: "ghost@calibra.dev", password: "Passw0rd1!" });
         response.assertStatus(400);
     });
 
@@ -57,9 +51,7 @@ test.group("POST /api/v1/auth/login", (group) => {
             locale: "fa",
             deletedAt: DateTime.utc(),
         });
-        const response = await client
-            .post("/api/v1/auth/login")
-            .json({ email: "deleted@calibra.dev", password: "Passw0rd1!" });
+        const response = await client.post("/api/v1/auth/login").json({ email: "deleted@calibra.dev", password: "Passw0rd1!" });
         response.assertStatus(401);
     });
 });

@@ -6,13 +6,7 @@ export default class extends BaseSchema {
     async up() {
         this.schema.createTable(this.tableName, (table) => {
             table.bigIncrements("id").notNullable();
-            table
-                .bigInteger("customer_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("customers")
-                .onDelete("CASCADE");
+            table.bigInteger("customer_id").unsigned().notNullable().references("id").inTable("customers").onDelete("CASCADE");
             /**
              * `product_id`, `product_download_id`, and `order_id` are advisory bigints in this phase
              * — the referenced tables land in phase 02 / phase 05. Phase 05's migrations will add

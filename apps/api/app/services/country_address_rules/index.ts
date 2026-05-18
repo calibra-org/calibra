@@ -1,7 +1,6 @@
-import Region from "#models/region";
-
 import { defaultRules } from "./default.js";
 import { ir } from "./ir.js";
+import Region from "#models/region";
 
 export type AddressField =
     | "first_name"
@@ -46,10 +45,7 @@ export interface CountryAddressRules {
     postcodePattern: RegExp | null;
     requiresRegion: boolean;
     fieldMetadata: Record<string, FieldMetadata>;
-    validateRegion?(
-        regionId: number | bigint | string,
-        ctx: AddressValidationContext,
-    ): Promise<boolean>;
+    validateRegion?(regionId: number | bigint | string, ctx: AddressValidationContext): Promise<boolean>;
     extensionValidator?(
         extension: AddressExtensionPayload | null | undefined,
     ): Promise<{ ok: true } | { ok: false; field: string; reason: string }>;

@@ -27,10 +27,7 @@ test.group("GET /api/v1/account/me", (group) => {
         await truncatePhase03Tables();
     });
 
-    test("returns user, customer, and profile_extensions when iran profile is absent", async ({
-        client,
-        assert,
-    }) => {
+    test("returns user, customer, and profile_extensions when iran profile is absent", async ({ client, assert }) => {
         const { user } = await createCustomer("me@calibra.dev", "IR");
 
         const response = await client.get("/api/v1/account/me").withGuard("api").loginAs(user);
@@ -42,10 +39,7 @@ test.group("GET /api/v1/account/me", (group) => {
         assert.notProperty(body.customer.profile_extensions, "iran");
     });
 
-    test("returns the iran extension when a customer_iran_profiles row exists", async ({
-        client,
-        assert,
-    }) => {
+    test("returns the iran extension when a customer_iran_profiles row exists", async ({ client, assert }) => {
         const { user, customer } = await createCustomer("withiran@calibra.dev");
         await CustomerIranProfile.create({
             customerId: customer.id,
@@ -106,24 +100,13 @@ test.group("PUT /api/v1/account/me", (group) => {
 
     test("succeeds when the iran_extension is omitted entirely", async ({ client }) => {
         const { user } = await createCustomer("noiran@calibra.dev");
-        const response = await client
-            .put("/api/v1/account/me")
-            .withGuard("api")
-            .loginAs(user)
-            .json({ first_name: "X" });
+        const response = await client.put("/api/v1/account/me").withGuard("api").loginAs(user).json({ first_name: "X" });
         response.assertStatus(200);
     });
 
-    test("does not expose iran extension for a US-default customer that never set one", async ({
-        client,
-        assert,
-    }) => {
+    test("does not expose iran extension for a US-default customer that never set one", async ({ client, assert }) => {
         const { user } = await createCustomer("us@calibra.dev", "US");
-        const response = await client
-            .put("/api/v1/account/me")
-            .withGuard("api")
-            .loginAs(user)
-            .json({ first_name: "John" });
+        const response = await client.put("/api/v1/account/me").withGuard("api").loginAs(user).json({ first_name: "John" });
         response.assertStatus(200);
         assert.notProperty(response.body().customer.profile_extensions, "iran");
     });

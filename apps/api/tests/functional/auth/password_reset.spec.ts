@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-
 import { test } from "@japa/runner";
 import { DateTime } from "luxon";
 
@@ -26,10 +25,7 @@ test.group("POST /api/v1/auth/password/forgot + /reset", (group) => {
         known.assertStatus(200);
     });
 
-    test("reset with a valid token updates the password and revokes existing tokens", async ({
-        client,
-        assert,
-    }) => {
+    test("reset with a valid token updates the password and revokes existing tokens", async ({ client, assert }) => {
         const user = await User.create({
             email: "reset@calibra.dev",
             passwordHash: "OldPassw0rd!",
@@ -47,19 +43,13 @@ test.group("POST /api/v1/auth/password/forgot + /reset", (group) => {
             expiresAt: DateTime.utc().plus({ minutes: 60 }),
         });
 
-        const response = await client
-            .post("/api/v1/auth/password/reset")
-            .json({ token: plain, password: "NewPassw0rd1!" });
+        const response = await client.post("/api/v1/auth/password/reset").json({ token: plain, password: "NewPassw0rd1!" });
         response.assertStatus(200);
 
-        const login = await client
-            .post("/api/v1/auth/login")
-            .json({ email: "reset@calibra.dev", password: "NewPassw0rd1!" });
+        const login = await client.post("/api/v1/auth/login").json({ email: "reset@calibra.dev", password: "NewPassw0rd1!" });
         login.assertStatus(200);
 
-        const retry = await client
-            .post("/api/v1/auth/logout")
-            .header("Authorization", `Bearer ${oldBearer}`);
+        const retry = await client.post("/api/v1/auth/logout").header("Authorization", `Bearer ${oldBearer}`);
         retry.assertStatus(401);
 
         const row = await PasswordResetToken.findBy("token_hash", hash);
@@ -81,9 +71,7 @@ test.group("POST /api/v1/auth/password/forgot + /reset", (group) => {
             expiresAt: DateTime.utc().minus({ minutes: 1 }),
         });
 
-        const response = await client
-            .post("/api/v1/auth/password/reset")
-            .json({ token: plain, password: "Passw0rd2!" });
+        const response = await client.post("/api/v1/auth/password/reset").json({ token: plain, password: "Passw0rd2!" });
         response.assertStatus(422);
     });
 
@@ -103,9 +91,7 @@ test.group("POST /api/v1/auth/password/forgot + /reset", (group) => {
             usedAt: DateTime.utc(),
         });
 
-        const response = await client
-            .post("/api/v1/auth/password/reset")
-            .json({ token: plain, password: "Passw0rd2!" });
+        const response = await client.post("/api/v1/auth/password/reset").json({ token: plain, password: "Passw0rd2!" });
         response.assertStatus(422);
     });
 });

@@ -6,7 +6,13 @@ import vine from "@vinejs/vine";
  * persist it from a copy/paste mistake on the client.
  */
 const iranExtensionShape = vine.object({
-    national_id: vine.string().trim().fixedLength(10).regex(/^\d{10}$/).optional().nullable(),
+    national_id: vine
+        .string()
+        .trim()
+        .fixedLength(10)
+        .regex(/^\d{10}$/)
+        .optional()
+        .nullable(),
     corporate_national_id: vine
         .string()
         .trim()
@@ -14,7 +20,12 @@ const iranExtensionShape = vine.object({
         .regex(/^\d{11}$/)
         .optional()
         .nullable(),
-    economic_code: vine.string().trim().regex(/^\d{12}$/).optional().nullable(),
+    economic_code: vine
+        .string()
+        .trim()
+        .regex(/^\d{12}$/)
+        .optional()
+        .nullable(),
     legal_company_name_fa: vine.string().trim().maxLength(200).optional().nullable(),
     vat_taxpayer_status: vine.string().trim().maxLength(20).optional().nullable(),
 });

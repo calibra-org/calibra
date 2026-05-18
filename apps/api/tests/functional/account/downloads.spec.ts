@@ -71,10 +71,7 @@ test.group("GET /api/v1/account/downloads", (group) => {
             grantedAt: DateTime.utc(),
         });
 
-        const response = await client
-            .get(`/api/v1/account/downloads/${grant.id}/url`)
-            .withGuard("api")
-            .loginAs(user);
+        const response = await client.get(`/api/v1/account/downloads/${grant.id}/url`).withGuard("api").loginAs(user);
         response.assertStatus(200);
         const body = response.body();
         assert.match(body.data.url, /^https:\/\/downloads\.example\.invalid\/stub\//);

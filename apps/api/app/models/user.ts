@@ -1,5 +1,5 @@
-import { DbAccessTokensProvider } from "@adonisjs/auth/access_tokens";
 import type { AccessToken } from "@adonisjs/auth/access_tokens";
+import { DbAccessTokensProvider } from "@adonisjs/auth/access_tokens";
 import { withAuthFinder } from "@adonisjs/auth/mixins/lucid";
 import { compose } from "@adonisjs/core/helpers";
 import hash from "@adonisjs/core/services/hash";

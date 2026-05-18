@@ -1,12 +1,12 @@
 import { Exception } from "@adonisjs/core/exceptions";
 
 import {
-    defaultValidationContext,
-    rulesFor,
     type AddressExtensionPayload,
     type AddressField,
     type AddressValidationContext,
     type CountryAddressRules,
+    defaultValidationContext,
+    rulesFor,
 } from "#services/country_address_rules/index";
 
 export interface AddressInput {

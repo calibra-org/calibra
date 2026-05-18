@@ -3,7 +3,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
-import Customer from "#models/customer";
+import type Customer from "#models/customer";
 import CustomerIranProfile from "#models/customer_iran_profile";
 import nationalIdService from "#services/national_id_service";
 import phoneService from "#services/phone_service";
@@ -49,11 +49,12 @@ export default class MeController {
         await this.applyIranExtensionChecks(payload.iran_extension);
 
         const country = (payload.country_default ?? customer.countryDefault).toUpperCase();
-        const normalizedPhone = payload.phone === undefined
-            ? undefined
-            : payload.phone === null
-                ? null
-                : phoneService.normalize(payload.phone, country);
+        const normalizedPhone =
+            payload.phone === undefined
+                ? undefined
+                : payload.phone === null
+                  ? null
+                  : phoneService.normalize(payload.phone, country);
 
         await db.transaction(async (trx) => {
             if (payload.locale) {
@@ -99,13 +100,16 @@ export default class MeController {
     private async persistIranExtension(
         trx: TransactionClientContract,
         customer: Customer,
-        extension: ({
-            national_id?: string | null;
-            corporate_national_id?: string | null;
-            economic_code?: string | null;
-            legal_company_name_fa?: string | null;
-            vat_taxpayer_status?: string | null;
-        } | null | undefined),
+        extension:
+            | {
+                  national_id?: string | null;
+                  corporate_national_id?: string | null;
+                  economic_code?: string | null;
+                  legal_company_name_fa?: string | null;
+                  vat_taxpayer_status?: string | null;
+              }
+            | null
+            | undefined,
     ) {
         if (extension === undefined) return;
         const customerIdNum = Number(customer.id);

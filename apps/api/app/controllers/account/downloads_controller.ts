@@ -1,10 +1,9 @@
 import crypto from "node:crypto";
-
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import { DateTime } from "luxon";
 
-import Customer from "#models/customer";
+import type Customer from "#models/customer";
 import CustomerDownload from "#models/customer_download";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
 

@@ -11,13 +11,7 @@ export default class extends BaseSchema {
              * keeping the auth table free of PII. The `UNIQUE` clause guarantees the 1:1 link to
              * users when present without blocking multiple NULL guest rows.
              */
-            table
-                .bigInteger("user_id")
-                .unsigned()
-                .nullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("RESTRICT");
+            table.bigInteger("user_id").unsigned().nullable().references("id").inTable("users").onDelete("RESTRICT");
             table.string("first_name", 80).notNullable();
             table.string("last_name", 80).notNullable();
             table.string("phone", 32).nullable();

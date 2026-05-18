@@ -68,21 +68,17 @@ test.group("POST /api/v1/account/addresses", (group) => {
     test("creates a US address with region_text and no region_id", async ({ client, assert }) => {
         const { user } = await createCustomer("us-addr@calibra.dev");
 
-        const response = await client
-            .post("/api/v1/account/addresses")
-            .withGuard("api")
-            .loginAs(user)
-            .json({
-                kind: "billing",
-                first_name: "John",
-                last_name: "Doe",
-                address_line_1: "1 Market Street",
-                city: "San Francisco",
-                region_text: "California",
-                postcode: "94105",
-                country: "US",
-                phone: "+14155551212",
-            });
+        const response = await client.post("/api/v1/account/addresses").withGuard("api").loginAs(user).json({
+            kind: "billing",
+            first_name: "John",
+            last_name: "Doe",
+            address_line_1: "1 Market Street",
+            city: "San Francisco",
+            region_text: "California",
+            postcode: "94105",
+            country: "US",
+            phone: "+14155551212",
+        });
 
         response.assertStatus(201);
         const body = response.body();
@@ -94,26 +90,20 @@ test.group("POST /api/v1/account/addresses", (group) => {
 
     test("rejects an Iran address with no region_id with 422", async ({ client }) => {
         const { user } = await createCustomer("missing-region@calibra.dev");
-        const response = await client
-            .post("/api/v1/account/addresses")
-            .withGuard("api")
-            .loginAs(user)
-            .json({
-                kind: "billing",
-                first_name: "X",
-                last_name: "Y",
-                address_line_1: "...",
-                city: "تهران",
-                postcode: "1234567890",
-                country: "IR",
-                phone: "09121234567",
-            });
+        const response = await client.post("/api/v1/account/addresses").withGuard("api").loginAs(user).json({
+            kind: "billing",
+            first_name: "X",
+            last_name: "Y",
+            address_line_1: "...",
+            city: "تهران",
+            postcode: "1234567890",
+            country: "IR",
+            phone: "09121234567",
+        });
         response.assertStatus(422);
     });
 
-    test("rejects an Iran address with an invalid iran_extension national_id with 422", async ({
-        client,
-    }) => {
+    test("rejects an Iran address with an invalid iran_extension national_id with 422", async ({ client }) => {
         const { user } = await createCustomer("bad-nid@calibra.dev");
         const region = await seedTehranRegion();
         const response = await client
@@ -156,10 +146,7 @@ test.group("POST /api/v1/account/addresses", (group) => {
         response.assertStatus(201);
     });
 
-    test("setting is_default=true unsets sibling defaults of the same kind", async ({
-        client,
-        assert,
-    }) => {
+    test("setting is_default=true unsets sibling defaults of the same kind", async ({ client, assert }) => {
         const { user } = await createCustomer("default@calibra.dev");
         const region = await seedTehranRegion();
 
@@ -220,10 +207,7 @@ test.group("POST /api/v1/account/addresses", (group) => {
             });
         const id = created.body().data.id;
 
-        const response = await client
-            .delete(`/api/v1/account/addresses/${id}`)
-            .withGuard("api")
-            .loginAs(user);
+        const response = await client.delete(`/api/v1/account/addresses/${id}`).withGuard("api").loginAs(user);
         response.assertStatus(422);
     });
 

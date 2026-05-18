@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";

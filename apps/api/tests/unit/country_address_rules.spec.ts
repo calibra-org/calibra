@@ -1,8 +1,8 @@
 import { test } from "@japa/runner";
 
 import { defaultRules } from "#services/country_address_rules/default";
-import { ir } from "#services/country_address_rules/ir";
 import { rulesFor } from "#services/country_address_rules/index";
+import { ir } from "#services/country_address_rules/ir";
 
 test.group("country_address_rules.rulesFor", () => {
     test("returns the Iran ruleset for IR", ({ assert }) => {

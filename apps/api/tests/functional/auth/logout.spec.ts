@@ -21,14 +21,10 @@ test.group("POST /api/v1/auth/logout", (group) => {
         const token = await User.accessTokens.create(user);
         const bearer = token.value!.release();
 
-        const logout = await client
-            .post("/api/v1/auth/logout")
-            .header("Authorization", `Bearer ${bearer}`);
+        const logout = await client.post("/api/v1/auth/logout").header("Authorization", `Bearer ${bearer}`);
         logout.assertStatus(200);
 
-        const retry = await client
-            .post("/api/v1/auth/logout")
-            .header("Authorization", `Bearer ${bearer}`);
+        const retry = await client.post("/api/v1/auth/logout").header("Authorization", `Bearer ${bearer}`);
         retry.assertStatus(401);
         assert.equal(retry.status(), 401);
     });

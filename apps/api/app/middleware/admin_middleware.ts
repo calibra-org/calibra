@@ -1,6 +1,6 @@
+import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import type { NextFn } from "@adonisjs/core/types/http";
-import { Exception } from "@adonisjs/core/exceptions";
 
 /**
  * Gatekeeper for admin-only routes. Always mounted after `auth`, so `ctx.auth.user` is guaranteed

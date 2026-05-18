@@ -1,6 +1,5 @@
-import nationalIdService from "#services/national_id_service";
-
 import type { AddressExtensionPayload, AddressValidationContext, CountryAddressRules } from "./index.js";
+import nationalIdService from "#services/national_id_service";
 
 /**
  * Iran-specific address rules. Postcode is the unambiguous 10-digit form (no dash). Region is

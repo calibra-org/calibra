@@ -3,7 +3,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
-import Customer from "#models/customer";
+import type Customer from "#models/customer";
 import CustomerAddress from "#models/customer_address";
 import CustomerIranProfile from "#models/customer_iran_profile";
 import { throwIfErrors, validateAddressForCountry } from "#services/address_country_validator";
@@ -15,9 +15,7 @@ import { addressCreateValidator, addressUpdateValidator } from "#validators/acco
 export default class AddressesController {
     async index(ctx: HttpContext) {
         const customer = await this.requireCustomer(ctx);
-        const addresses = await CustomerAddress.query()
-            .where("customer_id", Number(customer.id))
-            .orderBy("id", "asc");
+        const addresses = await CustomerAddress.query().where("customer_id", Number(customer.id)).orderBy("id", "asc");
         return {
             data: addresses.map((a) => new CustomerAddressTransformer(a).toObject()),
             meta: { field_metadata: this.fieldMetadataFor(customer.countryDefault) },
@@ -105,11 +103,12 @@ export default class AddressesController {
         const payload = await ctx.request.validateUsing(addressUpdateValidator);
 
         const country = payload.country.toUpperCase();
-        const normalizedPhone = payload.phone === undefined
-            ? undefined
-            : payload.phone === null
-                ? null
-                : phoneService.normalize(payload.phone, country);
+        const normalizedPhone =
+            payload.phone === undefined
+                ? undefined
+                : payload.phone === null
+                  ? null
+                  : phoneService.normalize(payload.phone, country);
 
         const errors = await validateAddressForCountry({
             first_name: payload.first_name ?? address.firstName,
@@ -193,21 +192,14 @@ export default class AddressesController {
         if (!Number.isFinite(numericId)) {
             throw new Exception("Address not found", { status: 404, code: "E_NOT_FOUND" });
         }
-        const address = await CustomerAddress.query()
-            .where("id", numericId)
-            .where("customer_id", Number(customer.id))
-            .first();
+        const address = await CustomerAddress.query().where("id", numericId).where("customer_id", Number(customer.id)).first();
         if (!address) {
             throw new Exception("Address not found", { status: 404, code: "E_NOT_FOUND" });
         }
         return address;
     }
 
-    private async clearSiblingDefaults(
-        trx: TransactionClientContract,
-        customerId: number,
-        kind: string,
-    ): Promise<void> {
+    private async clearSiblingDefaults(trx: TransactionClientContract, customerId: number, kind: string): Promise<void> {
         await trx
             .from("customer_addresses")
             .where("customer_id", customerId)

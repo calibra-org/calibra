@@ -143,11 +143,12 @@ export default class AdminCustomersController {
         const payload = await ctx.request.validateUsing(adminCustomerUpdateValidator);
 
         const country = (payload.country_default ?? customer.countryDefault).toUpperCase();
-        const normalizedPhone = payload.phone === undefined
-            ? undefined
-            : payload.phone === null
-                ? null
-                : phoneService.normalize(payload.phone, country);
+        const normalizedPhone =
+            payload.phone === undefined
+                ? undefined
+                : payload.phone === null
+                  ? null
+                  : phoneService.normalize(payload.phone, country);
 
         await db.transaction(async (trx) => {
             customer.useTransaction(trx);
@@ -190,10 +191,7 @@ export default class AdminCustomersController {
                 customer.user.useTransaction(trx);
                 customer.user.deletedAt = now;
                 await customer.user.save();
-                await trx
-                    .from("auth_access_tokens")
-                    .where("tokenable_id", Number(customer.user.id))
-                    .delete();
+                await trx.from("auth_access_tokens").where("tokenable_id", Number(customer.user.id)).delete();
             }
         });
         return ctx.response.noContent();
@@ -201,9 +199,7 @@ export default class AdminCustomersController {
 
     async downloads(ctx: HttpContext) {
         const customer = await this.findOrFail(ctx.params.id);
-        const rows = await CustomerDownload.query()
-            .where("customer_id", Number(customer.id))
-            .orderBy("granted_at", "desc");
+        const rows = await CustomerDownload.query().where("customer_id", Number(customer.id)).orderBy("granted_at", "desc");
         return { data: rows.map((r) => new CustomerDownloadTransformer(r).toObject()) };
     }
 
@@ -293,10 +289,7 @@ export default class AdminCustomersController {
                 if (customer.user) {
                     customer.user.deletedAt = now;
                     await customer.user.save();
-                    await trx
-                    .from("auth_access_tokens")
-                    .where("tokenable_id", Number(customer.user.id))
-                    .delete();
+                    await trx.from("auth_access_tokens").where("tokenable_id", Number(customer.user.id)).delete();
                 }
                 deletedIds.push(id);
             }

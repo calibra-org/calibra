@@ -6,12 +6,7 @@ import { assert } from "@japa/assert";
 import { pluginAdonisJS } from "@japa/plugin-adonisjs";
 import type { Config } from "@japa/runner/types";
 
-export const plugins: Config["plugins"] = [
-    assert(),
-    apiClient(),
-    pluginAdonisJS(app),
-    authApiClient(app),
-];
+export const plugins: Config["plugins"] = [assert(), apiClient(), pluginAdonisJS(app), authApiClient(app)];
 
 /**
  * Schema lifecycle for the whole test run. `migrate()` brings the test database up to the latest
