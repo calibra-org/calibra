@@ -56,9 +56,15 @@ function DropdownMenuItem({ className, ...props }: React.ComponentProps<typeof M
     );
 }
 
-function DropdownMenuLabel({ className, ...props }: React.ComponentProps<typeof Menu.GroupLabel>) {
+/**
+ * Section heading inside the dropdown. Rendered as a plain `<div>` rather than
+ * `Menu.GroupLabel` because the latter requires a `<Menu.Group>` parent (Base UI throws
+ * `MenuGroupRootContext is missing` otherwise). When you need a real a11y-grouped label, wrap
+ * with {@link DropdownMenuGroup} and use `<Menu.GroupLabel>` directly inside it.
+ */
+function DropdownMenuLabel({ className, ...props }: React.ComponentProps<"div">) {
     return (
-        <Menu.GroupLabel
+        <div
             data-slot="dropdown-menu-label"
             className={cn("px-2.5 py-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wide", className)}
             {...props}

@@ -78,7 +78,7 @@ export default async function PaymentsPage({ params }: PageProps) {
                             <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
                                 <Link href={`/payments/${row.code}` as never}>
                                     {commonT("view")}
-                                    <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                                    <ArrowUpRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
                                 </Link>
                             </Button>
                         ),

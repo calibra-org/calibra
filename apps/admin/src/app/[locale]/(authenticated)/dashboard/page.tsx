@@ -44,7 +44,7 @@ export default async function DashboardPage({ params }: PageProps) {
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                 <StatCard
                     label={t("ordersToday")}
                     value={formatNumber(stats.ordersToday, locale)}
@@ -64,20 +64,20 @@ export default async function DashboardPage({ params }: PageProps) {
                     icon={Package}
                 />
                 <StatCard label={t("pendingFulfilments")} value={formatNumber(stats.pendingFulfilments, locale)} icon={Truck} />
+                <StatCard
+                    label={t("newCustomers")}
+                    value={formatNumber(stats.newCustomersToday, locale)}
+                    delta={{ percent: stats.newCustomersDeltaPercent, comparison: t("newCustomersComparison") }}
+                    description={t("newCustomersDescription")}
+                    icon={UserPlus}
+                />
             </div>
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Card className="xl:col-span-2">
-                    <CardHeader className="flex items-start justify-between gap-2 border-b pb-4">
-                        <div>
-                            <CardTitle className="text-base">{t("salesTrend")}</CardTitle>
-                            <CardDescription>{t("salesTrendSubtitle")}</CardDescription>
-                        </div>
-                        <StatCard
-                            label={t("newCustomers")}
-                            value={formatNumber(stats.newCustomersToday, locale)}
-                            icon={UserPlus}
-                        />
+                    <CardHeader className="border-b pb-4">
+                        <CardTitle className="text-base">{t("salesTrend")}</CardTitle>
+                        <CardDescription>{t("salesTrendSubtitle")}</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <SalesAreaChart data={stats.salesSeries} />
@@ -105,7 +105,7 @@ export default async function DashboardPage({ params }: PageProps) {
                         <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
                             <Link href="/orders">
                                 {t("viewAll")}
-                                <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                                <ArrowUpRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
                             </Link>
                         </Button>
                     </CardHeader>
@@ -173,42 +173,52 @@ export default async function DashboardPage({ params }: PageProps) {
             </div>
 
             <Card>
-                <CardHeader className="border-b pb-4">
-                    <CardTitle className="text-base">{t("recentOrders")}</CardTitle>
+                <CardHeader className="flex items-center justify-between border-b pb-4">
+                    <div>
+                        <CardTitle className="text-base">{t("recentCustomers")}</CardTitle>
+                        <CardDescription>{t("recentCustomersSubtitle")}</CardDescription>
+                    </div>
+                    <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
+                        <Link href="/customers">
+                            {t("viewAll")}
+                            <ArrowUpRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
+                        </Link>
+                    </Button>
                 </CardHeader>
                 <CardContent className="px-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-muted/40">
-                                <TableHead className="px-5">#</TableHead>
-                                <TableHead>{/* customer */}</TableHead>
-                                <TableHead className="text-end">{/* total */}</TableHead>
-                                <TableHead className="text-end">{/* placedAt */}</TableHead>
-                                <TableHead className="px-5 text-end">{/* status */}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {stats.recentOrders.map((order) => (
-                                <TableRow key={`activity-${order.id}`}>
-                                    <TableCell className="px-5 py-3 font-medium">
-                                        <Link href={`/orders/${order.id}` as never} className="hover:underline">
-                                            #{formatNumber(order.orderNumber, locale)}
+                    {stats.recentCustomers.length === 0 ? (
+                        <p className="px-5 py-6 text-center text-muted-foreground text-sm">{t("noNewCustomers")}</p>
+                    ) : (
+                        <ul className="flex flex-col">
+                            {stats.recentCustomers.map((customer) => {
+                                const initials = `${customer.firstName.charAt(0)}${customer.lastName.charAt(0)}`.toUpperCase();
+                                return (
+                                    <li
+                                        key={customer.id}
+                                        className="flex items-center justify-between gap-3 border-border border-b px-5 py-3 last:border-b-0"
+                                    >
+                                        <Link
+                                            href={`/customers/${customer.id}` as never}
+                                            className="flex flex-1 items-center gap-3 hover:underline"
+                                        >
+                                            <span className="grid size-9 place-items-center rounded-full bg-accent font-semibold text-accent-foreground text-xs">
+                                                {initials || "—"}
+                                            </span>
+                                            <div className="flex min-w-0 flex-col">
+                                                <span className="truncate font-medium text-sm">
+                                                    {customer.firstName} {customer.lastName}
+                                                </span>
+                                                <span className="truncate text-muted-foreground text-xs">{customer.email}</span>
+                                            </div>
                                         </Link>
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">{order.customerName}</TableCell>
-                                    <TableCell className="text-end font-medium">
-                                        {formatMoney(order.grandTotal, locale)}
-                                    </TableCell>
-                                    <TableCell className="text-end text-muted-foreground text-xs">
-                                        {formatRelativeTime(order.createdAt, locale)}
-                                    </TableCell>
-                                    <TableCell className="px-5 text-end">
-                                        <OrderStatusBadge status={order.status} />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                                        <span className="shrink-0 text-muted-foreground text-xs">
+                                            {formatRelativeTime(customer.createdAt, locale)}
+                                        </span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
                 </CardContent>
             </Card>
         </section>

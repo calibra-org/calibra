@@ -13,10 +13,15 @@ interface StatCardProps {
         /** Human label for the comparison window (e.g. `"vs last week"`). */
         comparison: string;
     };
+    /**
+     * Optional one-line caption rendered below the delta (or value, if no delta is supplied).
+     * Use it to declare what the metric means — e.g. "Registered in the last 24h".
+     */
+    description?: string;
     icon?: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
-export function StatCard({ label, value, delta, icon: Icon }: StatCardProps) {
+export function StatCard({ label, value, delta, description, icon: Icon }: StatCardProps) {
     const trendingUp = (delta?.percent ?? 0) >= 0;
     const TrendIcon = trendingUp ? TrendingUp : TrendingDown;
 
@@ -49,6 +54,8 @@ export function StatCard({ label, value, delta, icon: Icon }: StatCardProps) {
                         <span className="text-muted-foreground">{delta.comparison}</span>
                     </div>
                 )}
+
+                {description !== undefined && <span className="text-muted-foreground text-xs leading-snug">{description}</span>}
             </CardContent>
         </Card>
     );

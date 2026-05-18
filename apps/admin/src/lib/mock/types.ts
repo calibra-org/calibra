@@ -354,7 +354,12 @@ export interface DashboardStats {
     activeProducts: number;
     activeProductsDeltaPercent: number;
     pendingFulfilments: number;
+    /** Count of customers whose `createdAt` falls within the trailing 24h. */
     newCustomersToday: number;
+    /** Day-over-day percentage change in `newCustomersToday` vs the previous 24h. */
+    newCustomersDeltaPercent: number;
+    /** Up to 5 customers, most recently registered first. Already shaped for the dashboard list. */
+    recentCustomers: AdminCustomer[];
     salesSeries: { date: string; revenue: MoneyMinor; orders: number }[];
     ordersByStatus: { status: OrderStatus; count: number }[];
     topProducts: { productId: number; name: LocalizedString; sku: string; revenue: MoneyMinor; units: number }[];

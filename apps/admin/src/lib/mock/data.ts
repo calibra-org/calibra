@@ -4,6 +4,10 @@
  *
  * Money is in **Rial minor units** per the ADR. Toman display is `value / 10` and happens in the
  * formatter, not here.
+ *
+ * `TODAY_MS` is the single "now" anchor every fixture uses so dashboard tiles, recent-orders
+ * lists, recent-customers lists and the sales series all agree on what day it is. Bump the anchor
+ * in one place and every demo number reorients consistently.
  */
 
 import type {
@@ -27,6 +31,15 @@ import type {
     AdminTaxRate,
     OrderStatus,
 } from "./types";
+
+const TODAY_MS = Date.UTC(2026, 4, 18, 14, 0, 0);
+const ONE_HOUR_MS = 60 * 60 * 1000;
+const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+
+/** Builds an ISO timestamp `hours` hours before `TODAY_MS`. Keeps anchor offsets readable. */
+function hoursAgo(hours: number): string {
+    return new Date(TODAY_MS - hours * ONE_HOUR_MS).toISOString();
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Catalog                                                                   */
@@ -367,17 +380,29 @@ const customerSeed: Pick<AdminCustomer, "id" | "firstName" | "lastName" | "email
     },
 ];
 
+/**
+ * Hours-before-`TODAY_MS` that each customer registered, ordered to match `customerSeed`.
+ * Distribution:
+ *  - 3 within the last 24h (the "new customers today" KPI counts these)
+ *  - 2 in the prior 24h–7d window (so the week-over-week delta has signal)
+ *  - 3 older (a few weeks back, to anchor "returning customer" stats)
+ *
+ * Edit this array to retune the demo without rewriting the seed array.
+ */
+const customerRegistrationOffsetsHours: number[] = [3, 11, 22, 30, 96, 9 * 24, 14 * 24, 22 * 24];
+
 export const customers: AdminCustomer[] = customerSeed.map((seed, index) => {
     const ordersCount = 2 + ((index * 3) % 7);
     const totalSpent = (250_000 + index * 180_000) * 10;
+    const registeredOffset = customerRegistrationOffsetsHours[index] ?? 30 * 24;
     return {
         ...seed,
         userId: seed.id,
         isPayingCustomer: ordersCount > 0,
         ordersCount,
         totalSpent,
-        lastOrderAt: new Date(2026, 4, 17 - (index % 12)).toISOString(),
-        createdAt: new Date(2025, 8, 4 + index).toISOString(),
+        lastOrderAt: new Date(TODAY_MS - ((index % 12) + 1) * ONE_DAY_MS).toISOString(),
+        createdAt: hoursAgo(registeredOffset),
         addresses: [
             {
                 id: index * 2 + 1,
@@ -1101,6 +1126,35 @@ function buildSalesSeries(days: number, base: number): { date: string; revenue: 
     return out;
 }
 
+/**
+ * "New customers" is defined as customers whose `createdAt` falls within the trailing 24h window
+ * ending at `TODAY_MS`. The delta compares that count against the same-size window immediately
+ * preceding it (24h–48h ago), giving a day-over-day signal that's useful even with small numbers.
+ *
+ * When the real API lands, swap this for `GET /api/v1/admin/customers/totals?window=24h` and
+ * compute deltas server-side; the shape returned should keep `value` + `deltaPercent` + the
+ * "recently joined" list so the dashboard tile stays unchanged.
+ */
+function countInWindow(startMs: number, endMs: number): number {
+    return customers.filter((customer) => {
+        const ms = new Date(customer.createdAt).getTime();
+        return ms >= startMs && ms < endMs;
+    }).length;
+}
+
+const newCustomersToday = countInWindow(TODAY_MS - ONE_DAY_MS, TODAY_MS);
+const newCustomersYesterday = countInWindow(TODAY_MS - 2 * ONE_DAY_MS, TODAY_MS - ONE_DAY_MS);
+const newCustomersDeltaPercent =
+    newCustomersYesterday === 0
+        ? newCustomersToday === 0
+            ? 0
+            : 100
+        : Math.round(((newCustomersToday - newCustomersYesterday) / newCustomersYesterday) * 1000) / 10;
+
+const recentCustomers = [...customers]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
 export const dashboard = {
     ordersToday: 42,
     ordersDeltaPercent: 12.4,
@@ -1109,7 +1163,9 @@ export const dashboard = {
     activeProducts: products.filter((p) => p.status === "publish").length,
     activeProductsDeltaPercent: -2.3,
     pendingFulfilments: orders.filter((o) => o.status === "processing").length,
-    newCustomersToday: 6,
+    newCustomersToday,
+    newCustomersDeltaPercent,
+    recentCustomers,
     salesSeries: buildSalesSeries(14, 1_800_000).map(({ date, revenue, orders }) => ({ date, revenue, orders })),
     ordersByStatus: (
         Object.entries(
