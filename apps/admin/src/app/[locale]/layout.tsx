@@ -6,6 +6,8 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 
+import { ThemeScript } from "#/components/ThemeScript";
+import { TooltipProvider } from "#/components/ui/tooltip";
 import { routing } from "#/lib/i18n/routing";
 import "#/styles/globals.css";
 
@@ -42,9 +44,19 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
     setRequestLocale(locale);
 
     return (
-        <html lang={locale} dir={directionFor(locale)} className={`${inter.variable} ${vazirmatn.variable}`}>
-            <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
-                <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <html
+            lang={locale}
+            dir={directionFor(locale)}
+            className={`${inter.variable} ${vazirmatn.variable}`}
+            suppressHydrationWarning
+        >
+            <head>
+                <ThemeScript />
+            </head>
+            <body className="min-h-dvh bg-background text-foreground antialiased">
+                <NextIntlClientProvider>
+                    <TooltipProvider>{children}</TooltipProvider>
+                </NextIntlClientProvider>
             </body>
         </html>
     );

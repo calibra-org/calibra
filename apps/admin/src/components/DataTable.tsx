@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { cn } from "#/lib/utils";
+
 interface Column<T> {
     /** Stable id for the column — used as the React key on header + body cells. */
     id: string;
@@ -7,7 +9,11 @@ interface Column<T> {
     header: ReactNode;
     /** Cell renderer. Receives the row plus its zero-based index. */
     cell: (row: T, index: number) => ReactNode;
-    /** Tailwind classes applied to both header and body cells (e.g. `"w-32"`, `"text-end"`). */
+    /**
+     * Tailwind classes applied to both header and body cells (e.g. `"w-32"`, `"text-end"`).
+     * Merged via tailwind-merge so column-level utilities (`text-end`) correctly override the
+     * defaults below (`text-start`) instead of fighting them on equal specificity.
+     */
     className?: string;
 }
 
@@ -39,7 +45,7 @@ export function DataTable<T>({ columns, rows, getRowKey, emptyState }: DataTable
                 <thead>
                     <tr className="border-border border-b bg-muted/40 text-muted-foreground text-xs uppercase tracking-wide">
                         {columns.map((column) => (
-                            <th key={column.id} className={`px-4 py-3 text-start font-medium ${column.className ?? ""}`}>
+                            <th key={column.id} className={cn("px-4 py-3 text-start font-medium", column.className)}>
                                 {column.header}
                             </th>
                         ))}
@@ -52,7 +58,7 @@ export function DataTable<T>({ columns, rows, getRowKey, emptyState }: DataTable
                             className="border-border border-b transition last:border-b-0 hover:bg-muted/40"
                         >
                             {columns.map((column) => (
-                                <td key={column.id} className={`px-4 py-3 ${column.className ?? ""}`}>
+                                <td key={column.id} className={cn("px-4 py-3", column.className)}>
                                     {column.cell(row, index)}
                                 </td>
                             ))}
