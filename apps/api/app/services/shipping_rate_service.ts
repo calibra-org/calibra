@@ -1,0 +1,150 @@
+import db from "@adonisjs/lucid/services/db";
+
+import Region from "#models/region";
+import type ShippingZone from "#models/shipping_zone";
+import { matchShippingZone } from "#services/shipping_zone_match";
+
+/**
+ * Address keys that drive shipping-zone matching. `country` is the only required field; the rest
+ * sharpen the match (postcode > state > country > continent, per ADR D15). The `regionId` is the
+ * country-agnostic FK to `regions` — the service resolves it to its `code` for the matcher.
+ */
+export interface ShippingRateAddress {
+    country: string;
+    regionId: number | null;
+    postcode: string | null;
+}
+
+export interface ShippingRateOption {
+    /** PK on `shipping_zone_methods` — the value `POST /cart/shipping-rate` accepts. */
+    id: number;
+    /** Stable code of the underlying registered method (`flat_rate`, `tipax`, …). */
+    methodCode: string;
+    title: string;
+    /** Final cost in minor units after eligibility checks (free_shipping → 0 when min_amount met). */
+    cost: number;
+    /** Tax behavior on the carrier line. `taxable=true` lets the tax pipeline pick this up. */
+    taxable: boolean;
+    /** `id` of the matched `shipping_zones` row. */
+    zoneId: number;
+}
+
+/**
+ * Enumerate every shipping rate the storefront should show for `address`. Returns an empty array
+ * when no matching zone (and no fallback) is configured — the controller should surface this as
+ * "no shipping options available" rather than treating it as a system error.
+ *
+ * `itemsTotal` (cart subtotal in minor units, pre-discount) is required because `free_shipping`
+ * eligibility checks against its `min_amount` setting; passing `0` is safe and matches the
+ * "before any items are added" UX where free_shipping should not appear yet.
+ */
+export async function enumerateShippingRates(address: ShippingRateAddress, itemsTotal: number): Promise<ShippingRateOption[]> {
+    const zone = await resolveZone(address);
+    if (!zone) return [];
+
+    const rows = await db
+        .from("shipping_zone_methods as szm")
+        .innerJoin("shipping_methods as sm", "sm.id", "szm.method_id")
+        .where("szm.zone_id", Number(zone.id))
+        .where("szm.enabled", true)
+        .select(
+            "szm.id as id",
+            "szm.title_override as title_override",
+            "szm.settings as settings",
+            "szm.ordering as ordering",
+            "sm.code as code",
+            "sm.title_default as title_default",
+        )
+        .orderBy("szm.ordering", "asc");
+
+    const options: ShippingRateOption[] = [];
+    for (const row of rows) {
+        const settings = parseSettings(row.settings);
+        const resolved = resolveMethodCost(row.code, settings, itemsTotal);
+        if (!resolved) continue;
+        options.push({
+            id: Number(row.id),
+            methodCode: row.code,
+            title: (row.title_override ?? row.title_default) as string,
+            cost: resolved.cost,
+            taxable: resolved.taxable,
+            zoneId: Number(zone.id),
+        });
+    }
+    return options;
+}
+
+/**
+ * Look up a single rate by id and confirm it's eligible for `address` + `itemsTotal`. Used by
+ * `POST /cart/shipping-rate` to validate the selection before saving it on the cart. Returns the
+ * option when valid; returns `null` when the rate is disabled, belongs to a different zone, or
+ * fails its min-amount check.
+ */
+export async function findEligibleRate(
+    address: ShippingRateAddress,
+    shippingZoneMethodId: number,
+    itemsTotal: number,
+): Promise<ShippingRateOption | null> {
+    const eligible = await enumerateShippingRates(address, itemsTotal);
+    return eligible.find((option) => option.id === shippingZoneMethodId) ?? null;
+}
+
+async function resolveZone(address: ShippingRateAddress): Promise<ShippingZone | null> {
+    const regionCode = address.regionId === null ? null : await loadRegionCode(address.regionId);
+    return matchShippingZone({
+        country: address.country.toUpperCase(),
+        regionCode,
+        postcode: address.postcode,
+        continent: null,
+    });
+}
+
+async function loadRegionCode(regionId: number): Promise<string | null> {
+    const region = await Region.find(regionId);
+    return region?.code ?? null;
+}
+
+interface ResolvedMethodCost {
+    cost: number;
+    taxable: boolean;
+}
+
+/**
+ * Translate a method's settings JSONB into a final delivered cost given the cart's running items
+ * total. Returns `null` when the method is conditionally unavailable (e.g. `free_shipping` whose
+ * `min_amount` is not met) so the enumerator filters it out cleanly. The default `taxable=true`
+ * matches the Woo convention — operators flip it off through `taxable: false` in the settings
+ * blob; the cart respects the shipping tax line only when `tax_rates.applies_to_shipping=true`.
+ */
+function resolveMethodCost(code: string, settings: Record<string, unknown>, itemsTotal: number): ResolvedMethodCost | null {
+    const taxable = settings.taxable === undefined ? true : Boolean(settings.taxable);
+    if (code === "free_shipping") {
+        const minAmount = toNumber(settings.min_amount, 0);
+        if (itemsTotal < minAmount) return null;
+        return { cost: 0, taxable };
+    }
+    const cost = toNumber(settings.cost, 0);
+    return { cost, taxable };
+}
+
+function parseSettings(raw: unknown): Record<string, unknown> {
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, unknown>;
+    if (typeof raw === "string") {
+        try {
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+        } catch {
+            return {};
+        }
+    }
+    return {};
+}
+
+function toNumber(value: unknown, fallback: number): number {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+        const parsed = Number.parseFloat(value);
+        if (Number.isFinite(parsed)) return parsed;
+    }
+    return fallback;
+}
