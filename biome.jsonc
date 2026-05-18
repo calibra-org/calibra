@@ -131,6 +131,16 @@
             }
         },
         {
+            "includes": ["apps/api/**/*.ts", "!apps/api/database/schema.ts"],
+            "linter": {
+                "rules": {
+                    "correctness": {
+                        "useHookAtTopLevel": "off"
+                    }
+                }
+            }
+        },
+        {
             "includes": ["apps/api/database/schema.ts"],
             "linter": {
                 "enabled": false
