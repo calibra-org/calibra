@@ -324,6 +324,7 @@ const SETTINGS: SettingRow[] = [
     { group: "tax", key: "display_cart", value: "incl", type: "string" },
     { group: "inventory", key: "hold_stock_minutes", value: 60, type: "number" },
     { group: "inventory", key: "low_stock_threshold_default", value: 2, type: "number" },
+    { group: "inventory", key: "cart_abandonment_days", value: 30, type: "number" },
     { group: "orders", key: "draft_expiry_hours", value: 24, type: "number" },
     { group: "orders", key: "number_format", value: "{id}", type: "string" },
 ];
