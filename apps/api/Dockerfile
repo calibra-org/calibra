@@ -12,8 +12,9 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 COPY --from=deps /repo /repo
 COPY . .
-WORKDIR /repo/apps/api
-RUN pnpm run build
+RUN pnpm --filter=@calibra/api run build
+RUN pnpm --filter=@calibra/api deploy --prod --legacy /prod/api
+RUN cp -r apps/api/build/. /prod/api/
 
 FROM node:24-alpine AS runner
 WORKDIR /app
@@ -22,11 +23,9 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 adonis
 
-COPY --from=builder --chown=adonis:nodejs /repo/apps/api/build ./build
-COPY --from=builder --chown=adonis:nodejs /repo/apps/api/node_modules ./node_modules
-COPY --from=builder --chown=adonis:nodejs /repo/apps/api/package.json ./
+COPY --from=builder --chown=adonis:nodejs /prod/api ./
 
 USER adonis
 EXPOSE 3333
 
-CMD ["node", "build/bin/server.js"]
+CMD ["node", "bin/server.js"]
