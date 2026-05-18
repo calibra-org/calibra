@@ -6,6 +6,15 @@
             "unauthenticated": "Authentication is required.",
             "invalid_credentials": "Invalid credentials.",
             "forbidden_admin": "Admin access required."
+        },
+        "orders": {
+            "illegal_transition": "Illegal order status transition: {from} → {to}.",
+            "not_draft": "Order is no longer a draft.",
+            "billing_required": "Billing address is required before submitting.",
+            "payment_required": "Payment method is required before submitting.",
+            "empty": "Order has no line items.",
+            "out_of_stock": "Some items are out of stock.",
+            "price_changed": "Product price changed since the draft was last viewed."
         }
     }
 }
