@@ -1,6 +1,6 @@
 # apps/web
 
-Next.js 16 storefront. App Router, React Server Components, Tailwind v4, next-intl. Talks to WordPress via [`@shop/sdk`](../../packages/sdk).
+Next.js 16 storefront. App Router, React Server Components, Tailwind v4, next-intl. Talks to WordPress via [`@calibra/sdk`](../../packages/sdk).
 
 ## Layout
 
@@ -44,12 +44,12 @@ apps/web/
 - Theme tokens live in `src/styles/globals.css` under `@theme { … }`. Reference them as Tailwind classes: `bg-background`, `text-foreground`, `border-border`, `text-muted-foreground`, `bg-accent text-accent-foreground`.
 - Use OKLCH for new colors — see existing tokens for the pattern.
 
-## Data: `@shop/sdk`
+## Data: `@calibra/sdk`
 
 The storefront does not call WordPress directly. Use the workspace SDK:
 
 ```tsx
-import { createApiClient } from "@shop/sdk";
+import { createApiClient } from "@calibra/sdk";
 
 const wc = createApiClient({ baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL });
 const products = await wc.products.list({ per_page: 24 });
@@ -59,11 +59,11 @@ Add response types via `WcProduct`, `WcCart`, etc. (re-exported from the SDK; so
 
 ## Deployment
 
-The Dockerfile in this directory produces a self-contained image using Next.js's `standalone` output. Build context is the **repo root** — the Dockerfile copies workspace lockfile, the `@shop/sdk` and `@shop/typescript-config` package directories, then builds web. There is no Vercel-specific glue.
+The Dockerfile in this directory produces a self-contained image using Next.js's `standalone` output. Build context is the **repo root** — the Dockerfile copies workspace lockfile, the `@calibra/sdk` and `@calibra/typescript-config` package directories, then builds web. There is no Vercel-specific glue.
 
 ```sh
-docker build -f apps/web/Dockerfile -t shop-web .
+docker build -f apps/web/Dockerfile -t calibra-web .
 docker run -p 3000:3000 \
     -e NEXT_PUBLIC_API_BASE_URL=https://cms.example.com \
-    shop-web
+    calibra-web
 ```

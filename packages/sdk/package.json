@@ -1,5 +1,5 @@
 {
-    "name": "@shop/sdk",
+    "name": "@calibra/sdk",
     "version": "0.0.0",
     "private": true,
     "license": "MIT",
@@ -25,7 +25,7 @@
         "@woocommerce/types": "catalog:"
     },
     "devDependencies": {
-        "@shop/typescript-config": "workspace:*",
+        "@calibra/typescript-config": "workspace:*",
         "@types/node": "catalog:",
         "msw": "catalog:",
         "tsdown": "catalog:",

@@ -13,8 +13,8 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 COPY --from=deps /repo /repo
 COPY . .
-RUN pnpm --filter @shop/sdk run build
-RUN pnpm --filter @shop/web run build
+RUN pnpm --filter @calibra/sdk run build
+RUN pnpm --filter @calibra/web run build
 
 FROM node:24-alpine AS runner
 WORKDIR /app

@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: shop bootstrap
+ * Plugin Name: calibra bootstrap
  * Description: Must-use plugin that installs WooCommerce + Polylang on first boot and registers them.
  *
  * Lives outside the wp-content volume so the host doesn't shadow it. Idempotent — safe to keep

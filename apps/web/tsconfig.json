@@ -1,5 +1,5 @@
 {
-    "extends": "@shop/typescript-config/nextjs.json",
+    "extends": "@calibra/typescript-config/nextjs.json",
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {

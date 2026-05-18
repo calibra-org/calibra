@@ -1,4 +1,4 @@
-# @shop/web
+# @calibra/web
 
 Next.js 16 storefront. App Router, Tailwind v4, next-intl (English default + Persian RTL).
 
@@ -18,7 +18,7 @@ just up           # boots WordPress (docker) + Next.js together
 ## Build
 
 ```sh
-pnpm --filter @shop/web build       # next build → .next/standalone/
+pnpm --filter @calibra/web build       # next build → .next/standalone/
 docker build -f apps/web/Dockerfile -t web .   # production image
 ```
 

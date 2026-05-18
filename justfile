@@ -40,23 +40,23 @@ test *args:
 
 # Run the web Playwright e2e suite (set BASE_URL to target a remote preview; otherwise boots `pnpm run dev`)
 test-e2e *args:
-    pnpm --filter @shop/web run test:e2e {{ args }}
+    pnpm --filter @calibra/web run test:e2e {{ args }}
 
 # Record a new spec via Playwright's codegen recorder
 test-e2e-codegen *args:
-    pnpm --filter @shop/web run test:e2e:codegen {{ args }}
+    pnpm --filter @calibra/web run test:e2e:codegen {{ args }}
 
 # Run the e2e suite in headed mode
 test-e2e-headed *args:
-    pnpm --filter @shop/web run test:e2e:headed {{ args }}
+    pnpm --filter @calibra/web run test:e2e:headed {{ args }}
 
 # Open Playwright's UI mode
 test-e2e-ui *args:
-    pnpm --filter @shop/web run test:e2e:ui {{ args }}
+    pnpm --filter @calibra/web run test:e2e:ui {{ args }}
 
 # Open the last HTML report
 test-e2e-report *args:
-    pnpm --filter @shop/web run test:e2e:report {{ args }}
+    pnpm --filter @calibra/web run test:e2e:report {{ args }}
 
 # Run typecheck across all packages
 typecheck:
@@ -75,23 +75,23 @@ ready: format lint typecheck build test
 
 # Boot the WordPress backend (docker compose up -d)
 cms-up:
-    pnpm --filter @shop/cms run up
+    pnpm --filter @calibra/cms run up
 
 # Stop the WordPress backend (preserves volumes)
 cms-down:
-    pnpm --filter @shop/cms run down
+    pnpm --filter @calibra/cms run down
 
 # Nuke WordPress volumes and start fresh (loses DB + uploads)
 cms-reset:
-    pnpm --filter @shop/cms run reset
+    pnpm --filter @calibra/cms run reset
 
 # Tail WordPress logs
 cms-logs:
-    pnpm --filter @shop/cms run logs
+    pnpm --filter @calibra/cms run logs
 
 # Forward an argument to wp-cli inside the WordPress container, e.g. `just cms-wp 'plugin list'`
 cms-wp arg:
-    pnpm --filter @shop/cms run wp {{ arg }}
+    pnpm --filter @calibra/cms run wp {{ arg }}
 
 # Clean build artifacts and caches
 clean:

@@ -1,6 +1,6 @@
 # apps/cms
 
-WordPress + WooCommerce + Polylang backend, run via Docker. This is the source of truth for products, orders, customers, and translated content. The Next.js storefront in [`apps/web`](../web) consumes it through `@shop/sdk`.
+WordPress + WooCommerce + Polylang backend, run via Docker. This is the source of truth for products, orders, customers, and translated content. The Next.js storefront in [`apps/web`](../web) consumes it through `@calibra/sdk`.
 
 ## Stack
 
@@ -15,7 +15,7 @@ WordPress + WooCommerce + Polylang backend, run via Docker. This is the source o
 - `Dockerfile` — extends the official `wordpress` image; adds wp-cli and a must-use bootstrap plugin.
 - `docker-compose.yml` — `db` (MariaDB) + `wordpress` + `wpcli` services.
 - `mu-bootstrap.php` — must-use plugin baked into the image. On every admin request it installs and activates WooCommerce + Polylang if they're missing. Idempotent.
-- `wp-content/themes/shop/` — custom theme (host-mounted; edit and refresh).
+- `wp-content/themes/calibra/` — custom theme (host-mounted; edit and refresh).
 - `wp-content/plugins/` — host-mounted plugin directory (mounted as `…/plugins/local` inside the container so it doesn't shadow auto-installed plugins).
 - `wp-content/mu-plugins/` — host-mounted MU plugins for site-specific tweaks.
 - `.env.example` — copy to `.env` (git-ignored) and adjust ports / passwords.
@@ -36,6 +36,6 @@ After first boot, the admin UI is at `http://localhost:8080/wp-admin/`. Complete
 
 - **Do not commit `wp_data` / `db_data` volumes** — they're Docker named volumes, not bind mounts. The `.gitignore` keeps any stray local files out.
 - **Do not commit `.env`** — only `.env.example` is tracked.
-- **Theme + custom plugin code goes in `wp-content/themes/shop/` and `wp-content/mu-plugins/`** — both are bind-mounted from the host, so they survive container rebuilds and are version-controlled.
+- **Theme + custom plugin code goes in `wp-content/themes/calibra/` and `wp-content/mu-plugins/`** — both are bind-mounted from the host, so they survive container rebuilds and are version-controlled.
 - **WooCommerce + Polylang are auto-installed via `mu-bootstrap.php`** — don't commit them into `wp-content/plugins/`. If you need to pin a specific version, edit the bootstrap to install from a URL instead of the WP plugin directory.
 - **Schema changes are made through the WordPress admin or wp-cli**, not by editing the database directly.

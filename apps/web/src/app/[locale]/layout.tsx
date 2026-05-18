@@ -11,8 +11,8 @@ import { routing } from "#/lib/i18n/routing";
 import "#/styles/globals.css";
 
 export const metadata: Metadata = {
-    title: { default: "shop", template: "%s · shop" },
-    description: "shop online store",
+    title: { default: "calibra", template: "%s · calibra" },
+    description: "calibra online store",
 };
 
 export function generateStaticParams(): { locale: Locale }[] {

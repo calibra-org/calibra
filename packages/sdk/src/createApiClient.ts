@@ -3,7 +3,7 @@ import { HttpClient, type HttpClientOptions } from "./HttpClient";
 import type { WcCart, WcProduct } from "./types";
 
 export interface CreateApiClientOptions extends Partial<Pick<HttpClientOptions, "headers" | "fetch">> {
-    /** WordPress site origin, e.g. `"https://shop.example.com"`. Defaults to {@link getBaseUrl}. */
+    /** WordPress site origin, e.g. `"https://calibra.example.com"`. Defaults to {@link getBaseUrl}. */
     baseUrl?: string;
     /**
      * Storefront cart token returned by the Store API as a `Cart-Token` response header. Forward it on

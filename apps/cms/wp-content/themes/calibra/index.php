@@ -16,7 +16,7 @@ nocache_headers();
 <html lang="<?php bloginfo('language'); ?>">
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
-    <title>shop CMS</title>
+    <title>calibra CMS</title>
 </head>
 <body>
     <p>This is the WordPress admin backend. The storefront lives elsewhere.</p>

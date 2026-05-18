@@ -1,4 +1,4 @@
-# shop
+# calibra
 
 Headless commerce monorepo baseline. **WordPress + WooCommerce** backend behind a **Next.js 16** storefront. pnpm + Turborepo + Tailwind v4 + next-intl (English default, Persian RTL).
 
@@ -44,9 +44,9 @@ Repo-wide conventions live in [`AGENTS.md`](./AGENTS.md). Each scope (app or pac
 
 There's no Vercel-specific glue — both apps deploy via Docker:
 
-- `apps/web/Dockerfile` builds a self-contained Next.js standalone server. Build from the repo root: `docker build -f apps/web/Dockerfile -t shop-web .`
+- `apps/web/Dockerfile` builds a self-contained Next.js standalone server. Build from the repo root: `docker build -f apps/web/Dockerfile -t calibra-web .`
 - `apps/cms/Dockerfile` extends the official WordPress image; `apps/cms/docker-compose.yml` brings the stack up locally and serves as the production reference.
 
 ## License
 
-[MIT](./LICENSE) © shop.
+[MIT](./LICENSE) © calibra.
