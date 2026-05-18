@@ -2,8 +2,5 @@
     "errors": {
         "not_found": "{resource} پیدا نشد.",
         "internal": "خطایی در سرور رخ داد. لطفاً دوباره تلاش کنید."
-    },
-    "products": {
-        "not_found": "محصول \"{slug}\" پیدا نشد."
     }
 }

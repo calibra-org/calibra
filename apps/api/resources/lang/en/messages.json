@@ -2,8 +2,5 @@
     "errors": {
         "not_found": "{resource} not found.",
         "internal": "Something went wrong on our side. Please try again."
-    },
-    "products": {
-        "not_found": "Product \"{slug}\" not found."
     }
 }

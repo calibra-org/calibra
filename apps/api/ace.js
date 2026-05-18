@@ -1,11 +1,11 @@
 /**
- * JavaScript entrypoint for `node ace …`. We can't run TypeScript directly through `node`, so this
- * file registers the `ts-node-maintained/register/esm` hook and then imports the real entrypoint
- * at `bin/console.ts` (resolved as `.js` because the hook handles the source mapping).
+ * JavaScript entrypoint for `node ace …`. Registers the `@poppinss/ts-exec` JIT compiler so
+ * `bin/console.ts` can be loaded directly from source. v7 replaced the legacy
+ * `ts-node-maintained/register/esm` hook with this lighter ESM loader.
  *
  * @see https://docs.adonisjs.com/guides/typescript-build-process#creating-production-build
  */
 
-import "ts-node-maintained/register/esm";
+import "@poppinss/ts-exec";
 
 await import("./bin/console.js");

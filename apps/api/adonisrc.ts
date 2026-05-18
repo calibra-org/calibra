@@ -1,13 +1,13 @@
+import { indexEntities } from "@adonisjs/core";
 import { defineConfig } from "@adonisjs/core/app";
 
 export default defineConfig({
     /**
-     * Forward-compat flags. Opted in so the future major release of AdonisJS is a no-op upgrade.
-     * Drop entries here only when the upstream major actually ships them as defaults.
+     * v7 hooks. `indexEntities()` is always required: it generates the barrel files under
+     * `.adonisjs/server/` that power `#generated/*` imports for controllers, events, and policies.
      */
-    experimental: {
-        mergeMultipartFieldsAndFiles: true,
-        shutdownInReverseOrder: true,
+    hooks: {
+        init: [indexEntities()],
     },
 
     /**
@@ -38,12 +38,12 @@ export default defineConfig({
     tests: {
         suites: [
             {
-                files: ["tests/unit/**/*.spec(.ts|.js)"],
+                files: ["tests/unit/**/*.spec.{ts,js}"],
                 name: "unit",
                 timeout: 2000,
             },
             {
-                files: ["tests/functional/**/*.spec(.ts|.js)"],
+                files: ["tests/functional/**/*.spec.{ts,js}"],
                 name: "functional",
                 timeout: 30_000,
             },
