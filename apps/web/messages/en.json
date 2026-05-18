@@ -1,7 +1,7 @@
 {
     "Site": {
-        "name": "calibra",
-        "tagline": "calibra online store"
+        "name": "Shop",
+        "tagline": "Online store"
     },
     "Nav": {
         "home": "Home",
@@ -9,7 +9,7 @@
         "cart": "Cart"
     },
     "Home": {
-        "heroTitle": "Welcome to calibra",
+        "heroTitle": "Welcome",
         "heroBody": "A curated selection of quality products — fresh and dependable.",
         "browseProducts": "Browse products"
     },

@@ -1,0 +1,79 @@
+{
+    "Site": {
+        "name": "Admin",
+        "tagline": "Commerce admin panel"
+    },
+    "Nav": {
+        "dashboard": "Dashboard",
+        "products": "Products",
+        "orders": "Orders",
+        "customers": "Customers",
+        "settings": "Settings"
+    },
+    "Topbar": {
+        "search": "Search…",
+        "notifications": "Notifications",
+        "signOut": "Sign out"
+    },
+    "Login": {
+        "title": "Sign in",
+        "subtitle": "Enter your admin credentials.",
+        "email": "Email",
+        "password": "Password",
+        "submit": "Sign in"
+    },
+    "Dashboard": {
+        "title": "Dashboard",
+        "subtitle": "Overview of the store at a glance.",
+        "ordersToday": "Orders today",
+        "revenueToday": "Revenue today",
+        "activeProducts": "Active products",
+        "pendingFulfilments": "Pending fulfilments",
+        "recentOrders": "Recent orders",
+        "topProducts": "Top products",
+        "viewAll": "View all"
+    },
+    "Products": {
+        "title": "Products",
+        "subtitle": "Manage your catalog.",
+        "addProduct": "Add product",
+        "search": "Search products…",
+        "empty": "No products yet — add your first one to get started.",
+        "table": {
+            "product": "Product",
+            "sku": "SKU",
+            "price": "Price",
+            "stock": "Stock",
+            "status": "Status",
+            "actions": "Actions"
+        }
+    },
+    "Orders": {
+        "title": "Orders",
+        "subtitle": "Track and fulfil incoming orders.",
+        "search": "Search orders…",
+        "empty": "No orders yet.",
+        "table": {
+            "order": "Order",
+            "customer": "Customer",
+            "total": "Total",
+            "status": "Status",
+            "placedAt": "Placed",
+            "actions": "Actions"
+        }
+    },
+    "Status": {
+        "active": "Active",
+        "draft": "Draft",
+        "outOfStock": "Out of stock",
+        "pending": "Pending",
+        "paid": "Paid",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "refunded": "Refunded",
+        "cancelled": "Cancelled"
+    },
+    "Common": {
+        "switchLocale": "فارسی"
+    }
+}

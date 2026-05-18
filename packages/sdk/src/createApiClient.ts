@@ -1,54 +1,52 @@
 import { getBaseUrl } from "./getBaseUrl";
 import { HttpClient, type HttpClientOptions } from "./HttpClient";
-import type { WcCart, WcProduct } from "./types";
+import type { Cart, Paginated, Product, Resource } from "./types";
 
 export interface CreateApiClientOptions extends Partial<Pick<HttpClientOptions, "headers" | "fetch">> {
-    /** WordPress site origin, e.g. `"https://calibra.example.com"`. Defaults to {@link getBaseUrl}. */
+    /** API origin, e.g. `"https://api.example.com"`. Defaults to {@link getBaseUrl}. */
     baseUrl?: string;
+    /** Bearer token issued by `POST /api/v1/auth/login`. Forwarded as `Authorization: Bearer …`. */
+    token?: string;
     /**
-     * Storefront cart token returned by the Store API as a `Cart-Token` response header. Forward it on
-     * subsequent cart requests so WooCommerce keeps mutating the same cart for the same visitor.
+     * Active UI locale (`"en"` / `"fa"`). Forwarded as `Accept-Language` so the API can localize
+     * validator messages, error responses, and any translatable content. Pass it from the calling
+     * app's i18n hook (`useLocale()` in next-intl) so the two never drift out of sync.
      */
-    cartToken?: string;
-    /**
-     * Optional WooCommerce REST API consumer key. Only required for admin endpoints (`/wp-json/wc/v3/*`).
-     * The Storefront methods on the returned client use the public Store API and do not need this.
-     */
-    consumerKey?: string;
-    consumerSecret?: string;
+    locale?: string;
 }
 
 export interface ApiClient {
-    /** Pre-configured HTTP client. Use this to hit non-storefront endpoints (`/wp-json/wc/v3/*`, custom routes). */
+    /** Pre-configured low-level client. Use directly for endpoints not yet wrapped below. */
     http: HttpClient;
+
     products: {
-        list: (params?: { page?: number; per_page?: number; search?: string; category?: string }) => Promise<WcProduct[]>;
-        bySlug: (slug: string) => Promise<WcProduct | null>;
-        byId: (id: number) => Promise<WcProduct>;
+        list: (params?: { page?: number; per_page?: number; search?: string }) => Promise<Paginated<Product>>;
+        bySlug: (slug: string) => Promise<Product>;
     };
+
     cart: {
-        get: () => Promise<WcCart>;
-        addItem: (input: { id: number; quantity: number }) => Promise<WcCart>;
-        updateItem: (key: string, quantity: number) => Promise<WcCart>;
-        removeItem: (key: string) => Promise<WcCart>;
+        get: (cartId: string) => Promise<Cart>;
+        addLine: (cartId: string, input: { productId: number; quantity: number }) => Promise<Cart>;
+        updateLine: (cartId: string, lineKey: string, quantity: number) => Promise<Cart>;
+        removeLine: (cartId: string, lineKey: string) => Promise<Cart>;
     };
 }
 
 /**
- * Build a typed client around the WooCommerce Store API (`/wp-json/wc/store/v1/*`).
+ * Build a typed client around the Calibra commerce API (`/api/v1/*`).
  *
- * The Store API is public and cart-token-scoped — designed for headless storefronts. Use the returned
- * `http` field for admin endpoints (`/wp-json/wc/v3/*`) that require consumer key/secret auth.
+ * Same client works from React server components, route handlers, the browser, and Node/edge
+ * runtimes — the underlying {@link HttpClient} only assumes global `fetch`.
  */
 export function createApiClient(options: CreateApiClientOptions = {}): ApiClient {
     const origin = (options.baseUrl ?? getBaseUrl()).replace(/\/+$/, "");
 
     const http = new HttpClient({
-        baseUrl: `${origin}/wp-json/wc/store/v1`,
+        baseUrl: `${origin}/api/v1`,
         headers: {
             accept: "application/json",
-            "Cart-Token": options.cartToken,
-            authorization: buildBasicAuth(options.consumerKey, options.consumerSecret),
+            "accept-language": options.locale,
+            authorization: options.token !== undefined ? `Bearer ${options.token}` : undefined,
             ...options.headers,
         },
         fetch: options.fetch,
@@ -57,24 +55,34 @@ export function createApiClient(options: CreateApiClientOptions = {}): ApiClient
     return {
         http,
         products: {
-            list: (params) => http.get<WcProduct[]>("/products", { query: params }),
-            byId: (id) => http.get<WcProduct>(`/products/${id}`),
+            list: (params) => http.get<Paginated<Product>>("/products", { query: params }),
             bySlug: async (slug) => {
-                const list = await http.get<WcProduct[]>("/products", { query: { slug } });
-                return list[0] ?? null;
+                const { data } = await http.get<Resource<Product>>(`/products/${encodeURIComponent(slug)}`);
+                return data;
             },
         },
         cart: {
-            get: () => http.get<WcCart>("/cart"),
-            addItem: (input) => http.post<WcCart>("/cart/add-item", input),
-            updateItem: (key, quantity) => http.post<WcCart>("/cart/update-item", { key, quantity }),
-            removeItem: (key) => http.post<WcCart>("/cart/remove-item", { key }),
+            get: async (cartId) => {
+                const { data } = await http.get<Resource<Cart>>(`/carts/${encodeURIComponent(cartId)}`);
+                return data;
+            },
+            addLine: async (cartId, input) => {
+                const { data } = await http.post<Resource<Cart>>(`/carts/${encodeURIComponent(cartId)}/lines`, input);
+                return data;
+            },
+            updateLine: async (cartId, lineKey, quantity) => {
+                const { data } = await http.patch<Resource<Cart>>(
+                    `/carts/${encodeURIComponent(cartId)}/lines/${encodeURIComponent(lineKey)}`,
+                    { quantity },
+                );
+                return data;
+            },
+            removeLine: async (cartId, lineKey) => {
+                const { data } = await http.delete<Resource<Cart>>(
+                    `/carts/${encodeURIComponent(cartId)}/lines/${encodeURIComponent(lineKey)}`,
+                );
+                return data;
+            },
         },
     };
-}
-
-function buildBasicAuth(key: string | undefined, secret: string | undefined): string | undefined {
-    if (key === undefined || secret === undefined) return undefined;
-    const encoded = typeof btoa === "function" ? btoa(`${key}:${secret}`) : Buffer.from(`${key}:${secret}`).toString("base64");
-    return `Basic ${encoded}`;
 }

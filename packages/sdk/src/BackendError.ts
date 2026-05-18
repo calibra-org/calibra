@@ -10,12 +10,7 @@ export class BackendError extends Error {
     readonly body: unknown;
 
     constructor(status: number, body: unknown, message?: string) {
-        const resolved =
-            message ??
-            (isRecord(body) && typeof body.message === "string" && body.message) ||
-            (isRecord(body) && typeof body.error === "string" && body.error) ||
-            "Request failed";
-        super(typeof resolved === "string" ? resolved : "Request failed");
+        super(message ?? extractMessage(body));
         this.name = "BackendError";
         this.status = status;
         this.body = body;
@@ -24,4 +19,11 @@ export class BackendError extends Error {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
+}
+
+function extractMessage(body: unknown): string {
+    if (!isRecord(body)) return "Request failed";
+    if (typeof body.message === "string" && body.message.length > 0) return body.message;
+    if (typeof body.error === "string" && body.error.length > 0) return body.error;
+    return "Request failed";
 }

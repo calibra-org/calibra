@@ -17,12 +17,12 @@
     },
     "dependencies": {
         "@calibra/sdk": "workspace:*",
-        "clsx": "catalog:",
+        "@calibra/shared": "workspace:*",
+        "lucide-react": "catalog:",
         "next": "catalog:",
         "next-intl": "catalog:",
         "react": "catalog:",
-        "react-dom": "catalog:",
-        "tailwind-merge": "catalog:"
+        "react-dom": "catalog:"
     },
     "devDependencies": {
         "@calibra/typescript-config": "workspace:*",

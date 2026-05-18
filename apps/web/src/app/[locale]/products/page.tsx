@@ -11,7 +11,7 @@ export default async function ProductsPage({ params }: PageProps) {
 
     return (
         <section className="flex flex-col gap-6 py-12">
-            <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+            <h1 className="font-bold text-3xl tracking-tight">{t("title")}</h1>
             <p className="text-muted-foreground">{t("empty")}</p>
         </section>
     );

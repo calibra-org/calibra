@@ -1,13 +1,13 @@
+import { locales } from "@calibra/shared/i18n";
 import { defineRouting } from "next-intl/routing";
 
-import { defaultLocale, locales } from "./config";
-
 /**
- * Single source of truth for locale-aware routing. `localePrefix: "as-needed"` keeps the default
- * locale (`fa`) unprefixed at `/` while English lives under `/en/*`.
+ * Locale-aware routing for the storefront. Persian is the default — the primary audience is
+ * Persian-speaking customers. `localePrefix: "as-needed"` keeps `/` and `/products` as Persian
+ * routes; English lives under `/en/*`.
  */
 export const routing = defineRouting({
     locales,
-    defaultLocale,
+    defaultLocale: "fa",
     localePrefix: "as-needed",
 });

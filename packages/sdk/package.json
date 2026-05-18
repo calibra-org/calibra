@@ -21,9 +21,6 @@
         "test:watch": "vitest",
         "typecheck": "tsc --noEmit --emitDeclarationOnly false"
     },
-    "dependencies": {
-        "@woocommerce/types": "catalog:"
-    },
     "devDependencies": {
         "@calibra/typescript-config": "workspace:*",
         "@types/node": "catalog:",

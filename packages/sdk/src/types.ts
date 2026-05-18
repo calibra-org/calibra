@@ -1,17 +1,61 @@
 /**
- * Re-export of the WooCommerce Store API response shapes consumed by the storefront.
+ * Public domain types exposed by the Calibra commerce API.
  *
- * The single source of truth for these is the official `@woocommerce/types` package — keep this file
- * as a thin re-export layer rather than duplicating field definitions. If you need a richer shape
- * (variations, attributes, payment methods, …), import it directly from `@woocommerce/types` in the
- * consuming module instead of widening this file.
+ * Mirror the response shapes in `apps/api/app/controllers/*.ts`. When the API adds a field, add it
+ * here and bump the SDK consumers — types are the contract.
  */
 
-export type {
-    CartResponse as WcCart,
-    CartResponseItem as WcCartItem,
-    CartResponseTotals as WcCartTotals,
-    ProductResponseImage as WcImage,
-    ProductResponseItem as WcProduct,
-    ProductResponseItemPrices as WcPrices,
-} from "@woocommerce/types";
+/** Money amount in minor units (cents, rials, …). Always an integer. */
+export type MoneyMinor = number;
+
+export interface Product {
+    id: number;
+    slug: string;
+    name: string;
+    description: string;
+    priceCents: MoneyMinor;
+    /** ISO 4217 currency code, e.g. `"USD"`, `"IRR"`. */
+    currency: string;
+    /** `null` when stock is untracked (digital goods, services). */
+    stockQuantity: number | null;
+    imageUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CartLine {
+    /** Stable identifier for the line, used to update or remove it without resending the product. */
+    key: string;
+    productId: number;
+    quantity: number;
+    unitPriceCents: MoneyMinor;
+    lineTotalCents: MoneyMinor;
+}
+
+export interface Cart {
+    id: string;
+    currency: string;
+    lines: CartLine[];
+    subtotalCents: MoneyMinor;
+    taxCents: MoneyMinor;
+    totalCents: MoneyMinor;
+}
+
+/**
+ * Paginated list response. Matches the envelope returned by `ProductsController#index` —
+ * `{ data, meta }` with cursor-free page numbers.
+ */
+export interface Paginated<T> {
+    data: T[];
+    meta: {
+        page: number;
+        perPage: number;
+        total: number;
+        lastPage: number;
+    };
+}
+
+/** Single-resource response envelope. */
+export interface Resource<T> {
+    data: T;
+}

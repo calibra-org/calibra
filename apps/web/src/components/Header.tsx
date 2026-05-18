@@ -1,9 +1,9 @@
 "use client";
 
+import type { Locale } from "@calibra/shared/i18n";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Link, getPathname, usePathname } from "#/lib/i18n/navigation";
-import type { Locale } from "#/lib/i18n/config";
+import { getPathname, Link, usePathname } from "#/lib/i18n/navigation";
 
 export function Header() {
     const t = useTranslations("Nav");
@@ -11,12 +11,12 @@ export function Header() {
     const switchLabel = useTranslations("Common")("switchLocale");
     const locale = useLocale() as Locale;
     const pathname = usePathname();
-    const nextLocale: Locale = locale === "en" ? "fa" : "en";
+    const nextLocale: Locale = locale === "fa" ? "en" : "fa";
 
     return (
-        <header className="border-b border-border">
+        <header className="border-border border-b">
             <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-4 py-4">
-                <Link href="/" className="text-lg font-bold tracking-tight">
+                <Link href="/" className="font-bold text-lg tracking-tight">
                     {siteName}
                 </Link>
                 <nav className="flex items-center gap-6 text-sm">

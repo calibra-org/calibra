@@ -1,0 +1,47 @@
+name: calibra-api
+
+services:
+    db:
+        image: postgres:17-alpine
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: ${DB_USER:-calibra}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:-calibra}
+            POSTGRES_DB: ${DB_DATABASE:-calibra}
+        ports:
+            - "${DB_PORT:-5432}:5432"
+        volumes:
+            - db_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-calibra} -d ${DB_DATABASE:-calibra}"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    api:
+        build:
+            context: ../..
+            dockerfile: apps/api/Dockerfile
+        restart: unless-stopped
+        depends_on:
+            db:
+                condition: service_healthy
+        ports:
+            - "${PORT:-3333}:3333"
+        environment:
+            TZ: UTC
+            NODE_ENV: production
+            PORT: 3333
+            HOST: 0.0.0.0
+            APP_NAME: calibra-api
+            LOG_LEVEL: ${LOG_LEVEL:-info}
+            APP_KEY: ${APP_KEY:?APP_KEY must be set in .env}
+            DB_HOST: db
+            DB_PORT: 5432
+            DB_USER: ${DB_USER:-calibra}
+            DB_PASSWORD: ${DB_PASSWORD:-calibra}
+            DB_DATABASE: ${DB_DATABASE:-calibra}
+            ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+
+volumes:
+    db_data:

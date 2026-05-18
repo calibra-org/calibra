@@ -1,18 +1,18 @@
-import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { directionFor, type Locale, locales } from "@calibra/shared/i18n";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 
 import { Footer } from "#/components/Footer";
 import { Header } from "#/components/Header";
-import { directionFor, locales, type Locale } from "#/lib/i18n/config";
 import { routing } from "#/lib/i18n/routing";
 import "#/styles/globals.css";
 
 export const metadata: Metadata = {
-    title: { default: "calibra", template: "%s · calibra" },
-    description: "calibra online store",
+    title: { default: "Shop", template: "%s · Shop" },
+    description: "Online store.",
 };
 
 export function generateStaticParams(): { locale: Locale }[] {

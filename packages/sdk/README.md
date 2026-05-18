@@ -1,19 +1,23 @@
 # @calibra/sdk
 
-Framework-agnostic TypeScript client for the WooCommerce Store API and REST API. Used by `apps/web` to talk to the WordPress backend in `apps/cms`.
+Framework-agnostic TypeScript client for the [`@calibra/api`](../../apps/api) AdonisJS backend. Used by `apps/web` and `apps/admin` to talk to the API.
 
 ## Usage
 
 ```ts
 import { createApiClient } from "@calibra/sdk";
 
-const wc = createApiClient({
+const api = createApiClient({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
-    cartToken: getCartTokenFromCookie(),
+    token: getSessionToken(),
 });
 
-const products = await wc.products.list({ per_page: 24 });
-const cart = await wc.cart.addItem({ id: 42, quantity: 1 });
+const products = await api.products.list({ per_page: 24 });
+const cart = await api.cart.addLine(cartId, { productId: 42, quantity: 1 });
 ```
 
-For admin endpoints (`/wp-json/wc/v3/*`) pass `consumerKey` + `consumerSecret` — Basic auth is applied automatically.
+For endpoints not yet wrapped, drop down to the low-level client:
+
+```ts
+const stats = await api.http.get<{ ordersToday: number }>("/admin/stats");
+```

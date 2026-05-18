@@ -19,18 +19,20 @@ alias u := up
 install:
     pnpm install
 
-# Run the web app only (assumes WordPress is already running)
+# Run the web + admin dev servers (assumes the API is already running)
 dev: install
     pnpm dev
 
-# Boot the full stack: WordPress backend (docker) + Next.js storefront (dev server)
-up: install cms-up
+# Boot the FULL infra: AdonisJS API + Postgres (docker) + storefront + admin dev servers.
+# Storefront at :3000, admin at :3001, API at :3333. Single command — Ctrl-C stops the dev
+# servers; the API container keeps running so the next `just up` is fast (`just down` to stop it).
+up: install api-up
     pnpm dev
 
-# Stop the WordPress backend (preserves volumes)
-down: cms-down
+# Stop the API stack (preserves volumes — data survives)
+down: api-down
 
-# Build all packages
+# Build every package + app via turbo
 build:
     pnpm build
 
@@ -38,11 +40,11 @@ build:
 test *args:
     pnpm test {{ args }}
 
-# Run the web Playwright e2e suite (set BASE_URL to target a remote preview; otherwise boots `pnpm run dev`)
+# Run the storefront Playwright e2e suite
 test-e2e *args:
     pnpm --filter @calibra/web run test:e2e {{ args }}
 
-# Record a new spec via Playwright's codegen recorder
+# Record a new storefront spec via Playwright's codegen recorder
 test-e2e-codegen *args:
     pnpm --filter @calibra/web run test:e2e:codegen {{ args }}
 
@@ -57,6 +59,10 @@ test-e2e-ui *args:
 # Open the last HTML report
 test-e2e-report *args:
     pnpm --filter @calibra/web run test:e2e:report {{ args }}
+
+# Run the admin e2e suite
+test-e2e-admin *args:
+    pnpm --filter @calibra/admin run test:e2e {{ args }}
 
 # Run typecheck across all packages
 typecheck:
@@ -73,25 +79,25 @@ format:
 # Ready for PR review: format, lint, typecheck, build, test
 ready: format lint typecheck build test
 
-# Boot the WordPress backend (docker compose up -d)
-cms-up:
-    pnpm --filter @calibra/cms run up
+# Boot the AdonisJS API + Postgres (docker compose up -d)
+api-up:
+    pnpm --filter @calibra/api run up
 
-# Stop the WordPress backend (preserves volumes)
-cms-down:
-    pnpm --filter @calibra/cms run down
+# Stop the API stack (preserves volumes)
+api-down:
+    pnpm --filter @calibra/api run down
 
-# Nuke WordPress volumes and start fresh (loses DB + uploads)
-cms-reset:
-    pnpm --filter @calibra/cms run reset
+# Nuke the API volumes and start fresh (loses DB)
+api-reset:
+    pnpm --filter @calibra/api run reset
 
-# Tail WordPress logs
-cms-logs:
-    pnpm --filter @calibra/cms run logs
+# Tail the API container logs
+api-logs:
+    pnpm --filter @calibra/api run logs
 
-# Forward an argument to wp-cli inside the WordPress container, e.g. `just cms-wp 'plugin list'`
-cms-wp arg:
-    pnpm --filter @calibra/cms run wp {{ arg }}
+# Run a Lucid command inside the API container, e.g. `just api-ace 'migration:run'`
+api-ace arg:
+    pnpm --filter @calibra/api exec node ace {{ arg }}
 
 # Clean build artifacts and caches
 clean:

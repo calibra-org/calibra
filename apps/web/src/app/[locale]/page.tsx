@@ -19,7 +19,7 @@ function HomeContent() {
 
     return (
         <section className="flex flex-col items-start gap-6 py-12">
-            <h1 className="text-balance text-4xl font-bold tracking-tight md:text-5xl">{t("heroTitle")}</h1>
+            <h1 className="text-balance font-bold text-4xl tracking-tight md:text-5xl">{t("heroTitle")}</h1>
             <p className="max-w-xl text-pretty text-lg text-muted-foreground">{t("heroBody")}</p>
             <Link
                 href="/products"

@@ -1,0 +1,7 @@
+.env
+.env.local
+build/
+node_modules/
+tmp/
+coverage/
+.cache/

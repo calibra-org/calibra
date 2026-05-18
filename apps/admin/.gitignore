@@ -1,0 +1,15 @@
+.next
+out
+dist
+.turbo
+.cache
+.env
+.env.local
+.env.*.local
+next-env.d.ts
+test-results
+playwright-report
+blob-report
+playwright/.cache
+.playwright-cli
+coverage

@@ -1,0 +1,79 @@
+{
+    "Site": {
+        "name": "پنل مدیریت",
+        "tagline": "پنل مدیریت فروشگاه"
+    },
+    "Nav": {
+        "dashboard": "داشبورد",
+        "products": "محصولات",
+        "orders": "سفارش‌ها",
+        "customers": "مشتری‌ها",
+        "settings": "تنظیمات"
+    },
+    "Topbar": {
+        "search": "جستجو…",
+        "notifications": "اعلان‌ها",
+        "signOut": "خروج"
+    },
+    "Login": {
+        "title": "ورود",
+        "subtitle": "اطلاعات ورود مدیر را وارد کنید.",
+        "email": "ایمیل",
+        "password": "رمز عبور",
+        "submit": "ورود"
+    },
+    "Dashboard": {
+        "title": "داشبورد",
+        "subtitle": "نمای کلی فروشگاه در یک نگاه.",
+        "ordersToday": "سفارش‌های امروز",
+        "revenueToday": "درآمد امروز",
+        "activeProducts": "محصولات فعال",
+        "pendingFulfilments": "در انتظار ارسال",
+        "recentOrders": "سفارش‌های اخیر",
+        "topProducts": "پرفروش‌ترین‌ها",
+        "viewAll": "مشاهده همه"
+    },
+    "Products": {
+        "title": "محصولات",
+        "subtitle": "مدیریت محصولات فروشگاه.",
+        "addProduct": "افزودن محصول",
+        "search": "جستجوی محصول…",
+        "empty": "هنوز محصولی اضافه نکرده‌اید — برای شروع اولین محصول را اضافه کنید.",
+        "table": {
+            "product": "محصول",
+            "sku": "کد",
+            "price": "قیمت",
+            "stock": "موجودی",
+            "status": "وضعیت",
+            "actions": "عملیات"
+        }
+    },
+    "Orders": {
+        "title": "سفارش‌ها",
+        "subtitle": "پیگیری و انجام سفارش‌های ورودی.",
+        "search": "جستجوی سفارش…",
+        "empty": "هنوز سفارشی ثبت نشده است.",
+        "table": {
+            "order": "سفارش",
+            "customer": "مشتری",
+            "total": "مبلغ",
+            "status": "وضعیت",
+            "placedAt": "زمان ثبت",
+            "actions": "عملیات"
+        }
+    },
+    "Status": {
+        "active": "فعال",
+        "draft": "پیش‌نویس",
+        "outOfStock": "ناموجود",
+        "pending": "در انتظار",
+        "paid": "پرداخت‌شده",
+        "shipped": "ارسال‌شده",
+        "delivered": "تحویل‌شده",
+        "refunded": "بازگشت‌شده",
+        "cancelled": "لغوشده"
+    },
+    "Common": {
+        "switchLocale": "English"
+    }
+}
