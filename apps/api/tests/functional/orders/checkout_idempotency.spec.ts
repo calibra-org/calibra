@@ -59,7 +59,12 @@ test.group("POST /api/v1/checkout/submit (idempotency)", (group) => {
         assert.equal(a.body().data.id, b.body().data.id);
         assert.equal(b.header("idempotency-replay"), "true");
 
-        const allOrders = await Order.query().where("status", OrderStatus.Pending);
+        /**
+         * cod is a no-redirect gateway; phase-08 `payment_service.init` transitions the order
+         * to `on_hold` inline (no PSP callback ever arrives), so the assertion targets that
+         * post-payment state — not the intermediate `pending` row the finalizer briefly writes.
+         */
+        const allOrders = await Order.query().where("status", OrderStatus.OnHold);
         assert.equal(allOrders.length, 1);
     });
 
@@ -71,8 +76,8 @@ test.group("POST /api/v1/checkout/submit (idempotency)", (group) => {
         const orderId = first.body().data.id;
 
         const order = await Order.findOrFail(orderId);
-        const { orderStateMachine } = await import("#services/order_state_machine");
-        await orderStateMachine.transition(order, OrderStatus.OnHold);
+        /** cod already left this on_hold via the payment-service init path, so the replay must echo on_hold. */
+        assert.equal(order.status, OrderStatus.OnHold);
 
         const replay = await client.post("/api/v1/checkout/submit").cookie("cart_token", token).header("Idempotency-Key", "ik-2");
         assert.equal(replay.body().data.status, "on_hold");

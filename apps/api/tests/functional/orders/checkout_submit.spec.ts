@@ -59,14 +59,20 @@ test.group("POST /api/v1/checkout/submit (happy + sad paths)", (group) => {
 
         submit.assertStatus(200);
         const body = submit.body();
-        assert.equal(body.data.status, "pending");
+        /**
+         * cod is a no-redirect gateway; phase-08 `payment_service.init` flips the freshly-
+         * finalized `pending` order to `on_hold` (no PSP callback ever arrives, treasury
+         * reconciles offline).
+         */
+        assert.equal(body.data.status, "on_hold");
         assert.exists(body.data.order_key);
         assert.equal(body.payment.method_code, "cod");
+        assert.isNull(body.payment.redirect_url);
 
         const after = await InventoryItem.query().where("product_id", Number(product.id)).first();
         assert.equal(after!.stockQuantity, before!.stockQuantity - 2);
 
-        const ordersForCart = await Order.query().where("status", OrderStatus.Pending).where("idempotency_key", "smoke-1");
+        const ordersForCart = await Order.query().where("status", OrderStatus.OnHold).where("idempotency_key", "smoke-1");
         assert.equal(ordersForCart.length, 1);
 
         const refreshedCart = await client.get("/api/v1/cart").cookie("cart_token", token);
