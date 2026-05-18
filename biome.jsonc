@@ -129,6 +129,18 @@
             "assist": {
                 "enabled": false
             }
+        },
+        {
+            "includes": ["apps/api/database/schema.ts"],
+            "linter": {
+                "enabled": false
+            },
+            "formatter": {
+                "enabled": false
+            },
+            "assist": {
+                "enabled": false
+            }
         }
     ],
 

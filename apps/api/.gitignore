@@ -6,4 +6,3 @@ tmp/
 coverage/
 .cache/
 .adonisjs/
-database/schema.ts
