@@ -49,6 +49,20 @@ jobs:
 
     test:
         runs-on: ubuntu-latest
+        services:
+            postgres:
+                image: postgres:17-alpine
+                env:
+                    POSTGRES_USER: calibra
+                    POSTGRES_PASSWORD: calibra
+                    POSTGRES_DB: calibra
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U calibra -d calibra"
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 10
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -59,6 +73,10 @@ jobs:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: "pnpm"
             - run: pnpm install --frozen-lockfile
+            - name: Create test database
+              env:
+                  PGPASSWORD: calibra
+              run: psql -h localhost -U calibra -d calibra -c "CREATE DATABASE calibra_test OWNER calibra;"
             - run: pnpm run test
 
     build:
