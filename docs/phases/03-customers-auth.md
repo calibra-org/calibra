@@ -1,0 +1,243 @@
+# Phase 03 — Customers + Auth
+
+> Users (auth), customers (commerce identity), addresses, downloads, register/login/logout/password-reset, `/account/*` endpoints, admin customer CRUD.
+
+**Branch:** `phase/03-customers-auth`
+**Prerequisites:** phase-01 (uses `regions`). Read [`09-extensibility-patterns.md`](./09-extensibility-patterns.md) before starting — patterns 1, 2, 3, 4 apply throughout this phase.
+**Parallel with:** phase-02-catalog
+**Migration timestamp block:** `1747300000000`–`1747399999999`
+**Estimated scope:** ~5 migrations, ~5 models, ~12 endpoints, ~25 tests.
+
+## Goal
+
+Stand up the entire auth + customer surface. After this PR:
+
+- Visitors can register, log in (issuing an Adonis `access_tokens` opaque bearer), log out, request + reset password.
+- Logged-in customers can read + update their profile, manage multiple addresses, view their download entitlements.
+- Admin can CRUD customers + view per-customer downloads.
+- The `auth` middleware exists; every other phase mounts it on routes that need it.
+
+## Files this phase owns
+
+```
+apps/api/
+├── start/routes/
+│   ├── auth.ts                                    # register/login/logout/password
+│   ├── account.ts                                 # /account/me, addresses, downloads
+│   └── admin_customers.ts                         # admin CRUD
+├── start/kernel.ts                                # ADD: auth middleware to named map
+├── config/
+│   └── auth.ts                                    # NEW: access_tokens guard
+├── database/
+│   ├── migrations/
+│   │   ├── 1747300000000_create_users_table.ts
+│   │   ├── 1747300100000_create_auth_access_tokens_table.ts
+│   │   ├── 1747300200000_create_password_reset_tokens_table.ts
+│   │   ├── 1747300300000_create_customers_table.ts
+│   │   ├── 1747300400000_create_customer_addresses_table.ts
+│   │   ├── 1747300500000_create_customer_downloads_table.ts
+│   │   ├── 1747300600000_create_customer_iran_profiles_table.ts          # Pattern 3
+│   │   └── 1747300700000_create_order_address_iran_extensions_table.ts   # Pattern 3 — snapshot table referenced by phase 05
+│   └── seeders/
+│       └── 0003_customers_demo_seeder.ts          # ~10 customers + addresses for dev
+├── app/
+│   ├── models/
+│   │   ├── user.ts
+│   │   ├── customer.ts
+│   │   ├── customer_address.ts
+│   │   ├── customer_download.ts
+│   │   ├── customer_iran_profile.ts                              # Pattern 3
+│   │   └── order_address_iran_extension.ts                       # Pattern 3 — phase 05 writes to it
+│   ├── controllers/
+│   │   ├── auth/
+│   │   │   ├── register_controller.ts
+│   │   │   ├── login_controller.ts
+│   │   │   ├── logout_controller.ts
+│   │   │   ├── password_forgot_controller.ts
+│   │   │   └── password_reset_controller.ts
+│   │   ├── account/
+│   │   │   ├── me_controller.ts
+│   │   │   ├── addresses_controller.ts
+│   │   │   └── downloads_controller.ts
+│   │   └── admin/
+│   │       └── customers_controller.ts
+│   ├── middleware/
+│   │   ├── auth_middleware.ts                     # Adonis access_tokens guard
+│   │   └── admin_middleware.ts                    # role check
+│   ├── validators/
+│   │   ├── auth/
+│   │   │   ├── register_validator.ts
+│   │   │   ├── login_validator.ts
+│   │   │   └── password_validator.ts
+│   │   └── account/
+│   │       └── address_validator.ts
+│   └── services/
+│       ├── national_id_service.ts                 # کد ملی checksum validator (used by Iran country rules)
+│       ├── phone_service.ts                       # E.164 normalization
+│       └── country_address_rules/                 # Pattern 2 — pluggable per-country validation
+│           ├── index.ts                           # registry + rulesFor(country)
+│           ├── default.ts                         # permissive defaults for unknown countries
+│           └── ir.ts                              # Iran-specific rules (postcode regex, region required, NID extension)
+└── tests/
+    ├── unit/
+    │   ├── national_id.spec.ts
+    │   └── phone_service.spec.ts
+    └── functional/
+        ├── auth/
+        │   ├── register.spec.ts
+        │   ├── login.spec.ts
+        │   ├── logout.spec.ts
+        │   └── password_reset.spec.ts
+        ├── account/
+        │   ├── me.spec.ts
+        │   ├── addresses.spec.ts
+        │   └── downloads.spec.ts
+        └── admin/
+            └── customers.spec.ts
+```
+
+## Schema (ADR §"Customer / account")
+
+| Table | Notes |
+|---|---|
+| `users` | `id, email CITEXT UNIQUE, password_hash, locale, role ('customer'\|'admin'), last_login_at, deleted_at`. NO PII beyond email — name/phone live on `customers`. |
+| `auth_access_tokens` | Adonis-generated by `node ace configure @adonisjs/auth --guard=access_tokens`. Leave the migration as scaffolded. |
+| `password_reset_tokens` | `id, user_id FK, token_hash UNIQUE, expires_at, used_at`. |
+| `customers` | `id, user_id FK UNIQUE NULLABLE (NULL = guest), first_name, last_name, phone (E.164), country_default CHAR(2), attributes JSONB, deleted_at`. **No Iran-specific columns** — those live in `customer_iran_profiles` per Pattern 3. |
+| `customer_addresses` | `id, customer_id FK, kind ('billing'\|'shipping'\|'both'), label, first_name, last_name, company, address_line_1, address_line_2, city, region_id BIGINT NULLABLE FK regions, region_text TEXT NULLABLE, postcode, country CHAR(2), phone, is_default BOOL, attributes JSONB`. Partial unique index `(customer_id, kind) WHERE is_default = true`. CHECK constraint: `(region_id IS NOT NULL) OR (region_text IS NOT NULL) OR NOT requires_region(country)` — the `country_address_rules` service enforces the "is region required" question per country, validator surfaces the constraint at API time. |
+| `customer_downloads` | `id, customer_id FK, product_id FK, product_download_id FK, order_id FK, granted_at, expires_at, download_limit, downloads_used`. Populated when an order moves to `completed` (phase 05). |
+| `customer_iran_profiles` | **Optional 1:1 extension** for Iranian customers (Pattern 3). `customer_id BIGINT PK FK customers(id) ON DELETE CASCADE, national_id CHAR(10) NULL, corporate_national_id CHAR(11) NULL, economic_code VARCHAR(20) NULL, legal_company_name_fa VARCHAR(200) NULL, vat_taxpayer_status VARCHAR(20) NULL, attributes JSONB`. Foreign customers have no row here. Index on `national_id` for lookup. |
+| `order_address_iran_extensions` | **Optional 1:1 snapshot** for Iranian order addresses (Pattern 3). `order_address_id BIGINT PK FK order_addresses(id) ON DELETE CASCADE, national_id, corporate_national_id, economic_code, legal_company_name_fa, attributes JSONB`. Migration lives in this phase; phase 05 writes to it when snapshotting an IR address that carries extension data. |
+
+**Important:** `customer_addresses.region_id` references the country-agnostic `regions` table (Pattern 1). Foreign-customer escape hatch is the `region_text` free-text fallback. The country-rules service (Pattern 2) decides whether region is required — Iran requires it, US optionally takes it, unlisted countries default to permissive (neither required).
+
+## Auth configuration
+
+`config/auth.ts` (after `node ace configure @adonisjs/auth --guard=access_tokens`):
+- Default guard: `api`
+- `api` guard: access_tokens, user provider = `users` model
+- Token lifetime: 30 days for storefront, configurable for admin (defer)
+
+`start/kernel.ts` register the named middleware:
+```ts
+export const middleware = router.named({
+    auth: () => import('#middleware/auth_middleware'),
+    admin: () => import('#middleware/admin_middleware'),
+})
+```
+
+`auth_middleware`: `await ctx.auth.use('api').authenticate()` — wraps any 401 in a `{ message: i18n.t('errors.auth.unauthenticated') }`.
+
+`admin_middleware`: requires `ctx.auth.user.role === 'admin'`; throws localized 403 otherwise.
+
+## Endpoints
+
+### Auth (`start/routes/auth.ts`, prefix `/api/v1/auth`)
+
+| Method | Path | Body | Notes |
+|---|---|---|---|
+| `POST` | `/register` | `{email, password, first_name, last_name, phone?}` | Creates `users` + `customers` row in one transaction. Returns `{ user, customer, token }`. Auto-login. |
+| `POST` | `/login` | `{email, password}` | Returns `{ user, customer, token }`. |
+| `POST` | `/logout` | (none, auth required) | Revokes current token. |
+| `POST` | `/password/forgot` | `{email}` | Creates `password_reset_tokens` row, sends email (mail service stubbed — log to console in dev). Always returns 200 (no enumeration). |
+| `POST` | `/password/reset` | `{token, password}` | Consumes token, updates password_hash, revokes existing access tokens. |
+| `GET` | `/me` | (auth required) | Same as `/account/me`, convenience. |
+
+### Account (`start/routes/account.ts`, prefix `/api/v1/account`, `auth` middleware)
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/me` | Returns `{ user (filtered), customer }`. |
+| `PUT` | `/me` | Updates customer profile fields + user locale. Email change requires re-verification (defer to phase 9). |
+| `GET` | `/addresses` | List customer's addresses. |
+| `POST` | `/addresses` | Add an address. Setting `is_default=true` unsets siblings of the same `kind`. |
+| `GET` | `/addresses/:id` | Single. |
+| `PATCH` | `/addresses/:id` | Partial update. |
+| `DELETE` | `/addresses/:id` | Remove. Cannot delete the only default of a kind. |
+| `GET` | `/downloads` | List customer's download entitlements (joined from `customer_downloads`). |
+| `GET` | `/downloads/:id/url` | Returns a short-lived signed URL (stub in this phase; phase 08 wires the signing). |
+
+### Admin (`start/routes/admin_customers.ts`, prefix `/api/v1/admin/customers`, `auth + admin` middleware)
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/` | List + filter (`search`, `role`, `is_paying_customer`, `country`). |
+| `GET` | `/:id` | Single. |
+| `POST` | `/` | Create (admin can register customers manually). |
+| `PUT|PATCH` | `/:id` | Update. |
+| `DELETE` | `/:id` | Soft-delete (set `deleted_at` on both `users` + `customers`). |
+| `GET` | `/:id/downloads` | Per-Woo parity. |
+| `POST` | `/batch` | `{create, update, delete}` |
+
+## Validators
+
+- `register_validator`: `email` is email + unique on `users` + max 255, `password` ≥ 8 chars + complexity rule (1 letter + 1 digit), `first_name` 1–80 chars, `last_name` 1–80 chars, `phone` optional + E.164 normalized via `phone_service`.
+- `login_validator`: `email` + `password` required.
+- `password_validator` (reset): `token` 64-char hex, `password` per register rules.
+- `address_validator` — thin wrapper around `country_address_rules.rulesFor(country)` (Pattern 2):
+  - `country` required ISO-3166-1 alpha-2.
+  - Apply `rules.requiredFields`, `rules.postcodePattern`, `rules.requiresRegion`, `rules.validateRegion`, `rules.extensionValidator` (returns localized error codes for the `iran_extension.national_id` checksum, etc.).
+  - For Iran with `iran_extension` present: `national_id` must pass `national_id_service.validate`, `corporate_national_id` 11-digit if present, `economic_code` 12-digit if present.
+  - `kind` ∈ enum; `is_default` optional bool.
+  - The validator never branches on country in its own code; all country-conditional logic lives behind `rulesFor()`.
+
+## Services
+
+### `national_id_service.ts` — `validate(nid: string): boolean`
+
+Standard کد ملی checksum. Used **only** when a customer or address opts into the Iran-specific extension fields. NOT enforced globally — only validates when present.
+
+Algorithm:
+```
+if (!/^\d{10}$/.test(nid)) return false
+const digits = nid.split('').map(Number)
+const check = digits[9]
+const sum = digits.slice(0,9).reduce((acc, d, i) => acc + d * (10 - i), 0)
+const remainder = sum % 11
+return (remainder < 2 && check === remainder) || (remainder >= 2 && check === 11 - remainder)
+```
+
+### `phone_service.ts` — `normalize(input: string, defaultCountry: string): string`
+
+Strip non-digits, prepend country code based on `defaultCountry`, validate E.164. For Iran: `0912…` → `+98912…`, also accepts `+98912…` directly. Use `libphonenumber-js` only if approved (it's not currently in catalog; defer to a simpler regex pair for now).
+
+## Seeder
+
+`0003_customers_demo_seeder.ts`:
+- 1 admin user (`admin@calibra.dev` / `admin1234`, role=admin).
+- 10 customer users with realistic Persian names + emails + phones.
+- Each customer gets 1–3 addresses (mix of Iran + 2 foreign-customer examples to exercise the country-conditional path).
+- Idempotent via `updateOrCreate(email)`.
+
+## Tests
+
+### Unit
+
+| Spec | Cases |
+|---|---|
+| `national_id.spec.ts` | (a) Known-valid Iranian NID passes. (b) Wrong length → false. (c) All-same-digit → false. (d) Bad checksum → false. (e) Non-digit input → false. |
+| `country_address_rules.spec.ts` | (a) `rulesFor('IR')` returns Iran rules: postcode pattern, region required, NID extension validator. (b) `rulesFor('US')` returns default rules (region optional, postcode permissive). (c) `rulesFor('ZZ')` (unknown) returns permissive defaults; no throw. (d) `defaultRules.requiredFields` covers the universal minimum. |
+| `phone_service.spec.ts` | (a) `09121234567` → `+989121234567`. (b) `+989121234567` → `+989121234567`. (c) Already E.164 from another country preserved. (d) Garbage → throws. |
+
+### Functional
+
+| Spec | Cases |
+|---|---|
+| `auth/register.spec.ts` | (a) Happy path returns token + creates customer. (b) Duplicate email → 422. (c) Weak password → 422. (d) Phone normalized on save. |
+| `auth/login.spec.ts` | (a) Correct credentials → token. (b) Wrong password → 401. (c) Unknown email → 401 (same message, no enumeration). (d) Deleted user → 401. |
+| `auth/logout.spec.ts` | (a) Revokes current token. (b) Subsequent request with same token → 401. |
+| `auth/password_reset.spec.ts` | (a) Forgot always returns 200. (b) Reset with valid token sets new password + revokes existing tokens. (c) Reset with expired token → 422. (d) Reset with already-used token → 422. |
+| `account/me.spec.ts` | (a) GET returns `{user, customer, profile_extensions: {iran?: {...}}}`. (b) Customer with no Iran profile → `profile_extensions.iran` absent (not null). (c) PUT updates allowed fields, including upsert of `customer_iran_profiles` row when `iran` extension provided. (d) PUT with country='IR' and invalid `national_id` checksum → 422. (e) PUT with country='US' has no Iran extension in response. (f) Cannot change email via PUT. (g) Unauth'd → 401. |
+| `account/addresses.spec.ts` | (a) POST Iran address requires `region_id` (rule-enforced); missing → 422 with localized field error. (b) POST non-IR address with no `region_id` succeeds (US: optional; unknown country: permissive default). (c) POST Iran address with `iran_extension.national_id` invalid checksum → 422. (d) POST Iran address omitting `iran_extension` succeeds (extension optional). (e) GET response includes `meta.field_metadata` (Pattern 4) with locale-resolvable `label_key`. (f) Setting `is_default=true` unsets sibling. (g) Cannot delete last default of a kind. (h) Cross-tenant access (another customer's address) → 404. |
+| `account/downloads.spec.ts` | (a) Returns only entitled rows. (b) `/url` returns stubbed signed URL. (c) Expired entitlement omitted from list. |
+| `admin/customers.spec.ts` | (a) Non-admin → 403. (b) Admin list with search. (c) Admin can create customer with admin role. (d) Soft-delete cascades to `users.deleted_at`. (e) Batch endpoint atomicity (any failure rolls all back). |
+
+## Definition of done
+
+- [ ] `node ace configure @adonisjs/auth --guard=access_tokens` baseline preserved (do not regenerate after edits).
+- [ ] All migrations apply cleanly.
+- [ ] All unit + functional tests pass.
+- [ ] `auth` + `admin` middleware exported from `start/kernel.ts` for other phases to import.
+- [ ] Demo seeder produces 1 admin + 10 customers idempotently.
+- [ ] PR body includes example cURLs for register, login, address create (one IR + one non-IR), me.
+- [ ] `start/routes.ts` uncomments the three route imports.
