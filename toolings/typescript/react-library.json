@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "display": "React Library",
+    "extends": "./internal-package.json",
+    "compilerOptions": {
+        "lib": ["ESNext", "dom", "dom.iterable"],
+        "jsx": "preserve",
+        "rootDir": "."
+    },
+    "exclude": ["node_modules"]
+}

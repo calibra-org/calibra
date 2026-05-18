@@ -1,0 +1,140 @@
+{
+    "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+    "root": true,
+
+    "linter": {
+        "enabled": true,
+        "domains": {
+            "next": "all",
+            "project": "recommended",
+            "react": "all"
+        },
+        "rules": {
+            "nursery": {
+                "useSortedClasses": {
+                    "fix": "safe",
+                    "level": "warn",
+                    "options": {
+                        "attributes": ["classList"],
+                        "functions": ["cn", "clsx", "cva", "tw", "tv"]
+                    }
+                }
+            },
+            "correctness": {
+                "useUniqueElementIds": "off",
+                "useImportExtensions": "off",
+                "noUndeclaredDependencies": "off"
+            },
+            "style": {
+                "useExportType": "error",
+                "noNonNullAssertion": "off",
+                "useComponentExportOnlyModules": "off"
+            },
+            "a11y": {
+                "noSvgWithoutTitle": "off"
+            }
+        }
+    },
+
+    "assist": {
+        "enabled": true,
+        "actions": {
+            "source": {
+                "organizeImports": {
+                    "level": "on",
+                    "options": {
+                        "groups": [
+                            [":NODE:", ":PACKAGE:"],
+                            ":BLANK_LINE:",
+                            ["#*", "#/**"],
+                            ":BLANK_LINE:",
+                            "../**",
+                            ":BLANK_LINE:",
+                            { "type": false, "source": ["./**"] },
+                            { "type": true, "source": ["./**"] }
+                        ],
+                        "identifierOrder": "natural"
+                    }
+                }
+            }
+        }
+    },
+
+    "css": {
+        "parser": {
+            "tailwindDirectives": true
+        }
+    },
+
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 130,
+        "lineEnding": "lf",
+        "useEditorconfig": false
+    },
+
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "double",
+            "jsxQuoteStyle": "double",
+            "lineWidth": 130,
+            "indentWidth": 4
+        }
+    },
+
+    "overrides": [
+        {
+            "includes": ["packages/sdk/**"],
+            "linter": {
+                "domains": {
+                    "next": "none"
+                }
+            }
+        },
+        {
+            "includes": [
+                "**/*.spec.ts",
+                "**/*.spec.tsx",
+                "**/*.spec.js",
+                "**/*.test.ts",
+                "**/*.test.tsx",
+                "**/*.test.js",
+                "**/__tests__/**",
+                "**/tests/**"
+            ],
+            "linter": {
+                "enabled": false
+            }
+        },
+        {
+            "includes": ["**/globals.css"],
+            "linter": {
+                "rules": {
+                    "complexity": {
+                        "noImportantStyles": "off"
+                    }
+                }
+            }
+        },
+        {
+            "includes": ["**/*.md", "**/*.mdx"],
+            "linter": {
+                "enabled": false
+            },
+            "formatter": {
+                "enabled": false
+            },
+            "assist": {
+                "enabled": false
+            }
+        }
+    ],
+
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    }
+}

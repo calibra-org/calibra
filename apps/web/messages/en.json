@@ -1,0 +1,28 @@
+{
+    "Site": {
+        "name": "shop",
+        "tagline": "shop online store"
+    },
+    "Nav": {
+        "home": "Home",
+        "products": "Products",
+        "cart": "Cart"
+    },
+    "Home": {
+        "heroTitle": "Welcome to shop",
+        "heroBody": "A curated selection of quality products — fresh and dependable.",
+        "browseProducts": "Browse products"
+    },
+    "Products": {
+        "title": "Products",
+        "empty": "No products to display yet."
+    },
+    "Cart": {
+        "title": "Cart",
+        "empty": "Your cart is empty."
+    },
+    "Common": {
+        "switchLocale": "فارسی",
+        "rights": "All rights reserved."
+    }
+}

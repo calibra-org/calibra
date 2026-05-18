@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/**
+ * Theme tokens. Two semantic tokens (background / foreground) drive light + dark mode through the
+ * `prefers-color-scheme` media query. Tailwind v4 reads these via the @theme block.
+ */
+@theme {
+    --color-background: oklch(99% 0 0);
+    --color-foreground: oklch(15% 0 0);
+    --color-muted: oklch(96% 0 0);
+    --color-muted-foreground: oklch(45% 0 0);
+    --color-border: oklch(90% 0 0);
+    --color-accent: oklch(60% 0.18 250);
+    --color-accent-foreground: oklch(99% 0 0);
+
+    --font-sans: "Inter", "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+    @theme {
+        --color-background: oklch(15% 0 0);
+        --color-foreground: oklch(98% 0 0);
+        --color-muted: oklch(22% 0 0);
+        --color-muted-foreground: oklch(65% 0 0);
+        --color-border: oklch(28% 0 0);
+        --color-accent: oklch(70% 0.18 250);
+        --color-accent-foreground: oklch(15% 0 0);
+    }
+}
+
+html,
+body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+}
+
+/**
+ * `:lang(fa)` flips logical CSS to RTL automatically. Tailwind v4 already emits logical properties
+ * (`ms-*` / `me-*` / `text-start`) for utilities, so no per-component RTL handling is needed.
+ */
+html[lang="fa"] {
+    direction: rtl;
+}

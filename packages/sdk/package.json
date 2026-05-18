@@ -1,0 +1,35 @@
+{
+    "name": "@shop/sdk",
+    "version": "0.0.0",
+    "private": true,
+    "license": "MIT",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "source": "./src/index.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsdown",
+        "dev": "tsdown --watch",
+        "test": "vitest --run",
+        "test:coverage": "vitest --coverage",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    },
+    "dependencies": {
+        "@woocommerce/types": "catalog:"
+    },
+    "devDependencies": {
+        "@shop/typescript-config": "workspace:*",
+        "@types/node": "catalog:",
+        "msw": "catalog:",
+        "tsdown": "catalog:",
+        "typescript": "catalog:",
+        "vitest": "catalog:"
+    }
+}

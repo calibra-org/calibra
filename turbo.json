@@ -1,0 +1,43 @@
+{
+    "$schema": "https://turbo.build/schema.json",
+    "globalDependencies": ["**/.env.*local"],
+    "globalEnv": [
+        "ALLOWED_ORIGINS",
+        "GITHUB_ACTIONS",
+        "NEXT_PUBLIC_API_BASE_URL",
+        "NEXT_PUBLIC_SITE_URL",
+        "NODE_ENV",
+        "PLAYWRIGHT_WORKERS",
+        "REVALIDATION_SECRET"
+    ],
+    "tasks": {
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": [".next/**", "!.next/cache/**", "dist/**", ".cache/tsbuildinfo.json"]
+        },
+        "typecheck": {
+            "dependsOn": ["^build"],
+            "outputs": [".cache/tsbuildinfo.json"]
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "format": {
+            "outputLogs": "new-only",
+            "outputs": [".cache/.prettiercache"]
+        },
+        "test:e2e": {
+            "dependsOn": ["^build"],
+            "passThroughEnv": ["PLAYWRIGHT_*"]
+        },
+        "lint:fix": {},
+        "test": {
+            "dependsOn": ["^test"]
+        },
+        "test:watch": {
+            "cache": false,
+            "persistent": true
+        }
+    }
+}

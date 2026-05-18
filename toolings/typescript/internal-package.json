@@ -1,0 +1,9 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "display": "Internal Package",
+    "extends": "./base.json",
+    "compilerOptions": {
+        "noEmit": false,
+        "outDir": "${configDir}/dist"
+    }
+}
