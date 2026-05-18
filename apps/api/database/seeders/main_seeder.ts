@@ -16,6 +16,7 @@ export default class MainSeeder extends BaseSeeder {
 
     async run() {
         await this.runSeeder(await import("./phases/0001_foundation_seeder.js"));
+        await this.runSeeder(await import("./phases/0002_catalog_demo_seeder.js"));
         await this.runSeeder(await import("./phases/0003_customers_demo_seeder.js"));
     }
 }
