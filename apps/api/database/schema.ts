@@ -327,6 +327,334 @@ export class OrderAddressIranExtensionSchema extends BaseModel {
   declare updatedAt: DateTime
 }
 
+export class OrderAddressSchema extends BaseModel {
+  static $columns = ['addressLine1', 'addressLine2', 'attributes', 'city', 'company', 'country', 'createdAt', 'email', 'firstName', 'id', 'kind', 'lastName', 'orderId', 'phone', 'postcode', 'regionId', 'regionText', 'updatedAt'] as const
+  $columns = OrderAddressSchema.$columns
+  @column()
+  declare addressLine1: string
+  @column()
+  declare addressLine2: string | null
+  @column()
+  declare attributes: any
+  @column()
+  declare city: string
+  @column()
+  declare company: string | null
+  @column()
+  declare country: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare email: string | null
+  @column()
+  declare firstName: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare kind: string
+  @column()
+  declare lastName: string
+  @column()
+  declare orderId: bigint | number
+  @column()
+  declare phone: string | null
+  @column()
+  declare postcode: string | null
+  @column()
+  declare regionId: bigint | number | null
+  @column()
+  declare regionText: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class OrderCouponLineSchema extends BaseModel {
+  static $columns = ['codeSnapshot', 'couponId', 'createdAt', 'discount', 'discountTax', 'id', 'orderId', 'updatedAt'] as const
+  $columns = OrderCouponLineSchema.$columns
+  @column()
+  declare codeSnapshot: string
+  @column()
+  declare couponId: bigint | number | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare discount: bigint | number
+  @column()
+  declare discountTax: bigint | number
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare orderId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class OrderDocumentSchema extends BaseModel {
+  static $columns = ['amountMinor', 'attributes', 'createdAt', 'currency', 'currencyDisplay', 'id', 'issuedAt', 'issuedByUserId', 'locale', 'number', 'orderId', 'pdfMediaId', 'status', 'type', 'updatedAt'] as const
+  $columns = OrderDocumentSchema.$columns
+  @column()
+  declare amountMinor: bigint | number
+  @column()
+  declare attributes: any
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare currency: string
+  @column()
+  declare currencyDisplay: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime()
+  declare issuedAt: DateTime | null
+  @column()
+  declare issuedByUserId: bigint | number | null
+  @column()
+  declare locale: string
+  @column()
+  declare number: bigint | number | null
+  @column()
+  declare orderId: bigint | number
+  @column()
+  declare pdfMediaId: bigint | number | null
+  @column()
+  declare status: string
+  @column()
+  declare type: any
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class OrderFeeLineSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'nameSnapshot', 'orderId', 'taxClassIdSnapshot', 'taxable', 'total', 'totalTax', 'updatedAt'] as const
+  $columns = OrderFeeLineSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare nameSnapshot: string
+  @column()
+  declare orderId: bigint | number
+  @column()
+  declare taxClassIdSnapshot: bigint | number | null
+  @column()
+  declare taxable: boolean
+  @column()
+  declare total: bigint | number
+  @column()
+  declare totalTax: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class OrderLineItemTaxSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'lineItemId', 'shippingTaxAmount', 'taxAmount', 'taxRateId', 'updatedAt'] as const
+  $columns = OrderLineItemTaxSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare lineItemId: bigint | number
+  @column()
+  declare shippingTaxAmount: bigint | number
+  @column()
+  declare taxAmount: bigint | number
+  @column()
+  declare taxRateId: bigint | number | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class OrderLineItemSchema extends BaseModel {
+  static $columns = ['attributesSnapshot', 'createdAt', 'id', 'nameSnapshot', 'orderId', 'priceSnapshot', 'productId', 'quantity', 'skuSnapshot', 'subtotal', 'subtotalTax', 'taxClassIdSnapshot', 'total', 'totalTax', 'updatedAt', 'variationId'] as const
+  $columns = OrderLineItemSchema.$columns
+  @column()
+  declare attributesSnapshot: any
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare nameSnapshot: string
+  @column()
+  declare orderId: bigint | number
+  @column()
+  declare priceSnapshot: bigint | number
+  @column()
+  declare productId: bigint | number | null
+  @column()
+  declare quantity: number
+  @column()
+  declare skuSnapshot: string | null
+  @column()
+  declare subtotal: bigint | number
+  @column()
+  declare subtotalTax: bigint | number
+  @column()
+  declare taxClassIdSnapshot: bigint | number | null
+  @column()
+  declare total: bigint | number
+  @column()
+  declare totalTax: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare variationId: bigint | number | null
+}
+
+export class OrderShippingLineSchema extends BaseModel {
+  static $columns = ['attributes', 'createdAt', 'id', 'instanceIdSnapshot', 'methodCodeSnapshot', 'methodIdSnapshot', 'orderId', 'titleSnapshot', 'total', 'totalTax', 'updatedAt'] as const
+  $columns = OrderShippingLineSchema.$columns
+  @column()
+  declare attributes: any
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare instanceIdSnapshot: bigint | number | null
+  @column()
+  declare methodCodeSnapshot: string
+  @column()
+  declare methodIdSnapshot: bigint | number | null
+  @column()
+  declare orderId: bigint | number
+  @column()
+  declare titleSnapshot: string
+  @column()
+  declare total: bigint | number
+  @column()
+  declare totalTax: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class OrderStatusHistorySchema extends BaseModel {
+  static $columns = ['changedByUserId', 'createdAt', 'fromStatus', 'id', 'occurredAt', 'orderId', 'reason', 'toStatus', 'updatedAt'] as const
+  $columns = OrderStatusHistorySchema.$columns
+  @column()
+  declare changedByUserId: bigint | number | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare fromStatus: any | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime()
+  declare occurredAt: DateTime
+  @column()
+  declare orderId: bigint | number
+  @column()
+  declare reason: string | null
+  @column()
+  declare toStatus: any
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class OrderTaxLineSchema extends BaseModel {
+  static $columns = ['compoundSnapshot', 'createdAt', 'id', 'labelSnapshot', 'orderId', 'rateCodeSnapshot', 'ratePercentSnapshot', 'shippingTaxTotal', 'taxRateIdSnapshot', 'taxTotal', 'updatedAt'] as const
+  $columns = OrderTaxLineSchema.$columns
+  @column()
+  declare compoundSnapshot: boolean
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare labelSnapshot: string
+  @column()
+  declare orderId: bigint | number
+  @column()
+  declare rateCodeSnapshot: string
+  @column()
+  declare ratePercentSnapshot: string
+  @column()
+  declare shippingTaxTotal: bigint | number
+  @column()
+  declare taxRateIdSnapshot: bigint | number | null
+  @column()
+  declare taxTotal: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class OrderSchema extends BaseModel {
+  static $columns = ['attributes', 'billingEmail', 'cartHash', 'createdAt', 'createdVia', 'currency', 'currencyDisplay', 'customerId', 'customerNote', 'dateCompletedAt', 'datePaidAt', 'deletedAt', 'discountTaxTotal', 'discountTotal', 'feesTaxTotal', 'feesTotal', 'grandTotal', 'id', 'idempotencyKey', 'ipAddress', 'itemsTaxTotal', 'itemsTotal', 'orderKey', 'orderNumber', 'paymentGatewayIdSnapshot', 'paymentMethodCodeSnapshot', 'paymentMethodTitleSnapshot', 'pricesIncludeTax', 'shippingTaxTotal', 'shippingTotal', 'status', 'taxTotal', 'transactionId', 'updatedAt', 'userAgent'] as const
+  $columns = OrderSchema.$columns
+  @column()
+  declare attributes: any
+  @column()
+  declare billingEmail: string | null
+  @column()
+  declare cartHash: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare createdVia: string
+  @column()
+  declare currency: string
+  @column()
+  declare currencyDisplay: string
+  @column()
+  declare customerId: bigint | number | null
+  @column()
+  declare customerNote: string | null
+  @column.dateTime()
+  declare dateCompletedAt: DateTime | null
+  @column.dateTime()
+  declare datePaidAt: DateTime | null
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+  @column()
+  declare discountTaxTotal: bigint | number
+  @column()
+  declare discountTotal: bigint | number
+  @column()
+  declare feesTaxTotal: bigint | number
+  @column()
+  declare feesTotal: bigint | number
+  @column()
+  declare grandTotal: bigint | number
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare idempotencyKey: string | null
+  @column()
+  declare ipAddress: string | null
+  @column()
+  declare itemsTaxTotal: bigint | number
+  @column()
+  declare itemsTotal: bigint | number
+  @column()
+  declare orderKey: string | null
+  @column()
+  declare orderNumber: bigint | number
+  @column()
+  declare paymentGatewayIdSnapshot: bigint | number | null
+  @column()
+  declare paymentMethodCodeSnapshot: string | null
+  @column()
+  declare paymentMethodTitleSnapshot: string | null
+  @column()
+  declare pricesIncludeTax: boolean
+  @column()
+  declare shippingTaxTotal: bigint | number
+  @column()
+  declare shippingTotal: bigint | number
+  @column()
+  declare status: any
+  @column()
+  declare taxTotal: bigint | number
+  @column()
+  declare transactionId: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userAgent: string | null
+}
+
 export class PasswordResetTokenSchema extends BaseModel {
   static $columns = ['createdAt', 'expiresAt', 'id', 'tokenHash', 'updatedAt', 'usedAt', 'userId'] as const
   $columns = PasswordResetTokenSchema.$columns
