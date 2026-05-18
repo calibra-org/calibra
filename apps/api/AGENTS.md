@@ -1,82 +1,111 @@
 # apps/api
 
-AdonisJS 6 backend. Source of truth for products, orders, customers, auth, and admin operations. Both the [storefront](../web) and the [admin panel](../admin) talk to it through [`@calibra/sdk`](../../packages/sdk).
+AdonisJS 7 backend. Source of truth for products, orders, customers, auth, and admin operations. Both the [storefront](../web) and the [admin panel](../admin) talk to it through [`@calibra/sdk`](../../packages/sdk).
 
 ## Stack
 
-- **AdonisJS 6** (TypeScript, ESM, hot-reload via `hot-hook`).
-- **Lucid 21** ORM on **PostgreSQL 17**.
-- **VineJS** for request validation.
-- **Japa** for unit + functional tests, with `apiClient` for HTTP assertions.
+- **AdonisJS 7** (TypeScript ESM, hot-reload via `hot-hook`, `@poppinss/ts-exec` as the JIT loader).
+- **Lucid 22** ORM on **PostgreSQL 17**. v22 auto-generates `database/schema.ts` from migrations — models extend the generated `<Entity>Schema` classes (column types come for free, no hand-maintained `@column` boilerplate).
+- **VineJS 4** for request validation. Schemas compile once at module scope.
+- **`@adonisjs/auth` 10** with the `access_tokens` guard (configured on first wiring — see "Auth" below).
+- **`@adonisjs/i18n` 3** wired; the active locale is on `ctx.i18n` (set by the `detect_user_locale_middleware` from the `Accept-Language` header). API `defaultLocale` is `"fa"` — see `config/i18n.ts`.
+- **`@adonisjs/cors` 3** + **encryption** (`config/encryption.ts`, chacha20 driver).
+- **Japa 5** for unit + functional tests, with **`@japa/api-client` 3** for real-HTTP assertions through the wired router. **Model factories** live under `database/factories/`.
+- **AdonisJS Transformers** (first-party in v7 — `https://docs.adonisjs.com/guides/frontend/transformers`) shape every API response. Each resource gets a class extending `BaseTransformer<T>` under `app/transformers/`. Sensitive columns are never picked, so they cannot leak. Controllers stay one-liners: `return serialize(ProductTransformer.transform(products))` (or `.paginate(paginator)` for paginated responses).
 - **Pino** structured logging (pretty in dev, ndjson in production).
+
+Local docs cache for the agent doing the work: `~/adonis-v7-docs/content/` (framework) and `~/adonis-lucid-docs/content/docs/` (ORM). Read those before reaching for memory.
 
 ## Layout
 
 ```
 apps/api/
-├── adonisrc.ts                    # providers / preloads / test suites / experimental flags
-├── ace.js                         # `node ace …` entry (delegates to bin/console.js)
+├── adonisrc.ts                    # providers / preloads / test suites / v7 hooks (indexEntities)
+├── ace.js                         # node ace entry — loads @poppinss/ts-exec then bin/console.ts
+├── .adonisjs/                     # generated barrels (gitignored) — powers #generated/* imports
 ├── bin/
 │   ├── server.ts                  # HTTP entry — `node bin/server.js`
 │   ├── console.ts                 # Ace entry — booted by `node ace …`
 │   └── test.ts                    # Japa entry — booted by `node ace test`
 ├── start/
 │   ├── env.ts                     # validated env (every env key must be declared here)
-│   ├── kernel.ts                  # server + router middleware stacks
-│   └── routes.ts                  # /api/v1/* route table + /health
-├── config/                        # app, bodyparser, cors, hash, logger, database
+│   ├── kernel.ts                  # server + router middleware stacks (named middleware map)
+│   ├── routes.ts                  # /health + per-domain route file imports
+│   └── routes/                    # per-domain route files (added as phases ship)
+├── config/                        # app, bodyparser, cors, hash, logger, database, i18n, encryption, auth
 ├── app/
 │   ├── controllers/               # one class per resource (snake_case_controller.ts)
 │   ├── exceptions/handler.ts      # global error handler
 │   ├── middleware/                # request middleware (auto-snake_cased filenames)
-│   ├── models/                    # Lucid models
-│   └── validators/                # VineJS schemas (extract from controllers as they grow)
+│   ├── models/                    # Lucid models; each extends its <Entity>Schema from #database/schema
+│   ├── transformers/              # BaseTransformer<T> subclasses — owns API response shape
+│   ├── validators/                # VineJS schemas (extract from controllers as they grow)
+│   ├── services/                  # plain domain services (settings, slug, inventory, …)
+│   └── enums/                     # shared enums (e.g. OrderStatus)
 ├── database/
 │   ├── migrations/                # timestamped — never edit a migration after it's run
-│   └── seeders/                   # idempotent — use `updateOrCreate` over `create`
+│   ├── seeders/                   # idempotent — use `updateOrCreate` over `create`
+│   ├── factories/                 # Lucid model factories for tests (`UserFactory`, `ProductFactory`, …)
+│   └── schema.ts                  # auto-generated by `node ace migration:run` (gitignored)
+├── resources/lang/{fa,en}/        # i18n catalogs (`messages.json` per locale)
 ├── tests/
 │   ├── bootstrap.ts               # Japa plugins + lifecycle hooks
-│   └── functional/                # API tests via @japa/api-client
-├── Dockerfile                     # multi-stage → built JS in `build/`
-├── docker-compose.yml             # api + postgres
+│   ├── unit/                      # `*.spec.{ts,js}`
+│   └── functional/                # HTTP tests via @japa/api-client (`*.spec.{ts,js}`)
+├── Dockerfile                     # multi-stage → standalone build via `pnpm deploy`
+├── docker-compose.yml             # dev infra only: Postgres + pgAdmin (API runs on host via HMR)
 ├── .env.example                   # copy to .env (git-ignored)
 └── tsconfig.json                  # extends @adonisjs/tsconfig/tsconfig.app.json
 ```
 
 ## Conventions
 
-- **Subpath imports.** Every internal import goes through the `#namespace/*` aliases declared in `package.json#imports` (e.g. `#controllers/products_controller`, `#models/product`, `#start/env`). Never use deep relative paths like `../../models/product`. Ace scaffolds (`node ace make:controller`) already follow this convention.
-- **Filenames are `snake_case.ts`.** Controllers end with `_controller.ts`, middleware with `_middleware.ts`, models stay singular (`product.ts`), validators with `_validator.ts`. Class names stay PascalCase.
-- **Versioned routes.** Public endpoints sit under `/api/v1/*` (defined in `start/routes.ts`). Liveness probe at `/health` is unversioned. Breaking changes go behind `/api/v2/*` rather than mutating v1.
-- **Money in integer minor units.** Every price column is `int` cents in the DB and an integer in the model. Convert to a major-unit string only at the JSON response edge.
-- **Validators are VineJS, called inside the controller** until they grow more than a handful of lines — then they get extracted into `app/validators/<resource>_validator.ts` and imported.
+- **Subpath imports.** Every internal import goes through the `#namespace/*` aliases declared in `package.json#imports`. Available aliases: `#controllers/*`, `#exceptions/*`, `#models/*`, `#services/*`, `#middleware/*`, `#validators/*`, `#transformers/*`, `#providers/*`, `#database/*`, `#start/*`, `#tests/*`, `#config/*`, `#generated/*`. Never use deep relative paths like `../../models/product`. Ace scaffolds already follow this.
+- **Filenames are `snake_case.ts`.** Controllers end with `_controller.ts`, middleware with `_middleware.ts`, models stay singular (`product.ts`), validators with `_validator.ts`, transformers with `_transformer.ts`. Class names stay PascalCase.
+- **Models extend the generated schema class.** After `node ace migration:run`, `database/schema.ts` is regenerated with one `<Entity>Schema` per table. The hand-written model just does `class Product extends ProductSchema { /* relationships, hooks, computed */ }`. Don't redeclare columns the schema class already covers.
+- **Transformers own response shape.** Never hand-build JSON objects in controllers. Each resource gets `app/transformers/<resource>_transformer.ts` extending `BaseTransformer<T>` with `toObject()` + variant methods (`forList`, `forDetail`, `forAdmin`). Sensitive fields are simply not picked.
+- **Versioned routes.** Public endpoints sit under `/api/v1/*`. Liveness probe at `/health` is unversioned. Breaking changes go behind `/api/v2/*` rather than mutating v1. Each domain has its own file under `start/routes/<domain>.ts` imported from `start/routes.ts`.
+- **Money in integer minor units.** Every monetary column is `BIGINT` Rial minor units. Convert to a major-unit string only at the JSON response edge (inside the transformer).
+- **Validators are VineJS, called inside the controller** until they grow more than a handful of lines — then extract into `app/validators/<resource>_validator.ts` and import.
 - **Migrations are immutable once shipped.** Use a new migration to alter an existing table, never edit history. Seeders must be idempotent (`updateOrCreate`, not `create`).
-- **Pagination response envelope:** `{ data: T[], meta: { page, perPage, total, lastPage } }`. The SDK's `Paginated<T>` matches this exactly — keep them in sync.
+- **Pagination response envelope:** `{ data: T[], meta: { page, perPage, total, lastPage } }` — produced by `Transformer.paginate(paginator)`. The SDK's `Paginated<T>` matches this exactly; keep them in sync.
 
 ## Common commands
 
 ```sh
-# Dev
-just api-up                          # boot Postgres + API (docker)
-just api-down                        # stop and preserve volumes
-just api-logs                        # tail the api container
-just api-reset                       # nuke volumes (loses all data)
+# Dev infra (Postgres + pgAdmin in docker)
+just db-up                              # block until db is healthy
+just db-down                            # stop (volumes persist)
+just db-reset                           # nuke volumes + re-migrate
+just db-shell                           # psql inside the db container
+just db-logs                            # tail postgres logs
 
-# From inside apps/api/
-pnpm dev                             # node ace serve --hmr
-pnpm test                            # japa
-pnpm typecheck                       # tsc --noEmit
-node ace make:controller orders      # scaffold a controller
-node ace make:model Order -m         # model + migration in one go
-node ace migration:run               # apply pending migrations
-node ace db:seed                     # run all seeders
+# Dev servers (host)
+just up                                 # db + migrate + web + admin + api (turbo, parallel)
+just up-api                             # db + migrate + api only
+pnpm --filter @calibra/api dev          # api only (node ace serve --hmr)
+
+# Lucid + Ace
+just migrate                            # node ace migration:run
+just migrate-rollback                   # node ace migration:rollback
+just seed                               # node ace db:seed (runs MainSeeder)
+just ace 'make:controller orders'       # scaffold a controller
+just ace 'make:model Order -m'          # model + migration in one go
+just ace 'make:validator order'         # VineJS schema
+just ace 'make:transformer order'       # BaseTransformer<Order> stub
+
+# Verification
+pnpm --filter @calibra/api typecheck    # tsc --noEmit
+pnpm --filter @calibra/api test         # full Japa suite (unit + functional)
+just lint                               # biome + sherif
 ```
 
-## Auth (next milestone)
+## Auth (when wiring)
 
-`@adonisjs/auth@9` is installed but not yet wired. When adding auth:
+`@adonisjs/auth@10` is installed but not yet wired. When wiring:
 
-1. `node ace configure @adonisjs/auth --guard=access_tokens` (API token guard is the right default for storefront + admin clients).
-2. Add a `User` model + `users` migration; reference it from `config/auth.ts`.
-3. Mount login routes (`POST /api/v1/auth/login`, `POST /api/v1/auth/logout`) and the `auth` middleware in `start/kernel.ts`.
-4. Surface a session helper in `@calibra/sdk` that stores the token and forwards it as `Authorization: Bearer <token>`.
+1. `node ace configure @adonisjs/auth --guard=access_tokens` — wires the auth provider, generates the `auth_access_tokens` migration, scaffolds `app/middleware/auth_middleware.ts`.
+2. Add a `User` model + `users` migration; reference it from `config/auth.ts` as the user provider.
+3. Mount login routes (`POST /api/v1/auth/login`, `POST /api/v1/auth/logout`) under `start/routes/auth.ts`. Register the `auth` middleware in `start/kernel.ts` `router.named({ auth: () => import('#middleware/auth_middleware') })`.
+4. Mint tokens with `User.accessTokens.create(user, abilities?, { expiresIn })`; ship `tokenResult.value!.release()` to the client.
+5. In tests, use `.loginAs(user)` from `@japa/api-client` — it mints a real token and attaches the bearer header through the full pipeline.

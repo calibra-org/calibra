@@ -6,7 +6,7 @@
 
 ## Context
 
-`apps/api` is an AdonisJS 6 backend that needs to give a storefront (`apps/web`) and admin panel (`apps/admin`) the full commerce capability surface of WooCommerce — products, variants, cart, checkout, orders, refunds, customers, coupons, taxes, shipping, payments — but as a **clean modern relational schema** on PostgreSQL 17, not a 1:1 port of WordPress legacy. Webhooks are explicitly **out of scope** (deferred until a real consumer exists).
+`apps/api` is an AdonisJS 7 backend (Lucid 22 ORM, VineJS 4 validators, Japa 5 tests, `@adonisjs/auth` 10 with the `access_tokens` guard, `@adonisjs/i18n` 3 keyed off `Accept-Language`, first-party transformer system shaping every response) that needs to give a storefront (`apps/web`) and admin panel (`apps/admin`) the full commerce capability surface of WooCommerce — products, variants, cart, checkout, orders, refunds, customers, coupons, taxes, shipping, payments — but as a **clean modern relational schema** on PostgreSQL 17, not a 1:1 port of WordPress legacy. Webhooks are explicitly **out of scope** (deferred until a real consumer exists).
 
 This ADR is the design checkpoint: agreed here, then we scaffold migrations + models + controllers + seeders in phases.
 
@@ -22,6 +22,8 @@ This ADR is the design checkpoint: agreed here, then we scaffold migrations + mo
 8. **State machines as enums + transition tables.** Order status is an enum; transitions are guarded in the model layer; status changes write an audit row.
 9. **Money/dates always UTC + canonical unit in DB.** Jalali calendar and Toman are presentation; never persisted.
 10. **Single source of truth for catalog locale data lives in shared translation tables**, not duplicated per app. The SDK forwards `Accept-Language`; API resolves once.
+11. **Transformers own the response shape, not controllers.** Every entity gets a `BaseTransformer<T>` subclass under `app/transformers/`. Sensitive columns (`password_hash`, `idempotency_key`, gateway secrets) are simply not picked, so they cannot leak. Variants (`forList`, `forDetail`, `forAdmin`) replace branchy "include this field for admin but hide for storefront" logic.
+12. **Lucid v22 schema codegen.** `database/schema.ts` is auto-generated from migrations; models extend `<Entity>Schema` and only add relationships / hooks / computed fields. Don't hand-maintain `@column` boilerplate the codegen already provides.
 
 ## Decisions made up-front (override here if wrong)
 

@@ -8,7 +8,7 @@ This is **Calibra's commerce baseline** — the agency clones this repo as the s
 
 - `apps/web/` — Next.js 16 storefront (App Router, Tailwind v4, next-intl with Persian default + English RTL toggle).
 - `apps/admin/` — Next.js 16 admin panel (App Router, Tailwind v4, next-intl with Persian default + English). Port 3001. Intentionally different design language from `web`.
-- `apps/api/` — AdonisJS 6 backend (Lucid ORM on Postgres, VineJS validators, Japa tests, `@adonisjs/i18n`). Source of truth for products / orders / customers / auth. Run via Docker.
+- `apps/api/` — AdonisJS 7 backend (Lucid ORM on Postgres, VineJS validators, Japa tests, `@adonisjs/i18n`). Source of truth for products / orders / customers / auth. Run via Docker.
 - `packages/sdk/` — framework-agnostic TypeScript client for `apps/api`. Used by both `web` and `admin`.
 - `packages/shared/` — shared **utilities and types only** (cn helper, locale registry). **Not** UI components — the storefront and admin use different design languages by design.
 - `toolings/typescript/` — shared `tsconfig` presets.
