@@ -11,13 +11,13 @@ import router from "@adonisjs/core/services/router";
 
 router.get("/health", async () => ({ status: "ok" }));
 
-/** await import("./routes/catalog.js");            phase 02 */
+await import("./routes/catalog.js");
 /** await import("./routes/auth.js");               phase 03 */
 /** await import("./routes/account.js");            phase 03 */
 /** await import("./routes/cart.js");               phase 04 */
 /** await import("./routes/checkout.js");           phase 05 */
 /** await import("./routes/account_orders.js");     phase 05 */
-/** await import("./routes/admin_catalog.js");      phase 02 */
+await import("./routes/admin_catalog.js");
 /** await import("./routes/admin_customers.js");    phase 03 */
 /** await import("./routes/admin_orders.js");       phase 05 */
 /** await import("./routes/admin_coupons.js");      phase 06 */
