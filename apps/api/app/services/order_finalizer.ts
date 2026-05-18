@@ -1,17 +1,21 @@
 import { randomBytes } from "node:crypto";
 import { Exception } from "@adonisjs/core/exceptions";
 import db from "@adonisjs/lucid/services/db";
+import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 import { OrderStatus } from "#enums/order_status";
 import type Cart from "#models/cart";
 import CartItem from "#models/cart_item";
+import CouponRedemption from "#models/coupon_redemption";
 import type CustomerAddress from "#models/customer_address";
 import CustomerIranProfile from "#models/customer_iran_profile";
 import type Order from "#models/order";
 import OrderAddress from "#models/order_address";
 import OrderAddressIranExtension from "#models/order_address_iran_extension";
+import OrderCouponLine from "#models/order_coupon_line";
 import OrderLineItem from "#models/order_line_item";
 import type User from "#models/user";
+import { checkEligibility, countRedemptions, loadSnapshotForUpdate } from "#services/discounter_service";
 import { OrderFactory } from "#services/order_factory";
 import { orderStateMachine } from "#services/order_state_machine";
 
@@ -104,6 +108,14 @@ export class OrderFinalizer {
             if (opts.ipAddress) draft.ipAddress = opts.ipAddress;
             if (opts.userAgent !== undefined) draft.userAgent = opts.userAgent;
             await draft.save();
+
+            /**
+             * Coupon redemption write happens AFTER the draft is persisted (so the FK to orders.id
+             * resolves) and BEFORE the status transition (so a failed re-validation rolls back the
+             * whole submit, not just the redemption attempt). The lock + recount inside this
+             * transaction is the race-safe bit — concurrent submits serialise on the coupon row.
+             */
+            await this.writeRedemptionLedger(draft, trx);
 
             await orderStateMachine.transition(draft, OrderStatus.Pending, {
                 actor: opts.actor ?? null,
@@ -207,6 +219,90 @@ export class OrderFinalizer {
             }
         }
         return null;
+    }
+
+    /**
+     * For each coupon line on the draft, lock the coupon row, re-validate the limits, and INSERT
+     * the redemption row. UNIQUE `(coupon_id, order_id)` makes the INSERT idempotent under
+     * `Idempotency-Key` replay — a retry of the same order returns the existing row instead of
+     * double-counting. Limit re-validation throws E_COUPON_LIMIT_EXHAUSTED on race loss; the
+     * surrounding transaction rolls back so no half-finalized order survives.
+     */
+    private async writeRedemptionLedger(order: Order, trx: TransactionClientContract): Promise<void> {
+        const lines = await OrderCouponLine.query({ client: trx }).where("order_id", Number(order.id));
+        if (lines.length === 0) return;
+
+        const customerId = order.customerId === null || order.customerId === undefined ? null : Number(order.customerId);
+        const email = order.billingEmail ?? null;
+
+        for (const line of lines) {
+            if (line.couponId === null || line.couponId === undefined) continue;
+            const couponId = Number(line.couponId);
+            const snapshot = await loadSnapshotForUpdate(couponId, trx);
+            if (!snapshot) {
+                /** Coupon was hard-deleted between draft and submit; treat as exhausted. */
+                throw new Exception(`Coupon ${line.codeSnapshot} is no longer available`, {
+                    status: 409,
+                    code: "E_COUPON_LIMIT_EXHAUSTED",
+                });
+            }
+
+            const globalCount = snapshot.usageLimitGlobal === null ? 0 : await countRedemptions(couponId, { client: trx });
+            const perUserCount =
+                snapshot.usageLimitPerUser === null ? 0 : await countRedemptions(couponId, { client: trx, customerId, email });
+
+            /** Eligibility re-runs without item state — we only re-check the limit gates here. */
+            const result = checkEligibility({
+                coupon: snapshot,
+                items: [
+                    {
+                        lineKey: "1",
+                        productId: 0,
+                        variationId: null,
+                        quantity: 1,
+                        priceSnapshot: 0,
+                        lineSubtotal: 0,
+                        categoryIds: [],
+                        tagIds: [],
+                    },
+                ],
+                itemsTotal: Number(order.itemsTotal),
+                otherAppliedCouponIds: [],
+                customer: { customerId, email },
+                globalRedemptionCount: globalCount,
+                perUserRedemptionCount: perUserCount,
+            });
+            if (
+                !result.ok &&
+                (result.reason === "usage_limit_global_reached" || result.reason === "usage_limit_per_user_reached")
+            ) {
+                throw new Exception(`Coupon ${line.codeSnapshot} limit reached`, {
+                    status: 409,
+                    code: "E_COUPON_LIMIT_EXHAUSTED",
+                });
+            }
+
+            /**
+             * Idempotency-safe: UNIQUE (coupon_id, order_id) means the second insert during a
+             * replay fails. We swallow the duplicate-key error so the replay returns the same
+             * order without surfacing a 500.
+             */
+            const existing = await CouponRedemption.query({ client: trx })
+                .where("coupon_id", couponId)
+                .where("order_id", Number(order.id))
+                .first();
+            if (existing) continue;
+
+            await CouponRedemption.create(
+                {
+                    couponId: snapshot.id,
+                    orderId: order.id,
+                    customerId,
+                    emailSnapshot: email ?? "",
+                },
+                { client: trx },
+            );
+        }
     }
 
     /**

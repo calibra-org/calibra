@@ -1,6 +1,7 @@
 import { BaseTransformer } from "@adonisjs/core/transformers";
 
 import type Cart from "#models/cart";
+import type CartAppliedCoupon from "#models/cart_applied_coupon";
 import type CartItem from "#models/cart_item";
 import type { CartTotalsResult } from "#services/cart_totals_service";
 import type { ShippingRateOption } from "#services/shipping_rate_service";
@@ -14,6 +15,7 @@ import type { ShippingRateOption } from "#services/shipping_rate_service";
 export interface CartView {
     cart: Cart;
     items: CartItem[];
+    appliedCoupons: CartAppliedCoupon[];
     totals: CartTotalsResult;
     shippingOptions: ShippingRateOption[];
     locale: string;
@@ -33,7 +35,7 @@ interface ItemDisplay {
  */
 export default class CartTransformer extends BaseTransformer<CartView> {
     toObject() {
-        const { cart, items, totals, shippingOptions, locale } = this.resource;
+        const { cart, items, appliedCoupons, totals, shippingOptions, locale } = this.resource;
 
         return {
             id: Number(cart.id),
@@ -41,7 +43,7 @@ export default class CartTransformer extends BaseTransformer<CartView> {
             customer_id: cart.customerId === null ? null : Number(cart.customerId),
             currency: cart.currency,
             items: this.serializeItems(items, totals, locale),
-            applied_coupons: [],
+            applied_coupons: this.serializeAppliedCoupons(appliedCoupons),
             shipping_rates: this.serializeShippingRates(
                 shippingOptions,
                 cart.shippingZoneMethodId === null ? null : Number(cart.shippingZoneMethodId),
@@ -92,6 +94,13 @@ export default class CartTransformer extends BaseTransformer<CartView> {
                 attributes_snapshot: item.attributesSnapshot ?? {},
             };
         });
+    }
+
+    private serializeAppliedCoupons(rows: CartAppliedCoupon[]) {
+        return rows.map((row) => ({
+            coupon_id: Number(row.couponId),
+            code: row.codeSnapshot,
+        }));
     }
 
     private serializeShippingRates(options: ShippingRateOption[], selectedId: number | null) {

@@ -7,6 +7,21 @@
             "invalid_credentials": "Invalid credentials.",
             "forbidden_admin": "Admin access required."
         },
+        "coupons": {
+            "not_found": "Coupon code not found.",
+            "disabled": "This coupon is disabled.",
+            "not_yet_active": "This coupon is not active yet.",
+            "expired": "This coupon has expired.",
+            "below_minimum": "Cart subtotal is below the coupon minimum.",
+            "above_maximum": "Cart subtotal is above the coupon maximum.",
+            "no_eligible_items": "No items in your cart qualify for this coupon.",
+            "only_sale_items": "This coupon cannot be combined with sale items.",
+            "individual_use_conflict": "This coupon cannot be combined with other coupons.",
+            "email_not_allowed": "This coupon is not available for your email address.",
+            "usage_limit_global_reached": "This coupon has reached its usage limit.",
+            "usage_limit_per_user_reached": "You have already used this coupon the maximum number of times.",
+            "limit_exhausted": "This coupon was just used by someone else; please try again without it."
+        },
         "orders": {
             "illegal_transition": "Illegal order status transition: {from} → {to}.",
             "not_draft": "Order is no longer a draft.",

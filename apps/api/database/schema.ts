@@ -107,6 +107,136 @@ export class CartSchema extends BaseModel {
   declare userAgent: string | null
 }
 
+export class CouponCategoryConstraintSchema extends BaseModel {
+  static $columns = ['categoryId', 'couponId', 'createdAt', 'id', 'mode', 'updatedAt'] as const
+  $columns = CouponCategoryConstraintSchema.$columns
+  @column()
+  declare categoryId: bigint | number
+  @column()
+  declare couponId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare mode: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CouponEmailRestrictionSchema extends BaseModel {
+  static $columns = ['couponId', 'createdAt', 'emailPattern', 'id', 'updatedAt'] as const
+  $columns = CouponEmailRestrictionSchema.$columns
+  @column()
+  declare couponId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare emailPattern: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CouponProductConstraintSchema extends BaseModel {
+  static $columns = ['couponId', 'createdAt', 'id', 'mode', 'productId', 'updatedAt'] as const
+  $columns = CouponProductConstraintSchema.$columns
+  @column()
+  declare couponId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare mode: string
+  @column()
+  declare productId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CouponRedemptionSchema extends BaseModel {
+  static $columns = ['couponId', 'createdAt', 'customerId', 'emailSnapshot', 'id', 'orderId', 'redeemedAt', 'updatedAt'] as const
+  $columns = CouponRedemptionSchema.$columns
+  @column()
+  declare couponId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare customerId: bigint | number | null
+  @column()
+  declare emailSnapshot: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare orderId: bigint | number
+  @column.dateTime()
+  declare redeemedAt: DateTime
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CouponTranslationSchema extends BaseModel {
+  static $columns = ['couponId', 'createdAt', 'description', 'locale', 'updatedAt'] as const
+  $columns = CouponTranslationSchema.$columns
+  @column({ isPrimary: true })
+  declare couponId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare description: string | null
+  @column()
+  declare locale: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CouponSchema extends BaseModel {
+  static $columns = ['amountMinor', 'amountPercent', 'attributes', 'code', 'createdAt', 'deletedAt', 'discountType', 'excludeSaleItems', 'expiresAt', 'freeShipping', 'id', 'individualUse', 'limitUsageToXItems', 'maximumAmount', 'minimumAmount', 'startsAt', 'status', 'updatedAt', 'usageLimitGlobal', 'usageLimitPerUser'] as const
+  $columns = CouponSchema.$columns
+  @column()
+  declare amountMinor: bigint | number | null
+  @column()
+  declare amountPercent: string | null
+  @column()
+  declare attributes: any
+  @column()
+  declare code: any
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+  @column()
+  declare discountType: string
+  @column()
+  declare excludeSaleItems: boolean
+  @column.dateTime()
+  declare expiresAt: DateTime | null
+  @column()
+  declare freeShipping: boolean
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare individualUse: boolean
+  @column()
+  declare limitUsageToXItems: number | null
+  @column()
+  declare maximumAmount: bigint | number | null
+  @column()
+  declare minimumAmount: bigint | number | null
+  @column.dateTime()
+  declare startsAt: DateTime | null
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare usageLimitGlobal: number | null
+  @column()
+  declare usageLimitPerUser: number | null
+}
+
 export class CustomerAddressSchema extends BaseModel {
   static $columns = ['addressLine1', 'addressLine2', 'attributes', 'city', 'company', 'country', 'createdAt', 'customerId', 'firstName', 'id', 'isDefault', 'kind', 'label', 'lastName', 'phone', 'postcode', 'regionId', 'regionText', 'updatedAt'] as const
   $columns = CustomerAddressSchema.$columns

@@ -2,16 +2,20 @@ import { Exception } from "@adonisjs/core/exceptions";
 import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
-import { noopDiscounter } from "#contracts/discounter";
+import type { DiscounterCouponContext, DiscounterCustomerContext } from "#contracts/discounter";
 import { OrderStatus } from "#enums/order_status";
 import type Cart from "#models/cart";
+import Customer from "#models/customer";
 import Order from "#models/order";
+import OrderCouponLine from "#models/order_coupon_line";
 import OrderLineItem from "#models/order_line_item";
 import OrderShippingLine from "#models/order_shipping_line";
 import Product from "#models/product";
 import ProductVariation from "#models/product_variation";
 import { type CartTotalsItem, computeCartTotals } from "#services/cart_totals_service";
+import { getDiscounter } from "#services/discounter";
 import { orderNumberService } from "#services/order_number_service";
+import { resolvePrice } from "#services/price_resolver";
 import SettingsService from "#services/settings_service";
 import { enumerateShippingRates } from "#services/shipping_rate_service";
 
@@ -50,7 +54,7 @@ export class OrderFactory {
             }
 
             const snapshots = await this.snapshotLines(cart, opts.locale ?? "fa", trx);
-            const totals = await this.computeTotals(cart, snapshots);
+            const totals = await this.computeTotals(cart, snapshots, trx);
 
             const order = new Order();
             order.useTransaction(trx);
@@ -95,6 +99,7 @@ export class OrderFactory {
             }
 
             await this.writeShippingLine(order, cart, totals.shippingTotal, totals.shippingTaxTotal, trx);
+            await this.writeCouponLines(order, cart, totals, trx);
 
             return order;
         };
@@ -197,7 +202,7 @@ export class OrderFactory {
         return snapshots;
     }
 
-    private async computeTotals(cart: Cart, snapshots: LineSnapshot[]) {
+    private async computeTotals(cart: Cart, snapshots: LineSnapshot[], trx: TransactionClientContract) {
         const pricesIncludeTax = await settings.get<boolean>("tax", "prices_include_tax", true);
         const itemsTotalGross = snapshots.reduce((sum, snap) => sum + snap.priceSnapshot * snap.quantity, 0);
         const shippingOptions = cart.country
@@ -211,17 +216,50 @@ export class OrderFactory {
               )
             : [];
 
-        const items: CartTotalsItem[] = snapshots.map((snap, index) => ({
-            lineKey: String(index),
-            id: index,
-            productId: snap.productId,
-            variationId: snap.variationId,
-            quantity: snap.quantity,
-            priceSnapshot: snap.priceSnapshot,
-            taxClassId: snap.taxClassId,
-            taxStatus: "taxable",
-            requiresShipping: true,
+        /**
+         * Enrich snapshots with the discounter-only fields (categoryIds, tagIds, onSale). Preload
+         * the products + relations once so the discount math sees the same data the cart-apply
+         * eligibility check used.
+         */
+        const productIds = [...new Set(snapshots.map((s) => s.productId))];
+        const products =
+            productIds.length === 0
+                ? ([] as Product[])
+                : await Product.query({ client: trx }).whereIn("id", productIds).preload("categories").preload("tags");
+        const productMap = new Map(products.map((p) => [Number(p.id), p]));
+        const variationIds = snapshots.map((s) => s.variationId).filter((v): v is number => v !== null);
+        const variations =
+            variationIds.length === 0
+                ? ([] as ProductVariation[])
+                : await ProductVariation.query({ client: trx }).whereIn("id", variationIds);
+        const variationMap = new Map(variations.map((v) => [Number(v.id), v]));
+
+        const items: CartTotalsItem[] = snapshots.map((snap, index) => {
+            const product = productMap.get(snap.productId);
+            const variation = snap.variationId === null ? null : (variationMap.get(snap.variationId) ?? null);
+            const onSale = product ? resolvePrice(product, variation).onSale : false;
+            return {
+                lineKey: String(index),
+                id: index,
+                productId: snap.productId,
+                variationId: snap.variationId,
+                quantity: snap.quantity,
+                priceSnapshot: snap.priceSnapshot,
+                taxClassId: snap.taxClassId,
+                taxStatus: "taxable",
+                requiresShipping: true,
+                categoryIds: ((product?.categories ?? []) as Array<{ id: bigint | number }>).map((c) => Number(c.id)),
+                tagIds: ((product?.tags ?? []) as Array<{ id: bigint | number }>).map((t) => Number(t.id)),
+                onSale,
+            };
+        });
+
+        await cart.useTransaction(trx).load("appliedCoupons");
+        const appliedCoupons: DiscounterCouponContext[] = cart.appliedCoupons.map((row) => ({
+            id: Number(row.couponId),
+            code: row.codeSnapshot,
         }));
+        const customer = await resolveCustomerContextFromCart(cart, trx);
 
         return computeCartTotals({
             items,
@@ -229,9 +267,11 @@ export class OrderFactory {
                 ? { country: cart.country, regionId: cart.regionId === null ? null : Number(cart.regionId) }
                 : null,
             selectedRateId: cart.shippingZoneMethodId == null ? null : Number(cart.shippingZoneMethodId),
-            discounter: noopDiscounter,
+            discounter: getDiscounter(),
             pricesIncludeTax,
             shippingOptions,
+            appliedCoupons,
+            customer,
         });
     }
 
@@ -311,6 +351,60 @@ export class OrderFactory {
         if (productClass !== undefined && productClass !== null) return Number(productClass);
         return null;
     }
+
+    /**
+     * Snapshot one `order_coupon_lines` row per applied coupon, distributing the discounter's
+     * per-coupon total into the row. We resolve the per-coupon total off the running discounter
+     * result; for the MVP that's simply the cart's `discountTotal` allocated to the single coupon
+     * when there is one applied, or proportionally split when several apply. Tax portion is 0 in
+     * this phase — phase 04's totals service already recomputes line tax on the post-discount
+     * total, so the discount-tax column is reserved for tax-inclusive carts that need a separate
+     * audit field.
+     */
+    private async writeCouponLines(
+        order: Order,
+        cart: Cart,
+        totals: { discountTotal: number; discountTaxTotal: number },
+        trx: TransactionClientContract,
+    ): Promise<void> {
+        await cart.useTransaction(trx).load("appliedCoupons");
+        if (cart.appliedCoupons.length === 0) return;
+
+        const codes = cart.appliedCoupons.map((row) => ({
+            couponId: Number(row.couponId),
+            code: row.codeSnapshot,
+        }));
+        /** Equal split when multiple coupons stack; residual goes to the first row. */
+        const share = Math.floor(totals.discountTotal / codes.length);
+        let residual = totals.discountTotal - share * codes.length;
+
+        for (const entry of codes) {
+            const line = new OrderCouponLine();
+            line.useTransaction(trx);
+            line.orderId = order.id;
+            line.couponId = entry.couponId;
+            line.codeSnapshot = entry.code;
+            line.discount = share + residual;
+            line.discountTax = 0;
+            residual = 0;
+            await line.save();
+        }
+    }
 }
 
 export const orderFactory = new OrderFactory();
+
+/**
+ * Pull the customer/email pair off the cart inside the factory's transaction. Used as the
+ * discounter's per-user context — guests get `customerId=null` and an email pulled from the cart
+ * once the storefront has set one (defaults to `null` if absent).
+ */
+async function resolveCustomerContextFromCart(cart: Cart, trx: TransactionClientContract): Promise<DiscounterCustomerContext> {
+    const customerId = cart.customerId === null || cart.customerId === undefined ? null : Number(cart.customerId);
+    let email: string | null = null;
+    if (customerId !== null) {
+        const customer = await Customer.query({ client: trx }).where("id", customerId).preload("user").first();
+        email = customer?.user?.email ?? null;
+    }
+    return { customerId, email };
+}
