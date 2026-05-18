@@ -1,5 +1,6 @@
 import { directionFor, type Locale, locales } from "@calibra/shared/i18n";
 import type { Metadata } from "next";
+import { Inter, Vazirmatn } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -7,6 +8,18 @@ import type { ReactNode } from "react";
 
 import { routing } from "#/lib/i18n/routing";
 import "#/styles/globals.css";
+
+const inter = Inter({
+    subsets: ["latin"],
+    variable: "--font-inter",
+    display: "swap",
+});
+
+const vazirmatn = Vazirmatn({
+    subsets: ["arabic", "latin"],
+    variable: "--font-vazirmatn",
+    display: "swap",
+});
 
 export const metadata: Metadata = {
     title: { default: "Admin", template: "%s · Admin" },
@@ -29,8 +42,12 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
     setRequestLocale(locale);
 
     return (
-        <html lang={locale} dir={directionFor(locale)}>
-            <body className="min-h-dvh bg-background text-foreground antialiased">
+        <html
+            lang={locale}
+            dir={directionFor(locale)}
+            className={`${inter.variable} ${vazirmatn.variable}`}
+        >
+            <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
                 <NextIntlClientProvider>{children}</NextIntlClientProvider>
             </body>
         </html>

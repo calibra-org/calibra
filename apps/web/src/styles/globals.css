@@ -13,7 +13,7 @@
     --color-accent: oklch(60% 0.18 250);
     --color-accent-foreground: oklch(99% 0 0);
 
-    --font-sans: "Inter", "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: var(--font-inter), var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -38,7 +38,12 @@ body {
 /**
  * `:lang(fa)` flips logical CSS to RTL automatically. Tailwind v4 already emits logical properties
  * (`ms-*` / `me-*` / `text-start`) for utilities, so no per-component RTL handling is needed.
+ *
+ * For Persian, also prefer Vazirmatn so the whole UI (including Latin runs mixed inside Persian
+ * copy) renders in a consistent type system. Inter remains as a fallback for any glyphs Vazirmatn
+ * lacks.
  */
 html[lang="fa"] {
     direction: rtl;
+    --font-sans: var(--font-vazirmatn), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }

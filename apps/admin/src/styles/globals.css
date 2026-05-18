@@ -124,7 +124,16 @@
     --color-sidebar-border: hsl(var(--sidebar-border));
     --color-sidebar-ring: hsl(var(--sidebar-ring));
 
-    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: var(--font-inter), var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
+}
+
+/**
+ * Persian uses Vazirmatn first; Inter remains as fallback for any glyphs Vazirmatn lacks. Keeps
+ * the whole admin UI in a consistent type system even when Latin runs are mixed inside Persian
+ * copy (product SKUs, currency codes, etc.).
+ */
+html[lang="fa"] {
+    --font-sans: var(--font-vazirmatn), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
