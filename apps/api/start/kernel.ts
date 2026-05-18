@@ -1,6 +1,7 @@
 /**
  * HTTP kernel. Registers server-level middleware (runs for every request, even unmatched routes)
- * and router-level middleware (runs only for matched routes), plus the named middleware map.
+ * and router-level middleware (runs only for matched routes), plus the named middleware map other
+ * phases mount onto their routes.
  */
 
 import router from "@adonisjs/core/services/router";
@@ -15,6 +16,12 @@ server.use([
     () => import("@adonisjs/cors/cors_middleware"),
 ]);
 
-router.use([() => import("@adonisjs/core/bodyparser_middleware")]);
+router.use([
+    () => import("@adonisjs/core/bodyparser_middleware"),
+    () => import("@adonisjs/auth/initialize_auth_middleware"),
+]);
 
-export const middleware = router.named({});
+export const middleware = router.named({
+    auth: () => import("#middleware/auth_middleware"),
+    admin: () => import("#middleware/admin_middleware"),
+});
