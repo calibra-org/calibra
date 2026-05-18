@@ -15,22 +15,74 @@ alias fmt := format
 alias d := dev
 alias u := up
 
+default: dev
+
 # Install nodejs dependencies
 install:
     pnpm install
 
-# Run the web + admin dev servers (assumes the API is already running)
+# Bring up the full dev stack: Postgres (+pgAdmin) in docker, then web + admin + api dev servers
+# on the host. Storefront :3000, admin :3001, api :3333, pgAdmin :5050.
+# Ctrl-C stops the dev servers; the DB container keeps running (`just down` to stop it).
+up: install db-up migrate
+    pnpm dev
+
+# Same as `up` but only runs the API dev server (skips web + admin)
+up-api: install db-up migrate
+    pnpm dev:api
+
+# Same as `up` but only runs the storefront (assumes API is already running elsewhere)
+up-web: install
+    pnpm dev:web
+
+# Same as `up` but only runs the admin panel (assumes API is already running elsewhere)
+up-admin: install
+    pnpm dev:admin
+
+# Run dev servers without touching docker (assumes db is already up)
 dev: install
     pnpm dev
 
-# Boot the FULL infra: AdonisJS API + Postgres (docker) + storefront + admin dev servers.
-# Storefront at :3000, admin at :3001, API at :3333. Single command — Ctrl-C stops the dev
-# servers; the API container keeps running so the next `just up` is fast (`just down` to stop it).
-up: install api-up
-    pnpm dev
+# Stop the dev infra containers (preserves volumes — data survives)
+down: db-down
 
-# Stop the API stack (preserves volumes — data survives)
-down: api-down
+# Boot Postgres + pgAdmin and block until db is healthy (docker compose --wait)
+db-up:
+    cd apps/api && docker compose up -d --wait
+
+# Stop the dev infra containers (preserves volumes)
+db-down:
+    cd apps/api && docker compose down
+
+# Nuke the dev db volumes and start fresh (loses all data)
+db-reset:
+    cd apps/api && docker compose down -v
+    @just db-up
+    @just migrate
+
+# Tail the db container logs
+db-logs:
+    cd apps/api && docker compose logs -f db
+
+# Open a psql shell inside the db container
+db-shell:
+    cd apps/api && docker compose exec db psql -U $${DB_USER:-calibra} -d $${DB_DATABASE:-calibra}
+
+# Run pending Lucid migrations (db must be up)
+migrate:
+    pnpm --filter @calibra/api exec node ace migration:run
+
+# Roll back the last migration batch
+migrate-rollback:
+    pnpm --filter @calibra/api exec node ace migration:rollback
+
+# Run all Lucid seeders
+seed:
+    pnpm --filter @calibra/api exec node ace db:seed
+
+# Run an arbitrary Lucid/Ace command, e.g. `just ace 'make:controller orders'`
+ace arg:
+    pnpm --filter @calibra/api exec node ace {{ arg }}
 
 # Build every package + app via turbo
 build:
@@ -79,26 +131,6 @@ format:
 # Ready for PR review: format, lint, typecheck, build, test
 ready: format lint typecheck build test
 
-# Boot the AdonisJS API + Postgres (docker compose up -d)
-api-up:
-    pnpm --filter @calibra/api run up
-
-# Stop the API stack (preserves volumes)
-api-down:
-    pnpm --filter @calibra/api run down
-
-# Nuke the API volumes and start fresh (loses DB)
-api-reset:
-    pnpm --filter @calibra/api run reset
-
-# Tail the API container logs
-api-logs:
-    pnpm --filter @calibra/api run logs
-
-# Run a Lucid command inside the API container, e.g. `just api-ace 'migration:run'`
-api-ace arg:
-    pnpm --filter @calibra/api exec node ace {{ arg }}
-
 # Clean build artifacts and caches
 clean:
     find . \( -name 'node_modules' -o -name '.pnpm' -o -name '.turbo' -o -name 'build' -o -name '.next' -o -name '.cache' -o -name 'dist' -o -name 'coverage' -o -name 'playwright-report' -o -name 'test-results' \) \
@@ -106,5 +138,4 @@ clean:
     find . -type f -name 'tsconfig.tsbuildinfo' -exec rm -f {} +
 
 # Clean all build artifacts and caches and reinstall dependencies
-fresh: clean
-    pnpm install
+fresh: clean install db-reset
