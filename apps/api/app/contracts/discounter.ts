@@ -27,6 +27,8 @@ export interface DiscounterItem {
     categoryIds: number[];
     /** Optional product tags the line carries — phase 06 uses these for include/exclude lists. */
     tagIds: number[];
+    /** True when `priceSnapshot` reflects an active sale price — drives `exclude_sale_items`. */
+    onSale?: boolean;
 }
 
 export interface DiscounterCouponContext {
@@ -36,10 +38,21 @@ export interface DiscounterCouponContext {
     code: string;
 }
 
+/**
+ * Optional viewer/customer context the discounter uses for per-user redemption counting and email
+ * restriction matching. `null` denotes the anonymous/guest case during cart browsing — usage limits
+ * are still re-checked at order submit when the email is captured.
+ */
+export interface DiscounterCustomerContext {
+    customerId: number | null;
+    email: string | null;
+}
+
 export interface DiscounterInput {
     items: DiscounterItem[];
     itemsTotal: number;
     appliedCoupons: DiscounterCouponContext[];
+    customer?: DiscounterCustomerContext | null;
 }
 
 export interface DiscounterResult {
