@@ -216,7 +216,22 @@ export default class AddressesController {
             .update({ is_default: false });
     }
 
+    /**
+     * Pattern 4: convert the rules-layer camelCase keys (`labelKey`, `valuesEndpoint`, `inputMode`)
+     * to the snake_case shape the public API contract advertises. The internal type stays
+     * idiomatic TypeScript; the boundary translates.
+     */
     private fieldMetadataFor(country: string) {
-        return rulesFor(country).fieldMetadata;
+        const source = rulesFor(country).fieldMetadata;
+        const out: Record<string, Record<string, unknown>> = {};
+        for (const [field, meta] of Object.entries(source)) {
+            const entry: Record<string, unknown> = { label_key: meta.labelKey };
+            if (meta.pattern !== undefined) entry.pattern = meta.pattern;
+            if (meta.inputMode !== undefined) entry.input_mode = meta.inputMode;
+            if (meta.valuesEndpoint !== undefined) entry.values_endpoint = meta.valuesEndpoint;
+            if (meta.optional !== undefined) entry.optional = meta.optional;
+            out[field] = entry;
+        }
+        return out;
     }
 }
