@@ -1,0 +1,165 @@
+import { BaseTransformer } from "@adonisjs/core/transformers";
+
+import type Product from "#models/product";
+import { resolvePrice } from "#services/price_resolver";
+import { pickTranslation } from "#transformers/i18n_helpers";
+
+export default class ProductTransformer extends BaseTransformer<Product> {
+    constructor(
+        resource: Product,
+        protected locale: string = "fa",
+    ) {
+        super(resource);
+    }
+
+    toObject() {
+        const p = this.resource;
+        const translation = pickTranslation(p.translations, this.locale);
+        const price = resolvePrice({
+            regularPrice: p.regularPrice,
+            salePrice: p.salePrice,
+            saleStartsAt: p.saleStartsAt,
+            saleEndsAt: p.saleEndsAt,
+        });
+
+        const images = (p.images ?? [])
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map((img) => ({
+                id: Number(img.id),
+                media_id: Number(img.mediaId),
+                position: img.position,
+                url: img.media?.url ?? null,
+                alt: img.media?.alt ?? null,
+            }));
+
+        return {
+            id: Number(p.id),
+            type: p.type,
+            sku: p.sku,
+            status: p.status,
+            catalog_visibility: p.catalogVisibility,
+            featured: p.featured,
+            virtual: p.virtual,
+            downloadable: p.downloadable,
+            regular_price: p.regularPrice === null ? null : Number(p.regularPrice),
+            sale_price: p.salePrice === null ? null : Number(p.salePrice),
+            effective_price: price.effectivePrice === null ? null : Number(price.effectivePrice),
+            on_sale: price.onSale,
+            sale_starts_at: p.saleStartsAt?.toISO() ?? null,
+            sale_ends_at: p.saleEndsAt?.toISO() ?? null,
+            tax_class_id: p.taxClassId === null ? null : Number(p.taxClassId),
+            tax_status: p.taxStatus,
+            shipping_class_id: p.shippingClassId === null ? null : Number(p.shippingClassId),
+            weight_grams: p.weightGrams,
+            length_mm: p.lengthMm,
+            width_mm: p.widthMm,
+            height_mm: p.heightMm,
+            sold_individually: p.soldIndividually,
+            reviews_allowed: p.reviewsAllowed,
+            external_url: p.externalUrl,
+            menu_order: p.menuOrder,
+            name: translation?.name ?? null,
+            slug: translation?.slug ?? null,
+            short_description: translation?.shortDescription ?? null,
+            locale: translation?.locale ?? this.locale,
+            featured_image_url: images[0]?.url ?? null,
+        };
+    }
+
+    forDetail() {
+        const p = this.resource;
+        const translation = pickTranslation(p.translations, this.locale);
+        const base = this.toObject();
+
+        const images = (p.images ?? [])
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map((img) => ({
+                id: Number(img.id),
+                media_id: Number(img.mediaId),
+                position: img.position,
+                url: img.media?.url ?? null,
+                alt: img.media?.alt ?? null,
+            }));
+
+        const variations = (p.variations ?? []).map((v) => {
+            const variationPrice = resolvePrice(
+                { regularPrice: p.regularPrice, salePrice: p.salePrice, saleStartsAt: p.saleStartsAt, saleEndsAt: p.saleEndsAt },
+                v,
+            );
+            return {
+                id: Number(v.id),
+                sku: v.sku,
+                regular_price: v.regularPrice === null ? null : Number(v.regularPrice),
+                sale_price: v.salePrice === null ? null : Number(v.salePrice),
+                effective_price: variationPrice.effectivePrice === null ? null : Number(variationPrice.effectivePrice),
+                on_sale: variationPrice.onSale,
+                manage_stock_mode: v.manageStockMode,
+                attribute_pins: (v.attributePins ?? []).map((pin) => ({
+                    attribute_id: Number(pin.attributeId),
+                    term_id: Number(pin.termId),
+                })),
+            };
+        });
+
+        const attributeLinks = (p.attributeLinks ?? []).map((link) => ({
+            id: Number(link.id),
+            attribute_id: Number(link.attributeId),
+            position: link.position,
+            visible: link.visible,
+            used_for_variation: link.usedForVariation,
+            term_ids: (link.terms ?? []).map((t) => Number(t.id)),
+        }));
+
+        const categories = (p.categories ?? []).map((c) => ({
+            id: Number(c.id),
+            name: pickTranslation(c.translations, this.locale)?.name ?? null,
+            slug: pickTranslation(c.translations, this.locale)?.slug ?? null,
+        }));
+        const tags = (p.tags ?? []).map((t) => ({
+            id: Number(t.id),
+            name: pickTranslation(t.translations, this.locale)?.name ?? null,
+            slug: pickTranslation(t.translations, this.locale)?.slug ?? null,
+        }));
+        const brands = (p.brands ?? []).map((b) => ({
+            id: Number(b.id),
+            name: pickTranslation(b.translations, this.locale)?.name ?? null,
+            slug: pickTranslation(b.translations, this.locale)?.slug ?? null,
+        }));
+
+        return {
+            ...base,
+            description: translation?.description ?? null,
+            purchase_note: translation?.purchaseNote ?? null,
+            images,
+            variations,
+            attribute_links: attributeLinks,
+            categories,
+            tags,
+            brands,
+        };
+    }
+
+    forAdmin() {
+        const p = this.resource;
+        const detail = this.forDetail();
+        return {
+            ...detail,
+            global_unique_id: p.globalUniqueId,
+            attributes: p.attributes ?? {},
+            translations: (p.translations ?? []).map((t) => ({
+                locale: t.locale,
+                name: t.name,
+                slug: t.slug,
+                description: t.description,
+                short_description: t.shortDescription,
+                purchase_note: t.purchaseNote,
+                external_button_text: t.externalButtonText,
+            })),
+            created_at: p.createdAt?.toISO(),
+            updated_at: p.updatedAt?.toISO(),
+            deleted_at: p.deletedAt?.toISO() ?? null,
+        };
+    }
+}

@@ -94,6 +94,15 @@
             }
         },
         {
+            "includes": ["apps/api/**"],
+            "linter": {
+                "domains": {
+                    "next": "none",
+                    "react": "none"
+                }
+            }
+        },
+        {
             "includes": [
                 "**/*.spec.ts",
                 "**/*.spec.tsx",

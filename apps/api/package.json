@@ -13,6 +13,7 @@
         "#transformers/*": "./app/transformers/*.js",
         "#providers/*": "./providers/*.js",
         "#database/*": "./database/*.js",
+        "#factories/*": "./database/factories/*.js",
         "#start/*": "./start/*.js",
         "#tests/*": "./tests/*.js",
         "#config/*": "./config/*.js",
