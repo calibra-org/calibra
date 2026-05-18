@@ -399,10 +399,7 @@ export const orderFactory = new OrderFactory();
  * discounter's per-user context — guests get `customerId=null` and an email pulled from the cart
  * once the storefront has set one (defaults to `null` if absent).
  */
-async function resolveCustomerContextFromCart(
-    cart: Cart,
-    trx: TransactionClientContract,
-): Promise<DiscounterCustomerContext> {
+async function resolveCustomerContextFromCart(cart: Cart, trx: TransactionClientContract): Promise<DiscounterCustomerContext> {
     const customerId = cart.customerId === null || cart.customerId === undefined ? null : Number(cart.customerId);
     let email: string | null = null;
     if (customerId !== null) {
@@ -411,4 +408,3 @@ async function resolveCustomerContextFromCart(
     }
     return { customerId, email };
 }
-

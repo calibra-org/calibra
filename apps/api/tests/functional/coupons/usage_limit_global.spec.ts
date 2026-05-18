@@ -3,7 +3,8 @@ import { test } from "@japa/runner";
 
 import { CouponFactory } from "#factories/coupon_factory";
 import CouponRedemption from "#models/coupon_redemption";
-import { createTaxableProduct, resetWithFoundation } from "#tests/helpers/cart";
+import { createTaxableProduct } from "#tests/helpers/cart";
+import { makeDraftOrder, resetPhase05 } from "#tests/helpers/orders";
 
 /**
  * Phase 05 will exercise the global limit through the order submit pipeline. Until then we test it
@@ -12,20 +13,21 @@ import { createTaxableProduct, resetWithFoundation } from "#tests/helpers/cart";
  */
 test.group("usage_limit_global", (group) => {
     group.each.setup(async () => {
-        await resetWithFoundation();
+        await resetPhase05();
         await db.rawQuery("TRUNCATE TABLE coupons, coupon_redemptions RESTART IDENTITY CASCADE");
     });
 
     test("ledger at the limit blocks new apply attempts with reason=usage_limit_global_reached", async ({ client, assert }) => {
         const coupon = await CouponFactory.merge({ code: "G1", usageLimitGlobal: 1 }).create();
+        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
+        const existingOrder = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 1_000_000 });
         await CouponRedemption.create({
             couponId: coupon.id,
-            orderId: 1,
+            orderId: existingOrder.id,
             customerId: null,
             emailSnapshot: "first@x.com",
         });
 
-        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
         const added = await client.post("/api/v1/cart/items").json({ product_id: Number(product.id), quantity: 1 });
         const token = added.cookie("cart_token")?.value as string;
 

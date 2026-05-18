@@ -4,23 +4,27 @@ import { test } from "@japa/runner";
 import { CouponFactory } from "#factories/coupon_factory";
 import CouponRedemption from "#models/coupon_redemption";
 import { countRedemptions, loadSnapshotForUpdate } from "#services/discounter_service";
+import { createTaxableProduct } from "#tests/helpers/cart";
+import { makeDraftOrder, resetPhase05 } from "#tests/helpers/orders";
 
 /**
- * These tests target the race-safe redemption ledger. The order_finalizer integration in phase 05
- * will wrap the same primitives — locking the coupon row, counting redemptions, inserting on
- * success — inside the larger submit transaction. We test the primitives directly here so phase 05
- * can land independently with the same guarantees.
+ * Race-safe redemption ledger primitives that `order_finalizer.writeRedemptionLedger` wraps inside
+ * the larger submit transaction. The FK to `orders.id` (added by the phase-05 merge migration)
+ * means every test row needs a real order row — we mint one via `makeDraftOrder`.
  */
 test.group("Redemption concurrency", (group) => {
     group.each.setup(async () => {
-        await db.rawQuery("TRUNCATE TABLE coupon_redemptions, coupons, customers RESTART IDENTITY CASCADE");
+        await resetPhase05();
+        await db.rawQuery("TRUNCATE TABLE coupon_redemptions, coupons RESTART IDENTITY CASCADE");
     });
 
     test("UNIQUE (coupon_id, order_id) prevents the same order from double-writing", async ({ assert }) => {
         const coupon = await CouponFactory.merge({ code: "RACE1" }).create();
+        const product = await createTaxableProduct({ regularPrice: 100_000 });
+        const order = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
         await CouponRedemption.create({
             couponId: coupon.id,
-            orderId: 1,
+            orderId: order.id,
             customerId: null,
             emailSnapshot: "a@example.com",
         });
@@ -29,7 +33,7 @@ test.group("Redemption concurrency", (group) => {
         try {
             await CouponRedemption.create({
                 couponId: coupon.id,
-                orderId: 1,
+                orderId: order.id,
                 customerId: null,
                 emailSnapshot: "a@example.com",
             });
@@ -46,8 +50,11 @@ test.group("Redemption concurrency", (group) => {
     test("FOR UPDATE serializes two concurrent claims for the last slot", async ({ assert }) => {
         const coupon = await CouponFactory.merge({ code: "RACE2", usageLimitGlobal: 1 }).create();
         const couponId = Number(coupon.id);
+        const product = await createTaxableProduct({ regularPrice: 100_000 });
+        const orderA = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
+        const orderB = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
 
-        const claim = async (orderId: number) => {
+        const claim = async (orderId: bigint | number) => {
             return db.transaction(async (trx) => {
                 const snapshot = await loadSnapshotForUpdate(couponId, trx);
                 if (!snapshot) throw new Error("coupon vanished");
@@ -59,7 +66,7 @@ test.group("Redemption concurrency", (group) => {
             });
         };
 
-        const [a, b] = await Promise.allSettled([claim(101), claim(102)]);
+        const [a, b] = await Promise.allSettled([claim(orderA.id), claim(orderB.id)]);
         const fulfilled = [a, b].filter((r) => r.status === "fulfilled").length;
         const rejected = [a, b].filter((r) => r.status === "rejected").length;
         assert.equal(fulfilled, 1, "exactly one claim wins the slot");
@@ -71,6 +78,11 @@ test.group("Redemption concurrency", (group) => {
     test("countRedemptions scopes by customer_id OR email_snapshot", async ({ assert }) => {
         const coupon = await CouponFactory.merge({ code: "PERUSER1" }).create();
         const couponId = Number(coupon.id);
+        const product = await createTaxableProduct({ regularPrice: 100_000 });
+        const orderA = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
+        const orderB = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
+        const orderC = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
+
         /** Real customer rows so the FK on coupon_redemptions.customer_id is satisfied. */
         const customerA = await db
             .table("customers")
@@ -99,9 +111,9 @@ test.group("Redemption concurrency", (group) => {
         const idA = Number((customerA[0] as { id: number | bigint }).id);
         const idB = Number((customerB[0] as { id: number | bigint }).id);
 
-        await CouponRedemption.create({ couponId, orderId: 1, customerId: idA, emailSnapshot: "x@a.com" });
-        await CouponRedemption.create({ couponId, orderId: 2, customerId: null, emailSnapshot: "guest@a.com" });
-        await CouponRedemption.create({ couponId, orderId: 3, customerId: idB, emailSnapshot: "other@a.com" });
+        await CouponRedemption.create({ couponId, orderId: orderA.id, customerId: idA, emailSnapshot: "x@a.com" });
+        await CouponRedemption.create({ couponId, orderId: orderB.id, customerId: null, emailSnapshot: "guest@a.com" });
+        await CouponRedemption.create({ couponId, orderId: orderC.id, customerId: idB, emailSnapshot: "other@a.com" });
 
         const matchByCustomer = await countRedemptions(couponId, { customerId: idA, email: "unused@x.com" });
         assert.equal(matchByCustomer, 1);

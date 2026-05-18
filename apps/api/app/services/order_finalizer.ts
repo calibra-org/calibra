@@ -6,12 +6,12 @@ import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { OrderStatus } from "#enums/order_status";
 import type Cart from "#models/cart";
 import CartItem from "#models/cart_item";
+import CouponRedemption from "#models/coupon_redemption";
 import type CustomerAddress from "#models/customer_address";
 import CustomerIranProfile from "#models/customer_iran_profile";
 import type Order from "#models/order";
 import OrderAddress from "#models/order_address";
 import OrderAddressIranExtension from "#models/order_address_iran_extension";
-import CouponRedemption from "#models/coupon_redemption";
 import OrderCouponLine from "#models/order_coupon_line";
 import OrderLineItem from "#models/order_line_item";
 import type User from "#models/user";
@@ -247,12 +247,9 @@ export class OrderFinalizer {
                 });
             }
 
-            const globalCount =
-                snapshot.usageLimitGlobal === null ? 0 : await countRedemptions(couponId, { client: trx });
+            const globalCount = snapshot.usageLimitGlobal === null ? 0 : await countRedemptions(couponId, { client: trx });
             const perUserCount =
-                snapshot.usageLimitPerUser === null
-                    ? 0
-                    : await countRedemptions(couponId, { client: trx, customerId, email });
+                snapshot.usageLimitPerUser === null ? 0 : await countRedemptions(couponId, { client: trx, customerId, email });
 
             /** Eligibility re-runs without item state — we only re-check the limit gates here. */
             const result = checkEligibility({
@@ -275,7 +272,10 @@ export class OrderFinalizer {
                 globalRedemptionCount: globalCount,
                 perUserRedemptionCount: perUserCount,
             });
-            if (!result.ok && (result.reason === "usage_limit_global_reached" || result.reason === "usage_limit_per_user_reached")) {
+            if (
+                !result.ok &&
+                (result.reason === "usage_limit_global_reached" || result.reason === "usage_limit_per_user_reached")
+            ) {
                 throw new Exception(`Coupon ${line.codeSnapshot} limit reached`, {
                     status: 409,
                     code: "E_COUPON_LIMIT_EXHAUSTED",

@@ -5,8 +5,9 @@ import { CouponFactory } from "#factories/coupon_factory";
 import CouponRedemption from "#models/coupon_redemption";
 import Customer from "#models/customer";
 import User from "#models/user";
-import { createTaxableProduct, resetWithFoundation } from "#tests/helpers/cart";
+import { createTaxableProduct } from "#tests/helpers/cart";
 import { truncatePhase03Tables } from "#tests/helpers/db";
+import { makeDraftOrder, resetPhase05 } from "#tests/helpers/orders";
 
 async function loginUser(email: string) {
     const user = await User.create({
@@ -26,7 +27,7 @@ async function loginUser(email: string) {
 
 test.group("usage_limit_per_user", (group) => {
     group.each.setup(async () => {
-        await resetWithFoundation();
+        await resetPhase05();
         await db.rawQuery("TRUNCATE TABLE coupons, coupon_redemptions RESTART IDENTITY CASCADE");
         await truncatePhase03Tables();
     });
@@ -34,14 +35,20 @@ test.group("usage_limit_per_user", (group) => {
     test("second apply by the same customer fails after their cap is reached", async ({ client, assert }) => {
         const coupon = await CouponFactory.merge({ code: "U1", usageLimitPerUser: 1 }).create();
         const { user, customer } = await loginUser("repeat@example.com");
+        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
+        const existingOrder = await makeDraftOrder({
+            customerId: Number(customer.id),
+            productId: Number(product.id),
+            quantity: 1,
+            price: 1_000_000,
+        });
         await CouponRedemption.create({
             couponId: coupon.id,
-            orderId: 1,
+            orderId: existingOrder.id,
             customerId: customer.id,
             emailSnapshot: user.email,
         });
 
-        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
         const added = await client
             .post("/api/v1/cart/items")
             .withGuard("api")
@@ -61,15 +68,21 @@ test.group("usage_limit_per_user", (group) => {
     test("a different customer is unaffected by another user's redemption count", async ({ client, assert }) => {
         const coupon = await CouponFactory.merge({ code: "U2", usageLimitPerUser: 1 }).create();
         const { customer: other } = await loginUser("other@example.com");
+        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
+        const otherOrder = await makeDraftOrder({
+            customerId: Number(other.id),
+            productId: Number(product.id),
+            quantity: 1,
+            price: 1_000_000,
+        });
         await CouponRedemption.create({
             couponId: coupon.id,
-            orderId: 1,
+            orderId: otherOrder.id,
             customerId: other.id,
             emailSnapshot: "other@example.com",
         });
 
         const { user } = await loginUser("fresh@example.com");
-        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
         const added = await client
             .post("/api/v1/cart/items")
             .withGuard("api")

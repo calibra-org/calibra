@@ -6,7 +6,9 @@ import Coupon from "#models/coupon";
 import CouponRedemption from "#models/coupon_redemption";
 import Customer from "#models/customer";
 import User from "#models/user";
+import { createTaxableProduct } from "#tests/helpers/cart";
 import { truncatePhase03Tables } from "#tests/helpers/db";
+import { makeDraftOrder, resetPhase05 } from "#tests/helpers/orders";
 
 async function createAdmin() {
     const user = await User.create({
@@ -37,6 +39,7 @@ async function createPlain() {
 
 test.group("/api/v1/admin/coupons", (group) => {
     group.each.setup(async () => {
+        await resetPhase05();
         await db.rawQuery("TRUNCATE TABLE coupon_redemptions, coupons RESTART IDENTITY CASCADE");
         await truncatePhase03Tables();
     });
@@ -68,9 +71,11 @@ test.group("/api/v1/admin/coupons", (group) => {
     test("update changes the discount and is non-retroactive (no historic data altered)", async ({ client, assert }) => {
         const admin = await createAdmin();
         const coupon = await CouponFactory.merge({ code: "UP", amountPercent: "10.00" }).create();
+        const product = await createTaxableProduct({ regularPrice: 100_000 });
+        const order = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
         await CouponRedemption.create({
             couponId: coupon.id,
-            orderId: 999,
+            orderId: order.id,
             customerId: null,
             emailSnapshot: "buyer@x.com",
         });
@@ -84,16 +89,18 @@ test.group("/api/v1/admin/coupons", (group) => {
         assert.equal(Number(r.body().data.amount_percent), 25);
 
         /** Existing redemption row is untouched — updates are forward-only. */
-        const ledger = await CouponRedemption.find(1);
+        const ledger = await CouponRedemption.query().where("coupon_id", Number(coupon.id)).first();
         assert.exists(ledger);
     });
 
     test("soft-delete blocks future apply but preserves history", async ({ client, assert }) => {
         const admin = await createAdmin();
         const coupon = await CouponFactory.merge({ code: "DEL" }).create();
+        const product = await createTaxableProduct({ regularPrice: 100_000 });
+        const order = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
         await CouponRedemption.create({
             couponId: coupon.id,
-            orderId: 1,
+            orderId: order.id,
             customerId: null,
             emailSnapshot: "h@x.com",
         });
@@ -135,9 +142,12 @@ test.group("/api/v1/admin/coupons", (group) => {
     test("redemptions endpoint lists ledger rows for the coupon", async ({ client, assert }) => {
         const admin = await createAdmin();
         const coupon = await CouponFactory.merge({ code: "LIST" }).create();
+        const product = await createTaxableProduct({ regularPrice: 100_000 });
+        const orderA = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
+        const orderB = await makeDraftOrder({ productId: Number(product.id), quantity: 1, price: 100_000 });
         await CouponRedemption.createMany([
-            { couponId: coupon.id, orderId: 1, customerId: null, emailSnapshot: "a@x.com" },
-            { couponId: coupon.id, orderId: 2, customerId: null, emailSnapshot: "b@x.com" },
+            { couponId: coupon.id, orderId: orderA.id, customerId: null, emailSnapshot: "a@x.com" },
+            { couponId: coupon.id, orderId: orderB.id, customerId: null, emailSnapshot: "b@x.com" },
         ]);
 
         const r = await client.get(`/api/v1/admin/coupons/${coupon.id}/redemptions`).withGuard("api").loginAs(admin);
