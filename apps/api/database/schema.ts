@@ -7,6 +7,151 @@
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
+export class AuthAccessTokenSchema extends BaseModel {
+  static $columns = ['abilities', 'createdAt', 'expiresAt', 'hash', 'id', 'lastUsedAt', 'name', 'tokenableId', 'type', 'updatedAt'] as const
+  $columns = AuthAccessTokenSchema.$columns
+  @column()
+  declare abilities: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare expiresAt: DateTime | null
+  @column()
+  declare hash: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime()
+  declare lastUsedAt: DateTime | null
+  @column()
+  declare name: string | null
+  @column()
+  declare tokenableId: bigint | number
+  @column()
+  declare type: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CustomerAddressSchema extends BaseModel {
+  static $columns = ['addressLine1', 'addressLine2', 'attributes', 'city', 'company', 'country', 'createdAt', 'customerId', 'firstName', 'id', 'isDefault', 'kind', 'label', 'lastName', 'phone', 'postcode', 'regionId', 'regionText', 'updatedAt'] as const
+  $columns = CustomerAddressSchema.$columns
+  @column()
+  declare addressLine1: string
+  @column()
+  declare addressLine2: string | null
+  @column()
+  declare attributes: any
+  @column()
+  declare city: string
+  @column()
+  declare company: string | null
+  @column()
+  declare country: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare customerId: bigint | number
+  @column()
+  declare firstName: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare isDefault: boolean
+  @column()
+  declare kind: string
+  @column()
+  declare label: string | null
+  @column()
+  declare lastName: string
+  @column()
+  declare phone: string | null
+  @column()
+  declare postcode: string | null
+  @column()
+  declare regionId: bigint | number | null
+  @column()
+  declare regionText: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CustomerDownloadSchema extends BaseModel {
+  static $columns = ['createdAt', 'customerId', 'downloadLimit', 'downloadsUsed', 'expiresAt', 'grantedAt', 'id', 'orderId', 'productDownloadId', 'productId', 'updatedAt'] as const
+  $columns = CustomerDownloadSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare customerId: bigint | number
+  @column()
+  declare downloadLimit: number | null
+  @column()
+  declare downloadsUsed: number
+  @column.dateTime()
+  declare expiresAt: DateTime | null
+  @column.dateTime()
+  declare grantedAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare orderId: bigint | number | null
+  @column()
+  declare productDownloadId: bigint | number | null
+  @column()
+  declare productId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CustomerIranProfileSchema extends BaseModel {
+  static $columns = ['attributes', 'corporateNationalId', 'createdAt', 'customerId', 'economicCode', 'legalCompanyNameFa', 'nationalId', 'updatedAt', 'vatTaxpayerStatus'] as const
+  $columns = CustomerIranProfileSchema.$columns
+  @column()
+  declare attributes: any
+  @column()
+  declare corporateNationalId: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare customerId: bigint | number
+  @column()
+  declare economicCode: string | null
+  @column()
+  declare legalCompanyNameFa: string | null
+  @column()
+  declare nationalId: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare vatTaxpayerStatus: string | null
+}
+
+export class CustomerSchema extends BaseModel {
+  static $columns = ['attributes', 'countryDefault', 'createdAt', 'deletedAt', 'firstName', 'id', 'isPayingCustomer', 'lastName', 'phone', 'updatedAt', 'userId'] as const
+  $columns = CustomerSchema.$columns
+  @column()
+  declare attributes: any
+  @column()
+  declare countryDefault: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+  @column()
+  declare firstName: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare isPayingCustomer: boolean
+  @column()
+  declare lastName: string
+  @column()
+  declare phone: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: bigint | number | null
+}
+
 export class MediaSchema extends BaseModel {
   static $columns = ['alt', 'attributes', 'createdAt', 'height', 'id', 'kind', 'mime', 'sizeBytes', 'updatedAt', 'url', 'width'] as const
   $columns = MediaSchema.$columns
@@ -32,6 +177,46 @@ export class MediaSchema extends BaseModel {
   declare url: string
   @column()
   declare width: number | null
+}
+
+export class OrderAddressIranExtensionSchema extends BaseModel {
+  static $columns = ['attributes', 'corporateNationalId', 'createdAt', 'economicCode', 'legalCompanyNameFa', 'nationalId', 'orderAddressId', 'updatedAt'] as const
+  $columns = OrderAddressIranExtensionSchema.$columns
+  @column()
+  declare attributes: any
+  @column()
+  declare corporateNationalId: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare economicCode: string | null
+  @column()
+  declare legalCompanyNameFa: string | null
+  @column()
+  declare nationalId: string | null
+  @column({ isPrimary: true })
+  declare orderAddressId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class PasswordResetTokenSchema extends BaseModel {
+  static $columns = ['createdAt', 'expiresAt', 'id', 'tokenHash', 'updatedAt', 'usedAt', 'userId'] as const
+  $columns = PasswordResetTokenSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare expiresAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare tokenHash: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column.dateTime()
+  declare usedAt: DateTime | null
+  @column()
+  declare userId: bigint | number
 }
 
 export class PaymentGatewaySchema extends BaseModel {
@@ -226,6 +411,29 @@ export class TaxRateSchema extends BaseModel {
   declare regionId: bigint | number | null
   @column()
   declare taxClassId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class UserSchema extends BaseModel {
+  static $columns = ['createdAt', 'deletedAt', 'email', 'id', 'lastLoginAt', 'locale', 'passwordHash', 'role', 'updatedAt'] as const
+  $columns = UserSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+  @column()
+  declare email: any
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime()
+  declare lastLoginAt: DateTime | null
+  @column()
+  declare locale: string
+  @column()
+  declare passwordHash: string
+  @column()
+  declare role: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }

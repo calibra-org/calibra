@@ -1,6 +1,11 @@
 {
     "errors": {
         "not_found": "{resource} not found.",
-        "internal": "Something went wrong on our side. Please try again."
+        "internal": "Something went wrong on our side. Please try again.",
+        "auth": {
+            "unauthenticated": "Authentication is required.",
+            "invalid_credentials": "Invalid credentials.",
+            "forbidden_admin": "Admin access required."
+        }
     }
 }
