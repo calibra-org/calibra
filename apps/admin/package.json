@@ -15,6 +15,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
+        "@base-ui/react": "catalog:",
         "@calibra/sdk": "workspace:*",
         "@calibra/shared": "workspace:*",
         "@radix-ui/react-slot": "catalog:",
@@ -24,6 +25,7 @@
         "next-intl": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
+        "recharts": "catalog:",
         "tw-animate-css": "catalog:"
     },
     "devDependencies": {

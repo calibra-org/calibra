@@ -1,26 +1,80 @@
 {
     "Site": {
-        "name": "Admin",
+        "name": "Calibra Admin",
         "tagline": "Commerce admin panel"
     },
     "Nav": {
+        "overview": "Overview",
+        "catalog": "Catalog",
+        "sales": "Sales",
+        "customersSection": "Customers",
+        "configuration": "Configuration",
         "dashboard": "Dashboard",
         "products": "Products",
+        "categories": "Categories",
+        "tags": "Tags",
+        "brands": "Brands",
+        "attributes": "Attributes",
+        "reviews": "Reviews",
         "orders": "Orders",
+        "refunds": "Refunds",
+        "coupons": "Coupons",
         "customers": "Customers",
-        "settings": "Settings"
+        "tax": "Tax",
+        "shipping": "Shipping",
+        "payments": "Payments",
+        "settings": "Settings",
+        "reports": "Reports"
     },
     "Topbar": {
         "search": "Search…",
         "notifications": "Notifications",
-        "signOut": "Sign out"
+        "signOut": "Sign out",
+        "account": "Account",
+        "profile": "Profile",
+        "settings": "Settings"
+    },
+    "Theme": {
+        "toggle": "Toggle theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+    },
+    "Common": {
+        "switchLocale": "فارسی",
+        "search": "Search",
+        "filter": "Filter",
+        "all": "All",
+        "actions": "Actions",
+        "edit": "Edit",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "view": "View",
+        "viewAll": "View all",
+        "back": "Back",
+        "yes": "Yes",
+        "no": "No",
+        "active": "Active",
+        "inactive": "Inactive",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "loading": "Loading…",
+        "noResults": "No results found",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "thisWeek": "This week",
+        "comparison": "vs previous period",
+        "showing": "Showing {from} to {to} of {total}"
     },
     "Login": {
-        "title": "Sign in",
-        "subtitle": "Enter your admin credentials.",
+        "title": "Sign in to the admin",
+        "subtitle": "Enter your admin credentials to continue.",
         "email": "Email",
         "password": "Password",
-        "submit": "Sign in"
+        "submit": "Sign in",
+        "demoNotice": "Demo mode — any non-empty email + password is accepted.",
+        "footerCopyright": "© 2026 Calibra — all rights reserved."
     },
     "Dashboard": {
         "title": "Dashboard",
@@ -29,38 +83,435 @@
         "revenueToday": "Revenue today",
         "activeProducts": "Active products",
         "pendingFulfilments": "Pending fulfilments",
-        "recentOrders": "Recent orders",
+        "newCustomers": "New customers",
+        "salesTrend": "Sales trend",
+        "salesTrendSubtitle": "Daily revenue over the last two weeks",
+        "ordersByStatus": "Orders by status",
+        "ordersByStatusSubtitle": "Active order mix in the system",
         "topProducts": "Top products",
-        "viewAll": "View all"
+        "topProductsSubtitle": "Best sellers this month",
+        "recentOrders": "Recent orders",
+        "viewAll": "View all",
+        "comparedTo": "vs previous period"
     },
     "Products": {
         "title": "Products",
-        "subtitle": "Manage your catalog.",
+        "subtitle": "Manage your product catalog.",
         "addProduct": "Add product",
         "search": "Search products…",
-        "empty": "No products yet — add your first one to get started.",
+        "empty": "No products yet.",
+        "filterStatus": "Status",
         "table": {
             "product": "Product",
             "sku": "SKU",
             "price": "Price",
             "stock": "Stock",
             "status": "Status",
+            "category": "Category",
+            "updated": "Updated",
+            "actions": "Actions"
+        },
+        "form": {
+            "general": "General information",
+            "name": "Product name",
+            "slug": "Slug",
+            "shortDescription": "Short description",
+            "pricing": "Pricing",
+            "regularPrice": "Regular price (Rial)",
+            "salePrice": "Sale price (Rial)",
+            "inventory": "Inventory",
+            "stockQuantity": "Stock quantity",
+            "manageStock": "Manage stock",
+            "stockStatus": "Stock status",
+            "organization": "Organization",
+            "category": "Category",
+            "brand": "Brand",
+            "tags": "Tags",
+            "submit": "Save product"
+        },
+        "newTitle": "Add a new product",
+        "newSubtitle": "Capture the essentials now; variations and media can be added later."
+    },
+    "ProductStatus": {
+        "draft": "Draft",
+        "publish": "Published",
+        "private": "Private",
+        "pending": "Pending",
+        "any": "All"
+    },
+    "StockStatus": {
+        "instock": "In stock",
+        "outofstock": "Out of stock",
+        "onbackorder": "Backorder"
+    },
+    "Categories": {
+        "title": "Categories",
+        "subtitle": "Tree of product categories.",
+        "addCategory": "Add category",
+        "table": {
+            "name": "Name",
+            "slug": "Slug",
+            "parent": "Parent",
+            "productCount": "Products",
+            "actions": "Actions"
+        },
+        "noParent": "—"
+    },
+    "Tags": {
+        "title": "Tags",
+        "subtitle": "Lightweight descriptors for products.",
+        "addTag": "Add tag",
+        "table": {
+            "name": "Name",
+            "slug": "Slug",
+            "productCount": "Products",
             "actions": "Actions"
         }
     },
+    "Brands": {
+        "title": "Brands",
+        "subtitle": "Brands available in the catalog.",
+        "addBrand": "Add brand",
+        "table": {
+            "name": "Name",
+            "slug": "Slug",
+            "productCount": "Products",
+            "actions": "Actions"
+        }
+    },
+    "Attributes": {
+        "title": "Product attributes",
+        "subtitle": "Attributes like size and color used by product variations.",
+        "addAttribute": "Add attribute",
+        "table": {
+            "name": "Name",
+            "code": "Code",
+            "termCount": "Terms",
+            "orderBy": "Order by",
+            "hasArchives": "Archive page",
+            "actions": "Actions"
+        },
+        "orderBy": {
+            "menu_order": "Manual",
+            "name": "Name",
+            "id": "ID"
+        },
+        "termsTitle": "Attribute terms",
+        "termsSubtitle": "Allowed values for this attribute.",
+        "termsTable": {
+            "name": "Name",
+            "slug": "Slug",
+            "actions": "Actions"
+        }
+    },
+    "Reviews": {
+        "title": "Product reviews",
+        "subtitle": "Moderate and manage customer reviews.",
+        "search": "Search reviews…",
+        "filterStatus": "Status",
+        "table": {
+            "reviewer": "Reviewer",
+            "product": "Product",
+            "rating": "Rating",
+            "body": "Review",
+            "status": "Status",
+            "createdAt": "Posted",
+            "actions": "Actions"
+        }
+    },
+    "ReviewStatus": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "spam": "Spam",
+        "trash": "Trash",
+        "any": "All"
+    },
     "Orders": {
         "title": "Orders",
-        "subtitle": "Track and fulfil incoming orders.",
-        "search": "Search orders…",
+        "subtitle": "Track, filter and fulfil incoming orders.",
+        "search": "Search by number, customer or email…",
+        "filterStatus": "Status",
         "empty": "No orders yet.",
         "table": {
             "order": "Order",
             "customer": "Customer",
             "total": "Total",
             "status": "Status",
+            "payment": "Payment",
             "placedAt": "Placed",
             "actions": "Actions"
+        },
+        "detail": {
+            "title": "Order #{number}",
+            "subtitle": "Placed on {date}",
+            "items": "Line items",
+            "billing": "Billing address",
+            "shipping": "Shipping address",
+            "summary": "Order summary",
+            "itemsTotal": "Items subtotal",
+            "shippingTotal": "Shipping",
+            "taxTotal": "Tax",
+            "discountTotal": "Discount",
+            "grandTotal": "Grand total",
+            "history": "Status history",
+            "notes": "Notes",
+            "addNote": "Add note",
+            "refunds": "Refunds",
+            "noteVisibility": {
+                "internal": "Internal",
+                "customer": "Customer-visible"
+            },
+            "tabs": {
+                "items": "Items",
+                "addresses": "Addresses",
+                "history": "History",
+                "notes": "Notes",
+                "refunds": "Refunds"
+            }
         }
+    },
+    "OrderStatus": {
+        "draft": "Draft",
+        "pending": "Pending payment",
+        "on_hold": "On hold",
+        "processing": "Processing",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "failed": "Failed",
+        "any": "All"
+    },
+    "Refunds": {
+        "title": "Refunds",
+        "subtitle": "All refunds processed across orders.",
+        "table": {
+            "refundNumber": "Number",
+            "order": "Order",
+            "amount": "Amount",
+            "reason": "Reason",
+            "refundedBy": "Issued by",
+            "processedAt": "Processed"
+        }
+    },
+    "Coupons": {
+        "title": "Coupons",
+        "subtitle": "Discounts you can offer in the store.",
+        "addCoupon": "Add coupon",
+        "filterStatus": "Status",
+        "table": {
+            "code": "Code",
+            "type": "Type",
+            "value": "Value",
+            "usage": "Usage",
+            "expiresAt": "Expires",
+            "status": "Status",
+            "actions": "Actions"
+        },
+        "discountType": {
+            "percent": "Percentage",
+            "fixed_cart": "Fixed cart",
+            "fixed_product": "Fixed product",
+            "free_shipping": "Free shipping"
+        },
+        "status": {
+            "active": "Active",
+            "disabled": "Disabled"
+        },
+        "neverExpires": "Never expires",
+        "detail": {
+            "title": "Coupon \"{code}\"",
+            "subtitle": "Discount configuration and usage limits.",
+            "general": "General",
+            "constraints": "Constraints",
+            "usage": "Usage",
+            "totalUses": "Total uses",
+            "perUserLimit": "Per-user limit",
+            "globalLimit": "Global limit",
+            "minimumAmount": "Minimum order amount",
+            "maximumAmount": "Maximum order amount"
+        }
+    },
+    "Customers": {
+        "title": "Customers",
+        "subtitle": "Manage customer profiles and addresses.",
+        "search": "Search name, email or phone…",
+        "table": {
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone",
+            "orders": "Orders",
+            "spent": "Spent",
+            "lastOrder": "Last order",
+            "actions": "Actions"
+        },
+        "detail": {
+            "title": "{name}",
+            "subtitle": "Member since {since}",
+            "profile": "Profile",
+            "addresses": "Addresses",
+            "ordersTab": "Orders",
+            "downloads": "Downloads",
+            "totalOrders": "Total orders",
+            "totalSpent": "Total spent",
+            "averageOrder": "Average order",
+            "noDownloads": "No downloads granted to this customer yet.",
+            "addressLabel": "{label} ({kind})",
+            "addressKind": {
+                "billing": "Billing",
+                "shipping": "Shipping",
+                "both": "Both"
+            },
+            "downloadsTable": {
+                "product": "Product",
+                "order": "Order",
+                "granted": "Granted",
+                "expires": "Expires",
+                "downloadsUsed": "Used",
+                "limit": "Limit"
+            }
+        }
+    },
+    "Tax": {
+        "title": "Tax",
+        "subtitle": "Tax classes and rates.",
+        "tabs": {
+            "classes": "Classes",
+            "rates": "Rates"
+        },
+        "classes": {
+            "title": "Tax classes",
+            "subtitle": "Groups that can be applied to products.",
+            "table": {
+                "name": "Name",
+                "slug": "Slug",
+                "rateCount": "Rates"
+            }
+        },
+        "rates": {
+            "title": "Tax rates",
+            "subtitle": "Rates applied during checkout.",
+            "table": {
+                "label": "Label",
+                "country": "Country",
+                "province": "Province",
+                "rate": "Rate",
+                "priority": "Priority",
+                "compound": "Compound",
+                "appliesToShipping": "Applies to shipping"
+            },
+            "anywhere": "Anywhere"
+        }
+    },
+    "Shipping": {
+        "title": "Shipping",
+        "subtitle": "Shipping zones and methods.",
+        "tabs": {
+            "zones": "Zones",
+            "methods": "Methods"
+        },
+        "zones": {
+            "title": "Shipping zones",
+            "subtitle": "Geographies with bespoke shipping methods.",
+            "table": {
+                "name": "Name",
+                "countries": "Countries",
+                "methodCount": "Methods",
+                "isFallback": "Fallback"
+            },
+            "fallback": "Fallback zone",
+            "noCountries": "All other locations"
+        },
+        "methods": {
+            "title": "Shipping methods",
+            "subtitle": "Methods you can offer inside zones.",
+            "table": {
+                "title": "Title",
+                "code": "Code",
+                "description": "Description"
+            }
+        }
+    },
+    "Payments": {
+        "title": "Payment methods",
+        "subtitle": "Payment gateways available in the store.",
+        "table": {
+            "title": "Title",
+            "code": "Code",
+            "status": "Status",
+            "supportsRefunds": "Refunds",
+            "ordering": "Order",
+            "actions": "Actions"
+        },
+        "detail": {
+            "title": "{title}",
+            "subtitle": "Gateway configuration and customer-facing copy.",
+            "configuration": "Configuration",
+            "customerInstructions": "Customer instructions",
+            "save": "Save settings"
+        }
+    },
+    "Settings": {
+        "title": "Settings",
+        "subtitle": "Grouped store settings.",
+        "save": "Save changes",
+        "groupsNav": "Settings group",
+        "groups": {
+            "general": "General",
+            "products": "Products",
+            "tax": "Tax",
+            "shipping": "Shipping",
+            "account": "Accounts",
+            "email": "Email",
+            "advanced": "Advanced"
+        }
+    },
+    "Reports": {
+        "title": "Reports",
+        "subtitle": "Sales trends and product performance.",
+        "tabs": {
+            "sales": "Sales",
+            "topSellers": "Top sellers"
+        },
+        "sales": {
+            "title": "Sales report",
+            "subtitle": "Revenue and refunds for the last 30 days.",
+            "totalRevenue": "Gross revenue",
+            "netRevenue": "Net revenue",
+            "refundedAmount": "Refunded",
+            "averageOrder": "Average order value",
+            "orderCount": "Orders",
+            "chartTitle": "Revenue and refunds"
+        },
+        "topSellers": {
+            "title": "Top-selling products",
+            "subtitle": "Range: {start} to {end}",
+            "table": {
+                "product": "Product",
+                "sku": "SKU",
+                "units": "Units",
+                "revenue": "Revenue"
+            },
+            "chartTitle": "Top 10 by revenue"
+        }
+    },
+    "ReportsLegend": {
+        "revenue": "Revenue",
+        "refunded": "Refunded"
+    },
+    "Address": {
+        "country": "Country",
+        "province": "Province",
+        "city": "City",
+        "postcode": "Postcode",
+        "line1": "Address",
+        "line2": "Address line 2",
+        "phone": "Phone",
+        "nationalId": "National ID"
+    },
+    "NotFound": {
+        "title": "Page not found",
+        "description": "This URL does not exist or has been removed.",
+        "back": "Back to dashboard"
     },
     "Status": {
         "active": "Active",
@@ -72,8 +523,5 @@
         "delivered": "Delivered",
         "refunded": "Refunded",
         "cancelled": "Cancelled"
-    },
-    "Common": {
-        "switchLocale": "فارسی"
     }
 }

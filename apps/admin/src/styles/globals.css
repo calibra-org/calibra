@@ -123,15 +123,19 @@
     --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
     --color-sidebar-border: hsl(var(--sidebar-border));
     --color-sidebar-ring: hsl(var(--sidebar-ring));
-
-    --font-sans: var(--font-inter), var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
 }
 
 /**
- * Persian uses Vazirmatn first; Inter remains as fallback for any glyphs Vazirmatn lacks. Keeps
- * the whole admin UI in a consistent type system even when Latin runs are mixed inside Persian
- * copy (product SKUs, currency codes, etc.).
+ * `--font-sans` is intentionally NOT declared inside `@theme inline` — Tailwind v4 inlines
+ * `@theme` values into the generated utility classes, which would freeze `.font-sans` at the
+ * Inter-first stack and prevent Persian's `html[lang="fa"]` override from ever winning. Defining
+ * the variable in `:root` (and overriding it on `html[lang="fa"]`) keeps it cascading, and the
+ * `@layer base` rule below applies it everywhere via `font-family: var(--font-sans)`.
  */
+:root {
+    --font-sans: var(--font-inter), var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
+}
+
 html[lang="fa"] {
     --font-sans: var(--font-vazirmatn), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }

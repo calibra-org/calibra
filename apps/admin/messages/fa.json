@@ -1,26 +1,80 @@
 {
     "Site": {
-        "name": "پنل مدیریت",
+        "name": "پنل مدیریت کالیبرا",
         "tagline": "پنل مدیریت فروشگاه"
     },
     "Nav": {
+        "overview": "نمای کلی",
+        "catalog": "کاتالوگ",
+        "sales": "فروش",
+        "customersSection": "مشتری‌ها",
+        "configuration": "پیکربندی",
         "dashboard": "داشبورد",
         "products": "محصولات",
+        "categories": "دسته‌بندی‌ها",
+        "tags": "برچسب‌ها",
+        "brands": "برندها",
+        "attributes": "ویژگی‌ها",
+        "reviews": "نقد و بررسی‌ها",
         "orders": "سفارش‌ها",
+        "refunds": "بازگشت‌ها",
+        "coupons": "کوپن‌ها",
         "customers": "مشتری‌ها",
-        "settings": "تنظیمات"
+        "tax": "مالیات",
+        "shipping": "ارسال",
+        "payments": "روش‌های پرداخت",
+        "settings": "تنظیمات",
+        "reports": "گزارش‌ها"
     },
     "Topbar": {
         "search": "جستجو…",
         "notifications": "اعلان‌ها",
-        "signOut": "خروج"
+        "signOut": "خروج",
+        "account": "حساب کاربری",
+        "profile": "پروفایل",
+        "settings": "تنظیمات"
+    },
+    "Theme": {
+        "toggle": "تغییر تم",
+        "light": "روشن",
+        "dark": "تیره",
+        "system": "بر اساس سیستم"
+    },
+    "Common": {
+        "switchLocale": "English",
+        "search": "جستجو",
+        "filter": "فیلتر",
+        "all": "همه",
+        "actions": "عملیات",
+        "edit": "ویرایش",
+        "save": "ذخیره",
+        "cancel": "انصراف",
+        "delete": "حذف",
+        "view": "مشاهده",
+        "viewAll": "مشاهده همه",
+        "back": "بازگشت",
+        "yes": "بله",
+        "no": "خیر",
+        "active": "فعال",
+        "inactive": "غیرفعال",
+        "enabled": "فعال",
+        "disabled": "غیرفعال",
+        "loading": "در حال بارگذاری…",
+        "noResults": "نتیجه‌ای یافت نشد",
+        "today": "امروز",
+        "yesterday": "دیروز",
+        "thisWeek": "این هفته",
+        "comparison": "نسبت به دوره قبل",
+        "showing": "نمایش {from} تا {to} از {total}"
     },
     "Login": {
-        "title": "ورود",
-        "subtitle": "اطلاعات ورود مدیر را وارد کنید.",
+        "title": "ورود به پنل مدیریت",
+        "subtitle": "برای دسترسی به فروشگاه، اطلاعات ورود را وارد کنید.",
         "email": "ایمیل",
         "password": "رمز عبور",
-        "submit": "ورود"
+        "submit": "ورود",
+        "demoNotice": "حالت دمو: هر ایمیل/رمز عبور غیرخالی پذیرفته می‌شود.",
+        "footerCopyright": "© ۱۴۰۵ کالیبرا — تمامی حقوق محفوظ است."
     },
     "Dashboard": {
         "title": "داشبورد",
@@ -29,38 +83,435 @@
         "revenueToday": "درآمد امروز",
         "activeProducts": "محصولات فعال",
         "pendingFulfilments": "در انتظار ارسال",
-        "recentOrders": "سفارش‌های اخیر",
+        "newCustomers": "مشتری‌های جدید",
+        "salesTrend": "روند فروش",
+        "salesTrendSubtitle": "درآمد روزانه طی دو هفته اخیر",
+        "ordersByStatus": "سفارش‌ها بر اساس وضعیت",
+        "ordersByStatusSubtitle": "ترکیب وضعیت‌های فعال در سیستم",
         "topProducts": "پرفروش‌ترین‌ها",
-        "viewAll": "مشاهده همه"
+        "topProductsSubtitle": "پرفروش‌ترین محصولات این ماه",
+        "recentOrders": "سفارش‌های اخیر",
+        "viewAll": "مشاهده همه",
+        "comparedTo": "نسبت به دوره قبل"
     },
     "Products": {
         "title": "محصولات",
-        "subtitle": "مدیریت محصولات فروشگاه.",
+        "subtitle": "مدیریت کاتالوگ محصولات.",
         "addProduct": "افزودن محصول",
         "search": "جستجوی محصول…",
-        "empty": "هنوز محصولی اضافه نکرده‌اید — برای شروع اولین محصول را اضافه کنید.",
+        "empty": "هنوز محصولی اضافه نکرده‌اید.",
+        "filterStatus": "وضعیت",
         "table": {
             "product": "محصول",
             "sku": "کد",
             "price": "قیمت",
             "stock": "موجودی",
             "status": "وضعیت",
+            "category": "دسته‌بندی",
+            "updated": "بروزرسانی",
+            "actions": "عملیات"
+        },
+        "form": {
+            "general": "اطلاعات عمومی",
+            "name": "نام محصول",
+            "slug": "نامک",
+            "shortDescription": "توضیح کوتاه",
+            "pricing": "قیمت‌گذاری",
+            "regularPrice": "قیمت اصلی (ریال)",
+            "salePrice": "قیمت تخفیف (ریال)",
+            "inventory": "موجودی",
+            "stockQuantity": "تعداد موجودی",
+            "manageStock": "مدیریت موجودی",
+            "stockStatus": "وضعیت موجودی",
+            "organization": "دسته‌بندی و برند",
+            "category": "دسته‌بندی",
+            "brand": "برند",
+            "tags": "برچسب‌ها",
+            "submit": "ذخیره محصول"
+        },
+        "newTitle": "افزودن محصول جدید",
+        "newSubtitle": "اطلاعات اولیه را وارد کنید؛ بعداً می‌توانید تنوع و رسانه را اضافه کنید."
+    },
+    "ProductStatus": {
+        "draft": "پیش‌نویس",
+        "publish": "منتشرشده",
+        "private": "خصوصی",
+        "pending": "در انتظار",
+        "any": "همه"
+    },
+    "StockStatus": {
+        "instock": "موجود",
+        "outofstock": "ناموجود",
+        "onbackorder": "پیش‌سفارش"
+    },
+    "Categories": {
+        "title": "دسته‌بندی‌ها",
+        "subtitle": "ساختار درختی محصولات.",
+        "addCategory": "افزودن دسته",
+        "table": {
+            "name": "نام",
+            "slug": "نامک",
+            "parent": "والد",
+            "productCount": "تعداد محصول",
+            "actions": "عملیات"
+        },
+        "noParent": "—"
+    },
+    "Tags": {
+        "title": "برچسب‌ها",
+        "subtitle": "برچسب‌های توصیفی برای محصولات.",
+        "addTag": "افزودن برچسب",
+        "table": {
+            "name": "نام",
+            "slug": "نامک",
+            "productCount": "تعداد محصول",
             "actions": "عملیات"
         }
     },
+    "Brands": {
+        "title": "برندها",
+        "subtitle": "برندهای موجود در فروشگاه.",
+        "addBrand": "افزودن برند",
+        "table": {
+            "name": "نام",
+            "slug": "نامک",
+            "productCount": "تعداد محصول",
+            "actions": "عملیات"
+        }
+    },
+    "Attributes": {
+        "title": "ویژگی‌های محصول",
+        "subtitle": "ویژگی‌هایی مانند سایز و رنگ که در تنوع محصول استفاده می‌شوند.",
+        "addAttribute": "افزودن ویژگی",
+        "table": {
+            "name": "نام",
+            "code": "کد",
+            "termCount": "تعداد گزینه",
+            "orderBy": "ترتیب",
+            "hasArchives": "صفحه آرشیو",
+            "actions": "عملیات"
+        },
+        "orderBy": {
+            "menu_order": "ترتیب دستی",
+            "name": "نام",
+            "id": "شناسه"
+        },
+        "termsTitle": "گزینه‌های ویژگی",
+        "termsSubtitle": "مقادیر مجاز برای این ویژگی.",
+        "termsTable": {
+            "name": "نام",
+            "slug": "نامک",
+            "actions": "عملیات"
+        }
+    },
+    "Reviews": {
+        "title": "نقد و بررسی‌ها",
+        "subtitle": "بازرسی و مدیریت نظرات مشتریان.",
+        "search": "جستجو در نظرات…",
+        "filterStatus": "وضعیت",
+        "table": {
+            "reviewer": "بازنگر",
+            "product": "محصول",
+            "rating": "امتیاز",
+            "body": "متن",
+            "status": "وضعیت",
+            "createdAt": "تاریخ",
+            "actions": "عملیات"
+        }
+    },
+    "ReviewStatus": {
+        "pending": "در انتظار",
+        "approved": "تأییدشده",
+        "spam": "هرزنامه",
+        "trash": "سطل زباله",
+        "any": "همه"
+    },
     "Orders": {
         "title": "سفارش‌ها",
-        "subtitle": "پیگیری و انجام سفارش‌های ورودی.",
-        "search": "جستجوی سفارش…",
+        "subtitle": "پیگیری، فیلتر و انجام سفارش‌های ورودی.",
+        "search": "جستجوی سفارش، مشتری یا ایمیل…",
+        "filterStatus": "وضعیت",
         "empty": "هنوز سفارشی ثبت نشده است.",
         "table": {
             "order": "سفارش",
             "customer": "مشتری",
             "total": "مبلغ",
             "status": "وضعیت",
+            "payment": "پرداخت",
             "placedAt": "زمان ثبت",
             "actions": "عملیات"
+        },
+        "detail": {
+            "title": "سفارش #{number}",
+            "subtitle": "ثبت‌شده در {date}",
+            "items": "آیتم‌های سفارش",
+            "billing": "آدرس صورتحساب",
+            "shipping": "آدرس ارسال",
+            "summary": "خلاصه سفارش",
+            "itemsTotal": "جمع آیتم‌ها",
+            "shippingTotal": "هزینه ارسال",
+            "taxTotal": "مالیات",
+            "discountTotal": "تخفیف",
+            "grandTotal": "مبلغ نهایی",
+            "history": "تاریخچه وضعیت",
+            "notes": "یادداشت‌ها",
+            "addNote": "افزودن یادداشت",
+            "refunds": "بازگشت وجه",
+            "noteVisibility": {
+                "internal": "داخلی",
+                "customer": "قابل‌مشاهده برای مشتری"
+            },
+            "tabs": {
+                "items": "آیتم‌ها",
+                "addresses": "آدرس‌ها",
+                "history": "تاریخچه",
+                "notes": "یادداشت‌ها",
+                "refunds": "بازگشت‌ها"
+            }
         }
+    },
+    "OrderStatus": {
+        "draft": "پیش‌نویس",
+        "pending": "در انتظار پرداخت",
+        "on_hold": "در انتظار",
+        "processing": "در حال پردازش",
+        "completed": "تکمیل‌شده",
+        "cancelled": "لغوشده",
+        "refunded": "بازگشت‌داده‌شده",
+        "failed": "ناموفق",
+        "any": "همه"
+    },
+    "Refunds": {
+        "title": "بازگشت وجه",
+        "subtitle": "تمام بازگشت‌های ثبت‌شده در فروشگاه.",
+        "table": {
+            "refundNumber": "شماره",
+            "order": "سفارش",
+            "amount": "مبلغ",
+            "reason": "علت",
+            "refundedBy": "ثبت‌کننده",
+            "processedAt": "زمان"
+        }
+    },
+    "Coupons": {
+        "title": "کوپن‌ها",
+        "subtitle": "تخفیف‌های قابل اعمال در فروشگاه.",
+        "addCoupon": "افزودن کوپن",
+        "filterStatus": "وضعیت",
+        "table": {
+            "code": "کد",
+            "type": "نوع",
+            "value": "مقدار",
+            "usage": "استفاده",
+            "expiresAt": "انقضا",
+            "status": "وضعیت",
+            "actions": "عملیات"
+        },
+        "discountType": {
+            "percent": "درصد",
+            "fixed_cart": "مبلغ ثابت سبد",
+            "fixed_product": "مبلغ ثابت محصول",
+            "free_shipping": "ارسال رایگان"
+        },
+        "status": {
+            "active": "فعال",
+            "disabled": "غیرفعال"
+        },
+        "neverExpires": "بدون انقضا",
+        "detail": {
+            "title": "کوپن «{code}»",
+            "subtitle": "تنظیمات تخفیف و محدودیت‌های استفاده.",
+            "general": "اطلاعات کلی",
+            "constraints": "محدودیت‌ها",
+            "usage": "آمار استفاده",
+            "totalUses": "تعداد استفاده",
+            "perUserLimit": "محدودیت برای هر کاربر",
+            "globalLimit": "محدودیت کل",
+            "minimumAmount": "حداقل مبلغ سفارش",
+            "maximumAmount": "حداکثر مبلغ سفارش"
+        }
+    },
+    "Customers": {
+        "title": "مشتری‌ها",
+        "subtitle": "مدیریت پروفایل و آدرس مشتریان.",
+        "search": "جستجوی نام، ایمیل یا شماره…",
+        "table": {
+            "name": "نام",
+            "email": "ایمیل",
+            "phone": "تلفن",
+            "orders": "سفارش‌ها",
+            "spent": "مجموع خرید",
+            "lastOrder": "آخرین سفارش",
+            "actions": "عملیات"
+        },
+        "detail": {
+            "title": "{name}",
+            "subtitle": "عضو از {since}",
+            "profile": "پروفایل",
+            "addresses": "آدرس‌ها",
+            "ordersTab": "سفارش‌ها",
+            "downloads": "دانلودها",
+            "totalOrders": "تعداد سفارش",
+            "totalSpent": "مجموع خرید",
+            "averageOrder": "میانگین خرید",
+            "noDownloads": "دانلودی برای این مشتری ثبت نشده است.",
+            "addressLabel": "{label} ({kind})",
+            "addressKind": {
+                "billing": "صورتحساب",
+                "shipping": "ارسال",
+                "both": "هر دو"
+            },
+            "downloadsTable": {
+                "product": "محصول",
+                "order": "سفارش",
+                "granted": "صدور",
+                "expires": "انقضا",
+                "downloadsUsed": "استفاده‌شده",
+                "limit": "محدودیت"
+            }
+        }
+    },
+    "Tax": {
+        "title": "مالیات",
+        "subtitle": "کلاس‌ها و نرخ‌های مالیاتی فروشگاه.",
+        "tabs": {
+            "classes": "کلاس‌ها",
+            "rates": "نرخ‌ها"
+        },
+        "classes": {
+            "title": "کلاس‌های مالیاتی",
+            "subtitle": "گروه‌های مالیاتی قابل اتساب به محصولات.",
+            "table": {
+                "name": "نام",
+                "slug": "نامک",
+                "rateCount": "تعداد نرخ"
+            }
+        },
+        "rates": {
+            "title": "نرخ‌های مالیاتی",
+            "subtitle": "نرخ‌های قابل اعمال بر سفارش‌ها.",
+            "table": {
+                "label": "عنوان",
+                "country": "کشور",
+                "province": "استان",
+                "rate": "درصد",
+                "priority": "اولویت",
+                "compound": "ترکیبی",
+                "appliesToShipping": "شامل ارسال"
+            },
+            "anywhere": "همه"
+        }
+    },
+    "Shipping": {
+        "title": "ارسال",
+        "subtitle": "زون‌ها و روش‌های ارسال فروشگاه.",
+        "tabs": {
+            "zones": "زون‌ها",
+            "methods": "روش‌ها"
+        },
+        "zones": {
+            "title": "زون‌های ارسال",
+            "subtitle": "محدوده‌های جغرافیایی با روش‌های ارسال اختصاصی.",
+            "table": {
+                "name": "نام",
+                "countries": "کشورها",
+                "methodCount": "تعداد روش",
+                "isFallback": "زون پیش‌فرض"
+            },
+            "fallback": "زون پیش‌فرض",
+            "noCountries": "تمام موقعیت‌های دیگر"
+        },
+        "methods": {
+            "title": "روش‌های ارسال",
+            "subtitle": "روش‌های قابل ارائه در زون‌ها.",
+            "table": {
+                "title": "عنوان",
+                "code": "کد",
+                "description": "توضیحات"
+            }
+        }
+    },
+    "Payments": {
+        "title": "روش‌های پرداخت",
+        "subtitle": "درگاه‌های پرداخت موجود در فروشگاه.",
+        "table": {
+            "title": "عنوان",
+            "code": "کد",
+            "status": "وضعیت",
+            "supportsRefunds": "بازگشت وجه",
+            "ordering": "ترتیب",
+            "actions": "عملیات"
+        },
+        "detail": {
+            "title": "{title}",
+            "subtitle": "تنظیمات درگاه و دستورالعمل‌های مشتری.",
+            "configuration": "پیکربندی",
+            "customerInstructions": "دستورالعمل‌های مشتری",
+            "save": "ذخیره تنظیمات"
+        }
+    },
+    "Settings": {
+        "title": "تنظیمات",
+        "subtitle": "گروه‌بندی تنظیمات فروشگاه.",
+        "save": "ذخیره تغییرات",
+        "groupsNav": "گروه تنظیمات",
+        "groups": {
+            "general": "کلی",
+            "products": "محصولات",
+            "tax": "مالیات",
+            "shipping": "ارسال",
+            "account": "حساب کاربری",
+            "email": "ایمیل",
+            "advanced": "پیشرفته"
+        }
+    },
+    "Reports": {
+        "title": "گزارش‌ها",
+        "subtitle": "روند فروش و عملکرد محصولات.",
+        "tabs": {
+            "sales": "فروش",
+            "topSellers": "پرفروش‌ترین‌ها"
+        },
+        "sales": {
+            "title": "گزارش فروش",
+            "subtitle": "خلاصه درآمد و بازگشت‌ها در ۳۰ روز اخیر.",
+            "totalRevenue": "درآمد ناخالص",
+            "netRevenue": "درآمد خالص",
+            "refundedAmount": "بازگشت‌ها",
+            "averageOrder": "میانگین مبلغ سفارش",
+            "orderCount": "تعداد سفارش",
+            "chartTitle": "روند درآمد و بازگشت‌ها"
+        },
+        "topSellers": {
+            "title": "پرفروش‌ترین محصولات",
+            "subtitle": "بازه: {start} تا {end}",
+            "table": {
+                "product": "محصول",
+                "sku": "کد",
+                "units": "تعداد",
+                "revenue": "درآمد"
+            },
+            "chartTitle": "ده محصول برتر بر اساس درآمد"
+        }
+    },
+    "ReportsLegend": {
+        "revenue": "درآمد",
+        "refunded": "بازگشت‌ها"
+    },
+    "Address": {
+        "country": "کشور",
+        "province": "استان",
+        "city": "شهر",
+        "postcode": "کدپستی",
+        "line1": "آدرس",
+        "line2": "ادامه آدرس",
+        "phone": "تلفن",
+        "nationalId": "کد ملی"
+    },
+    "NotFound": {
+        "title": "صفحه پیدا نشد",
+        "description": "این آدرس وجود ندارد یا حذف شده است.",
+        "back": "بازگشت به داشبورد"
     },
     "Status": {
         "active": "فعال",
@@ -72,8 +523,5 @@
         "delivered": "تحویل‌شده",
         "refunded": "بازگشت‌شده",
         "cancelled": "لغوشده"
-    },
-    "Common": {
-        "switchLocale": "English"
     }
 }
