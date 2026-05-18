@@ -327,4 +327,7 @@ const SETTINGS: SettingRow[] = [
     { group: "inventory", key: "cart_abandonment_days", value: 30, type: "number" },
     { group: "orders", key: "draft_expiry_hours", value: 24, type: "number" },
     { group: "orders", key: "number_format", value: "{id}", type: "string" },
+    { group: "general", key: "checkout_return_url_success", value: "http://localhost:3000/checkout/success", type: "string" },
+    { group: "general", key: "checkout_return_url_failed", value: "http://localhost:3000/checkout/failed", type: "string" },
+    { group: "payments", key: "callback_base_url", value: "http://localhost:3333", type: "string" },
 ];
