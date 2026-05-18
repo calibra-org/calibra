@@ -7,8 +7,16 @@ import type { Config } from "@japa/runner/types";
 
 export const plugins: Config["plugins"] = [assert(), apiClient(), pluginAdonisJS(app)];
 
+/**
+ * Schema lifecycle for the whole test run. `migrate()` brings the test database up to the latest
+ * migrations on startup and rolls it back to empty on teardown — pair with `truncate()` (per
+ * `group.each.setup`) so data resets between tests without redoing migrations every time.
+ *
+ * Requires a separate test database (`calibra_test`) so the dev DB's seeded data survives test
+ * runs. Configured in `.env.test`.
+ */
 export const runnerHooks: Required<Pick<Config, "setup" | "teardown">> = {
-    setup: [],
+    setup: [() => testUtils.db().migrate()],
     teardown: [],
 };
 
