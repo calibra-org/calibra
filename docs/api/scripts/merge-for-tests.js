@@ -80,7 +80,7 @@ console.log(`✓ Wrote ${outPath} (${Object.keys(merged.paths).length} paths)`);
  */
 function downgradeTo30(node, root) {
     if (Array.isArray(node)) {
-        node.forEach((child) => downgradeTo30(child, root));
+        for (const child of node) downgradeTo30(child, root);
         return;
     }
     if (!node || typeof node !== "object") return;
