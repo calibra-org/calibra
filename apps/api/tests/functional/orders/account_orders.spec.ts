@@ -86,6 +86,7 @@ test.group("GET /api/v1/account/orders", (group) => {
 
         const response = await client.get(`/api/v1/account/orders/${draft.id}`).loginAs(user);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.id, Number(draft.id));
         assert.equal(body.data.line_items.length, 1);
@@ -171,6 +172,7 @@ test.group("admin_orders.spec", (group) => {
             .json({ to_status: "pending", reason: "manual confirm" });
 
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         await draft.refresh();
         assert.equal(draft.status, OrderStatus.Pending);
     });

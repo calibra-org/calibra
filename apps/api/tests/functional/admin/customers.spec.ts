@@ -54,10 +54,12 @@ test.group("/api/v1/admin/customers", (group) => {
 
         const list = await client.get("/api/v1/admin/customers").withGuard("api").loginAs(admin);
         list.assertStatus(200);
+        list.assertAgainstApiSpec();
         assert.isAtLeast(list.body().data.length, 3);
 
         const search = await client.get("/api/v1/admin/customers").qs({ search: "alice" }).withGuard("api").loginAs(admin);
         search.assertStatus(200);
+        search.assertAgainstApiSpec();
         const matched = search.body().data as Array<{ user: { email: string } | null }>;
         assert.isTrue(matched.some((row) => row.user?.email === "alice@calibra.dev"));
     });
@@ -73,6 +75,7 @@ test.group("/api/v1/admin/customers", (group) => {
             country_default: "IR",
         });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         const created = await User.findBy("email", "new-admin@calibra.dev");
         assert.equal(created?.role, "admin");
     });

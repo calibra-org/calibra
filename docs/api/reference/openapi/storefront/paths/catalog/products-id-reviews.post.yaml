@@ -1,0 +1,42 @@
+operationId: catalogProductsReviewsStore
+summary: Submit a review for a product
+description: >
+    Lands as `status: pending` regardless of the submitter — a moderator approves it later.
+    `customer_id` is currently always written as `null`; wiring the authenticated customer is
+    purely additive. Returns 403 if the product has `reviews_allowed: false`, 404 if the product
+    does not exist.
+tags: [Catalog]
+security: []
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [reviewer_name, reviewer_email, body, rating]
+                properties:
+                    reviewer_name: { type: string }
+                    reviewer_email: { type: string, format: email }
+                    body: { type: string }
+                    rating: { type: integer, minimum: 1, maximum: 5 }
+
+responses:
+    "201":
+        description: Review accepted (pending moderation).
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/Review.yaml" }
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

@@ -1,0 +1,16 @@
+title: SignedDownloadUrl
+description: >
+    Short-lived signed URL for a customer download grant, returned by
+    `GET /account/downloads/{id}/url`. The URL expires 15 minutes after issuance. Phase 08
+    will swap the stub host for the configured CDN; the shape is stable.
+type: object
+properties:
+    url:
+        type: string
+        format: uri
+    expires_at:
+        type: string
+        format: date-time
+required:
+    - url
+    - expires_at

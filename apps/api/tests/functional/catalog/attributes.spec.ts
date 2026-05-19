@@ -16,6 +16,7 @@ test.group("Catalog attributes", (group) => {
             ],
         });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         assert.notMatch(response.body().data.code, /^pa_/);
     });
 
@@ -34,6 +35,7 @@ test.group("Catalog attributes", (group) => {
             ],
         });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         assert.equal(response.body().data.attribute_id, Number(attribute.id));
     });
 
@@ -46,6 +48,7 @@ test.group("Catalog attributes", (group) => {
         });
         const response = await client.get(`/api/v1/attributes/${attribute.id}/terms`).header("Accept-Language", "fa");
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         assert.equal(response.body().data[0].name, "پنبه");
     });
 });

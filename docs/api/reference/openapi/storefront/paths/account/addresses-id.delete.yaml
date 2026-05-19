@@ -1,0 +1,20 @@
+operationId: accountAddressesDestroy
+summary: Delete a saved address
+description: >
+    Removes a customer-owned address. Refuses with `422 E_DEFAULT_ADDRESS_REQUIRED` if the row
+    is the customer's only default address of its `kind`. Cross-tenant access returns 404, never
+    403.
+tags: [Account]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Address deleted.
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

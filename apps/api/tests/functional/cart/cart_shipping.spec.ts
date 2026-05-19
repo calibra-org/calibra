@@ -54,6 +54,7 @@ test.group("cart shipping", (group) => {
             .cookie("cart_token", token)
             .json({ shipping_zone_method_id: chosenRate });
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         const selected = body.data.shipping_rates.find((r: { id: number; selected: boolean }) => r.id === chosenRate);
         assert.isTrue(selected?.selected);
@@ -66,6 +67,7 @@ test.group("cart shipping", (group) => {
 
         const switched = await client.post("/api/v1/cart/customer").cookie("cart_token", token).json({ country: "US" });
         switched.assertStatus(200);
+        switched.assertAgainstApiSpec();
         const body = switched.body();
         assert.equal(body.data.totals.shipping_total, 0);
         assert.notExists(body.data.shipping_rates.find((r: { selected: boolean }) => r.selected));

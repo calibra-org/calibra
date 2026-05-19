@@ -56,6 +56,7 @@ test.group("POST /api/v1/account/addresses", (group) => {
             });
 
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.country, "IR");
         assert.equal(body.data.postcode, "1234567890");
@@ -81,6 +82,7 @@ test.group("POST /api/v1/account/addresses", (group) => {
         });
 
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.country, "US");
         assert.equal(body.data.region_text, "California");
@@ -144,6 +146,7 @@ test.group("POST /api/v1/account/addresses", (group) => {
                 phone: "09121234567",
             });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
     });
 
     test("setting is_default=true unsets sibling defaults of the same kind", async ({ client, assert }) => {
@@ -168,6 +171,7 @@ test.group("POST /api/v1/account/addresses", (group) => {
             .loginAs(user)
             .json({ ...baseBody, is_default: true });
         first.assertStatus(201);
+        first.assertAgainstApiSpec();
         const firstId = first.body().data.id;
 
         const second = await client
@@ -176,6 +180,7 @@ test.group("POST /api/v1/account/addresses", (group) => {
             .loginAs(user)
             .json({ ...baseBody, is_default: true });
         second.assertStatus(201);
+        second.assertAgainstApiSpec();
 
         const list = await client.get("/api/v1/account/addresses").withGuard("api").loginAs(user);
         const data = list.body().data as Array<{ id: number; is_default: boolean }>;

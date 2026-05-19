@@ -1,0 +1,28 @@
+operationId: accountAddressesShow
+summary: Fetch a single saved address
+description: Returns one address owned by the authenticated customer. Cross-tenant access returns 404, never 403.
+tags: [Account]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Address detail with form-field metadata.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data: { $ref: "../../components/schemas/CustomerAddress.yaml" }
+                        meta:
+                            type: object
+                            required: [field_metadata]
+                            properties:
+                                field_metadata: { $ref: "../../components/schemas/AddressFieldMetadata.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

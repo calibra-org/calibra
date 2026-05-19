@@ -69,6 +69,7 @@ test.group("GET /api/v1/.../orders/:id/history", (group) => {
 
         const response = await client.get(`/api/v1/account/orders/${order.id}/history`).loginAs(user);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const rows: Array<Record<string, unknown>> = response.body().data;
         assert.isAtLeast(rows.length, 3);
         for (const row of rows) {

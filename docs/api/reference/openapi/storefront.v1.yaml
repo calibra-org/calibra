@@ -21,8 +21,11 @@ info:
           locale.
         - **Auth.** Public endpoints carry `security: []`. Authenticated endpoints use a bearer
           token from `POST /api/v1/auth/login`.
-        - **Idempotency.** `POST /checkout/submit` and `POST /payment/init/:order_key` accept an
+        - **Idempotency.** `POST /checkout/submit` and `POST /payment/init` accept an
           `Idempotency-Key` header so retries don't re-run side effects.
+        - **HEAD methods.** AdonisJS auto-registers a `HEAD` handler for every `GET` route. Each
+          `head:` entry below is a documentation companion that returns the same headers as the
+          paired `get:` operation with an empty body.
     contact:
         name: Calibra Backend Team
         url: https://calibra.dev/support
@@ -75,30 +78,80 @@ paths:
     /api/v1/auth/password/reset:
         post:
             $ref: "./storefront/paths/auth/password-reset.post.yaml"
+    /api/v1/auth/me:
+        get:
+            $ref: "./storefront/paths/auth/me.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
 
     /api/v1/products:
         get:
             $ref: "./storefront/paths/catalog/products.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/products/{slug}:
         get:
             $ref: "./storefront/paths/catalog/products-slug.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/products/{id}/variations:
+        get:
+            $ref: "./storefront/paths/catalog/products-id-variations.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/products/{id}/reviews:
+        get:
+            $ref: "./storefront/paths/catalog/products-id-reviews.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./storefront/paths/catalog/products-id-reviews.post.yaml"
     /api/v1/categories:
         get:
             $ref: "./storefront/paths/catalog/categories.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/categories/{slug}:
+        get:
+            $ref: "./storefront/paths/catalog/categories-slug.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/attributes:
+        get:
+            $ref: "./storefront/paths/catalog/attributes.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/attributes/{id}/terms:
+        get:
+            $ref: "./storefront/paths/catalog/attributes-id-terms.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/brands:
+        get:
+            $ref: "./storefront/paths/catalog/brands.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/tags:
+        get:
+            $ref: "./storefront/paths/catalog/tags.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
 
     /api/v1/cart:
         get:
             $ref: "./storefront/paths/cart/cart.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/cart/items:
         post:
             $ref: "./storefront/paths/cart/items.post.yaml"
         delete:
             $ref: "./storefront/paths/cart/items.delete.yaml"
-    /api/v1/cart/items/{line}:
+    /api/v1/cart/items/{line_id}:
         patch:
-            $ref: "./storefront/paths/cart/items-line.patch.yaml"
+            $ref: "./storefront/paths/cart/items-line_id.patch.yaml"
         delete:
-            $ref: "./storefront/paths/cart/items-line.delete.yaml"
+            $ref: "./storefront/paths/cart/items-line_id.delete.yaml"
     /api/v1/cart/customer:
         post:
             $ref: "./storefront/paths/cart/customer.post.yaml"
@@ -115,32 +168,78 @@ paths:
     /api/v1/checkout:
         get:
             $ref: "./storefront/paths/checkout/checkout.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
         put:
             $ref: "./storefront/paths/checkout/checkout.put.yaml"
     /api/v1/checkout/submit:
         post:
             $ref: "./storefront/paths/checkout/submit.post.yaml"
-    /api/v1/orders/{order_key}/pay:
+    /api/v1/checkout/orders/{order_key}/pay:
         post:
-            $ref: "./storefront/paths/checkout/orders-key-pay.post.yaml"
+            $ref: "./storefront/paths/checkout/checkout-orders-key-pay.post.yaml"
 
     /api/v1/account/me:
         get:
             $ref: "./storefront/paths/account/me.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
         put:
             $ref: "./storefront/paths/account/me.put.yaml"
     /api/v1/account/orders:
         get:
             $ref: "./storefront/paths/account/orders.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/account/orders/{id}:
         get:
             $ref: "./storefront/paths/account/orders-id.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/account/orders/{id}/history:
+        get:
+            $ref: "./storefront/paths/account/orders-id-history.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/account/orders/{id}/notes:
+        get:
+            $ref: "./storefront/paths/account/orders-id-notes.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/account/addresses:
+        get:
+            $ref: "./storefront/paths/account/addresses.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./storefront/paths/account/addresses.post.yaml"
+    /api/v1/account/addresses/{id}:
+        get:
+            $ref: "./storefront/paths/account/addresses-id.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./storefront/paths/account/addresses-id.patch.yaml"
+        delete:
+            $ref: "./storefront/paths/account/addresses-id.delete.yaml"
+    /api/v1/account/downloads:
+        get:
+            $ref: "./storefront/paths/account/downloads.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/account/downloads/{id}/url:
+        get:
+            $ref: "./storefront/paths/account/downloads-id-url.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
 
-    /api/v1/payment/init/{order_key}:
+    /api/v1/payment/init:
         post:
             $ref: "./storefront/paths/payment/init.post.yaml"
-    /api/v1/payment/callback/{gateway}:
+    /api/v1/payment/callback/{gateway_code}:
         get:
-            $ref: "./storefront/paths/payment/callback-gateway.get.yaml"
+            $ref: "./storefront/paths/payment/callback-gateway_code.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
-            $ref: "./storefront/paths/payment/callback-gateway.post.yaml"
+            $ref: "./storefront/paths/payment/callback-gateway_code.post.yaml"

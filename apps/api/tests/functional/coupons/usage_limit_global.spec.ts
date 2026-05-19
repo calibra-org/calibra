@@ -44,6 +44,7 @@ test.group("usage_limit_global", (group) => {
 
         const result = await client.post("/api/v1/cart/coupons").cookie("cart_token", token).json({ code: "G2" });
         result.assertStatus(200);
+        result.assertAgainstApiSpec();
         assert.equal(result.body().data.applied_coupons[0].code, "G2");
     });
 });

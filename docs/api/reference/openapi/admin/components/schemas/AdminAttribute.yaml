@@ -1,25 +1,31 @@
 title: AdminAttribute
-description: Catalog attribute (e.g. "Color", "Size"). Terms are nested under each attribute via `/api/v1/admin/attributes/{id}/terms`.
+description: >
+    Catalog attribute — matches `ProductAttributeTransformer.forAdmin()` exactly. Terms are
+    nested under each attribute via `/api/v1/admin/attributes/{id}/terms`. The `code` is the
+    stable internal handle (Calibra does NOT prefix with `pa_` à la WooCommerce); `name`
+    is resolved from the active locale, and `translations` carries every locale row.
 type: object
 properties:
     id: { type: integer }
-    slug: { type: string, examples: ["color", "storage"] }
-    name: { type: string, description: Resolved from the active locale. }
-    type:
-        type: string
-        enum: [select, color, image]
-        description: Storefront rendering hint. `color` paints swatches; `image` shows thumbnails.
+    code: { type: string, examples: ["color", "storage"] }
+    order_by: { type: string }
     has_archives: { type: boolean }
+    name: { type: string }
     locale: { type: string }
     translations:
         type: array
         items:
             type: object
+            required: [locale, name]
             properties:
                 locale: { type: string }
                 name: { type: string }
-                description: { type: [string, "null"] }
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
 required:
     - id
-    - slug
-    - type
+    - code
+    - order_by
+    - has_archives
+    - name
+    - locale

@@ -51,6 +51,7 @@ async function submitZarinpalOrder(client: any, productId: number): Promise<{ or
         .cookie("cart_token", token)
         .header("Idempotency-Key", `cb-${Date.now()}`);
     submit.assertStatus(200);
+    submit.assertAgainstApiSpec();
     const attempt = await PaymentAttempt.query().orderBy("id", "desc").firstOrFail();
     return { orderId: submit.body().data.id, authority: attempt.gatewayAuthority! };
 }

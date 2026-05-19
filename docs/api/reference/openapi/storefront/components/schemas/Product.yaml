@@ -1,64 +1,61 @@
 title: Product
 description: >
-    Storefront-facing product card payload. Returned in product listings; the detail variant
-    {@link ProductDetail} adds gallery, long description, variations, brand, attributes, and
-    related products. Locale-dependent fields (`name`, `description`) are resolved from
-    `Accept-Language`.
+    Storefront product card payload — matches `ProductTransformer.toObject()` exactly. Money
+    fields are flat integer minor units (`regular_price`, `sale_price`, `effective_price`);
+    `on_sale` reflects the resolved sale window. Locale-dependent fields (`name`,
+    `short_description`) come from the active locale.
 type: object
 properties:
-    id:
-        type: integer
-    slug:
-        type: string
-        examples: ["calibra-smartphone-x1"]
-    sku:
-        type: [string, "null"]
-        examples: ["CAL-X1-128"]
-    name:
-        type: string
-        description: Resolved from the active locale.
-        examples: ["گوشی هوشمند کلیربا مدل X1", "Calibra Smartphone X1"]
-    short_description:
-        type: [string, "null"]
+    id: { type: integer }
     type:
         type: string
-        enum: [simple, variable, virtual, downloadable]
+        enum: [simple, variable, virtual, downloadable, external]
+    sku: { type: [string, "null"] }
     status:
         type: string
-        enum: [draft, published, archived]
-    featured:
-        type: boolean
-    price:
-        type: object
-        description: Money in minor units; resolves sale-price window server-side.
-        properties:
-            regular: { $ref: "../../../common/components/schemas/Money.yaml" }
-            sale: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
-            current: { $ref: "../../../common/components/schemas/Money.yaml" }
-            on_sale: { type: boolean }
-    stock_status:
+        description: Lifecycle stage.
+        enum: [draft, publish, archived]
+    catalog_visibility:
         type: string
-        enum: [in_stock, out_of_stock, on_backorder]
-    primary_image:
-        anyOf:
-            - type: object
-              properties:
-                  url: { type: string }
-                  alt: { type: [string, "null"] }
-            - type: "null"
-    categories:
-        type: array
-        items:
-            type: object
-            properties:
-                id: { type: integer }
-                slug: { type: string }
-                name: { type: string, description: Resolved from the active locale. }
+        enum: [catalog, search, hidden, both, visible]
+    featured: { type: boolean }
+    virtual: { type: boolean }
+    downloadable: { type: boolean }
+    regular_price: { type: [integer, "null"] }
+    sale_price: { type: [integer, "null"] }
+    effective_price: { type: [integer, "null"] }
+    on_sale: { type: boolean }
+    sale_starts_at: { type: [string, "null"], format: date-time }
+    sale_ends_at: { type: [string, "null"], format: date-time }
+    tax_class_id: { type: [integer, "null"] }
+    tax_status:
+        type: string
+        enum: [taxable, shipping, none]
+    shipping_class_id: { type: [integer, "null"] }
+    weight_grams: { type: [integer, "null"] }
+    length_mm: { type: [integer, "null"] }
+    width_mm: { type: [integer, "null"] }
+    height_mm: { type: [integer, "null"] }
+    sold_individually: { type: boolean }
+    reviews_allowed: { type: boolean }
+    external_url: { type: [string, "null"] }
+    menu_order: { type: integer }
+    name: { type: [string, "null"], description: "Resolved from the active locale." }
+    slug: { type: [string, "null"] }
+    short_description: { type: [string, "null"] }
+    locale: { type: string }
+    featured_image_url: { type: [string, "null"] }
 required:
     - id
-    - slug
-    - name
     - type
     - status
-    - price
-    - stock_status
+    - catalog_visibility
+    - featured
+    - virtual
+    - downloadable
+    - on_sale
+    - tax_status
+    - sold_individually
+    - reviews_allowed
+    - menu_order
+    - locale

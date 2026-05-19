@@ -12,16 +12,16 @@ properties:
     sku: { type: [string, "null"] }
     status:
         type: string
-        enum: [draft, published, archived]
+        enum: [draft, publish, archived]
     catalog_visibility:
         type: string
-        enum: [catalog, search, hidden, both]
+        enum: [catalog, search, hidden, both, visible]
     featured: { type: boolean }
     virtual: { type: boolean }
     downloadable: { type: boolean }
-    regular_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
-    sale_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
-    effective_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+    regular_price: { type: [integer, "null"] }
+    sale_price: { type: [integer, "null"] }
+    effective_price: { type: [integer, "null"] }
     on_sale: { type: boolean }
     sale_starts_at: { type: [string, "null"], format: date-time }
     sale_ends_at: { type: [string, "null"], format: date-time }

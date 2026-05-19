@@ -1,0 +1,32 @@
+operationId: accountAddressesIndex
+summary: List the signed-in customer's addresses
+description: >
+    Returns every saved address (billing + shipping) belonging to the authenticated customer,
+    sorted by id ascending. The `meta.field_metadata` map describes how the storefront should
+    render the address form for the customer's `country_default`.
+tags: [Account]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Address list with form-field metadata.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/CustomerAddress.yaml" }
+                        meta:
+                            type: object
+                            required: [field_metadata]
+                            properties:
+                                field_metadata: { $ref: "../../components/schemas/AddressFieldMetadata.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

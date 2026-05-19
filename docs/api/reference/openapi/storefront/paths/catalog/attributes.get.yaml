@@ -1,0 +1,23 @@
+operationId: catalogAttributesIndex
+summary: List product attributes (storefront)
+description: >
+    Returns every product attribute (color, size, material, …) with localised `name`. Terms
+    for an attribute are served separately via `/attributes/{id}/terms`.
+tags: [Catalog]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Attribute list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/Attribute.yaml" }

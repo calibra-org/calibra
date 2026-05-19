@@ -21,6 +21,7 @@ test.group("Admin products CRUD", (group) => {
             ],
         });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         assert.equal(response.body().data.sku, "SKU-CRUD-1");
         assert.equal(response.body().data.translations.length, 2);
     });
@@ -31,6 +32,7 @@ test.group("Admin products CRUD", (group) => {
             featured: true,
         });
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         assert.isTrue(response.body().data.featured);
     });
 
@@ -46,6 +48,7 @@ test.group("Admin products CRUD", (group) => {
         const source = await createProduct({ fa: { name: "اصل", slug: "src-fa" }, en: { name: "Source", slug: "src-en" } });
         const response = await client.post(`/api/v1/admin/products/${source.id}/duplicate`);
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         const newId = response.body().data.id;
         assert.notEqual(newId, Number(source.id));
         const newTranslations = await ProductTranslation.query().where("product_id", String(newId));
@@ -74,6 +77,7 @@ test.group("Admin products CRUD", (group) => {
             delete: [Number(toDelete.id)],
         });
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         assert.equal(response.body().data.created.length, 1);
         assert.equal(response.body().data.updated.length, 1);
         assert.equal(response.body().data.deleted.length, 1);

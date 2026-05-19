@@ -2,12 +2,12 @@ operationId: cartUpdateLine
 summary: Update the quantity of one cart line
 description: >
     Sets the quantity of an existing cart line. Use `quantity: 0` as a convenience for delete
-    (equivalent to `DELETE /cart/items/{line}`).
+    (equivalent to `DELETE /cart/items/{line_id}`).
 tags: [Cart]
 security: []
 
 parameters:
-    - name: line
+    - name: line_id
       in: path
       required: true
       schema: { type: integer }

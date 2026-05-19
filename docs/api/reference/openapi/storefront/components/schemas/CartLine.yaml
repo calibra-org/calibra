@@ -1,29 +1,41 @@
 title: CartLine
-description: One cart line item with its computed totals.
+description: >
+    One cart line item with its computed totals. Matches `CartTransformer.serializeItems()` exactly:
+    the line carries an integer `id` (the value to pass back as `{line_id}` on PATCH/DELETE), the
+    captured `price` per unit, and the four totals that take applied coupons + tax into account.
 type: object
 properties:
-    id: { type: integer, description: "Stable line id; pass it as the `line` path segment to PATCH/DELETE." }
+    id:
+        type: integer
+        description: Stable line id; pass it as `{line_id}` on PATCH/DELETE.
     product_id: { type: integer }
     variation_id: { type: [integer, "null"] }
-    quantity: { type: integer, minimum: 1 }
-    price_snapshot:
-        $ref: "../../../common/components/schemas/Money.yaml"
-        description: Price per unit captured when the line was added; not re-priced on cart fetch.
     name:
         type: [string, "null"]
         description: Resolved from the active locale.
-    sku:
+    sku: { type: [string, "null"] }
+    image:
         type: [string, "null"]
-    image_url:
-        type: [string, "null"]
-    subtotal: { $ref: "../../../common/components/schemas/Money.yaml" }
-    subtotal_tax: { $ref: "../../../common/components/schemas/Money.yaml" }
-    total: { $ref: "../../../common/components/schemas/Money.yaml" }
-    total_tax: { $ref: "../../../common/components/schemas/Money.yaml" }
+        description: URL of the featured product image, or null.
+    price:
+        type: integer
+        description: Price per unit captured when the line was added; not re-priced on cart fetch.
+    quantity: { type: integer, minimum: 1 }
+    subtotal: { type: integer }
+    subtotal_tax: { type: integer }
+    total: { type: integer }
+    total_tax: { type: integer }
+    attributes_snapshot:
+        type: object
+        additionalProperties: true
+        description: Variation/attribute pins captured at add-to-cart time.
 required:
     - id
     - product_id
+    - price
     - quantity
-    - price_snapshot
     - subtotal
+    - subtotal_tax
     - total
+    - total_tax
+    - attributes_snapshot

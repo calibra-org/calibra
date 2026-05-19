@@ -20,6 +20,7 @@ test.group("POST /api/v1/cart/items", (group) => {
         const product = await createTaxableProduct({ regularPrice: 1_000_000 });
         const response = await client.post("/api/v1/cart/items").json({ product_id: Number(product.id), quantity: 1 });
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.items.length, 1);
         assert.equal(body.data.items[0].product_id, Number(product.id));
@@ -32,6 +33,7 @@ test.group("POST /api/v1/cart/items", (group) => {
 
         const first = await client.post("/api/v1/cart/items").json({ product_id: Number(product.id), quantity: 1 });
         first.assertStatus(200);
+        first.assertAgainstApiSpec();
         const token = tokenFromResponse(first);
 
         const second = await client
@@ -40,6 +42,7 @@ test.group("POST /api/v1/cart/items", (group) => {
             .json({ product_id: Number(product.id), quantity: 2 });
 
         second.assertStatus(200);
+        second.assertAgainstApiSpec();
         const body = second.body();
         assert.equal(body.data.items.length, 1);
         assert.equal(body.data.items[0].quantity, 3);
@@ -105,6 +108,7 @@ test.group("POST /api/v1/cart/items", (group) => {
         const product = await createTaxableProduct({ regularPrice: 5_000_000, soldIndividually: true });
         const response = await client.post("/api/v1/cart/items").json({ product_id: Number(product.id), quantity: 4 });
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         assert.equal(response.body().data.items[0].quantity, 1);
 
         const token = tokenFromResponse(response);
@@ -113,6 +117,7 @@ test.group("POST /api/v1/cart/items", (group) => {
             .cookie("cart_token", token)
             .json({ product_id: Number(product.id), quantity: 3 });
         again.assertStatus(200);
+        again.assertAgainstApiSpec();
         assert.equal(again.body().data.items[0].quantity, 1);
     });
 

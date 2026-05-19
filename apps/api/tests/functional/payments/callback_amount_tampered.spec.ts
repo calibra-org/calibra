@@ -51,6 +51,7 @@ async function submitOrder(client: any, productId: number, authority: string): P
         .cookie("cart_token", token)
         .header("Idempotency-Key", `amt-${Date.now()}`);
     submit.assertStatus(200);
+    submit.assertAgainstApiSpec();
     return submit.body().data.id;
 }
 

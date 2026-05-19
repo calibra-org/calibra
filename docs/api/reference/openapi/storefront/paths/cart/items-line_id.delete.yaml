@@ -5,10 +5,11 @@ tags: [Cart]
 security: []
 
 parameters:
-    - name: line
+    - name: line_id
       in: path
       required: true
       schema: { type: integer }
+      description: Line id from the `items[].id` field of the cart envelope.
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
 
 responses:

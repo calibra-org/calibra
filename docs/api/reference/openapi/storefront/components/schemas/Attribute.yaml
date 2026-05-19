@@ -1,0 +1,20 @@
+title: Attribute
+description: >
+    Localised product attribute (color, size, …). `code` is the stable internal handle; `name`
+    is resolved from the active locale. Attribute terms (the actual values like "red", "small")
+    are served separately under `/attributes/{id}/terms`.
+type: object
+properties:
+    id: { type: integer }
+    code: { type: string }
+    order_by: { type: string }
+    has_archives: { type: boolean }
+    name: { type: string }
+    locale: { type: string }
+required:
+    - id
+    - code
+    - order_by
+    - has_archives
+    - name
+    - locale

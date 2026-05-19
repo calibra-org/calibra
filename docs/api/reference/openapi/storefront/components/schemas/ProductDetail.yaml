@@ -1,8 +1,9 @@
 title: ProductDetail
 description: >
-    Storefront product detail-page payload. Extends {@link Product} with the full gallery,
-    long-form description, brand, tags, attributes (with terms), and the variation list when the
-    product is `type=variable`. All translatable fields are resolved from `Accept-Language`.
+    Storefront product detail-page payload — matches `ProductTransformer.forDetail()` exactly:
+    the base `Product` shape extended with `description`, `purchase_note`, the full `images`
+    gallery, `variations`, `attribute_links`, and the categories/tags/brands the product belongs
+    to. All translatable fields are resolved from `Accept-Language`.
 type: object
 allOf:
     - $ref: "./Product.yaml"
@@ -11,55 +12,80 @@ allOf:
           description:
               type: [string, "null"]
               description: Long-form description resolved from the active locale.
-          gallery:
+          purchase_note:
+              type: [string, "null"]
+              description: Operator-supplied note shown to the customer after purchase.
+          images:
               type: array
               items:
                   type: object
+                  required: [id, media_id, position]
                   properties:
-                      url: { type: string }
+                      id: { type: integer }
+                      media_id: { type: integer }
+                      position: { type: integer }
+                      url: { type: [string, "null"] }
                       alt: { type: [string, "null"] }
-          brand:
-              anyOf:
-                  - type: object
-                    properties:
-                        id: { type: integer }
-                        slug: { type: string }
-                        name: { type: string }
-                  - type: "null"
-          tags:
-              type: array
-              items:
-                  type: object
-                  properties:
-                      id: { type: integer }
-                      slug: { type: string }
-                      name: { type: string }
-          attributes:
-              type: array
-              items:
-                  type: object
-                  properties:
-                      id: { type: integer }
-                      slug: { type: string }
-                      name: { type: string }
-                      variation: { type: boolean, description: "True when this attribute is used to differentiate variations." }
-                      terms:
-                          type: array
-                          items:
-                              type: object
-                              properties:
-                                  id: { type: integer }
-                                  slug: { type: string }
-                                  name: { type: string }
           variations:
               type: array
               description: Present only when `type=variable`.
               items:
-                  $ref: "./ProductVariation.yaml"
-          reviews_allowed:
-              type: boolean
-          average_rating:
-              type: [number, "null"]
-              description: 0–5 stars, null when no approved reviews exist.
-          review_count:
-              type: integer
+                  type: object
+                  required: [id, on_sale, manage_stock_mode, attribute_pins]
+                  properties:
+                      id: { type: integer }
+                      sku: { type: [string, "null"] }
+                      regular_price: { type: [integer, "null"] }
+                      sale_price: { type: [integer, "null"] }
+                      effective_price: { type: [integer, "null"] }
+                      on_sale: { type: boolean }
+                      manage_stock_mode: { type: string }
+                      attribute_pins:
+                          type: array
+                          items:
+                              type: object
+                              required: [attribute_id, term_id]
+                              properties:
+                                  attribute_id: { type: integer }
+                                  term_id: { type: integer }
+          attribute_links:
+              type: array
+              items:
+                  type: object
+                  required: [id, attribute_id, position, visible, used_for_variation, term_ids]
+                  properties:
+                      id: { type: integer }
+                      attribute_id: { type: integer }
+                      position: { type: integer }
+                      visible: { type: boolean }
+                      used_for_variation: { type: boolean }
+                      term_ids:
+                          type: array
+                          items: { type: integer }
+          categories:
+              type: array
+              items:
+                  type: object
+                  required: [id]
+                  properties:
+                      id: { type: integer }
+                      name: { type: [string, "null"] }
+                      slug: { type: [string, "null"] }
+          tags:
+              type: array
+              items:
+                  type: object
+                  required: [id]
+                  properties:
+                      id: { type: integer }
+                      name: { type: [string, "null"] }
+                      slug: { type: [string, "null"] }
+          brands:
+              type: array
+              items:
+                  type: object
+                  required: [id]
+                  properties:
+                      id: { type: integer }
+                      name: { type: [string, "null"] }
+                      slug: { type: [string, "null"] }

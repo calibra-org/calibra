@@ -1,0 +1,19 @@
+title: AddressFieldMetadata
+description: >
+    Per-country field-metadata map returned alongside the address envelope. Keys are address
+    fields (`first_name`, `address_line_1`, `region_id`, …) and the value carries the i18n key
+    plus rendering hints the storefront uses to drive the form (input mode, optional flag,
+    regex pattern, optional values-endpoint URL for select fields).
+type: object
+additionalProperties:
+    type: object
+    properties:
+        label_key: { type: string }
+        pattern: { type: string }
+        input_mode:
+            type: string
+            enum: [text, numeric, tel, email, decimal]
+        values_endpoint: { type: string }
+        optional: { type: boolean }
+    required:
+        - label_key

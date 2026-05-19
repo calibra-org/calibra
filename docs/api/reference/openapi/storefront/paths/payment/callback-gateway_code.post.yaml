@@ -8,9 +8,10 @@ tags: [Payment]
 security: []
 
 parameters:
-    - name: gateway
+    - name: gateway_code
       in: path
       required: true
+      description: Stable adapter code (e.g. `zarinpal`, `irankish`, `bank_transfer`).
       schema: { type: string }
 
 requestBody:

@@ -26,23 +26,29 @@ properties:
         type: array
         items:
             type: object
+            required: [coupon_id, code]
             properties:
-                code: { type: string, examples: ["WELCOME10"] }
-                code_snapshot: { type: string }
+                coupon_id: { type: integer }
+                code:
+                    type: string
+                    description: Snapshot of the coupon code at apply time (uppercased).
+                    examples: ["WELCOME10"]
     shipping_rates:
         type: array
         description: "Eligible shipping rates given the cart address; the selected rate is flagged via `selected: true`."
         items:
             type: object
+            required: [id, method_code, title, total, total_tax, selected]
             properties:
                 id: { type: integer }
                 method_code: { type: string }
                 title: { type: string }
-                cost: { $ref: "../../../common/components/schemas/Money.yaml" }
+                total: { type: integer, description: "Shipping cost in Rial minor units." }
+                total_tax: { type: integer, description: "Tax on shipping in Rial minor units (currently always 0)." }
                 selected: { type: boolean }
-                free_shipping: { type: boolean }
     address:
         type: object
+        required: [country, region_id, postcode]
         properties:
             country: { type: [string, "null"] }
             region_id: { type: [integer, "null"] }
@@ -50,24 +56,41 @@ properties:
     totals:
         type: object
         description: All money fields are in Rial minor units.
+        required:
+            - items_total
+            - items_tax_total
+            - shipping_total
+            - shipping_tax_total
+            - discount_total
+            - discount_tax_total
+            - tax_total
+            - grand_total
+            - needs_shipping
+            - needs_payment
         properties:
-            items_total: { $ref: "../../../common/components/schemas/Money.yaml" }
-            items_tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
-            shipping_total: { $ref: "../../../common/components/schemas/Money.yaml" }
-            shipping_tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
-            discount_total: { $ref: "../../../common/components/schemas/Money.yaml" }
-            discount_tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
-            tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
-            grand_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+            items_total: { type: integer }
+            items_tax_total: { type: integer }
+            shipping_total: { type: integer }
+            shipping_tax_total: { type: integer }
+            discount_total: { type: integer }
+            discount_tax_total: { type: integer }
+            tax_total: { type: integer }
+            grand_total: { type: integer }
             needs_shipping:
                 type: boolean
                 description: False when every line is virtual.
             needs_payment:
                 type: boolean
-                description: False when totals.grand_total ≤ 0 (e.g. a 100%-off coupon).
+                description: False when `totals.grand_total` is ≤ 0 (e.g. a 100%-off coupon).
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
 required:
     - id
     - token
+    - customer_id
     - currency
     - items
+    - applied_coupons
+    - shipping_rates
+    - address
     - totals

@@ -24,17 +24,7 @@ responses:
                     required: [data, payment]
                     properties:
                         data: { $ref: "../../components/schemas/OrderDetail.yaml" }
-                        payment:
-                            type: object
-                            properties:
-                                gateway:
-                                    type: object
-                                    properties:
-                                        id: { type: [integer, "null"] }
-                                        code: { type: [string, "null"] }
-                                redirect_url:
-                                    type: [string, "null"]
-                                    description: Always null at finalize-time; call `POST /payment/init/:order_key` to obtain.
+                        payment: { $ref: "../../components/schemas/PaymentInfo.yaml" }
     "409":
         $ref: "../../../common/components/responses/Conflict.yaml"
     "422":

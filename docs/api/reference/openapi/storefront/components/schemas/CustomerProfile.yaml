@@ -1,0 +1,17 @@
+title: CustomerProfile
+description: >
+    `CustomerBase` extended with `profile_extensions` — matches
+    `CustomerTransformer.withProfileExtensions()` exactly. The `profile_extensions` object
+    only carries keys for country-scoped extensions the customer actually has a row for;
+    Iranian customers see the `iran` key, foreign customers see an empty object. The
+    storefront branches on `'iran' in profile_extensions`.
+allOf:
+    - $ref: "./CustomerBase.yaml"
+    - type: object
+      required: [profile_extensions]
+      properties:
+          profile_extensions:
+              type: object
+              description: Country-scoped extension rows. Today only `iran` is recognised.
+              properties:
+                  iran: { $ref: "../../../common/components/schemas/IranAddressExtension.yaml" }

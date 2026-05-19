@@ -19,6 +19,7 @@ test.group("POST /api/v1/auth/register", (group) => {
         });
 
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         response.assertBodyContains({
             user: { email: "test@calibra.dev", role: "customer" },
             customer: { first_name: "علی", last_name: "احمدی" },
@@ -72,6 +73,7 @@ test.group("POST /api/v1/auth/register", (group) => {
             phone: "0912 555 1212",
         });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         const user = await User.findByOrFail("email", "phone@calibra.dev");
         const customer = await Customer.findByOrFail("user_id", user.id);
         assert.equal(customer.phone, "+989125551212");

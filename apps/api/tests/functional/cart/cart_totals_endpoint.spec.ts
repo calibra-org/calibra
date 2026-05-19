@@ -43,6 +43,7 @@ test.group("GET /api/v1/cart end-to-end totals", (group) => {
             .cookie("cart_token", token)
             .json({ shipping_zone_method_id: tipaxRate.id });
         finalized.assertStatus(200);
+        finalized.assertAgainstApiSpec();
 
         const body = finalized.body();
         const totals = body.data.totals;

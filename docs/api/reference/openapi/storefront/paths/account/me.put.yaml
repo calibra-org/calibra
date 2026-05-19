@@ -33,11 +33,10 @@ responses:
             application/json:
                 schema:
                     type: object
-                    required: [customer]
+                    required: [user, customer]
                     properties:
-                        customer:
-                            type: object
-                            additionalProperties: true
+                        user: { $ref: "../../components/schemas/AuthUser.yaml" }
+                        customer: { $ref: "../../components/schemas/CustomerProfile.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "422":

@@ -1,0 +1,15 @@
+title: Brand
+description: Localised brand entry.
+type: object
+properties:
+    id: { type: integer }
+    image_media_id: { type: [integer, "null"] }
+    menu_order: { type: integer }
+    name: { type: [string, "null"] }
+    slug: { type: [string, "null"] }
+    description: { type: [string, "null"] }
+    locale: { type: string }
+required:
+    - id
+    - menu_order
+    - locale

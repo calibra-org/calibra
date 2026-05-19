@@ -1,0 +1,29 @@
+title: CustomerBase
+description: >
+    Customer commerce identity — matches `CustomerTransformer.toObject()` exactly. This is
+    the shape returned by `POST /auth/login`, `POST /auth/register`, and anywhere the API
+    serialises a customer without country-scoped extension rows. The `CustomerProfile`
+    schema extends this with `profile_extensions` (used by `GET /account/me`).
+type: object
+properties:
+    id:
+        type: string
+        description: BIGINT id serialised as a string (Lucid default for safety above 2^53).
+    user_id: { type: string }
+    first_name: { type: [string, "null"] }
+    last_name: { type: [string, "null"] }
+    phone: { type: [string, "null"] }
+    country_default:
+        type: string
+        description: ISO-3166-1 alpha-2 (uppercase).
+    is_paying_customer: { type: boolean }
+    attributes:
+        type: object
+        additionalProperties: true
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
+required:
+    - id
+    - user_id
+    - country_default
+    - is_paying_customer

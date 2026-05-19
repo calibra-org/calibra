@@ -33,22 +33,14 @@ responses:
             application/json:
                 schema:
                     type: object
-                    required: [user, token]
+                    required: [user, customer, token]
                     properties:
-                        user:
-                            type: object
-                            properties:
-                                id: { type: integer }
-                                email: { type: string }
-                                role: { type: string }
-                                locale: { type: string }
-                        token:
-                            type: object
-                            required: [type, value]
-                            properties:
-                                type: { type: string, examples: ["bearer"] }
-                                value: { type: string }
-                                expires_at: { type: [string, "null"], format: date-time }
+                        user: { $ref: "../../components/schemas/AuthUser.yaml" }
+                        customer:
+                            anyOf:
+                                - type: "null"
+                                - $ref: "../../components/schemas/CustomerBase.yaml"
+                        token: { $ref: "../../components/schemas/BearerToken.yaml" }
     "400":
         $ref: "../../../common/components/responses/BadRequest.yaml"
     "422":

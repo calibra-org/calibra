@@ -60,5 +60,6 @@ test.group("Admin variations CRUD", (group) => {
             manage_stock_mode: "parent",
         });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
     });
 });

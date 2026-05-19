@@ -48,7 +48,7 @@ const merged = {
     },
 };
 
-downgradeTo30(merged);
+downgradeTo30(merged, merged);
 
 const outPath = resolve(ROOT, "dist/_merged.test.json");
 await writeFile(outPath, JSON.stringify(merged, null, 2));
@@ -63,6 +63,10 @@ console.log(`✓ Wrote ${outPath} (${Object.keys(merged.paths).length} paths)`);
  *   - `anyOf` / `oneOf` containing a `{ type: "null" }` branch sheds the null branch and
  *     marks the parent `nullable: true`; if the combinator collapses to a single member, it
  *     is hoisted into the parent so the validator sees a Schema rather than an empty `anyOf`.
+ *     When the surviving member is a `$ref`, the referenced schema is *resolved and inlined*
+ *     rather than wrapped in `allOf: [{$ref}]` — `api-contract-validator@2.2.8` does not
+ *     process `allOf + nullable: true` correctly, so a flat inlined object is the only shape
+ *     it accepts.
  *   - Schema-level `examples: [v, …]` (3.1) becomes `example: v` — Media-Type-level
  *     `examples` (which is a Map<name, ExampleObject> in both 3.0 and 3.1) is left alone,
  *     distinguished by Array vs Object shape.
@@ -72,10 +76,11 @@ console.log(`✓ Wrote ${outPath} (${Object.keys(merged.paths).length} paths)`);
  * Add further down-conversions here if the hand-authored spec adopts more 3.1-only constructs.
  *
  * @param {unknown} node — any JSON-typed value reachable from the OAS document.
+ * @param {unknown} root — the full merged OAS document, used to resolve `$ref` pointers.
  */
-function downgradeTo30(node) {
+function downgradeTo30(node, root) {
     if (Array.isArray(node)) {
-        node.forEach(downgradeTo30);
+        for (const child of node) downgradeTo30(child, root);
         return;
     }
     if (!node || typeof node !== "object") return;
@@ -104,6 +109,14 @@ function downgradeTo30(node) {
         if (filtered.length === 1) {
             const only = filtered[0];
             delete node[key];
+            if (typeof only.$ref === "string") {
+                const resolved = resolveRef(only.$ref, root);
+                if (resolved && typeof resolved === "object") {
+                    Object.assign(node, deepClone(resolved));
+                    node.nullable = true;
+                    continue;
+                }
+            }
             Object.assign(node, only);
         } else {
             node[key] = filtered;
@@ -126,5 +139,27 @@ function downgradeTo30(node) {
         node.allOf = [{ $ref: ref }, ...(Array.isArray(node.allOf) ? node.allOf : [])];
     }
 
-    for (const value of Object.values(node)) downgradeTo30(value);
+    for (const value of Object.values(node)) downgradeTo30(value, root);
+}
+
+/**
+ * Resolves a local JSON-pointer `$ref` (e.g. `#/components/schemas/Foo`) against the
+ * merged document. Returns the referenced node or `null` when the pointer is external or
+ * cannot be navigated. Only handles the form Redocly's bundler produces — no fragment
+ * escaping (`~0`/`~1`) is needed because component names are simple identifiers.
+ */
+function resolveRef(ref, root) {
+    if (typeof ref !== "string" || !ref.startsWith("#/")) return null;
+    const segments = ref.slice(2).split("/");
+    let cursor = root;
+    for (const segment of segments) {
+        if (!cursor || typeof cursor !== "object") return null;
+        cursor = cursor[segment];
+    }
+    return cursor ?? null;
+}
+
+/** Structural clone for plain JSON nodes. The merged spec is JSON, so this is enough. */
+function deepClone(node) {
+    return JSON.parse(JSON.stringify(node));
 }

@@ -1,0 +1,15 @@
+title: OrderNoteEntry
+description: >
+    Customer-visible order note — matches `OrderNoteTransformer.forCustomer()` exactly.
+    Internal-only fields (`visibility`, `author_user_id`) are dropped so a row that somehow
+    slipped through the controller's `visibility = 'customer'` filter still would not
+    expose them.
+type: object
+properties:
+    id: { type: integer }
+    body: { type: string }
+    created_at: { type: [string, "null"], format: date-time }
+required:
+    - id
+    - body
+    - created_at

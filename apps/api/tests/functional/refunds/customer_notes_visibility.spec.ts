@@ -53,6 +53,7 @@ test.group("GET /api/v1/account/orders/:id/notes (customer-side)", (group) => {
 
         const response = await client.get(`/api/v1/account/orders/${order.id}/notes`).loginAs(user);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const rows: Array<{ id: number; body: string; visibility?: string; author_user_id?: number | null }> =
             response.body().data;
         assert.equal(rows.length, 1);

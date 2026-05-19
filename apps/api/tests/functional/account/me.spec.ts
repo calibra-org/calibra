@@ -32,6 +32,7 @@ test.group("GET /api/v1/account/me", (group) => {
 
         const response = await client.get("/api/v1/account/me").withGuard("api").loginAs(user);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
 
         const body = response.body();
         assert.equal(body.user.email, "me@calibra.dev");
@@ -49,6 +50,7 @@ test.group("GET /api/v1/account/me", (group) => {
 
         const response = await client.get("/api/v1/account/me").withGuard("api").loginAs(user);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.property(body.customer.profile_extensions, "iran");
         assert.equal(body.customer.profile_extensions.iran.national_id, "1234567891");

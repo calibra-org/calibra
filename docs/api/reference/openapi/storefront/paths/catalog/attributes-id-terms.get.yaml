@@ -1,0 +1,24 @@
+operationId: catalogAttributeTermsIndex
+summary: List terms for one product attribute (storefront)
+description: Returns every attribute term scoped to the requested attribute, with localised `name` + `slug`.
+tags: [Catalog]
+security: []
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Attribute term list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AttributeTerm.yaml" }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

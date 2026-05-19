@@ -1,0 +1,25 @@
+title: OrderAddress
+description: >
+    Address row snapshot stored with an order — matches
+    `OrderTransformer.serializeAddress()` exactly. `kind` is `billing` or `shipping`. Phone
+    and email may be null on shipping rows where the customer reused a single contact on
+    billing.
+type: object
+properties:
+    kind:
+        type: string
+        enum: [billing, shipping]
+    first_name: { type: [string, "null"] }
+    last_name: { type: [string, "null"] }
+    company: { type: [string, "null"] }
+    address_line_1: { type: [string, "null"] }
+    address_line_2: { type: [string, "null"] }
+    city: { type: [string, "null"] }
+    region_id: { type: [integer, "null"] }
+    region_text: { type: [string, "null"] }
+    postcode: { type: [string, "null"] }
+    country: { type: [string, "null"], description: "ISO-3166-1 alpha-2." }
+    phone: { type: [string, "null"] }
+    email: { type: [string, "null"], format: email }
+required:
+    - kind

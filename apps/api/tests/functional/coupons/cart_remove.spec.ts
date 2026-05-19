@@ -27,6 +27,7 @@ test.group("DELETE /api/v1/cart/coupons/:code", (group) => {
 
         const removed = await client.delete("/api/v1/cart/coupons/P10").cookie("cart_token", token);
         removed.assertStatus(200);
+        removed.assertAgainstApiSpec();
         const body = removed.body().data;
         assert.equal(body.applied_coupons.length, 0);
         assert.equal(body.totals.discount_total, 0);
@@ -49,6 +50,7 @@ test.group("DELETE /api/v1/cart/coupons/:code", (group) => {
         await client.post("/api/v1/cart/coupons").cookie("cart_token", token).json({ code: "ABC123" });
         const removed = await client.delete("/api/v1/cart/coupons/abc123").cookie("cart_token", token);
         removed.assertStatus(200);
+        removed.assertAgainstApiSpec();
         assert.equal(removed.body().data.applied_coupons.length, 0);
     });
 });

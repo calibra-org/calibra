@@ -30,6 +30,7 @@ test.group("POST /api/v1/cart/coupons", (group) => {
         const applied = await client.post("/api/v1/cart/coupons").cookie("cart_token", token).json({ code: "P10" });
 
         applied.assertStatus(200);
+        applied.assertAgainstApiSpec();
         const after = applied.body().data;
         assert.equal(after.applied_coupons.length, 1);
         assert.equal(after.applied_coupons[0].code, "P10");
@@ -88,8 +89,10 @@ test.group("POST /api/v1/cart/coupons", (group) => {
         const token = tokenFromResponse(added);
         const a = await client.post("/api/v1/cart/coupons").cookie("cart_token", token).json({ code: "DUP" });
         a.assertStatus(200);
+        a.assertAgainstApiSpec();
         const b = await client.post("/api/v1/cart/coupons").cookie("cart_token", token).json({ code: "DUP" });
         b.assertStatus(200);
+        b.assertAgainstApiSpec();
         assert.equal(b.body().data.applied_coupons.length, 1);
     });
 
@@ -100,6 +103,7 @@ test.group("POST /api/v1/cart/coupons", (group) => {
         const token = tokenFromResponse(added);
         const applied = await client.post("/api/v1/cart/coupons").cookie("cart_token", token).json({ code: "welcome10" });
         applied.assertStatus(200);
+        applied.assertAgainstApiSpec();
         assert.equal(applied.body().data.applied_coupons[0].code, "WELCOME10");
     });
 });

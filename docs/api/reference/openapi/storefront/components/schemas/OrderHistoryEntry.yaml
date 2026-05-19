@@ -1,0 +1,20 @@
+title: OrderHistoryEntry
+description: >
+    Customer-visible order status-history row — matches
+    `OrderStatusHistoryTransformer.forCustomer()` exactly. The admin variant adds
+    `changed_by_user_id` and the free-text `reason`; this customer variant drops both and
+    adds a stable `label_key` (e.g. `order.status.processing`) the storefront resolves
+    through its own i18n catalog (Pattern 4 — the API never returns translated labels).
+type: object
+properties:
+    id: { type: integer }
+    from_status: { type: [string, "null"] }
+    to_status: { type: [string, "null"] }
+    occurred_at: { type: [string, "null"], format: date-time }
+    label_key: { type: [string, "null"] }
+required:
+    - id
+    - from_status
+    - to_status
+    - occurred_at
+    - label_key

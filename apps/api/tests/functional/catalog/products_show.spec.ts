@@ -14,6 +14,7 @@ test.group("GET /api/v1/products/:slug", (group) => {
         });
         const response = await client.get("/api/v1/products/گوشی-سامسونگ-show").header("Accept-Language", "fa");
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         assert.equal(response.body().data.name, "گوشی سامسونگ");
         assert.equal(response.body().data.slug, "گوشی-سامسونگ-show");
     });
@@ -25,6 +26,7 @@ test.group("GET /api/v1/products/:slug", (group) => {
         });
         const response = await client.get("/api/v1/products/show-phone").header("Accept-Language", "en");
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         assert.equal(response.body().data.name, "Show Phone");
     });
 

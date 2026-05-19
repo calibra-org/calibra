@@ -1,0 +1,43 @@
+title: CustomerAddress
+description: >
+    Customer-owned postal address as returned by `GET/POST/PATCH /account/addresses`. Country is
+    stored as ISO-3166-1 alpha-2 (uppercase). Phone is normalised server-side per `country`. The
+    `attributes` map is a free-form key-value bag for country-scoped extras (e.g. Iranian extras
+    live separately on the customer profile and are not echoed here).
+type: object
+properties:
+    id:
+        type: string
+        description: BIGINT id serialised as a string (Lucid default for safety above 2^53).
+    kind:
+        type: string
+        enum: [billing, shipping]
+    label: { type: [string, "null"] }
+    first_name: { type: string }
+    last_name: { type: string }
+    company: { type: [string, "null"] }
+    address_line_1: { type: string }
+    address_line_2: { type: [string, "null"] }
+    city: { type: string }
+    region_id: { type: [integer, "null"] }
+    region_text: { type: [string, "null"] }
+    postcode: { type: [string, "null"] }
+    country:
+        type: string
+        description: ISO-3166-1 alpha-2 country code (uppercase).
+    phone: { type: [string, "null"] }
+    is_default: { type: boolean }
+    attributes:
+        type: object
+        additionalProperties: true
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
+required:
+    - id
+    - kind
+    - first_name
+    - last_name
+    - address_line_1
+    - city
+    - country
+    - is_default

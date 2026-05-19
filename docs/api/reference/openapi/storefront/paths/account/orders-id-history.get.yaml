@@ -1,0 +1,29 @@
+operationId: accountOrdersHistory
+summary: Customer-visible order timeline
+description: >
+    Public-safe order status timeline for an order owned by the authenticated customer. Drops
+    the actor (`changed_by_user_id`) and the free-text `reason` field (which may carry internal
+    operator context) and adds a `label_key` the storefront resolves through its own i18n catalog
+    (Pattern 4 — the API never returns translated labels, only the key + the raw status value).
+    Cross-tenant access returns 404, never 403.
+tags: [Account]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "200":
+        description: Customer-visible status history.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/OrderHistoryEntry.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
