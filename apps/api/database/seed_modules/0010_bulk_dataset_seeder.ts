@@ -5,9 +5,8 @@ import { faker as fakerEn } from "@faker-js/faker/locale/en";
 import { faker as fakerFa } from "@faker-js/faker/locale/fa";
 import { DateTime } from "luxon";
 
-import { slugify } from "#services/slug_service";
-
 import { BULK_CATEGORY_TREE, type CategoryNode, type LeafProductSpec } from "./bulk_catalog_taxonomy.js";
+import { slugify } from "#services/slug_service";
 
 const BATCH = 500;
 

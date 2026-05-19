@@ -6,9 +6,9 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 
-import { ThemeScript } from "#/components/ThemeScript";
 import { TooltipProvider } from "#/components/ui/tooltip";
 import { routing } from "#/lib/i18n/routing";
+import { getResolvedTheme } from "#/lib/theme";
 import "#/styles/globals.css";
 
 const inter = Inter({
@@ -43,16 +43,16 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
     if (!hasLocale(routing.locales, locale)) notFound();
     setRequestLocale(locale);
 
+    const theme = await getResolvedTheme();
+
     return (
         <html
             lang={locale}
             dir={directionFor(locale)}
-            className={`${inter.variable} ${vazirmatn.variable}`}
+            className={`${inter.variable} ${vazirmatn.variable}${theme === "dark" ? " dark" : ""}`}
+            style={{ colorScheme: theme }}
             suppressHydrationWarning
         >
-            <head>
-                <ThemeScript />
-            </head>
             <body className="min-h-dvh bg-background text-foreground antialiased">
                 <NextIntlClientProvider>
                     <TooltipProvider>{children}</TooltipProvider>

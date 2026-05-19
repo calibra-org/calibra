@@ -10,7 +10,9 @@ import { cn } from "#/lib/utils";
 
 type Theme = "light" | "dark" | "system";
 
-const STORAGE_KEY = "calibra-admin-theme";
+/** Local mirrors of the lib/theme.ts cookie name — kept here because this is a client module. */
+const COOKIE_NAME = "calibra-admin-theme";
+const STORAGE_KEY = "calibra-admin-theme-pref";
 
 function applyTheme(theme: Theme): void {
     const root = document.documentElement;
@@ -18,6 +20,11 @@ function applyTheme(theme: Theme): void {
     const resolved = theme === "system" ? (prefersDark ? "dark" : "light") : theme;
     root.classList.toggle("dark", resolved === "dark");
     root.style.colorScheme = resolved;
+    /**
+     * Persist the resolved value (not the user's "system" intent) so SSR can render the matching
+     * `.dark` class on `<html>` without an inline boot script — no FOUC, no React 19 warning.
+     */
+    document.cookie = `${COOKIE_NAME}=${resolved};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
 }
 
 export function ThemeToggle() {

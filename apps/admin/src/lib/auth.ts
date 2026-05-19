@@ -1,5 +1,6 @@
 import "server-only";
 
+import { BackendError, createApiClient } from "@calibra/sdk";
 import { cookies } from "next/headers";
 
 import { redirect } from "#/lib/i18n/navigation";
@@ -36,13 +37,35 @@ export async function getSession(): Promise<AdminSession | null> {
     }
 }
 
-/** Server-side guard for the authenticated layout. `redirect` throws an internal Next.js
- *  exception, so the cast on the unreachable branch is only there to satisfy the type checker. */
+/**
+ * Server-side guard for the authenticated layout. Redirects to `/login` when the cookie is
+ * absent, malformed, or carries a token the API has revoked / expired / never knew about
+ * (cleared on DB reset, manual logout from another tab, etc.). A single `/auth/me` call
+ * validates the token without surfacing 401s into page renders downstream.
+ *
+ * `redirect` throws an internal Next.js exception, so the cast on the unreachable branch is
+ * only there to satisfy the type checker.
+ */
 export async function requireSession(locale: string): Promise<AdminSession> {
     const session = await getSession();
     if (session === null) {
         redirect({ href: "/login", locale });
         return null as unknown as AdminSession;
+    }
+    try {
+        const api = createApiClient({
+            baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+            token: session.token,
+        });
+        await api.storefront.GET("/api/v1/auth/me", {});
+    } catch (err) {
+        if (err instanceof BackendError && (err.status === 401 || err.status === 403)) {
+            const store = await cookies();
+            store.delete(SESSION_COOKIE);
+            redirect({ href: "/login", locale });
+            return null as unknown as AdminSession;
+        }
+        throw err;
     }
     return session;
 }
