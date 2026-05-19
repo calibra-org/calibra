@@ -786,7 +786,7 @@ export class OrderTaxLineSchema extends BaseModel {
 }
 
 export class OrderSchema extends BaseModel {
-  static $columns = ['attributes', 'billingEmail', 'cartHash', 'createdAt', 'createdVia', 'currency', 'currencyDisplay', 'customerId', 'customerNote', 'dateCompletedAt', 'datePaidAt', 'deletedAt', 'discountTaxTotal', 'discountTotal', 'feesTaxTotal', 'feesTotal', 'grandTotal', 'id', 'idempotencyKey', 'ipAddress', 'itemsTaxTotal', 'itemsTotal', 'orderKey', 'orderNumber', 'paymentGatewayIdSnapshot', 'paymentMethodCodeSnapshot', 'paymentMethodTitleSnapshot', 'pricesIncludeTax', 'shippingTaxTotal', 'shippingTotal', 'status', 'taxTotal', 'transactionId', 'updatedAt', 'userAgent'] as const
+  static $columns = ['attributes', 'billingEmail', 'cartHash', 'createdAt', 'createdVia', 'currency', 'currencyDisplay', 'customerId', 'customerNote', 'dateCompletedAt', 'datePaidAt', 'deletedAt', 'discountTaxTotal', 'discountTotal', 'feesTaxTotal', 'feesTotal', 'grandTotal', 'id', 'idempotencyKey', 'ipAddress', 'itemsTaxTotal', 'itemsTotal', 'lastPaymentAttemptId', 'orderKey', 'orderNumber', 'paymentGatewayIdSnapshot', 'paymentMethodCodeSnapshot', 'paymentMethodTitleSnapshot', 'pricesIncludeTax', 'shippingTaxTotal', 'shippingTotal', 'status', 'taxTotal', 'transactionId', 'updatedAt', 'userAgent'] as const
   $columns = OrderSchema.$columns
   @column()
   declare attributes: any
@@ -832,6 +832,8 @@ export class OrderSchema extends BaseModel {
   declare itemsTaxTotal: bigint | number
   @column()
   declare itemsTotal: bigint | number
+  @column()
+  declare lastPaymentAttemptId: bigint | number | null
   @column()
   declare orderKey: string | null
   @column()
@@ -879,6 +881,45 @@ export class PasswordResetTokenSchema extends BaseModel {
   declare userId: bigint | number
 }
 
+export class PaymentAttemptSchema extends BaseModel {
+  static $columns = ['amountMinor', 'createdAt', 'currency', 'errorCode', 'errorMessage', 'gatewayAuthority', 'gatewayCodeSnapshot', 'gatewayId', 'gatewayPayload', 'gatewayTransactionId', 'id', 'idempotencyKey', 'initiatedAt', 'orderId', 'status', 'updatedAt', 'verifiedAt'] as const
+  $columns = PaymentAttemptSchema.$columns
+  @column()
+  declare amountMinor: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare currency: string
+  @column()
+  declare errorCode: string | null
+  @column()
+  declare errorMessage: string | null
+  @column()
+  declare gatewayAuthority: string | null
+  @column()
+  declare gatewayCodeSnapshot: string
+  @column()
+  declare gatewayId: bigint | number
+  @column()
+  declare gatewayPayload: any
+  @column()
+  declare gatewayTransactionId: string | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare idempotencyKey: string | null
+  @column.dateTime()
+  declare initiatedAt: DateTime
+  @column()
+  declare orderId: bigint | number
+  @column()
+  declare status: any
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column.dateTime()
+  declare verifiedAt: DateTime | null
+}
+
 export class PaymentGatewaySchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'enabled', 'id', 'ordering', 'settings', 'supports', 'updatedAt'] as const
   $columns = PaymentGatewaySchema.$columns
@@ -898,6 +939,41 @@ export class PaymentGatewaySchema extends BaseModel {
   declare supports: any
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+}
+
+export class PaymentLinkSchema extends BaseModel {
+  static $columns = ['amountMinor', 'attributes', 'code', 'createdAt', 'createdByUserId', 'currency', 'description', 'expiresAt', 'gatewayId', 'id', 'maxUses', 'orderId', 'status', 'updatedAt', 'usedCount'] as const
+  $columns = PaymentLinkSchema.$columns
+  @column()
+  declare amountMinor: bigint | number
+  @column()
+  declare attributes: any
+  @column()
+  declare code: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare createdByUserId: bigint | number | null
+  @column()
+  declare currency: string
+  @column()
+  declare description: string | null
+  @column.dateTime()
+  declare expiresAt: DateTime | null
+  @column()
+  declare gatewayId: bigint | number | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare maxUses: number
+  @column()
+  declare orderId: bigint | number | null
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare usedCount: number
 }
 
 export class ProductAttributeLinkTermSchema extends BaseModel {

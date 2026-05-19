@@ -13,6 +13,7 @@ import OrderRefundLineItem from "#models/order_refund_line_item";
 import type User from "#models/user";
 import InventoryService from "#services/inventory_service";
 import { orderStateMachine } from "#services/order_state_machine";
+import { paymentService } from "#services/payment_service";
 
 export interface RefundLineItemInput {
     orderLineItemId: number | bigint;
@@ -148,7 +149,7 @@ export class RefundService {
                 await this.restock(refund.id, numericOrderId, lineInputs, hasLines, trx);
             }
 
-            await this.callGatewayRefundStub(order, refund);
+            await this.callGatewayRefund(order, refund, trx);
 
             const newPriorTotal = priorTotal + resolvedAmount;
             const fullyRefunded = newPriorTotal >= grandTotal;
@@ -297,17 +298,42 @@ export class RefundService {
     }
 
     /**
-     * Phase-08 PSP refund hook. When the gateway adapter ships, this method will look up the
-     * order's verified `payment_attempts` row, check the gateway's `supports.refunds` flag, call
-     * the adapter's `refund(order, refund)` method, and stash the returned PSP-side identifier in
-     * `refund.gatewayRefundId`. The whole chain is wrapped in a try/catch so an adapter outage
-     * never blocks Calibra-side bookkeeping — the refund row is the source of truth.
+     * PSP refund hook. Looks up the order's verified `payment_attempts` row and calls the
+     * adapter's `refund()`. On success, persists the PSP-side identifier in
+     * `refund.gateway_refund_id`. The whole chain is best-effort: adapter outage, "refunds
+     * unsupported", or "no verified attempt" never blocks Calibra-side bookkeeping — the refund
+     * row is the source of truth, and the failure detail rides on `attributes.gateway_refund` for
+     * forensic replay later.
      *
-     * Today: no adapter exists, no `payment_attempts` table exists. Method is intentionally a
-     * no-op so the integration point is visible in the call graph.
+     * Failures (return ok=false) are intentionally NOT re-thrown — for cod / bank_transfer
+     * orders there's no PSP to refund against, and for redirect gateways an offline reconcile
+     * is expected when the PSP is unreachable. Callers see the booking either way.
      */
-    private async callGatewayRefundStub(_order: Order, _refund: OrderRefund): Promise<void> {
-        return;
+    private async callGatewayRefund(order: Order, refund: OrderRefund, trx: TransactionClientContract): Promise<void> {
+        try {
+            const result = await paymentService.refund(order, Number(refund.amountMinor), refund.reason ?? undefined);
+            refund.useTransaction(trx);
+            if (result.ok && result.gateway_refund_id) {
+                refund.gatewayRefundId = result.gateway_refund_id;
+                refund.attributes = {
+                    ...((refund.attributes as Record<string, unknown>) ?? {}),
+                    gateway_refund: { ok: true, gateway_refund_id: result.gateway_refund_id },
+                };
+            } else {
+                refund.attributes = {
+                    ...((refund.attributes as Record<string, unknown>) ?? {}),
+                    gateway_refund: { ok: false, error_code: result.error_code, error_message: result.error_message },
+                };
+            }
+            await refund.save();
+        } catch (error) {
+            refund.useTransaction(trx);
+            refund.attributes = {
+                ...((refund.attributes as Record<string, unknown>) ?? {}),
+                gateway_refund: { ok: false, error_code: "exception", error_message: (error as Error).message ?? "unknown" },
+            };
+            await refund.save();
+        }
     }
 
     private async writeAuditNote(trx: TransactionClientContract, order: Order, refund: OrderRefund): Promise<void> {

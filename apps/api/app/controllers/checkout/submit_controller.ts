@@ -5,12 +5,16 @@ import { OrderStatus } from "#enums/order_status";
 import type Cart from "#models/cart";
 import Order from "#models/order";
 import { orderFinalizer } from "#services/order_finalizer";
+import { paymentService } from "#services/payment_service";
 import OrderTransformer from "#transformers/order_transformer";
 
 /**
  * Storefront checkout finalize handler. The {@link IdempotencyMiddleware} runs first and either
  * short-circuits with a previously-stored response or stashes the key on `ctx`. This controller
- * then runs the full draft → pending flow via {@link OrderFinalizer}.
+ * then runs the full draft → pending flow via {@link OrderFinalizer} and hands the freshly-
+ * pending order to {@link paymentService} so the response carries a real `redirect_url` for
+ * redirect gateways (or `null` for cod / bank_transfer, which transition the order to `on_hold`
+ * inline).
  */
 export default class CheckoutSubmitController {
     async submit(ctx: HttpContext) {
@@ -25,13 +29,21 @@ export default class CheckoutSubmitController {
             userAgent: ctx.request.header("user-agent") ?? null,
         });
 
+        let redirectUrl: string | null = result.payment.redirectUrl;
+        if (result.payment.gateway.id) {
+            const idempotencyKey = ctx.idempotencyKey ? `${ctx.idempotencyKey}:pay` : null;
+            const initResult = await paymentService.init(result.order, result.payment.gateway.id, idempotencyKey);
+            redirectUrl = initResult.redirect_url;
+            await result.order.refresh();
+        }
+
         await this.loadForResponse(result.order);
         return {
             data: new OrderTransformer(result.order).forDetail(),
             payment: {
                 gateway_id: result.payment.gateway.id,
                 method_code: result.payment.gateway.code,
-                redirect_url: result.payment.redirectUrl,
+                redirect_url: redirectUrl,
             },
         };
     }

@@ -32,7 +32,11 @@ test.group("POST /api/v1/checkout/orders/:order_key/pay", (group) => {
 
         response.assertStatus(200);
         await draft.refresh();
-        assert.equal(draft.status, OrderStatus.Pending);
+        /**
+         * cod is a no-redirect gateway; the pay-link path now invokes `payment_service.init`
+         * which flips pending → on_hold inline.
+         */
+        assert.equal(draft.status, OrderStatus.OnHold);
     });
 
     test("wrong order_key returns 404", async ({ client }) => {

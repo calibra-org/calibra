@@ -5,6 +5,7 @@ import { OrderStatus } from "#enums/order_status";
 import Order from "#models/order";
 import PaymentGateway from "#models/payment_gateway";
 import { orderStateMachine } from "#services/order_state_machine";
+import { paymentService } from "#services/payment_service";
 import OrderTransformer from "#transformers/order_transformer";
 import { payLinkValidator } from "#validators/checkout/draft_validator";
 
@@ -57,13 +58,17 @@ export default class PayLinkController {
             });
         }
 
+        const idempotencyKey = ctx.request.header("idempotency-key") ?? ctx.request.header("Idempotency-Key") ?? null;
+        const initResult = await paymentService.init(order, gateway.id, idempotencyKey ?? null);
+        await order.refresh();
+
         await this.loadForResponse(order);
         return {
             data: new OrderTransformer(order).forDetail(),
             payment: {
                 gateway_id: Number(gateway.id),
                 method_code: gateway.code,
-                redirect_url: null,
+                redirect_url: initResult.redirect_url,
             },
         };
     }
