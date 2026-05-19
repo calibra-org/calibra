@@ -150,6 +150,18 @@
             "assist": {
                 "enabled": false
             }
+        },
+        {
+            "includes": ["packages/sdk/src/generated/**"],
+            "linter": {
+                "enabled": false
+            },
+            "formatter": {
+                "enabled": false
+            },
+            "assist": {
+                "enabled": false
+            }
         }
     ],
 
