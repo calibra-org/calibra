@@ -203,6 +203,19 @@ export async function listCategories(params: ListParams = {}): Promise<Paginated
     });
     if (error !== undefined || !data) return emptyPage<AdminCategory>(params.perPage);
     const rows = (data.data ?? []).map(toAdminCategory);
+    /**
+     * The /admin/categories index doesn't return product counts. Run one parallel
+     * `/admin/products?category={id}&perPage=1` per row and read `meta.total` — fine for a
+     * page-size list (≤ 20 categories typically), but skip the lookups if there are no rows.
+     */
+    await Promise.all(
+        rows.map(async (row) => {
+            const res = await api.admin.GET("/api/v1/admin/products", {
+                params: { query: { category: row.id, perPage: 1 } },
+            });
+            row.productCount = res.data?.meta?.total ?? 0;
+        }),
+    );
     const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
@@ -224,6 +237,14 @@ export async function listTags(params: ListParams = {}): Promise<Paginated<Admin
     });
     if (error !== undefined || !data) return emptyPage<AdminTag>(params.perPage);
     const rows = (data.data ?? []).map(toAdminTag);
+    await Promise.all(
+        rows.map(async (row) => {
+            const res = await api.admin.GET("/api/v1/admin/products", {
+                params: { query: { tag: row.id, perPage: 1 } },
+            });
+            row.productCount = res.data?.meta?.total ?? 0;
+        }),
+    );
     const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
@@ -245,6 +266,14 @@ export async function listBrands(params: ListParams = {}): Promise<Paginated<Adm
     });
     if (error !== undefined || !data) return emptyPage<AdminBrand>(params.perPage);
     const rows = (data.data ?? []).map(toAdminBrand);
+    await Promise.all(
+        rows.map(async (row) => {
+            const res = await api.admin.GET("/api/v1/admin/products", {
+                params: { query: { brand: row.id, perPage: 1 } },
+            });
+            row.productCount = res.data?.meta?.total ?? 0;
+        }),
+    );
     const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }

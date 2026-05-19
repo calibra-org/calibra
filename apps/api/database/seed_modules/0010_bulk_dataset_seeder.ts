@@ -90,6 +90,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             console.warn("No categories found — run `node ace db:seed` first to load the demo catalog scaffolding.");
             return;
         }
+        const tagIds = await this.ensureBulkTags(now);
 
         /**
          * Idempotency check. Each section inserts only the delta between its current bulk count
@@ -120,10 +121,10 @@ export default class BulkDatasetSeeder extends BaseSeeder {
 
         if (productsNeeded > 0) {
             console.time("[bulk-seed] products + translations + images + inventory");
-            const productInserted = await this.seedProducts(productsNeeded, categoryIds, brandIds, now);
+            const productInserted = await this.seedProducts(productsNeeded, categoryIds, brandIds, tagIds, now);
             console.timeEnd("[bulk-seed] products + translations + images + inventory");
             console.log(
-                `Inserted ${productInserted.products} products (${productInserted.variations} variations) + ${productInserted.translations} translations + ${productInserted.images} images + ${productInserted.inventory} inventory rows`,
+                `Inserted ${productInserted.products} products (${productInserted.variations} variations) + ${productInserted.translations} translations + ${productInserted.images} images + ${productInserted.inventory} inventory rows + ${productInserted.tagLinks} tag links`,
             );
         }
 
@@ -230,6 +231,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         await this.client.from("product_variations").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_category_links").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_brand_links").whereIn("product_id", productsFilter).delete();
+        await this.client.from("product_tag_links").whereIn("product_id", productsFilter).delete();
         await this.client.from("products").whereIn("id", productsFilter).delete();
 
         await this.client.from("customer_addresses").whereIn("customer_id", customersFilter).delete();
@@ -250,6 +252,45 @@ export default class BulkDatasetSeeder extends BaseSeeder {
     private async loadDemoBrandIds(): Promise<number[]> {
         const rows = await this.client.from("product_brands").select("id");
         return rows.map((r: { id: number | string }) => Number(r.id));
+    }
+
+    /**
+     * The base seeders don't ship product tags — the bulk seeder owns the tag taxonomy. Creates
+     * the fixed {@link BULK_TAGS} list once and returns the ids; reused on subsequent runs via
+     * the unique `(locale, slug)` constraint on `product_tag_translations`.
+     */
+    private async ensureBulkTags(now: string): Promise<number[]> {
+        const existingTranslations = await this.client
+            .from("product_tag_translations")
+            .select(["tag_id", "slug"])
+            .where("locale", "en")
+            .whereIn(
+                "slug",
+                BULK_TAGS.map((t) => t.slugEn),
+            );
+        const slugToId = new Map<string, number>();
+        for (const r of existingTranslations) slugToId.set(String(r.slug), Number(r.tag_id));
+
+        const ids: number[] = [];
+        for (let i = 0; i < BULK_TAGS.length; i += 1) {
+            const t = BULK_TAGS[i]!;
+            const existingId = slugToId.get(t.slugEn);
+            if (existingId !== undefined) {
+                ids.push(existingId);
+                continue;
+            }
+            const [{ id: newId }] = await this.client
+                .table("product_tags")
+                .returning("id")
+                .insert({ menu_order: i + 1, attributes: {}, created_at: now, updated_at: now });
+            const tagId = Number(newId);
+            ids.push(tagId);
+            await this.client.table("product_tag_translations").insert([
+                { tag_id: tagId, locale: "fa", name: t.fa, slug: t.slugFa, created_at: now, updated_at: now },
+                { tag_id: tagId, locale: "en", name: t.en, slug: t.slugEn, created_at: now, updated_at: now },
+            ]);
+        }
+        return ids;
     }
 
     private async seedUsersAndCustomers(
@@ -368,8 +409,16 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         target: number,
         categoryIds: number[],
         brandIds: number[],
+        tagIds: number[],
         now: string,
-    ): Promise<{ products: number; variations: number; translations: number; images: number; inventory: number }> {
+    ): Promise<{
+        products: number;
+        variations: number;
+        translations: number;
+        images: number;
+        inventory: number;
+        tagLinks: number;
+    }> {
         const existingSkus = new Set<string>(
             (await this.client.from("products").select("sku").where("sku", "like", `${BULK_SKU_PREFIX}%`)).map(
                 (r: { sku: string }) => String(r.sku),
@@ -398,6 +447,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             description_en: string;
             categoryIds: number[];
             brandId: number | null;
+            tagIds: number[];
             variations: Array<{ sku: string; regular_price: number; sale_price: number | null }>;
         }> = [];
 
@@ -429,6 +479,11 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             const brandChosen =
                 brandIds.length > 0 && faker.datatype.boolean({ probability: 0.5 }) ? faker.helpers.arrayElement(brandIds) : null;
 
+            const chosenTagIds =
+                tagIds.length > 0 && faker.datatype.boolean({ probability: 0.7 })
+                    ? faker.helpers.arrayElements(tagIds, faker.number.int({ min: 1, max: Math.min(3, tagIds.length) }))
+                    : [];
+
             const variations: Array<{ sku: string; regular_price: number; sale_price: number | null }> = [];
             if (type === "variable") {
                 const variationCount = faker.number.int({ min: 2, max: 6 });
@@ -459,6 +514,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 description_en: fakerEn.lorem.paragraphs(2, "\n\n"),
                 categoryIds: chosenCategoryIds,
                 brandId: brandChosen,
+                tagIds: chosenTagIds,
                 variations,
             });
         }
@@ -497,6 +553,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         const imageMediaRows: Array<Record<string, unknown>> = [];
         const categoryLinkRows: Array<Record<string, unknown>> = [];
         const brandLinkRows: Array<Record<string, unknown>> = [];
+        const tagLinkRows: Array<Record<string, unknown>> = [];
         const variationRows: Array<Record<string, unknown>> = [];
         const inventoryRows: Array<Record<string, unknown>> = [];
         const productImageLinks: Array<{ product_id: number; slug: string; image_count: number; alt: string }> = [];
@@ -540,6 +597,14 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 brandLinkRows.push({
                     product_id: productId,
                     brand_id: spec.brandId,
+                    created_at: now,
+                    updated_at: now,
+                });
+            }
+            for (const tagId of spec.tagIds) {
+                tagLinkRows.push({
+                    product_id: productId,
+                    tag_id: tagId,
                     created_at: now,
                     updated_at: now,
                 });
@@ -590,6 +655,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         }
         for (const chunk of chunked(brandLinkRows, BATCH)) {
             await this.client.table("product_brand_links").insert(chunk);
+        }
+        for (const chunk of chunked(tagLinkRows, BATCH)) {
+            await this.client.table("product_tag_links").insert(chunk);
         }
 
         const insertedVariationIdsByProduct = new Map<number, number[]>();
@@ -679,6 +747,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             translations: translationsCount,
             images: imagesCount,
             inventory: inventoryCount,
+            tagLinks: tagLinkRows.length,
         };
     }
 
@@ -1155,4 +1224,23 @@ const PERSIAN_REVIEW_SAMPLES = [
     "کیفیت بسته‌بندی متوسط بود ولی کالا سالم رسید.",
     "ارزشش رو داره، حتما دوباره خرید می‌کنم.",
     "از سرویس پشتیبانی هم راضی بودم.",
+];
+
+/**
+ * Tag taxonomy owned by the bulk seeder. The base demo seeders only ship categories + brands; tags
+ * are a bulk-only concern. Keyed by `(locale, slug)` for idempotent upserts.
+ */
+const BULK_TAGS: Array<{ fa: string; en: string; slugFa: string; slugEn: string }> = [
+    { fa: "جدید", en: "New Arrival", slugFa: "tag-new-arrival", slugEn: "tag-new-arrival" },
+    { fa: "پرفروش", en: "Bestseller", slugFa: "tag-bestseller", slugEn: "tag-bestseller" },
+    { fa: "تخفیف ویژه", en: "Special Offer", slugFa: "tag-special-offer", slugEn: "tag-special-offer" },
+    { fa: "محدود", en: "Limited Edition", slugFa: "tag-limited-edition", slugEn: "tag-limited-edition" },
+    { fa: "اقتصادی", en: "Budget", slugFa: "tag-budget", slugEn: "tag-budget" },
+    { fa: "لوکس", en: "Premium", slugFa: "tag-premium", slugEn: "tag-premium" },
+    { fa: "هدیه", en: "Gift", slugFa: "tag-gift", slugEn: "tag-gift" },
+    { fa: "ایرانی", en: "Made in Iran", slugFa: "tag-made-in-iran", slugEn: "tag-made-in-iran" },
+    { fa: "وارداتی", en: "Imported", slugFa: "tag-imported", slugEn: "tag-imported" },
+    { fa: "ارگانیک", en: "Organic", slugFa: "tag-organic", slugEn: "tag-organic" },
+    { fa: "حرفه‌ای", en: "Professional", slugFa: "tag-professional", slugEn: "tag-professional" },
+    { fa: "خانگی", en: "Home Use", slugFa: "tag-home-use", slugEn: "tag-home-use" },
 ];
