@@ -1,11 +1,12 @@
 import { BaseSeeder } from "@adonisjs/lucid/seeders";
 
 /**
- * Orchestrator that invokes per-phase seeders in order. `db:seed` is configured to discover every
- * file under `database/seeders/`; per-phase seeders set `static environment` to a sentinel so the
- * auto-discovery step ignores them and only this file runs end-to-end.
+ * Sole entry point for `node ace db:seed`. Lucid auto-discovers seeders from `database/seeders/`
+ * and runs them in lexical order; we keep only this orchestrator in that directory, and the per-
+ * phase seed modules live under `database/seed_modules/` so Lucid never tries to load them as
+ * standalone seeders and the run output stays free of "ignored — disabled in environment" noise.
  *
- * Subsequent phases append a single `await this.run(...)` line below.
+ * Subsequent phases append a single `await this.runSeeder(...)` line below.
  */
 export default class MainSeeder extends BaseSeeder {
     private async runSeeder(seederModule: { default: typeof BaseSeeder }) {
@@ -15,9 +16,9 @@ export default class MainSeeder extends BaseSeeder {
     }
 
     async run() {
-        await this.runSeeder(await import("./phases/0001_foundation_seeder.js"));
-        await this.runSeeder(await import("./phases/0002_catalog_demo_seeder.js"));
-        await this.runSeeder(await import("./phases/0003_customers_demo_seeder.js"));
-        await this.runSeeder(await import("./phases/0006_coupons_demo_seeder.js"));
+        await this.runSeeder(await import("#database/seed_modules/0001_foundation_seeder"));
+        await this.runSeeder(await import("#database/seed_modules/0002_catalog_demo_seeder"));
+        await this.runSeeder(await import("#database/seed_modules/0003_customers_demo_seeder"));
+        await this.runSeeder(await import("#database/seed_modules/0006_coupons_demo_seeder"));
     }
 }

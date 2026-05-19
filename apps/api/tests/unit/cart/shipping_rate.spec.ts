@@ -5,7 +5,7 @@ import { enumerateShippingRates } from "#services/shipping_rate_service";
 
 async function seedFoundationFixtures() {
     /** Run the foundation seeder so phase-04 tests see the same baseline as a fresh deployment. */
-    const FoundationSeeder = (await import("#database/seeders/phases/0001_foundation_seeder")).default;
+    const FoundationSeeder = (await import("#database/seed_modules/0001_foundation_seeder")).default;
     const seeder = new FoundationSeeder(db.connection());
     await seeder.run();
 }

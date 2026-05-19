@@ -29,8 +29,6 @@ interface DemoCoupon {
  * re-running won't accumulate duplicates.
  */
 export default class CouponsDemoSeeder extends BaseSeeder {
-    static environment = ["__phase_seeder__"];
-
     async run() {
         const apparelCategoryId = await this.findCategoryIdByName("پوشاک");
 
