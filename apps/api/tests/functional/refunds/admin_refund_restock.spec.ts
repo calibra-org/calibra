@@ -49,6 +49,7 @@ test.group("POST /api/v1/admin/orders/:order_id/refunds (restock)", (group) => {
                 restock_requested: true,
             });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
 
         const itemAfter = await InventoryItem.query().where("product_id", Number(product.id)).firstOrFail();
         assert.equal(itemAfter.stockQuantity, before + 1);
@@ -111,5 +112,6 @@ test.group("POST /api/v1/admin/orders/:order_id/refunds (restock)", (group) => {
                 restock_requested: true,
             });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
     });
 });
