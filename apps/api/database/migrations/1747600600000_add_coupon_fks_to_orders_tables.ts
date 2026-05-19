@@ -1,10 +1,10 @@
 import { BaseSchema } from "@adonisjs/lucid/schema";
 
 /**
- * Phase 05 created `order_coupon_lines.coupon_id` as a bare BIGINT (it deferred the FK until
- * `coupons` existed); phase 06 created `coupon_redemptions.order_id` the same way (orders didn't
- * exist yet). Now that both phases are merged, wire both FKs with RESTRICT — a coupon row referenced
- * by any historical order or redemption cannot be hard-deleted (soft-delete is the supported path).
+ * Wires the two cross-table FKs that couldn't be declared at create-time because the parent
+ * tables didn't exist yet: `order_coupon_lines.coupon_id → coupons.id` and
+ * `coupon_redemptions.order_id → orders.id`. Both use `RESTRICT` — a coupon row referenced by any
+ * historical order or redemption cannot be hard-deleted; soft-delete is the supported path.
  */
 export default class extends BaseSchema {
     async up() {

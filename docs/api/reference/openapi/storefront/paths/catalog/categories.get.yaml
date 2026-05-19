@@ -1,0 +1,28 @@
+operationId: catalogCategoriesIndex
+summary: List categories
+description: >
+    Returns every published category in a flat list. The storefront builds the tree client-side
+    via `parent_id`. Category names come back in the active locale.
+tags: [Catalog]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - name: parent_id
+      in: query
+      description: Limit to children of a specific parent (top-level categories have `parent_id=null`).
+      schema: { type: integer }
+
+responses:
+    "200":
+        description: Flat category list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                $ref: "../../components/schemas/Category.yaml"

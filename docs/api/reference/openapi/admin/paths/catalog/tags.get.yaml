@@ -1,0 +1,26 @@
+operationId: adminTagsIndex
+summary: List tags (admin)
+description: Paginated list of every non-deleted tag.
+tags: [Admin / Catalog / Tags]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: search, in: query, schema: { type: string } }
+
+responses:
+    "200":
+        description: Paginated tag list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminTaxonomy.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

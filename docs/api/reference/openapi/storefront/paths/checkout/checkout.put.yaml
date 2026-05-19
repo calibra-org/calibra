@@ -1,0 +1,46 @@
+operationId: checkoutUpdate
+summary: Update the draft order's addresses, payment method, and customer note
+description: >
+    Patches the draft order with billing/shipping addresses (snapshotted from inputs onto
+    `order_addresses` rows) and the selected payment gateway. Iranian addresses can attach the
+    fiscal-identifier extension under `iran_extension`. `customer_note` is preserved on the
+    finalized order. The response is the latest draft state.
+tags: [Checkout]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    billing_email:
+                        type: string
+                        format: email
+                    customer_note:
+                        type: [string, "null"]
+                    payment_gateway_id:
+                        type: integer
+                        description: Id from `GET /payment-gateways` (currently embedded under settings or surfaced via admin endpoints).
+                    billing_address: { $ref: "../../../common/components/schemas/Address.yaml" }
+                    shipping_address:
+                        anyOf:
+                            - $ref: "../../../common/components/schemas/Address.yaml"
+                            - type: "null"
+
+responses:
+    "200":
+        description: Updated draft order detail envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/OrderDetail.yaml" }
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

@@ -1,0 +1,20 @@
+description: >
+    Bad request (400) — the request body or parameters were structurally invalid, or a
+    precondition failed.
+content:
+    application/json:
+        schema:
+            type: object
+            properties:
+                errors:
+                    type: array
+                    items:
+                        $ref: "../schemas/BasicMessage.yaml"
+            required: [errors]
+        examples:
+            badRequest:
+                summary: Bad request with application code
+                value:
+                    errors:
+                        - message: "Invalid input"
+                          code: "E_BAD_REQUEST"

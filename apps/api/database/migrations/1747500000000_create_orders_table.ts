@@ -5,9 +5,9 @@ export default class extends BaseSchema {
 
     async up() {
         /**
-         * Postgres enum for `OrderStatus` (ADR D18). Created BEFORE the table so the column can
-         * reference it by name. Mirrors `app/enums/order_status.ts` — keep both in sync; adding a
-         * new status is a `CREATE TYPE … ADD VALUE` migration plus an enum-member addition.
+         * Postgres enum for `OrderStatus`. Created BEFORE the table so the column can reference
+         * it by name. Mirrors `app/enums/order_status.ts` — keep both in sync; adding a new
+         * status is a `CREATE TYPE … ADD VALUE` migration plus an enum-member addition.
          */
         this.schema.raw(`
             DO $$ BEGIN
@@ -23,7 +23,7 @@ export default class extends BaseSchema {
             table.bigIncrements("id").notNullable();
 
             /**
-             * Sequence-allocated, gap-free human-readable reference (ADR D4). Independent of `id`
+             * Sequence-allocated, gap-free human-readable reference. Independent of `id`
              * so `id` stays opaque (security) while `order_number` stays compact. Default uses the
              * sequence created in the sibling `order_number_seq` migration.
              */
@@ -42,7 +42,7 @@ export default class extends BaseSchema {
 
             table.string("billing_email", 254).nullable();
 
-            /** Canonical money currency (always `IRR` in MVP, locked on creation per ADR D2). */
+            /** Canonical money currency (always `IRR` for now; locked on creation). */
             table.specificType("currency", "char(3)").notNullable().defaultTo("IRR");
             /** Display currency — `IRT` or `IRR`, locked on creation. */
             table.specificType("currency_display", "char(3)").notNullable().defaultTo("IRT");
@@ -62,7 +62,7 @@ export default class extends BaseSchema {
             table.string("payment_method_code_snapshot", 64).nullable();
             table.string("payment_method_title_snapshot", 200).nullable();
 
-            /** Set on payment capture (phase 08). Unique across the table so PSP IDs cannot collide. */
+            /** Set when the payment service captures the gateway transaction. Unique across the table so PSP IDs cannot collide. */
             table.string("transaction_id", 200).nullable();
 
             table.text("customer_note").nullable();

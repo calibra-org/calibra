@@ -1,0 +1,41 @@
+operationId: paymentInit
+summary: Initialize a payment attempt against the order's gateway
+description: >
+    Looks up the order by `order_key` (the opaque token from finalize) and dispatches to the
+    snapshotted gateway adapter. Redirecting gateways return a hosted-checkout URL in
+    `redirect_url`; bank-transfer returns `null` for the URL and flips the order to `on_hold`
+    with the IBAN + account-name instructions stamped onto `gateway_payload.customer_note`.
+    Pass `Idempotency-Key` so retries do not re-init the gateway intent.
+tags: [Payment]
+security: []
+
+parameters:
+    - name: order_key
+      in: path
+      required: true
+      schema: { type: string }
+    - $ref: "../../../common/components/parameters/IdempotencyKeyHeader.yaml"
+
+responses:
+    "200":
+        description: Payment attempt initialized.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [redirect_url]
+                    properties:
+                        redirect_url:
+                            type: [string, "null"]
+                            description: Hosted-checkout URL. Null for non-redirecting gateways.
+                        gateway:
+                            type: object
+                            properties:
+                                code: { type: string }
+                                attempt_id: { type: integer }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"
+    "503":
+        $ref: "../../../common/components/responses/ServiceUnavailable.yaml"

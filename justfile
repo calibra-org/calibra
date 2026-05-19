@@ -1,5 +1,7 @@
 set dotenv-load := true
 
+mod api-docs "docs/api/mod.just"
+
 alias r := ready
 alias b := build
 alias i := install
@@ -130,6 +132,18 @@ format:
 
 # Ready for PR review: format, lint, typecheck, build, test
 ready: format lint typecheck build test
+
+# Build the OpenAPI docs bundle into docs/api/dist/ and serve it on :5055
+docs-dev:
+    @just api-docs::dev
+
+# Bundle both storefront and admin OpenAPI specs into docs/api/dist/
+docs-build:
+    @just api-docs::build
+
+# Run redocly lint across both storefront and admin specs
+docs-lint:
+    @just api-docs::lint
 
 # Clean build artifacts and caches
 clean:

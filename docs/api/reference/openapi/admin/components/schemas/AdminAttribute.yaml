@@ -1,0 +1,25 @@
+title: AdminAttribute
+description: Catalog attribute (e.g. "Color", "Size"). Terms are nested under each attribute via `/api/v1/admin/attributes/{id}/terms`.
+type: object
+properties:
+    id: { type: integer }
+    slug: { type: string, examples: ["color", "storage"] }
+    name: { type: string, description: Resolved from the active locale. }
+    type:
+        type: string
+        enum: [select, color, image]
+        description: Storefront rendering hint. `color` paints swatches; `image` shows thumbnails.
+    has_archives: { type: boolean }
+    locale: { type: string }
+    translations:
+        type: array
+        items:
+            type: object
+            properties:
+                locale: { type: string }
+                name: { type: string }
+                description: { type: [string, "null"] }
+required:
+    - id
+    - slug
+    - type

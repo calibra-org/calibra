@@ -1,0 +1,22 @@
+title: BasicMessage
+type: object
+description: >
+    Generic message envelope for non-2xx responses. The `message` is already localized through the
+    `Accept-Language` catalog; `code` is the stable application error code (`E_…`) the storefront
+    can branch on programmatically.
+properties:
+    message:
+        type: [string, "null"]
+        description: Human-readable, localized message.
+    code:
+        type: string
+        description: Stable application error code (e.g. `E_ORDER_NOT_DRAFT`, `E_COUPON_LIMIT_EXHAUSTED`).
+        examples: ["E_ORDER_NOT_DRAFT", "E_COUPON_LIMIT_EXHAUSTED"]
+    errors:
+        type: object
+        description: Optional extra context. Format varies per code (e.g. drift details for `E_PRICE_CHANGED`).
+        additionalProperties: true
+additionalProperties: false
+examples:
+    - { message: "Order is no longer a draft", code: "E_ORDER_NOT_DRAFT" }
+    - { message: "Coupon limit reached", code: "E_COUPON_LIMIT_EXHAUSTED" }

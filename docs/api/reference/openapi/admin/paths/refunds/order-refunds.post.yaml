@@ -1,0 +1,78 @@
+operationId: adminOrderRefundCreate
+summary: Issue a refund against an order
+description: >
+    Runs the {@link RefundService} transaction:
+    1. `SELECT … FOR UPDATE` on the order so parallel refunds serialize.
+    2. Idempotency-key short-circuit — replays return the original row.
+    3. Validate the request: `amount_minor` XOR `line_items[]`, both > 0, both ≤ outstanding.
+    4. Allocate `refund_number` from `refund_number_seq`.
+    5. Write `order_refunds` + optional `order_refund_line_items`.
+    6. Restock requested lines via {@link InventoryService.increment}.
+    7. Dispatch to the gateway adapter's `refund()` — failures are recorded on
+       `attributes.gateway_refund` but do not block the booking.
+    8. If cumulative refunds ≥ `grand_total`, transition the order to `refunded`.
+    9. Append an internal audit note.
+    10. Emit `order:refunded`.
+
+    Pass `Idempotency-Key` to make retries safe; the second call with the same key returns the
+    original refund row.
+tags: [Admin / Refunds]
+
+parameters:
+    - name: order_id
+      in: path
+      required: true
+      schema: { type: integer }
+    - $ref: "../../../common/components/parameters/IdempotencyKeyHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                oneOf:
+                    - title: AmountRefund
+                      type: object
+                      required: [amount_minor]
+                      properties:
+                          amount_minor: { type: integer, minimum: 1 }
+                          reason: { type: [string, "null"], maxLength: 2000 }
+                          restock_requested: { type: boolean, default: false }
+                    - title: LineItemRefund
+                      type: object
+                      required: [line_items]
+                      properties:
+                          line_items:
+                              type: array
+                              minItems: 1
+                              items:
+                                  type: object
+                                  required: [order_line_item_id, quantity]
+                                  properties:
+                                      order_line_item_id: { type: integer }
+                                      quantity: { type: integer, minimum: 1 }
+                                      refund_amount_minor: { type: [integer, "null"], minimum: 0 }
+                                      refund_tax_minor: { type: [integer, "null"], minimum: 0 }
+                          reason: { type: [string, "null"], maxLength: 2000 }
+                          restock_requested: { type: boolean, default: false }
+
+responses:
+    "201":
+        description: Refund created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminRefund.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "409":
+        $ref: "../../../common/components/responses/Conflict.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

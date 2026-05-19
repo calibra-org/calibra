@@ -1,0 +1,38 @@
+operationId: adminTermCreate
+summary: Create a term under an attribute
+description: Creates a term row plus its translations. The term inherits the attribute's `type` for rendering hints.
+tags: [Admin / Catalog / Attribute Terms]
+
+parameters:
+    - { name: attribute_id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [translations]
+                properties:
+                    color_hex: { type: [string, "null"], description: "Only meaningful when the parent attribute's `type=color`." }
+                    image_media_id: { type: [integer, "null"], description: "Only meaningful when the parent attribute's `type=image`." }
+                    menu_order: { type: integer, default: 0 }
+                    translations:
+                        type: array
+                        minItems: 1
+                        items: { $ref: "../../components/schemas/AdminTranslationInput.yaml" }
+
+responses:
+    "201":
+        description: Term created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminTaxonomy.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

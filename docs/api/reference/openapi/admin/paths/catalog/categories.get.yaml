@@ -1,0 +1,27 @@
+operationId: adminCategoriesIndex
+summary: List categories (admin)
+description: Paginated list of every non-deleted category. Use `parent_id` to fetch one level of the hierarchy.
+tags: [Admin / Catalog / Categories]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: parent_id, in: query, schema: { type: integer }, description: "Filter children of a parent. Pass `0` for top-level rows." }
+    - { name: search, in: query, schema: { type: string } }
+
+responses:
+    "200":
+        description: Paginated category list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminTaxonomy.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

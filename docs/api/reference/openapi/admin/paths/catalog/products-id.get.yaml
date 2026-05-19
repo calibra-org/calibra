@@ -1,0 +1,22 @@
+operationId: adminProductShow
+summary: Fetch a product (admin)
+description: Returns the full admin product detail — every translation row, the image gallery, variations, attribute → terms map.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Product detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminProductDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

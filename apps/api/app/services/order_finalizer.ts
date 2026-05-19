@@ -35,7 +35,12 @@ export interface FinalizeOptions {
 
 export interface FinalizeResult {
     order: Order;
-    /** Stub for phase 08 — the post-submit payment-intent URL once a gateway adapter is wired. */
+    /**
+     * Snapshot of the selected payment gateway plus a `redirectUrl`. The finalizer leaves
+     * `redirectUrl` as `null`; storefronts then call `POST /payment/init/:orderKey` to ask the
+     * matching gateway adapter for a hosted-checkout URL (or null for non-redirecting methods like
+     * bank-transfer).
+     */
     payment: { gateway: { id: number | null; code: string | null }; redirectUrl: string | null };
 }
 
@@ -139,15 +144,20 @@ export class OrderFinalizer {
                     id: draft.paymentGatewayIdSnapshot === null ? null : Number(draft.paymentGatewayIdSnapshot),
                     code: draft.paymentMethodCodeSnapshot ?? null,
                 },
-                /** Phase 08 fills this from the adapter; null in this phase. */
+                /**
+                 * Always `null` at finalize-time — the payment-intent URL is produced later by
+                 * `POST /payment/init/:orderKey`, which calls into the resolved gateway adapter.
+                 */
                 redirectUrl: null,
             },
         };
     }
 
     /**
-     * Snapshot an address from the customer's address book onto the order. Optionally writes the
-     * IR fiscal-identifier extension row (Pattern 3) when the source customer carries one.
+     * Snapshot an address from the customer's address book onto the order. When the address is in
+     * Iran and the customer carries fiscal identifiers, also writes the matching
+     * `order_address_iran_extensions` row so the order keeps a self-contained legal-identifier
+     * record independent of any later profile edits.
      */
     async snapshotAddress(
         order: Order,

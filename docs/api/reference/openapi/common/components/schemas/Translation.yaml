@@ -1,0 +1,23 @@
+title: Translation
+description: >
+    Single locale translation row. The API auto-resolves the active locale from `Accept-Language`,
+    so storefront responses usually carry the resolved string directly rather than the full
+    `Translation[]`. Admin endpoints expose the raw rows so editors can update each locale.
+type: object
+properties:
+    locale:
+        type: string
+        description: ISO locale code — `fa` (Persian, default) or `en` (English).
+        examples: ["fa", "en"]
+    name:
+        type: string
+        description: Translated display name for the parent record.
+    description:
+        type: [string, "null"]
+        description: Optional translated long-form description.
+    short_description:
+        type: [string, "null"]
+        description: Optional translated short-form summary.
+required:
+    - locale
+    - name

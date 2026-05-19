@@ -1,0 +1,25 @@
+operationId: checkoutShow
+summary: Fetch (or lazily create) the draft order for the current cart
+description: >
+    Returns the draft order for the active cart, creating one if no draft exists yet. The draft
+    snapshots line items + shipping line off the cart but is not yet placed — every cart-affecting
+    change re-syncs the draft. Use `PUT /checkout` to attach addresses / payment method, then
+    `POST /checkout/submit` to place the order.
+tags: [Checkout]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Draft order detail envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/OrderDetail.yaml" }
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

@@ -6,9 +6,9 @@ import OrderStatusHistory from "#models/order_status_history";
 import OrderStatusHistoryTransformer from "#transformers/order_status_history_transformer";
 
 /**
- * Admin status-history endpoint. Rows are written by `OrderStateMachine.transition()` (phase 05);
- * this controller is read-only — `forAdmin` returns the full audit row including actor_user_id +
- * free-text reason.
+ * Admin status-history endpoint. Rows are written by `OrderStateMachine.transition()`; this
+ * controller is read-only — `forAdmin` returns the full audit row including `actor_user_id` and
+ * the free-text `reason`.
  */
 export default class AdminOrderHistoryController {
     async index(ctx: HttpContext) {

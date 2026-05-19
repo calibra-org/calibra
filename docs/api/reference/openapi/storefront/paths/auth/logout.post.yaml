@@ -1,0 +1,14 @@
+operationId: authLogout
+summary: Revoke the current bearer token
+description: >
+    Invalidates the bearer token sent on this request. The same token is unusable on any
+    subsequent request — other devices/sessions are unaffected.
+tags: [Auth]
+security:
+    - BearerAuth: []
+
+responses:
+    "204":
+        description: Logged out. Empty body.
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"

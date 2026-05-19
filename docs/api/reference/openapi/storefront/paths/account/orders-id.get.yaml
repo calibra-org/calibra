@@ -1,0 +1,28 @@
+operationId: accountOrderShow
+summary: Fetch one of the signed-in customer's orders
+description: Returns the order detail envelope for the customer's own order. 404 if the order belongs to a different customer or doesn't exist.
+tags: [Account]
+security:
+    - BearerAuth: []
+
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Order detail envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/OrderDetail.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

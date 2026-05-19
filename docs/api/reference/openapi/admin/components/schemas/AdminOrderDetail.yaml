@@ -1,0 +1,68 @@
+title: AdminOrderDetail
+description: >
+    Admin order detail payload. Extends the customer view with the actor on every status-history
+    row (admin sees `actor_user_id`; customer sees only `reason` and timestamps), all order notes
+    (internal + customer), and the refunds summary. Money is in Rial minor units.
+type: object
+properties:
+    id: { type: integer }
+    order_number: { type: integer }
+    order_key: { type: [string, "null"] }
+    status:
+        type: string
+        enum: [draft, pending, on_hold, processing, completed, cancelled, refunded, failed]
+    customer_id: { type: [integer, "null"] }
+    billing_email: { type: [string, "null"] }
+    currency: { type: string }
+    currency_display: { type: string }
+    items_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    items_tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    shipping_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    shipping_tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    fees_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    discount_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    discount_tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    grand_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    refunded_total:
+        $ref: "../../../common/components/schemas/Money.yaml"
+        description: Cumulative `sum(order_refunds.amount_minor)` for this order.
+    payment:
+        type: object
+        properties:
+            gateway_id: { type: [integer, "null"] }
+            method_code: { type: [string, "null"] }
+            method_title: { type: [string, "null"] }
+            transaction_id: { type: [string, "null"] }
+    ip_address: { type: [string, "null"] }
+    user_agent: { type: [string, "null"] }
+    idempotency_key: { type: [string, "null"] }
+    date_paid_at: { type: [string, "null"], format: date-time }
+    date_completed_at: { type: [string, "null"], format: date-time }
+    line_items:
+        type: array
+        items:
+            type: object
+            additionalProperties: true
+    shipping_lines:
+        type: array
+        items:
+            type: object
+            additionalProperties: true
+    billing_address:
+        anyOf:
+            - $ref: "../../../common/components/schemas/Address.yaml"
+            - type: "null"
+    shipping_address:
+        anyOf:
+            - $ref: "../../../common/components/schemas/Address.yaml"
+            - type: "null"
+    created_at: { type: string, format: date-time }
+    updated_at: { type: string, format: date-time }
+required:
+    - id
+    - order_number
+    - status
+    - currency
+    - grand_total
+    - created_at

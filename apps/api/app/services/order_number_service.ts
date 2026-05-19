@@ -2,9 +2,9 @@ import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 /**
- * Wrapper around the `order_number_seq` Postgres sequence (ADR D4). Sequence advances are serial
- * at the engine level — two concurrent `nextval()` calls cannot return the same value — so the
- * allocator needs no locking on our side.
+ * Wrapper around the `order_number_seq` Postgres sequence. Sequence advances are serial at the
+ * engine level — two concurrent `nextval()` calls cannot return the same value — so the allocator
+ * needs no locking on our side.
  *
  * The sequence is independent of `orders.id`, so `id` stays opaque (security) and `order_number`
  * stays compact and gap-free for customer support.

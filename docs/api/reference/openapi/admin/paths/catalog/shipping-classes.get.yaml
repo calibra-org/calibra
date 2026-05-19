@@ -1,0 +1,25 @@
+operationId: adminShippingClassesIndex
+summary: List shipping classes
+description: Paginated list of shipping classes.
+tags: [Admin / Catalog / Shipping Classes]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Paginated shipping-class list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminShippingClass.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

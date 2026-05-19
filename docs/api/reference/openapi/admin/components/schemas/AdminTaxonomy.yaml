@@ -1,0 +1,29 @@
+title: AdminTaxonomy
+description: >
+    Shared shape for the simple taxonomic resources — categories, tags, brands, and attribute
+    terms. `name` and `slug` are resolved from the active locale; the detail variants surface
+    the full `translations[]` array for editing.
+type: object
+properties:
+    id: { type: integer }
+    parent_id:
+        type: [integer, "null"]
+        description: Only meaningful for hierarchical resources (categories). Other resources always return `null`.
+    name: { type: string, description: Resolved from the active locale. }
+    slug: { type: string }
+    locale: { type: string }
+    image_url: { type: [string, "null"] }
+    menu_order: { type: integer }
+    translations:
+        type: array
+        items:
+            type: object
+            properties:
+                locale: { type: string }
+                name: { type: string }
+                slug: { type: string }
+                description: { type: [string, "null"] }
+required:
+    - id
+    - name
+    - slug

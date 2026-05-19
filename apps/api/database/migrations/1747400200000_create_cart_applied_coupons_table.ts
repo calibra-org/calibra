@@ -8,9 +8,8 @@ export default class extends BaseSchema {
             table.bigIncrements("id").notNullable();
             table.bigInteger("cart_id").unsigned().notNullable().references("id").inTable("carts").onDelete("CASCADE");
             /**
-             * No FK to a `coupons` table yet — phase 06 lands the coupons schema and adds the
-             * constraint then. Until that PR ships, this column stays bare BIGINT so the cart
-             * table can exist standalone.
+             * Bare BIGINT here because `coupons` does not yet exist in the migration order. A
+             * later migration adds the FK once the parent table is in place.
              */
             table.bigInteger("coupon_id").notNullable();
             table.string("code_snapshot", 200).notNullable();

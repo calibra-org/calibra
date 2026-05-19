@@ -1,0 +1,41 @@
+operationId: adminOrderPatch
+summary: Partial-update an order
+description: Patch order metadata. Status transitions are not accepted here — use `POST /orders/{id}/status`.
+tags: [Admin / Orders]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    customer_note: { type: [string, "null"] }
+                    billing_email: { type: [string, "null"] }
+                    payment_gateway_id: { type: [integer, "null"] }
+                    billing_address:
+                        anyOf:
+                            - $ref: "../../../common/components/schemas/Address.yaml"
+                            - type: "null"
+                    shipping_address:
+                        anyOf:
+                            - $ref: "../../../common/components/schemas/Address.yaml"
+                            - type: "null"
+
+responses:
+    "200":
+        description: Updated order.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

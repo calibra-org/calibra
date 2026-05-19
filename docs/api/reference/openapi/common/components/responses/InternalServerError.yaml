@@ -1,0 +1,22 @@
+description: >
+    Internal server error (500) — an unhandled exception bubbled up to the framework. Stack
+    traces are emitted only outside production; the response body always carries a generic
+    message + the request id (echoed back via the `x-request-id` response header for support
+    correlation).
+content:
+    application/json:
+        schema:
+            type: object
+            properties:
+                errors:
+                    type: array
+                    items:
+                        $ref: "../schemas/BasicMessage.yaml"
+            required: [errors]
+        examples:
+            internalServerError:
+                summary: Unhandled exception
+                value:
+                    errors:
+                        - message: "Something went wrong"
+                          code: "E_INTERNAL"

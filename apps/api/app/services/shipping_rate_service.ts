@@ -6,8 +6,9 @@ import { matchShippingZone } from "#services/shipping_zone_match";
 
 /**
  * Address keys that drive shipping-zone matching. `country` is the only required field; the rest
- * sharpen the match (postcode > state > country > continent, per ADR D15). The `regionId` is the
- * country-agnostic FK to `regions` — the service resolves it to its `code` for the matcher.
+ * sharpen the match — specificity order is postcode > state > country > continent. The
+ * `regionId` is the country-agnostic FK to `regions` — the service resolves it to its `code` for
+ * the matcher.
  */
 export interface ShippingRateAddress {
     country: string;

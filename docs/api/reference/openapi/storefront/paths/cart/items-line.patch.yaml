@@ -1,0 +1,43 @@
+operationId: cartUpdateLine
+summary: Update the quantity of one cart line
+description: >
+    Sets the quantity of an existing cart line. Use `quantity: 0` as a convenience for delete
+    (equivalent to `DELETE /cart/items/{line}`).
+tags: [Cart]
+security: []
+
+parameters:
+    - name: line
+      in: path
+      required: true
+      schema: { type: integer }
+      description: Line id from the `items[].id` field of the cart envelope.
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [quantity]
+                properties:
+                    quantity:
+                        type: integer
+                        minimum: 0
+                        examples: [3]
+
+responses:
+    "200":
+        description: Updated cart envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/Cart.yaml" }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

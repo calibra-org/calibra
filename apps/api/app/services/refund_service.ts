@@ -35,8 +35,7 @@ export interface RefundCreateOptions {
 }
 
 /**
- * Issues refunds against an existing order (ADR D11). Every mutation runs inside a single
- * transaction:
+ * Issues refunds against an existing order. Every mutation runs inside a single transaction:
  *
  *  1. `SELECT … FOR UPDATE` on the order (so two parallel refund requests serialize).
  *  2. Idempotency-Key short-circuit — if a refund row with `(order_id, idempotency_key)` already
@@ -45,7 +44,8 @@ export interface RefundCreateOptions {
  *  4. Allocate the refund_number from `refund_number_seq`.
  *  5. Insert `order_refunds` + (optionally) `order_refund_line_items` rows.
  *  6. If `restock_requested` → call {@link InventoryService.increment} per refunded line.
- *  7. PSP refund hook (phase 08 stub — try/catch around an imported adapter call; left null here).
+ *  7. PSP refund hook — `paymentService.refund()` dispatches to the gateway adapter; failures are
+ *     recorded on `attributes.gateway_refund` but do not block the booking.
  *  8. If `sum(refunds.amount_minor) >= order.grand_total` → transition the order to `refunded`.
  *  9. Append an internal audit note (`"Refund #{number} for {amount} {currency}. Reason: {reason}"`).
  * 10. Commit, then emit `order:refunded`.

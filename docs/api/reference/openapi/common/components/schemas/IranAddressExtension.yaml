@@ -1,0 +1,28 @@
+title: IranAddressExtension
+description: >
+    Iran-specific fiscal-identifier extension carried on addresses. Present only when the address
+    country is `IR` and the customer has filled in at least one identifier; foreign addresses omit
+    this object entirely. Validation rules are enforced server-side: `national_id` is exactly 10
+    digits with the official checksum, `corporate_national_id` is 11 digits, `economic_code` is 12
+    digits.
+type: object
+properties:
+    national_id:
+        type: [string, "null"]
+        description: Iran personal national id (کد ملی) — 10 digits.
+        examples: ["0014568924"]
+    corporate_national_id:
+        type: [string, "null"]
+        description: Iran corporate national id (شناسه ملی) — 11 digits.
+        examples: ["10101234567"]
+    economic_code:
+        type: [string, "null"]
+        description: Iran economic code (کد اقتصادی) — 12 digits.
+        examples: ["411234567890"]
+    legal_company_name_fa:
+        type: [string, "null"]
+        description: Persian legal company name as registered with the National Tax Administration.
+        examples: ["شرکت آزمایشی کلیربا"]
+    vat_taxpayer_status:
+        type: [string, "null"]
+        description: Optional VAT taxpayer status code (free-text, 20 chars).

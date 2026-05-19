@@ -1,0 +1,79 @@
+operationId: adminProductCreate
+summary: Create a product
+description: >
+    Creates a product row plus its `product_translations`, `product_images`, and (when the type
+    is `variable`) attribute → terms mapping. Slugs default to the locale-aware slugify of each
+    translation's `name`. The created product lands in `status=draft` unless the payload sets
+    `status=published`.
+tags: [Admin / Catalog / Products]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [type, translations]
+                properties:
+                    type: { type: string, enum: [simple, variable, virtual, downloadable, external] }
+                    sku: { type: [string, "null"] }
+                    status: { type: string, enum: [draft, published, archived], default: draft }
+                    catalog_visibility: { type: string, enum: [catalog, search, hidden, both], default: both }
+                    featured: { type: boolean, default: false }
+                    virtual: { type: boolean, default: false }
+                    downloadable: { type: boolean, default: false }
+                    regular_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+                    sale_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+                    sale_starts_at: { type: [string, "null"], format: date-time }
+                    sale_ends_at: { type: [string, "null"], format: date-time }
+                    tax_class_id: { type: [integer, "null"] }
+                    tax_status: { type: string, enum: [taxable, shipping, none], default: taxable }
+                    shipping_class_id: { type: [integer, "null"] }
+                    weight_grams: { type: [integer, "null"] }
+                    length_mm: { type: [integer, "null"] }
+                    width_mm: { type: [integer, "null"] }
+                    height_mm: { type: [integer, "null"] }
+                    sold_individually: { type: boolean, default: false }
+                    reviews_allowed: { type: boolean, default: true }
+                    external_url: { type: [string, "null"] }
+                    menu_order: { type: integer, default: 0 }
+                    category_ids:
+                        type: array
+                        items: { type: integer }
+                    tag_ids:
+                        type: array
+                        items: { type: integer }
+                    brand_id: { type: [integer, "null"] }
+                    image_media_ids:
+                        type: array
+                        items: { type: integer }
+                    attributes:
+                        type: array
+                        items:
+                            type: object
+                            required: [attribute_id]
+                            properties:
+                                attribute_id: { type: integer }
+                                visible: { type: boolean, default: true }
+                                variation: { type: boolean, default: false }
+                                term_ids:
+                                    type: array
+                                    items: { type: integer }
+                    translations:
+                        type: array
+                        minItems: 1
+                        items: { $ref: "../../components/schemas/AdminTranslationInput.yaml" }
+
+responses:
+    "201":
+        description: Product created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminProductDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

@@ -1,7 +1,8 @@
 /**
  * `کد ملی` validator — Iran's 10-digit personal national ID. Used only when a customer or order
- * address opts into the Iran-specific extension fields (Pattern 3); never required globally, so
- * foreign customers never hit this code path.
+ * address fills in the Iran-specific extension fields stored on
+ * `customer_iran_profiles` / `order_address_iran_extensions`. Never required globally, so foreign
+ * customers never hit this code path.
  *
  * Algorithm (per the official spec):
  *   - 10 digits, with the last digit being the check digit;

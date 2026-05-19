@@ -1,0 +1,20 @@
+description: >
+    Unauthorized (401) — the request did not include a valid bearer token, or the token has been
+    revoked.
+content:
+    application/json:
+        schema:
+            type: object
+            properties:
+                errors:
+                    type: array
+                    items:
+                        $ref: "../schemas/BasicMessage.yaml"
+            required: [errors]
+        examples:
+            unauthenticated:
+                summary: Missing or invalid token
+                value:
+                    errors:
+                        - message: "Unauthenticated"
+                          code: "E_UNAUTHENTICATED"

@@ -7,9 +7,9 @@ import OrderRefundLineItem from "#models/order_refund_line_item";
 import User from "#models/user";
 
 /**
- * Refund aggregate (ADR D11). Each row carries the rolled-up money totals; the per-line breakdown
- * lives on {@link OrderRefundLineItem}. The `idempotency_key` column is `serializeAs: null` so the
- * raw header value never echoes back in API responses — only the canonical refund row does.
+ * Refund aggregate. Each row carries the rolled-up money totals; the per-line breakdown lives on
+ * {@link OrderRefundLineItem}. The `idempotency_key` column is `serializeAs: null` so the raw
+ * header value never echoes back in API responses — only the canonical refund row does.
  */
 export default class OrderRefund extends OrderRefundSchema {
     static table = "order_refunds";

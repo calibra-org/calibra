@@ -1,0 +1,35 @@
+operationId: adminProductReplace
+summary: Replace a product
+description: >
+    Full replace — every field on the resource takes the request body's value. Missing
+    fields are reset to their defaults. For partial updates, use `PATCH` instead.
+    `translations[]` replaces the locale rows; omitting a previously-present locale deletes
+    that translation row.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                additionalProperties: true
+                description: Same shape as `POST /admin/products` (the `type` may not change once set).
+
+responses:
+    "200":
+        description: Updated product detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminProductDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

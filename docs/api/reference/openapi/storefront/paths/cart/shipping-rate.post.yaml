@@ -1,0 +1,37 @@
+operationId: cartSelectShippingRate
+summary: Select a shipping rate for the cart
+description: >
+    Sets the cart's chosen shipping option to the matching `shipping_zone_methods.id`. The rate
+    must appear in `shipping_rates[]` on the cart envelope; otherwise the request 422s. A
+    subsequent address change can invalidate the selection — when that happens the API silently
+    clears it.
+tags: [Cart]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [shipping_zone_method_id]
+                properties:
+                    shipping_zone_method_id:
+                        type: integer
+                        description: Id from one of the items in `shipping_rates[]`.
+
+responses:
+    "200":
+        description: Updated cart envelope with the selected rate flagged.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/Cart.yaml" }
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

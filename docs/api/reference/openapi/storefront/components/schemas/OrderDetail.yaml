@@ -1,0 +1,52 @@
+title: OrderDetail
+description: Detail-page payload for a customer's own order.
+allOf:
+    - $ref: "./Order.yaml"
+    - type: object
+      properties:
+          order_key:
+              type: [string, "null"]
+              description: Opaque 32-char token used in the guest pay-link URL. Null for drafts.
+          customer_note: { type: [string, "null"] }
+          payment_method:
+              type: object
+              properties:
+                  gateway_id: { type: [integer, "null"] }
+                  code: { type: [string, "null"], examples: ["bank_transfer", "zarinpal"] }
+                  title: { type: [string, "null"] }
+          line_items:
+              type: array
+              items:
+                  type: object
+                  properties:
+                      id: { type: integer }
+                      product_id: { type: integer }
+                      variation_id: { type: [integer, "null"] }
+                      name_snapshot: { type: string }
+                      sku_snapshot: { type: [string, "null"] }
+                      quantity: { type: integer }
+                      price_snapshot: { $ref: "../../../common/components/schemas/Money.yaml" }
+                      subtotal: { $ref: "../../../common/components/schemas/Money.yaml" }
+                      total: { $ref: "../../../common/components/schemas/Money.yaml" }
+          shipping_lines:
+              type: array
+              items:
+                  type: object
+                  properties:
+                      method_code_snapshot: { type: string }
+                      title_snapshot: { type: string }
+                      total: { $ref: "../../../common/components/schemas/Money.yaml" }
+          billing_address: { $ref: "../../../common/components/schemas/Address.yaml" }
+          shipping_address:
+              anyOf:
+                  - $ref: "../../../common/components/schemas/Address.yaml"
+                  - type: "null"
+          status_history:
+              type: array
+              items:
+                  type: object
+                  properties:
+                      from_status: { type: string }
+                      to_status: { type: string }
+                      reason: { type: [string, "null"] }
+                      occurred_at: { type: string, format: date-time }

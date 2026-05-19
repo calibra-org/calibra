@@ -10,8 +10,8 @@ interface BankTransferSettings {
 /**
  * Bank-transfer (offline). Special non-redirect adapter — `init` returns `redirect_url=null`,
  * `payment_service.init` flips the order to `on_hold`, and a customer-visible note containing the
- * IBAN + account name from settings is recorded on the attempt's payload (the order-notes table
- * lands in phase 07; until then the note rides on `gateway_payload.customer_note`).
+ * IBAN + account name from settings is stamped onto the attempt's `gateway_payload.customer_note`
+ * so the storefront can render bank instructions on the order confirmation screen.
  */
 export class BankTransferGateway implements PaymentAdapter {
     readonly code = "bank_transfer";

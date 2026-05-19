@@ -78,8 +78,8 @@ export interface CartTotalsInput {
     address: TaxAddress | null;
     selectedRateId: number | null;
     /**
-     * Phase-04 wiring point. {@link Discounter.calculate} runs at the start of the pipeline; the
-     * returned {@link DiscounterResult} is then folded into per-line and shipping totals.
+     * Discount allocation produced by {@link Discounter.calculate} at the start of the pipeline.
+     * The result is folded into per-line and shipping totals downstream.
      */
     discounterResult: DiscounterResult;
     pricesIncludeTax: boolean;
@@ -198,9 +198,9 @@ export async function computeCartTotals(args: {
     pricesIncludeTax: boolean;
     shippingOptions: ShippingRateOption[];
     /**
-     * Coupons the customer has on the cart. Phase 04 left this empty; phase 06's controller passes
-     * the loaded `cart_applied_coupons` rows so the engine can re-evaluate eligibility on every
-     * recomputation (a newly-added line might disqualify a previously-applied coupon).
+     * Coupons the customer has on the cart — the cart controller passes the loaded
+     * `cart_applied_coupons` rows so the engine can re-evaluate eligibility on every recomputation
+     * (a newly-added line might disqualify a previously-applied coupon).
      */
     appliedCoupons?: DiscounterCouponContext[];
     /** Viewer context for per-user limits and email restrictions. */

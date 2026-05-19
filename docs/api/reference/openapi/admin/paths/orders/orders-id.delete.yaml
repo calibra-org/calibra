@@ -1,0 +1,18 @@
+operationId: adminOrderDelete
+summary: Soft-delete an order
+description: >
+    Soft-deletes the order. Refunded / completed orders are deletable but the audit history is
+    preserved; deleting a `pending` order also restores reserved stock through the
+    state-machine `pending → cancelled` edge.
+tags: [Admin / Orders]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "409": { $ref: "../../../common/components/responses/Conflict.yaml" }

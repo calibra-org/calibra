@@ -1,0 +1,27 @@
+operationId: adminTermsIndex
+summary: List terms under an attribute
+description: Paginated list of every term nested under the given attribute.
+tags: [Admin / Catalog / Attribute Terms]
+
+parameters:
+    - { name: attribute_id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Paginated term list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminTaxonomy.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

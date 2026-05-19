@@ -1,0 +1,32 @@
+operationId: adminShippingClassCreate
+summary: Create a shipping class
+description: Creates a shipping-class row plus per-locale translation rows.
+tags: [Admin / Catalog / Shipping Classes]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [slug, translations]
+                properties:
+                    slug: { type: string, minLength: 1, maxLength: 200 }
+                    translations:
+                        type: array
+                        minItems: 1
+                        items: { $ref: "../../components/schemas/AdminTranslationInput.yaml" }
+
+responses:
+    "201":
+        description: Shipping class created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminShippingClass.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

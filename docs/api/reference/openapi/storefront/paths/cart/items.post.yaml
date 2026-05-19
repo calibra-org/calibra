@@ -1,0 +1,44 @@
+operationId: cartAddItem
+summary: Add an item to the cart
+description: >
+    Adds a product (and optional variation) to the cart, snapshotting the current sale-aware
+    price onto the line. Adding the same product+variation pair again increments the existing
+    line's quantity rather than creating a duplicate. Stock is checked against the line's
+    requested quantity; out-of-stock products 422 with `E_PRODUCT_OUT_OF_STOCK`.
+tags: [Cart]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [product_id, quantity]
+                properties:
+                    product_id: { type: integer }
+                    variation_id:
+                        type: [integer, "null"]
+                        description: Required when the product is `type=variable`.
+                    quantity:
+                        type: integer
+                        minimum: 1
+                        examples: [1, 2]
+
+responses:
+    "200":
+        description: Updated cart envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/Cart.yaml" }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

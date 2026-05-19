@@ -1,0 +1,19 @@
+operationId: adminOrderRefundDelete
+summary: Delete a refund
+description: >
+    Hard-deletes the refund row. Used for ops-error cleanup; the matching audit note on the
+    order is retained. If deleting the refund drops cumulative refunds below `grand_total` and
+    the order had already transitioned to `refunded`, the controller leaves the order status
+    unchanged — manual `POST /orders/{id}/status` may be needed.
+tags: [Admin / Refunds]
+
+parameters:
+    - { name: order_id, in: path, required: true, schema: { type: integer } }
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

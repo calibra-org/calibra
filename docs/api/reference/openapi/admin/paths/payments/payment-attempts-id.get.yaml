@@ -1,0 +1,21 @@
+operationId: adminPaymentAttemptShow
+summary: Fetch a payment attempt
+description: Returns one attempt row with the full request/response payloads from the gateway. Useful for diagnosing PSP-side failures.
+tags: [Admin / Payments]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "200":
+        description: Attempt detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminPaymentAttempt.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

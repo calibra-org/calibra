@@ -1,0 +1,14 @@
+operationId: adminReviewDelete
+summary: Delete a review
+description: Hard-delete of the review row. Used for spam / abuse cleanup. Recomputes the product's `review_count` and `average_rating` if the review was previously approved.
+tags: [Admin / Catalog / Reviews]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

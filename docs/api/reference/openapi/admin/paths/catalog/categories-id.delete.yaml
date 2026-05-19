@@ -1,0 +1,14 @@
+operationId: adminCategoryDelete
+summary: Soft-delete a category
+description: Soft-deletes the category. Child categories are re-parented to the deleted row's parent; product associations are dropped.
+tags: [Admin / Catalog / Categories]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

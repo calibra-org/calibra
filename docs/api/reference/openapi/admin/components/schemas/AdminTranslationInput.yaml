@@ -1,0 +1,22 @@
+title: AdminTranslationInput
+description: >
+    Translation row submitted on write. Resources with locale-resolved fields (products,
+    categories, tags, brands, attributes, terms) accept one of these per active locale.
+    `slug` defaults to a locale-aware slugify of `name` when omitted.
+type: object
+required: [locale, name]
+properties:
+    locale:
+        type: string
+        enum: [fa, en]
+    name:
+        type: string
+        minLength: 1
+        maxLength: 200
+    slug:
+        type: [string, "null"]
+        description: Locale-aware slug. Auto-derived from `name` when omitted.
+    short_description:
+        type: [string, "null"]
+    description:
+        type: [string, "null"]

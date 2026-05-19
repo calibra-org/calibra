@@ -1,0 +1,33 @@
+operationId: adminProductPatch
+summary: Partial-update a product
+description: >
+    Patch fields on an existing product. Only the keys in the request body are touched — every
+    other field keeps its current value. `translations[]` is upserted by locale, never reset.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                description: Same fields as `POST /admin/products`, all optional.
+                additionalProperties: true
+
+responses:
+    "200":
+        description: Updated product detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminProductDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

@@ -1,0 +1,26 @@
+operationId: adminVariationsIndex
+summary: List a product's variations
+description: Paginated list of every variation row for the parent product. 404s if the product doesn't exist or `type != variable`.
+tags: [Admin / Catalog / Variations]
+
+parameters:
+    - { name: product_id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+
+responses:
+    "200":
+        description: Paginated variation list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminProductVariation.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

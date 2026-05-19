@@ -4,9 +4,10 @@ import type Customer from "#models/customer";
 import CustomerIranProfileTransformer from "#transformers/customer_iran_profile_transformer";
 
 /**
- * Customer transformer. The default shape returns the commerce identity fields; the `withProfileExtensions`
- * variant additionally folds in any present Pattern 3 extensions. Foreign customers naturally land
- * with `profile_extensions: {}`; the iran key is absent (not `null`), which is what the storefront
+ * Customer transformer. The default shape returns the commerce identity fields; the
+ * `withProfileExtensions` variant additionally folds in any country-scoped extension rows the
+ * customer carries (today: `iran` from `customer_iran_profiles`). Foreign customers land with
+ * `profile_extensions: {}` and the `iran` key absent — not `null` — which is what the storefront
  * checks via `if ('iran' in profile_extensions)`.
  */
 export default class CustomerTransformer extends BaseTransformer<Customer> {
@@ -26,9 +27,9 @@ export default class CustomerTransformer extends BaseTransformer<Customer> {
     }
 
     /**
-     * Variant emitted by `GET /account/me`. The `profile_extensions` object only carries the keys
-     * for extensions the customer actually has a row in — Pattern 3 enforces that absence is the
-     * correct signal, never an empty placeholder.
+     * Variant emitted by `GET /account/me`. The `profile_extensions` object only carries keys for
+     * country-scoped extensions the customer actually has a row in — absence is the correct
+     * signal, never an empty placeholder.
      */
     withProfileExtensions() {
         const base = this.toObject();

@@ -4,14 +4,14 @@ export default class extends BaseSchema {
     protected tableName = "order_refunds";
 
     /**
-     * Refunds are stored in their own table (ADR D11) rather than as `orders` rows. The schema
-     * mirrors WooCommerce's WC_Order_Refund surface (amount, reason, refunded-by user) but drops
-     * the `wp_posts` coupling that forced Woo to encode refunds as posts in the first place.
+     * Refunds are stored in their own table rather than as `orders` rows. The schema mirrors
+     * WooCommerce's WC_Order_Refund surface (amount, reason, refunded-by user) but drops the
+     * `wp_posts` coupling that forced Woo to encode refunds as posts in the first place.
      *
-     * The actual `refund_number` BIGINT is allocated from the sibling `refund_number_seq`
-     * (independent of `order_number_seq` so refund numbering doesn't share a sequence with
-     * orders). The `gateway_refund_id` column is populated by phase 08 when the PSP returns its
-     * own refund identifier — left null in this phase.
+     * `refund_number` is allocated from `refund_number_seq` (independent of `order_number_seq` so
+     * refund numbering doesn't share a sequence with orders). `gateway_refund_id` is populated by
+     * `paymentService.refund()` when the gateway adapter returns a PSP-side identifier; otherwise
+     * it stays `NULL`.
      */
     async up() {
         this.schema.createTable(this.tableName, (table) => {
@@ -40,9 +40,10 @@ export default class extends BaseSchema {
             table.boolean("restock_requested").notNullable().defaultTo(false);
 
             /**
-             * PSP-side identifier returned by the gateway's `refund()` adapter call. Phase 08 wires
-             * the adapter; this phase leaves the column NULL. Storing it lets ops reconcile a
-             * Calibra refund against the gateway's portal directly.
+             * PSP-side identifier returned by the gateway adapter's `refund()` call. Stays
+             * `NULL` for bank-transfer / non-PSP gateways and for failed PSP calls (the failure
+             * detail rides on `attributes.gateway_refund` for forensic replay). Lets ops
+             * reconcile a Calibra refund against the gateway's portal directly when present.
              */
             table.string("gateway_refund_id", 100).nullable();
 

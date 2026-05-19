@@ -1,0 +1,12 @@
+title: Money
+type: integer
+format: int64
+minimum: 0
+description: >
+    Monetary amount in Rial minor units. Calibra stores every price column as a `BIGINT` so
+    rounding and tax math stay integer-safe. Display currency is reported separately (`IRR` or
+    `IRT`) and is locked on creation for orders.
+examples:
+    - 259000000
+    - 0
+    - 1

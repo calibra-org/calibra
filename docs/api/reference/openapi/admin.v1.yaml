@@ -1,0 +1,80 @@
+openapi: 3.1.0
+
+info:
+    title: Calibra Admin API
+    version: "1.0.0"
+    description: >
+        Authenticated admin REST API for the Calibra commerce backend — used by `apps/admin/`.
+        Every operation requires a bearer token belonging to a user with admin privileges and
+        returns 401 / 403 otherwise. The locale and money conventions match the storefront API:
+        Persian (`fa`) by default, English under `Accept-Language: en`; money is in Rial minor
+        units.
+
+        ## Conventions
+
+        - **Pagination.** `page` / `perPage` query params; `{ data, meta }` envelope.
+        - **Money.** Rial minor units (BIGINT) for every monetary field.
+        - **Auth.** Every endpoint requires `Authorization: Bearer <token>` from an admin user.
+        - **Idempotency.** `POST /orders/:id/refunds` accepts `Idempotency-Key` so retries don't
+          double-issue refunds.
+    contact:
+        name: Calibra Backend Team
+        url: https://calibra.dev/support
+        email: support@calibra.dev
+    license:
+        name: "UNLICENSED (Proprietary)"
+
+servers:
+    - url: http://localhost:3333
+      description: Local development
+    - url: https://api.calibra.dev
+      description: Production
+
+tags:
+    - name: Admin / Orders
+      description: Orders, line items, status transitions, status history.
+    - name: Admin / Refunds
+      description: Refund issuance and retrieval.
+    - name: Admin / Notes
+      description: Order notes (internal + customer-facing).
+    - name: Admin / Coupons
+      description: Coupon CRUD.
+    - name: Admin / Customers
+      description: Customer listing and detail.
+    - name: Admin / Payments
+      description: Read-only payment-gateway registry and payment-attempt audit log.
+
+components:
+    securitySchemes:
+        BearerAuth:
+            $ref: "./common/components/securitySchemes/BearerAuth.yaml"
+
+security:
+    - BearerAuth: []
+
+paths:
+    /api/v1/admin/orders:
+        get:
+            $ref: "./admin/paths/orders/orders.get.yaml"
+    /api/v1/admin/orders/{id}:
+        get:
+            $ref: "./admin/paths/orders/orders-id.get.yaml"
+    /api/v1/admin/orders/{id}/status:
+        post:
+            $ref: "./admin/paths/orders/orders-id-status.post.yaml"
+    /api/v1/admin/orders/{order_id}/history:
+        get:
+            $ref: "./admin/paths/orders/orders-id-history.get.yaml"
+    /api/v1/admin/orders/{order_id}/notes:
+        get:
+            $ref: "./admin/paths/notes/order-notes.get.yaml"
+        post:
+            $ref: "./admin/paths/notes/order-notes.post.yaml"
+    /api/v1/admin/orders/{order_id}/refunds:
+        get:
+            $ref: "./admin/paths/refunds/order-refunds.get.yaml"
+        post:
+            $ref: "./admin/paths/refunds/order-refunds.post.yaml"
+    /api/v1/admin/orders/{order_id}/refunds/{id}:
+        get:
+            $ref: "./admin/paths/refunds/order-refunds-id.get.yaml"

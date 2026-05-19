@@ -310,10 +310,10 @@ export class OrderFactory {
     }
 
     /**
-     * Every order — draft or otherwise — gets its number from `order_number_seq` (ADR D4). The
-     * sequence is gap-free at the engine level, so concurrent allocations cannot collide.
-     * Abandoned drafts burn a sequence value; that's an explicit tradeoff for "the number is
-     * stable from the moment the customer sees it on the draft."
+     * Every order — draft or otherwise — gets its number from `order_number_seq`. The sequence is
+     * gap-free at the engine level, so concurrent allocations cannot collide. Abandoned drafts
+     * burn a sequence value; that's a deliberate tradeoff for "the number is stable from the
+     * moment the customer first sees it on the draft."
      */
     private async placeholderOrderNumber(trx: TransactionClientContract): Promise<number> {
         return orderNumberService.allocate(trx);
@@ -354,12 +354,11 @@ export class OrderFactory {
 
     /**
      * Snapshot one `order_coupon_lines` row per applied coupon, distributing the discounter's
-     * per-coupon total into the row. We resolve the per-coupon total off the running discounter
-     * result; for the MVP that's simply the cart's `discountTotal` allocated to the single coupon
-     * when there is one applied, or proportionally split when several apply. Tax portion is 0 in
-     * this phase — phase 04's totals service already recomputes line tax on the post-discount
-     * total, so the discount-tax column is reserved for tax-inclusive carts that need a separate
-     * audit field.
+     * total across the codes. Allocation is simple: the cart's `discountTotal` goes to the single
+     * applied coupon, or splits evenly when several stack, with the rounding residual landing on
+     * the first row. `discount_tax` is always 0 — line tax already gets recomputed on the
+     * post-discount base in the totals service, so this column is reserved for future
+     * tax-inclusive carts that need a separate audit field.
      */
     private async writeCouponLines(
         order: Order,

@@ -1,0 +1,47 @@
+title: AdminProduct
+description: >
+    Admin product card. The detail variant {@link AdminProductDetail} adds the full image
+    gallery, every translation row, the variation list, and the attribute → terms map.
+    Money fields are in Rial minor units.
+type: object
+properties:
+    id: { type: integer }
+    type:
+        type: string
+        enum: [simple, variable, virtual, downloadable, external]
+    sku: { type: [string, "null"] }
+    status:
+        type: string
+        enum: [draft, published, archived]
+    catalog_visibility:
+        type: string
+        enum: [catalog, search, hidden, both]
+    featured: { type: boolean }
+    virtual: { type: boolean }
+    downloadable: { type: boolean }
+    regular_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+    sale_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+    effective_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+    on_sale: { type: boolean }
+    sale_starts_at: { type: [string, "null"], format: date-time }
+    sale_ends_at: { type: [string, "null"], format: date-time }
+    tax_class_id: { type: [integer, "null"] }
+    tax_status: { type: string, enum: [taxable, shipping, none] }
+    shipping_class_id: { type: [integer, "null"] }
+    weight_grams: { type: [integer, "null"] }
+    length_mm: { type: [integer, "null"] }
+    width_mm: { type: [integer, "null"] }
+    height_mm: { type: [integer, "null"] }
+    sold_individually: { type: boolean }
+    reviews_allowed: { type: boolean }
+    external_url: { type: [string, "null"] }
+    menu_order: { type: integer }
+    name: { type: [string, "null"], description: Resolved from the active locale. }
+    slug: { type: [string, "null"] }
+    short_description: { type: [string, "null"] }
+    locale: { type: string }
+    featured_image_url: { type: [string, "null"] }
+required:
+    - id
+    - type
+    - status

@@ -1,0 +1,37 @@
+operationId: adminReviewPatch
+summary: Moderate a review
+description: >
+    Approves or rejects a pending review. Setting `status: approved` also recomputes the parent
+    product's `average_rating` and `review_count`. Admins can also edit the review's `body` or
+    `rating` for typo / abuse-cleanup fixes.
+tags: [Admin / Catalog / Reviews]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    status: { type: string, enum: [pending, approved, rejected] }
+                    body: { type: string }
+                    rating: { type: integer, minimum: 1, maximum: 5 }
+                    verified: { type: boolean }
+
+responses:
+    "200":
+        description: Updated review.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminReview.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

@@ -1,0 +1,29 @@
+title: CartLine
+description: One cart line item with its computed totals.
+type: object
+properties:
+    id: { type: integer, description: "Stable line id; pass it as the `line` path segment to PATCH/DELETE." }
+    product_id: { type: integer }
+    variation_id: { type: [integer, "null"] }
+    quantity: { type: integer, minimum: 1 }
+    price_snapshot:
+        $ref: "../../../common/components/schemas/Money.yaml"
+        description: Price per unit captured when the line was added; not re-priced on cart fetch.
+    name:
+        type: [string, "null"]
+        description: Resolved from the active locale.
+    sku:
+        type: [string, "null"]
+    image_url:
+        type: [string, "null"]
+    subtotal: { $ref: "../../../common/components/schemas/Money.yaml" }
+    subtotal_tax: { $ref: "../../../common/components/schemas/Money.yaml" }
+    total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    total_tax: { $ref: "../../../common/components/schemas/Money.yaml" }
+required:
+    - id
+    - product_id
+    - quantity
+    - price_snapshot
+    - subtotal
+    - total

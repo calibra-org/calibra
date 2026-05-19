@@ -1,0 +1,54 @@
+title: Address
+description: >
+    Postal address as stored on a customer's address book or snapshotted onto an order. Country
+    is required (ISO-3166-1 alpha-2); `region_id` references {@link Region} and is preferred over
+    the free-text `region_text` fallback. Iranian addresses can carry the optional
+    {@link IranAddressExtension} block with fiscal identifiers.
+type: object
+properties:
+    id:
+        type: integer
+        description: Stable address id (only present on returned addresses, not on create payloads).
+    first_name:
+        type: string
+        examples: ["علی", "Ali"]
+    last_name:
+        type: string
+        examples: ["محمدی", "Mohammadi"]
+    company:
+        type: [string, "null"]
+    address_line1:
+        type: string
+        examples: ["خیابان ولیعصر، شماره ۱۲۳", "123 Valiasr Street"]
+    address_line2:
+        type: [string, "null"]
+    city:
+        type: string
+        examples: ["تهران", "Tehran"]
+    region_id:
+        type: [integer, "null"]
+        description: FK to {@link Region}; preferred over `region_text`.
+    region_text:
+        type: [string, "null"]
+        description: Free-text region fallback when `region_id` is null.
+    postcode:
+        type: [string, "null"]
+        examples: ["1593945657"]
+    country:
+        type: string
+        description: ISO-3166-1 alpha-2 country code.
+        examples: ["IR"]
+    phone:
+        type: [string, "null"]
+        examples: ["+989121234567"]
+    iran_extension:
+        anyOf:
+            - $ref: "./IranAddressExtension.yaml"
+            - type: "null"
+        description: Country-scoped fiscal identifiers, present only on IR addresses that carry them.
+required:
+    - first_name
+    - last_name
+    - address_line1
+    - city
+    - country

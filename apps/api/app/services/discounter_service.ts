@@ -74,9 +74,9 @@ export interface CouponSnapshot {
 }
 
 /**
- * Real Discounter — the one phase 04 left {@link NoopDiscounter} stubbed for. Bound under the
- * `discounter` container key in `providers/app_provider.ts`; everything else (cart_totals_service,
- * cart_controller) keeps depending on the interface.
+ * Coupon-aware {@link Discounter}. Bound under the `discounter` container key in
+ * `providers/app_provider.ts`; everything else (cart_totals_service, cart_controller) depends on
+ * the interface so the binding can be swapped per test.
  */
 export default class DiscounterService implements Discounter {
     async calculate(input: DiscounterInput): Promise<DiscounterResult> {
@@ -92,8 +92,8 @@ export default class DiscounterService implements Discounter {
 /**
  * Reusable pure entry point — no DB. The cart controller resolves coupon snapshots once and feeds
  * the same data structure to {@link checkEligibility} and to the discount math; unit tests build
- * snapshots by hand instead of seeding rows. Mirrors the structure of `calculateTax` /
- * `calculateCartTotals` from phase 04.
+ * snapshots by hand instead of seeding rows. Mirrors the shape of `calculateTax` /
+ * `calculateCartTotals`.
  */
 export function computeDiscounts(input: DiscounterInput, snapshots: CouponSnapshot[]): DiscounterResult {
     const perLine = new Map<string, number>();

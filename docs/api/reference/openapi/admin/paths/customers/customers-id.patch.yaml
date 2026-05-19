@@ -1,0 +1,28 @@
+operationId: adminCustomerPatch
+summary: Partial-update a customer
+description: "Patch the included fields. Pass `iran_profile: null` to delete the IR extension row."
+tags: [Admin / Customers]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema: { type: object, additionalProperties: true }
+
+responses:
+    "200":
+        description: Updated customer.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomer.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

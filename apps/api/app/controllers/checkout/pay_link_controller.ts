@@ -14,8 +14,10 @@ import { payLinkValidator } from "#validators/checkout/draft_validator";
  * only orders eligible for the retry flow are `failed` (gateway declined) and `on_hold` (async
  * pending) — completed orders return 409 and unknown keys return 404.
  *
- * Phase 08 will wire the actual gateway-redirect step here; this phase only handles the
- * state-machine bookkeeping and re-reservation when an earlier `failed` released stock.
+ * Bookkeeping flow: re-snapshot the chosen gateway onto the order, transition `failed → pending`
+ * if needed (re-reserves the stock the failed transition released), then hand off to
+ * {@link paymentService.init} which dispatches to the gateway adapter and returns the redirect URL
+ * (or `null` for non-redirecting methods like bank-transfer).
  */
 export default class PayLinkController {
     async pay(ctx: HttpContext) {

@@ -1,0 +1,20 @@
+operationId: adminCouponsBatch
+summary: Bulk create/update/delete coupons
+description: Runs every operation in `{ create?, update?, delete? }` inside one DB transaction.
+tags: [Admin / Coupons]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema: { $ref: "../../components/schemas/BatchOperation.yaml" }
+
+responses:
+    "200":
+        description: Batch result.
+        content:
+            application/json:
+                schema: { $ref: "../../components/schemas/BatchResult.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

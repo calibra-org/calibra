@@ -1,0 +1,32 @@
+operationId: catalogProductBySlug
+summary: Fetch a product by slug
+description: >
+    Returns the storefront detail-page payload for the matching product. Slugs are locale-aware
+    and case-sensitive (slugs are lowercased server-side at write-time). For variable products,
+    the response includes every variation with its own price and stock status.
+tags: [Catalog]
+security: []
+
+parameters:
+    - name: slug
+      in: path
+      required: true
+      schema: { type: string }
+      examples:
+          phone:
+              value: "calibra-smartphone-x1"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Product detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/ProductDetail.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

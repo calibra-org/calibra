@@ -35,6 +35,10 @@
             "msw",
             "sharp",
             "unrs-resolver"
+        ],
+        "ignoredBuiltDependencies": [
+            "core-js",
+            "protobufjs"
         ]
     }
 }

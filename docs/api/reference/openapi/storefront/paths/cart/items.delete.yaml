@@ -1,0 +1,19 @@
+operationId: cartClear
+summary: Clear every item from the cart
+description: Removes all line items from the current cart. Applied coupons and the selected shipping rate are also cleared.
+tags: [Cart]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Cleared cart envelope (empty `items` array, zeroed totals).
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/Cart.yaml" }

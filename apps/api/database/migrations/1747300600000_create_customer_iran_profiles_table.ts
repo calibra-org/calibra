@@ -6,9 +6,9 @@ export default class extends BaseSchema {
     async up() {
         this.schema.createTable(this.tableName, (table) => {
             /**
-             * Customer ID is also the primary key — this is a Pattern 3 extension table, strict 1:1
-             * with the parent customer. Foreign customers have no row here; the absence is the
-             * answer to "does this customer use Iranian fiscal identifiers?".
+             * Customer id is also the primary key — this is a country-scoped extension table,
+             * strict 1:1 with the parent customer. Foreign customers have no row here; the absence
+             * is the answer to "does this customer use Iranian fiscal identifiers?".
              */
             table
                 .bigInteger("customer_id")

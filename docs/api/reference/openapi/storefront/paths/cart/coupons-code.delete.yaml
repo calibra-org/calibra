@@ -1,0 +1,28 @@
+operationId: cartRemoveCoupon
+summary: Remove an applied coupon from the cart
+description: Detaches the coupon by its code. Recomputes totals and shipping (a free-shipping coupon being removed reinstates shipping cost).
+tags: [Cart]
+security: []
+
+parameters:
+    - name: code
+      in: path
+      required: true
+      schema: { type: string }
+      examples:
+          welcome:
+              value: "WELCOME10"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Updated cart envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/Cart.yaml" }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

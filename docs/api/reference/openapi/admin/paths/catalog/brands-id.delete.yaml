@@ -1,0 +1,14 @@
+operationId: adminBrandDelete
+summary: Soft-delete a brand
+description: Removes the brand and detaches it from every product.
+tags: [Admin / Catalog / Brands]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

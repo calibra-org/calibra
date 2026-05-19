@@ -1,0 +1,28 @@
+operationId: adminReviewsIndex
+summary: List product reviews (admin)
+description: Paginated list of every review, including pending and rejected rows. Filter by status, product, rating, or verification.
+tags: [Admin / Catalog / Reviews]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - { name: status, in: query, schema: { type: string, enum: [pending, approved, rejected] } }
+    - { name: product_id, in: query, schema: { type: integer } }
+    - { name: rating, in: query, schema: { type: integer, minimum: 1, maximum: 5 } }
+    - { name: verified, in: query, schema: { type: boolean } }
+
+responses:
+    "200":
+        description: Paginated review list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminReview.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

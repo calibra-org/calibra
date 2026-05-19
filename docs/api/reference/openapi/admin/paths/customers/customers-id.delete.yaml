@@ -1,0 +1,14 @@
+operationId: adminCustomerDelete
+summary: Soft-delete a customer
+description: Soft-deletes the `users` row (cascading to `customers`). Historical orders that referenced the customer keep their billing-email snapshot.
+tags: [Admin / Customers]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

@@ -1,0 +1,64 @@
+title: Product
+description: >
+    Storefront-facing product card payload. Returned in product listings; the detail variant
+    {@link ProductDetail} adds gallery, long description, variations, brand, attributes, and
+    related products. Locale-dependent fields (`name`, `description`) are resolved from
+    `Accept-Language`.
+type: object
+properties:
+    id:
+        type: integer
+    slug:
+        type: string
+        examples: ["calibra-smartphone-x1"]
+    sku:
+        type: [string, "null"]
+        examples: ["CAL-X1-128"]
+    name:
+        type: string
+        description: Resolved from the active locale.
+        examples: ["گوشی هوشمند کلیربا مدل X1", "Calibra Smartphone X1"]
+    short_description:
+        type: [string, "null"]
+    type:
+        type: string
+        enum: [simple, variable, virtual, downloadable]
+    status:
+        type: string
+        enum: [draft, published, archived]
+    featured:
+        type: boolean
+    price:
+        type: object
+        description: Money in minor units; resolves sale-price window server-side.
+        properties:
+            regular: { $ref: "../../../common/components/schemas/Money.yaml" }
+            sale: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+            current: { $ref: "../../../common/components/schemas/Money.yaml" }
+            on_sale: { type: boolean }
+    stock_status:
+        type: string
+        enum: [in_stock, out_of_stock, on_backorder]
+    primary_image:
+        anyOf:
+            - type: object
+              properties:
+                  url: { type: string }
+                  alt: { type: [string, "null"] }
+            - type: "null"
+    categories:
+        type: array
+        items:
+            type: object
+            properties:
+                id: { type: integer }
+                slug: { type: string }
+                name: { type: string, description: Resolved from the active locale. }
+required:
+    - id
+    - slug
+    - name
+    - type
+    - status
+    - price
+    - stock_status

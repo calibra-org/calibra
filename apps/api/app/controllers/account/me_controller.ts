@@ -13,9 +13,9 @@ import { meUpdateValidator } from "#validators/account/me_validator";
 
 export default class MeController {
     /**
-     * GET /api/v1/account/me — returns the user, the commerce customer, and Pattern 3 profile
-     * extensions for the customer. Foreign customers omit the iran key entirely (absence == "this
-     * customer has no Iran-specific identifiers").
+     * GET /api/v1/account/me — returns the user, the commerce customer, and (for Iranian
+     * customers) the `customer_iran_profiles` extension row under an `iran` key. Foreign customers
+     * omit `iran` entirely (absence == "this customer has no Iran-specific identifiers").
      */
     async show(ctx: HttpContext) {
         const user = ctx.auth.getUserOrFail();
@@ -33,8 +33,9 @@ export default class MeController {
     }
 
     /**
-     * PUT /api/v1/account/me — updates allowed customer fields, optionally upserts the Iran
-     * extension. `email` is never updatable here (re-verification flow is phase 09).
+     * PUT /api/v1/account/me — updates allowed customer fields and optionally upserts the
+     * `customer_iran_profiles` extension row. `email` is intentionally not editable through this
+     * endpoint; changing the email requires a re-verification flow that's not yet exposed.
      */
     async update(ctx: HttpContext) {
         const user = ctx.auth.getUserOrFail();

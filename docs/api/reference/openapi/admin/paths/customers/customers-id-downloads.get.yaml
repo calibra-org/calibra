@@ -1,0 +1,40 @@
+operationId: adminCustomerDownloads
+summary: List a customer's downloadable entitlements
+description: >
+    Returns every `customer_downloads` row for the customer — paid orders unlock entries here.
+    Each row carries the entitlement count remaining, expiry, and the source order id for
+    audit.
+tags: [Admin / Customers]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+
+responses:
+    "200":
+        description: Paginated download-entitlement list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    id: { type: integer }
+                                    customer_id: { type: integer }
+                                    product_id: { type: integer }
+                                    product_download_id: { type: [integer, "null"] }
+                                    order_id: { type: [integer, "null"] }
+                                    granted_at: { type: string, format: date-time }
+                                    expires_at: { type: [string, "null"], format: date-time }
+                                    download_limit: { type: [integer, "null"] }
+                                    downloads_used: { type: integer }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

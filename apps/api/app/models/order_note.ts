@@ -8,9 +8,10 @@ import User from "#models/user";
 export type OrderNoteVisibility = "internal" | "customer";
 
 /**
- * Flat order note (ADR D20 — Woo's shape). The {@link visibility} enum decides whether the row is
- * ever exposed on customer-facing endpoints; `internal` rows are admin-only. `authorUserId` is
- * NULL on system-emitted rows (refund audit comments, status-change auto-notes, …).
+ * Flat order note — same shape WooCommerce uses for `wc_order_notes`. The {@link visibility} enum
+ * decides whether the row is ever exposed on customer-facing endpoints; `internal` rows are
+ * admin-only. `authorUserId` is NULL on system-emitted rows (refund audit comments,
+ * status-change auto-notes, …).
  */
 export default class OrderNote extends OrderNoteSchema {
     static table = "order_notes";

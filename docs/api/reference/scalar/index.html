@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Calibra API Reference</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style>
+            :root {
+                --scalar-font: Inter, ui-sans-serif, system-ui, sans-serif;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app" style="height: 100vh"></div>
+        <!-- Scalar script from CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+        <script>
+            const options = {
+                hideModels: false,
+                layout: "modern",
+                documentDownloadType: "both",
+                darkMode: true,
+                persistAuth: true,
+            };
+            Scalar.createApiReference("#app", [
+                {
+                    ...options,
+                    title: "Storefront",
+                    url: "./storefront.v1.yaml",
+                    default: true,
+                },
+                {
+                    ...options,
+                    title: "Admin",
+                    url: "./admin.v1.yaml",
+                },
+            ]);
+        </script>
+    </body>
+</html>

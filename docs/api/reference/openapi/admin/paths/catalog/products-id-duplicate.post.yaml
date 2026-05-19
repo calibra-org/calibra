@@ -1,0 +1,24 @@
+operationId: adminProductDuplicate
+summary: Duplicate a product
+description: >
+    Deep-clones the product row, all translations, images, attribute mappings, and variations
+    into a new draft. The clone's slugs get a `-copy` suffix; ids are fresh; `status` is forced
+    to `draft` regardless of the source's status. Returns the new product detail envelope.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "201":
+        description: Duplicated product detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminProductDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

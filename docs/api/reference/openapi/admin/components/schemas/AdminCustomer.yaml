@@ -1,0 +1,32 @@
+title: AdminCustomer
+description: >
+    Admin customer envelope. Bundles the user identity (email, locale, role) with the commerce
+    profile and, for IR customers, the country-scoped fiscal-identifier extension.
+type: object
+properties:
+    id: { type: integer }
+    user_id: { type: integer }
+    email: { type: string, format: email }
+    first_name: { type: string }
+    last_name: { type: string }
+    phone: { type: [string, "null"] }
+    country_default: { type: string, description: ISO-3166-1 alpha-2 country code. }
+    is_paying_customer: { type: boolean }
+    role: { type: string }
+    locale: { type: string }
+    iran_profile:
+        anyOf:
+            - $ref: "../../../common/components/schemas/IranAddressExtension.yaml"
+            - type: "null"
+    addresses:
+        type: array
+        items: { $ref: "../../../common/components/schemas/Address.yaml" }
+    created_at: { type: string, format: date-time }
+    updated_at: { type: string, format: date-time }
+required:
+    - id
+    - user_id
+    - email
+    - first_name
+    - last_name
+    - country_default

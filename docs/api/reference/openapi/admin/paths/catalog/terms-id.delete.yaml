@@ -1,0 +1,15 @@
+operationId: adminTermDelete
+summary: Soft-delete a term
+description: Removes the term from the attribute. Products referencing the term drop it from their `attributes[].term_ids`.
+tags: [Admin / Catalog / Attribute Terms]
+
+parameters:
+    - { name: attribute_id, in: path, required: true, schema: { type: integer } }
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

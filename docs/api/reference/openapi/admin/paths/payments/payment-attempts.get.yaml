@@ -1,0 +1,32 @@
+operationId: adminPaymentAttemptsIndex
+summary: List payment attempts
+description: >
+    Paginated audit log of every `payment_attempts` row — every init + callback writes here.
+    Filter by order, gateway, status, or date range. Read-only on the admin surface; the
+    payment service is the sole writer.
+tags: [Admin / Payments]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - { name: order_id, in: query, schema: { type: integer } }
+    - { name: payment_gateway_id, in: query, schema: { type: integer } }
+    - { name: status, in: query, schema: { type: string, enum: [initialized, pending, succeeded, failed, cancelled] } }
+    - { name: created_from, in: query, schema: { type: string, format: date-time } }
+    - { name: created_to, in: query, schema: { type: string, format: date-time } }
+
+responses:
+    "200":
+        description: Paginated attempt list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminPaymentAttempt.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

@@ -1,0 +1,26 @@
+title: ProductVariation
+description: One purchasable variant of a `type=variable` product.
+type: object
+properties:
+    id: { type: integer }
+    sku: { type: [string, "null"] }
+    price:
+        type: object
+        properties:
+            regular: { $ref: "../../../common/components/schemas/Money.yaml" }
+            sale: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+            current: { $ref: "../../../common/components/schemas/Money.yaml" }
+            on_sale: { type: boolean }
+    stock_status: { type: string, enum: [in_stock, out_of_stock, on_backorder] }
+    attributes:
+        type: object
+        description: Map of `attribute_slug → term_slug` identifying the variation.
+        additionalProperties:
+            type: string
+        examples:
+            - color: "graphite"
+              storage: "128gb"
+required:
+    - id
+    - price
+    - stock_status

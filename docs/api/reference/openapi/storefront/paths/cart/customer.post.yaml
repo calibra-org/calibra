@@ -1,0 +1,41 @@
+operationId: cartSetCustomerContext
+summary: Set the cart's address/customer context
+description: >
+    Sets the shipping/billing address keys that drive shipping-zone matching and tax-rate
+    resolution. Setting the country/region triggers a recomputation of shipping rates and totals,
+    so the response always reflects the new state.
+tags: [Cart]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    country:
+                        type: string
+                        description: ISO-3166-1 alpha-2 country code.
+                        examples: ["IR"]
+                    region_id:
+                        type: [integer, "null"]
+                        description: FK to `regions`; matched against shipping zones.
+                    postcode:
+                        type: [string, "null"]
+
+responses:
+    "200":
+        description: Updated cart envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/Cart.yaml" }
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

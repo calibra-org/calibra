@@ -1,0 +1,40 @@
+operationId: cartApplyCoupon
+summary: Apply a coupon to the cart
+description: >
+    Looks up the coupon by code (case-insensitive via the `citext` column), runs eligibility
+    checks against the current cart and customer/email context, and attaches the coupon if
+    eligible. Ineligible coupons return 422 with a stable `code` (`disabled`, `not_yet_active`,
+    `expired`, `below_minimum`, `no_eligible_items`, `individual_use_conflict`, …) so the
+    storefront can show a localized message. Re-applying a coupon already on the cart is a no-op.
+tags: [Cart]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [code]
+                properties:
+                    code:
+                        type: string
+                        examples: ["WELCOME10", "FREESHIP"]
+
+responses:
+    "200":
+        description: Updated cart envelope with the coupon applied.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/Cart.yaml" }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

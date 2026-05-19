@@ -1,0 +1,67 @@
+operationId: adminCouponCreate
+summary: Create a coupon
+description: >
+    Creates a coupon row plus its product / category / email-restriction relations. The code is
+    stored case-insensitively (citext) and must be unique across non-deleted rows. For percent
+    discounts, set `amount_percent` (0–100); for money discounts, set `amount_minor`; for
+    free-shipping coupons, set `free_shipping=true` and the discount type to either
+    `free_shipping` or any other type (in which case the free shipping rides alongside the
+    monetary discount).
+tags: [Admin / Coupons]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [code, discount_type]
+                properties:
+                    code: { type: string, minLength: 1, maxLength: 200 }
+                    discount_type: { type: string, enum: [fixed_cart, fixed_product, percent, free_shipping] }
+                    amount_minor: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+                    amount_percent: { type: [number, "null"], minimum: 0, maximum: 100 }
+                    status: { type: string, enum: [active, disabled], default: active }
+                    starts_at: { type: [string, "null"], format: date-time }
+                    expires_at: { type: [string, "null"], format: date-time }
+                    minimum_amount: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+                    maximum_amount: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+                    individual_use: { type: boolean, default: false }
+                    exclude_sale_items: { type: boolean, default: false }
+                    usage_limit_global: { type: [integer, "null"] }
+                    usage_limit_per_user: { type: [integer, "null"] }
+                    limit_usage_to_x_items: { type: [integer, "null"] }
+                    free_shipping: { type: boolean, default: false }
+                    product_constraints:
+                        type: array
+                        items:
+                            type: object
+                            required: [product_id, mode]
+                            properties:
+                                product_id: { type: integer }
+                                mode: { type: string, enum: [include, exclude] }
+                    category_constraints:
+                        type: array
+                        items:
+                            type: object
+                            required: [category_id, mode]
+                            properties:
+                                category_id: { type: integer }
+                                mode: { type: string, enum: [include, exclude] }
+                    email_restrictions:
+                        type: array
+                        items: { type: string, description: "Email or glob (e.g. `*@example.com`)." }
+
+responses:
+    "201":
+        description: Coupon created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCoupon.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

@@ -1,0 +1,62 @@
+operationId: adminOrderCreate
+summary: Create an order (admin)
+description: >
+    Creates an order directly from the admin surface — bypasses the cart/checkout flow.
+    Use this for ops-entered orders (phone, marketplace exports, …). The order lands in
+    `status=processing` by default; pass an explicit `status` to override. Stock reservation
+    runs only when the resulting status reserves stock; otherwise stock is left untouched.
+tags: [Admin / Orders]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [line_items, billing_address]
+                properties:
+                    customer_id: { type: [integer, "null"] }
+                    billing_email: { type: [string, "null"] }
+                    customer_note: { type: [string, "null"] }
+                    status: { type: string, enum: [pending, on_hold, processing, completed], default: processing }
+                    created_via: { type: string, enum: [checkout, admin, api, import], default: admin }
+                    currency: { type: string, default: "IRR" }
+                    payment_gateway_id: { type: [integer, "null"] }
+                    line_items:
+                        type: array
+                        minItems: 1
+                        items:
+                            type: object
+                            required: [product_id, quantity]
+                            properties:
+                                product_id: { type: integer }
+                                variation_id: { type: [integer, "null"] }
+                                quantity: { type: integer, minimum: 1 }
+                                price_override:
+                                    anyOf:
+                                        - $ref: "../../../common/components/schemas/Money.yaml"
+                                        - type: "null"
+                                    description: Forces a line price; otherwise the snapshot resolves from current catalog data.
+                    shipping_zone_method_id: { type: [integer, "null"] }
+                    billing_address: { $ref: "../../../common/components/schemas/Address.yaml" }
+                    shipping_address:
+                        anyOf:
+                            - $ref: "../../../common/components/schemas/Address.yaml"
+                            - type: "null"
+                    coupon_codes:
+                        type: array
+                        items: { type: string }
+
+responses:
+    "201":
+        description: Order created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

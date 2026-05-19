@@ -1,0 +1,15 @@
+name: Idempotency-Key
+in: header
+description: >
+    Client-generated idempotency token (≤ 64 chars) for write operations that must be safe to
+    retry: `POST /checkout/submit`, `POST /payment/init/:order_key`, admin `POST .../refunds`.
+    A retry with the same key returns the original result without re-running side effects. Keys
+    are scoped per-resource (per-order for refunds, per-cart for submit).
+required: false
+schema:
+    type: string
+    maxLength: 64
+examples:
+    uuid:
+        summary: A random UUID
+        value: "9b1d6f50-f43d-4f1d-8d3e-b3a7d6c0c9e2"

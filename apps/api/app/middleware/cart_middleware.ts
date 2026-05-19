@@ -18,7 +18,7 @@ const CART_COOKIE_NAME = "cart_token";
  * Resolve (or lazily create) the cart for this request and attach it to the HTTP context. Mounted
  * on `/api/v1/cart/*` only — the rest of the API doesn't need a cart row materialized per request.
  *
- * Priority order (ADR D8, phase-04 doc §"Cart resolution"):
+ * Priority order:
  * 1. Authenticated request → load by `customer_id`, creating the row if missing.
  *    a. If an anonymous `cart_token` cookie is also present, the anon cart is merged into the
  *       customer cart via {@link Cart.assignCustomer} and the loser is deleted.
@@ -67,8 +67,9 @@ export default class CartMiddleware {
         const customer = await Customer.query().where("user_id", Number(userId)).first();
         if (!customer) {
             /**
-             * Phase 03 guarantees every user has a 1:1 customer row after registration. Defensive
-             * `createCustomer` is intentionally avoided here — surface the bug rather than mask it.
+             * Every authenticated user is registered with a 1:1 `customers` row by the auth flow.
+             * Defensive `createCustomer` is intentionally avoided here — surface the missing row
+             * loudly so the registration bug is fixed at source rather than masked.
              */
             throw new Error("Authenticated user has no linked customer; create a customer row before adding to cart.");
         }
