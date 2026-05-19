@@ -5,10 +5,11 @@ import { OrderAddressIranExtensionSchema } from "#database/schema";
 import OrderAddress from "#models/order_address";
 
 /**
- * Pattern 3 snapshot extension. The row exists only when the snapshotted address carried Iran
- * fiscal-identifier fields; the absence of the row is itself the answer for "no extension." The
- * order_finalizer writes it inside the same transaction as `order_addresses`, so callers see the
- * pair atomically.
+ * Country-scoped extension carrying the IR fiscal identifiers (national id, corporate id,
+ * economic code, legal company name) for a snapshotted order address. The row exists only when
+ * the address carried at least one of those fields — the absence of the row is itself the answer
+ * for "no extension." `order_finalizer` writes it inside the same transaction as the parent
+ * `order_addresses` row, so callers see the pair atomically.
  */
 export default class OrderAddressIranExtension extends OrderAddressIranExtensionSchema {
     static table = "order_address_iran_extensions";

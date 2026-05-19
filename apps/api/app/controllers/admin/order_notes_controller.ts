@@ -52,7 +52,11 @@ export default class AdminOrderNotesController {
         await note.save();
 
         if (payload.send_email && payload.visibility === "customer") {
-            /** MVP: log only. A real mailer lands when the email-template phase is scheduled. */
+            /**
+             * No mailer is bound yet — log a structured stub so we can spot stuck queues later
+             * without losing the request. Swap the logger call for the real mail dispatch when
+             * the email templates land; the note row is already persisted.
+             */
             logger.info(
                 {
                     order_id: Number(order.id),

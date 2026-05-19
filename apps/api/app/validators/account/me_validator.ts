@@ -1,9 +1,9 @@
 import vine from "@vinejs/vine";
 
 /**
- * `email` is deliberately omitted — changing email is a separate re-verification flow (deferred to
- * phase 09). The validator silently drops any submitted email so the controller cannot accidentally
- * persist it from a copy/paste mistake on the client.
+ * `email` is deliberately omitted — changing email requires a re-verification flow not exposed
+ * through this endpoint. The validator silently drops any submitted email so the controller
+ * cannot accidentally persist it from a copy/paste mistake on the client.
  */
 const iranExtensionShape = vine.object({
     national_id: vine
@@ -38,9 +38,9 @@ export const meUpdateValidator = vine.compile(
         country_default: vine.string().trim().fixedLength(2).optional(),
         locale: vine.string().trim().maxLength(8).optional(),
         /**
-         * Pattern 3: the Iran extension can be omitted to leave the profile unchanged, passed as
-         * a fields object to upsert, or passed as `null` to clear (the controller treats `null` as
-         * a delete intent).
+         * Iran-specific fiscal extension. Omit to leave the existing `customer_iran_profiles` row
+         * unchanged, pass a fields object to upsert, or pass `null` to clear (the controller
+         * treats `null` as a delete intent).
          */
         iran_extension: iranExtensionShape.optional().nullable(),
     }),

@@ -10,10 +10,10 @@ import { adminRefundCreateValidator, adminRefundListValidator } from "#validator
 const DEFAULT_PER_PAGE = 25;
 
 /**
- * Admin refund surface (ADR D11). `POST` runs the full {@link refundService} transaction (FOR
- * UPDATE lock → validate → allocate → restock → audit note → optional state transition). `DELETE`
- * returns 405 unconditionally — refunds are immutable audit records; voiding is a future
- * `credit_note` document.
+ * Admin refund surface. `POST` runs the full {@link refundService} transaction (FOR UPDATE lock →
+ * validate → allocate → restock → audit note → optional state transition). `DELETE` returns 405
+ * unconditionally — refunds are immutable audit records; voiding is a future `credit_note`
+ * document.
  */
 export default class AdminRefundsController {
     async index(ctx: HttpContext) {

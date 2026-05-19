@@ -24,8 +24,9 @@ export default class Customer extends CustomerSchema {
     declare downloads: HasMany<typeof CustomerDownload>;
 
     /**
-     * Pattern 3 extension. Absence of a row is the answer to "does this customer have Iranian
-     * fiscal identifiers?" — never coerce to a `{}` placeholder, never throw on missing.
+     * Country-scoped IR fiscal-identifier extension. Absence of a row is the answer to "does this
+     * customer have Iranian fiscal identifiers?" — never coerce to a `{}` placeholder, never throw
+     * on missing.
      */
     @hasOne(() => CustomerIranProfile, { foreignKey: "customerId" })
     declare iranProfile: HasOne<typeof CustomerIranProfile>;

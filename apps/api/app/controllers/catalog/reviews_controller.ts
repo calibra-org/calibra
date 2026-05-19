@@ -22,9 +22,11 @@ export default class ReviewsController {
     }
 
     /**
-     * `POST /api/v1/products/:id/reviews` — submit a review. Lands as `pending` regardless of who
-     * submitted it; moderator approves later. `customer_id` is set if the request is authenticated
-     * (placeholder for phase 03 — currently always null).
+     * `POST /api/v1/products/:id/reviews` — submit a review. Lands as `pending` regardless of the
+     * submitter; a moderator approves it later. `customer_id` is currently always written as
+     * `null` — even when the request carries a session token, this endpoint snapshots only the
+     * caller-supplied `reviewer_name` / `reviewer_email`. Wiring it to `ctx.auth.user?.customer.id`
+     * is purely additive.
      */
     async store(ctx: HttpContext) {
         const productId = ctx.params.id;

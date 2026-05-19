@@ -16,8 +16,9 @@ export default class OrderAddress extends OrderAddressSchema {
     declare region: BelongsTo<typeof Region>;
 
     /**
-     * Pattern 3 — present only on snapshotted IR addresses that carried fiscal identifiers. The
-     * absence of a row means "no extension data," never a `{}` placeholder.
+     * IR fiscal-identifier extension — present only on snapshotted addresses with country `IR` that
+     * carried at least one fiscal identifier. The absence of a row means "no extension data," never
+     * a `{}` placeholder.
      */
     @hasOne(() => OrderAddressIranExtension, { foreignKey: "orderAddressId" })
     declare iranExtension: HasOne<typeof OrderAddressIranExtension>;

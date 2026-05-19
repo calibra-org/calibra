@@ -17,9 +17,10 @@ const LOCALIZED_ORDER_CODES: Record<string, string> = {
 };
 
 /**
- * Global HTTP exception handler. The order phase introduces a small localization shim — every
+ * Global HTTP exception handler. Adds a localization shim on top of the framework default — every
  * domain code declared in {@link LOCALIZED_ORDER_CODES} is rendered through the active i18n
- * catalog before the framework default serializes the error body.
+ * catalog (selected from `Accept-Language` by `@adonisjs/i18n`) before the framework serializes
+ * the error body. Codes without an entry pass through unchanged.
  */
 export default class HttpExceptionHandler extends ExceptionHandler {
     /** Verbose stack traces are emitted outside production only. */

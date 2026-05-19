@@ -4,9 +4,10 @@ import type OrderRefund from "#models/order_refund";
 import type OrderRefundLineItem from "#models/order_refund_line_item";
 
 /**
- * Owns the `/api/v1/.../refunds/*` response shape (admin and customer paths share the same fields
- * — the column set is non-sensitive). `gateway_refund_id` echoes the PSP-side identifier when
- * phase 08 fills it in; null in this phase.
+ * Owns the `/api/v1/.../refunds/*` response shape — admin and customer paths share the same
+ * fields, since the column set is non-sensitive. `gateway_refund_id` echoes the PSP-side
+ * identifier when `paymentService.refund()` returns one; bank-transfer and other non-PSP refunds
+ * leave it `null`.
  */
 export default class OrderRefundTransformer extends BaseTransformer<OrderRefund> {
     toObject() {
