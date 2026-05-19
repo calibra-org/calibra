@@ -19,6 +19,10 @@ export async function resetPhase08(): Promise<void> {
     await zarinpal.save();
     const bank = await PaymentGateway.findByOrFail("code", "bank_transfer");
     bank.enabled = true;
-    bank.settings = { ...((bank.settings as Record<string, unknown>) ?? {}), iban: "IR000000000000000001", account_name: "Calibra" };
+    bank.settings = {
+        ...((bank.settings as Record<string, unknown>) ?? {}),
+        iban: "IR000000000000000001",
+        account_name: "Calibra",
+    };
     await bank.save();
 }

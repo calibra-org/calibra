@@ -68,7 +68,10 @@ test.group("callback failure paths", (group) => {
         const authority = "AFAIL000000000000000000000000000001";
         const orderId = await submitZarinpalOrder(client, Number(product.id), authority);
 
-        const callback = await client.get(`/api/v1/payment/callback/zarinpal`).qs({ Authority: authority, Status: "NOK" }).redirects(0);
+        const callback = await client
+            .get(`/api/v1/payment/callback/zarinpal`)
+            .qs({ Authority: authority, Status: "NOK" })
+            .redirects(0);
         assert.equal(callback.response.status, 302);
         const location = callback.header("location") as string;
         assert.match(location, /checkout\/failed/);
@@ -90,7 +93,10 @@ test.group("callback failure paths", (group) => {
             [VERIFY_URL]: { status: 200, body: { data: { code: -53, message: "expired authority" } } },
         });
 
-        const callback = await client.get(`/api/v1/payment/callback/zarinpal`).qs({ Authority: authority, Status: "OK" }).redirects(0);
+        const callback = await client
+            .get(`/api/v1/payment/callback/zarinpal`)
+            .qs({ Authority: authority, Status: "OK" })
+            .redirects(0);
         assert.equal(callback.response.status, 302);
         const location = callback.header("location") as string;
         assert.match(location, /checkout\/failed/);

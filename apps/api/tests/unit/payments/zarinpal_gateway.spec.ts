@@ -53,10 +53,7 @@ test.group("ZarinpalGateway (mocked HTTP)", (group) => {
         });
 
         assert.equal(result.authority, "A00000000000000000000000000000000001");
-        assert.equal(
-            result.redirect_url,
-            "https://payment.zarinpal.com/pg/StartPay/A00000000000000000000000000000000001",
-        );
+        assert.equal(result.redirect_url, "https://payment.zarinpal.com/pg/StartPay/A00000000000000000000000000000000001");
         const call = fetchCalls().find((c) => c.url === REQUEST_URL)!;
         assert.equal(call.method, "POST");
         const body = call.body as { merchant_id: string; amount: number; callback_url: string };

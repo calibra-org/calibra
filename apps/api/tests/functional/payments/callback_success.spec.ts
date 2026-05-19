@@ -75,7 +75,10 @@ test.group("GET /api/v1/payment/callback/zarinpal — happy path", (group) => {
             [VERIFY_URL]: { status: 200, body: { data: { code: 100, ref_id: 700111222 } } },
         });
 
-        const callback = await client.get(`/api/v1/payment/callback/zarinpal`).qs({ Authority: authority, Status: "OK" }).redirects(0);
+        const callback = await client
+            .get(`/api/v1/payment/callback/zarinpal`)
+            .qs({ Authority: authority, Status: "OK" })
+            .redirects(0);
         assert.equal(callback.response.status, 302);
         const location = callback.header("location") as string;
         assert.match(location, /checkout\/success/);

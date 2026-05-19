@@ -17,9 +17,18 @@ async function createAdmin(): Promise<User> {
     return user;
 }
 
-async function seedAttempt(opts: { gatewayCode: string; status: PaymentAttemptStatus; productId: number }): Promise<PaymentAttempt> {
+async function seedAttempt(opts: {
+    gatewayCode: string;
+    status: PaymentAttemptStatus;
+    productId: number;
+}): Promise<PaymentAttempt> {
     const gateway = await PaymentGateway.findByOrFail("code", opts.gatewayCode);
-    const order = await makeDraftOrder({ productId: opts.productId, quantity: 1, price: 1_000_000, gatewayId: Number(gateway.id) });
+    const order = await makeDraftOrder({
+        productId: opts.productId,
+        quantity: 1,
+        price: 1_000_000,
+        gatewayId: Number(gateway.id),
+    });
     const attempt = new PaymentAttempt();
     attempt.orderId = order.id;
     attempt.gatewayId = gateway.id;
@@ -80,7 +89,10 @@ test.group("/api/v1/admin/payment-attempts", (group) => {
             productId: Number(product.id),
         });
 
-        const response = await client.get(`/api/v1/admin/payment-attempts/${Number(attempt.id)}`).withGuard("api").loginAs(admin);
+        const response = await client
+            .get(`/api/v1/admin/payment-attempts/${Number(attempt.id)}`)
+            .withGuard("api")
+            .loginAs(admin);
         response.assertStatus(200);
         const body = response.body().data as { gateway_payload: Record<string, unknown> };
         assert.deepEqual(body.gateway_payload, { hello: "world" });

@@ -72,7 +72,10 @@ test.group("callback replay (idempotent)", (group) => {
             [VERIFY_URL]: { status: 200, body: { data: { code: 100, ref_id: 800111223 } } },
         });
 
-        const first = await client.get(`/api/v1/payment/callback/zarinpal`).qs({ Authority: authority, Status: "OK" }).redirects(0);
+        const first = await client
+            .get(`/api/v1/payment/callback/zarinpal`)
+            .qs({ Authority: authority, Status: "OK" })
+            .redirects(0);
         assert.equal(first.response.status, 302);
 
         const order = await Order.findOrFail(orderId);
@@ -81,7 +84,10 @@ test.group("callback replay (idempotent)", (group) => {
         const beforeCount = await countHistory(orderId);
 
         /** Re-fire the same callback — no extra verify HTTP call should be made. */
-        const second = await client.get(`/api/v1/payment/callback/zarinpal`).qs({ Authority: authority, Status: "OK" }).redirects(0);
+        const second = await client
+            .get(`/api/v1/payment/callback/zarinpal`)
+            .qs({ Authority: authority, Status: "OK" })
+            .redirects(0);
         assert.equal(second.response.status, 302);
         const location = second.header("location") as string;
         assert.match(location, /checkout\/success/);

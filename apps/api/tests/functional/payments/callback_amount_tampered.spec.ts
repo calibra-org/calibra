@@ -78,7 +78,10 @@ test.group("callback amount-tamper guard", (group) => {
             },
         });
 
-        const callback = await client.get(`/api/v1/payment/callback/zarinpal`).qs({ Authority: authority, Status: "OK" }).redirects(0);
+        const callback = await client
+            .get(`/api/v1/payment/callback/zarinpal`)
+            .qs({ Authority: authority, Status: "OK" })
+            .redirects(0);
         assert.equal(callback.response.status, 302);
         const location = callback.header("location") as string;
         assert.match(location, /checkout\/failed/);

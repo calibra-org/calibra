@@ -218,9 +218,7 @@ export class PaymentService {
 
             if (!verifyResult.ok || amountMismatch) {
                 attempt.status = PaymentAttemptStatus.Failed;
-                attempt.errorCode = amountMismatch
-                    ? "amount_mismatch"
-                    : (verifyResult as { error_code: string }).error_code;
+                attempt.errorCode = amountMismatch ? "amount_mismatch" : (verifyResult as { error_code: string }).error_code;
                 attempt.errorMessage = amountMismatch
                     ? `expected ${attempt.amountMinor}, got ${(verifyResult as { amount_minor: number }).amount_minor}`
                     : (verifyResult as { error_message: string }).error_message;

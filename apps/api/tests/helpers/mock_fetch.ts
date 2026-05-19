@@ -71,7 +71,7 @@ async function mockedFetch(input: string | URL | MaybeRequest, init?: RequestIni
     if (!route) {
         throw new Error(`mockFetch: no route registered for ${url}`);
     }
-    const spec = Array.isArray(route) ? route[Math.min((cursors[url] ?? 0), route.length - 1)] : route;
+    const spec = Array.isArray(route) ? route[Math.min(cursors[url] ?? 0, route.length - 1)] : route;
     if (Array.isArray(route)) cursors[url] = (cursors[url] ?? 0) + 1;
     const body = spec.body === undefined ? "" : JSON.stringify(spec.body);
     return new Response(body, {

@@ -65,10 +65,7 @@ test.group("POST /api/v1/checkout/submit — payment integration", (group) => {
         const product = await createTaxableProduct({ regularPrice: 1_000_000 });
         const token = await prepareCart(client, Number(product.id), "zarinpal");
 
-        const submit = await client
-            .post("/api/v1/checkout/submit")
-            .cookie("cart_token", token)
-            .header("Idempotency-Key", "zp-1");
+        const submit = await client.post("/api/v1/checkout/submit").cookie("cart_token", token).header("Idempotency-Key", "zp-1");
 
         submit.assertStatus(200);
         assert.equal(submit.body().data.status, "pending");
