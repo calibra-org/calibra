@@ -1,6 +1,6 @@
 "use server";
 
-import { createApiClient } from "@calibra/sdk";
+import { BackendError, createApiClient } from "@calibra/sdk";
 import { cookies } from "next/headers";
 
 import { redirect } from "#/lib/i18n/navigation";
@@ -30,18 +30,26 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
         baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
         locale,
     });
-    const { data, error, response } = await api.storefront.POST("/api/v1/auth/login", {
-        body: { email, password },
-    });
-    if (error !== undefined || !data) {
-        const status = response?.status ?? 400;
-        if (status === 400 || status === 422) {
+    let data: NonNullable<Awaited<ReturnType<typeof api.storefront.POST>>["data"]> | undefined;
+    try {
+        const result = await api.storefront.POST("/api/v1/auth/login", { body: { email, password } });
+        data = result.data;
+    } catch (err) {
+        if (err instanceof BackendError && (err.status === 400 || err.status === 422)) {
             return { ok: false, error: locale === "fa" ? "ایمیل یا رمز عبور نادرست است." : "Invalid email or password." };
         }
         return { ok: false, error: locale === "fa" ? "ورود ناموفق بود. دوباره تلاش کنید." : "Sign-in failed. Please try again." };
     }
+    if (!data || typeof data !== "object" || !("user" in data) || !("token" in data)) {
+        return { ok: false, error: locale === "fa" ? "ورود ناموفق بود. دوباره تلاش کنید." : "Sign-in failed. Please try again." };
+    }
+    const loginData = data as {
+        user: { id: string; email: string; role: string };
+        customer: { first_name?: string | null; last_name?: string | null } | null;
+        token: { value: string };
+    };
 
-    if (data.user.role !== "admin") {
+    if (loginData.user.role !== "admin") {
         return {
             ok: false,
             error:
@@ -51,16 +59,16 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
         };
     }
 
-    const customer = data.customer;
+    const customer = loginData.customer;
     const displayName =
         customer && (customer.first_name || customer.last_name)
             ? `${customer.first_name ?? ""} ${customer.last_name ?? ""}`.trim()
-            : data.user.email;
+            : loginData.user.email;
 
     const session = {
-        token: data.token.value,
-        userId: Number(data.user.id),
-        email: data.user.email,
+        token: loginData.token.value,
+        userId: Number(loginData.user.id),
+        email: loginData.user.email,
         displayName,
     };
 
