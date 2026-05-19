@@ -30,6 +30,29 @@
             "empty": "Order has no line items.",
             "out_of_stock": "Some items are out of stock.",
             "price_changed": "Product price changed since the draft was last viewed."
+        },
+        "refunds": {
+            "input_invalid": "Refund body must contain either amount_minor or line_items, never both.",
+            "amount_nonpositive": "Refund amount must be positive.",
+            "exceeds_outstanding": "Refund exceeds the remaining outstanding amount on this order.",
+            "line_invalid": "Line item does not belong to this order.",
+            "line_quantity_exceeds": "Refund quantity exceeds the remaining quantity for this line.",
+            "already_refunded": "Order is already fully refunded.",
+            "not_refundable": "Order is not refundable in its current status.",
+            "fully_refunded": "Order has no remaining outstanding to refund.",
+            "deletion_forbidden": "Refunds cannot be deleted — issue a credit note instead."
+        }
+    },
+    "order": {
+        "status": {
+            "draft": "Draft",
+            "pending": "Pending",
+            "on_hold": "On hold",
+            "processing": "Processing",
+            "completed": "Completed",
+            "cancelled": "Cancelled",
+            "refunded": "Refunded",
+            "failed": "Failed"
         }
     }
 }

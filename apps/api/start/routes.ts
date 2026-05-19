@@ -21,7 +21,7 @@ await import("./routes/admin_catalog.js");
 await import("./routes/admin_customers.js");
 await import("./routes/admin_orders.js");
 await import("./routes/admin_coupons.js");
-/** await import("./routes/admin_refunds.js");      phase 07 */
-/** await import("./routes/admin_notes.js");        phase 07 */
+await import("./routes/admin_refunds.js");
+await import("./routes/admin_notes.js");
 /** await import("./routes/admin_payments.js");     phase 08 */
 /** await import("./routes/payment.js");            phase 08 */
