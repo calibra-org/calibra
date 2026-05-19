@@ -15,9 +15,9 @@
     },
     "devDependencies": {
         "@redocly/cli": "^2.14.6",
-        "http-server": "^14.1.1",
         "ajv": "^8.17.1",
-        "ajv-formats": "^3.0.1"
+        "ajv-formats": "^3.0.1",
+        "http-server": "^14.1.1"
     },
     "license": "UNLICENSED"
 }

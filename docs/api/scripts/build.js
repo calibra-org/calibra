@@ -21,8 +21,7 @@ function main() {
 
 function buildSpec(source, output) {
     try {
-        const redocly = join(ROOT, "node_modules", ".bin", "redocly");
-        execSync(`"${redocly}" bundle "${source}" -o "${output}"`, { stdio: "inherit" });
+        execSync(`pnpm redocly bundle ${source} -o ${output}`, { stdio: "inherit" });
         console.log(`✓ Built ${source} to ${output}`);
     } catch (err) {
         console.error(`✗ Building ${source} failed:`, err.message);
