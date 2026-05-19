@@ -49,7 +49,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
         <html
             lang={locale}
             dir={directionFor(locale)}
-            className={`${inter.variable} ${vazirmatn.variable}${theme === "dark" ? " dark" : ""}`}
+            className={`${inter.variable} ${vazirmatn.variable}${theme === "dark" ? "dark" : ""}`}
             style={{ colorScheme: theme }}
             suppressHydrationWarning
         >

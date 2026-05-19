@@ -5,14 +5,51 @@ import type { Locale } from "@calibra/shared/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
-import { toAdminOrderDetail } from "#/lib/adapters/orders";
+import { type SdkAdminOrderListRow, toAdminOrderDetail, toAdminOrderListRow } from "#/lib/adapters/orders";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
-import type { AdminOrder, OrderStatus } from "#/lib/types";
+import type { AdminOrder, OrderStatus, Paginated } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];
 
 interface OrderEnvelope {
     data: Schemas["AdminOrderDetail"];
+}
+
+interface OrderListEnvelope {
+    data: SdkAdminOrderListRow[];
+    meta?: { page: number; perPage: number; total: number; lastPage: number };
+}
+
+export interface OrdersListParams {
+    page?: number;
+    perPage?: number;
+    status?: OrderStatus | "any";
+    search?: string;
+}
+
+/**
+ * Paginated admin orders list. `status === "any"` (and `undefined`) skip the filter; non-`any`
+ * values feed the API's `status=` query. Search is forwarded verbatim. Every filter dimension
+ * lives in the query key so toggles refetch instead of mutating the same cache entry.
+ */
+export function useOrdersList(params: OrdersListParams = {}) {
+    const locale = useLocale() as Locale;
+    const page = params.page ?? 1;
+    const perPage = params.perPage ?? 20;
+    const status = params.status === "any" ? undefined : params.status;
+    const search = params.search;
+    return useQuery<OrderListEnvelope, Error, Paginated<AdminOrder>>({
+        queryKey: ["admin", "orders", "list", { locale, page, perPage, status, search }],
+        queryFn: () =>
+            apiGet<OrderListEnvelope>("orders", {
+                locale,
+                query: { page, perPage, status, search },
+            }),
+        select: (payload) => ({
+            data: (payload.data ?? []).map(toAdminOrderListRow),
+            meta: payload.meta ?? { page, perPage, total: payload.data?.length ?? 0, lastPage: 1 },
+        }),
+    });
 }
 
 /**

@@ -2,7 +2,11 @@ import "server-only";
 
 import type { AdminSchemas } from "@calibra/sdk";
 
+import { toAdminCoupon } from "./adapters/coupons";
+import { toAdminCustomer } from "./adapters/customers";
 import { type SdkAdminOrderListRow, toAdminOrderDetail, toAdminOrderListRow } from "./adapters/orders";
+import { toAdminProduct } from "./adapters/products";
+import { toAdminReview } from "./adapters/reviews";
 import { apiServer } from "./api";
 import type {
     AdminAttribute,
@@ -84,33 +88,6 @@ const SDK_PRODUCT_STATUS_MAP: Record<ProductStatus, "draft" | "published" | "arc
 interface ProductListParams extends ListParams {
     status?: ProductStatus | "any";
     categoryId?: number;
-}
-
-function toAdminProduct(p: SdkAdminProduct): AdminProduct {
-    const status = VIEW_PRODUCT_STATUS_MAP[p.status] ?? "draft";
-    const type = (p.type === "virtual" || p.type === "downloadable" ? "simple" : p.type) as AdminProduct["type"];
-    return {
-        id: p.id,
-        sku: p.sku ?? "",
-        type,
-        status,
-        name: dup(p.name),
-        slug: dup(p.slug),
-        shortDescription: dup(p.short_description),
-        regularPrice: Number(p.regular_price ?? 0) as MoneyMinor,
-        salePrice: p.sale_price === null || p.sale_price === undefined ? null : (Number(p.sale_price) as MoneyMinor),
-        stockQuantity: null,
-        stockStatus: "instock",
-        manageStock: false,
-        featured: Boolean(p.featured),
-        categoryIds: [],
-        brandId: null,
-        tagIds: [],
-        imageUrl: p.featured_image_url ?? null,
-        weightGrams: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    };
 }
 
 function toAdminProductFromDetail(p: SdkAdminProductDetail): AdminProduct {
@@ -311,26 +288,6 @@ interface ReviewListParams extends ListParams {
     status?: ReviewStatus | "any";
 }
 
-function toAdminReview(r: SdkAdminReview): AdminReview {
-    const status: ReviewStatus = r.status === "rejected" ? "spam" : r.status === "approved" ? "approved" : "pending";
-    return {
-        id: r.id,
-        productId: r.product_id,
-        productName: dup(""),
-        reviewerName: r.reviewer_name,
-        reviewerEmail: r.reviewer_email ?? "",
-        rating: clampRating(r.rating),
-        body: r.body,
-        status,
-        verified: Boolean(r.verified),
-        createdAt: r.created_at ?? new Date().toISOString(),
-    };
-}
-
-function clampRating(n: number): 1 | 2 | 3 | 4 | 5 {
-    return Math.min(5, Math.max(1, Math.round(n))) as 1 | 2 | 3 | 4 | 5;
-}
-
 export async function listReviews(params: ReviewListParams = {}): Promise<Paginated<AdminReview>> {
     const api = await apiServer();
     let sdkStatus: "pending" | "approved" | "rejected" | undefined;
@@ -356,27 +313,6 @@ export async function listReviews(params: ReviewListParams = {}): Promise<Pagina
 /* -------------------------------------------------------------------------- */
 /*  Customers                                                                  */
 /* -------------------------------------------------------------------------- */
-
-function toAdminCustomer(c: SdkAdminCustomer): AdminCustomer {
-    const iran = c.profile_extensions?.iran;
-    return {
-        id: Number(c.id),
-        userId: c.user?.id !== undefined ? Number(c.user.id) : null,
-        firstName: c.first_name ?? "",
-        lastName: c.last_name ?? "",
-        email: c.user?.email ?? "",
-        phone: c.phone ?? "",
-        nationalId: iran?.national_id ?? null,
-        companyName: iran?.legal_company_name_fa ?? null,
-        isPayingCustomer: Boolean(c.is_paying_customer),
-        ordersCount: 0,
-        totalSpent: 0 as MoneyMinor,
-        lastOrderAt: null,
-        createdAt: c.created_at ?? new Date().toISOString(),
-        addresses: [],
-        downloads: [],
-    };
-}
 
 export async function listCustomers(params: ListParams = {}): Promise<Paginated<AdminCustomer>> {
     const api = await apiServer();
@@ -454,34 +390,6 @@ export async function listRefunds(params: ListParams = {}): Promise<Paginated<Ad
 
 interface CouponListParams extends ListParams {
     status?: AdminCoupon["status"] | "any";
-}
-
-function toAdminCoupon(c: SdkAdminCoupon): AdminCoupon {
-    const description = (c.translations ?? []).reduce<{ fa?: string; en?: string }>((acc, t) => {
-        if (t.locale === "fa") acc.fa = t.description ?? "";
-        if (t.locale === "en") acc.en = t.description ?? "";
-        return acc;
-    }, {});
-    return {
-        id: c.id,
-        code: c.code,
-        discountType: c.discount_type,
-        amountMinor: c.amount_minor === null || c.amount_minor === undefined ? null : (Number(c.amount_minor) as MoneyMinor),
-        amountPercent: c.amount_percent ?? null,
-        description: { fa: description.fa ?? "", en: description.en ?? description.fa ?? "" },
-        expiresAt: c.expires_at ?? null,
-        individualUse: Boolean(c.individual_use),
-        excludeSaleItems: Boolean(c.exclude_sale_items),
-        minimumAmount:
-            c.minimum_amount === null || c.minimum_amount === undefined ? null : (Number(c.minimum_amount) as MoneyMinor),
-        maximumAmount:
-            c.maximum_amount === null || c.maximum_amount === undefined ? null : (Number(c.maximum_amount) as MoneyMinor),
-        usageLimitGlobal: c.usage_limit_global ?? null,
-        usageLimitPerUser: c.usage_limit_per_user ?? null,
-        freeShipping: Boolean(c.free_shipping),
-        status: c.status === "active" ? "active" : "disabled",
-        usageCount: 0,
-    };
 }
 
 export async function listCoupons(params: CouponListParams = {}): Promise<Paginated<AdminCoupon>> {
