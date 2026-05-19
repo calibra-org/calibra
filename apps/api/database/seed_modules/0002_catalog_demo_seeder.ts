@@ -15,7 +15,6 @@ import { slugify } from "#services/slug_service";
  * database state.
  */
 export default class CatalogDemoSeeder extends BaseSeeder {
-
     async run() {
         const now = DateTime.utc().toSQL();
 

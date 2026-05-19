@@ -29,7 +29,6 @@ interface DemoCoupon {
  * re-running won't accumulate duplicates.
  */
 export default class CouponsDemoSeeder extends BaseSeeder {
-
     async run() {
         const apparelCategoryId = await this.findCategoryIdByName("پوشاک");
 
