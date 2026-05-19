@@ -43,7 +43,7 @@ export async function truncatePhase04Tables(): Promise<void> {
 export async function resetWithFoundation(): Promise<void> {
     await truncatePhase04Tables();
     /** Re-run foundation so shipping_zones, tax_rates, settings exist for cart resolution. */
-    const FoundationSeeder = (await import("#database/seeders/phases/0001_foundation_seeder")).default;
+    const FoundationSeeder = (await import("#database/seed_modules/0001_foundation_seeder")).default;
     const seeder = new FoundationSeeder(db.connection());
     await seeder.run();
 }

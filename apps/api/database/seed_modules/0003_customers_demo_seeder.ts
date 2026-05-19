@@ -49,7 +49,6 @@ const ADMIN_PASSWORD = "admin1234";
  * stable idempotency.
  */
 export default class CustomersDemoSeeder extends BaseSeeder {
-    static environment = ["__phase_seeder__"];
 
     async run() {
         const regionsByCode = await this.loadIranRegions();

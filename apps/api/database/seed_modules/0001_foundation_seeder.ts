@@ -16,12 +16,10 @@ import TaxRate from "#models/tax_rate";
  * for tables with composite primary keys) so running the seeder twice produces the same database
  * state with no duplicate rows.
  *
- * Set `static environment` to a sentinel that never matches any real `NODE_ENV` value, so the
- * auto-discovery step in `db:seed` skips this file and only the orchestrating `MainSeeder` runs it.
+ * Lives under `database/seed_modules/` (outside Lucid's auto-discovery path) so it runs only when
+ * the orchestrating `MainSeeder` imports it explicitly.
  */
 export default class FoundationSeeder extends BaseSeeder {
-    static environment = ["__phase_seeder__"];
-
     async run() {
         const regionsByCode = await this.seedRegions();
         await this.seedRegionTranslations(regionsByCode);
