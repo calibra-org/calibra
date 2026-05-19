@@ -98,7 +98,19 @@ just ace 'make:transformer order'       # BaseTransformer<Order> stub
 pnpm --filter @calibra/api typecheck    # tsc --noEmit
 pnpm --filter @calibra/api test         # full Japa suite (unit + functional)
 just lint                               # biome + sherif
+
+# Spec / route drift detection
+just docs-check                         # bundle OpenAPI specs + node ace check:api-docs
+node ace check:api-docs                 # diff registered routes against the bundled spec
+node ace check:api-docs --update-known-drift  # rewrite .check-api-docs-known-drift.json
 ```
+
+## API spec drift
+
+Two complementary mechanisms keep the hand-authored OpenAPI documentation honest with the code:
+
+- **Runtime contract assertions.** `tests/bootstrap.ts` wires `@japa/openapi-assertions` against `docs/api/dist/_merged.test.json`. Functional tests call `response.assertAgainstApiSpec()` after every successful (2xx) status assertion; schema drift turns a test red. The `pretest` npm script regenerates the merged spec before every `node ace test` run, so the assertions always validate against the latest source.
+- **Route inventory lint.** `node ace check:api-docs` diffs the live router against the bundled spec and exits 1 on new drift (`missing-in-spec` / `stale-in-spec` / `mismatch`). Acknowledged drift from before the lint was wired up lives in `.check-api-docs-known-drift.json`; remove entries when the route or spec catches up, regenerate with `--update-known-drift` after intentional changes.
 
 ## Auth (when wiring)
 
