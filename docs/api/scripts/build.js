@@ -1,7 +1,7 @@
 import { execSync } from "node:child_process";
-import { mkdirSync, copyFileSync } from "fs";
-import { resolve, dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { copyFileSync, mkdirSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = join(ROOT, "dist");
