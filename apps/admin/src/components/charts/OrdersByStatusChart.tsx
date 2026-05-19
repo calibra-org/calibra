@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { formatNumber } from "#/lib/format";
-import type { OrderStatus } from "#/lib/mock/types";
+import type { OrderStatus } from "#/lib/types";
 
 interface OrdersByStatusChartProps {
     data: { status: OrderStatus; count: number }[];

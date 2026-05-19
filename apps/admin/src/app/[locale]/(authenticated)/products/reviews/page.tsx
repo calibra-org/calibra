@@ -9,8 +9,8 @@ import { SearchInput } from "#/components/SearchInput";
 import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { formatDate } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { listReviews } from "#/lib/mock/repos";
-import type { AdminReview, ReviewStatus } from "#/lib/mock/types";
+import { listReviews } from "#/lib/server-repos";
+import type { AdminReview, ReviewStatus } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

@@ -11,7 +11,7 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
-import { getPaymentGateway } from "#/lib/mock/repos";
+import { getPaymentGateway } from "#/lib/server-repos";
 
 interface PageProps {
     params: Promise<{ locale: string; code: string }>;

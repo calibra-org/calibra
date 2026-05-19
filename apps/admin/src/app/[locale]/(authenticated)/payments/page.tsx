@@ -9,8 +9,8 @@ import { StatusBadge } from "#/components/StatusBadge";
 import { Button } from "#/components/ui/button";
 import { formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { listPaymentGateways } from "#/lib/mock/repos";
-import type { AdminPaymentGateway } from "#/lib/mock/types";
+import { listPaymentGateways } from "#/lib/server-repos";
+import type { AdminPaymentGateway } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

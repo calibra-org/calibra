@@ -7,8 +7,8 @@ import { PageHeader } from "#/components/PageHeader";
 import { StatusBadge } from "#/components/StatusBadge";
 import { SubTabs } from "#/components/SubTabs";
 import { formatNumber } from "#/lib/format";
-import { listShippingZones } from "#/lib/mock/repos";
-import type { AdminShippingZone } from "#/lib/mock/types";
+import { listShippingZones } from "#/lib/server-repos";
+import type { AdminShippingZone } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

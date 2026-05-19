@@ -6,8 +6,8 @@ import { DataTable } from "#/components/DataTable";
 import { PageHeader } from "#/components/PageHeader";
 import { formatDateTime, formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { listRefunds } from "#/lib/mock/repos";
-import type { AdminRefund } from "#/lib/mock/types";
+import { listRefunds } from "#/lib/server-repos";
+import type { AdminRefund } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

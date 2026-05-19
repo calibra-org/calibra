@@ -3,16 +3,20 @@ import "server-only";
 import { createApiClient } from "@calibra/sdk";
 import { getLocale } from "next-intl/server";
 
+import { getSession } from "./auth";
+
 /**
- * Returns a SDK client configured for the current request locale (forwarded to the API via
- * `Accept-Language`). Server-side only — call from server components and route handlers.
- *
- * Add the bearer token here once auth lands: read it from cookies and pass `token`.
+ * Server-only SDK factory pinned to the request's locale (`Accept-Language`) and bearer token
+ * (`Authorization: Bearer …`). The token is read from the `admin_session` cookie via
+ * {@link getSession}; pages that don't yet have a session simply call the API anonymously and
+ * receive a 401 / 403 from the admin endpoints (the layout's `requireSession()` guard catches
+ * that earlier in the render path).
  */
 export async function apiServer() {
-    const locale = await getLocale();
+    const [locale, session] = await Promise.all([getLocale(), getSession()]);
     return createApiClient({
         baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
         locale,
+        ...(session ? { token: session.token } : {}),
     });
 }

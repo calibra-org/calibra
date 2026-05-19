@@ -7,8 +7,8 @@ import { PageHeader } from "#/components/PageHeader";
 import { SubTabs } from "#/components/SubTabs";
 import { Checkbox } from "#/components/ui/checkbox";
 import { formatNumber, formatPercent } from "#/lib/format";
-import { listTaxRates } from "#/lib/mock/repos";
-import type { AdminTaxRate } from "#/lib/mock/types";
+import { listTaxRates } from "#/lib/server-repos";
+import type { AdminTaxRate } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

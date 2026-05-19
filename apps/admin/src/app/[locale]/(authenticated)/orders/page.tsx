@@ -8,8 +8,8 @@ import { PageHeader } from "#/components/PageHeader";
 import { SearchInput } from "#/components/SearchInput";
 import { formatDateTime, formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { listOrders } from "#/lib/mock/repos";
-import type { AdminOrder } from "#/lib/mock/types";
+import { listOrders } from "#/lib/server-repos";
+import type { AdminOrder } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

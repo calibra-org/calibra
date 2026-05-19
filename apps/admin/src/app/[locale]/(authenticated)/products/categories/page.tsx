@@ -7,8 +7,8 @@ import { DataTable } from "#/components/DataTable";
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
 import { formatNumber } from "#/lib/format";
-import { listCategories } from "#/lib/mock/repos";
-import type { AdminCategory } from "#/lib/mock/types";
+import { listCategories } from "#/lib/server-repos";
+import type { AdminCategory } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

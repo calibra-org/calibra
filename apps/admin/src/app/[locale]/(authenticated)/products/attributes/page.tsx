@@ -8,8 +8,8 @@ import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
 import { formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { listAttributes } from "#/lib/mock/repos";
-import type { AdminAttribute } from "#/lib/mock/types";
+import { listAttributes } from "#/lib/server-repos";
+import type { AdminAttribute } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

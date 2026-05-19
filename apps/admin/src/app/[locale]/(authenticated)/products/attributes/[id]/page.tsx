@@ -7,8 +7,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { DataTable } from "#/components/DataTable";
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
-import { getAttribute, listAttributeTerms } from "#/lib/mock/repos";
-import type { AdminAttributeTerm } from "#/lib/mock/types";
+import { getAttribute, listAttributeTerms } from "#/lib/server-repos";
+import type { AdminAttributeTerm } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string; id: string }>;

@@ -30,7 +30,7 @@ export function LoginForm({ locale }: LoginFormProps) {
                     name="email"
                     autoComplete="email"
                     required
-                    defaultValue="admin@calibra.example"
+                    defaultValue="admin@bulk.calibra.dev"
                     aria-invalid={state.error !== null}
                 />
             </div>
@@ -43,7 +43,7 @@ export function LoginForm({ locale }: LoginFormProps) {
                     name="password"
                     autoComplete="current-password"
                     required
-                    defaultValue="••••••••"
+                    defaultValue="Passw0rd1!"
                     aria-invalid={state.error !== null}
                 />
             </div>

@@ -13,7 +13,7 @@ import { Progress } from "#/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { getDashboardStats } from "#/lib/mock/repos";
+import { getDashboardStats } from "#/lib/server-repos";
 
 interface PageProps {
     params: Promise<{ locale: string }>;
