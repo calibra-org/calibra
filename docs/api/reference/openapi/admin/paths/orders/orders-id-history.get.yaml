@@ -4,7 +4,7 @@ description: >
     Returns every `order_status_history` row for the order, ordered ascending by `occurred_at`.
     Rows are written by {@link OrderStateMachine.transition}; this endpoint is read-only — admins
     cannot mutate audit history.
-tags: [Admin / Orders]
+tags: [Admin / Order History]
 
 parameters:
     - name: order_id
