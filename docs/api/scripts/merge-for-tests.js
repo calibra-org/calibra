@@ -60,6 +60,9 @@ console.log(`✓ Wrote ${outPath} (${Object.keys(merged.paths).length} paths)`);
  *
  * Conversions:
  *   - `type: ["X", "null"]` (3.1 nullable shorthand) becomes `type: "X", nullable: true`.
+ *   - `anyOf` / `oneOf` containing a `{ type: "null" }` branch sheds the null branch and
+ *     marks the parent `nullable: true`; if the combinator collapses to a single member, it
+ *     is hoisted into the parent so the validator sees a Schema rather than an empty `anyOf`.
  *   - Schema-level `examples: [v, …]` (3.1) becomes `example: v` — Media-Type-level
  *     `examples` (which is a Map<name, ExampleObject> in both 3.0 and 3.1) is left alone,
  *     distinguished by Array vs Object shape.
@@ -85,6 +88,27 @@ function downgradeTo30(node) {
             node.type = nonNull[0];
             if (hasNull) node.nullable = true;
         }
+    }
+
+    for (const key of ["anyOf", "oneOf"]) {
+        if (!Array.isArray(node[key])) continue;
+        const original = node[key];
+        const filtered = original.filter((s) => !(s && typeof s === "object" && s.type === "null"));
+        const hadNull = filtered.length !== original.length;
+        if (!hadNull) continue;
+        if (filtered.length === 0) {
+            delete node[key];
+            node.nullable = true;
+            continue;
+        }
+        if (filtered.length === 1) {
+            const only = filtered[0];
+            delete node[key];
+            Object.assign(node, only);
+        } else {
+            node[key] = filtered;
+        }
+        node.nullable = true;
     }
 
     if (node.examples !== undefined) {
