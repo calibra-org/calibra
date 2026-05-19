@@ -1,0 +1,47 @@
+operationId: accountMeShow
+summary: Fetch the signed-in user and customer profile
+description: >
+    Returns the user identity, the linked customer profile, and any country-scoped extension rows
+    the customer carries. Iranian customers see the `iran` extension under `profile_extensions`;
+    foreign customers get `profile_extensions: {}` with the `iran` key absent (the storefront
+    branches on `'iran' in profile_extensions`).
+tags: [Account]
+security:
+    - BearerAuth: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: User + customer envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [user, customer]
+                    properties:
+                        user:
+                            type: object
+                            properties:
+                                id: { type: integer }
+                                email: { type: string }
+                                role: { type: string }
+                                locale: { type: string }
+                        customer:
+                            type: object
+                            properties:
+                                id: { type: integer }
+                                first_name: { type: string }
+                                last_name: { type: string }
+                                phone: { type: [string, "null"] }
+                                country_default: { type: string }
+                                profile_extensions:
+                                    type: object
+                                    properties:
+                                        iran: { $ref: "../../../common/components/schemas/IranAddressExtension.yaml" }
+                                    additionalProperties: false
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

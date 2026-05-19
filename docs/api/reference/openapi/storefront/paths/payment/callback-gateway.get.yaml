@@ -1,0 +1,28 @@
+operationId: paymentCallbackGet
+summary: Gateway return-URL callback (GET)
+description: >
+    Receives the PSP's return-URL hit after the customer completes (or abandons) the hosted
+    checkout. The gateway adapter parses the query string, verifies the transaction, and either
+    transitions the order to `processing` (`set_paid_at`) or to `failed`. The response is a
+    redirect (`302`) to the storefront's confirmation page; the actual redirect target depends
+    on the gateway settings.
+tags: [Payment]
+security: []
+
+parameters:
+    - name: gateway
+      in: path
+      required: true
+      description: Stable adapter code (e.g. `zarinpal`, `irankish`, `bank_transfer`).
+      schema: { type: string }
+
+responses:
+    "302":
+        description: Redirect to the storefront's success / failure URL.
+        headers:
+            Location:
+                schema: { type: string }
+    "400":
+        $ref: "../../../common/components/responses/BadRequest.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

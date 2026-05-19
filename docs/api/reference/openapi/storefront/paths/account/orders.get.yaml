@@ -1,0 +1,32 @@
+operationId: accountOrdersIndex
+summary: List the signed-in customer's orders
+description: Paginated list of the customer's own orders. Drafts are excluded — only orders that reached `pending` or later appear.
+tags: [Account]
+security:
+    - BearerAuth: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - name: status
+      in: query
+      schema:
+          type: string
+          enum: [pending, on_hold, processing, completed, cancelled, refunded, failed]
+
+responses:
+    "200":
+        description: Paginated list of customer orders.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/Order.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"

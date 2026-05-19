@@ -1,0 +1,32 @@
+title: Order
+description: >
+    Customer-facing order card. Returned in `/account/orders` listings. The detail variant
+    {@link OrderDetail} adds line items, shipping line, billing/shipping addresses, status
+    history (visible rows only), and customer notes. Money fields are in Rial minor units.
+type: object
+properties:
+    id: { type: integer }
+    order_number:
+        type: integer
+        description: Sequence-allocated, gap-free human-facing reference (independent of `id`).
+        examples: [1042]
+    status:
+        type: string
+        enum: [draft, pending, on_hold, processing, completed, cancelled, refunded, failed]
+    currency: { type: string, examples: ["IRR"] }
+    currency_display: { type: string, examples: ["IRT", "IRR"] }
+    items_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    shipping_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    discount_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    grand_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+    date_paid_at: { type: [string, "null"], format: date-time }
+    date_completed_at: { type: [string, "null"], format: date-time }
+    created_at: { type: string, format: date-time }
+required:
+    - id
+    - order_number
+    - status
+    - currency
+    - grand_total
+    - created_at

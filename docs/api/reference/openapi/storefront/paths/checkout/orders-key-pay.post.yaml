@@ -1,0 +1,52 @@
+operationId: orderPayLink
+summary: Guest pay-link retry
+description: >
+    Locates the order by `order_key` (the opaque token written at finalize). Only orders in
+    `failed` (gateway declined) or `on_hold` (async pending) are eligible — `completed` /
+    `refunded` orders return 409, unknown keys 404. Snapshots the requested gateway onto the
+    order, re-reserves stock if needed (failed→pending edge), then hands off to the gateway
+    adapter and returns the redirect URL.
+tags: [Checkout]
+security: []
+
+parameters:
+    - name: order_key
+      in: path
+      required: true
+      schema: { type: string }
+    - $ref: "../../../common/components/parameters/IdempotencyKeyHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [payment_gateway_id]
+                properties:
+                    payment_gateway_id: { type: integer }
+
+responses:
+    "200":
+        description: Order detail with a fresh `payment.redirect_url` if the gateway redirects.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, payment]
+                    properties:
+                        data: { $ref: "../../components/schemas/OrderDetail.yaml" }
+                        payment:
+                            type: object
+                            properties:
+                                gateway_id: { type: integer }
+                                method_code: { type: string }
+                                redirect_url:
+                                    type: [string, "null"]
+                                    description: Null for non-redirecting gateways (e.g. bank-transfer).
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "409":
+        $ref: "../../../common/components/responses/Conflict.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

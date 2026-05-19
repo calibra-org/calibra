@@ -1,0 +1,76 @@
+operationId: catalogProductsIndex
+summary: List products
+description: >
+    Paginated list of published products. Filter by category, tag, brand, attribute term, on-sale
+    flag, price range, stock status, and free-text search. Locale is forwarded via
+    `Accept-Language` — Persian copy by default, English under `Accept-Language: en`. Variations
+    are not included; fetch the detail endpoint or `/products/{id}/variations` for them.
+tags: [Catalog]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - name: search
+      in: query
+      description: Free-text search across product name, slug, and sku.
+      schema: { type: string }
+    - name: category
+      in: query
+      description: Filter by category id (single value; chain query strings for OR semantics).
+      schema: { type: integer }
+    - name: tag
+      in: query
+      description: Filter by tag id.
+      schema: { type: integer }
+    - name: brand
+      in: query
+      description: Filter by brand id.
+      schema: { type: integer }
+    - name: on_sale
+      in: query
+      description: Limit to products currently on sale.
+      schema: { type: boolean }
+    - name: stock_status
+      in: query
+      schema:
+          type: string
+          enum: [in_stock, out_of_stock, on_backorder]
+    - name: min_price
+      in: query
+      description: Minimum current price in Rial minor units.
+      schema: { type: integer }
+    - name: max_price
+      in: query
+      description: Maximum current price in Rial minor units.
+      schema: { type: integer }
+    - name: sort
+      in: query
+      description: |
+          Sort order. Supported values:
+          - `featured` (default) — featured first, then most recent
+          - `price_asc`, `price_desc`
+          - `newest`, `oldest`
+          - `popularity` — by review count
+      schema:
+          type: string
+          enum: [featured, price_asc, price_desc, newest, oldest, popularity]
+
+responses:
+    "200":
+        description: Paginated list of products.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                $ref: "../../components/schemas/Product.yaml"
+                        meta:
+                            $ref: "../../../common/components/schemas/PaginationMeta.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

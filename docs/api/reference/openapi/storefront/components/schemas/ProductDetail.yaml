@@ -1,0 +1,65 @@
+title: ProductDetail
+description: >
+    Storefront product detail-page payload. Extends {@link Product} with the full gallery,
+    long-form description, brand, tags, attributes (with terms), and the variation list when the
+    product is `type=variable`. All translatable fields are resolved from `Accept-Language`.
+type: object
+allOf:
+    - $ref: "./Product.yaml"
+    - type: object
+      properties:
+          description:
+              type: [string, "null"]
+              description: Long-form description resolved from the active locale.
+          gallery:
+              type: array
+              items:
+                  type: object
+                  properties:
+                      url: { type: string }
+                      alt: { type: [string, "null"] }
+          brand:
+              anyOf:
+                  - type: object
+                    properties:
+                        id: { type: integer }
+                        slug: { type: string }
+                        name: { type: string }
+                  - type: "null"
+          tags:
+              type: array
+              items:
+                  type: object
+                  properties:
+                      id: { type: integer }
+                      slug: { type: string }
+                      name: { type: string }
+          attributes:
+              type: array
+              items:
+                  type: object
+                  properties:
+                      id: { type: integer }
+                      slug: { type: string }
+                      name: { type: string }
+                      variation: { type: boolean, description: "True when this attribute is used to differentiate variations." }
+                      terms:
+                          type: array
+                          items:
+                              type: object
+                              properties:
+                                  id: { type: integer }
+                                  slug: { type: string }
+                                  name: { type: string }
+          variations:
+              type: array
+              description: Present only when `type=variable`.
+              items:
+                  $ref: "./ProductVariation.yaml"
+          reviews_allowed:
+              type: boolean
+          average_rating:
+              type: [number, "null"]
+              description: 0–5 stars, null when no approved reviews exist.
+          review_count:
+              type: integer

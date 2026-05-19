@@ -1,0 +1,25 @@
+operationId: cartRemoveLine
+summary: Remove one line from the cart
+description: Removes the matching line item and recomputes totals (applied coupons are re-validated).
+tags: [Cart]
+security: []
+
+parameters:
+    - name: line
+      in: path
+      required: true
+      schema: { type: integer }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Updated cart envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/Cart.yaml" }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

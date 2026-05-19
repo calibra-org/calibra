@@ -1,0 +1,73 @@
+title: Cart
+description: >
+    Server-side cart, returned by every `/api/v1/cart/*` endpoint. The shape is identical across
+    GET, POST, PATCH, and DELETE so storefronts only have to know one cart envelope. Money fields
+    are Rial minor units. Persian/English item display copy is resolved server-side from the
+    active locale.
+type: object
+properties:
+    id:
+        type: integer
+    token:
+        type: string
+        description: Opaque base32 cart token. The same value rides on the `cart_token` cookie for anonymous shoppers.
+    customer_id:
+        type: [integer, "null"]
+        description: Null for anonymous carts; populated after `POST /cart/customer` or login.
+    currency:
+        type: string
+        description: ISO currency code; currently always `IRR`.
+        examples: ["IRR"]
+    items:
+        type: array
+        items:
+            $ref: "./CartLine.yaml"
+    applied_coupons:
+        type: array
+        items:
+            type: object
+            properties:
+                code: { type: string, examples: ["WELCOME10"] }
+                code_snapshot: { type: string }
+    shipping_rates:
+        type: array
+        description: "Eligible shipping rates given the cart address; the selected rate is flagged via `selected: true`."
+        items:
+            type: object
+            properties:
+                id: { type: integer }
+                method_code: { type: string }
+                title: { type: string }
+                cost: { $ref: "../../../common/components/schemas/Money.yaml" }
+                selected: { type: boolean }
+                free_shipping: { type: boolean }
+    address:
+        type: object
+        properties:
+            country: { type: [string, "null"] }
+            region_id: { type: [integer, "null"] }
+            postcode: { type: [string, "null"] }
+    totals:
+        type: object
+        description: All money fields are in Rial minor units.
+        properties:
+            items_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+            items_tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+            shipping_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+            shipping_tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+            discount_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+            discount_tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+            tax_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+            grand_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+            needs_shipping:
+                type: boolean
+                description: False when every line is virtual.
+            needs_payment:
+                type: boolean
+                description: False when totals.grand_total ≤ 0 (e.g. a 100%-off coupon).
+required:
+    - id
+    - token
+    - currency
+    - items
+    - totals

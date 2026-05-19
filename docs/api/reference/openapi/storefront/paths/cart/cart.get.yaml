@@ -1,0 +1,28 @@
+operationId: cartShow
+summary: Fetch the current cart
+description: >
+    Resolves the current cart per request:
+    1. Authenticated request → load by `customer_id`, creating it lazily on first call. If an
+       anonymous `cart_token` cookie is also present, the anon cart is merged in.
+    2. Anonymous + `cart_token` cookie → load by token.
+    3. Anonymous + no cookie → mint a fresh cart and set the cookie.
+
+    Every cart-affecting request bumps `last_activity_at` so the abandonment purge has accurate
+    freshness data.
+tags: [Cart]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: The current cart with computed totals.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/Cart.yaml"

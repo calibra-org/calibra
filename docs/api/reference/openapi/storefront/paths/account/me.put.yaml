@@ -1,0 +1,44 @@
+operationId: accountMeUpdate
+summary: Update the customer profile
+description: >
+    Updates allowed customer fields. `email` is intentionally not editable here — changing email
+    requires a re-verification flow not yet exposed. The Iran extension can be omitted (no
+    change), passed as a fields object (upsert), or passed as `null` (delete the extension row).
+    Server-side validation runs `national_id` checksum verification before persisting.
+tags: [Account]
+security:
+    - BearerAuth: []
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    first_name: { type: string, minLength: 1, maxLength: 80 }
+                    last_name: { type: string, minLength: 1, maxLength: 80 }
+                    phone: { type: [string, "null"], minLength: 4, maxLength: 32 }
+                    country_default: { type: string, minLength: 2, maxLength: 2 }
+                    locale: { type: string, maxLength: 8 }
+                    iran_extension:
+                        anyOf:
+                            - $ref: "../../../common/components/schemas/IranAddressExtension.yaml"
+                            - type: "null"
+
+responses:
+    "200":
+        description: Updated profile envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [customer]
+                    properties:
+                        customer:
+                            type: object
+                            additionalProperties: true
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"
