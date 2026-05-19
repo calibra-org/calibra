@@ -1,6 +1,6 @@
 import { test } from "@japa/runner";
 
-import { diff, normalisePath, type CodeRoute, type SpecOperation } from "#commands/check_api_docs";
+import { type CodeRoute, diff, normalisePath, type SpecOperation } from "#commands/check_api_docs";
 
 test.group("check:api-docs diff()", () => {
     test("returns no issues when code and spec match exactly", ({ assert }) => {
@@ -21,9 +21,7 @@ test.group("check:api-docs diff()", () => {
             { method: "GET", path: "/api/v1/products" },
             { method: "POST", path: "/api/v1/admin/secrets" },
         ];
-        const spec: SpecOperation[] = [
-            { method: "GET", path: "/api/v1/products", operationId: "listProducts" },
-        ];
+        const spec: SpecOperation[] = [{ method: "GET", path: "/api/v1/products", operationId: "listProducts" }];
 
         const issues = diff(code, spec);
         assert.lengthOf(issues, 1);
@@ -47,9 +45,7 @@ test.group("check:api-docs diff()", () => {
 
     test("classifies same-path-different-method drift as a single mismatch row", ({ assert }) => {
         const code: CodeRoute[] = [{ method: "PATCH", path: "/api/v1/cart/items/{line}" }];
-        const spec: SpecOperation[] = [
-            { method: "PUT", path: "/api/v1/cart/items/{line}", operationId: "cartUpdateLine" },
-        ];
+        const spec: SpecOperation[] = [{ method: "PUT", path: "/api/v1/cart/items/{line}", operationId: "cartUpdateLine" }];
 
         const issues = diff(code, spec);
         assert.lengthOf(issues, 1);
@@ -60,9 +56,7 @@ test.group("check:api-docs diff()", () => {
 
     test("treats Adonis :slug and OpenAPI {slug} as the same path", ({ assert }) => {
         const code: CodeRoute[] = [{ method: "GET", path: normalisePath("/api/v1/products/:slug") }];
-        const spec: SpecOperation[] = [
-            { method: "GET", path: "/api/v1/products/{slug}", operationId: "showProduct" },
-        ];
+        const spec: SpecOperation[] = [{ method: "GET", path: "/api/v1/products/{slug}", operationId: "showProduct" }];
 
         assert.deepEqual(diff(code, spec), []);
     });

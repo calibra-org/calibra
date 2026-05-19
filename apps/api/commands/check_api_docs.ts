@@ -1,8 +1,8 @@
+import { readFile, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { BaseCommand, flags } from "@adonisjs/core/ace";
 import router from "@adonisjs/core/services/router";
 import type { CommandOptions } from "@adonisjs/core/types/ace";
-import { readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
 
 /**
  * Diff entry produced by {@link diff}. Each value indicates a single drift between the live
@@ -118,7 +118,8 @@ export function diff(codeRoutes: CodeRoute[], specRoutes: SpecOperation[]): Issu
                     severity: "mismatch",
                     codeKey: `${truelyExtra.join("|")} ${op.path}`,
                     specKey: key,
-                    message: `path registered under ${truelyExtra.join("/")} but spec declares ${op.method}` +
+                    message:
+                        `path registered under ${truelyExtra.join("/")} but spec declares ${op.method}` +
                         (op.operationId ? ` (operationId: ${op.operationId})` : ""),
                 });
                 reported.add(key);
@@ -128,8 +129,7 @@ export function diff(codeRoutes: CodeRoute[], specRoutes: SpecOperation[]): Issu
         issues.push({
             severity: "stale-in-spec",
             specKey: key,
-            message: "endpoint documented but no longer registered" +
-                (op.operationId ? ` (operationId: ${op.operationId})` : ""),
+            message: "endpoint documented but no longer registered" + (op.operationId ? ` (operationId: ${op.operationId})` : ""),
         });
     }
 
@@ -160,10 +160,7 @@ function driftKey(entry: { severity: Issue["severity"]; codeKey?: string; specKe
 }
 
 function byIssueOrder(a: Issue, b: Issue): number {
-    return (
-        a.severity.localeCompare(b.severity) ||
-        (a.codeKey ?? a.specKey ?? "").localeCompare(b.codeKey ?? b.specKey ?? "")
-    );
+    return a.severity.localeCompare(b.severity) || (a.codeKey ?? a.specKey ?? "").localeCompare(b.codeKey ?? b.specKey ?? "");
 }
 
 /**
@@ -192,9 +189,7 @@ export default class CheckApiDocs extends BaseCommand {
             try {
                 raw = await readFile(distPath, "utf8");
             } catch (err) {
-                this.logger.error(
-                    `Could not read ${file} — run \`pnpm --filter @calibra/api-docs run build:json\` first.`,
-                );
+                this.logger.error(`Could not read ${file} — run \`pnpm --filter @calibra/api-docs run build:json\` first.`);
                 throw err;
             }
             specRoutes.push(...this.collectSpecOperations(JSON.parse(raw)));
@@ -204,9 +199,7 @@ export default class CheckApiDocs extends BaseCommand {
 
         if (this.updateKnownDrift) {
             await this.writeKnownDrift(allIssues);
-            this.logger.success(
-                `Wrote ${allIssues.length} drift entry(ies) to .check-api-docs-known-drift.json.`,
-            );
+            this.logger.success(`Wrote ${allIssues.length} drift entry(ies) to .check-api-docs-known-drift.json.`);
             return;
         }
 

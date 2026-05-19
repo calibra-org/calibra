@@ -1,654 +1,654 @@
 [
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/account/addresses/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/attributes/{attribute_id}/terms/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/attributes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/brands/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/categories/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/coupons/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/customers/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/orders/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/orders/{order_id}/notes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/orders/{order_id}/refunds/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/products/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/products/{product_id}/variations/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/reviews/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/shipping-classes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/admin/tags/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "DELETE /api/v1/cart/items/{line_id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/account/addresses/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/account/addresses"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/account/downloads/{id}/url"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/account/downloads"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/account/orders/{id}/history"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/account/orders/{id}/notes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/attributes/{attribute_id}/terms"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/attributes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/attributes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/brands/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/brands"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/categories/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/categories"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/coupons/{id}/redemptions"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/coupons/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/coupons"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/customers/{id}/downloads"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/customers/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/customers"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/payment-attempts/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/payment-attempts"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/payment-gateways/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/payment-gateways"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/products/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/products/{product_id}/variations"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/products"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/reviews"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/shipping-classes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/shipping-classes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/tags/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/tags"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/attributes/{id}/terms"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/attributes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/auth/me"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/brands"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/categories/{slug}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/payment/callback/{gateway_code}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/products/{id}/reviews"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/products/{id}/variations"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/tags"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/account/addresses/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/account/addresses"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/account/downloads/{id}/url"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/account/downloads"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/account/me"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/account/orders/{id}/history"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/account/orders/{id}/notes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/account/orders/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/account/orders"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/attributes/{attribute_id}/terms"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/attributes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/attributes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/brands/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/brands"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/categories/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/categories"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/coupons/{id}/redemptions"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/coupons/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/coupons"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/customers/{id}/downloads"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/customers/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/customers"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/orders/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/orders/{order_id}/history"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/orders/{order_id}/notes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/orders/{order_id}/refunds/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/orders/{order_id}/refunds"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/orders"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/payment-attempts/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/payment-attempts"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/payment-gateways/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/payment-gateways"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/products/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/products/{product_id}/variations"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/products"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/reviews"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/shipping-classes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/shipping-classes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/tags/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/tags"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/attributes/{id}/terms"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/attributes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/auth/me"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/brands"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/cart"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/categories/{slug}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/categories"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/checkout"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/payment/callback/{gateway_code}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/products/{id}/reviews"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/products/{id}/variations"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/products/{slug}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/products"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/tags"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/account/addresses/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/attributes/{attribute_id}/terms/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/attributes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/brands/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/categories/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/coupons/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/customers/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/orders/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/payment-gateways/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/products/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/products/{product_id}/variations/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/reviews/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/shipping-classes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/admin/tags/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PATCH /api/v1/cart/items/{line_id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/account/addresses"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/attributes/{attribute_id}/terms"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/attributes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/brands"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/categories"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/coupons/batch"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/coupons"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/customers/batch"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/customers"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/orders/batch"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/orders"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/{id}/duplicate"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/{product_id}/variations"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/batch"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/shipping-classes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/tags"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/checkout/orders/{order_key}/pay"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/payment/callback/{gateway_code}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/payment/init"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/products/{id}/reviews"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/attributes/{attribute_id}/terms/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/attributes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/brands/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/categories/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/coupons/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/customers/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/orders/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/products/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/products/{product_id}/variations/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/shipping-classes/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "PUT /api/v1/admin/tags/{id}"
-  },
-  {
-    "severity": "stale-in-spec",
-    "specKey": "DELETE /api/v1/cart/items/{line}"
-  },
-  {
-    "severity": "stale-in-spec",
-    "specKey": "GET /api/v1/payment/callback/{gateway}"
-  },
-  {
-    "severity": "stale-in-spec",
-    "specKey": "PATCH /api/v1/cart/items/{line}"
-  },
-  {
-    "severity": "stale-in-spec",
-    "specKey": "POST /api/v1/orders/{order_key}/pay"
-  },
-  {
-    "severity": "stale-in-spec",
-    "specKey": "POST /api/v1/payment/callback/{gateway}"
-  },
-  {
-    "severity": "stale-in-spec",
-    "specKey": "POST /api/v1/payment/init/{order_key}"
-  }
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/account/addresses/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/attributes/{attribute_id}/terms/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/attributes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/brands/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/categories/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/coupons/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/customers/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/orders/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/orders/{order_id}/notes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/orders/{order_id}/refunds/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/products/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/products/{product_id}/variations/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/reviews/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/shipping-classes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/admin/tags/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "DELETE /api/v1/cart/items/{line_id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/account/addresses/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/account/addresses"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/account/downloads/{id}/url"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/account/downloads"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/account/orders/{id}/history"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/account/orders/{id}/notes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/attributes/{attribute_id}/terms"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/attributes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/attributes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/brands/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/brands"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/categories/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/categories"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/coupons/{id}/redemptions"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/coupons/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/coupons"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/customers/{id}/downloads"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/customers/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/customers"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/payment-attempts/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/payment-attempts"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/payment-gateways/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/payment-gateways"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/products/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/products/{product_id}/variations"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/products"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/reviews"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/shipping-classes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/shipping-classes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/tags/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/tags"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/attributes/{id}/terms"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/attributes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/auth/me"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/brands"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/categories/{slug}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/payment/callback/{gateway_code}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/products/{id}/reviews"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/products/{id}/variations"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/tags"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/account/addresses/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/account/addresses"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/account/downloads/{id}/url"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/account/downloads"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/account/me"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/account/orders/{id}/history"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/account/orders/{id}/notes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/account/orders/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/account/orders"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/attributes/{attribute_id}/terms"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/attributes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/attributes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/brands/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/brands"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/categories/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/categories"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/coupons/{id}/redemptions"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/coupons/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/coupons"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/customers/{id}/downloads"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/customers/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/customers"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/orders/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/orders/{order_id}/history"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/orders/{order_id}/notes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/orders/{order_id}/refunds/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/orders/{order_id}/refunds"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/orders"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/payment-attempts/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/payment-attempts"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/payment-gateways/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/payment-gateways"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/products/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/products/{product_id}/variations"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/products"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/reviews"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/shipping-classes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/shipping-classes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/tags/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/tags"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/attributes/{id}/terms"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/attributes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/auth/me"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/brands"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/cart"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/categories/{slug}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/categories"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/checkout"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/payment/callback/{gateway_code}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/products/{id}/reviews"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/products/{id}/variations"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/products/{slug}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/products"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/tags"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/account/addresses/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/attributes/{attribute_id}/terms/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/attributes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/brands/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/categories/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/coupons/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/customers/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/orders/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/payment-gateways/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/products/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/products/{product_id}/variations/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/reviews/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/shipping-classes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/admin/tags/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PATCH /api/v1/cart/items/{line_id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/account/addresses"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/attributes/{attribute_id}/terms"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/attributes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/brands"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/categories"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/coupons/batch"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/coupons"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/customers/batch"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/customers"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/orders/batch"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/orders"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/{id}/duplicate"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/{product_id}/variations"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/batch"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/shipping-classes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/tags"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/checkout/orders/{order_key}/pay"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/payment/callback/{gateway_code}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/payment/init"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/products/{id}/reviews"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/attributes/{attribute_id}/terms/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/attributes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/brands/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/categories/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/coupons/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/customers/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/orders/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/products/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/products/{product_id}/variations/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/shipping-classes/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "PUT /api/v1/admin/tags/{id}"
+    },
+    {
+        "severity": "stale-in-spec",
+        "specKey": "DELETE /api/v1/cart/items/{line}"
+    },
+    {
+        "severity": "stale-in-spec",
+        "specKey": "GET /api/v1/payment/callback/{gateway}"
+    },
+    {
+        "severity": "stale-in-spec",
+        "specKey": "PATCH /api/v1/cart/items/{line}"
+    },
+    {
+        "severity": "stale-in-spec",
+        "specKey": "POST /api/v1/orders/{order_key}/pay"
+    },
+    {
+        "severity": "stale-in-spec",
+        "specKey": "POST /api/v1/payment/callback/{gateway}"
+    },
+    {
+        "severity": "stale-in-spec",
+        "specKey": "POST /api/v1/payment/init/{order_key}"
+    }
 ]
