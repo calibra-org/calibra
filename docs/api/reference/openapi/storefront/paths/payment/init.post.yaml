@@ -3,18 +3,29 @@ summary: Initialize a payment attempt against the order's gateway
 description: >
     Looks up the order by `order_key` (the opaque token from finalize) and dispatches to the
     snapshotted gateway adapter. Redirecting gateways return a hosted-checkout URL in
-    `redirect_url`; bank-transfer returns `null` for the URL and flips the order to `on_hold`
-    with the IBAN + account-name instructions stamped onto `gateway_payload.customer_note`.
-    Pass `Idempotency-Key` so retries do not re-init the gateway intent.
+    `data.redirect_url`; bank-transfer returns `null` for the URL and flips the order to
+    `on_hold` with the IBAN + account-name instructions stamped onto
+    `gateway_payload.customer_note`. Pass `Idempotency-Key` so retries do not re-init the
+    gateway intent.
 tags: [Payment]
 security: []
 
 parameters:
-    - name: order_key
-      in: path
-      required: true
-      schema: { type: string }
     - $ref: "../../../common/components/parameters/IdempotencyKeyHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [order_key]
+                properties:
+                    order_key:
+                        type: string
+                        minLength: 8
+                        maxLength: 64
+                        description: Opaque order key issued at finalize time.
 
 responses:
     "200":
@@ -23,16 +34,21 @@ responses:
             application/json:
                 schema:
                     type: object
-                    required: [redirect_url]
+                    required: [data]
                     properties:
-                        redirect_url:
-                            type: [string, "null"]
-                            description: Hosted-checkout URL. Null for non-redirecting gateways.
-                        gateway:
+                        data:
                             type: object
+                            required: [order_id, order_key, redirect_url]
                             properties:
-                                code: { type: string }
-                                attempt_id: { type: integer }
+                                order_id:
+                                    type: integer
+                                    description: Internal numeric order id (BIGINT).
+                                order_key:
+                                    type: string
+                                    description: Echo of the request `order_key`.
+                                redirect_url:
+                                    type: [string, "null"]
+                                    description: Hosted-checkout URL. Null for non-redirecting gateways.
     "404":
         $ref: "../../../common/components/responses/NotFound.yaml"
     "422":

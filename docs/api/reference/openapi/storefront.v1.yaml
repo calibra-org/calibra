@@ -21,7 +21,7 @@ info:
           locale.
         - **Auth.** Public endpoints carry `security: []`. Authenticated endpoints use a bearer
           token from `POST /api/v1/auth/login`.
-        - **Idempotency.** `POST /checkout/submit` and `POST /payment/init/:order_key` accept an
+        - **Idempotency.** `POST /checkout/submit` and `POST /payment/init` accept an
           `Idempotency-Key` header so retries don't re-run side effects.
     contact:
         name: Calibra Backend Team
@@ -94,11 +94,11 @@ paths:
             $ref: "./storefront/paths/cart/items.post.yaml"
         delete:
             $ref: "./storefront/paths/cart/items.delete.yaml"
-    /api/v1/cart/items/{line}:
+    /api/v1/cart/items/{line_id}:
         patch:
-            $ref: "./storefront/paths/cart/items-line.patch.yaml"
+            $ref: "./storefront/paths/cart/items-line_id.patch.yaml"
         delete:
-            $ref: "./storefront/paths/cart/items-line.delete.yaml"
+            $ref: "./storefront/paths/cart/items-line_id.delete.yaml"
     /api/v1/cart/customer:
         post:
             $ref: "./storefront/paths/cart/customer.post.yaml"
@@ -120,9 +120,9 @@ paths:
     /api/v1/checkout/submit:
         post:
             $ref: "./storefront/paths/checkout/submit.post.yaml"
-    /api/v1/orders/{order_key}/pay:
+    /api/v1/checkout/orders/{order_key}/pay:
         post:
-            $ref: "./storefront/paths/checkout/orders-key-pay.post.yaml"
+            $ref: "./storefront/paths/checkout/checkout-orders-key-pay.post.yaml"
 
     /api/v1/account/me:
         get:
@@ -136,11 +136,11 @@ paths:
         get:
             $ref: "./storefront/paths/account/orders-id.get.yaml"
 
-    /api/v1/payment/init/{order_key}:
+    /api/v1/payment/init:
         post:
             $ref: "./storefront/paths/payment/init.post.yaml"
-    /api/v1/payment/callback/{gateway}:
+    /api/v1/payment/callback/{gateway_code}:
         get:
-            $ref: "./storefront/paths/payment/callback-gateway.get.yaml"
+            $ref: "./storefront/paths/payment/callback-gateway_code.get.yaml"
         post:
-            $ref: "./storefront/paths/payment/callback-gateway.post.yaml"
+            $ref: "./storefront/paths/payment/callback-gateway_code.post.yaml"
