@@ -95,6 +95,7 @@ test.group("usage_limit_per_user", (group) => {
             .cookie("cart_token", added.cookie("cart_token")?.value as string)
             .json({ code: "U2" });
         result.assertStatus(200);
+        result.assertAgainstApiSpec();
         assert.equal(result.body().data.applied_coupons[0].code, "U2");
     });
 });

@@ -1,9 +1,93 @@
 title: AdminProductDetail
-description: Admin detail-page payload for a single product. Carries every translation row, the full image gallery, variations, and the attribute → terms map.
+description: >
+    Admin detail-page payload for a single product. Matches `ProductTransformer.forAdmin()`
+    exactly — the storefront detail shape extended with every translation row, the
+    `global_unique_id`, the free-form `attributes` map, and the audit timestamps.
 allOf:
     - $ref: "./AdminProduct.yaml"
     - type: object
       properties:
+          description: { type: [string, "null"] }
+          purchase_note: { type: [string, "null"] }
+          global_unique_id: { type: [string, "null"] }
+          attributes:
+              type: object
+              additionalProperties: true
+              description: Free-form metadata bag.
+          images:
+              type: array
+              items:
+                  type: object
+                  required: [id, media_id, position]
+                  properties:
+                      id: { type: integer }
+                      media_id: { type: integer }
+                      position: { type: integer }
+                      url: { type: [string, "null"] }
+                      alt: { type: [string, "null"] }
+          variations:
+              type: array
+              description: Present only when `type=variable`.
+              items:
+                  type: object
+                  required: [id, on_sale, manage_stock_mode, attribute_pins]
+                  properties:
+                      id: { type: integer }
+                      sku: { type: [string, "null"] }
+                      regular_price: { type: [integer, "null"] }
+                      sale_price: { type: [integer, "null"] }
+                      effective_price: { type: [integer, "null"] }
+                      on_sale: { type: boolean }
+                      manage_stock_mode: { type: string }
+                      attribute_pins:
+                          type: array
+                          items:
+                              type: object
+                              required: [attribute_id, term_id]
+                              properties:
+                                  attribute_id: { type: integer }
+                                  term_id: { type: integer }
+          attribute_links:
+              type: array
+              items:
+                  type: object
+                  required: [id, attribute_id, position, visible, used_for_variation, term_ids]
+                  properties:
+                      id: { type: integer }
+                      attribute_id: { type: integer }
+                      position: { type: integer }
+                      visible: { type: boolean }
+                      used_for_variation: { type: boolean }
+                      term_ids:
+                          type: array
+                          items: { type: integer }
+          categories:
+              type: array
+              items:
+                  type: object
+                  required: [id]
+                  properties:
+                      id: { type: integer }
+                      name: { type: [string, "null"] }
+                      slug: { type: [string, "null"] }
+          tags:
+              type: array
+              items:
+                  type: object
+                  required: [id]
+                  properties:
+                      id: { type: integer }
+                      name: { type: [string, "null"] }
+                      slug: { type: [string, "null"] }
+          brands:
+              type: array
+              items:
+                  type: object
+                  required: [id]
+                  properties:
+                      id: { type: integer }
+                      name: { type: [string, "null"] }
+                      slug: { type: [string, "null"] }
           translations:
               type: array
               items:
@@ -12,46 +96,10 @@ allOf:
                       locale: { type: string }
                       name: { type: string }
                       slug: { type: string }
-                      short_description: { type: [string, "null"] }
                       description: { type: [string, "null"] }
-          images:
-              type: array
-              items:
-                  type: object
-                  properties:
-                      id: { type: integer }
-                      media_id: { type: integer }
-                      position: { type: integer }
-                      url: { type: [string, "null"] }
-                      alt: { type: [string, "null"] }
-          categories:
-              type: array
-              items: { type: integer, description: Category id. }
-          tags:
-              type: array
-              items: { type: integer, description: Tag id. }
-          brand_id: { type: [integer, "null"] }
-          attributes:
-              type: array
-              items:
-                  type: object
-                  properties:
-                      attribute_id: { type: integer }
-                      visible: { type: boolean }
-                      variation: { type: boolean }
-                      term_ids:
-                          type: array
-                          items: { type: integer }
-          variations:
-              type: array
-              description: Present only when `type=variable`.
-              items: { $ref: "./AdminProductVariation.yaml" }
-          downloads:
-              type: array
-              description: Present only when `downloadable=true`.
-              items:
-                  type: object
-                  properties:
-                      id: { type: integer }
-                      name: { type: string }
-                      url: { type: string }
+                      short_description: { type: [string, "null"] }
+                      purchase_note: { type: [string, "null"] }
+                      external_button_text: { type: [string, "null"] }
+          created_at: { type: [string, "null"], format: date-time }
+          updated_at: { type: [string, "null"], format: date-time }
+          deleted_at: { type: [string, "null"], format: date-time }

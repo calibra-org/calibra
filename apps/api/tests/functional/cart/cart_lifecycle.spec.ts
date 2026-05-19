@@ -39,6 +39,7 @@ test.group("cart lifecycle", (group) => {
     test("first GET /api/v1/cart creates a cart and sets the cart_token cookie", async ({ client, assert }) => {
         const response = await client.get("/api/v1/cart");
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         response.assertCookie("cart_token");
         const body = response.body();
         assert.exists(body.data.id);
@@ -52,6 +53,7 @@ test.group("cart lifecycle", (group) => {
 
         const second = await client.get("/api/v1/cart").cookie("cart_token", token);
         second.assertStatus(200);
+        second.assertAgainstApiSpec();
         assert.equal(second.body().data.id, first.body().data.id);
         assert.equal(second.body().data.token, first.body().data.token);
     });
@@ -60,6 +62,7 @@ test.group("cart lifecycle", (group) => {
         const { user, customer } = await createCustomer("auth-cart@calibra.dev");
         const response = await client.get("/api/v1/cart").withGuard("api").loginAs(user);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         assert.equal(response.body().data.customer_id, Number(customer.id));
         const stored = await Cart.query().where("customer_id", Number(customer.id)).first();
         assert.exists(stored);
@@ -76,15 +79,18 @@ test.group("cart lifecycle", (group) => {
             .loginAs(user)
             .json({ product_id: Number(product.id), quantity: 2 });
         customerSeed.assertStatus(200);
+        customerSeed.assertAgainstApiSpec();
 
         /** Step 2: as an anonymous shopper, seed a cart with quantity 3 of the same product. */
         const anonSeed = await client.post("/api/v1/cart/items").json({ product_id: Number(product.id), quantity: 3 });
         anonSeed.assertStatus(200);
+        anonSeed.assertAgainstApiSpec();
         const anonToken = tokenFromResponse(anonSeed);
 
         /** Step 3: login while carrying the anonymous cart_token cookie — middleware should merge. */
         const merged = await client.get("/api/v1/cart").cookie("cart_token", anonToken).withGuard("api").loginAs(user);
         merged.assertStatus(200);
+        merged.assertAgainstApiSpec();
         const body = merged.body();
         assert.equal(body.data.customer_id, Number(customer.id));
         assert.equal(body.data.items.length, 1);

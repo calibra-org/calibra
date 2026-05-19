@@ -22,6 +22,7 @@ test.group("POST /api/v1/auth/login", (group) => {
         const response = await client.post("/api/v1/auth/login").json({ email: "login@calibra.dev", password: "Passw0rd1!" });
 
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         response.assertBodyContains({ user: { email: "login@calibra.dev" }, token: { type: "bearer" } });
         const body = response.body();
         assert.match(body.token.value, /^oat_/);

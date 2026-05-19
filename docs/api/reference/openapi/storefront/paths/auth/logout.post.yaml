@@ -8,7 +8,10 @@ security:
     - BearerAuth: []
 
 responses:
-    "204":
-        description: Logged out. Empty body.
+    "200":
+        description: Logged out.
+        content:
+            application/json:
+                schema: { $ref: "../../../common/components/schemas/BasicMessage.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"

@@ -12,10 +12,10 @@ properties:
     sku: { type: [string, "null"] }
     status:
         type: string
-        enum: [draft, published, archived]
+        enum: [draft, publish, archived]
     catalog_visibility:
         type: string
-        enum: [catalog, search, hidden, both]
+        enum: [catalog, search, hidden, both, visible]
     featured: { type: boolean }
     virtual: { type: boolean }
     downloadable: { type: boolean }

@@ -23,6 +23,7 @@ test.group("POST /api/v1/auth/logout", (group) => {
 
         const logout = await client.post("/api/v1/auth/logout").header("Authorization", `Bearer ${bearer}`);
         logout.assertStatus(200);
+        logout.assertAgainstApiSpec();
 
         const retry = await client.post("/api/v1/auth/logout").header("Authorization", `Bearer ${bearer}`);
         retry.assertStatus(401);

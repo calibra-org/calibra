@@ -19,6 +19,7 @@ test.group("Product reviews", (group) => {
             rating: 5,
         });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         assert.equal(response.body().data.status, "pending");
         const row = await ProductReview.findOrFail(response.body().data.id);
         assert.isNull(row.customerId);

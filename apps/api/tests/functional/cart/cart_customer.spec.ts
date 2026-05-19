@@ -38,6 +38,7 @@ test.group("POST /api/v1/cart/customer", (group) => {
             .json({ country: "IR", region_id: tehranId, postcode: "1234567890" });
 
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.address.country, "IR");
         assert.equal(body.data.address.region_id, tehranId);
@@ -54,6 +55,7 @@ test.group("POST /api/v1/cart/customer", (group) => {
         const response = await client.post("/api/v1/cart/customer").cookie("cart_token", token).json({ country: "US" });
 
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.address.country, "US");
         assert.equal(body.data.totals.tax_total, 0);

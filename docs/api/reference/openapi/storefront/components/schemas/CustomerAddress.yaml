@@ -6,7 +6,9 @@ description: >
     live separately on the customer profile and are not echoed here).
 type: object
 properties:
-    id: { type: integer }
+    id:
+        type: string
+        description: BIGINT id serialised as a string (Lucid default for safety above 2^53).
     kind:
         type: string
         enum: [billing, shipping]

@@ -14,6 +14,7 @@ test.group("POST /api/v1/auth/password/forgot + /reset", (group) => {
     test("forgot always returns 200, regardless of email match", async ({ client }) => {
         const unknown = await client.post("/api/v1/auth/password/forgot").json({ email: "nobody@calibra.dev" });
         unknown.assertStatus(200);
+        unknown.assertAgainstApiSpec();
 
         await User.create({
             email: "real@calibra.dev",
@@ -23,6 +24,7 @@ test.group("POST /api/v1/auth/password/forgot + /reset", (group) => {
         });
         const known = await client.post("/api/v1/auth/password/forgot").json({ email: "real@calibra.dev" });
         known.assertStatus(200);
+        known.assertAgainstApiSpec();
     });
 
     test("reset with a valid token updates the password and revokes existing tokens", async ({ client, assert }) => {
@@ -45,9 +47,11 @@ test.group("POST /api/v1/auth/password/forgot + /reset", (group) => {
 
         const response = await client.post("/api/v1/auth/password/reset").json({ token: plain, password: "NewPassw0rd1!" });
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
 
         const login = await client.post("/api/v1/auth/login").json({ email: "reset@calibra.dev", password: "NewPassw0rd1!" });
         login.assertStatus(200);
+        login.assertAgainstApiSpec();
 
         const retry = await client.post("/api/v1/auth/logout").header("Authorization", `Bearer ${oldBearer}`);
         retry.assertStatus(401);

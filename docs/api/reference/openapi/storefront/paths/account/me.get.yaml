@@ -21,26 +21,8 @@ responses:
                     type: object
                     required: [user, customer]
                     properties:
-                        user:
-                            type: object
-                            properties:
-                                id: { type: integer }
-                                email: { type: string }
-                                role: { type: string }
-                                locale: { type: string }
-                        customer:
-                            type: object
-                            properties:
-                                id: { type: integer }
-                                first_name: { type: string }
-                                last_name: { type: string }
-                                phone: { type: [string, "null"] }
-                                country_default: { type: string }
-                                profile_extensions:
-                                    type: object
-                                    properties:
-                                        iran: { $ref: "../../../common/components/schemas/IranAddressExtension.yaml" }
-                                    additionalProperties: false
+                        user: { $ref: "../../components/schemas/AuthUser.yaml" }
+                        customer: { $ref: "../../components/schemas/CustomerProfile.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "404":

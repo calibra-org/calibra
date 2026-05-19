@@ -38,10 +38,28 @@ responses:
                         user:
                             type: object
                             properties:
-                                id: { type: integer }
+                                id: { type: string, description: "BIGINT id serialised as string." }
                                 email: { type: string }
                                 role: { type: string }
                                 locale: { type: string }
+                        customer:
+                            anyOf:
+                                - type: "null"
+                                - type: object
+                                  description: Base customer profile (no `profile_extensions`).
+                                  properties:
+                                      id: { type: string }
+                                      user_id: { type: string }
+                                      first_name: { type: [string, "null"] }
+                                      last_name: { type: [string, "null"] }
+                                      phone: { type: [string, "null"] }
+                                      country_default: { type: string }
+                                      is_paying_customer: { type: boolean }
+                                      attributes:
+                                          type: object
+                                          additionalProperties: true
+                                      created_at: { type: [string, "null"], format: date-time }
+                                      updated_at: { type: [string, "null"], format: date-time }
                         token:
                             type: object
                             required: [type, value]

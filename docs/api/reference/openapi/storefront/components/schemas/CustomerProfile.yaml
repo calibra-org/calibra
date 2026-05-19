@@ -6,8 +6,8 @@ description: >
     extension row of that kind — the storefront tests `if ('iran' in profile_extensions)`.
 type: object
 properties:
-    id: { type: integer }
-    user_id: { type: integer }
+    id: { type: string, description: "BIGINT id serialised as a string (Lucid default)." }
+    user_id: { type: string }
     first_name: { type: [string, "null"] }
     last_name: { type: [string, "null"] }
     phone: { type: [string, "null"] }
