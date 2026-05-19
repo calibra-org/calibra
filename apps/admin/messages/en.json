@@ -74,6 +74,9 @@
         "password": "Password",
         "submit": "Sign in",
         "demoNotice": "Demo mode — any non-empty email + password is accepted.",
+        "highlightSecure": "Secure authentication",
+        "highlightBilingual": "Persian + English",
+        "highlightTheme": "Light & dark themes",
         "footerCopyright": "© 2026 Calibra — all rights reserved."
     },
     "Dashboard": {

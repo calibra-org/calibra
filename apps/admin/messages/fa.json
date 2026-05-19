@@ -74,6 +74,9 @@
         "password": "رمز عبور",
         "submit": "ورود",
         "demoNotice": "حالت دمو: هر ایمیل/رمز عبور غیرخالی پذیرفته می‌شود.",
+        "highlightSecure": "احراز هویت امن",
+        "highlightBilingual": "فارسی + انگلیسی",
+        "highlightTheme": "حالت روشن و تاریک",
         "footerCopyright": "© ۱۴۰۵ کالیبرا — تمامی حقوق محفوظ است."
     },
     "Dashboard": {
