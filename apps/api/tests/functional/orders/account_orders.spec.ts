@@ -46,6 +46,7 @@ test.group("GET /api/v1/account/orders", (group) => {
 
         const response = await client.get("/api/v1/account/orders").loginAs(user);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.length, 1);
         assert.equal(body.data[0].status, "pending");
@@ -136,6 +137,7 @@ test.group("admin_orders.spec", (group) => {
 
         const list = await client.get("/api/v1/admin/orders?status=pending").loginAs(admin);
         list.assertStatus(200);
+        list.assertAgainstApiSpec();
         assert.equal(list.body().data.length, 1);
         assert.equal(list.body().data[0].status, "pending");
     });

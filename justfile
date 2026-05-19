@@ -145,6 +145,11 @@ docs-build:
 docs-lint:
     @just api-docs::lint
 
+# Diff the live Adonis router against the bundled OpenAPI specs (fails on new drift)
+docs-check:
+    pnpm --filter @calibra/api-docs run build:json
+    pnpm --filter @calibra/api exec node ace check:api-docs
+
 # Clean build artifacts and caches
 clean:
     find . \( -name 'node_modules' -o -name '.pnpm' -o -name '.turbo' -o -name 'build' -o -name '.next' -o -name '.cache' -o -name 'dist' -o -name 'coverage' -o -name 'playwright-report' -o -name 'test-results' \) \

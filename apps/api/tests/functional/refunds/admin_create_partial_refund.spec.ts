@@ -44,6 +44,7 @@ test.group("POST /api/v1/admin/orders/:order_id/refunds (partial)", (group) => {
                 reason: "customer changed mind",
             });
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.amount_minor, 1_000_000);
         assert.equal(body.data.line_items.length, 1);
@@ -72,6 +73,7 @@ test.group("POST /api/v1/admin/orders/:order_id/refunds (partial)", (group) => {
                 line_items: [{ order_line_item_id: Number(line.id), quantity: 1, refund_amount_minor: 1_000_000 }],
             });
         first.assertStatus(201);
+        first.assertAgainstApiSpec();
 
         const second = await client
             .post(`/api/v1/admin/orders/${order.id}/refunds`)
@@ -80,6 +82,7 @@ test.group("POST /api/v1/admin/orders/:order_id/refunds (partial)", (group) => {
                 line_items: [{ order_line_item_id: Number(line.id), quantity: 1, refund_amount_minor: 1_000_000 }],
             });
         second.assertStatus(201);
+        second.assertAgainstApiSpec();
 
         await order.refresh();
         assert.equal(order.status, OrderStatus.Refunded);

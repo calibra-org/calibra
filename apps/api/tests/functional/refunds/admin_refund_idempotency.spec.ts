@@ -42,6 +42,7 @@ test.group("POST /api/v1/admin/orders/:order_id/refunds (idempotency)", (group) 
             .header("Idempotency-Key", "rfd-1")
             .json({ amount_minor: 1_000_000, restock_requested: false });
         first.assertStatus(201);
+        first.assertAgainstApiSpec();
         const firstId = first.body().data.id;
 
         const second = await client
@@ -50,6 +51,7 @@ test.group("POST /api/v1/admin/orders/:order_id/refunds (idempotency)", (group) 
             .header("Idempotency-Key", "rfd-1")
             .json({ amount_minor: 1_000_000, restock_requested: false });
         second.assertStatus(201);
+        second.assertAgainstApiSpec();
         assert.equal(second.body().data.id, firstId);
 
         const all = await OrderRefund.query().where("order_id", Number(order.id));

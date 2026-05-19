@@ -41,6 +41,7 @@ test.group("POST /api/v1/admin/orders/:order_id/refunds (full)", (group) => {
             .json({ amount_minor: Number(order.grandTotal), reason: "goodwill" });
 
         response.assertStatus(201);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.amount_minor, Number(order.grandTotal));
         assert.equal(body.data.reason, "goodwill");

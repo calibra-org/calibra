@@ -15,6 +15,7 @@ test.group("GET /api/v1/categories", (group) => {
         });
         const response = await client.get("/api/v1/categories?tree=1").header("Accept-Language", "en");
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const data = response.body().data as Array<{ name: string; children: Array<{ name: string }> }>;
         const rootRow = data.find((row) => row.name === "Root");
         assert.isNotNull(rootRow);

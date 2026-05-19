@@ -81,6 +81,7 @@ test.group("PUT /api/v1/account/me", (group) => {
             });
 
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.customer.first_name, "تغییر");
         assert.equal(body.customer.last_name, "نام");
@@ -102,12 +103,14 @@ test.group("PUT /api/v1/account/me", (group) => {
         const { user } = await createCustomer("noiran@calibra.dev");
         const response = await client.put("/api/v1/account/me").withGuard("api").loginAs(user).json({ first_name: "X" });
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
     });
 
     test("does not expose iran extension for a US-default customer that never set one", async ({ client, assert }) => {
         const { user } = await createCustomer("us@calibra.dev", "US");
         const response = await client.put("/api/v1/account/me").withGuard("api").loginAs(user).json({ first_name: "John" });
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         assert.notProperty(response.body().customer.profile_extensions, "iran");
     });
 
@@ -119,6 +122,7 @@ test.group("PUT /api/v1/account/me", (group) => {
             .loginAs(user)
             .json({ email: "hijack@calibra.dev", first_name: "Stable" });
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const refreshed = await User.findOrFail(user.id);
         assert.equal(refreshed.email, "noemailchange@calibra.dev");
     });

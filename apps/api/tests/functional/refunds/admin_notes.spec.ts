@@ -41,6 +41,7 @@ test.group("/api/v1/admin/orders/:order_id/notes", (group) => {
             .loginAs(admin)
             .json({ body: "ops follow-up", visibility: "internal" });
         internal.assertStatus(201);
+        internal.assertAgainstApiSpec();
         assert.equal(internal.body().data.visibility, "internal");
 
         const customer = await client
@@ -48,10 +49,12 @@ test.group("/api/v1/admin/orders/:order_id/notes", (group) => {
             .loginAs(admin)
             .json({ body: "your refund is on the way", visibility: "customer", send_email: true });
         customer.assertStatus(201);
+        customer.assertAgainstApiSpec();
         assert.equal(customer.body().data.visibility, "customer");
 
         const customerOnly = await client.get(`/api/v1/admin/orders/${order.id}/notes`).qs({ type: "customer" }).loginAs(admin);
         customerOnly.assertStatus(200);
+        customerOnly.assertAgainstApiSpec();
         const visible: Array<{ visibility: string }> = customerOnly.body().data;
         assert.isTrue(visible.every((n) => n.visibility === "customer"));
         assert.isTrue(visible.length >= 1);

@@ -1,12 +1,28 @@
+import { resolve } from "node:path";
 import { authApiClient } from "@adonisjs/auth/plugins/api_client";
 import app from "@adonisjs/core/services/app";
 import testUtils from "@adonisjs/core/services/test_utils";
 import { apiClient } from "@japa/api-client";
 import { assert } from "@japa/assert";
+import { openapi } from "@japa/openapi-assertions";
 import { pluginAdonisJS } from "@japa/plugin-adonisjs";
 import type { Config } from "@japa/runner/types";
 
-export const plugins: Config["plugins"] = [assert(), apiClient(), pluginAdonisJS(app), authApiClient(app)];
+/**
+ * Path to the test-only merged OpenAPI bundle produced by
+ * `pnpm --filter @calibra/api-docs run build:test-spec`. The `pretest` hook in
+ * this package's `package.json` regenerates it before every `node ace test`
+ * run, so the assertions always validate against the latest hand-authored spec.
+ */
+const API_SPEC_PATH = resolve(import.meta.dirname, "../../../docs/api/dist/_merged.test.json");
+
+export const plugins: Config["plugins"] = [
+    assert(),
+    openapi({ schemas: [API_SPEC_PATH] }),
+    apiClient(),
+    pluginAdonisJS(app),
+    authApiClient(app),
+];
 
 /**
  * Schema lifecycle for the whole test run. `migrate()` brings the test database up to the latest
