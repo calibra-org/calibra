@@ -58,6 +58,7 @@ test.group("GET /api/v1/account/downloads", (group) => {
 
         const response = await client.get("/api/v1/account/downloads").withGuard("api").loginAs(user);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const data = response.body().data as Array<{ id: number; product_id: number }>;
         assert.lengthOf(data, 1);
         assert.equal(data[0].id, Number(active.id));
@@ -73,6 +74,7 @@ test.group("GET /api/v1/account/downloads", (group) => {
 
         const response = await client.get(`/api/v1/account/downloads/${grant.id}/url`).withGuard("api").loginAs(user);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.match(body.data.url, /^https:\/\/downloads\.example\.invalid\/stub\//);
         assert.exists(body.data.expires_at);

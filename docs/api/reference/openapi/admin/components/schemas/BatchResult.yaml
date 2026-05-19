@@ -1,17 +1,25 @@
 title: BatchResult
-description: Return envelope for `POST .../batch`. Each section mirrors the input shape with the resulting rows.
+description: >
+    Return envelope for `POST .../batch`. Section shape varies by resource — the
+    coupons/orders/customers batch endpoints return id arrays; the products batch returns
+    transformed rows. Consumers should rely on the resource-specific endpoint docs to know
+    which shape they receive.
 type: object
 properties:
     created:
         type: array
         items:
-            type: object
-            additionalProperties: true
+            anyOf:
+                - type: integer
+                - type: object
+                  additionalProperties: true
     updated:
         type: array
         items:
-            type: object
-            additionalProperties: true
+            anyOf:
+                - type: integer
+                - type: object
+                  additionalProperties: true
     deleted:
         type: array
         items: { type: integer }

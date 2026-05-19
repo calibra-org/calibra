@@ -1,5 +1,9 @@
 title: OrderDetail
-description: Detail-page payload for a customer's own order.
+description: >
+    Detail-page payload for a customer's own order — matches `OrderTransformer.forDetail()`
+    exactly. Extends `Order` with line items, shipping + tax lines, payment snapshot,
+    billing/shipping addresses, full totals breakdown, and the status history visible to the
+    customer. Money fields are integer Rial minor units.
 allOf:
     - $ref: "./Order.yaml"
     - type: object
@@ -7,46 +11,134 @@ allOf:
           order_key:
               type: [string, "null"]
               description: Opaque 32-char token used in the guest pay-link URL. Null for drafts.
+          customer_id: { type: [integer, "null"] }
+          billing_email: { type: [string, "null"], format: email }
           customer_note: { type: [string, "null"] }
-          payment_method:
+          prices_include_tax: { type: boolean }
+          payment:
               type: object
+              required: [gateway_id, method_code, method_title, transaction_id]
               properties:
                   gateway_id: { type: [integer, "null"] }
-                  code: { type: [string, "null"], examples: ["bank_transfer", "zarinpal"] }
-                  title: { type: [string, "null"] }
+                  method_code: { type: [string, "null"] }
+                  method_title: { type: [string, "null"] }
+                  transaction_id: { type: [string, "null"] }
+          totals:
+              type: object
+              required:
+                  - items_total
+                  - items_tax_total
+                  - shipping_total
+                  - shipping_tax_total
+                  - fees_total
+                  - fees_tax_total
+                  - discount_total
+                  - discount_tax_total
+                  - tax_total
+                  - grand_total
+              properties:
+                  items_total: { type: integer }
+                  items_tax_total: { type: integer }
+                  shipping_total: { type: integer }
+                  shipping_tax_total: { type: integer }
+                  fees_total: { type: integer }
+                  fees_tax_total: { type: integer }
+                  discount_total: { type: integer }
+                  discount_tax_total: { type: integer }
+                  tax_total: { type: integer }
+                  grand_total: { type: integer }
           line_items:
               type: array
               items:
                   type: object
+                  required: [id, quantity, price, subtotal, total, attributes_snapshot]
                   properties:
                       id: { type: integer }
-                      product_id: { type: integer }
+                      product_id: { type: [integer, "null"] }
                       variation_id: { type: [integer, "null"] }
-                      name_snapshot: { type: string }
-                      sku_snapshot: { type: [string, "null"] }
+                      name: { type: [string, "null"] }
+                      sku: { type: [string, "null"] }
                       quantity: { type: integer }
-                      price_snapshot: { $ref: "../../../common/components/schemas/Money.yaml" }
-                      subtotal: { $ref: "../../../common/components/schemas/Money.yaml" }
-                      total: { $ref: "../../../common/components/schemas/Money.yaml" }
+                      price: { type: integer }
+                      subtotal: { type: integer }
+                      subtotal_tax: { type: integer }
+                      total: { type: integer }
+                      total_tax: { type: integer }
+                      tax_class_id: { type: [integer, "null"] }
+                      attributes_snapshot:
+                          type: object
+                          additionalProperties: true
           shipping_lines:
               type: array
               items:
                   type: object
+                  required: [id, method_code, title, total, total_tax]
                   properties:
-                      method_code_snapshot: { type: string }
-                      title_snapshot: { type: string }
-                      total: { $ref: "../../../common/components/schemas/Money.yaml" }
-          billing_address: { $ref: "../../../common/components/schemas/Address.yaml" }
+                      id: { type: integer }
+                      method_code: { type: [string, "null"] }
+                      title: { type: [string, "null"] }
+                      total: { type: integer }
+                      total_tax: { type: integer }
+          tax_lines:
+              type: array
+              items:
+                  type: object
+                  required: [id, tax_total, shipping_tax_total]
+                  properties:
+                      id: { type: integer }
+                      rate_code: { type: [string, "null"] }
+                      label: { type: [string, "null"] }
+                      rate_percent: { type: number }
+                      compound: { type: boolean }
+                      tax_total: { type: integer }
+                      shipping_tax_total: { type: integer }
+          billing_address:
+              anyOf:
+                  - type: "null"
+                  - type: object
+                    required: [kind]
+                    properties:
+                        kind: { type: string, enum: [billing, shipping] }
+                        first_name: { type: [string, "null"] }
+                        last_name: { type: [string, "null"] }
+                        company: { type: [string, "null"] }
+                        address_line_1: { type: [string, "null"] }
+                        address_line_2: { type: [string, "null"] }
+                        city: { type: [string, "null"] }
+                        region_id: { type: [integer, "null"] }
+                        region_text: { type: [string, "null"] }
+                        postcode: { type: [string, "null"] }
+                        country: { type: [string, "null"] }
+                        phone: { type: [string, "null"] }
+                        email: { type: [string, "null"], format: email }
           shipping_address:
               anyOf:
-                  - $ref: "../../../common/components/schemas/Address.yaml"
                   - type: "null"
+                  - type: object
+                    required: [kind]
+                    properties:
+                        kind: { type: string, enum: [billing, shipping] }
+                        first_name: { type: [string, "null"] }
+                        last_name: { type: [string, "null"] }
+                        company: { type: [string, "null"] }
+                        address_line_1: { type: [string, "null"] }
+                        address_line_2: { type: [string, "null"] }
+                        city: { type: [string, "null"] }
+                        region_id: { type: [integer, "null"] }
+                        region_text: { type: [string, "null"] }
+                        postcode: { type: [string, "null"] }
+                        country: { type: [string, "null"] }
+                        phone: { type: [string, "null"] }
+                        email: { type: [string, "null"], format: email }
           status_history:
               type: array
               items:
                   type: object
+                  required: [id]
                   properties:
-                      from_status: { type: string }
-                      to_status: { type: string }
+                      id: { type: integer }
+                      from_status: { type: [string, "null"] }
+                      to_status: { type: [string, "null"] }
+                      changed_by_user_id: { type: [integer, "null"] }
                       reason: { type: [string, "null"] }
-                      occurred_at: { type: string, format: date-time }
+                      occurred_at: { type: [string, "null"], format: date-time }

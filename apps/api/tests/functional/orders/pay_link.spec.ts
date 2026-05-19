@@ -31,6 +31,7 @@ test.group("POST /api/v1/checkout/orders/:order_key/pay", (group) => {
             .json({ payment_gateway_id: Number(gateway!.id) });
 
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         await draft.refresh();
         /**
          * cod is a no-redirect gateway; the pay-link path now invokes `payment_service.init`

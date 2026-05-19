@@ -63,6 +63,7 @@ test.group("/api/v1/admin/coupons", (group) => {
                 translations: [{ locale: "en", description: "10% off" }],
             });
         r.assertStatus(201);
+        r.assertAgainstApiSpec();
         assert.equal(r.body().data.code, "NEW10");
         const row = await Coupon.findBy("code", "NEW10");
         assert.exists(row);
@@ -86,6 +87,7 @@ test.group("/api/v1/admin/coupons", (group) => {
             .loginAs(admin)
             .json({ amount_percent: 25 });
         r.assertStatus(200);
+        r.assertAgainstApiSpec();
         assert.equal(Number(r.body().data.amount_percent), 25);
 
         /** Existing redemption row is untouched — updates are forward-only. */
@@ -134,6 +136,7 @@ test.group("/api/v1/admin/coupons", (group) => {
                 delete: [Number(toDelete.id)],
             });
         r.assertStatus(200);
+        r.assertAgainstApiSpec();
         assert.equal(r.body().created.length, 1);
         assert.equal(r.body().updated.length, 1);
         assert.equal(r.body().deleted.length, 1);
@@ -152,6 +155,7 @@ test.group("/api/v1/admin/coupons", (group) => {
 
         const r = await client.get(`/api/v1/admin/coupons/${coupon.id}/redemptions`).withGuard("api").loginAs(admin);
         r.assertStatus(200);
+        r.assertAgainstApiSpec();
         assert.equal(r.body().data.length, 2);
         assert.equal(r.body().meta.total, 2);
     });

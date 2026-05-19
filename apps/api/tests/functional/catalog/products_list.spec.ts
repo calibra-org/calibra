@@ -20,6 +20,7 @@ test.group("GET /api/v1/products", (group) => {
         }
         const response = await client.get("/api/v1/products");
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         response.assertBodyContains({ meta: { page: 1, perPage: 20 } });
         assert.equal(response.body().data.length, 5);
         assert.equal(response.body().meta.total, 5);

@@ -32,6 +32,7 @@ test.group("/api/v1/admin/payment-gateways", (group) => {
         const admin = await createAdmin();
         const response = await client.get("/api/v1/admin/payment-gateways").withGuard("api").loginAs(admin);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const list = response.body().data as Array<{ code: string; settings: Record<string, string> }>;
         const zarinpal = list.find((g) => g.code === "zarinpal")!;
         assert.equal(zarinpal.settings.merchant_id, "***");
@@ -48,6 +49,7 @@ test.group("/api/v1/admin/payment-gateways", (group) => {
             .json({ enabled: true, settings: { api_key: "NEWKEY", currency_display: "IRT" } });
 
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body().data as { enabled: boolean; settings: Record<string, string> };
         assert.isTrue(body.enabled);
         assert.equal(body.settings.api_key, "***");

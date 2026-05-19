@@ -68,6 +68,7 @@ test.group("POST /api/v1/checkout/submit — payment integration", (group) => {
         const submit = await client.post("/api/v1/checkout/submit").cookie("cart_token", token).header("Idempotency-Key", "zp-1");
 
         submit.assertStatus(200);
+        submit.assertAgainstApiSpec();
         assert.equal(submit.body().data.status, "pending");
         assert.equal(
             submit.body().payment.redirect_url,
@@ -91,6 +92,7 @@ test.group("POST /api/v1/checkout/submit — payment integration", (group) => {
             .header("Idempotency-Key", "cod-1");
 
         submit.assertStatus(200);
+        submit.assertAgainstApiSpec();
         assert.isNull(submit.body().payment.redirect_url);
 
         const order = await Order.findOrFail(submit.body().data.id);

@@ -66,6 +66,7 @@ export default class AdminVariationsController {
             await syncVariationAttributePins(trx, created.id, payload.attribute_pins);
             return created;
         });
+        await row.refresh();
         await row.load("translations");
         await row.load("attributePins");
         ctx.response.status(201);

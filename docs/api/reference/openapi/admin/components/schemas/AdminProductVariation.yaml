@@ -1,31 +1,44 @@
 title: AdminProductVariation
-description: One row of a variable product's variation table.
+description: >
+    One row of a variable product's variation table — matches
+    `ProductVariationTransformer.toObject()` exactly. Money fields are flat integers in Rial
+    minor units. `attribute_pins` identifies this variation by `(attribute_id, term_id)` pairs.
 type: object
 properties:
     id: { type: integer }
     product_id: { type: integer }
     sku: { type: [string, "null"] }
-    status: { type: string, enum: [draft, published, archived] }
-    regular_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
-    sale_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
-    effective_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
-    on_sale: { type: boolean }
+    regular_price: { type: [integer, "null"] }
+    sale_price: { type: [integer, "null"] }
     sale_starts_at: { type: [string, "null"], format: date-time }
     sale_ends_at: { type: [string, "null"], format: date-time }
-    tax_class_id: { type: [integer, "null"] }
+    effective_price: { type: [integer, "null"] }
+    on_sale: { type: boolean }
     weight_grams: { type: [integer, "null"] }
     length_mm: { type: [integer, "null"] }
     width_mm: { type: [integer, "null"] }
     height_mm: { type: [integer, "null"] }
-    image_url: { type: [string, "null"] }
-    attribute_terms:
+    image_media_id: { type: [integer, "null"] }
+    virtual: { type: boolean }
+    downloadable: { type: boolean }
+    tax_class_id: { type: [integer, "null"] }
+    manage_stock_mode: { type: string }
+    menu_order: { type: integer }
+    description: { type: [string, "null"] }
+    attribute_pins:
         type: array
-        description: Map of `attribute_id → term_id` that identifies this variation.
         items:
             type: object
+            required: [attribute_id, term_id]
             properties:
                 attribute_id: { type: integer }
                 term_id: { type: integer }
 required:
     - id
     - product_id
+    - on_sale
+    - virtual
+    - downloadable
+    - manage_stock_mode
+    - menu_order
+    - attribute_pins

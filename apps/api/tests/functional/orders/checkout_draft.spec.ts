@@ -35,6 +35,7 @@ test.group("GET /api/v1/checkout (draft materialization)", (group) => {
 
         const response = await client.get("/api/v1/checkout").cookie("cart_token", token);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body();
         assert.equal(body.data.status, "draft");
         assert.equal(body.data.line_items.length, 1);
@@ -87,6 +88,7 @@ test.group("GET /api/v1/checkout (draft materialization)", (group) => {
                 customer_note: "leave at the door",
             });
         put.assertStatus(200);
+        put.assertAgainstApiSpec();
         const body = put.body();
         assert.equal(body.data.billing_address.first_name, "Ali");
         assert.equal(body.data.payment.gateway_id, gatewayId);

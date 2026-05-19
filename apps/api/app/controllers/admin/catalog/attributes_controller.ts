@@ -39,6 +39,7 @@ export default class AdminAttributesController {
             );
             return created;
         });
+        await row.refresh();
         await row.load("translations");
         ctx.response.status(201);
         return resource(ProductAttributeTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));

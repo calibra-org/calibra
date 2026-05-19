@@ -30,7 +30,14 @@ export default class IdempotencyMiddleware {
             const { default: OrderTransformer } = await import("#transformers/order_transformer");
             await this.preloadForResponse(existing);
             ctx.response.header("Idempotency-Replay", "true");
-            return ctx.response.ok({ data: new OrderTransformer(existing).forDetail() });
+            return ctx.response.ok({
+                data: new OrderTransformer(existing).forDetail(),
+                payment: {
+                    gateway_id: existing.paymentGatewayIdSnapshot === null ? null : Number(existing.paymentGatewayIdSnapshot),
+                    method_code: existing.paymentMethodCodeSnapshot ?? null,
+                    redirect_url: null,
+                },
+            });
         }
 
         ctx.idempotencyKey = key;

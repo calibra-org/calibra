@@ -52,9 +52,11 @@ test.group("POST /api/v1/checkout/submit (idempotency)", (group) => {
 
         const a = await client.post("/api/v1/checkout/submit").cookie("cart_token", token).header("Idempotency-Key", "ik-1");
         a.assertStatus(200);
+        a.assertAgainstApiSpec();
 
         const b = await client.post("/api/v1/checkout/submit").cookie("cart_token", token).header("Idempotency-Key", "ik-1");
         b.assertStatus(200);
+        b.assertAgainstApiSpec();
 
         assert.equal(a.body().data.id, b.body().data.id);
         assert.equal(b.header("idempotency-replay"), "true");

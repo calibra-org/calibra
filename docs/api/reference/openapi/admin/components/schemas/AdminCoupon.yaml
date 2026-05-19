@@ -1,8 +1,9 @@
 title: AdminCoupon
 description: >
-    Coupon row with every rule the discounter consults: discount type, money/percent amounts,
-    activation window, minimum/maximum cart spend, usage limits, individual-use flag, free-shipping
-    flag, sale-item exclusion, and product/category/email constraints.
+    Coupon row — matches `CouponTransformer.forAdmin()` exactly (or `summary()` for list
+    endpoints). Carries every rule the discounter consults: discount type, money/percent
+    amounts, activation window, minimum/maximum cart spend, usage limits, individual-use flag,
+    free-shipping flag, sale-item exclusion, and product/category/email constraints.
 type: object
 properties:
     id: { type: integer }
@@ -11,9 +12,7 @@ properties:
         type: string
         enum: [fixed_cart, fixed_product, percent, free_shipping]
     amount_minor:
-        anyOf:
-            - $ref: "../../../common/components/schemas/Money.yaml"
-            - type: "null"
+        type: [integer, "null"]
         description: Money amount for `fixed_*` types. Null for percent / free-shipping.
     amount_percent:
         type: [number, "null"]
@@ -21,24 +20,28 @@ properties:
     status: { type: string, enum: [active, disabled] }
     starts_at: { type: [string, "null"], format: date-time }
     expires_at: { type: [string, "null"], format: date-time }
-    minimum_amount:
-        anyOf:
-            - $ref: "../../../common/components/schemas/Money.yaml"
-            - type: "null"
-    maximum_amount:
-        anyOf:
-            - $ref: "../../../common/components/schemas/Money.yaml"
-            - type: "null"
+    minimum_amount: { type: [integer, "null"] }
+    maximum_amount: { type: [integer, "null"] }
     individual_use: { type: boolean }
     exclude_sale_items: { type: boolean }
     usage_limit_global: { type: [integer, "null"] }
     usage_limit_per_user: { type: [integer, "null"] }
     limit_usage_to_x_items: { type: [integer, "null"] }
     free_shipping: { type: boolean }
+    translations:
+        type: array
+        description: Localised descriptions; folded into `forAdmin()` only (not the list view).
+        items:
+            type: object
+            required: [locale]
+            properties:
+                locale: { type: string }
+                description: { type: [string, "null"] }
     product_constraints:
         type: array
         items:
             type: object
+            required: [product_id, mode]
             properties:
                 product_id: { type: integer }
                 mode: { type: string, enum: [include, exclude] }
@@ -46,17 +49,24 @@ properties:
         type: array
         items:
             type: object
+            required: [category_id, mode]
             properties:
                 category_id: { type: integer }
                 mode: { type: string, enum: [include, exclude] }
     email_restrictions:
         type: array
         items: { type: string, description: "Email or glob pattern (e.g. `*@example.com`)." }
-    redemptions_count: { type: integer, description: "Cumulative count of completed redemptions." }
-    created_at: { type: string, format: date-time }
-    updated_at: { type: string, format: date-time }
+    attributes:
+        type: object
+        additionalProperties: true
+    deleted_at: { type: [string, "null"], format: date-time }
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
 required:
     - id
     - code
     - discount_type
     - status
+    - individual_use
+    - exclude_sale_items
+    - free_shipping

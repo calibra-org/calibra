@@ -70,6 +70,7 @@ test.group("Checkout + coupon redemption", (group) => {
         const { finalize } = await applyCouponAndCheckout(client, product, "REDEEM10");
 
         finalize.assertStatus(200);
+        finalize.assertAgainstApiSpec();
         const orderId = finalize.body().data.id as number;
 
         const couponLines = await OrderCouponLine.query().where("order_id", orderId);
@@ -105,6 +106,7 @@ test.group("Checkout + coupon redemption", (group) => {
         const product = await createTaxableProduct({ regularPrice: 1_000_000 });
         const { finalize } = await applyCouponAndCheckout(client, product, "REPLAY");
         finalize.assertStatus(200);
+        finalize.assertAgainstApiSpec();
         const firstOrderId = finalize.body().data.id as number;
 
         /** Same Idempotency-Key on a brand new cart → should resolve to the original order. */

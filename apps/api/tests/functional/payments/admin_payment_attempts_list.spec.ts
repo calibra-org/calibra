@@ -65,6 +65,7 @@ test.group("/api/v1/admin/payment-attempts", (group) => {
 
         const all = await client.get("/api/v1/admin/payment-attempts").withGuard("api").loginAs(admin);
         all.assertStatus(200);
+        all.assertAgainstApiSpec();
         assert.equal(all.body().meta.total, 3);
 
         const filtered = await client
@@ -73,6 +74,7 @@ test.group("/api/v1/admin/payment-attempts", (group) => {
             .withGuard("api")
             .loginAs(admin);
         filtered.assertStatus(200);
+        filtered.assertAgainstApiSpec();
         assert.equal(filtered.body().meta.total, 2);
         assert.deepEqual(
             (filtered.body().data as Array<{ gateway_code: string }>).map((r) => r.gateway_code),
@@ -94,6 +96,7 @@ test.group("/api/v1/admin/payment-attempts", (group) => {
             .withGuard("api")
             .loginAs(admin);
         response.assertStatus(200);
+        response.assertAgainstApiSpec();
         const body = response.body().data as { gateway_payload: Record<string, unknown> };
         assert.deepEqual(body.gateway_payload, { hello: "world" });
     });

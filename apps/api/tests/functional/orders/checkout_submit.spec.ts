@@ -58,6 +58,7 @@ test.group("POST /api/v1/checkout/submit (happy + sad paths)", (group) => {
             .header("Idempotency-Key", "smoke-1");
 
         submit.assertStatus(200);
+        submit.assertAgainstApiSpec();
         const body = submit.body();
         /**
          * cod is a no-redirect gateway; phase-08 `payment_service.init` flips the freshly-

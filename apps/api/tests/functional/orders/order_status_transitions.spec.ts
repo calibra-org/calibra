@@ -41,6 +41,7 @@ test.group("POST /api/v1/admin/orders/:id/status (transition matrix)", (group) =
             .loginAs(admin)
             .json({ to_status: "pending", reason: "manual" });
         a.assertStatus(200);
+        a.assertAgainstApiSpec();
         assert.equal(a.body().data.status, "pending");
 
         /** pending → completed (illegal — must go through processing). */
@@ -53,9 +54,11 @@ test.group("POST /api/v1/admin/orders/:id/status (transition matrix)", (group) =
         /** pending → processing → completed (legal pair). */
         const b = await client.post(`/api/v1/admin/orders/${draft.id}/status`).loginAs(admin).json({ to_status: "processing" });
         b.assertStatus(200);
+        b.assertAgainstApiSpec();
 
         const c = await client.post(`/api/v1/admin/orders/${draft.id}/status`).loginAs(admin).json({ to_status: "completed" });
         c.assertStatus(200);
+        c.assertAgainstApiSpec();
         assert.isNotNull(c.body().data.date_completed_at);
 
         const history = await OrderStatusHistory.query().where("order_id", Number(draft.id)).orderBy("id", "asc");

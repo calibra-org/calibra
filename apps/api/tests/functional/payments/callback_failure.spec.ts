@@ -51,6 +51,7 @@ async function submitZarinpalOrder(client: any, productId: number, authority: st
         .cookie("cart_token", token)
         .header("Idempotency-Key", `cbf-${Date.now()}`);
     submit.assertStatus(200);
+    submit.assertAgainstApiSpec();
     return submit.body().data.id;
 }
 

@@ -19,9 +19,9 @@ properties:
     featured: { type: boolean }
     virtual: { type: boolean }
     downloadable: { type: boolean }
-    regular_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
-    sale_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
-    effective_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+    regular_price: { type: [integer, "null"] }
+    sale_price: { type: [integer, "null"] }
+    effective_price: { type: [integer, "null"] }
     on_sale: { type: boolean }
     sale_starts_at: { type: [string, "null"], format: date-time }
     sale_ends_at: { type: [string, "null"], format: date-time }
