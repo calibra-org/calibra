@@ -1,12 +1,21 @@
+import Script from "next/script";
+
 /**
- * Renders an inline `<script>` that reads the persisted theme preference from `localStorage` and
- * applies the `.dark` class on `<html>` before paint. Inlining is the only way to avoid the
- * classic dark-mode FOUC; the script is tiny so the cost is negligible.
+ * Inline boot script that reads the persisted theme from `localStorage` and applies the `.dark`
+ * class on `<html>` before paint — the standard fix for dark-mode FOUC.
+ *
+ * Uses `next/script` with `strategy="beforeInteractive"` so the framework injects the script
+ * directly into the document head at SSR time. Rendering a raw `<script>` element through React
+ * works on the initial document but trips a Next.js 16 / React 19 warning ("scripts inside React
+ * components are never executed when rendering on the client") because client navigation
+ * wouldn't re-execute the body — `next/script` is the framework-aware substitute.
  *
  * Pair with {@link ThemeToggle} which writes back to the same `localStorage` key.
  */
 export function ThemeScript() {
-    const script = `(() => {
+    return (
+        <Script id="calibra-admin-theme-init" strategy="beforeInteractive">
+            {`(() => {
     try {
         const stored = window.localStorage.getItem("calibra-admin-theme");
         const prefers = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -18,7 +27,7 @@ export function ThemeScript() {
         }
         document.documentElement.style.colorScheme = theme;
     } catch (_) {}
-})();`;
-    // biome-ignore lint/security/noDangerouslySetInnerHtml: inline boot script is the documented Next.js FOUC-mitigation pattern for dark mode; content is a string literal compiled into the module (no user input flows in).
-    return <script dangerouslySetInnerHTML={{ __html: script }} />;
+})();`}
+        </Script>
+    );
 }
