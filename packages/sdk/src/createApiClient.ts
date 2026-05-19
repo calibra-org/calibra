@@ -1,6 +1,7 @@
+import { type AdminClient, createAdminClient } from "./createAdminClient";
+import { createStorefrontClient, type StorefrontClient } from "./createStorefrontClient";
 import { getBaseUrl } from "./getBaseUrl";
 import { HttpClient, type HttpClientOptions } from "./HttpClient";
-import type { Cart, Paginated, Product, Resource } from "./types";
 
 export interface CreateApiClientOptions extends Partial<Pick<HttpClientOptions, "headers" | "fetch">> {
     /** API origin, e.g. `"https://api.example.com"`. Defaults to {@link getBaseUrl}. */
@@ -16,27 +17,25 @@ export interface CreateApiClientOptions extends Partial<Pick<HttpClientOptions, 
 }
 
 export interface ApiClient {
-    /** Pre-configured low-level client. Use directly for endpoints not yet wrapped below. */
+    /** Low-level fetch wrapper mounted at `${baseUrl}/api/v1`. Use for endpoints not yet in the spec. */
     http: HttpClient;
-
-    products: {
-        list: (params?: { page?: number; per_page?: number; search?: string }) => Promise<Paginated<Product>>;
-        bySlug: (slug: string) => Promise<Product>;
-    };
-
-    cart: {
-        get: (cartId: string) => Promise<Cart>;
-        addLine: (cartId: string, input: { productId: number; quantity: number }) => Promise<Cart>;
-        updateLine: (cartId: string, lineKey: string, quantity: number) => Promise<Cart>;
-        removeLine: (cartId: string, lineKey: string) => Promise<Cart>;
-    };
+    /** Typed storefront client — inferred from `storefront.v1.yaml`. */
+    storefront: StorefrontClient;
+    /** Typed admin client — inferred from `admin.v1.yaml`. */
+    admin: AdminClient;
 }
 
 /**
- * Build a typed client around the Calibra commerce API (`/api/v1/*`).
+ * Build the bundled Calibra API client. Returns three clients sharing the same baseUrl, locale,
+ * and bearer token:
  *
- * Same client works from React server components, route handlers, the browser, and Node/edge
- * runtimes — the underlying {@link HttpClient} only assumes global `fetch`.
+ * - `storefront` and `admin` are typed openapi-fetch clients; their operation signatures, body
+ *   shapes, and response envelopes are inferred from the OpenAPI specs.
+ * - `http` is the low-level {@link HttpClient} kept as an escape hatch for endpoints that aren't
+ *   in the spec yet.
+ *
+ * Works from React server components, route handlers, the browser, and Node/edge runtimes — the
+ * underlying transports only assume global `fetch`.
  */
 export function createApiClient(options: CreateApiClientOptions = {}): ApiClient {
     const origin = (options.baseUrl ?? getBaseUrl()).replace(/\/+$/, "");
@@ -52,37 +51,17 @@ export function createApiClient(options: CreateApiClientOptions = {}): ApiClient
         fetch: options.fetch,
     });
 
+    const typedOptions = {
+        origin,
+        locale: options.locale,
+        token: options.token,
+        headers: options.headers,
+        fetch: options.fetch,
+    };
+
     return {
         http,
-        products: {
-            list: (params) => http.get<Paginated<Product>>("/products", { query: params }),
-            bySlug: async (slug) => {
-                const { data } = await http.get<Resource<Product>>(`/products/${encodeURIComponent(slug)}`);
-                return data;
-            },
-        },
-        cart: {
-            get: async (cartId) => {
-                const { data } = await http.get<Resource<Cart>>(`/carts/${encodeURIComponent(cartId)}`);
-                return data;
-            },
-            addLine: async (cartId, input) => {
-                const { data } = await http.post<Resource<Cart>>(`/carts/${encodeURIComponent(cartId)}/lines`, input);
-                return data;
-            },
-            updateLine: async (cartId, lineKey, quantity) => {
-                const { data } = await http.patch<Resource<Cart>>(
-                    `/carts/${encodeURIComponent(cartId)}/lines/${encodeURIComponent(lineKey)}`,
-                    { quantity },
-                );
-                return data;
-            },
-            removeLine: async (cartId, lineKey) => {
-                const { data } = await http.delete<Resource<Cart>>(
-                    `/carts/${encodeURIComponent(cartId)}/lines/${encodeURIComponent(lineKey)}`,
-                );
-                return data;
-            },
-        },
+        storefront: createStorefrontClient(typedOptions),
+        admin: createAdminClient(typedOptions),
     };
 }

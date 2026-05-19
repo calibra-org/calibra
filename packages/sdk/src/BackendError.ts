@@ -9,8 +9,8 @@ export class BackendError extends Error {
     readonly status: number;
     readonly body: unknown;
 
-    constructor(status: number, body: unknown, message?: string) {
-        super(message ?? extractMessage(body));
+    constructor(status: number, body: unknown, fallback?: string) {
+        super(extractMessage(body, fallback));
         this.name = "BackendError";
         this.status = status;
         this.body = body;
@@ -21,9 +21,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
 }
 
-function extractMessage(body: unknown): string {
-    if (!isRecord(body)) return "Request failed";
-    if (typeof body.message === "string" && body.message.length > 0) return body.message;
-    if (typeof body.error === "string" && body.error.length > 0) return body.error;
+function extractMessage(body: unknown, fallback: string | undefined): string {
+    if (isRecord(body)) {
+        if (typeof body.message === "string" && body.message.length > 0) return body.message;
+        if (typeof body.error === "string" && body.error.length > 0) return body.error;
+    }
+    if (fallback !== undefined && fallback.length > 0) return fallback;
     return "Request failed";
 }

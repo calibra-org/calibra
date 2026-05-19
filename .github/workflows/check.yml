@@ -121,3 +121,18 @@ jobs:
                   DB_PASSWORD: calibra
                   DB_DATABASE: calibra
               run: node ace check:api-docs
+
+    sdk-codegen-sync:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: "pnpm"
+            - run: pnpm install --frozen-lockfile
+            - name: Regenerate SDK types from the OpenAPI specs and assert no drift
+              run: pnpm --filter @calibra/sdk run codegen:check

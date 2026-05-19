@@ -8,8 +8,9 @@ import { SESSION_COOKIE } from "./auth";
 
 /**
  * Mock login. Accepts any non-empty email + password and writes a token-shaped value to the
- * `admin_session` cookie. When phase 03 lands, replace the cookie write with
- * `apiServer().auth.login({ email, password })` and store the returned bearer.
+ * `admin_session` cookie. When phase 03 lands, replace the cookie write with the typed login
+ * call on `(await apiServer()).storefront` (or `.admin` once an admin-side login endpoint exists)
+ * and store the returned bearer.
  */
 export async function loginAction(
     _state: { ok: boolean; error: string | null },

@@ -46,16 +46,18 @@ apps/web/
 
 ## Data: `@calibra/sdk`
 
-The storefront does not call WordPress directly. Use the workspace SDK:
+The storefront uses the workspace SDK. Always go through `apiServer()` from `#/lib/api` so the locale header rides along:
 
 ```tsx
-import { createApiClient } from "@calibra/sdk";
+import { apiServer } from "#/lib/api";
 
-const wc = createApiClient({ baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL });
-const products = await wc.products.list({ per_page: 24 });
+const api = await apiServer();
+const { data } = await api.storefront.GET("/api/v1/catalog/products", {
+    params: { query: { page: 1, perPage: 24 } },
+});
 ```
 
-Add response types via `WcProduct`, `WcCart`, etc. (re-exported from the SDK; sourced from `@woocommerce/types`).
+Paths, params, request bodies, and response shapes are all inferred from `storefront.v1.yaml` (re-exported as `StorefrontSchemas` / `StorefrontPaths` for places that need them). Non-2xx responses throw `BackendError`. For endpoints not yet in the spec, drop down to `api.http` (the low-level `HttpClient`).
 
 ## Deployment
 

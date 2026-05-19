@@ -59,6 +59,7 @@ apps/admin/
 - **Persian default.** `localePrefix: "as-needed"` keeps `/dashboard` etc. as Persian routes; English lives under `/en/dashboard`. Update `messages/fa.json` first; treat English as a translation.
 - **RTL is automatic.** Tailwind v4 logical utilities (`ms-*` / `me-*` / `text-start`) flip per direction; never hand-write `mr-2` / `pl-4`.
 - **API calls forward locale.** Use `apiServer()` in server components — it reads `useLocale()` and passes it to `createApiClient` as the `locale` option, which the SDK sends as `Accept-Language`. Localized error messages and validator output flow back automatically.
+- **Typed admin client.** `(await apiServer()).admin` is an `openapi-fetch` client typed against `admin.v1.yaml`. Paths, params, request bodies, and response shapes are all inferred — `await api.admin.GET("/api/v1/admin/orders/{id}", { params: { path: { id } } })`. Pull schema types via `AdminSchemas["…"]` from `@calibra/sdk` when you need to name a response shape. Non-2xx responses throw `BackendError`.
 
 ## Deployment
 

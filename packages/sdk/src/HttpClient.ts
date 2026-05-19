@@ -1,4 +1,5 @@
 import { BackendError } from "./BackendError";
+import { parseJsonBody, sanitizeHeaders } from "./internal/sanitize";
 
 export interface HttpClientOptions {
     /** Base URL prepended to every request path. No trailing slash required — one will be added. */
@@ -80,7 +81,7 @@ export class HttpClient {
         }
 
         const text = await response.text();
-        const body = parseJson(text);
+        const body = parseJsonBody(text);
 
         if (!response.ok) {
             throw new BackendError(response.status, body, response.statusText);
@@ -96,17 +97,6 @@ export class HttpClient {
     }
 }
 
-function sanitizeHeaders(input: Record<string, string | undefined | null> | undefined): Record<string, string> {
-    if (input === undefined) return {};
-    const out: Record<string, string> = {};
-    for (const [key, value] of Object.entries(input)) {
-        if (typeof value === "string" && value.length > 0) {
-            out[key] = value;
-        }
-    }
-    return out;
-}
-
 function buildQueryString(query: RequestOptions["query"]): string {
     if (query === undefined) return "";
     const params = new URLSearchParams();
@@ -116,13 +106,4 @@ function buildQueryString(query: RequestOptions["query"]): string {
     }
     const serialized = params.toString();
     return serialized.length > 0 ? `?${serialized}` : "";
-}
-
-function parseJson(text: string): unknown {
-    if (text.length === 0) return null;
-    try {
-        return JSON.parse(text);
-    } catch {
-        return text;
-    }
 }
