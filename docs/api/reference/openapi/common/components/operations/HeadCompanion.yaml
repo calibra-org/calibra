@@ -1,0 +1,8 @@
+description: >
+    Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a
+    `HEAD` handler for every `GET` route — this stub exists so the route inventory matches
+    the spec without duplicating the full `GET` schema. The response body is empty by
+    definition; the headers match those returned by the `GET` operation.
+responses:
+    "200":
+        description: Same headers as the matching `GET`. Body is empty.
