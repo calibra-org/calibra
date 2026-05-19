@@ -29,7 +29,6 @@ import type {
     AdminTag,
     AdminTaxClass,
     AdminTaxRate,
-    DashboardStats,
     LocalizedString,
     MoneyMinor,
     OrderStatus,
@@ -824,55 +823,18 @@ export async function getSettingsGroup(key: SettingsGroupKey): Promise<AdminSett
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Dashboard + reports — composed from existing admin endpoints                */
+/*  Reports — composed from existing admin endpoints                           */
 /*                                                                             */
-/*  TODO(spec): no first-party dashboard or reports operation; this composes   */
-/*  metrics from /api/v1/admin/orders, /products, /customers. Sales-series and */
-/*  status counts are computed in TypeScript. When a real report endpoint      */
-/*  lands, swap this implementation for a single SDK call.                     */
+/*  TODO(spec): no first-party reports operation; this composes a sales report */
+/*  from /api/v1/admin/orders. When a real report endpoint lands, swap this    */
+/*  implementation for a single SDK call.                                      */
+/*                                                                             */
+/*  Dashboard aggregation lives in `lib/queries/dashboard.ts` — the dashboard  */
+/*  fetches client-side through the same-origin proxy so widgets can stream    */
+/*  independently. Add helpers there for new dashboard widgets, not here.      */
 /* -------------------------------------------------------------------------- */
 
-export async function getDashboardStats(): Promise<DashboardStats> {
-    const api = await apiServer();
-    const [ordersRes, productsRes, customersRes] = await Promise.all([
-        api.admin.GET("/api/v1/admin/orders", { params: { query: { perPage: 100 } } }),
-        api.admin.GET("/api/v1/admin/products", { params: { query: { perPage: 1, status: "published" } } }),
-        api.admin.GET("/api/v1/admin/customers", { params: { query: { perPage: 10 } } }),
-    ]);
-
-    const orderRows = ((ordersRes.data?.data ?? []) as SdkAdminOrderListRow[]).map(toAdminOrderListRow);
-    const recentOrders = orderRows.slice(0, 8);
-
-    const now = Date.now();
-    const dayMs = 24 * 60 * 60 * 1000;
-    const ordersToday = orderRows.filter((o) => now - new Date(o.createdAt).getTime() <= dayMs).length;
-    const revenueToday = orderRows
-        .filter((o) => now - new Date(o.createdAt).getTime() <= dayMs)
-        .reduce((sum, o) => sum + Number(o.grandTotal), 0) as MoneyMinor;
-    const pendingFulfilments = orderRows.filter((o) => o.status === "pending" || o.status === "processing").length;
-
-    const customerRows = (customersRes.data?.data ?? []).map(toAdminCustomer);
-    const newCustomersToday = customerRows.filter((c) => now - new Date(c.createdAt).getTime() <= dayMs).length;
-
-    return {
-        ordersToday,
-        ordersDeltaPercent: 0,
-        revenueToday,
-        revenueDeltaPercent: 0,
-        activeProducts: productsRes.data?.meta?.total ?? 0,
-        activeProductsDeltaPercent: 0,
-        pendingFulfilments,
-        newCustomersToday,
-        newCustomersDeltaPercent: 0,
-        recentCustomers: customerRows.slice(0, 5),
-        salesSeries: buildSalesSeries(orderRows),
-        ordersByStatus: countByStatus(orderRows),
-        topProducts: [],
-        recentOrders,
-    };
-}
-
-function buildSalesSeries(orders: AdminOrder[]): DashboardStats["salesSeries"] {
+function buildSalesSeries(orders: AdminOrder[]): { date: string; revenue: MoneyMinor; orders: number }[] {
     const buckets = new Map<string, { revenue: number; orders: number }>();
     const today = new Date();
     for (let i = 13; i >= 0; i -= 1) {
@@ -889,12 +851,6 @@ function buildSalesSeries(orders: AdminOrder[]): DashboardStats["salesSeries"] {
         bucket.orders += 1;
     }
     return [...buckets.entries()].map(([date, v]) => ({ date, revenue: v.revenue as MoneyMinor, orders: v.orders }));
-}
-
-function countByStatus(orders: AdminOrder[]): DashboardStats["ordersByStatus"] {
-    const counts = new Map<OrderStatus, number>();
-    for (const o of orders) counts.set(o.status, (counts.get(o.status) ?? 0) + 1);
-    return [...counts.entries()].map(([status, count]) => ({ status, count }));
 }
 
 export async function getSalesReport(): Promise<SalesReport> {
