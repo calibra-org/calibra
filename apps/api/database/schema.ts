@@ -633,6 +633,81 @@ export class OrderLineItemSchema extends BaseModel {
   declare variationId: bigint | number | null
 }
 
+export class OrderNoteSchema extends BaseModel {
+  static $columns = ['attributes', 'authorUserId', 'body', 'createdAt', 'id', 'orderId', 'updatedAt', 'visibility'] as const
+  $columns = OrderNoteSchema.$columns
+  @column()
+  declare attributes: any
+  @column()
+  declare authorUserId: bigint | number | null
+  @column()
+  declare body: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare orderId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare visibility: any
+}
+
+export class OrderRefundLineItemSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'orderLineItemId', 'quantity', 'refundAmountMinor', 'refundId', 'refundTaxMinor', 'updatedAt'] as const
+  $columns = OrderRefundLineItemSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare orderLineItemId: bigint | number
+  @column()
+  declare quantity: number
+  @column()
+  declare refundAmountMinor: bigint | number
+  @column()
+  declare refundId: bigint | number
+  @column()
+  declare refundTaxMinor: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class OrderRefundSchema extends BaseModel {
+  static $columns = ['amountMinor', 'attributes', 'createdAt', 'gatewayRefundId', 'id', 'idempotencyKey', 'orderId', 'processedAt', 'reason', 'refundNumber', 'refundedByUserId', 'restockRequested', 'taxAmountMinor', 'updatedAt'] as const
+  $columns = OrderRefundSchema.$columns
+  @column()
+  declare amountMinor: bigint | number
+  @column()
+  declare attributes: any
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare gatewayRefundId: string | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare idempotencyKey: string | null
+  @column()
+  declare orderId: bigint | number
+  @column.dateTime()
+  declare processedAt: DateTime
+  @column()
+  declare reason: string | null
+  @column()
+  declare refundNumber: bigint | number
+  @column()
+  declare refundedByUserId: bigint | number | null
+  @column()
+  declare restockRequested: boolean
+  @column()
+  declare taxAmountMinor: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
 export class OrderShippingLineSchema extends BaseModel {
   static $columns = ['attributes', 'createdAt', 'id', 'instanceIdSnapshot', 'methodCodeSnapshot', 'methodIdSnapshot', 'orderId', 'titleSnapshot', 'total', 'totalTax', 'updatedAt'] as const
   $columns = OrderShippingLineSchema.$columns
