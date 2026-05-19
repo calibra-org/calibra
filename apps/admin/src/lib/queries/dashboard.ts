@@ -1,8 +1,8 @@
 "use client";
 
-import type { Locale } from "@calibra/shared/i18n";
 import type { AdminSchemas } from "@calibra/sdk";
-import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import type { Locale } from "@calibra/shared/i18n";
+import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
 import type { AdminCustomer, AdminOrder, MoneyMinor, OrderStatus } from "#/lib/types";
@@ -215,7 +215,9 @@ export function useRevenueTodayStats() {
     return useAdminOrdersQuery<MoneyMinor>(100, {
         select: (orders) => {
             const now = Date.now();
-            return orders.filter((o) => withinLast24h(o.createdAt, now)).reduce((sum, o) => sum + Number(o.grandTotal), 0) as MoneyMinor;
+            return orders
+                .filter((o) => withinLast24h(o.createdAt, now))
+                .reduce((sum, o) => sum + Number(o.grandTotal), 0) as MoneyMinor;
         },
     });
 }
@@ -275,7 +277,11 @@ export function useActiveProductsCount() {
     return useQuery({
         queryKey: ["dashboard", "products", "activeCount", { locale }],
         queryFn: async () => {
-            const payload = await fetchAdmin<SdkPaginated<SdkAdminProduct>>("products", { perPage: 1, status: "published" }, locale);
+            const payload = await fetchAdmin<SdkPaginated<SdkAdminProduct>>(
+                "products",
+                { perPage: 1, status: "published" },
+                locale,
+            );
             return payload.meta?.total ?? 0;
         },
     });
