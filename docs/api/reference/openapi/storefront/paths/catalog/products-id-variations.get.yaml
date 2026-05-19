@@ -1,0 +1,27 @@
+operationId: catalogProductsVariations
+summary: List the variations of a variable product
+description: >
+    Returns the published variations of a variable product, sorted by `menu_order` ascending.
+    Each variation carries its own price + dimensions + `attribute_pins` (the attribute → term
+    pair that uniquely identifies it).
+tags: [Catalog]
+security: []
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Variation list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/ProductVariationStorefront.yaml" }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

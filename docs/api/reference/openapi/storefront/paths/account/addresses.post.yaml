@@ -1,0 +1,63 @@
+operationId: accountAddressesStore
+summary: Save a new address on the customer's address book
+description: >
+    Creates a new billing or shipping address for the authenticated customer. The payload is
+    validated per the address-country rules (Iranian addresses additionally accept an
+    `iran_extension` block that upserts the customer's `customer_iran_profiles` row). When
+    `is_default: true`, the controller transparently clears any sibling default of the same
+    `kind`. Phone is normalised server-side against the supplied `country`.
+tags: [Account]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [kind, first_name, last_name, address_line_1, city, country]
+                properties:
+                    kind: { type: string, enum: [billing, shipping] }
+                    label: { type: [string, "null"] }
+                    first_name: { type: string }
+                    last_name: { type: string }
+                    company: { type: [string, "null"] }
+                    address_line_1: { type: string }
+                    address_line_2: { type: [string, "null"] }
+                    city: { type: string }
+                    region_id: { type: [integer, "null"] }
+                    region_text: { type: [string, "null"] }
+                    postcode: { type: [string, "null"] }
+                    country:
+                        type: string
+                        description: ISO-3166-1 alpha-2 (case-insensitive; stored uppercase).
+                    phone: { type: [string, "null"] }
+                    is_default: { type: boolean, default: false }
+                    iran_extension:
+                        anyOf:
+                            - $ref: "../../../common/components/schemas/IranAddressExtension.yaml"
+                            - type: "null"
+
+responses:
+    "201":
+        description: Address created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data: { $ref: "../../components/schemas/CustomerAddress.yaml" }
+                        meta:
+                            type: object
+                            required: [field_metadata]
+                            properties:
+                                field_metadata: { $ref: "../../components/schemas/AddressFieldMetadata.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

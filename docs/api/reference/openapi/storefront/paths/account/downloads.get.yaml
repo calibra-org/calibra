@@ -1,0 +1,24 @@
+operationId: accountDownloadsIndex
+summary: List the customer's active download grants
+description: >
+    Returns every download grant whose `expires_at` is null or still in the future, sorted by
+    `granted_at` descending. The companion `GET /account/downloads/:id/url` mints a short-lived
+    signed URL when the customer is ready to download.
+tags: [Account]
+
+responses:
+    "200":
+        description: Active download grants.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/CustomerDownload.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

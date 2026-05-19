@@ -1,0 +1,34 @@
+operationId: accountOrdersNotes
+summary: Customer-visible notes on an order
+description: >
+    Returns only the `visibility = 'customer'` notes for an order owned by the authenticated
+    customer; internal-visibility rows are filtered server-side. The customer variant strips
+    `visibility` and `author_user_id` so a row that somehow slipped through still would not
+    expose them. Cross-tenant access returns 404, never 403.
+tags: [Account]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "200":
+        description: Customer-visible notes.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                required: [id, body, created_at]
+                                properties:
+                                    id: { type: integer }
+                                    body: { type: string }
+                                    created_at: { type: [string, "null"], format: date-time }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

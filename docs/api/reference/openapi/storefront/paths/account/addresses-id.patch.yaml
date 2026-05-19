@@ -1,0 +1,59 @@
+operationId: accountAddressesUpdate
+summary: Update a saved address
+description: >
+    Partial update of a customer-owned address. All body fields are optional; only the provided
+    keys are applied. Setting `is_default: true` transparently clears any sibling default of
+    the same `kind`. Phone is normalised against the (possibly new) `country`. Cross-tenant
+    access returns 404, never 403.
+tags: [Account]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    label: { type: [string, "null"] }
+                    first_name: { type: string }
+                    last_name: { type: string }
+                    company: { type: [string, "null"] }
+                    address_line_1: { type: string }
+                    address_line_2: { type: [string, "null"] }
+                    city: { type: string }
+                    region_id: { type: [integer, "null"] }
+                    region_text: { type: [string, "null"] }
+                    postcode: { type: [string, "null"] }
+                    country: { type: string }
+                    phone: { type: [string, "null"] }
+                    is_default: { type: boolean }
+                    iran_extension:
+                        anyOf:
+                            - $ref: "../../../common/components/schemas/IranAddressExtension.yaml"
+                            - type: "null"
+
+responses:
+    "200":
+        description: Updated address.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data: { $ref: "../../components/schemas/CustomerAddress.yaml" }
+                        meta:
+                            type: object
+                            required: [field_metadata]
+                            properties:
+                                field_metadata: { $ref: "../../components/schemas/AddressFieldMetadata.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

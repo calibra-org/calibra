@@ -1,0 +1,22 @@
+operationId: catalogCategoriesShow
+summary: Single category resolved by localised slug
+description: Returns the category that matches the localised `slug` for the active locale.
+tags: [Catalog]
+security: []
+
+parameters:
+    - { name: slug, in: path, required: true, schema: { type: string } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Category detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/CategoryDetail.yaml" }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

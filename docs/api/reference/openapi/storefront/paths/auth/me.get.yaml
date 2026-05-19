@@ -1,0 +1,23 @@
+operationId: authMe
+summary: Identity of the signed-in user
+description: >
+    Returns the user identity bound to the current bearer token. Used by the storefront to
+    hydrate the auth context on page load. The shape mirrors `GET /account/me` minus the
+    customer profile envelope.
+tags: [Auth]
+
+responses:
+    "200":
+        description: Authenticated user identity.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [user, customer]
+                    properties:
+                        user: { $ref: "../../components/schemas/AuthUser.yaml" }
+                        customer: { $ref: "../../components/schemas/CustomerProfile.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

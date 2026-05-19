@@ -1,0 +1,21 @@
+title: CustomerDownload
+description: >
+    Download grant row from the customer's downloads list. One row per `(product_id,
+    product_download_id, order_id)` triple. `expires_at: null` means the grant has no fixed
+    expiry; `download_limit: null` means unlimited downloads.
+type: object
+properties:
+    id: { type: integer }
+    product_id: { type: integer }
+    product_download_id: { type: integer }
+    order_id: { type: integer }
+    granted_at: { type: [string, "null"], format: date-time }
+    expires_at: { type: [string, "null"], format: date-time }
+    download_limit: { type: [integer, "null"] }
+    downloads_used: { type: integer }
+required:
+    - id
+    - product_id
+    - product_download_id
+    - order_id
+    - downloads_used

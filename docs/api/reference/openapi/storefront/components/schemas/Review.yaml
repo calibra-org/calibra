@@ -1,0 +1,21 @@
+title: Review
+description: "Product review row. Public listings only include `status: approved`."
+type: object
+properties:
+    id: { type: integer }
+    product_id: { type: integer }
+    customer_id: { type: [integer, "null"] }
+    reviewer_name: { type: string }
+    body: { type: string }
+    rating: { type: integer, minimum: 1, maximum: 5 }
+    status: { type: string, enum: [pending, approved, rejected, spam] }
+    verified: { type: boolean }
+    created_at: { type: [string, "null"], format: date-time }
+required:
+    - id
+    - product_id
+    - reviewer_name
+    - body
+    - rating
+    - status
+    - verified

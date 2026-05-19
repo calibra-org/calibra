@@ -1,0 +1,18 @@
+title: AttributeTerm
+description: >
+    Localised value of a product attribute (e.g. "red" under the `color` attribute). Returned
+    by `/attributes/{id}/terms`.
+type: object
+properties:
+    id: { type: integer }
+    attribute_id: { type: integer }
+    menu_order: { type: integer }
+    name: { type: [string, "null"] }
+    slug: { type: [string, "null"] }
+    description: { type: [string, "null"] }
+    locale: { type: string }
+required:
+    - id
+    - attribute_id
+    - menu_order
+    - locale

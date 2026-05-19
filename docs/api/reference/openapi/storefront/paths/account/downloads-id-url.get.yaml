@@ -1,0 +1,30 @@
+operationId: accountDownloadsUrl
+summary: Mint a short-lived signed URL for a download grant
+description: >
+    Returns a single-use signed URL for the requested download. The URL expires 15 minutes after
+    issuance. Phase 08 replaces the stub host with the configured CDN; the response shape is
+    stable.
+tags: [Account]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "200":
+        description: Signed URL with expiry.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [url, expires_at]
+                            properties:
+                                url: { type: string, format: uri }
+                                expires_at: { type: string, format: date-time }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

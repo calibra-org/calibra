@@ -1,0 +1,15 @@
+title: AuthUser
+description: Authenticated user identity returned by `GET /auth/me` and `GET /account/me`. Password hash never leaks — the transformer never picks it.
+type: object
+properties:
+    id: { type: integer }
+    email: { type: string, format: email }
+    locale: { type: string }
+    role: { type: string }
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
+required:
+    - id
+    - email
+    - locale
+    - role

@@ -1,0 +1,14 @@
+title: Tag
+description: Localised product tag.
+type: object
+properties:
+    id: { type: integer }
+    menu_order: { type: integer }
+    name: { type: [string, "null"] }
+    slug: { type: [string, "null"] }
+    description: { type: [string, "null"] }
+    locale: { type: string }
+required:
+    - id
+    - menu_order
+    - locale

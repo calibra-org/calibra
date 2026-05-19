@@ -1,0 +1,26 @@
+operationId: catalogProductsReviewsIndex
+summary: List approved reviews for a product
+description: >
+    Public listing — only `status: approved` reviews are returned, newest first. Pending and
+    rejected reviews are filtered server-side. Returns 404 if the product does not exist; the
+    `reviews_allowed: false` setting on a product only blocks `POST /reviews`, not the listing.
+tags: [Catalog]
+security: []
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "200":
+        description: Approved review list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/Review.yaml" }
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

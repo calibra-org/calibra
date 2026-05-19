@@ -1,0 +1,21 @@
+operationId: catalogBrandsIndex
+summary: List brands (storefront)
+description: Returns every brand with localised `name`, `slug`, and `description`. Sorted by `menu_order` ascending.
+tags: [Catalog]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Brand list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/Brand.yaml" }
