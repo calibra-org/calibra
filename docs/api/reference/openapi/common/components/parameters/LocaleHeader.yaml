@@ -1,0 +1,19 @@
+name: Accept-Language
+in: header
+description: >
+    Locale selector for server-resolved strings (product names, error messages, region names).
+    Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`.
+required: false
+schema:
+    type: string
+    enum:
+        - fa
+        - en
+    default: fa
+examples:
+    persian:
+        summary: Persian (default)
+        value: fa
+    english:
+        summary: English
+        value: en

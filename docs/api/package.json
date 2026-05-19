@@ -1,0 +1,23 @@
+{
+    "name": "@calibra/api-docs",
+    "description": "Calibra commerce API documentation and OpenAPI specification",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "node scripts/build.js",
+        "lint:storefront": "redocly lint reference/openapi/storefront.v1.yaml --format stylish",
+        "lint:admin": "redocly lint reference/openapi/admin.v1.yaml --format stylish",
+        "lint": "pnpm lint:storefront && pnpm lint:admin",
+        "stats:storefront": "redocly stats reference/openapi/storefront.v1.yaml",
+        "stats:admin": "redocly stats reference/openapi/admin.v1.yaml",
+        "preview": "pnpm build && http-server dist -p 5055 -c-1"
+    },
+    "devDependencies": {
+        "@redocly/cli": "^2.14.6",
+        "http-server": "^14.1.1",
+        "ajv": "^8.17.1",
+        "ajv-formats": "^3.0.1"
+    },
+    "license": "UNLICENSED"
+}

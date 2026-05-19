@@ -1,0 +1,23 @@
+title: PaginationMeta
+description: Pagination metadata returned alongside any paginated `data` array.
+type: object
+properties:
+    page:
+        type: integer
+        description: The 1-indexed page returned.
+    perPage:
+        type: integer
+        description: Number of items per page.
+    total:
+        type: integer
+        description: Total number of matching records across all pages.
+    lastPage:
+        type: integer
+        description: The last 1-indexed page that contains records.
+required:
+    - page
+    - perPage
+    - total
+    - lastPage
+examples:
+    - { page: 1, perPage: 20, total: 137, lastPage: 7 }

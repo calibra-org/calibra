@@ -1,0 +1,23 @@
+title: ValidationErrorMessage
+type: object
+description: >
+    Detailed per-field validation error item. Produced by VineJS on request-body / query
+    validation failures and returned inside the 422 envelope.
+properties:
+    message:
+        type: [string, "null"]
+        description: Localized human-readable message describing the failure.
+    rule:
+        type: string
+        description: Name of the VineJS rule that failed (e.g. `email`, `required`, `regex`).
+    field:
+        type: string
+        description: Dotted path of the field that failed validation.
+    meta:
+        type: object
+        description: "Optional rule metadata (e.g. `{ min: 1, max: 64 }` for length rules)."
+        additionalProperties: true
+additionalProperties: false
+examples:
+    - { message: "The email field must be a valid email address", rule: "email", field: "email" }
+    - { message: "Password must be at least 8 characters", rule: "minLength", field: "password", meta: { min: 8 } }

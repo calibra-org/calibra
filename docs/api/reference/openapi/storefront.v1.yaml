@@ -1,0 +1,146 @@
+openapi: 3.1.0
+
+info:
+    title: Calibra Storefront API
+    version: "1.0.0"
+    description: >
+        Public REST API for the Calibra commerce backend — storefront-facing endpoints consumed by
+        `apps/web/`. Persian (`fa`) is the default locale; pass `Accept-Language: en` to receive
+        English copy. Money is reported in Rial minor units (`BIGINT`). Translatable content
+        (product names, category names, descriptions) is resolved server-side from the active
+        locale.
+
+        ## Conventions
+
+        - **Pagination.** Paginated list endpoints take `page` and `perPage` query params and
+          return `{ data: [...], meta: { page, perPage, total, lastPage } }`.
+        - **Money.** Every monetary field is in Rial minor units (BIGINT). The display currency
+          (`IRR` or `IRT`) is reported separately on orders.
+        - **Locale.** The active locale comes from `Accept-Language` (defaults to `fa`).
+          Server-resolved strings (product names, region names, error messages) come back in that
+          locale.
+        - **Auth.** Public endpoints carry `security: []`. Authenticated endpoints use a bearer
+          token from `POST /api/v1/auth/login`.
+        - **Idempotency.** `POST /checkout/submit` and `POST /payment/init/:order_key` accept an
+          `Idempotency-Key` header so retries don't re-run side effects.
+    contact:
+        name: Calibra Backend Team
+        url: https://calibra.dev/support
+        email: support@calibra.dev
+    license:
+        name: "UNLICENSED (Proprietary)"
+
+servers:
+    - url: http://localhost:3333
+      description: Local development
+    - url: https://api.calibra.dev
+      description: Production
+
+tags:
+    - name: Auth
+      description: Registration, login, logout, password reset.
+    - name: Catalog
+      description: Read-only product, category, attribute, brand, tag, and review endpoints.
+    - name: Cart
+      description: >
+          Server-side cart resolved per visitor — anonymous via the `cart_token` cookie, or by
+          bearer token once the customer signs in.
+    - name: Checkout
+      description: Cart → draft order → submit, with `Idempotency-Key` dedup on submit.
+    - name: Account
+      description: Authenticated customer profile, addresses, downloads, and order history.
+    - name: Payment
+      description: PSP init + gateway callback endpoints (storefront-facing).
+
+components:
+    securitySchemes:
+        BearerAuth:
+            $ref: "./common/components/securitySchemes/BearerAuth.yaml"
+
+security: []
+
+paths:
+    /api/v1/auth/register:
+        post:
+            $ref: "./storefront/paths/auth/register.post.yaml"
+    /api/v1/auth/login:
+        post:
+            $ref: "./storefront/paths/auth/login.post.yaml"
+    /api/v1/auth/logout:
+        post:
+            $ref: "./storefront/paths/auth/logout.post.yaml"
+    /api/v1/auth/password/forgot:
+        post:
+            $ref: "./storefront/paths/auth/password-forgot.post.yaml"
+    /api/v1/auth/password/reset:
+        post:
+            $ref: "./storefront/paths/auth/password-reset.post.yaml"
+
+    /api/v1/products:
+        get:
+            $ref: "./storefront/paths/catalog/products.get.yaml"
+    /api/v1/products/{slug}:
+        get:
+            $ref: "./storefront/paths/catalog/products-slug.get.yaml"
+    /api/v1/categories:
+        get:
+            $ref: "./storefront/paths/catalog/categories.get.yaml"
+
+    /api/v1/cart:
+        get:
+            $ref: "./storefront/paths/cart/cart.get.yaml"
+    /api/v1/cart/items:
+        post:
+            $ref: "./storefront/paths/cart/items.post.yaml"
+        delete:
+            $ref: "./storefront/paths/cart/items.delete.yaml"
+    /api/v1/cart/items/{line}:
+        patch:
+            $ref: "./storefront/paths/cart/items-line.patch.yaml"
+        delete:
+            $ref: "./storefront/paths/cart/items-line.delete.yaml"
+    /api/v1/cart/customer:
+        post:
+            $ref: "./storefront/paths/cart/customer.post.yaml"
+    /api/v1/cart/shipping-rate:
+        post:
+            $ref: "./storefront/paths/cart/shipping-rate.post.yaml"
+    /api/v1/cart/coupons:
+        post:
+            $ref: "./storefront/paths/cart/coupons.post.yaml"
+    /api/v1/cart/coupons/{code}:
+        delete:
+            $ref: "./storefront/paths/cart/coupons-code.delete.yaml"
+
+    /api/v1/checkout:
+        get:
+            $ref: "./storefront/paths/checkout/checkout.get.yaml"
+        put:
+            $ref: "./storefront/paths/checkout/checkout.put.yaml"
+    /api/v1/checkout/submit:
+        post:
+            $ref: "./storefront/paths/checkout/submit.post.yaml"
+    /api/v1/orders/{order_key}/pay:
+        post:
+            $ref: "./storefront/paths/checkout/orders-key-pay.post.yaml"
+
+    /api/v1/account/me:
+        get:
+            $ref: "./storefront/paths/account/me.get.yaml"
+        put:
+            $ref: "./storefront/paths/account/me.put.yaml"
+    /api/v1/account/orders:
+        get:
+            $ref: "./storefront/paths/account/orders.get.yaml"
+    /api/v1/account/orders/{id}:
+        get:
+            $ref: "./storefront/paths/account/orders-id.get.yaml"
+
+    /api/v1/payment/init/{order_key}:
+        post:
+            $ref: "./storefront/paths/payment/init.post.yaml"
+    /api/v1/payment/callback/{gateway}:
+        get:
+            $ref: "./storefront/paths/payment/callback-gateway.get.yaml"
+        post:
+            $ref: "./storefront/paths/payment/callback-gateway.post.yaml"

@@ -1,0 +1,20 @@
+description: >
+    Forbidden (403) — the token is valid but the user lacks the required role for this operation.
+    Admin endpoints return 403 for non-admin users.
+content:
+    application/json:
+        schema:
+            type: object
+            properties:
+                errors:
+                    type: array
+                    items:
+                        $ref: "../schemas/BasicMessage.yaml"
+            required: [errors]
+        examples:
+            forbidden:
+                summary: Insufficient privileges
+                value:
+                    errors:
+                        - message: "Admin access required"
+                          code: "E_FORBIDDEN"

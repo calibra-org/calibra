@@ -1,0 +1,25 @@
+description: >
+    Validation failed (422). The `errors` array contains one item per field that failed
+    validation. VineJS rule name is in `rule`; the failing path is in `field`.
+content:
+    application/json:
+        schema:
+            type: object
+            properties:
+                errors:
+                    type: array
+                    items:
+                        $ref: "../schemas/ValidationErrorMessage.yaml"
+            required: [errors]
+        examples:
+            validationError:
+                summary: Two fields failed
+                value:
+                    errors:
+                        - message: "The email field must be a valid email address"
+                          rule: "email"
+                          field: "email"
+                        - message: "Password must be at least 8 characters"
+                          rule: "minLength"
+                          field: "password"
+                          meta: { min: 8 }

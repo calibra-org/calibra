@@ -1,0 +1,26 @@
+title: Region
+description: >
+    Country-scoped region (state, province, ostan). Names are resolved server-side from the active
+    locale; Iran's 31 ostans are seeded with both Persian and English names.
+type: object
+properties:
+    id:
+        type: integer
+        description: Stable region id.
+    country_code:
+        type: string
+        description: ISO-3166-1 alpha-2 country code.
+        examples: ["IR"]
+    code:
+        type: string
+        description: Country-scoped region code (e.g. `THR` for Tehran).
+        examples: ["THR", "ISF"]
+    name:
+        type: string
+        description: Region name, resolved from the active locale.
+        examples: ["تهران", "Tehran"]
+required:
+    - id
+    - country_code
+    - code
+    - name

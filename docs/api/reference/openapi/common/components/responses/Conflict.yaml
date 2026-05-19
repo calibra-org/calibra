@@ -1,0 +1,33 @@
+description: >
+    Conflict (409) — the request collides with current server state. Examples: submitting a draft
+    after its prices changed (`E_PRICE_CHANGED`), refunding a fully-refunded order
+    (`E_ORDER_ALREADY_REFUNDED`), or exhausting a coupon's usage limit
+    (`E_COUPON_LIMIT_EXHAUSTED`) on parallel submits.
+content:
+    application/json:
+        schema:
+            type: object
+            properties:
+                errors:
+                    type: array
+                    items:
+                        $ref: "../schemas/BasicMessage.yaml"
+            required: [errors]
+        examples:
+            priceChanged:
+                summary: Price drift on submit
+                value:
+                    errors:
+                        - message: "Product price changed since the draft was last viewed"
+                          code: "E_PRICE_CHANGED"
+                          errors:
+                              product_id: 42
+                              variation_id: null
+                              old: 259000000
+                              new: 269000000
+            couponExhausted:
+                summary: Coupon limit reached
+                value:
+                    errors:
+                        - message: "Coupon limit reached"
+                          code: "E_COUPON_LIMIT_EXHAUSTED"
