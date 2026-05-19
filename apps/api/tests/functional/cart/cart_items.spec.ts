@@ -53,6 +53,7 @@ test.group("POST /api/v1/cart/items", (group) => {
 
         const patched = await client.patch(`/api/v1/cart/items/${lineId}`).cookie("cart_token", token).json({ quantity: 0 });
         patched.assertStatus(200);
+        patched.assertAgainstApiSpec();
         assert.equal(patched.body().data.items.length, 0);
     });
 
@@ -64,6 +65,7 @@ test.group("POST /api/v1/cart/items", (group) => {
 
         const deleted = await client.delete(`/api/v1/cart/items/${lineId}`).cookie("cart_token", token);
         deleted.assertStatus(200);
+        deleted.assertAgainstApiSpec();
         assert.equal(deleted.body().data.items.length, 0);
     });
 
@@ -79,6 +81,7 @@ test.group("POST /api/v1/cart/items", (group) => {
 
         const cleared = await client.delete("/api/v1/cart/items").cookie("cart_token", token);
         cleared.assertStatus(200);
+        cleared.assertAgainstApiSpec();
         assert.equal(cleared.body().data.items.length, 0);
     });
 
