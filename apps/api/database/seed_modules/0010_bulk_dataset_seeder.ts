@@ -1,8 +1,8 @@
+import hash from "@adonisjs/core/services/hash";
+import { BaseSeeder } from "@adonisjs/lucid/seeders";
 import { faker } from "@faker-js/faker";
 import { faker as fakerEn } from "@faker-js/faker/locale/en";
 import { faker as fakerFa } from "@faker-js/faker/locale/fa";
-import hash from "@adonisjs/core/services/hash";
-import { BaseSeeder } from "@adonisjs/lucid/seeders";
 import { DateTime } from "luxon";
 
 import { slugify } from "#services/slug_service";
@@ -145,12 +145,16 @@ export default class BulkDatasetSeeder extends BaseSeeder {
     }
 
     private async countExistingBulk(): Promise<{ users: number; products: number; orders: number; reviews: number }> {
-        const usersRow = (await this.client.from("users").where("email", "like", `%${BULK_EMAIL_DOMAIN}`).count("* as count").first()) as
-            | { count: string | number }
-            | undefined;
-        const productsRow = (await this.client.from("products").where("sku", "like", `${BULK_SKU_PREFIX}%`).count("* as count").first()) as
-            | { count: string | number }
-            | undefined;
+        const usersRow = (await this.client
+            .from("users")
+            .where("email", "like", `%${BULK_EMAIL_DOMAIN}`)
+            .count("* as count")
+            .first()) as { count: string | number } | undefined;
+        const productsRow = (await this.client
+            .from("products")
+            .where("sku", "like", `${BULK_SKU_PREFIX}%`)
+            .count("* as count")
+            .first()) as { count: string | number } | undefined;
         const ordersRow = (await this.client
             .from("orders")
             .leftJoin("customers", "customers.id", "orders.customer_id")
@@ -184,7 +188,10 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         );
 
         const bulkCustomerIds = (
-            await this.client.from("customers").select("id").whereIn("user_id", bulkUserIds.length === 0 ? [-1] : bulkUserIds)
+            await this.client
+                .from("customers")
+                .select("id")
+                .whereIn("user_id", bulkUserIds.length === 0 ? [-1] : bulkUserIds)
         ).map((r: { id: number | string }) => Number(r.id));
 
         const bulkOrderIds = (
@@ -217,10 +224,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
 
         await this.client.from("product_reviews").whereIn("product_id", productsFilter).delete();
 
-        await this.client
-            .from("inventory_items")
-            .whereIn("product_id", productsFilter)
-            .delete();
+        await this.client.from("inventory_items").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_translations").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_images").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_variations").whereIn("product_id", productsFilter).delete();
@@ -254,8 +258,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         now: string,
     ): Promise<{ users: number; customers: number }> {
         const existingEmails = new Set<string>(
-            (await this.client.from("users").select("email").where("email", "like", `%${BULK_EMAIL_DOMAIN}`)).map((r: { email: string }) =>
-                String(r.email).toLowerCase(),
+            (await this.client.from("users").select("email").where("email", "like", `%${BULK_EMAIL_DOMAIN}`)).map(
+                (r: { email: string }) => String(r.email).toLowerCase(),
             ),
         );
 
@@ -309,10 +313,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
 
         const insertedCustomers: Array<{ id: number; user_id: number; country: string }> = [];
         for (const chunk of chunked(customerRows, BATCH)) {
-            const rows = await this.client
-                .table("customers")
-                .returning(["id", "user_id", "country_default"])
-                .insert(chunk);
+            const rows = await this.client.table("customers").returning(["id", "user_id", "country_default"]).insert(chunk);
             for (const r of rows) {
                 insertedCustomers.push({ id: Number(r.id), user_id: Number(r.user_id), country: String(r.country_default) });
             }
@@ -404,11 +405,11 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             const sku = uniqueBulkSku(existingSkus, i);
 
             const typeRoll = faker.number.float({ min: 0, max: 1 });
-            const type: "simple" | "variable" | "grouped" =
-                typeRoll < 0.8 ? "simple" : typeRoll < 0.98 ? "variable" : "grouped";
+            const type: "simple" | "variable" | "grouped" = typeRoll < 0.8 ? "simple" : typeRoll < 0.98 ? "variable" : "grouped";
 
             const statusRoll = faker.number.float({ min: 0, max: 1 });
-            const status: "publish" | "draft" | "pending" = statusRoll < 0.85 ? "publish" : statusRoll < 0.95 ? "draft" : "pending";
+            const status: "publish" | "draft" | "pending" =
+                statusRoll < 0.85 ? "publish" : statusRoll < 0.95 ? "draft" : "pending";
 
             const regular = faker.number.int({ min: 200_000, max: 50_000_000 });
             const sale =
@@ -426,9 +427,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             const chosenCategoryIds = faker.helpers.arrayElements(categoryIds, categoryChoiceCount);
 
             const brandChosen =
-                brandIds.length > 0 && faker.datatype.boolean({ probability: 0.5 })
-                    ? faker.helpers.arrayElement(brandIds)
-                    : null;
+                brandIds.length > 0 && faker.datatype.boolean({ probability: 0.5 }) ? faker.helpers.arrayElement(brandIds) : null;
 
             const variations: Array<{ sku: string; regular_price: number; sale_price: number | null }> = [];
             if (type === "variable") {
@@ -683,10 +682,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         };
     }
 
-    private async seedOrders(
-        target: number,
-        now: string,
-    ): Promise<{ orders: number; lineItems: number; history: number }> {
+    private async seedOrders(target: number, now: string): Promise<{ orders: number; lineItems: number; history: number }> {
         const bulkCustomers = await this.client
             .from("customers")
             .select(["customers.id as id", "customers.user_id as user_id", "users.email as email"])
@@ -710,10 +706,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             return { orders: 0, lineItems: 0, history: 0 };
         }
 
-        const maxOrderNumberRow = (await this.client
-            .from("orders")
-            .max("order_number as max")
-            .first()) as { max: string | number | null } | undefined;
+        const maxOrderNumberRow = (await this.client.from("orders").max("order_number as max").first()) as
+            | { max: string | number | null }
+            | undefined;
         const orderNumberBase = Math.max(100_000, Number(maxOrderNumberRow?.max ?? 0) + 1);
 
         const nameTranslations: Map<number, string> = new Map();

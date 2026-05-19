@@ -32,9 +32,7 @@ export default async function CartPage({ params }: PageProps) {
                                         {item.quantity} × {formatRial(item.price, locale)}
                                     </span>
                                 </div>
-                                <span className="font-medium text-sm tabular-nums">
-                                    {formatRial(item.total, locale)}
-                                </span>
+                                <span className="font-medium text-sm tabular-nums">{formatRial(item.total, locale)}</span>
                             </li>
                         ))}
                     </ul>

@@ -531,7 +531,8 @@ function toAdminOrderDetail(o: SdkAdminOrderDetail): AdminOrder {
         orderKey: o.order_key ?? "",
         status: normaliseStatus(o.status),
         customerId: o.customer_id !== null && o.customer_id !== undefined ? Number(o.customer_id) : null,
-        customerName: `${o.billing_address?.first_name ?? ""} ${o.billing_address?.last_name ?? ""}`.trim() || (o.billing_email ?? ""),
+        customerName:
+            `${o.billing_address?.first_name ?? ""} ${o.billing_address?.last_name ?? ""}`.trim() || (o.billing_email ?? ""),
         billingEmail: o.billing_email ?? "",
         currency: "IRR",
         currencyDisplay: "IRR",
@@ -617,8 +618,10 @@ function toAdminCoupon(c: SdkAdminCoupon): AdminCoupon {
         expiresAt: c.expires_at ?? null,
         individualUse: Boolean(c.individual_use),
         excludeSaleItems: Boolean(c.exclude_sale_items),
-        minimumAmount: c.minimum_amount === null || c.minimum_amount === undefined ? null : (Number(c.minimum_amount) as MoneyMinor),
-        maximumAmount: c.maximum_amount === null || c.maximum_amount === undefined ? null : (Number(c.maximum_amount) as MoneyMinor),
+        minimumAmount:
+            c.minimum_amount === null || c.minimum_amount === undefined ? null : (Number(c.minimum_amount) as MoneyMinor),
+        maximumAmount:
+            c.maximum_amount === null || c.maximum_amount === undefined ? null : (Number(c.maximum_amount) as MoneyMinor),
         usageLimitGlobal: c.usage_limit_global ?? null,
         usageLimitPerUser: c.usage_limit_per_user ?? null,
         freeShipping: Boolean(c.free_shipping),
@@ -754,7 +757,15 @@ export async function listShippingMethods(): Promise<AdminShippingMethod[]> {
 export async function listShippingZoneMethods(zoneId: number): Promise<AdminShippingZoneMethod[]> {
     if (zoneId !== 1) return [];
     return [
-        { id: 1, zoneId, methodCode: "post", title: { fa: "پست عادی", en: "Standard Post" }, cost: 500_000 as MoneyMinor, enabled: true, ordering: 1 },
+        {
+            id: 1,
+            zoneId,
+            methodCode: "post",
+            title: { fa: "پست عادی", en: "Standard Post" },
+            cost: 500_000 as MoneyMinor,
+            enabled: true,
+            ordering: 1,
+        },
     ];
 }
 

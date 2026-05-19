@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 
 import { redirect } from "#/lib/i18n/navigation";
 
-import { SESSION_COOKIE, getSession } from "./auth";
+import { getSession, SESSION_COOKIE } from "./auth";
 
 interface LoginState {
     ok: boolean;
@@ -42,7 +42,13 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     }
 
     if (data.user.role !== "admin") {
-        return { ok: false, error: locale === "fa" ? "حساب کاربری شما اجازه ورود به پنل را ندارد." : "This account is not allowed in the admin panel." };
+        return {
+            ok: false,
+            error:
+                locale === "fa"
+                    ? "حساب کاربری شما اجازه ورود به پنل را ندارد."
+                    : "This account is not allowed in the admin panel.",
+        };
     }
 
     const customer = data.customer;
