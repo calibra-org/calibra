@@ -779,6 +779,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/reports/top-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Top-selling products (admin)
+         * @description Ranks products by gross revenue over a trailing window (default 30 days). Only `processing` and `completed` orders contribute — refunded / cancelled / failed / draft orders are excluded so the chart matches what the merchant actually billed. Names are resolved from the locale matching `Accept-Language`, falling back to the order's line-item name snapshot when no translation is available (so deleted-product bestsellers still render correctly).
+         *     Window and result-size are capped (`days` ≤ 365, `limit` ≤ 50) to keep the aggregation bounded; it always scans the `order_line_items` ⋈ `orders` join, so very large windows are intentionally rejected upstream of the SQL.
+         */
+        get: operations["adminReportsTopProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products": {
         parameters: {
             query?: never;
@@ -3709,6 +3748,48 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    adminReportsTopProducts: {
+        parameters: {
+            query?: {
+                /** @description Trailing window in days. Defaults to 30; capped at 365. */
+                days?: number;
+                /** @description Maximum number of rows to return. Defaults to 5; capped at 50. */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Top products ranked by gross revenue, descending. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            product_id: number;
+                            name: string;
+                            sku?: string | null;
+                            units: number;
+                            revenue: components["schemas"]["Money"];
+                        }[];
+                        range: {
+                            /** Format: date */
+                            start_date: string;
+                            /** Format: date */
+                            end_date: string;
+                            days: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     adminProductsIndex: {

@@ -12,6 +12,7 @@ import { OrderStatusBadge } from "#/components/OrderStatusBadge";
 import { StatCard } from "#/components/StatCard";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
+import { Progress } from "#/components/ui/progress";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
@@ -26,6 +27,7 @@ import {
     useRecentOrders,
     useRevenueTodayStats,
     useSalesSeries,
+    useTopProducts,
 } from "#/lib/queries/dashboard";
 
 /**
@@ -113,8 +115,8 @@ export function DashboardClient() {
                         <CardTitle className="text-base">{t("topProducts")}</CardTitle>
                         <CardDescription>{t("topProductsSubtitle")}</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex items-center justify-center py-10 text-muted-foreground text-sm">
-                        {tCommon("noResults")}
+                    <CardContent className="flex flex-col gap-4 pt-5">
+                        <TopProductsList locale={locale} emptyLabel={tCommon("noResults")} />
                     </CardContent>
                 </Card>
             </div>
@@ -402,6 +404,66 @@ function RecentCustomersList({ locale, emptyLabel }: { locale: Locale; emptyLabe
                 );
             })}
         </ul>
+    );
+}
+
+function TopProductsList({ locale, emptyLabel }: { locale: Locale; emptyLabel: string }) {
+    const { data, isPending, isError, refetch } = useTopProducts({ days: 30, limit: 5 });
+
+    if (isPending) {
+        return (
+            <div className="flex flex-col gap-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={`skeleton-${String(i)}`} className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                            <Skeleton className="h-3.5 w-40" />
+                            <Skeleton className="h-3.5 w-20" />
+                        </div>
+                        <Skeleton className="h-2 w-full" />
+                        <div className="flex items-center justify-between text-xs">
+                            <Skeleton className="h-2.5 w-16" />
+                            <Skeleton className="h-2.5 w-10" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    if (isError) {
+        return <InlineError onRetry={refetch} />;
+    }
+
+    const rows = data ?? [];
+    if (rows.length === 0) {
+        return <p className="py-6 text-center text-muted-foreground text-sm">{emptyLabel}</p>;
+    }
+
+    const maxRevenue = Math.max(...rows.map((r) => r.revenue), 1);
+    return (
+        <>
+            {rows.map((product) => {
+                const percent = (product.revenue / maxRevenue) * 100;
+                return (
+                    <div key={product.productId} className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                            <Link
+                                href={`/products/${product.productId}` as never}
+                                className="truncate font-medium hover:underline"
+                            >
+                                {product.name}
+                            </Link>
+                            <span className="font-medium tabular-nums">{formatMoney(product.revenue, locale)}</span>
+                        </div>
+                        <Progress value={percent} />
+                        <div className="flex items-center justify-between text-muted-foreground text-xs">
+                            <span>{product.sku}</span>
+                            <span>{formatNumber(product.units, locale)} ×</span>
+                        </div>
+                    </div>
+                );
+            })}
+        </>
     );
 }
 

@@ -255,6 +255,50 @@ export function useActiveProductsCount() {
     });
 }
 
+interface TopProductsRow {
+    product_id: number;
+    name: string;
+    sku: string | null;
+    units: number;
+    revenue: number;
+}
+
+interface TopProductsResponse {
+    data: TopProductsRow[];
+    range: { start_date: string; end_date: string; days: number };
+}
+
+export interface TopProduct {
+    productId: number;
+    name: string;
+    sku: string;
+    units: number;
+    revenue: MoneyMinor;
+}
+
+/**
+ * Best-selling products over a trailing window (default 30 days, top 5). Backed by
+ * `/api/v1/admin/reports/top-products`, which already filters to `processing` + `completed` orders
+ * and resolves the locale server-side, so we don't need to massage the response.
+ */
+export function useTopProducts(options: { days?: number; limit?: number } = {}) {
+    const locale = useLocale() as Locale;
+    const days = options.days ?? 30;
+    const limit = options.limit ?? 5;
+    return useQuery<TopProductsResponse, Error, TopProduct[]>({
+        queryKey: ["dashboard", "topProducts", { locale, days, limit }],
+        queryFn: () => apiGet<TopProductsResponse>("reports/top-products", { locale, query: { days, limit } }),
+        select: (payload) =>
+            payload.data.map((row) => ({
+                productId: row.product_id,
+                name: row.name,
+                sku: row.sku ?? "",
+                units: row.units,
+                revenue: row.revenue as MoneyMinor,
+            })),
+    });
+}
+
 function buildSalesSeries(orders: AdminOrder[], days: number): { date: string; revenue: MoneyMinor; orders: number }[] {
     const buckets = new Map<string, { revenue: number; orders: number }>();
     const today = new Date();
