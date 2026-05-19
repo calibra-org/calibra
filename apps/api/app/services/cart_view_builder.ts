@@ -13,13 +13,13 @@ import type { CartView } from "#transformers/cart_transformer";
 const settingsService = new SettingsService();
 
 /**
- * Assemble the {@link CartView} the {@link CartTransformer} needs. Extracted from the cart
- * controller so the coupons controller (and phase 05's checkout draft endpoint) can produce the
- * same envelope without duplicating the preload + totals dance.
+ * Assemble the {@link CartView} the {@link CartTransformer} needs. Shared between every endpoint
+ * that returns the cart envelope (cart controller, coupons controller, checkout draft) so they
+ * don't duplicate the preload + totals dance.
  *
- * The function preloads relations, runs the active discounter against the cart's applied coupons,
- * and computes totals. It also keeps the cart's currency in sync with the configured default and
- * clears `shippingZoneMethodId` if the previously-selected rate is no longer eligible.
+ * Preloads cart relations, runs the active discounter against the cart's applied coupons, and
+ * computes totals. Also keeps the cart's currency in sync with the configured default and clears
+ * `shippingZoneMethodId` if the previously-selected rate is no longer eligible.
  */
 export async function buildCartView(
     cart: Cart,

@@ -20,8 +20,8 @@ const ASCII_LETTER_OR_DIGIT = /[a-zA-Z0-9]/;
  * - `fa` (and other non-en): preserves Persian letters, collapses whitespace + punctuation into a
  *   single `-`, trims leading/trailing dashes. Persian digits and diacritics survive intact.
  *
- * Never emits the WooCommerce `pa_` prefix on attribute slugs — that prefix is a WordPress
- * taxonomy-registry leak we don't want (per ADR D25).
+ * Never emits the WooCommerce `pa_` prefix on attribute slugs — Calibra stores attributes in a
+ * dedicated table rather than as WordPress taxonomies, so the prefix would be misleading clutter.
  *
  * Throws if the result is empty (input was only whitespace/punctuation).
  */

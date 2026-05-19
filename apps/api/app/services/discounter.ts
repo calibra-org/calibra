@@ -2,11 +2,9 @@ import type { Discounter } from "#contracts/discounter";
 import DiscounterService from "#services/discounter_service";
 
 /**
- * Single shared {@link Discounter} for the request path. Phase 04 wired the cart through
- * {@link NoopDiscounter}; this module replaces that reference. Importers that need the active
- * engine (cart controller, phase 05's order finalizer) should pull `discounter` from here rather
- * than instantiating their own — keeps testing seams uniform (any test that wants the no-op
- * variant rebinds via {@link setDiscounter}).
+ * Single shared {@link Discounter} for the request path. The cart controller and order finalizer
+ * resolve the active engine through {@link getDiscounter} so testing seams stay uniform — tests
+ * that want the inert variant rebind via {@link setDiscounter} and restore in `afterEach`.
  */
 let active: Discounter = new DiscounterService();
 

@@ -13,7 +13,7 @@ export interface ShippingAddressForMatch {
     continent?: string | null;
 }
 
-/** Specificity ranks per ADR D15: postcode > state > country > continent. */
+/** Specificity ranks used to break ties when a single address matches multiple zones: postcode > state > country > continent. */
 export const SHIPPING_LOCATION_SPECIFICITY = {
     postcode: 4,
     state: 3,

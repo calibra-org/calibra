@@ -76,9 +76,9 @@ export class OrderStateMachine {
         }
 
         /**
-         * Events fire after commit so listeners observe persisted state. Specific listeners are
-         * registered as later phases need them (email queue, search index, …); the events cost
-         * nothing on their own.
+         * Events fire after commit so listeners observe persisted state. No listener is bound
+         * today — the surface exists so email queues, search indexers, or webhook fan-out can hook
+         * in additively without touching the state machine.
          */
         await emitter.emit("order:status_changed", { order, from: fromStatus, to });
         if (to === "pending" && fromStatus === "draft") {
@@ -105,10 +105,10 @@ export class OrderStateMachine {
                 return;
             case "grant_downloads":
                 /**
-                 * Downloadable grants ledger (`customer_downloads`) is owned by phase 03; granting
-                 * lives in a later phase that ties downloads to the gateway-confirmed paid event.
-                 * Stub left in place so the state-machine reads cleanly; expanding it is purely
-                 * additive.
+                 * Hook for materialising `customer_downloads` rows for downloadable purchases.
+                 * Currently a no-op — the ledger table exists but no order transition writes to it
+                 * yet. Wiring is purely additive: enumerate the paid order's downloadable line
+                 * items and call `CustomerDownloadService.grant(...)` per match.
                  */
                 return;
         }

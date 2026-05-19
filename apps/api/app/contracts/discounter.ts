@@ -1,8 +1,8 @@
 /**
- * Contract phase 06 will swap a real {@link CouponDiscounter} into. Phase 04 ships
- * {@link NoopDiscounter} so the totals pipeline can be wired end-to-end before coupons land. The
- * container binding under the `discounter` key lets the rest of the app stay agnostic of which
- * implementation is active.
+ * Discount-engine contract. The active implementation is bound under the `discounter` key in
+ * `providers/app_provider.ts`; consumers (cart_totals_service, order_finalizer) depend on this
+ * interface only. Swapping the binding (e.g. {@link NoopDiscounter} in a test) is the supported
+ * extension seam.
  *
  * @see {@link https://docs.adonisjs.com/guides/concepts/dependency-injection} for the container
  * binding pattern used by `providers/app_provider.ts`.
@@ -10,8 +10,7 @@
 
 /**
  * Item descriptor as the totals service sees it — only the keys a discount engine could legitimately
- * branch on are exposed, so phase 06's coupon logic cannot accidentally couple to private cart
- * internals.
+ * branch on are exposed, so the coupon engine cannot accidentally couple to private cart internals.
  */
 export interface DiscounterItem {
     /** Stable identifier for the line; the totals service uses `cart_item.id` here. */
@@ -23,16 +22,16 @@ export interface DiscounterItem {
     priceSnapshot: number;
     /** Pre-discount line gross (quantity × priceSnapshot). */
     lineSubtotal: number;
-    /** Optional category ids the line belongs to — phase 06 uses these for category constraints. */
+    /** Category ids the line belongs to — used to match coupon category include/exclude constraints. */
     categoryIds: number[];
-    /** Optional product tags the line carries — phase 06 uses these for include/exclude lists. */
+    /** Product tag ids the line carries — used to match coupon tag include/exclude lists. */
     tagIds: number[];
     /** True when `priceSnapshot` reflects an active sale price — drives `exclude_sale_items`. */
     onSale?: boolean;
 }
 
 export interface DiscounterCouponContext {
-    /** PK on `coupons` once phase 06 wires the table. Phase 04 leaves this empty. */
+    /** PK on `coupons` for the code the customer applied to this cart. */
     id: number;
     /** Code snapshot the customer typed. Case-insensitive matches are the engine's job. */
     code: string;
@@ -76,8 +75,9 @@ export interface Discounter {
 }
 
 /**
- * Phase 04's placeholder. Returns zero discount, zero free-shipping, empty allocation map. Phase 06
- * replaces the container binding with `CouponDiscounter` and this class is unbound.
+ * Inert {@link Discounter} that returns zero discount, no free-shipping, and an empty allocation
+ * map. Use it in tests that need totals math without exercising the coupon engine — rebind via
+ * `setDiscounter()` and restore in `afterEach`.
  */
 export class NoopDiscounter implements Discounter {
     async calculate(): Promise<DiscounterResult> {
