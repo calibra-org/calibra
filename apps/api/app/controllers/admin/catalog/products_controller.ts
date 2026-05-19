@@ -21,7 +21,7 @@ export default class AdminProductsController {
     async index(ctx: HttpContext) {
         const { request } = ctx;
         const page = Math.max(1, Number(request.input("page", 1)) || 1);
-        const perPage = Math.min(200, Math.max(1, Number(request.input("per_page", 20)) || 20));
+        const perPage = Math.min(200, Math.max(1, Number(request.input("per_page", request.input("perPage", 20))) || 20));
         const withTrashed = String(request.input("with_trashed", "")) === "1";
         const query = Product.query()
             .preload("translations")
@@ -29,6 +29,29 @@ export default class AdminProductsController {
         if (!withTrashed) query.whereNull("deleted_at");
         if (request.input("status")) query.where("status", String(request.input("status")));
         if (request.input("type")) query.where("type", String(request.input("type")));
+
+        const categoryId = Number(request.input("category", 0));
+        if (Number.isFinite(categoryId) && categoryId > 0) {
+            query.whereIn("id", (sub) =>
+                sub.select("product_id").from("product_category_links").where("category_id", categoryId),
+            );
+        }
+        const tagId = Number(request.input("tag", 0));
+        if (Number.isFinite(tagId) && tagId > 0) {
+            query.whereIn("id", (sub) => sub.select("product_id").from("product_tag_links").where("tag_id", tagId));
+        }
+        const brandId = Number(request.input("brand", 0));
+        if (Number.isFinite(brandId) && brandId > 0) {
+            query.whereIn("id", (sub) => sub.select("product_id").from("product_brand_links").where("brand_id", brandId));
+        }
+        if (request.input("on_sale")) query.whereNotNull("sale_price");
+        const stockStatus = request.input("stock_status");
+        if (stockStatus) {
+            query.whereIn("id", (sub) =>
+                sub.select("product_id").from("inventory_items").where("stock_status", String(stockStatus)),
+            );
+        }
+
         const search = request.input("search");
         if (search) {
             const needle = `%${String(search)}%`;

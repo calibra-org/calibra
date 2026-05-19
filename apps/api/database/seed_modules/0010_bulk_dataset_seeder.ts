@@ -7,6 +7,8 @@ import { DateTime } from "luxon";
 
 import { slugify } from "#services/slug_service";
 
+import { BULK_CATEGORY_TREE, type CategoryNode, type LeafProductSpec } from "./bulk_catalog_taxonomy.js";
+
 const BATCH = 500;
 
 /**
@@ -84,13 +86,14 @@ export default class BulkDatasetSeeder extends BaseSeeder {
 
         const now = DateTime.utc().toSQL();
 
-        const categoryIds = await this.loadDemoCategoryIds();
         const brandIds = await this.loadDemoBrandIds();
-        if (categoryIds.length === 0) {
-            console.warn("No categories found — run `node ace db:seed` first to load the demo catalog scaffolding.");
+        const tagIds = await this.ensureBulkTags(now);
+        const leafCategories = await this.ensureBulkCategoryTree(now);
+        if (leafCategories.length === 0) {
+            console.warn("No bulk category leaves resolved — BULK_CATEGORY_TREE may be empty.");
             return;
         }
-        const tagIds = await this.ensureBulkTags(now);
+        console.log(`Resolved ${leafCategories.length} leaf categories from BULK_CATEGORY_TREE.`);
 
         /**
          * Idempotency check. Each section inserts only the delta between its current bulk count
@@ -121,7 +124,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
 
         if (productsNeeded > 0) {
             console.time("[bulk-seed] products + translations + images + inventory");
-            const productInserted = await this.seedProducts(productsNeeded, categoryIds, brandIds, tagIds, now);
+            const productInserted = await this.seedProducts(productsNeeded, leafCategories, brandIds, tagIds, now);
             console.timeEnd("[bulk-seed] products + translations + images + inventory");
             console.log(
                 `Inserted ${productInserted.products} products (${productInserted.variations} variations) + ${productInserted.translations} translations + ${productInserted.images} images + ${productInserted.inventory} inventory rows + ${productInserted.tagLinks} tag links`,
@@ -239,19 +242,89 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         await this.client.from("customers").whereIn("id", customersFilter).delete();
         await this.client.from("users").whereIn("id", usersFilter).delete();
 
+        /**
+         * Bulk-owned categories live under `slug LIKE 'bk-%'`. Wipe the translations + rows so
+         * the next run rebuilds the tree from BULK_CATEGORY_TREE cleanly; the 8 demo categories
+         * shipped by 0002_catalog_demo_seeder don't match the prefix and stay untouched.
+         */
+        const bulkCategoryIds = (
+            await this.client
+                .from("product_category_translations")
+                .select("category_id")
+                .where("locale", "en")
+                .where("slug", "like", "bk-%")
+        ).map((r: { category_id: number | string }) => Number(r.category_id));
+        if (bulkCategoryIds.length > 0) {
+            await this.client.from("product_category_translations").whereIn("category_id", bulkCategoryIds).delete();
+            await this.client.from("product_categories").whereIn("id", bulkCategoryIds).delete();
+        }
+
         console.log(
             `Reset removed ${bulkOrderIds.length} orders, ${bulkProductIds.length} products, ${bulkCustomerIds.length} customers, ${bulkUserIds.length} users.`,
         );
     }
 
-    private async loadDemoCategoryIds(): Promise<number[]> {
-        const rows = await this.client.from("product_categories").select("id");
-        return rows.map((r: { id: number | string }) => Number(r.id));
-    }
-
     private async loadDemoBrandIds(): Promise<number[]> {
         const rows = await this.client.from("product_brands").select("id");
         return rows.map((r: { id: number | string }) => Number(r.id));
+    }
+
+    /**
+     * Walks {@link BULK_CATEGORY_TREE}, upserting categories and their `(fa, en)` translations
+     * with parent links intact (every child references its parent's id). Returns the leaf-only
+     * nodes (those with `products` specs) paired with their inserted `category_id`, so the
+     * product generator can drop each product into the most-specific category.
+     *
+     * Idempotent — every category translation is keyed on `(locale, slug)` and re-runs reuse the
+     * existing id without changing rows.
+     */
+    private async ensureBulkCategoryTree(now: string): Promise<Array<{ categoryId: number; spec: LeafProductSpec }>> {
+        const existingTranslations = await this.client
+            .from("product_category_translations")
+            .select(["category_id", "slug"])
+            .where("locale", "en")
+            .where("slug", "like", "bk-%");
+        const slugToId = new Map<string, number>();
+        for (const r of existingTranslations) slugToId.set(String(r.slug), Number(r.category_id));
+
+        const leaves: Array<{ categoryId: number; spec: LeafProductSpec }> = [];
+        let menuOrder = 0;
+
+        const insertNode = async (node: CategoryNode, parentId: number | null): Promise<number> => {
+            menuOrder += 1;
+            const slugEn = slugify(node.slugBase, "en");
+            const slugFa = slugify(`${node.slugBase}-fa`, "en");
+            let categoryId = slugToId.get(slugEn);
+            if (categoryId === undefined) {
+                const [{ id: newId }] = await this.client.table("product_categories").returning("id").insert({
+                    parent_id: parentId,
+                    display: "default",
+                    menu_order: menuOrder,
+                    attributes: {},
+                    created_at: now,
+                    updated_at: now,
+                });
+                categoryId = Number(newId);
+                slugToId.set(slugEn, categoryId);
+                await this.client.table("product_category_translations").insert([
+                    { category_id: categoryId, locale: "fa", name: node.fa, slug: slugFa, created_at: now, updated_at: now },
+                    { category_id: categoryId, locale: "en", name: node.en, slug: slugEn, created_at: now, updated_at: now },
+                ]);
+            } else {
+                /** Ensure parent_id stays correct if the tree shape changed between runs. */
+                await this.client.from("product_categories").where("id", categoryId).update({
+                    parent_id: parentId,
+                    menu_order: menuOrder,
+                    updated_at: now,
+                });
+            }
+            if (node.products) leaves.push({ categoryId, spec: node.products });
+            for (const child of node.children ?? []) await insertNode(child, categoryId);
+            return categoryId;
+        };
+
+        for (const root of BULK_CATEGORY_TREE) await insertNode(root, null);
+        return leaves;
     }
 
     /**
@@ -306,12 +379,10 @@ export default class BulkDatasetSeeder extends BaseSeeder {
 
         const userRows: Array<Record<string, unknown>> = [];
         for (let i = 0; i < target; i += 1) {
-            const email = uniqueBulkEmail(existingEmails, i);
-            const role = i < Math.max(1, Math.floor(target * 0.005)) ? "admin" : "customer";
             userRows.push({
-                email,
+                email: uniqueBulkEmail(existingEmails, i),
                 password_hash: passwordHash,
-                role,
+                role: "customer",
                 locale: "fa",
                 created_at: now,
                 updated_at: now,
@@ -319,10 +390,16 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         }
         if (userRows.length === 0) return { users: 0, customers: 0 };
 
-        const ensureAdminEmail = "admin@bulk.calibra.dev";
-        if (!existingEmails.has(ensureAdminEmail) && !userRows.some((r) => r.email === ensureAdminEmail)) {
+        /**
+         * Fixed admin roster. Real ops teams have a handful of named admins, not a
+         * percentage-based slice — pre-pend each missing entry so a fresh `--reset` always lands
+         * the same four logins regardless of `--users`.
+         */
+        for (const admin of FIXED_ADMINS) {
+            if (existingEmails.has(admin.email)) continue;
+            if (userRows.some((r) => r.email === admin.email)) continue;
             userRows.unshift({
-                email: ensureAdminEmail,
+                email: admin.email,
                 password_hash: passwordHash,
                 role: "admin",
                 locale: "fa",
@@ -337,7 +414,22 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             for (const r of rows) insertedUsers.push({ id: Number(r.id), email: String(r.email) });
         }
 
+        const fixedAdminByEmail = new Map(FIXED_ADMINS.map((a) => [a.email, a]));
         const customerRows = insertedUsers.map((u) => {
+            const admin = fixedAdminByEmail.get(u.email);
+            if (admin) {
+                return {
+                    user_id: u.id,
+                    first_name: admin.firstName,
+                    last_name: admin.lastName,
+                    phone: randomIranianPhone(),
+                    country_default: "IR",
+                    is_paying_customer: false,
+                    attributes: {},
+                    created_at: now,
+                    updated_at: now,
+                };
+            }
             const ir = faker.datatype.boolean({ probability: 0.7 });
             return {
                 user_id: u.id,
@@ -407,7 +499,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
 
     private async seedProducts(
         target: number,
-        categoryIds: number[],
+        leafCategories: Array<{ categoryId: number; spec: LeafProductSpec }>,
         brandIds: number[],
         tagIds: number[],
         now: string,
@@ -454,6 +546,13 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         for (let i = 0; i < target; i += 1) {
             const sku = uniqueBulkSku(existingSkus, i);
 
+            /** Pick a random leaf category and pull the realistic product template from it. */
+            const leaf = faker.helpers.arrayElement(leafCategories);
+            const spec = leaf.spec;
+            const brandLabel = String(faker.helpers.arrayElement(spec.brands));
+            const modelLabel = String(faker.helpers.arrayElement(spec.models));
+            const blurb = String(faker.helpers.arrayElement(spec.blurbs));
+
             const typeRoll = faker.number.float({ min: 0, max: 1 });
             const type: "simple" | "variable" | "grouped" = typeRoll < 0.8 ? "simple" : typeRoll < 0.98 ? "variable" : "grouped";
 
@@ -461,20 +560,18 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             const status: "publish" | "draft" | "pending" =
                 statusRoll < 0.85 ? "publish" : statusRoll < 0.95 ? "draft" : "pending";
 
-            const regular = faker.number.int({ min: 200_000, max: 50_000_000 });
-            const sale =
-                faker.datatype.boolean({ probability: 0.35 }) && regular > 500_000
-                    ? Math.floor(regular * faker.number.float({ min: 0.5, max: 0.95 }))
-                    : null;
+            const regular = faker.number.int({ min: spec.priceMin, max: spec.priceMax });
+            const sale = faker.datatype.boolean({ probability: 0.35 })
+                ? Math.floor(regular * faker.number.float({ min: 0.6, max: 0.92 }))
+                : null;
 
-            const nameFa = randomPersianProductName();
-            const nameEn = faker.commerce.productName();
+            const nameFa = spec.namePatternFa.replace("{brand}", brandLabel).replace("{model}", modelLabel);
+            const nameEn = spec.namePatternEn.replace("{brand}", brandLabel).replace("{model}", modelLabel);
 
             const slugFa = uniqueSlug(existingProductSlugsEn, slugify(`${nameFa}-${sku}`, "fa"));
             const slugEn = uniqueSlug(existingProductSlugsEn, slugify(`${nameEn}-${sku}`, "en"));
 
-            const categoryChoiceCount = faker.number.int({ min: 1, max: 3 });
-            const chosenCategoryIds = faker.helpers.arrayElements(categoryIds, categoryChoiceCount);
+            const chosenCategoryIds = [leaf.categoryId];
 
             const brandChosen =
                 brandIds.length > 0 && faker.datatype.boolean({ probability: 0.5 }) ? faker.helpers.arrayElement(brandIds) : null;
@@ -508,10 +605,10 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 name_en: nameEn,
                 slug_fa: slugFa,
                 slug_en: slugEn,
-                short_fa: fakerFa.lorem.sentence({ min: 4, max: 8 }),
-                short_en: fakerEn.lorem.sentence({ min: 4, max: 8 }),
-                description_fa: fakerFa.lorem.paragraphs(2, "\n\n"),
-                description_en: fakerEn.lorem.paragraphs(2, "\n\n"),
+                short_fa: blurb,
+                short_en: blurb,
+                description_fa: `${blurb}\n\n${fakerFa.lorem.paragraphs(2, "\n\n")}`,
+                description_en: `${blurb}\n\n${fakerEn.lorem.paragraphs(2, "\n\n")}`,
                 categoryIds: chosenCategoryIds,
                 brandId: brandChosen,
                 tagIds: chosenTagIds,
@@ -1109,13 +1206,6 @@ function randomIranianStreet(): string {
     return `${street}، پلاک ${plate}`;
 }
 
-function randomPersianProductName(): string {
-    const noun = faker.helpers.arrayElement(PERSIAN_PRODUCT_NOUNS);
-    const adjective = faker.helpers.arrayElement(PERSIAN_PRODUCT_ADJECTIVES);
-    const code = faker.string.alphanumeric({ length: 3, casing: "upper" });
-    return `${noun} ${adjective} مدل ${code}`;
-}
-
 const IRANIAN_CITIES = [
     "تهران",
     "مشهد",
@@ -1154,59 +1244,6 @@ const IRANIAN_STREETS = [
     "بلوار کاوه",
 ];
 
-const PERSIAN_PRODUCT_NOUNS = [
-    "گوشی",
-    "لپ‌تاپ",
-    "ساعت",
-    "کیف",
-    "کفش",
-    "کوله",
-    "تلویزیون",
-    "هدفون",
-    "بلندگو",
-    "تبلت",
-    "دوربین",
-    "مانیتور",
-    "صندلی",
-    "میز",
-    "چراغ",
-    "تابه",
-    "قابلمه",
-    "پیراهن",
-    "شلوار",
-    "ژاکت",
-    "کاپشن",
-    "عینک",
-    "کتاب",
-    "عطر",
-    "کرم",
-    "شامپو",
-    "فرش",
-    "پتو",
-    "بالش",
-    "تشک",
-];
-
-const PERSIAN_PRODUCT_ADJECTIVES = [
-    "هوشمند",
-    "حرفه‌ای",
-    "کلاسیک",
-    "مدرن",
-    "سنتی",
-    "دست‌ساز",
-    "اقتصادی",
-    "لوکس",
-    "اسپرت",
-    "رسمی",
-    "خانگی",
-    "اداری",
-    "تابستانی",
-    "زمستانی",
-    "بچگانه",
-    "زنانه",
-    "مردانه",
-];
-
 const PERSIAN_REVIEW_SAMPLES = [
     "کیفیت محصول عالی بود و در سریع‌ترین زمان به دستم رسید.",
     "بسته‌بندی بسیار شیک و دقیق، بازم ازتون خرید می‌کنم.",
@@ -1224,6 +1261,17 @@ const PERSIAN_REVIEW_SAMPLES = [
     "کیفیت بسته‌بندی متوسط بود ولی کالا سالم رسید.",
     "ارزشش رو داره، حتما دوباره خرید می‌کنم.",
     "از سرویس پشتیبانی هم راضی بودم.",
+];
+
+/**
+ * Fixed admin roster. Real ops teams have a handful of named admins, not a percentage of the
+ * customer base. Each entry seeds one user with `role: admin` and the password is the shared
+ * `Passw0rd1!`. Idempotent — already-present emails are skipped on subsequent runs.
+ */
+const FIXED_ADMINS: Array<{ email: string; firstName: string; lastName: string }> = [
+    { email: "admin@bulk.calibra.dev", firstName: "مدیر", lastName: "ارشد" },
+    { email: "ali.admin@bulk.calibra.dev", firstName: "علی", lastName: "صادقی" },
+    { email: "sara.admin@bulk.calibra.dev", firstName: "سارا", lastName: "محمدی" },
 ];
 
 /**
