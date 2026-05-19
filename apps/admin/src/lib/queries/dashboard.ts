@@ -5,6 +5,7 @@ import type { Locale } from "@calibra/shared/i18n";
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
+import { type SdkAdminOrderListRow, toAdminOrderListRow } from "#/lib/adapters/orders";
 import { apiGet } from "#/lib/queries/api-client";
 import type { AdminCustomer, AdminOrder, MoneyMinor, OrderStatus } from "#/lib/types";
 
@@ -21,91 +22,12 @@ type Schemas = AdminSchemas["schemas"];
 type SdkAdminProduct = Schemas["AdminProduct"];
 type SdkAdminCustomer = Schemas["AdminCustomer"];
 
-/** The /admin/orders index returns this trimmed shape, not the full OrderDetail. */
-interface SdkAdminOrderListRow {
-    id?: number;
-    order_number?: number;
-    status?: string;
-    customer_id?: number | null;
-    billing_email?: string | null;
-    grand_total?: number;
-    currency?: string;
-    created_at?: string;
-}
-
 interface SdkPaginated<T> {
     data: T[];
     meta?: { page: number; perPage: number; total: number; lastPage: number };
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const ORDER_STATUS_MAP: Record<string, OrderStatus> = {
-    draft: "draft",
-    pending: "pending",
-    on_hold: "on_hold",
-    processing: "processing",
-    completed: "completed",
-    cancelled: "cancelled",
-    refunded: "refunded",
-    failed: "failed",
-};
-
-/** Fans the locale-resolved API string out to both `fa` and `en` keys (mirrors server-repos). */
-function dup(value: string | null | undefined) {
-    const safe = typeof value === "string" ? value : "";
-    return { fa: safe, en: safe };
-}
-
-function normaliseStatus(raw: string | null | undefined): OrderStatus {
-    return ORDER_STATUS_MAP[String(raw ?? "pending")] ?? "pending";
-}
-
-function toAdminOrderListRow(o: SdkAdminOrderListRow): AdminOrder {
-    return {
-        id: o.id ?? 0,
-        orderNumber: Number(o.order_number ?? o.id ?? 0),
-        orderKey: "",
-        status: normaliseStatus(o.status),
-        customerId: o.customer_id !== null && o.customer_id !== undefined ? Number(o.customer_id) : null,
-        customerName: o.billing_email ?? "",
-        billingEmail: o.billing_email ?? "",
-        currency: "IRR",
-        currencyDisplay: "IRR",
-        grandTotal: Number(o.grand_total ?? 0) as MoneyMinor,
-        itemsTotal: 0 as MoneyMinor,
-        shippingTotal: 0 as MoneyMinor,
-        discountTotal: 0 as MoneyMinor,
-        taxTotal: 0 as MoneyMinor,
-        paymentMethodTitle: dup(""),
-        createdAt: o.created_at ?? new Date().toISOString(),
-        paidAt: null,
-        completedAt: null,
-        billingAddress: emptyAddress(),
-        shippingAddress: emptyAddress(),
-        lineItems: [],
-        shippingLines: [],
-        couponLines: [],
-        taxLines: [],
-        history: [],
-        notes: [],
-    };
-}
-
-function emptyAddress() {
-    return {
-        firstName: "",
-        lastName: "",
-        company: null,
-        addressLine1: "",
-        addressLine2: null,
-        city: "",
-        provinceCode: "",
-        postcode: "",
-        country: "",
-        phone: "",
-        nationalId: null,
-    };
-}
 
 function toAdminCustomer(c: SdkAdminCustomer): AdminCustomer {
     const iran = c.profile_extensions?.iran;

@@ -279,7 +279,11 @@
                 "history": "History",
                 "notes": "Notes",
                 "refunds": "Refunds"
-            }
+            },
+            "changeStatus": "Change status",
+            "statusUpdated": "Order status updated.",
+            "statusUpdateFailed": "Couldn't update the order status.",
+            "notFound": "This order doesn't exist."
         }
     },
     "OrderStatus": {
