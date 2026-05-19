@@ -22,15 +22,7 @@ responses:
                     properties:
                         data:
                             type: array
-                            items:
-                                type: object
-                                required: [id, from_status, to_status, occurred_at, label_key]
-                                properties:
-                                    id: { type: integer }
-                                    from_status: { type: [string, "null"] }
-                                    to_status: { type: [string, "null"] }
-                                    occurred_at: { type: [string, "null"], format: date-time }
-                                    label_key: { type: [string, "null"] }
+                            items: { $ref: "../../components/schemas/OrderHistoryEntry.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "404":

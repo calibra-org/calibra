@@ -95,41 +95,11 @@ allOf:
           billing_address:
               anyOf:
                   - type: "null"
-                  - type: object
-                    required: [kind]
-                    properties:
-                        kind: { type: string, enum: [billing, shipping] }
-                        first_name: { type: [string, "null"] }
-                        last_name: { type: [string, "null"] }
-                        company: { type: [string, "null"] }
-                        address_line_1: { type: [string, "null"] }
-                        address_line_2: { type: [string, "null"] }
-                        city: { type: [string, "null"] }
-                        region_id: { type: [integer, "null"] }
-                        region_text: { type: [string, "null"] }
-                        postcode: { type: [string, "null"] }
-                        country: { type: [string, "null"] }
-                        phone: { type: [string, "null"] }
-                        email: { type: [string, "null"], format: email }
+                  - $ref: "./OrderAddress.yaml"
           shipping_address:
               anyOf:
                   - type: "null"
-                  - type: object
-                    required: [kind]
-                    properties:
-                        kind: { type: string, enum: [billing, shipping] }
-                        first_name: { type: [string, "null"] }
-                        last_name: { type: [string, "null"] }
-                        company: { type: [string, "null"] }
-                        address_line_1: { type: [string, "null"] }
-                        address_line_2: { type: [string, "null"] }
-                        city: { type: [string, "null"] }
-                        region_id: { type: [integer, "null"] }
-                        region_text: { type: [string, "null"] }
-                        postcode: { type: [string, "null"] }
-                        country: { type: [string, "null"] }
-                        phone: { type: [string, "null"] }
-                        email: { type: [string, "null"], format: email }
+                  - $ref: "./OrderAddress.yaml"
           status_history:
               type: array
               items:

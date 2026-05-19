@@ -1,20 +1,23 @@
 title: Category
-description: Catalog category. Hierarchical via `parent_id`; tree depth is unbounded server-side.
+description: >
+    Catalog category — matches `ProductCategoryTransformer.toObject()` exactly. Hierarchical
+    via `parent_id` (null on roots); `display` is the storefront rendering hint (`default`,
+    `products`, `subcategories`); `image_media_id` references a row in `media`. Locale-aware
+    fields (`name`, `slug`, `description`) are resolved from the active locale. The tree
+    variant of `GET /categories` returns an extra `children: Category[]` field per node;
+    that variant is otherwise identical.
 type: object
 properties:
     id: { type: integer }
     parent_id: { type: [integer, "null"] }
-    slug: { type: string, examples: ["smartphones"] }
-    name: { type: string, description: Resolved from the active locale. }
+    display: { type: [string, "null"] }
+    image_media_id: { type: [integer, "null"] }
+    menu_order: { type: integer }
+    name: { type: [string, "null"] }
+    slug: { type: [string, "null"] }
     description: { type: [string, "null"] }
-    image:
-        anyOf:
-            - type: object
-              properties:
-                  url: { type: string }
-                  alt: { type: [string, "null"] }
-            - type: "null"
+    locale: { type: string }
 required:
     - id
-    - slug
-    - name
+    - menu_order
+    - locale

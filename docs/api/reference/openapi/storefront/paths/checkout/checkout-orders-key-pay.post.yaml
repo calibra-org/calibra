@@ -36,14 +36,7 @@ responses:
                     required: [data, payment]
                     properties:
                         data: { $ref: "../../components/schemas/OrderDetail.yaml" }
-                        payment:
-                            type: object
-                            properties:
-                                gateway_id: { type: integer }
-                                method_code: { type: string }
-                                redirect_url:
-                                    type: [string, "null"]
-                                    description: Null for non-redirecting gateways (e.g. bank-transfer).
+                        payment: { $ref: "../../components/schemas/PaymentInfo.yaml" }
     "404":
         $ref: "../../../common/components/responses/NotFound.yaml"
     "409":

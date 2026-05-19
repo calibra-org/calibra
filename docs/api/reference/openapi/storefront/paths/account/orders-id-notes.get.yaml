@@ -21,13 +21,7 @@ responses:
                     properties:
                         data:
                             type: array
-                            items:
-                                type: object
-                                required: [id, body, created_at]
-                                properties:
-                                    id: { type: integer }
-                                    body: { type: string }
-                                    created_at: { type: [string, "null"], format: date-time }
+                            items: { $ref: "../../components/schemas/OrderNoteEntry.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "404":

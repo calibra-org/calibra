@@ -1,49 +1,20 @@
 title: AdminCustomer
 description: >
-    Admin customer envelope. Matches `CustomerTransformer.toObject()` spread with `user:
-    UserTransformer.forAdmin()` (or `null` when the customer is guest-only). The detail
-    variant additionally folds in `profile_extensions` for IR fiscal identifiers — both list
-    and detail use this schema, but list omits `profile_extensions`.
-type: object
-properties:
-    id: { type: string, description: "BIGINT id serialised as string (Lucid default)." }
-    user_id: { type: [string, "null"] }
-    first_name: { type: [string, "null"] }
-    last_name: { type: [string, "null"] }
-    phone: { type: [string, "null"] }
-    country_default: { type: string, description: "ISO-3166-1 alpha-2 country code (uppercase)." }
-    is_paying_customer: { type: boolean }
-    attributes:
-        type: object
-        additionalProperties: true
-    created_at: { type: [string, "null"], format: date-time }
-    updated_at: { type: [string, "null"], format: date-time }
-    user:
-        anyOf:
-            - type: "null"
-            - type: object
+    Admin customer envelope — matches the controller's `CustomerTransformer.toObject()`
+    spread with `user: UserTransformer.forAdmin()` (or `user: null` when the customer is
+    guest-only). The detail variant additionally folds in `profile_extensions` for IR
+    fiscal identifiers; the list variant omits `profile_extensions`. Refer to
+    `CustomerBase` for the base customer columns and `UserAdmin` for the user audit shape.
+allOf:
+    - $ref: "../../../storefront/components/schemas/CustomerBase.yaml"
+    - type: object
+      properties:
+          user:
+              anyOf:
+                  - type: "null"
+                  - $ref: "./UserAdmin.yaml"
+          profile_extensions:
+              type: object
+              description: Country-scoped extension rows. Today only `iran` is recognised. Omitted on list responses.
               properties:
-                  id: { type: string }
-                  email: { type: string, format: email }
-                  locale: { type: string }
-                  role: { type: string }
-                  created_at: { type: [string, "null"], format: date-time }
-                  updated_at: { type: [string, "null"], format: date-time }
-                  last_login_at: { type: [string, "null"], format: date-time }
-                  deleted_at: { type: [string, "null"], format: date-time }
-    profile_extensions:
-        type: object
-        description: Country-scoped extension rows. Today only `iran` is recognised. Omitted on list responses.
-        properties:
-            iran:
-                type: object
-                properties:
-                    national_id: { type: [string, "null"] }
-                    corporate_national_id: { type: [string, "null"] }
-                    economic_code: { type: [string, "null"] }
-                    legal_company_name_fa: { type: [string, "null"] }
-                    vat_taxpayer_status: { type: [string, "null"] }
-required:
-    - id
-    - country_default
-    - is_paying_customer
+                  iran: { $ref: "../../../common/components/schemas/IranAddressExtension.yaml" }

@@ -1,0 +1,17 @@
+title: PaymentInfo
+description: >
+    Flat payment envelope returned alongside the order on `POST /checkout/submit`,
+    `POST /checkout/orders/{order_key}/pay`, and on idempotent replays. The fields mirror
+    the order's snapshot columns (`payment_gateway_id_snapshot`,
+    `payment_method_code_snapshot`); `redirect_url` is the hosted-checkout URL when the
+    gateway redirects and `null` for non-redirecting methods (bank-transfer, cod) or on
+    idempotent replays.
+type: object
+properties:
+    gateway_id: { type: [integer, "null"] }
+    method_code: { type: [string, "null"] }
+    redirect_url: { type: [string, "null"] }
+required:
+    - gateway_id
+    - method_code
+    - redirect_url

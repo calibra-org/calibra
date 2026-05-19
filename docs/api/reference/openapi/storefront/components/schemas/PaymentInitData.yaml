@@ -1,0 +1,20 @@
+title: PaymentInitData
+description: >
+    Response data envelope from `POST /payment/init`. The `redirect_url` is the hosted-checkout
+    URL for redirecting gateways (Zarinpal, IRANKish, …) and `null` for non-redirecting
+    methods (bank-transfer, cod) — those gateways transition the order to `on_hold` inline.
+type: object
+properties:
+    order_id:
+        type: integer
+        description: Internal numeric order id (BIGINT, wrapped to Number by the transformer).
+    order_key:
+        type: string
+        description: Echo of the request `order_key`.
+    redirect_url:
+        type: [string, "null"]
+        description: Hosted-checkout URL. Null for non-redirecting gateways.
+required:
+    - order_id
+    - order_key
+    - redirect_url

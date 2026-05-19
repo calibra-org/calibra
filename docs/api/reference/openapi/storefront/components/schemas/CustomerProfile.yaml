@@ -1,38 +1,17 @@
 title: CustomerProfile
 description: >
-    Commerce identity row associated with a `User`. Returned with the user-shaped `data.user`
-    envelope on `GET /account/me`. `profile_extensions` is keyed by country-scoped extension
-    name; today only `iran` is recognised. The key is absent (not null) when the customer has no
-    extension row of that kind — the storefront tests `if ('iran' in profile_extensions)`.
-type: object
-properties:
-    id: { type: string, description: "BIGINT id serialised as a string (Lucid default)." }
-    user_id: { type: string }
-    first_name: { type: [string, "null"] }
-    last_name: { type: [string, "null"] }
-    phone: { type: [string, "null"] }
-    country_default: { type: string, description: "ISO-3166-1 alpha-2 (uppercase)." }
-    is_paying_customer: { type: boolean }
-    attributes:
-        type: object
-        additionalProperties: true
-    created_at: { type: [string, "null"], format: date-time }
-    updated_at: { type: [string, "null"], format: date-time }
-    profile_extensions:
-        type: object
-        description: Country-scoped extension rows. Today only `iran` is recognised.
-        properties:
-            iran:
-                type: object
-                properties:
-                    national_id: { type: [string, "null"] }
-                    corporate_national_id: { type: [string, "null"] }
-                    economic_code: { type: [string, "null"] }
-                    legal_company_name_fa: { type: [string, "null"] }
-                    vat_taxpayer_status: { type: [string, "null"] }
-required:
-    - id
-    - user_id
-    - country_default
-    - is_paying_customer
-    - profile_extensions
+    `CustomerBase` extended with `profile_extensions` — matches
+    `CustomerTransformer.withProfileExtensions()` exactly. The `profile_extensions` object
+    only carries keys for country-scoped extensions the customer actually has a row for;
+    Iranian customers see the `iran` key, foreign customers see an empty object. The
+    storefront branches on `'iran' in profile_extensions`.
+allOf:
+    - $ref: "./CustomerBase.yaml"
+    - type: object
+      required: [profile_extensions]
+      properties:
+          profile_extensions:
+              type: object
+              description: Country-scoped extension rows. Today only `iran` is recognised.
+              properties:
+                  iran: { $ref: "../../../common/components/schemas/IranAddressExtension.yaml" }

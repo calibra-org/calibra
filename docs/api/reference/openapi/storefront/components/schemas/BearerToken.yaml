@@ -1,0 +1,21 @@
+title: BearerToken
+description: >
+    Opaque bearer-token envelope returned by `POST /auth/login` and `POST /auth/register`.
+    The `value` is single-use cleartext (the API never echoes the hash); store it on the
+    client and send it as `Authorization: Bearer <value>` on subsequent requests.
+type: object
+properties:
+    type:
+        type: string
+        description: Always `bearer`.
+        examples: ["bearer"]
+    value:
+        type: string
+        description: Opaque token. Treat as a credential — never log or display.
+    expires_at:
+        type: [string, "null"]
+        format: date-time
+        description: Null when the token has no fixed expiry.
+required:
+    - type
+    - value

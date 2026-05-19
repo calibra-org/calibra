@@ -17,6 +17,6 @@ responses:
                     type: object
                     required: [data]
                     properties:
-                        data: { $ref: "../../components/schemas/CategoryDetail.yaml" }
+                        data: { $ref: "../../components/schemas/Category.yaml" }
     "404":
         $ref: "../../../common/components/responses/NotFound.yaml"

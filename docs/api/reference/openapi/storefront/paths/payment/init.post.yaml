@@ -36,19 +36,7 @@ responses:
                     type: object
                     required: [data]
                     properties:
-                        data:
-                            type: object
-                            required: [order_id, order_key, redirect_url]
-                            properties:
-                                order_id:
-                                    type: integer
-                                    description: Internal numeric order id (BIGINT).
-                                order_key:
-                                    type: string
-                                    description: Echo of the request `order_key`.
-                                redirect_url:
-                                    type: [string, "null"]
-                                    description: Hosted-checkout URL. Null for non-redirecting gateways.
+                        data: { $ref: "../../components/schemas/PaymentInitData.yaml" }
     "404":
         $ref: "../../../common/components/responses/NotFound.yaml"
     "422":

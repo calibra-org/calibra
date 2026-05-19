@@ -24,15 +24,7 @@ responses:
                     required: [data, payment]
                     properties:
                         data: { $ref: "../../components/schemas/OrderDetail.yaml" }
-                        payment:
-                            type: object
-                            required: [gateway_id, method_code, redirect_url]
-                            properties:
-                                gateway_id: { type: [integer, "null"] }
-                                method_code: { type: [string, "null"] }
-                                redirect_url:
-                                    type: [string, "null"]
-                                    description: Hosted-checkout URL when the gateway redirects; null for non-redirecting methods (cod / bank-transfer).
+                        payment: { $ref: "../../components/schemas/PaymentInfo.yaml" }
     "409":
         $ref: "../../../common/components/responses/Conflict.yaml"
     "422":
