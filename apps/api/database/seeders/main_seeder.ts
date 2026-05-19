@@ -2,11 +2,11 @@ import { BaseSeeder } from "@adonisjs/lucid/seeders";
 
 /**
  * Sole entry point for `node ace db:seed`. Lucid auto-discovers seeders from `database/seeders/`
- * and runs them in lexical order; we keep only this orchestrator in that directory, and the per-
- * phase seed modules live under `database/seed_modules/` so Lucid never tries to load them as
+ * and runs them in lexical order; only this orchestrator lives in that directory. The per-domain
+ * seed modules live under `database/seed_modules/` so Lucid never tries to load them as
  * standalone seeders and the run output stays free of "ignored — disabled in environment" noise.
  *
- * Subsequent phases append a single `await this.runSeeder(...)` line below.
+ * Add a new dataset by appending one `await this.runSeeder(...)` line below.
  */
 export default class MainSeeder extends BaseSeeder {
     private async runSeeder(seederModule: { default: typeof BaseSeeder }) {

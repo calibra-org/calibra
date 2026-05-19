@@ -8,7 +8,7 @@ export default class extends BaseSchema {
             table.bigIncrements("id").notNullable();
             /**
              * Opaque base32 lookup key, set as the `cart_token` cookie for anonymous shoppers. All
-             * cart state lives in this row — the cookie is only the pointer (ADR D8).
+             * cart state lives in this row — the cookie is only the pointer.
              */
             table.specificType("token", "char(40)").notNullable().unique();
             /**

@@ -42,9 +42,9 @@ export default class extends BaseSchema {
         this.schema.raw(`CREATE UNIQUE INDEX "order_addresses_order_kind_unique" ON "${this.tableName}" (order_id, kind)`);
 
         /**
-         * Phase 03 created `order_address_iran_extensions` (Pattern 3) ahead of this table to keep
-         * the iran-fields migration cohesive with the customer extensions. Add the FK now that the
-         * parent table exists.
+         * `order_address_iran_extensions` was created earlier (with the customer-extension
+         * tables, to keep the country-scoped fields in one migration). Wire up its FK now that
+         * the parent `order_addresses` table exists.
          */
         this.schema.raw(
             `ALTER TABLE "order_address_iran_extensions"

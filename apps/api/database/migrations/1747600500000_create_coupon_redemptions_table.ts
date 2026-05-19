@@ -8,10 +8,9 @@ export default class extends BaseSchema {
             table.bigIncrements("id").notNullable();
             table.bigInteger("coupon_id").unsigned().notNullable().references("id").inTable("coupons").onDelete("RESTRICT");
             /**
-             * `orders` is not in the DB yet (phase 05 lands in parallel). The column stays a bare
-             * BIGINT until orders ships; a follow-up migration in phase 05 adds the FK. Storing the
-             * id alone keeps redemptions writable from the order_finalizer integration test that
-             * stubs orders behind a minimal table.
+             * Bare BIGINT here because `orders` does not yet exist in the migration order at
+             * this point. The cross-table FK to `orders.id` is added by a later migration once
+             * the parent table is in place.
              */
             table.bigInteger("order_id").notNullable();
             table.bigInteger("customer_id").unsigned().nullable().references("id").inTable("customers").onDelete("RESTRICT");

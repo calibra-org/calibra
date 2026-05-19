@@ -4,7 +4,7 @@ export default class extends BaseSchema {
     protected tableName = "order_notes";
 
     /**
-     * Flat notes table (ADR D20 — Woo's shape). `visibility = 'internal'` rows never leave the
+     * Flat notes table, same shape WooCommerce uses for `wc_order_notes`. `visibility = 'internal'` rows never leave the
      * admin surface; `visibility = 'customer'` rows are exposed through the storefront's account
      * timeline AND can opt-in to email delivery at the controller layer (no column needed for the
      * email choice — it's a one-shot side effect, not state).

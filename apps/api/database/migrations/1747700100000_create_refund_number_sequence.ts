@@ -2,10 +2,9 @@ import { BaseSchema } from "@adonisjs/lucid/schema";
 
 export default class extends BaseSchema {
     /**
-     * Allocates the human-facing refund numbers. Mirrors the `order_number_seq` pattern (ADR D4 +
-     * phase 05) but lives in its own sequence so refund numbering is independent of order
-     * numbering — refund #1001 is not "the refund of order #1001"; they're parallel reference
-     * spaces.
+     * Allocates the human-facing refund numbers. Mirrors the `order_number_seq` pattern but lives
+     * in its own sequence so refund numbering is independent of order numbering — refund #1001 is
+     * not "the refund of order #1001"; they're parallel reference spaces.
      *
      * Allocation happens inside the `refund_service.create` transaction via
      * `SELECT nextval('refund_number_seq')`. Postgres serializes sequence advances at the engine

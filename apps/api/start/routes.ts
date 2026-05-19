@@ -1,10 +1,9 @@
 /**
- * Public route table. Versioned under `/api/v1` so we can ship breaking changes behind `/api/v2`
+ * Public route table. Versioned under `/api/v1` so breaking changes can ship behind `/api/v2`
  * without rewriting consumer apps. Liveness probe lives at `/health` (unversioned).
  *
- * Per-domain route files live under `start/routes/` and are loaded here as the commerce backend
- * is built out — see `docs/phases/01-foundation.md`. Imports for later phases are kept here
- * (commented out) so adding a phase is a one-line uncomment instead of a merge-prone edit.
+ * Per-domain route files live under `start/routes/`; this module imports each one so the registry
+ * is fully populated before AdonisJS boots the HTTP server.
  */
 
 import router from "@adonisjs/core/services/router";

@@ -8,10 +8,9 @@ export default class extends BaseSchema {
             table.bigIncrements("id").notNullable();
             table.bigInteger("customer_id").unsigned().notNullable().references("id").inTable("customers").onDelete("CASCADE");
             /**
-             * `product_id`, `product_download_id`, and `order_id` are advisory bigints in this phase
-             * — the referenced tables land in phase 02 / phase 05. Phase 05's migrations will add
-             * the FK constraints once the source tables exist; until then keeping them as plain
-             * columns lets us seed and test entitlement rows without a cross-phase ordering bind.
+             * `product_id`, `product_download_id`, and `order_id` are advisory bigints — the
+             * `products` and `orders` tables were not yet present in the migration ordering when
+             * this table was created. The FKs are added later, once those parents exist.
              */
             table.bigInteger("product_id").unsigned().notNullable();
             table.bigInteger("product_download_id").unsigned().nullable();

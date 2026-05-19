@@ -6,9 +6,10 @@ export default class extends BaseSchema {
     async up() {
         this.schema.createTable(this.tableName, (table) => {
             /**
-             * Pattern 3 snapshot extension. The FK to `order_addresses` is added in phase 05 when
-             * that table lands — here we only own the schema so phase 05 is purely additive.
-             * `order_address_id` doubles as the primary key, enforcing the 1:1 contract.
+             * IR fiscal-identifier snapshot extension for an `order_addresses` row. The FK to
+             * `order_addresses` is added in the migration that creates that table — this file
+             * only owns the schema. `order_address_id` doubles as the primary key, enforcing the
+             * 1:1 contract.
              */
             table.bigInteger("order_address_id").unsigned().notNullable().primary();
             table.specificType("national_id", "char(10)").nullable();
