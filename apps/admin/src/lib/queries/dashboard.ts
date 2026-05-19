@@ -5,6 +5,7 @@ import type { Locale } from "@calibra/shared/i18n";
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
+import { apiGet } from "#/lib/queries/api-client";
 import type { AdminCustomer, AdminOrder, MoneyMinor, OrderStatus } from "#/lib/types";
 
 /**
@@ -48,38 +49,6 @@ const ORDER_STATUS_MAP: Record<string, OrderStatus> = {
     refunded: "refunded",
     failed: "failed",
 };
-
-class ProxyError extends Error {
-    constructor(
-        message: string,
-        readonly status: number,
-    ) {
-        super(message);
-        this.name = "ProxyError";
-    }
-}
-
-/**
- * Fetches the same-origin proxy at `/api/admin/<path>` with `Accept-Language` set from the active
- * UI locale. The proxy injects the bearer server-side; client code never touches the token. 401 /
- * 403 propagate as a {@link ProxyError} so React Query surfaces them — the proxy has already
- * cleared the session cookie on the way out, so the next render bounces to /login.
- */
-async function fetchAdmin<T>(path: string, query: Record<string, string | number | undefined>, locale: Locale): Promise<T> {
-    const search = new URLSearchParams();
-    for (const [k, v] of Object.entries(query)) {
-        if (v === undefined) continue;
-        search.set(k, String(v));
-    }
-    const qs = search.toString();
-    const url = qs.length > 0 ? `/api/admin/${path}?${qs}` : `/api/admin/${path}`;
-    const res = await fetch(url, {
-        method: "GET",
-        headers: { "accept-language": locale, accept: "application/json" },
-    });
-    if (!res.ok) throw new ProxyError(`admin proxy returned ${res.status}`, res.status);
-    return (await res.json()) as T;
-}
 
 /** Fans the locale-resolved API string out to both `fa` and `en` keys (mirrors server-repos). */
 function dup(value: string | null | undefined) {
@@ -173,7 +142,7 @@ function useAdminOrdersQuery<TSelected = AdminOrder[]>(perPage = 100, options: O
     return useQuery<AdminOrder[], Error, TSelected>({
         queryKey: ["dashboard", "orders", { locale, perPage }],
         queryFn: async () => {
-            const payload = await fetchAdmin<SdkPaginated<SdkAdminOrderListRow>>("orders", { perPage }, locale);
+            const payload = await apiGet<SdkPaginated<SdkAdminOrderListRow>>("orders", { locale, query: { perPage } });
             return (payload.data ?? []).map(toAdminOrderListRow);
         },
         ...options,
@@ -187,7 +156,7 @@ function useAdminCustomersQuery<TSelected = AdminCustomer[]>(perPage = 10, optio
     return useQuery<AdminCustomer[], Error, TSelected>({
         queryKey: ["dashboard", "customers", { locale, perPage }],
         queryFn: async () => {
-            const payload = await fetchAdmin<SdkPaginated<SdkAdminCustomer>>("customers", { perPage }, locale);
+            const payload = await apiGet<SdkPaginated<SdkAdminCustomer>>("customers", { locale, query: { perPage } });
             return (payload.data ?? []).map(toAdminCustomer);
         },
         ...options,
@@ -277,11 +246,10 @@ export function useActiveProductsCount() {
     return useQuery({
         queryKey: ["dashboard", "products", "activeCount", { locale }],
         queryFn: async () => {
-            const payload = await fetchAdmin<SdkPaginated<SdkAdminProduct>>(
-                "products",
-                { perPage: 1, status: "published" },
+            const payload = await apiGet<SdkPaginated<SdkAdminProduct>>("products", {
                 locale,
-            );
+                query: { perPage: 1, status: "published" },
+            });
             return payload.meta?.total ?? 0;
         },
     });
