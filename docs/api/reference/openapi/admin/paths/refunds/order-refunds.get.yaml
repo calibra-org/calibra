@@ -1,0 +1,32 @@
+operationId: adminOrderRefundsIndex
+summary: List refunds against an order
+description: Paginated list of every `order_refunds` row for the order, with their `order_refund_line_items` preloaded. Newest first.
+tags: [Admin / Refunds]
+
+parameters:
+    - name: order_id
+      in: path
+      required: true
+      schema: { type: integer }
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+
+responses:
+    "200":
+        description: Paginated refund list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminRefund.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

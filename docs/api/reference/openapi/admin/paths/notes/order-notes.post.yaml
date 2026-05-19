@@ -1,0 +1,50 @@
+operationId: adminOrderNoteCreate
+summary: Add an order note (admin)
+description: >
+    Writes a new `order_notes` row. `internal` notes never leave the admin surface; `customer`
+    notes appear on the storefront's account timeline. `send_email=true` schedules a
+    notification to the customer's email — no mailer is bound yet, so the API logs a structured
+    stub and returns 201 without delivering.
+tags: [Admin / Notes]
+
+parameters:
+    - name: order_id
+      in: path
+      required: true
+      schema: { type: integer }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [body, visibility]
+                properties:
+                    body: { type: string, minLength: 1, maxLength: 5000 }
+                    visibility: { type: string, enum: [internal, customer] }
+                    send_email:
+                        type: boolean
+                        description: Only respected when `visibility=customer`. Currently logs a stub instead of delivering.
+                        default: false
+
+responses:
+    "201":
+        description: Note created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            additionalProperties: true
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

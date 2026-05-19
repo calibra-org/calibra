@@ -1,0 +1,31 @@
+operationId: adminOrderRefundShow
+summary: Fetch one refund
+description: Returns a single refund row with its line-item breakdown.
+tags: [Admin / Refunds]
+
+parameters:
+    - name: order_id
+      in: path
+      required: true
+      schema: { type: integer }
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+
+responses:
+    "200":
+        description: Refund detail envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminRefund.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

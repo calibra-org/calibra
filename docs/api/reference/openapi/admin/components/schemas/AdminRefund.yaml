@@ -1,0 +1,35 @@
+title: AdminRefund
+description: One `order_refunds` row plus its line-item breakdown.
+type: object
+properties:
+    id: { type: integer }
+    order_id: { type: integer }
+    refund_number:
+        type: integer
+        description: Human-facing reference allocated from `refund_number_seq`.
+    amount_minor: { $ref: "../../../common/components/schemas/Money.yaml" }
+    tax_amount_minor: { $ref: "../../../common/components/schemas/Money.yaml" }
+    reason: { type: [string, "null"] }
+    refunded_by_user_id: { type: [integer, "null"] }
+    restock_requested: { type: boolean }
+    gateway_refund_id:
+        type: [string, "null"]
+        description: Null for bank-transfer / non-PSP refunds, and for PSP calls that failed.
+    processed_at: { type: string, format: date-time }
+    line_items:
+        type: array
+        items:
+            type: object
+            properties:
+                id: { type: integer }
+                order_line_item_id: { type: integer }
+                quantity: { type: integer }
+                refund_amount_minor: { $ref: "../../../common/components/schemas/Money.yaml" }
+                refund_tax_minor: { $ref: "../../../common/components/schemas/Money.yaml" }
+    created_at: { type: string, format: date-time }
+required:
+    - id
+    - order_id
+    - refund_number
+    - amount_minor
+    - processed_at

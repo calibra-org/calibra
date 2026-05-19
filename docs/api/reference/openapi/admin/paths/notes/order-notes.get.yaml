@@ -1,0 +1,42 @@
+operationId: adminOrderNotesIndex
+summary: List order notes (admin)
+description: Returns every `order_notes` row (both `internal` and `customer` visibility) for the order, newest first.
+tags: [Admin / Notes]
+
+parameters:
+    - name: order_id
+      in: path
+      required: true
+      schema: { type: integer }
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+
+responses:
+    "200":
+        description: Paginated note list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    id: { type: integer }
+                                    body: { type: string }
+                                    visibility: { type: string, enum: [internal, customer] }
+                                    author_user_id: { type: [integer, "null"] }
+                                    created_at: { type: string, format: date-time }
+                                    attributes:
+                                        type: object
+                                        additionalProperties: true
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

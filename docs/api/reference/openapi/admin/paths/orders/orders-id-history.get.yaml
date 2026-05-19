@@ -1,0 +1,41 @@
+operationId: adminOrderHistoryIndex
+summary: List an order's status-history audit rows
+description: >
+    Returns every `order_status_history` row for the order, ordered ascending by `occurred_at`.
+    Rows are written by {@link OrderStateMachine.transition}; this endpoint is read-only — admins
+    cannot mutate audit history.
+tags: [Admin / Orders]
+
+parameters:
+    - name: order_id
+      in: path
+      required: true
+      schema: { type: integer }
+
+responses:
+    "200":
+        description: Full status history.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    id: { type: integer }
+                                    order_id: { type: integer }
+                                    from_status: { type: string }
+                                    to_status: { type: string }
+                                    actor_user_id: { type: [integer, "null"] }
+                                    reason: { type: [string, "null"] }
+                                    occurred_at: { type: string, format: date-time }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

@@ -1,0 +1,49 @@
+operationId: adminOrderTransitionStatus
+summary: Transition an order's status
+description: >
+    Runs the {@link OrderStateMachine} transition `from → to`. The state machine validates the
+    edge (illegal transitions return 422 with `E_ILLEGAL_ORDER_TRANSITION`), executes per-edge
+    side effects (`reserve_stock`, `restore_stock`, `set_paid_at`, `set_completed_at`,
+    `grant_downloads`), and appends an audit row to `order_status_history`. The actor user is
+    pulled from the bearer token; `reason` is written verbatim to the audit row.
+tags: [Admin / Orders]
+
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [to]
+                properties:
+                    to:
+                        type: string
+                        enum: [pending, on_hold, processing, completed, cancelled, refunded, failed]
+                    reason:
+                        type: [string, "null"]
+                        maxLength: 500
+
+responses:
+    "200":
+        description: Updated order detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

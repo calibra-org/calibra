@@ -1,0 +1,59 @@
+operationId: adminOrdersIndex
+summary: List orders (admin)
+description: >
+    Paginated list of every non-deleted order. Filter by status, customer, date range, and
+    free-text search across `order_number`, `billing_email`, and customer name. Drafts are
+    included by default — pass `include_drafts=false` to exclude them.
+tags: [Admin / Orders]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - name: status
+      in: query
+      schema:
+          type: string
+          enum: [draft, pending, on_hold, processing, completed, cancelled, refunded, failed]
+    - name: customer_id
+      in: query
+      schema: { type: integer }
+    - name: search
+      in: query
+      schema: { type: string }
+    - name: created_from
+      in: query
+      schema: { type: string, format: date-time }
+    - name: created_to
+      in: query
+      schema: { type: string, format: date-time }
+    - name: include_drafts
+      in: query
+      schema: { type: boolean, default: true }
+
+responses:
+    "200":
+        description: Paginated order list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    id: { type: integer }
+                                    order_number: { type: integer }
+                                    status: { type: string }
+                                    customer_id: { type: [integer, "null"] }
+                                    billing_email: { type: [string, "null"] }
+                                    grand_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+                                    currency: { type: string }
+                                    created_at: { type: string, format: date-time }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
