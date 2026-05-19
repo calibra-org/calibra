@@ -88,7 +88,9 @@ pnpm --filter @calibra/api dev          # api only (node ace serve --hmr)
 # Lucid + Ace
 just migrate                            # node ace migration:run
 just migrate-rollback                   # node ace migration:rollback
-just seed                               # node ace db:seed (runs MainSeeder)
+just seed                               # node ace db:seed (runs MainSeeder — small demo dataset)
+just ace 'db:bulk-seed'                 # ~10k products / 1k users / 5k orders (idempotent, opt-in)
+just ace 'db:bulk-seed --reset'         # wipe just the bulk dataset and re-seed
 just ace 'make:controller orders'       # scaffold a controller
 just ace 'make:model Order -m'          # model + migration in one go
 just ace 'make:validator order'         # VineJS schema
