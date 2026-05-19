@@ -1,0 +1,106 @@
+import { readFile, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/**
+ * Produces `dist/_merged.test.json`, a single OpenAPI document that fuses the
+ * bundled storefront and admin specs. The Japa `@japa/openapi-assertions`
+ * plugin validates each response against one schema document, so we materialise
+ * a merged artefact at test time instead of teaching the plugin about two
+ * roots.
+ *
+ * The hand-authored specs are OAS 3.1, but the underlying validator
+ * (`api-contract-validator` → `api-schema-builder`) only understands OAS 3.0.
+ * We therefore rewrite the merged document into a 3.0-compatible shape — most
+ * notably collapsing `type: ["X", "null"]` into `type: "X", nullable: true`.
+ * Public consumers still bundle the original 3.1 specs separately; this file
+ * is gitignored test-only scaffolding.
+ */
+
+const ROOT = resolve(fileURLToPath(import.meta.url), "../..");
+
+const storefront = JSON.parse(await readFile(resolve(ROOT, "dist/storefront.v1.json"), "utf8"));
+const admin = JSON.parse(await readFile(resolve(ROOT, "dist/admin.v1.json"), "utf8"));
+
+const overlap = Object.keys(storefront.paths ?? {}).filter((p) => Object.hasOwn(admin.paths ?? {}, p));
+if (overlap.length > 0) {
+    throw new Error(
+        `Path collision between storefront and admin specs — both define: ${overlap.join(", ")}. ` +
+            "Investigate before merging.",
+    );
+}
+
+const merged = {
+    openapi: "3.0.3",
+    info: { title: "Calibra API (test-only merge)", version: "0.0.0" },
+    servers: storefront.servers ?? admin.servers ?? [],
+    paths: { ...storefront.paths, ...admin.paths },
+    components: {
+        schemas: { ...(storefront.components?.schemas ?? {}), ...(admin.components?.schemas ?? {}) },
+        responses: { ...(storefront.components?.responses ?? {}), ...(admin.components?.responses ?? {}) },
+        parameters: { ...(storefront.components?.parameters ?? {}), ...(admin.components?.parameters ?? {}) },
+        requestBodies: { ...(storefront.components?.requestBodies ?? {}), ...(admin.components?.requestBodies ?? {}) },
+        headers: { ...(storefront.components?.headers ?? {}), ...(admin.components?.headers ?? {}) },
+        securitySchemes: {
+            ...(storefront.components?.securitySchemes ?? {}),
+            ...(admin.components?.securitySchemes ?? {}),
+        },
+    },
+};
+
+downgradeTo30(merged);
+
+const outPath = resolve(ROOT, "dist/_merged.test.json");
+await writeFile(outPath, JSON.stringify(merged, null, 2));
+console.log(`✓ Wrote ${outPath} (${Object.keys(merged.paths).length} paths)`);
+
+/**
+ * Recursively rewrites OAS 3.1 idioms into the OAS 3.0 equivalents the
+ * api-contract-validator expects. Walks every node; transforms in place.
+ *
+ * Conversions:
+ *   - `type: ["X", "null"]` (3.1 nullable shorthand) becomes `type: "X", nullable: true`.
+ *   - Schema-level `examples: [v, …]` (3.1) becomes `example: v` — Media-Type-level
+ *     `examples` (which is a Map<name, ExampleObject> in both 3.0 and 3.1) is left alone,
+ *     distinguished by Array vs Object shape.
+ *   - `$ref` with sibling properties (3.1) is wrapped in `allOf: [{ $ref }]` so the
+ *     siblings live outside the Reference Object (3.0 forbids `$ref` siblings).
+ *
+ * Add further down-conversions here if the hand-authored spec adopts more 3.1-only constructs.
+ *
+ * @param {unknown} node — any JSON-typed value reachable from the OAS document.
+ */
+function downgradeTo30(node) {
+    if (Array.isArray(node)) {
+        node.forEach(downgradeTo30);
+        return;
+    }
+    if (!node || typeof node !== "object") return;
+
+    if (Array.isArray(node.type)) {
+        const types = node.type;
+        const nonNull = types.filter((t) => t !== "null");
+        const hasNull = types.includes("null");
+        if (nonNull.length === 1) {
+            node.type = nonNull[0];
+            if (hasNull) node.nullable = true;
+        }
+    }
+
+    if (node.examples !== undefined) {
+        if (Array.isArray(node.examples)) {
+            if (node.example === undefined && node.examples.length > 0) {
+                node.example = node.examples[0];
+            }
+        }
+        delete node.examples;
+    }
+
+    if (typeof node.$ref === "string" && Object.keys(node).length > 1) {
+        const ref = node.$ref;
+        delete node.$ref;
+        node.allOf = [{ $ref: ref }, ...(Array.isArray(node.allOf) ? node.allOf : [])];
+    }
+
+    for (const value of Object.values(node)) downgradeTo30(value);
+}
