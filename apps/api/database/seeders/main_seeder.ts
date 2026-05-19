@@ -17,8 +17,7 @@ export default class MainSeeder extends BaseSeeder {
 
     async run() {
         await this.runSeeder(await import("#database/seed_modules/0001_foundation_seeder"));
-        await this.runSeeder(await import("#database/seed_modules/0002_catalog_demo_seeder"));
-        await this.runSeeder(await import("#database/seed_modules/0003_customers_demo_seeder"));
+        await this.runSeeder(await import("#database/seed_modules/0010_bulk_dataset_seeder"));
         await this.runSeeder(await import("#database/seed_modules/0006_coupons_demo_seeder"));
     }
 }

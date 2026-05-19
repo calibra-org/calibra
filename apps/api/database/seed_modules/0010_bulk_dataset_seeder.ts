@@ -86,7 +86,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
 
         const now = DateTime.utc().toSQL();
 
-        const brandIds = await this.loadDemoBrandIds();
+        const brandIds = await this.ensureBulkBrands(now);
         const tagIds = await this.ensureBulkTags(now);
         const leafCategories = await this.ensureBulkCategoryTree(now);
         if (leafCategories.length === 0) {
@@ -264,9 +264,43 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         );
     }
 
-    private async loadDemoBrandIds(): Promise<number[]> {
-        const rows = await this.client.from("product_brands").select("id");
-        return rows.map((r: { id: number | string }) => Number(r.id));
+    /**
+     * Brand roster owned by the bulk seeder. Each entry seeds one `product_brands` row + its
+     * `(fa, en)` translations. Idempotent via `product_brand_translations`'s unique
+     * `(locale, slug)` constraint, so re-runs reuse the existing ids.
+     */
+    private async ensureBulkBrands(now: string): Promise<number[]> {
+        const existing = await this.client
+            .from("product_brand_translations")
+            .select(["brand_id", "slug"])
+            .where("locale", "en")
+            .whereIn(
+                "slug",
+                BULK_BRANDS.map((b) => b.slugEn),
+            );
+        const slugToId = new Map<string, number>();
+        for (const r of existing) slugToId.set(String(r.slug), Number(r.brand_id));
+
+        const ids: number[] = [];
+        for (let i = 0; i < BULK_BRANDS.length; i += 1) {
+            const b = BULK_BRANDS[i]!;
+            const existingId = slugToId.get(b.slugEn);
+            if (existingId !== undefined) {
+                ids.push(existingId);
+                continue;
+            }
+            const [{ id: newId }] = await this.client
+                .table("product_brands")
+                .returning("id")
+                .insert({ menu_order: i + 1, attributes: {}, created_at: now, updated_at: now });
+            const brandId = Number(newId);
+            ids.push(brandId);
+            await this.client.table("product_brand_translations").insert([
+                { brand_id: brandId, locale: "fa", name: b.fa, slug: b.slugFa, created_at: now, updated_at: now },
+                { brand_id: brandId, locale: "en", name: b.en, slug: b.slugEn, created_at: now, updated_at: now },
+            ]);
+        }
+        return ids;
     }
 
     /**
@@ -1275,8 +1309,21 @@ const FIXED_ADMINS: Array<{ email: string; firstName: string; lastName: string }
 ];
 
 /**
- * Tag taxonomy owned by the bulk seeder. The base demo seeders only ship categories + brands; tags
- * are a bulk-only concern. Keyed by `(locale, slug)` for idempotent upserts.
+ * Brand roster seeded by the bulk seeder. Mix of marquee internationals and Calibra's own house
+ * brand so the storefront / admin pages have realistic-looking brand chips out of the box.
+ */
+const BULK_BRANDS: Array<{ fa: string; en: string; slugFa: string; slugEn: string }> = [
+    { fa: "کلیربا", en: "Calibra", slugFa: "brand-calibra", slugEn: "brand-calibra" },
+    { fa: "سامسونگ", en: "Samsung", slugFa: "brand-samsung", slugEn: "brand-samsung" },
+    { fa: "اپل", en: "Apple", slugFa: "brand-apple", slugEn: "brand-apple" },
+    { fa: "شیائومی", en: "Xiaomi", slugFa: "brand-xiaomi", slugEn: "brand-xiaomi" },
+    { fa: "ال‌جی", en: "LG", slugFa: "brand-lg", slugEn: "brand-lg" },
+    { fa: "آذرنوش", en: "Azarnoosh", slugFa: "brand-azarnoosh", slugEn: "brand-azarnoosh" },
+    { fa: "پارسیان", en: "Parsian", slugFa: "brand-parsian", slugEn: "brand-parsian" },
+];
+
+/**
+ * Tag taxonomy owned by the bulk seeder. Keyed by `(locale, slug)` for idempotent upserts.
  */
 const BULK_TAGS: Array<{ fa: string; en: string; slugFa: string; slugEn: string }> = [
     { fa: "جدید", en: "New Arrival", slugFa: "tag-new-arrival", slugEn: "tag-new-arrival" },
