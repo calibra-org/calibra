@@ -1,0 +1,31 @@
+title: AdminProductVariation
+description: One row of a variable product's variation table.
+type: object
+properties:
+    id: { type: integer }
+    product_id: { type: integer }
+    sku: { type: [string, "null"] }
+    status: { type: string, enum: [draft, published, archived] }
+    regular_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+    sale_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+    effective_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
+    on_sale: { type: boolean }
+    sale_starts_at: { type: [string, "null"], format: date-time }
+    sale_ends_at: { type: [string, "null"], format: date-time }
+    tax_class_id: { type: [integer, "null"] }
+    weight_grams: { type: [integer, "null"] }
+    length_mm: { type: [integer, "null"] }
+    width_mm: { type: [integer, "null"] }
+    height_mm: { type: [integer, "null"] }
+    image_url: { type: [string, "null"] }
+    attribute_terms:
+        type: array
+        description: Map of `attribute_id → term_id` that identifies this variation.
+        items:
+            type: object
+            properties:
+                attribute_id: { type: integer }
+                term_id: { type: integer }
+required:
+    - id
+    - product_id

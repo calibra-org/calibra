@@ -1,0 +1,15 @@
+operationId: adminAttributeDelete
+summary: Soft-delete an attribute
+description: Soft-deletes the attribute and its terms. Products that referenced the attribute drop the entry from their `attributes[]` map.
+tags: [Admin / Catalog / Attributes]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "409": { $ref: "../../../common/components/responses/Conflict.yaml" }

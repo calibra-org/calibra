@@ -1,0 +1,35 @@
+operationId: adminProductsIndex
+summary: List products (admin)
+description: >
+    Paginated list of every non-deleted product, including drafts and archived rows. Filter by
+    status, type, free-text search, category/tag/brand, on-sale flag, and stock status.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: search, in: query, schema: { type: string } }
+    - { name: status, in: query, schema: { type: string, enum: [draft, published, archived] } }
+    - { name: type, in: query, schema: { type: string, enum: [simple, variable, virtual, downloadable, external] } }
+    - { name: category, in: query, schema: { type: integer } }
+    - { name: tag, in: query, schema: { type: integer } }
+    - { name: brand, in: query, schema: { type: integer } }
+    - { name: on_sale, in: query, schema: { type: boolean } }
+    - { name: stock_status, in: query, schema: { type: string, enum: [in_stock, out_of_stock, on_backorder] } }
+
+responses:
+    "200":
+        description: Paginated product list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminProduct.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

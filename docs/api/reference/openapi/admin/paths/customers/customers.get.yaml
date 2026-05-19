@@ -1,0 +1,32 @@
+operationId: adminCustomersIndex
+summary: List customers (admin)
+description: >
+    Paginated list of every customer. Free-text search runs over `users.email`, `customers.first_name`,
+    `customers.last_name`, and `customers.phone`. Filter by paying status, country, or registration date.
+tags: [Admin / Customers]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: search, in: query, schema: { type: string } }
+    - { name: is_paying_customer, in: query, schema: { type: boolean } }
+    - { name: country, in: query, schema: { type: string }, description: ISO-3166-1 alpha-2 country code. }
+    - { name: created_from, in: query, schema: { type: string, format: date-time } }
+    - { name: created_to, in: query, schema: { type: string, format: date-time } }
+
+responses:
+    "200":
+        description: Paginated customer list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminCustomer.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

@@ -1,0 +1,40 @@
+title: AdminPaymentAttempt
+description: >
+    One `payment_attempts` row — written by the payment service on init and on every callback
+    from the gateway. Read-only on the admin surface.
+type: object
+properties:
+    id: { type: integer }
+    order_id: { type: integer }
+    payment_gateway_id: { type: integer }
+    gateway_code: { type: string }
+    status:
+        type: string
+        enum: [initialized, pending, succeeded, failed, cancelled]
+    amount_minor: { $ref: "../../../common/components/schemas/Money.yaml" }
+    currency: { type: string }
+    gateway_authority:
+        type: [string, "null"]
+        description: PSP-side identifier returned by the gateway's init call.
+    gateway_transaction_id:
+        type: [string, "null"]
+        description: PSP-side transaction id, populated on successful verify.
+    idempotency_key: { type: [string, "null"] }
+    request_payload:
+        type: object
+        description: Serialized request the adapter sent to the PSP.
+        additionalProperties: true
+    response_payload:
+        type: object
+        description: Serialized response the adapter received.
+        additionalProperties: true
+    error_code: { type: [string, "null"] }
+    error_message: { type: [string, "null"] }
+    initialized_at: { type: [string, "null"], format: date-time }
+    verified_at: { type: [string, "null"], format: date-time }
+    created_at: { type: string, format: date-time }
+required:
+    - id
+    - order_id
+    - status
+    - amount_minor

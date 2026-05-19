@@ -1,0 +1,15 @@
+operationId: adminVariationDelete
+summary: Soft-delete a variation
+description: Removes the variation from the parent product. Historical orders that reference the variation keep their snapshot.
+tags: [Admin / Catalog / Variations]
+
+parameters:
+    - { name: product_id, in: path, required: true, schema: { type: integer } }
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

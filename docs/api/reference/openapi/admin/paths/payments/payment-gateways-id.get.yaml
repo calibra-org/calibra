@@ -1,0 +1,22 @@
+operationId: adminPaymentGatewayShow
+summary: Fetch a payment gateway
+description: Returns the gateway row with its current `settings` JSON. The shape of `settings` depends on the adapter's `code`.
+tags: [Admin / Payments]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Gateway detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminPaymentGateway.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

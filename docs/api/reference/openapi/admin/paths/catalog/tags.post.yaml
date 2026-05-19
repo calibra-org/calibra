@@ -1,0 +1,31 @@
+operationId: adminTagCreate
+summary: Create a tag
+description: Creates a tag row plus per-locale translation rows.
+tags: [Admin / Catalog / Tags]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [translations]
+                properties:
+                    translations:
+                        type: array
+                        minItems: 1
+                        items: { $ref: "../../components/schemas/AdminTranslationInput.yaml" }
+
+responses:
+    "201":
+        description: Tag created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminTaxonomy.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

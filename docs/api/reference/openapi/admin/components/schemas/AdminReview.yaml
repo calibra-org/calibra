@@ -1,0 +1,21 @@
+title: AdminReview
+description: Product review row with full moderation fields.
+type: object
+properties:
+    id: { type: integer }
+    product_id: { type: integer }
+    customer_id: { type: [integer, "null"] }
+    reviewer_name: { type: string }
+    reviewer_email: { type: [string, "null"] }
+    body: { type: string }
+    rating: { type: integer, minimum: 1, maximum: 5 }
+    status: { type: string, enum: [pending, approved, rejected] }
+    verified: { type: boolean, description: "True when the reviewer has a paid order containing this product." }
+    created_at: { type: string, format: date-time }
+required:
+    - id
+    - product_id
+    - reviewer_name
+    - body
+    - rating
+    - status

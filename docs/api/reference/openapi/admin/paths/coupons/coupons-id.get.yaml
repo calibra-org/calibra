@@ -1,0 +1,21 @@
+operationId: adminCouponShow
+summary: Fetch a coupon
+description: Returns the coupon row with every constraint set and the cumulative redemptions count.
+tags: [Admin / Coupons]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "200":
+        description: Coupon detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCoupon.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

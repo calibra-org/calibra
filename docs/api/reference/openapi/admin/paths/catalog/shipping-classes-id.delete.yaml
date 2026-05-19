@@ -1,0 +1,14 @@
+operationId: adminShippingClassDelete
+summary: Soft-delete a shipping class
+description: Soft-deletes the shipping-class row. Products that referenced it fall back to no-class shipping math.
+tags: [Admin / Catalog / Shipping Classes]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

@@ -1,0 +1,29 @@
+operationId: adminCouponsIndex
+summary: List coupons (admin)
+description: Paginated list of coupons. Filter by status, discount type, or free-text search across the code.
+tags: [Admin / Coupons]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - { name: search, in: query, schema: { type: string }, description: Matches against the coupon code. }
+    - { name: status, in: query, schema: { type: string, enum: [active, disabled] } }
+    - { name: discount_type, in: query, schema: { type: string, enum: [fixed_cart, fixed_product, percent, free_shipping] } }
+    - { name: free_shipping, in: query, schema: { type: boolean } }
+    - { name: individual_use, in: query, schema: { type: boolean } }
+
+responses:
+    "200":
+        description: Paginated coupon list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminCoupon.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

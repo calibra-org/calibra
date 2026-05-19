@@ -1,0 +1,25 @@
+operationId: adminPaymentGatewaysIndex
+summary: List payment gateways
+description: >
+    Returns every payment gateway in the registry — both enabled and disabled — ordered by
+    `sort_order`. The capabilities map is reported back per row so the admin UI can hide refund
+    affordances on gateways that don't support them.
+tags: [Admin / Payments]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Gateway list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminPaymentGateway.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

@@ -1,0 +1,32 @@
+operationId: adminOrderReplace
+summary: Replace an order
+description: >
+    Full replace of order metadata — addresses, customer note, billing email, payment-method
+    snapshot. Status changes go through `POST /orders/{id}/status`, not here, and line items
+    are managed through their own admin endpoints (not exposed today; use `POST /orders` to
+    create a fresh order if line items must change).
+tags: [Admin / Orders]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema: { type: object, additionalProperties: true }
+
+responses:
+    "200":
+        description: Updated order.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

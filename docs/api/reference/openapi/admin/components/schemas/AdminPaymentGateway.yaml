@@ -1,0 +1,35 @@
+title: AdminPaymentGateway
+description: >
+    Payment gateway registry row. Calibra ships adapters (e.g. `bank_transfer`, `zarinpal`); each
+    row stores per-gateway enablement, customer-facing titles, ordering, and a free-form
+    `settings` JSON that the adapter reads on every request. PATCH updates these without
+    touching the adapter code.
+type: object
+properties:
+    id: { type: integer }
+    code:
+        type: string
+        description: Stable adapter code (e.g. `bank_transfer`, `zarinpal`).
+    name: { type: string, description: Admin display name. }
+    title: { type: string, description: Customer-facing title shown at checkout. }
+    description: { type: [string, "null"] }
+    enabled: { type: boolean }
+    capabilities:
+        type: object
+        description: Adapter-reported capability flags (read-only).
+        properties:
+            redirect: { type: boolean }
+            refunds: { type: boolean }
+            partial_refunds: { type: boolean }
+    settings:
+        type: object
+        description: Free-form per-gateway settings. The shape depends on `code`.
+        additionalProperties: true
+    sort_order: { type: integer }
+    created_at: { type: string, format: date-time }
+    updated_at: { type: string, format: date-time }
+required:
+    - id
+    - code
+    - title
+    - enabled

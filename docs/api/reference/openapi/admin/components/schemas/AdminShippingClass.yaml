@@ -1,0 +1,20 @@
+title: AdminShippingClass
+description: >
+    Shipping class — products with the same class share carrier rules and tax-rate eligibility.
+type: object
+properties:
+    id: { type: integer }
+    slug: { type: string }
+    name: { type: string, description: Resolved from the active locale. }
+    locale: { type: string }
+    translations:
+        type: array
+        items:
+            type: object
+            properties:
+                locale: { type: string }
+                name: { type: string }
+                description: { type: [string, "null"] }
+required:
+    - id
+    - slug

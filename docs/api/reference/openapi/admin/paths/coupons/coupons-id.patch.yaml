@@ -1,0 +1,30 @@
+operationId: adminCouponPatch
+summary: Partial-update a coupon
+description: >
+    Patch the included fields. Constraint arrays (`product_constraints`, `category_constraints`,
+    `email_restrictions`) are replaced wholesale when present; omit them to keep the existing rows.
+tags: [Admin / Coupons]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema: { type: object, additionalProperties: true }
+
+responses:
+    "200":
+        description: Updated coupon.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCoupon.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

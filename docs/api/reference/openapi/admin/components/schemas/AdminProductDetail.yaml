@@ -1,0 +1,57 @@
+title: AdminProductDetail
+description: Admin detail-page payload for a single product. Carries every translation row, the full image gallery, variations, and the attribute → terms map.
+allOf:
+    - $ref: "./AdminProduct.yaml"
+    - type: object
+      properties:
+          translations:
+              type: array
+              items:
+                  type: object
+                  properties:
+                      locale: { type: string }
+                      name: { type: string }
+                      slug: { type: string }
+                      short_description: { type: [string, "null"] }
+                      description: { type: [string, "null"] }
+          images:
+              type: array
+              items:
+                  type: object
+                  properties:
+                      id: { type: integer }
+                      media_id: { type: integer }
+                      position: { type: integer }
+                      url: { type: [string, "null"] }
+                      alt: { type: [string, "null"] }
+          categories:
+              type: array
+              items: { type: integer, description: Category id. }
+          tags:
+              type: array
+              items: { type: integer, description: Tag id. }
+          brand_id: { type: [integer, "null"] }
+          attributes:
+              type: array
+              items:
+                  type: object
+                  properties:
+                      attribute_id: { type: integer }
+                      visible: { type: boolean }
+                      variation: { type: boolean }
+                      term_ids:
+                          type: array
+                          items: { type: integer }
+          variations:
+              type: array
+              description: Present only when `type=variable`.
+              items: { $ref: "./AdminProductVariation.yaml" }
+          downloads:
+              type: array
+              description: Present only when `downloadable=true`.
+              items:
+                  type: object
+                  properties:
+                      id: { type: integer }
+                      name: { type: string }
+                      url: { type: string }

@@ -1,0 +1,37 @@
+operationId: adminCouponRedemptions
+summary: List a coupon's redemption ledger
+description: >
+    Paginated list of every `coupon_redemptions` row for the coupon. Each row carries the order
+    id, the customer (or null + email snapshot for guest redemptions), and the redemption
+    timestamp. Sorted newest first.
+tags: [Admin / Coupons]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+
+responses:
+    "200":
+        description: Paginated redemption list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    id: { type: integer }
+                                    coupon_id: { type: integer }
+                                    order_id: { type: integer }
+                                    customer_id: { type: [integer, "null"] }
+                                    email_snapshot: { type: string }
+                                    redeemed_at: { type: string, format: date-time }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

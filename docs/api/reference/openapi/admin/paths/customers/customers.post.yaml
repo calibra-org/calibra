@@ -1,0 +1,45 @@
+operationId: adminCustomerCreate
+summary: Create a customer (admin)
+description: >
+    Creates the `users` + `customers` rows in a single transaction. The password is hashed
+    server-side. Email uniqueness is enforced case-insensitively. Optionally seeds the IR
+    fiscal-identifier extension when `iran_profile` is included.
+tags: [Admin / Customers]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [email, password, first_name, last_name]
+                properties:
+                    email: { type: string, format: email, maxLength: 254 }
+                    password: { type: string, minLength: 8, maxLength: 128 }
+                    first_name: { type: string, minLength: 1, maxLength: 80 }
+                    last_name: { type: string, minLength: 1, maxLength: 80 }
+                    phone: { type: [string, "null"] }
+                    country_default: { type: string, minLength: 2, maxLength: 2, default: "IR" }
+                    locale: { type: string, default: "fa" }
+                    role: { type: string, default: "customer" }
+                    iran_profile:
+                        anyOf:
+                            - $ref: "../../../common/components/schemas/IranAddressExtension.yaml"
+                            - type: "null"
+                    addresses:
+                        type: array
+                        items: { $ref: "../../../common/components/schemas/Address.yaml" }
+
+responses:
+    "201":
+        description: Customer created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomer.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

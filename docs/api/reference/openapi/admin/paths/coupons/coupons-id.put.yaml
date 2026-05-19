@@ -1,0 +1,28 @@
+operationId: adminCouponReplace
+summary: Replace a coupon
+description: Full replace. Replaces every constraint set with the values in the request.
+tags: [Admin / Coupons]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema: { type: object, additionalProperties: true }
+
+responses:
+    "200":
+        description: Updated coupon.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCoupon.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

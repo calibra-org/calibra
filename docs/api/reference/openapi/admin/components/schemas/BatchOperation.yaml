@@ -1,0 +1,25 @@
+title: BatchOperation
+description: >
+    Request body for `POST .../batch` endpoints. Every entry runs inside one DB transaction —
+    a failure anywhere rolls back the whole batch.
+type: object
+properties:
+    create:
+        type: array
+        description: Resources to create. Each element is the same body the singular `POST` would accept.
+        items:
+            type: object
+            additionalProperties: true
+    update:
+        type: array
+        description: Resources to update. Each element must include the resource id plus the fields to patch.
+        items:
+            type: object
+            required: [id]
+            properties:
+                id: { type: integer }
+            additionalProperties: true
+    delete:
+        type: array
+        description: Resource ids to soft-delete.
+        items: { type: integer }

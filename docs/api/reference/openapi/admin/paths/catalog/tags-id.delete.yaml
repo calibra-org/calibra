@@ -1,0 +1,14 @@
+operationId: adminTagDelete
+summary: Soft-delete a tag
+description: Removes the tag and detaches it from every product.
+tags: [Admin / Catalog / Tags]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

@@ -1,0 +1,17 @@
+title: BatchResult
+description: Return envelope for `POST .../batch`. Each section mirrors the input shape with the resulting rows.
+type: object
+properties:
+    created:
+        type: array
+        items:
+            type: object
+            additionalProperties: true
+    updated:
+        type: array
+        items:
+            type: object
+            additionalProperties: true
+    deleted:
+        type: array
+        items: { type: integer }

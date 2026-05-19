@@ -1,0 +1,26 @@
+operationId: adminAttributesIndex
+summary: List attributes (admin)
+description: Paginated list of every catalog attribute. Terms live under each attribute and are fetched separately.
+tags: [Admin / Catalog / Attributes]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: search, in: query, schema: { type: string } }
+
+responses:
+    "200":
+        description: Paginated attribute list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminAttribute.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

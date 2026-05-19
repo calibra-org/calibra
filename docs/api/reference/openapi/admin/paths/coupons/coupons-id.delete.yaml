@@ -1,0 +1,17 @@
+operationId: adminCouponDelete
+summary: Soft-delete a coupon
+description: >
+    Soft-deletes the coupon. The `RESTRICT` FK on `coupon_redemptions.coupon_id` is enforced
+    through soft-delete: historical redemptions stay readable through the redemptions
+    sub-endpoint, but new carts cannot apply the code.
+tags: [Admin / Coupons]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

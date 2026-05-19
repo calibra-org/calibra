@@ -1,0 +1,31 @@
+operationId: adminVariationPatch
+summary: Partial-update a variation
+description: Patch the fields included in the request body; everything else is preserved.
+tags: [Admin / Catalog / Variations]
+
+parameters:
+    - { name: product_id, in: path, required: true, schema: { type: integer } }
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                additionalProperties: true
+
+responses:
+    "200":
+        description: Updated variation.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminProductVariation.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

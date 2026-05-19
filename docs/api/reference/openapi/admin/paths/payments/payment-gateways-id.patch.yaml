@@ -1,0 +1,42 @@
+operationId: adminPaymentGatewayPatch
+summary: Update a payment gateway
+description: >
+    Patches gateway-level fields: `enabled`, `title`, `description`, `sort_order`, and the
+    free-form `settings` JSON. The adapter `code` is immutable. Disabling a gateway prevents new
+    payment-attempt rows from being initialized against it; in-flight attempts complete normally.
+tags: [Admin / Payments]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    enabled: { type: boolean }
+                    name: { type: string }
+                    title: { type: string, description: Customer-facing title shown at checkout. }
+                    description: { type: [string, "null"] }
+                    sort_order: { type: integer }
+                    settings:
+                        type: object
+                        description: Free-form per-gateway settings; the adapter validates the shape on read.
+                        additionalProperties: true
+
+responses:
+    "200":
+        description: Updated gateway.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminPaymentGateway.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

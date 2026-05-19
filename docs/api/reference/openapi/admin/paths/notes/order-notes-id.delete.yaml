@@ -1,0 +1,15 @@
+operationId: adminOrderNoteDelete
+summary: Delete an order note
+description: Hard-deletes the note. Note rows are forensic — only spam / ops-error cleanup should use this.
+tags: [Admin / Notes]
+
+parameters:
+    - { name: order_id, in: path, required: true, schema: { type: integer } }
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
