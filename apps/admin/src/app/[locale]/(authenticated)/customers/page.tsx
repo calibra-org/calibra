@@ -7,8 +7,8 @@ import { PageHeader } from "#/components/PageHeader";
 import { SearchInput } from "#/components/SearchInput";
 import { formatDate, formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { listCustomers } from "#/lib/mock/repos";
-import type { AdminCustomer } from "#/lib/mock/types";
+import { listCustomers } from "#/lib/server-repos";
+import type { AdminCustomer } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

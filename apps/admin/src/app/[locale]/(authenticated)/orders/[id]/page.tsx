@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { Textarea } from "#/components/ui/textarea";
 import { formatDateTime, formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { getOrder } from "#/lib/mock/repos";
+import { getOrder } from "#/lib/server-repos";
 
 interface PageProps {
     params: Promise<{ locale: string; id: string }>;

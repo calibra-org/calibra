@@ -13,8 +13,8 @@ import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
 import { formatDate } from "#/lib/format";
-import { getProduct, listBrands, listCategories, listTags } from "#/lib/mock/repos";
-import type { ProductStatus } from "#/lib/mock/types";
+import { getProduct, listBrands, listCategories, listTags } from "#/lib/server-repos";
+import type { ProductStatus } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string; id: string }>;

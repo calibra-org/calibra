@@ -9,7 +9,7 @@ import { StatusBadge } from "#/components/StatusBadge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { Progress } from "#/components/ui/progress";
 import { formatDate, formatMoney, formatNumber, formatPercent } from "#/lib/format";
-import { getCoupon } from "#/lib/mock/repos";
+import { getCoupon } from "#/lib/server-repos";
 
 interface PageProps {
     params: Promise<{ locale: string; id: string }>;

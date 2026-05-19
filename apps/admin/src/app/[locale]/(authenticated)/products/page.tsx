@@ -10,8 +10,8 @@ import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { Button } from "#/components/ui/button";
 import { formatDate, formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { listProducts } from "#/lib/mock/repos";
-import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/mock/types";
+import { listProducts } from "#/lib/server-repos";
+import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

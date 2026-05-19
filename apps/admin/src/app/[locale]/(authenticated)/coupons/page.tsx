@@ -9,8 +9,8 @@ import { StatusBadge } from "#/components/StatusBadge";
 import { Button } from "#/components/ui/button";
 import { formatDate, formatMoney, formatNumber, formatPercent } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { listCoupons } from "#/lib/mock/repos";
-import type { AdminCoupon } from "#/lib/mock/types";
+import { listCoupons } from "#/lib/server-repos";
+import type { AdminCoupon } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

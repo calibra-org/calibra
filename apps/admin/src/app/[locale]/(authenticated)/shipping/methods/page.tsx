@@ -5,8 +5,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { DataTable } from "#/components/DataTable";
 import { PageHeader } from "#/components/PageHeader";
 import { SubTabs } from "#/components/SubTabs";
-import { listShippingMethods } from "#/lib/mock/repos";
-import type { AdminShippingMethod } from "#/lib/mock/types";
+import { listShippingMethods } from "#/lib/server-repos";
+import type { AdminShippingMethod } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

@@ -9,7 +9,7 @@ import { StatCard } from "#/components/StatCard";
 import { SubTabs } from "#/components/SubTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { formatMoney, formatNumber } from "#/lib/format";
-import { getSalesReport } from "#/lib/mock/repos";
+import { getSalesReport } from "#/lib/server-repos";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

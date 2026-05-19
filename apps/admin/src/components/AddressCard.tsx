@@ -2,7 +2,7 @@ import type { Locale } from "@calibra/shared/i18n";
 import { useTranslations } from "next-intl";
 
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
-import type { AdminOrderAddress } from "#/lib/mock/types";
+import type { AdminOrderAddress } from "#/lib/types";
 
 interface AddressCardProps {
     title: string;

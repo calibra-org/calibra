@@ -6,8 +6,8 @@ import { DataTable } from "#/components/DataTable";
 import { PageHeader } from "#/components/PageHeader";
 import { SubTabs } from "#/components/SubTabs";
 import { formatNumber } from "#/lib/format";
-import { listTaxClasses } from "#/lib/mock/repos";
-import type { AdminTaxClass } from "#/lib/mock/types";
+import { listTaxClasses } from "#/lib/server-repos";
+import type { AdminTaxClass } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

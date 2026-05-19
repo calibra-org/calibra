@@ -9,7 +9,7 @@ import { SubTabs } from "#/components/SubTabs";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { formatDate, formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { getTopSellersReport } from "#/lib/mock/repos";
+import { getTopSellersReport } from "#/lib/server-repos";
 
 interface PageProps {
     params: Promise<{ locale: string }>;

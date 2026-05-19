@@ -1,8 +1,12 @@
 /**
- * Admin-side view types for mock mode. Mirrors the ADR schema (apps/api will eventually return
- * the same shapes through the SDK) but lives here for now so the admin can render every page
- * without a live backend. When the real API endpoints land, these move into `@calibra/sdk/types`
- * and the repos in `./repos.ts` swap from in-memory fixtures to SDK calls — pages stay untouched.
+ * Admin-side view types. The shapes mirror the ADR schema; `./server-repos.ts` adapts every SDK
+ * response into one of these so page templates stay untouched whether they're rendering against
+ * fixture data or the live AdonisJS API.
+ *
+ * `LocalizedString` stays as `Record<Locale, string>` deliberately. The API resolves one locale
+ * per request (via `Accept-Language`) and returns plain strings; the adapter fans the resolved
+ * string out to both `fa` and `en` keys so the existing `row.name[locale]` access pattern keeps
+ * working. The wire types in `@calibra/sdk` stay narrow.
  *
  * @see /docs/adr/0001-commerce-domain-model.md
  */

@@ -13,8 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { formatDate, formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import { getCustomer, listOrders } from "#/lib/mock/repos";
-import type { AdminCustomerDownload, AdminOrder } from "#/lib/mock/types";
+import { getCustomer, listOrders } from "#/lib/server-repos";
+import type { AdminCustomerDownload, AdminOrder } from "#/lib/types";
 
 interface PageProps {
     params: Promise<{ locale: string; id: string }>;

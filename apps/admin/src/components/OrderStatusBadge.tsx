@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 
 import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
-import type { OrderStatus } from "#/lib/mock/types";
+import type { OrderStatus } from "#/lib/types";
 
 /**
  * Maps the ADR order-status enum to a `StatusBadge` tone. Single source of truth so every page
