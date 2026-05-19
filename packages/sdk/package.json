@@ -21,10 +21,14 @@
         "test:watch": "vitest",
         "typecheck": "tsc --noEmit --emitDeclarationOnly false"
     },
+    "dependencies": {
+        "openapi-fetch": "catalog:"
+    },
     "devDependencies": {
         "@calibra/typescript-config": "workspace:*",
         "@types/node": "catalog:",
         "msw": "catalog:",
+        "openapi-typescript": "catalog:",
         "tsdown": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:"
