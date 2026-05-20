@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { ScrollArea } from "#/components/ui/scroll-area";
 import { cn } from "#/lib/utils";
 
 import type { DataTableDensity } from "./types";
@@ -62,7 +63,8 @@ export function DataTableViewOptions({
                     <p className="px-2 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wide">
                         {labels.columnsHeading}
                     </p>
-                    <ul className="flex max-h-72 flex-col overflow-y-auto">
+                    <ScrollArea viewportClassName="max-h-72">
+                    <ul className="flex flex-col">
                         {columns.map((column) => {
                             const checked = visibility[column.id] !== false;
                             return (
@@ -91,6 +93,7 @@ export function DataTableViewOptions({
                             );
                         })}
                     </ul>
+                    </ScrollArea>
                 </div>
                 <hr className="border-border" />
                 <div className="flex flex-col gap-1 p-2">

@@ -260,5 +260,7 @@ html[lang="fa"] {
     body {
         @apply bg-background text-foreground antialiased;
         font-family: var(--font-sans);
+        /** No horizontal page scroll — admin chrome is column-bounded; runaway X scroll is always a bug. */
+        overflow-x: hidden;
     }
 }

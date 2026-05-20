@@ -5,6 +5,7 @@ import { type ReactNode, useMemo } from "react";
 
 import { Badge } from "#/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { ScrollArea } from "#/components/ui/scroll-area";
 import { cn } from "#/lib/utils";
 
 import type { FacetedFilterDef } from "./types";
@@ -75,7 +76,7 @@ export function DataTableFacetedFilter({
                 )}
             />
             <PopoverContent className="min-w-[14rem] p-0" align="start">
-                <div className="max-h-72 overflow-y-auto">
+                <ScrollArea viewportClassName="max-h-72">
                     {facet.options.length === 0 ? (
                         <p className="px-3 py-4 text-center text-muted-foreground text-xs">—</p>
                     ) : (
@@ -112,7 +113,7 @@ export function DataTableFacetedFilter({
                             })}
                         </ul>
                     )}
-                </div>
+                </ScrollArea>
                 {selectedSet.size > 0 && (
                     <>
                         <hr className="border-border" />
