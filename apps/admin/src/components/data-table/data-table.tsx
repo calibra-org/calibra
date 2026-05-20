@@ -32,7 +32,7 @@ import {
     useReactTable,
     type VisibilityState,
 } from "@tanstack/react-table";
-import { AlertTriangle, type LucideIcon } from "lucide-react";
+import { AlertTriangle, GripVertical, type LucideIcon } from "lucide-react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "#/components/ui/button";
@@ -214,19 +214,32 @@ export function DataTable<TData>({
     }, [columnVisibility]);
 
     /**
-     * Reconcile the persisted column order against the live column set: any persisted ids that
-     * no longer exist drop out; any newly-added columns slot in at the end. An empty persisted
-     * order falls back to TanStack's natural definition order.
+     * Reconcile the persisted column order against the live column set:
+     *  - Pinned columns (`select`, `actions`) are forced to the start / end regardless of what's
+     *    in localStorage. This protects against stale persisted orders dropping the checkbox
+     *    column off-viewport or pushing the row-actions menu out of its sticky cell.
+     *  - Among the unpinned middle columns the user's persisted order wins; ids that no longer
+     *    exist drop out; newly-added columns slot in at the tail.
+     *  - An empty persisted order falls back to TanStack's natural definition order.
      */
+    const PINNED_START_IDS = useMemo(() => new Set(["select"]), []);
+    const PINNED_END_IDS = useMemo(() => new Set(["actions"]), []);
+
     const effectiveColumnOrder = useMemo<ColumnOrderState>(() => {
         const allIds = columns.map((column) => column.id).filter((id): id is string => typeof id === "string");
-        if (columnOrder === undefined || columnOrder.length === 0) return allIds;
-        const known = new Set(allIds);
+        const startIds = allIds.filter((id) => PINNED_START_IDS.has(id));
+        const endIds = allIds.filter((id) => PINNED_END_IDS.has(id));
+        const middleIds = allIds.filter((id) => !PINNED_START_IDS.has(id) && !PINNED_END_IDS.has(id));
+
+        if (columnOrder === undefined || columnOrder.length === 0) {
+            return [...startIds, ...middleIds, ...endIds];
+        }
+        const known = new Set(middleIds);
         const ordered = columnOrder.filter((id) => known.has(id));
         const seen = new Set(ordered);
-        const appended = allIds.filter((id) => !seen.has(id));
-        return [...ordered, ...appended];
-    }, [columns, columnOrder]);
+        const appended = middleIds.filter((id) => !seen.has(id));
+        return [...startIds, ...ordered, ...appended, ...endIds];
+    }, [columns, columnOrder, PINNED_START_IDS, PINNED_END_IDS]);
 
     const table = useReactTable<TData>({
         data,
@@ -260,7 +273,9 @@ export function DataTable<TData>({
         onColumnOrderChange: (updater) => {
             if (onColumnOrderChange === undefined) return;
             const next = typeof updater === "function" ? updater(effectiveColumnOrder) : updater;
-            onColumnOrderChange(next);
+            /** Persist only the middle columns — pinned ids are recomputed on every read. */
+            const middleOnly = next.filter((id) => !PINNED_START_IDS.has(id) && !PINNED_END_IDS.has(id));
+            onColumnOrderChange(middleOnly);
         },
         onExpandedChange: setExpanded,
         getCoreRowModel: getCoreRowModel(),
@@ -284,16 +299,18 @@ export function DataTable<TData>({
             const newIndex = current.indexOf(over.id as string);
             if (oldIndex === -1 || newIndex === -1) return;
             const next = arrayMove(current, oldIndex, newIndex);
-            onColumnOrderChange?.(next);
+            /** Persist only the middle columns — pinned ids are recomputed on every read. */
+            const middleOnly = next.filter((id) => !PINNED_START_IDS.has(id) && !PINNED_END_IDS.has(id));
+            onColumnOrderChange?.(middleOnly);
         },
-        [effectiveColumnOrder, onColumnOrderChange],
+        [effectiveColumnOrder, onColumnOrderChange, PINNED_START_IDS, PINNED_END_IDS],
     );
 
-    /** Pinned columns (select / actions) stay put — only data columns participate in sorting. */
-    const sortableHeaderIds = useMemo(() => {
-        const PINNED = new Set(["select", "actions"]);
-        return effectiveColumnOrder.filter((id) => PINNED.has(id) === false);
-    }, [effectiveColumnOrder]);
+    /** Pinned columns stay put — only data columns participate in sorting. */
+    const sortableHeaderIds = useMemo(
+        () => effectiveColumnOrder.filter((id) => !PINNED_START_IDS.has(id) && !PINNED_END_IDS.has(id)),
+        [effectiveColumnOrder, PINNED_START_IDS, PINNED_END_IDS],
+    );
 
     const visibleRows = table.getRowModel().rows;
     const cellClass = DENSITY_CLASSES[density].cell;
@@ -520,9 +537,10 @@ interface SortableHeaderProps<TData> {
  * via the `transform` returned by `useSortable`; opacity drops so the source position is still
  * visible under the cursor.
  */
+const SORTABLE_HEADER_PINNED = new Set(["select", "actions"]);
+
 function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>) {
-    const PINNED = new Set(["select", "actions"]);
-    const isPinned = PINNED.has(header.column.id);
+    const isPinned = SORTABLE_HEADER_PINNED.has(header.column.id);
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
         id: header.column.id,
         disabled: isPinned,
@@ -546,10 +564,29 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
         <ColumnDragHandleProvider attributes={attributes} listeners={listeners} isDragging={isDragging} isDraggable={!isPinned}>
             <TableHead
                 ref={setNodeRef}
-                className={cn(cellClass, "text-start text-xs", headerMeta?.headerClassName)}
+                className={cn(cellClass, "text-start text-xs", "group/header", headerMeta?.headerClassName)}
                 style={{ ...widthStyle, ...dragStyle }}
             >
-                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                <span className="inline-flex w-full min-w-0 items-center gap-1">
+                    <span className="min-w-0 flex-1">
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </span>
+                    {!isPinned && (
+                        <button
+                            type="button"
+                            aria-label="Drag column"
+                            {...attributes}
+                            {...listeners}
+                            className={cn(
+                                "grid size-4 shrink-0 cursor-grab touch-none place-items-center text-transparent outline-none transition-colors",
+                                "group-hover/header:text-muted-foreground hover:!text-foreground focus-visible:!text-foreground",
+                                isDragging && "cursor-grabbing !text-foreground",
+                            )}
+                        >
+                            <GripVertical className="size-3.5" aria-hidden="true" />
+                        </button>
+                    )}
+                </span>
             </TableHead>
         </ColumnDragHandleProvider>
     );
