@@ -176,7 +176,8 @@ export function ProductsList() {
         tableState.setFacetValues("status", [value]);
     };
 
-    const headerSubtitle = data === undefined ? t("loadingTotal") : t("totalProducts", { count: meta.total });
+    const headerSubtitle =
+        data === undefined ? t("loadingTotal") : t("totalProducts", { count: formatNumber(meta.total, locale) });
 
     return (
         <section className="flex flex-col gap-6">

@@ -12,6 +12,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof BaseTabs.
         <BaseTabs.List
             data-slot="tabs-list"
             className={cn(
+                /** Inline flex over the bottom border so the active-tab indicator sits flush on the line. */
                 "relative -mb-px inline-flex h-10 w-fit items-center gap-1 border-border border-b text-muted-foreground",
                 className,
             )}
@@ -25,13 +26,18 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof BaseTa
         <BaseTabs.Tab
             data-slot="tabs-trigger"
             className={cn(
-                "relative inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap px-3 font-medium text-sm outline-none transition-colors",
-                /** 2px underline that sits flush on the parent's border-bottom. Linear-style. */
-                "before:pointer-events-none before:absolute before:start-2 before:end-2 before:bottom-0 before:h-[2px] before:rounded-t-sm before:bg-foreground before:opacity-0 before:transition-opacity",
-                "hover:text-foreground",
-                "focus-visible:bg-accent",
+                "relative inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-t-md px-3 font-medium text-sm outline-none transition-colors",
+                /**
+                 * Hover: subtle fill to telegraph it's a clickable tab.
+                 * Active: primary text colour + tinted background pill + 2px primary underline that
+                 * sits flush on the parent's border-bottom. Three reinforcing signals so operators
+                 * can spot the active filter at a glance.
+                 */
+                "hover:bg-muted/60 hover:text-foreground",
+                "focus-visible:bg-accent focus-visible:text-foreground",
                 "disabled:pointer-events-none disabled:opacity-50",
-                "data-[selected]:font-semibold data-[selected]:text-foreground data-[selected]:before:opacity-100",
+                "before:pointer-events-none before:absolute before:start-2 before:end-2 before:bottom-[-1px] before:h-[2px] before:rounded-t before:bg-primary before:opacity-0 before:transition-opacity",
+                "data-[selected]:bg-primary/10 data-[selected]:font-semibold data-[selected]:text-primary data-[selected]:before:opacity-100",
                 className,
             )}
             {...props}
