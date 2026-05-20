@@ -1,6 +1,6 @@
 "use client";
 
-import type { Locale } from "@calibra/shared/i18n";
+import { directionFor, type Locale } from "@calibra/shared/i18n";
 import { ChevronsDownUp, ChevronsUpDown, FolderPlus, LayoutList, ListTree, Search, Sparkles, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -41,7 +41,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
     const t = useTranslations("Categories");
     const locale = useLocale() as Locale;
 
-    const tree = useCategoriesTree({ initialRows });
+    const tree = useCategoriesTree({ initialRows, direction: directionFor(locale) });
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<FilterMode>("all");
     const [selectedId, setSelectedId] = useState<number | null>(null);

@@ -6,10 +6,18 @@ import { useCallback, useMemo, useState } from "react";
 import type { AdminCategory } from "#/lib/types";
 
 import { collectSubtreeIds, flattenCategoryTree, moveCategory, projectDrop, sortIntoDfsOrder } from "./build-tree";
-import type { CategoryTreeRow, DropProjection } from "./types";
+import { type CategoryTreeRow, type DropProjection, TREE_INDENT_PX } from "./types";
 
 interface UseCategoriesTreeArgs {
     initialRows: AdminCategory[];
+    /**
+     * Document direction. Decides the sign of the horizontal drag offset that triggers a
+     * nest — under LTR, dragging right (positive `delta.x`) moves toward deeper indent;
+     * under RTL, dragging left (negative `delta.x`) moves toward deeper indent. We flip the
+     * sign before feeding `projectDrop` so the math downstream doesn't have to know about
+     * writing direction.
+     */
+    direction: "ltr" | "rtl";
 }
 
 interface CategoriesTreeApi {
@@ -48,7 +56,7 @@ interface CategoriesTreeApi {
  * global `pointermove` listener, which fired ~120 Hz and produced enough state churn to trip
  * React's max-update-depth guard during long drags.
  */
-export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): CategoriesTreeApi {
+export function useCategoriesTree({ initialRows, direction }: UseCategoriesTreeArgs): CategoriesTreeApi {
     const [rows, setRows] = useState<AdminCategory[]>(() => sortIntoDfsOrder(initialRows));
     const [expanded, setExpanded] = useState<Set<number>>(() => topLevelIds(initialRows));
     const [activeId, setActiveId] = useState<number | null>(null);
@@ -128,16 +136,23 @@ export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): Categ
             const positionInRow = (pointerY - rect.top) / rect.height;
             const overId = Number(event.over.id);
             if (!Number.isFinite(overId)) return;
+            /**
+             * Cumulative horizontal drag offset, normalised so positive values always mean
+             * "toward the deeper indent side" regardless of writing direction.
+             */
+            const nestOffset = direction === "rtl" ? -event.delta.x : event.delta.x;
             const next = projectDrop({
                 flatRows: flatRowsForDrag,
                 activeId,
                 overId,
                 positionInRow,
+                nestOffset,
+                indentPx: TREE_INDENT_PX,
                 movingSubtree,
             });
             setProjection((prev) => (projectionsEqual(prev, next) ? prev : next));
         },
-        [activeId, movingSubtree, flatRowsForDrag],
+        [activeId, movingSubtree, flatRowsForDrag, direction],
     );
 
     const resetDrag = useCallback(() => {

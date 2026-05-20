@@ -114,55 +114,46 @@ export function collectSubtreeIds(rows: AdminCategory[], nodeId: number): Set<nu
 }
 
 /**
- * Project a drop based on the cursor's vertical position inside the hovered row. Returns
- * `null` if the projection would create a cycle (e.g. dropping a parent into its own subtree)
- * or if the over row IS the active row.
+ * Project a drop from two independent inputs:
  *
- * Zone thresholds:
+ *   - Cursor Y inside the hovered row decides sibling order — above or below the target.
+ *   - A direction-corrected horizontal drag offset decides whether to nest — dragging at
+ *     least one indent step *toward the deeper side* (right under LTR, left under RTL)
+ *     flips the projection into the "inside" kind.
  *
- *   - `0 .. 0.25`  → above (sibling, inserted before the target)
- *   - `0.25 .. 0.75` → inside (last child of the target)
- *   - `0.75 .. 1`  → below (sibling, inserted after the target)
+ * Operators learn the gesture once: vertical = reorder, horizontal = nest. The horizontal
+ * sign already comes in flipped for RTL via the caller, so the math here doesn't know about
+ * writing direction at all.
  *
- * Rows already at {@link MAX_TREE_DEPTH} collapse to a 50/50 above/below split — there is no
- * "deeper" to go.
+ * Returns `null` for self-drops or projections that would create a cycle.
  */
 export function projectDrop(args: {
     flatRows: CategoryTreeRow[];
     activeId: number;
     overId: number;
     positionInRow: number;
+    nestOffset: number;
+    indentPx: number;
     movingSubtree: ReadonlySet<number>;
 }): DropProjection | null {
-    const { flatRows, activeId, overId, positionInRow, movingSubtree } = args;
+    const { flatRows, activeId, overId, positionInRow, nestOffset, indentPx, movingSubtree } = args;
     if (overId === activeId) return null;
     const overRow = flatRows.find((r) => r.category.id === overId);
     if (overRow === undefined) return null;
 
-    /**
-     * Zone thresholds — operators aim for the visible divider lines between rows to drop
-     * between items, and for the row body to nest as a child. Borders get a narrow
-     * trigger band (~17 % of the row's height on each edge) and the rest of the row is the
-     * generous "drop into" target. This matches the discoverability pattern every desktop
-     * file manager uses.
-     */
     const canNestInside = overRow.depth < MAX_TREE_DEPTH && !movingSubtree.has(overId);
+    const wantsNest = canNestInside && nestOffset >= indentPx;
     const clamped = Math.max(0, Math.min(1, positionInRow));
-    let kind: DropProjection["kind"];
-    if (canNestInside) {
-        if (clamped < 0.17) kind = "above";
-        else if (clamped > 0.83) kind = "below";
-        else kind = "inside";
-    } else {
-        kind = clamped < 0.5 ? "above" : "below";
-    }
 
+    let kind: DropProjection["kind"];
     let parentId: number | null;
     let depth: number;
-    if (kind === "inside") {
+    if (wantsNest) {
+        kind = "inside";
         parentId = overId;
         depth = overRow.depth + 1;
     } else {
+        kind = clamped < 0.5 ? "above" : "below";
         parentId = overRow.category.parentId;
         depth = overRow.depth;
     }
