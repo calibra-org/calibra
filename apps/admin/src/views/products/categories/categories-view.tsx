@@ -109,6 +109,21 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
 
     const handleSelect = useCallback((id: number) => setSelectedId(id), []);
 
+    /**
+     * Selection follows drag: starting a drag on row X should make X the inspector's focus,
+     * the same as clicking on it. Without this, dragging row B while row A was selected
+     * leaves the inspector showing A — a confusing state where the visible card and the
+     * row in motion are different.
+     */
+    const handleDragStart = useCallback(
+        (event: Parameters<typeof tree.onDragStart>[0]) => {
+            const id = Number(event.active.id);
+            if (Number.isFinite(id)) setSelectedId(id);
+            tree.onDragStart(event);
+        },
+        [tree.onDragStart],
+    );
+
     const handleAddChild = useCallback((parentId: number | null) => {
         setSelectedId(null);
         const sentinelId = -Date.now();
@@ -230,7 +245,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                                 onToggleExpand={tree.toggleExpand}
                                 onAddChild={handleAddChild}
                                 onDelete={handleDelete}
-                                onDragStart={tree.onDragStart}
+                                onDragStart={handleDragStart}
                                 onDragMove={tree.onDragMove}
                                 onDragEnd={tree.onDragEnd}
                                 onDragCancel={tree.onDragCancel}
