@@ -394,6 +394,14 @@ export function DataTable<TData>({
                      */}
                     <div className="custom-scrollbar max-h-[calc(100dvh-22rem)] overflow-y-auto [&_[data-slot=table-container]]:overflow-visible">
                         <DndContext
+                            /**
+                             * Stable id prevents the hydration mismatch coming from dnd-kit's
+                             * auto-incrementing accessibility ids (`DndDescribedBy-N`) — those
+                             * use a module-level counter, so SSR and CSR render different values
+                             * when multiple DndContexts mount in any order. A fixed id scopes
+                             * the counter to this table.
+                             */
+                            id="data-table-columns"
                             sensors={dndSensors}
                             collisionDetection={closestCenter}
                             modifiers={[restrictToHorizontalAxis]}
