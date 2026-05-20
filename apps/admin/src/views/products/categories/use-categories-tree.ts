@@ -10,6 +10,12 @@ import { type CategoryTreeRow, type DropProjection, TREE_INDENT_PX } from "./typ
 
 interface UseCategoriesTreeArgs {
     initialRows: AdminCategory[];
+    /**
+     * Document direction. Drives the sign of the horizontal drag offset — under RTL the
+     * "deeper nesting" gesture is a *leftward* cursor movement (toward the start side), so
+     * `delta.x` must be inverted before it feeds the projection.
+     */
+    direction: "ltr" | "rtl";
 }
 
 interface CategoriesTreeApi {
@@ -47,7 +53,7 @@ interface CategoriesTreeApi {
  * mutation. The renderer reads `activeProjectedDepth` so the active row's indent animates as
  * the cursor moves horizontally — without that feedback, "drag right to nest" feels broken.
  */
-export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): CategoriesTreeApi {
+export function useCategoriesTree({ initialRows, direction }: UseCategoriesTreeArgs): CategoriesTreeApi {
     const [rows, setRows] = useState<AdminCategory[]>(() => sortIntoDfsOrder(initialRows));
     const [expanded, setExpanded] = useState<Set<number>>(() => topLevelIds(initialRows));
     const [activeId, setActiveId] = useState<number | null>(null);
@@ -75,15 +81,21 @@ export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): Categ
 
     const dropResult = useMemo(() => {
         if (activeId === null || overId === null || movingSubtree === null) return null;
+        /**
+         * Under RTL the "nest deeper" gesture is a leftward pointer movement, which dnd-kit
+         * still reports as a *negative* `delta.x` in physical viewport coordinates. Flip the
+         * sign so the projection math reads "drag toward the start side = deeper".
+         */
+        const logicalOffsetX = direction === "rtl" ? -offsetLeft : offsetLeft;
         return projectDrop({
             flatRows: flatRowsForDrag,
             activeId,
             overId,
-            dragOffsetX: offsetLeft,
+            dragOffsetX: logicalOffsetX,
             indentPx: TREE_INDENT_PX,
             movingSubtree,
         });
-    }, [activeId, overId, offsetLeft, flatRowsForDrag, movingSubtree]);
+    }, [activeId, overId, offsetLeft, flatRowsForDrag, movingSubtree, direction]);
 
     const projection = useMemo<DropProjection | null>(() => {
         if (dropResult === null) return null;
