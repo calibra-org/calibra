@@ -121,22 +121,23 @@ export function CategoryTreeRowView({
             <TreeRails depth={row.depth} />
 
             {/**
-             * Single drop indicator — a thin vertical bar sitting in the gap between rows.
-             * One pattern covers all three drop kinds; horizontal position encodes depth, so
-             * "nest under target" reads as the same indicator at a deeper indent rather than
-             * a separate halo on the target row. Logical `insetInlineStart` flips the side
-             * automatically under RTL.
+             * Single drop indicator — a thin horizontal bar in the gap between rows. One
+             * pattern covers all three drop kinds; the bar's `inset-inline-start` encodes
+             * depth, so "nest under target" reads as the same line starting one indent step
+             * deeper, rather than a separate halo on the row. Logical positioning + a
+             * transitioned start so the line slides between depths as the cursor crosses
+             * zones.
              *
-             *   - above target → above this row, indented to `row.depth`
-             *   - below target → below this row, indented to `row.depth`
-             *   - inside target (this row) → below this row, indented to `row.depth + 1`
+             *   - above target → top edge, line starts at `row.depth` indent
+             *   - below target → bottom edge, line starts at `row.depth` indent
+             *   - inside target → bottom edge, line starts at `row.depth + 1` indent
              */}
             {(showAboveLine || showBelowLine || isDropParent) && (
                 <span
                     aria-hidden="true"
                     className={cn(
-                        "pointer-events-none absolute z-10 h-4 w-[3px] rounded-full bg-primary shadow-md shadow-primary/30 transition-[inset-inline-start] duration-100 ease-out",
-                        showAboveLine ? "-top-2" : "-bottom-2",
+                        "pointer-events-none absolute end-3 z-10 h-[3px] rounded-full bg-primary shadow-sm shadow-primary/30 transition-[inset-inline-start] duration-100 ease-out",
+                        showAboveLine ? "-top-[2px]" : "-bottom-[2px]",
                     )}
                     style={{
                         insetInlineStart: `${(isDropParent ? row.depth + 1 : row.depth) * TREE_INDENT_PX + 12}px`,
