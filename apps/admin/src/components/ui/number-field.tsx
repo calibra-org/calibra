@@ -60,9 +60,9 @@ export function NumberField({
         >
             <BaseNumberField.Group
                 data-slot="number-field-group"
+                dir="ltr"
                 className={cn(
-                    "group/number-field grid h-9 w-full grid-cols-[1fr_auto] grid-rows-2 overflow-hidden rounded-md border border-input bg-background text-sm shadow-xs outline-none transition-[color,box-shadow,border-color]",
-                    "[grid-template-areas:'field_increment''field_decrement']",
+                    "group/number-field flex h-9 w-full items-stretch overflow-hidden rounded-md border border-input bg-background text-sm shadow-xs outline-none transition-[color,box-shadow,border-color]",
                     "hover:border-ring/40",
                     "focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/40",
                     ariaInvalid === true && "border-destructive ring-destructive/20",
@@ -73,39 +73,40 @@ export function NumberField({
                     placeholder={placeholder}
                     dir="ltr"
                     className={cn(
-                        "min-w-0 bg-transparent px-3 text-foreground outline-none placeholder:text-muted-foreground/70 [grid-area:field]",
-                        "tabular-nums",
+                        "min-w-0 flex-1 bg-transparent px-3 text-foreground outline-none placeholder:text-muted-foreground/70 tabular-nums",
                         inputClassName,
                     )}
                 />
                 {suffix !== undefined && (
                     <span
-                        className="pointer-events-none flex items-center px-2 text-muted-foreground text-xs uppercase tracking-wide [grid-area:field] justify-self-end"
+                        className="pointer-events-none flex shrink-0 items-center border-input border-l px-2 text-muted-foreground text-xs uppercase tracking-wide"
                         aria-hidden="true"
                     >
                         {suffix}
                     </span>
                 )}
-                <BaseNumberField.Increment
-                    aria-label="Increment"
-                    className={cn(
-                        "inline-flex h-[18px] w-7 items-center justify-center border-input border-s text-muted-foreground transition-colors [grid-area:increment]",
-                        "hover:bg-muted hover:text-foreground",
-                        "disabled:pointer-events-none disabled:opacity-50",
-                    )}
-                >
-                    <ChevronUp className="size-3" aria-hidden="true" />
-                </BaseNumberField.Increment>
-                <BaseNumberField.Decrement
-                    aria-label="Decrement"
-                    className={cn(
-                        "inline-flex h-[18px] w-7 items-center justify-center border-input border-s border-t text-muted-foreground transition-colors [grid-area:decrement]",
-                        "hover:bg-muted hover:text-foreground",
-                        "disabled:pointer-events-none disabled:opacity-50",
-                    )}
-                >
-                    <ChevronDown className="size-3" aria-hidden="true" />
-                </BaseNumberField.Decrement>
+                <div className="flex shrink-0 flex-col border-input border-l">
+                    <BaseNumberField.Increment
+                        aria-label="Increment"
+                        className={cn(
+                            "inline-flex h-1/2 w-7 items-center justify-center text-muted-foreground transition-colors",
+                            "hover:bg-muted hover:text-foreground",
+                            "disabled:pointer-events-none disabled:opacity-50",
+                        )}
+                    >
+                        <ChevronUp className="size-3" aria-hidden="true" />
+                    </BaseNumberField.Increment>
+                    <BaseNumberField.Decrement
+                        aria-label="Decrement"
+                        className={cn(
+                            "inline-flex h-1/2 w-7 items-center justify-center border-input border-t text-muted-foreground transition-colors",
+                            "hover:bg-muted hover:text-foreground",
+                            "disabled:pointer-events-none disabled:opacity-50",
+                        )}
+                    >
+                        <ChevronDown className="size-3" aria-hidden="true" />
+                    </BaseNumberField.Decrement>
+                </div>
             </BaseNumberField.Group>
         </BaseNumberField.Root>
     );

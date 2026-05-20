@@ -491,7 +491,6 @@ function CurrencyInput({ id, value, onChange, nullable }: CurrencyInputProps) {
             min={0}
             step={1000}
             suffix={t("currency")}
-            inputClassName="pe-12"
         />
     );
 }
