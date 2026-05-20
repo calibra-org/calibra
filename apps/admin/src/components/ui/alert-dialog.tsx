@@ -26,16 +26,15 @@ function AlertDialogContent({ className, children, ...props }: React.ComponentPr
             <BaseAlertDialog.Backdrop
                 className={cn(
                     "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm",
-                    "transition-opacity duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
+                    "transition-opacity duration-200 ease-out data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none",
                 )}
             />
             <BaseAlertDialog.Popup
                 data-slot="alert-dialog-content"
                 className={cn(
-                    "fixed top-1/2 left-1/2 z-50 grid w-full max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-border bg-card p-6 shadow-lg outline-none",
-                    "data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
-                    "data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
-                    "transition-[opacity,transform] duration-200",
+                    "fixed top-1/2 left-1/2 z-50 grid w-full max-w-md gap-4 rounded-lg border border-border bg-card p-6 shadow-lg outline-none",
+                    "[transform:translate(-50%,-50%)] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 data-[ending-style]:[transform:translate(-50%,-46%)] data-[starting-style]:[transform:translate(-50%,-46%)]",
+                    "transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none",
                     className,
                 )}
                 {...props}
