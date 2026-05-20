@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { Radio, RadioGroup } from "#/components/ui/radio";
 import { ScrollArea } from "#/components/ui/scroll-area";
 import { cn } from "#/lib/utils";
 
@@ -100,29 +101,25 @@ export function DataTableViewOptions({
                     <p className="px-2 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wide">
                         {labels.densityHeading}
                     </p>
-                    <div className="flex flex-col gap-0.5">
+                    <RadioGroup
+                        value={density}
+                        onValueChange={(value) => onDensityChange(value as DataTableDensity)}
+                        className="flex flex-col gap-0.5"
+                    >
                         {(["comfortable", "cozy", "compact"] as const).map((option) => (
-                            <button
+                            <label
                                 key={option}
-                                type="button"
-                                onClick={() => onDensityChange(option)}
                                 className={cn(
-                                    "flex items-center gap-2 rounded-sm px-2 py-1.5 text-start text-sm outline-none",
+                                    "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-sm outline-none",
                                     "hover:bg-accent hover:text-accent-foreground",
                                     density === option && "text-foreground",
                                 )}
                             >
-                                <span
-                                    className={cn(
-                                        "grid size-4 shrink-0 place-items-center rounded-full border border-input",
-                                        density === option && "border-primary bg-primary",
-                                    )}
-                                    aria-hidden="true"
-                                />
-                                {labels.density[option]}
-                            </button>
+                                <Radio value={option} />
+                                <span className="flex-1">{labels.density[option]}</span>
+                            </label>
                         ))}
-                    </div>
+                    </RadioGroup>
                 </div>
             </PopoverContent>
         </Popover>
