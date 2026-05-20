@@ -32,7 +32,7 @@ import {
     useReactTable,
     type VisibilityState,
 } from "@tanstack/react-table";
-import { AlertTriangle, GripVertical, type LucideIcon } from "lucide-react";
+import { AlertTriangle, type LucideIcon } from "lucide-react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "#/components/ui/button";
@@ -222,7 +222,7 @@ export function DataTable<TData>({
      *    exist drop out; newly-added columns slot in at the tail.
      *  - An empty persisted order falls back to TanStack's natural definition order.
      */
-    const PINNED_START_IDS = useMemo(() => new Set(["select"]), []);
+    const PINNED_START_IDS = useMemo(() => new Set(["select", "favorite"]), []);
     const PINNED_END_IDS = useMemo(() => new Set(["actions"]), []);
 
     const effectiveColumnOrder = useMemo<ColumnOrderState>(() => {
@@ -537,7 +537,7 @@ interface SortableHeaderProps<TData> {
  * via the `transform` returned by `useSortable`; opacity drops so the source position is still
  * visible under the cursor.
  */
-const SORTABLE_HEADER_PINNED = new Set(["select", "actions"]);
+const SORTABLE_HEADER_PINNED = new Set(["select", "favorite", "actions"]);
 
 function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>) {
     const isPinned = SORTABLE_HEADER_PINNED.has(header.column.id);
@@ -567,26 +567,7 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
                 className={cn(cellClass, "text-start text-xs", "group/header", headerMeta?.headerClassName)}
                 style={{ ...widthStyle, ...dragStyle }}
             >
-                <span className="inline-flex w-full min-w-0 items-center gap-1">
-                    <span className="min-w-0 flex-1">
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </span>
-                    {!isPinned && (
-                        <button
-                            type="button"
-                            aria-label="Drag column"
-                            {...attributes}
-                            {...listeners}
-                            className={cn(
-                                "grid size-4 shrink-0 cursor-grab touch-none place-items-center text-transparent outline-none transition-colors",
-                                "group-hover/header:text-muted-foreground hover:!text-foreground focus-visible:!text-foreground",
-                                isDragging && "cursor-grabbing !text-foreground",
-                            )}
-                        >
-                            <GripVertical className="size-3.5" aria-hidden="true" />
-                        </button>
-                    )}
-                </span>
+                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
             </TableHead>
         </ColumnDragHandleProvider>
     );

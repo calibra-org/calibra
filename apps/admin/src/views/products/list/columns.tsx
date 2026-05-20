@@ -96,9 +96,13 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         {
             id: "favorite",
             meta: { headerClassName: "!px-2", cellClassName: "!px-2" },
-            header: sortableHeader("favorite", ctx.t("columns.favorite"), "px-0"),
+            header: () => (
+                <span className="sr-only" aria-hidden="true">
+                    {ctx.t("columns.favorite")}
+                </span>
+            ),
             cell: ({ row }) => <FavoriteToggle productId={row.original.id} initialIsFavorite={ctx.isFavorite(row.original.id)} />,
-            enableSorting: true,
+            enableSorting: false,
             size: 48,
         },
         {
