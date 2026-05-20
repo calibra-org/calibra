@@ -292,8 +292,8 @@ export function DataTable<TData>({
             <div className="overflow-hidden rounded-lg border border-border bg-card" onKeyDown={onTableKeyDown} role="grid">
                 {/** Desktop / tablet: real <table>. */}
                 <div className={cn("hidden md:block", renderCard !== undefined && "md:block")}>
-                    <div className="max-h-[calc(100dvh-22rem)] overflow-auto">
-                        <Table>
+                    <div className="max-h-[calc(100dvh-22rem)] overflow-y-auto [&_[data-slot=table-container]]:overflow-x-hidden">
+                        <Table className="w-full table-fixed">
                             <TableHeader className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id} className="border-border border-b">
