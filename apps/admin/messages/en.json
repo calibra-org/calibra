@@ -443,7 +443,10 @@
         "dropCaption": {
             "inside": "Nest under {name}",
             "top": "Move to top level",
-            "reorder": "Reorder"
+            "reorder": "Reorder",
+            "above": "Place above {name}",
+            "below": "Place below {name}",
+            "dragHint": "Drop somewhere to move"
         }
     },
     "Tags": {

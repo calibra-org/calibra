@@ -34,14 +34,18 @@ export interface DropProjection {
     /** 0-based depth the row will live at after the drop. Capped by {@link MAX_TREE_DEPTH}. */
     depth: number;
     /**
-     * What the drop will do, split into three intents so the caption / target halo can speak in
-     * the user's language:
+     * What the drop will do — derived from the cursor's vertical position inside the target row:
      *
-     *   - `reorder`  — same parent, different sibling rank.
-     *   - `nest`     — the active row becomes a child of a different row.
-     *   - `promote`  — the active row moves to the top level (no parent).
+     *   - `above`  — top quarter: insert as the target's previous sibling.
+     *   - `below`  — bottom quarter: insert as the target's next sibling.
+     *   - `inside` — middle half: nest as the last child of the target row.
+     *
+     * The Y-zone model trades the previous horizontal-offset-to-nest gesture for one that
+     * matches every desktop file manager, which is what operators actually expect from a tree.
      */
-    kind: "reorder" | "nest" | "promote";
+    kind: "above" | "below" | "inside";
+    /** The row id the cursor is hovering over — the anchor for the visual indicator. */
+    targetId: number;
 }
 
 /** Hard ceiling on visible nesting. Past this point the tree gets unreadable; keep it sensible. */

@@ -1,21 +1,15 @@
 "use client";
 
 import type { DragEndEvent, DragMoveEvent, DragStartEvent } from "@dnd-kit/core";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { AdminCategory } from "#/lib/types";
 
 import { collectSubtreeIds, flattenCategoryTree, moveCategory, projectDrop, sortIntoDfsOrder } from "./build-tree";
-import { type CategoryTreeRow, type DropProjection, TREE_INDENT_PX } from "./types";
+import type { CategoryTreeRow, DropProjection } from "./types";
 
 interface UseCategoriesTreeArgs {
     initialRows: AdminCategory[];
-    /**
-     * Document direction. Drives the sign of the horizontal drag offset — under RTL the
-     * "deeper nesting" gesture is a *leftward* cursor movement (toward the start side), so
-     * `delta.x` must be inverted before it feeds the projection.
-     */
-    direction: "ltr" | "rtl";
 }
 
 interface CategoriesTreeApi {
@@ -45,20 +39,38 @@ interface CategoriesTreeApi {
 
 /**
  * Owns the categories tree state — the flat-list cache, expand/collapse, drag selection, and
- * the projected drop position. Implements the canonical dnd-kit Sortable Tree drop math
- * (see {@link projectDrop}) so reorders and reparents share one code path.
+ * the projected drop position. Drop semantics follow the cursor-Y-zone pattern (see
+ * {@link projectDrop}): top quarter of a row = drop above, bottom quarter = drop below, middle
+ * half = nest inside. Predictable, jitter-free, and matches the convention every operator has
+ * internalised from desktop file managers.
  *
  * Persistence is local-only for now (no PATCH endpoint); the drag controller commits to the
  * client state via {@link moveCategory} and emits a TODO so future work can swap in a server
- * mutation. The renderer reads `activeProjectedDepth` so the active row's indent animates as
- * the cursor moves horizontally — without that feedback, "drag right to nest" feels broken.
+ * mutation.
  */
-export function useCategoriesTree({ initialRows, direction }: UseCategoriesTreeArgs): CategoriesTreeApi {
+export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): CategoriesTreeApi {
     const [rows, setRows] = useState<AdminCategory[]>(() => sortIntoDfsOrder(initialRows));
     const [expanded, setExpanded] = useState<Set<number>>(() => topLevelIds(initialRows));
     const [activeId, setActiveId] = useState<number | null>(null);
     const [overId, setOverId] = useState<number | null>(null);
-    const [offsetLeft, setOffsetLeft] = useState(0);
+    const [overRect, setOverRect] = useState<{ top: number; height: number } | null>(null);
+    const [pointerY, setPointerY] = useState<number | null>(null);
+
+    /**
+     * Track raw pointer Y throughout the drag. dnd-kit gives us `event.delta` but the cursor's
+     * absolute viewport position is what determines which zone of the over row it sits in — a
+     * single `pointermove` listener is cheaper than reading `activatorEvent` + summing deltas
+     * on every render.
+     */
+    useEffect(() => {
+        if (activeId === null) {
+            setPointerY(null);
+            return;
+        }
+        const handler = (event: PointerEvent) => setPointerY(event.clientY);
+        window.addEventListener("pointermove", handler);
+        return () => window.removeEventListener("pointermove", handler);
+    }, [activeId]);
 
     const flatRows = useMemo(() => flattenCategoryTree(rows, expanded), [rows, expanded]);
 
@@ -79,36 +91,19 @@ export function useCategoriesTree({ initialRows, direction }: UseCategoriesTreeA
         [activeId, flatRows],
     );
 
-    const dropResult = useMemo(() => {
-        if (activeId === null || overId === null || movingSubtree === null) return null;
-        /**
-         * Under RTL the "nest deeper" gesture is a leftward pointer movement, which dnd-kit
-         * still reports as a *negative* `delta.x` in physical viewport coordinates. Flip the
-         * sign so the projection math reads "drag toward the start side = deeper".
-         */
-        const logicalOffsetX = direction === "rtl" ? -offsetLeft : offsetLeft;
+    const projection = useMemo<DropProjection | null>(() => {
+        if (activeId === null || overId === null || overRect === null || pointerY === null || movingSubtree === null) return null;
+        const positionInRow = (pointerY - overRect.top) / overRect.height;
         return projectDrop({
             flatRows: flatRowsForDrag,
             activeId,
             overId,
-            dragOffsetX: logicalOffsetX,
-            indentPx: TREE_INDENT_PX,
+            positionInRow,
             movingSubtree,
         });
-    }, [activeId, overId, offsetLeft, flatRowsForDrag, movingSubtree, direction]);
+    }, [activeId, overId, overRect, pointerY, flatRowsForDrag, movingSubtree]);
 
-    const projection = useMemo<DropProjection | null>(() => {
-        if (dropResult === null) return null;
-        const currentParent = activeRow?.category.parentId ?? null;
-        const nextParent = dropResult.parentId;
-        let kind: DropProjection["kind"] = "reorder";
-        if (nextParent !== currentParent) {
-            kind = nextParent === null ? "promote" : "nest";
-        }
-        return { parentId: nextParent, depth: dropResult.depth, kind };
-    }, [dropResult, activeRow]);
-
-    const activeProjectedDepth = dropResult?.depth ?? null;
+    const activeProjectedDepth = projection?.depth ?? null;
 
     const isExpanded = useCallback((id: number) => expanded.has(id), [expanded]);
 
@@ -148,24 +143,27 @@ export function useCategoriesTree({ initialRows, direction }: UseCategoriesTreeA
         if (!Number.isFinite(id)) return;
         setActiveId(id);
         setOverId(id);
-        setOffsetLeft(0);
         if (typeof document !== "undefined") {
             document.body.style.cursor = "grabbing";
         }
     }, []);
 
     const onDragMove = useCallback((event: DragMoveEvent) => {
-        setOffsetLeft(event.delta.x);
         if (event.over !== null) {
             const id = Number(event.over.id);
-            if (Number.isFinite(id)) setOverId(id);
+            if (Number.isFinite(id)) {
+                setOverId(id);
+                const rect = event.over.rect;
+                setOverRect({ top: rect.top, height: rect.height });
+            }
         }
     }, []);
 
     const resetDrag = useCallback(() => {
         setActiveId(null);
         setOverId(null);
-        setOffsetLeft(0);
+        setOverRect(null);
+        setPointerY(null);
         if (typeof document !== "undefined") {
             document.body.style.cursor = "";
         }
@@ -174,28 +172,25 @@ export function useCategoriesTree({ initialRows, direction }: UseCategoriesTreeA
     const onDragEnd = useCallback(
         (event: DragEndEvent) => {
             const draggedId = Number(event.active.id);
-            const overTargetId = event.over === null ? null : Number(event.over.id);
-            const result = dropResult;
+            const proj = projection;
             resetDrag();
-            if (!Number.isFinite(draggedId) || overTargetId === null || !Number.isFinite(overTargetId) || result === null) {
-                return;
-            }
+            if (!Number.isFinite(draggedId) || proj === null) return;
             /**
              * TODO(api): no `PATCH /admin/categories/{id}` with parent / order change is wired
              * yet. Optimistically rearrange on the client; once the move endpoint lands, fire a
              * mutation here and roll back the local state if the server rejects.
              */
-            setRows((current) => moveCategory(current, draggedId, overTargetId, result.parentId));
-            if (result.parentId !== null) {
+            setRows((current) => moveCategory(current, draggedId, proj.targetId, proj.kind, proj.parentId));
+            if (proj.kind === "inside") {
                 setExpanded((current) => {
-                    if (current.has(result.parentId as number)) return current;
+                    if (current.has(proj.targetId)) return current;
                     const next = new Set(current);
-                    next.add(result.parentId as number);
+                    next.add(proj.targetId);
                     return next;
                 });
             }
         },
-        [dropResult, resetDrag],
+        [projection, resetDrag],
     );
 
     const onDragCancel = useCallback(() => {

@@ -2,7 +2,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 
 import type { AdminCategory } from "#/lib/types";
 
-import { type CategoryTreeRow, MAX_TREE_DEPTH } from "./types";
+import { type CategoryTreeRow, type DropProjection, MAX_TREE_DEPTH } from "./types";
 
 /**
  * Source-of-truth ordering for the categories list. Sibling rank is encoded by array order — the
@@ -114,93 +114,106 @@ export function collectSubtreeIds(rows: AdminCategory[], nodeId: number): Set<nu
 }
 
 /**
- * Move `activeId` to sit at `overId`'s position with a new `parentId`. Implements the dnd-kit
- * Sortable Tree pattern: arrayMove on the flat rows array — siblings preserve their relative
- * order via the array, parent-child structure follows from {@link AdminCategory.parentId}.
+ * Project a drop based on the cursor's vertical position inside the hovered row. Returns
+ * `null` if the projection would create a cycle (e.g. dropping a parent into its own subtree)
+ * or if the over row IS the active row.
  *
- * Cycle-safe: callers are expected to have screened out drops that would parent the active row
- * inside its own subtree (the drag controller does this via {@link collectSubtreeIds}).
- */
-export function moveCategory(
-    rows: AdminCategory[],
-    activeId: number,
-    overId: number,
-    newParentId: number | null,
-): AdminCategory[] {
-    const activeIndex = rows.findIndex((r) => r.id === activeId);
-    const overIndex = rows.findIndex((r) => r.id === overId);
-    if (activeIndex === -1 || overIndex === -1) return rows;
-    const updated = rows.slice();
-    updated[activeIndex] = { ...updated[activeIndex], parentId: newParentId } as AdminCategory;
-    return arrayMove(updated, activeIndex, overIndex);
-}
-
-/**
- * Compute a drop projection from the canonical dnd-kit Sortable Tree rules. The active row
- * conceptually lands at `overIndex` (an `arrayMove` on the visible flat list). The depth is
- * derived from the cursor's accumulated horizontal offset, then clamped by the depth of the
- * post-move predecessor and successor so we never produce orphaned indentation.
+ * Zone thresholds:
  *
- * Returns `null` when no legal drop exists (cursor over self, projected parent inside the
- * moving subtree, etc.) so the renderer can hide the indicator instead of showing a bad target.
+ *   - `0 .. 0.25`  → above (sibling, inserted before the target)
+ *   - `0.25 .. 0.75` → inside (last child of the target)
+ *   - `0.75 .. 1`  → below (sibling, inserted after the target)
+ *
+ * Rows already at {@link MAX_TREE_DEPTH} collapse to a 50/50 above/below split — there is no
+ * "deeper" to go.
  */
 export function projectDrop(args: {
     flatRows: CategoryTreeRow[];
     activeId: number;
     overId: number;
-    dragOffsetX: number;
-    indentPx: number;
+    positionInRow: number;
     movingSubtree: ReadonlySet<number>;
-}): { depth: number; parentId: number | null; projectedIndex: number } | null {
-    const { flatRows, activeId, overId, dragOffsetX, indentPx, movingSubtree } = args;
-    const overIndex = flatRows.findIndex((r) => r.category.id === overId);
-    const activeIndex = flatRows.findIndex((r) => r.category.id === activeId);
-    if (overIndex === -1 || activeIndex === -1) return null;
+}): DropProjection | null {
+    const { flatRows, activeId, overId, positionInRow, movingSubtree } = args;
+    if (overId === activeId) return null;
+    const overRow = flatRows.find((r) => r.category.id === overId);
+    if (overRow === undefined) return null;
 
-    const activeRow = flatRows[activeIndex];
-    const reordered = simulateMove(flatRows, activeIndex, overIndex);
-    const previous = reordered[overIndex - 1];
-    const next = reordered[overIndex + 1];
-    const dragDepth = Math.round(dragOffsetX / indentPx);
-    const projectedDepth = activeRow.depth + dragDepth;
-    const maxDepth = previous === undefined ? 0 : Math.min(previous.depth + 1, MAX_TREE_DEPTH);
-    const minDepth = next === undefined ? 0 : next.depth;
-    const depth = clampDepth(projectedDepth, minDepth, maxDepth);
-
-    const parentId = resolveParentId({ depth, previous, reordered, overIndex });
-    if (parentId !== null && movingSubtree.has(parentId)) return null;
-    return { depth, parentId, projectedIndex: overIndex };
-}
-
-function simulateMove(items: CategoryTreeRow[], fromIndex: number, toIndex: number): CategoryTreeRow[] {
-    if (fromIndex === toIndex) return items;
-    const next = items.slice();
-    const [moved] = next.splice(fromIndex, 1);
-    if (moved === undefined) return items;
-    next.splice(toIndex, 0, moved);
-    return next;
-}
-
-function clampDepth(value: number, minDepth: number, maxDepth: number): number {
-    if (value >= maxDepth) return maxDepth;
-    if (value < minDepth) return minDepth;
-    return value;
-}
-
-function resolveParentId(args: {
-    depth: number;
-    previous: CategoryTreeRow | undefined;
-    reordered: CategoryTreeRow[];
-    overIndex: number;
-}): number | null {
-    const { depth, previous, reordered, overIndex } = args;
-    if (depth === 0 || previous === undefined) return null;
-    if (depth === previous.depth) return previous.category.parentId;
-    if (depth > previous.depth) return previous.category.id;
-    for (let i = overIndex - 1; i >= 0; i -= 1) {
-        const row = reordered[i];
-        if (row === undefined) continue;
-        if (row.depth === depth - 1) return row.category.id;
+    const canNestInside = overRow.depth < MAX_TREE_DEPTH && !movingSubtree.has(overId);
+    const clamped = Math.max(0, Math.min(1, positionInRow));
+    let kind: DropProjection["kind"];
+    if (canNestInside) {
+        if (clamped < 0.25) kind = "above";
+        else if (clamped > 0.75) kind = "below";
+        else kind = "inside";
+    } else {
+        kind = clamped < 0.5 ? "above" : "below";
     }
-    return null;
+
+    let parentId: number | null;
+    let depth: number;
+    if (kind === "inside") {
+        parentId = overId;
+        depth = overRow.depth + 1;
+    } else {
+        parentId = overRow.category.parentId;
+        depth = overRow.depth;
+    }
+
+    /** Cycle guard: the projected parent must not live inside the moving subtree. */
+    if (parentId !== null && movingSubtree.has(parentId)) return null;
+
+    return { parentId, depth, kind, targetId: overId };
+}
+
+/**
+ * Commit a drop: update the active row's `parentId` and splice it into the rows array at the
+ * position implied by `kind`. Sibling rank is encoded by array order, so the splice index
+ * determines whether the moved row appears before / after / inside the target.
+ *
+ *   - `above`  → splice immediately before the target row in the rows array.
+ *   - `below`  → splice immediately after the target row.
+ *   - `inside` → splice at the end of the target's subtree, so the moved row becomes the
+ *                target's last visible child.
+ *
+ * Descendants of the moved row are not relocated in the array — they "follow" the parent via
+ * `parentId`, and the flatten pass orders siblings by their relative position in `rows`.
+ */
+export function moveCategory(
+    rows: AdminCategory[],
+    activeId: number,
+    targetId: number,
+    kind: DropProjection["kind"],
+    newParentId: number | null,
+): AdminCategory[] {
+    const activeIndex = rows.findIndex((r) => r.id === activeId);
+    const targetIndex = rows.findIndex((r) => r.id === targetId);
+    if (activeIndex === -1 || targetIndex === -1) return rows;
+
+    const updated = rows.slice();
+    updated[activeIndex] = { ...updated[activeIndex], parentId: newParentId } as AdminCategory;
+
+    let insertIndex: number;
+    if (kind === "above") {
+        insertIndex = targetIndex;
+    } else if (kind === "below") {
+        insertIndex = targetIndex + 1;
+    } else {
+        let endIndex = targetIndex + 1;
+        const subtree = new Set<number>([targetId]);
+        while (endIndex < updated.length) {
+            const row = updated[endIndex];
+            if (row !== undefined && row.parentId !== null && subtree.has(row.parentId)) {
+                subtree.add(row.id);
+                endIndex += 1;
+            } else {
+                break;
+            }
+        }
+        insertIndex = endIndex;
+    }
+
+    /** `arrayMove` operates on the post-removal index space; adjust when active sits before target. */
+    const adjusted = activeIndex < insertIndex ? insertIndex - 1 : insertIndex;
+    return arrayMove(updated, activeIndex, adjusted);
 }

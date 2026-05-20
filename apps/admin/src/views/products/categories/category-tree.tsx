@@ -15,7 +15,7 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { ArrowUpToLine, CornerDownRight, FolderTree, MoveVertical } from "lucide-react";
+import { ArrowDownToLine, ArrowUpToLine, CornerDownRight, FolderTree } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
@@ -88,6 +88,12 @@ export function CategoryTree({
         return parentRow?.category.name[locale] ?? null;
     }, [projection, flatRowsForDrag, locale]);
 
+    const dropTargetName = useMemo(() => {
+        if (projection === null) return null;
+        const targetRow = flatRowsForDrag.find((row) => row.category.id === projection.targetId);
+        return targetRow?.category.name[locale] ?? null;
+    }, [projection, flatRowsForDrag, locale]);
+
     return (
         <DndContext
             sensors={sensors}
@@ -102,8 +108,10 @@ export function CategoryTree({
                 <div role="tree" aria-label={t("tree.label")} className="flex flex-col gap-0.5">
                     {flatRowsForDrag.map((row) => {
                         const isActive = activeId === row.category.id;
-                        const isDropParent =
-                            projection?.kind === "nest" && projection.parentId === row.category.id && activeId !== null;
+                        const isTarget = projection?.targetId === row.category.id && activeId !== null;
+                        const isDropParent = isTarget && projection?.kind === "inside";
+                        const showAboveLine = isTarget && projection?.kind === "above";
+                        const showBelowLine = isTarget && projection?.kind === "below";
                         const overrideDepth = isActive ? activeProjectedDepth : null;
                         return (
                             <CategoryTreeRowView
@@ -113,8 +121,10 @@ export function CategoryTree({
                                 isSelected={selectedId === row.category.id}
                                 isActive={isActive}
                                 isDropParent={isDropParent}
+                                showAboveLine={showAboveLine}
+                                showBelowLine={showBelowLine}
                                 overrideDepth={overrideDepth}
-                                nestingParentName={isActive && projection?.kind === "nest" ? dropParentName : null}
+                                nestingParentName={isActive && projection?.kind === "inside" ? dropParentName : null}
                                 onSelect={onSelect}
                                 onToggleExpand={onToggleExpand}
                                 onAddChild={onAddChild}
@@ -127,7 +137,14 @@ export function CategoryTree({
 
             <DragOverlay dropAnimation={null}>
                 {activeRow !== null ? (
-                    <DragGhost row={activeRow} projection={projection} dropParentName={dropParentName} locale={locale} t={t} />
+                    <DragGhost
+                        row={activeRow}
+                        projection={projection}
+                        dropParentName={dropParentName}
+                        dropTargetName={dropTargetName}
+                        locale={locale}
+                        t={t}
+                    />
                 ) : null}
             </DragOverlay>
         </DndContext>
@@ -138,34 +155,37 @@ interface DragGhostProps {
     row: CategoryTreeRow;
     projection: DropProjection | null;
     dropParentName: string | null;
+    dropTargetName: string | null;
     locale: Locale;
     t: ReturnType<typeof useTranslations<"Categories">>;
 }
 
 /**
- * Floating card that follows the cursor while a drag is in flight. Doubles as the live drop
- * caption — the badge beneath the card spells out the next action so the operator never has to
- * scan the page to learn what release will do.
+ * Floating card that follows the cursor while a drag is in flight. The badge beneath the card
+ * spells out the next action ("Place above X" / "Place below X" / "Nest under X") so the
+ * operator never has to scan the page to learn what release will do.
  */
-function DragGhost({ row, projection, dropParentName, locale, t }: DragGhostProps) {
-    const kind = projection?.kind ?? "reorder";
+function DragGhost({ row, projection, dropParentName, dropTargetName, locale, t }: DragGhostProps) {
+    const kind = projection?.kind ?? null;
     const captionLabel =
-        kind === "nest"
+        kind === "inside"
             ? dropParentName !== null
                 ? t("dropCaption.inside", { name: dropParentName })
-                : t("dropCaption.reorder")
-            : kind === "promote"
-              ? t("dropCaption.top")
-              : t("dropCaption.reorder");
+                : t("dropCaption.dragHint")
+            : kind === "above" && dropTargetName !== null
+              ? t("dropCaption.above", { name: dropTargetName })
+              : kind === "below" && dropTargetName !== null
+                ? t("dropCaption.below", { name: dropTargetName })
+                : t("dropCaption.dragHint");
 
     return (
         <div className="pointer-events-none flex w-fit max-w-md flex-col items-start gap-2">
             <div
                 className={cn(
                     "flex h-12 min-w-72 items-center gap-2 rounded-xl border bg-card px-3 shadow-foreground/10 shadow-xl ring-1 ring-black/5",
-                    kind === "nest" && "border-primary/60",
-                    kind === "promote" && "border-foreground/20",
-                    kind === "reorder" && "border-border",
+                    kind === "inside" && "border-primary/60",
+                    kind === null && "border-border",
+                    (kind === "above" || kind === "below") && "border-foreground/20",
                 )}
             >
                 <FolderTree className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -177,17 +197,19 @@ function DragGhost({ row, projection, dropParentName, locale, t }: DragGhostProp
             <div
                 className={cn(
                     "flex items-center gap-2 rounded-full px-3 py-1 font-medium text-xs shadow-md",
-                    kind === "nest" && "bg-primary text-primary-foreground",
-                    kind === "promote" && "bg-foreground text-background",
-                    kind === "reorder" && "bg-muted-foreground text-background",
+                    kind === "inside" && "bg-primary text-primary-foreground",
+                    (kind === "above" || kind === "below") && "bg-foreground text-background",
+                    kind === null && "bg-muted-foreground text-background",
                 )}
             >
-                {kind === "nest" ? (
+                {kind === "inside" ? (
                     <CornerDownRight className="size-3.5" data-rtl-flip aria-hidden="true" />
-                ) : kind === "promote" ? (
+                ) : kind === "above" ? (
                     <ArrowUpToLine className="size-3.5" aria-hidden="true" />
+                ) : kind === "below" ? (
+                    <ArrowDownToLine className="size-3.5" aria-hidden="true" />
                 ) : (
-                    <MoveVertical className="size-3.5" aria-hidden="true" />
+                    <FolderTree className="size-3.5" aria-hidden="true" />
                 )}
                 <span>{captionLabel}</span>
             </div>

@@ -22,6 +22,10 @@ interface CategoryTreeRowViewProps {
     isActive: boolean;
     /** The active row's projection lands inside this row — render with full nesting halo. */
     isDropParent: boolean;
+    /** Drop indicator above this row — render an insertion line at the top edge. */
+    showAboveLine: boolean;
+    /** Drop indicator below this row — render an insertion line at the bottom edge. */
+    showBelowLine: boolean;
     /** Override the row's indent while dragging — reflects the projected post-drop depth. */
     overrideDepth: number | null;
     /** Localized name of the projected parent — shown inline on the active row while nesting. */
@@ -50,6 +54,8 @@ export function CategoryTreeRowView({
     isSelected,
     isActive,
     isDropParent,
+    showAboveLine,
+    showBelowLine,
     overrideDepth,
     nestingParentName,
     onSelect,
@@ -125,6 +131,27 @@ export function CategoryTreeRowView({
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-y-0 start-0 w-1.5 rounded-e-full bg-primary"
                 />
+            )}
+
+            {/**
+             * Insertion line indicators for above/below drops. Drawn between rows (just above
+             * or just below the row's box) and indented to the projected depth. Logical
+             * `start` / `end` so they flip with writing direction.
+             */}
+            {(showAboveLine || showBelowLine) && (
+                <span
+                    aria-hidden="true"
+                    className={cn(
+                        "pointer-events-none absolute end-2 z-10 h-0.5 rounded-full bg-primary shadow-primary/40 shadow-sm",
+                        showAboveLine ? "-top-px" : "-bottom-px",
+                    )}
+                    style={{ insetInlineStart: `${indentPx + 8}px` }}
+                >
+                    <span
+                        className="absolute -top-1 size-2 rounded-full border-2 border-primary bg-background"
+                        style={{ insetInlineStart: "-4px" }}
+                    />
+                </span>
             )}
 
             <div
