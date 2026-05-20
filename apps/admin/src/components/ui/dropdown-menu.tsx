@@ -29,7 +29,7 @@ function DropdownMenuContent({ className, sideOffset = 6, align = "end", childre
                     className={cn(
                         "min-w-44 origin-[var(--transform-origin)] rounded-md border border-border bg-popover p-1 text-popover-foreground text-sm shadow-md outline-none",
                         "data-[ending-style]:scale-95 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
-                        "transition-[opacity,transform] duration-150",
+                        "transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none",
                         className,
                     )}
                     {...props}

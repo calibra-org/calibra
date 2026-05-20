@@ -1,12 +1,7 @@
-import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { PageHeader } from "#/components/PageHeader";
-import { Button } from "#/components/ui/button";
-import { Link } from "#/lib/i18n/navigation";
-
-import { ProductsListClient } from "./ProductsListClient";
+import { ProductsList } from "#/views/products/list/products-list";
 
 interface PageProps {
     params: Promise<{ locale: string }>;
@@ -18,27 +13,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: t("title") };
 }
 
+/**
+ * Products list page. The page itself is a server component (so next-intl's static optimization
+ * still kicks in); the interactive list, including TanStack Query hooks and TanStack Table
+ * state, lives inside {@link ProductsList} as a client component.
+ */
 export default async function ProductsPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const t = await getTranslations("Products");
 
-    return (
-        <section className="flex flex-col gap-6">
-            <PageHeader
-                title={t("title")}
-                subtitle={t("subtitle")}
-                actions={
-                    <Button asChild>
-                        <Link href="/products/new">
-                            <Plus className="size-4" aria-hidden="true" />
-                            {t("addProduct")}
-                        </Link>
-                    </Button>
-                }
-            />
-
-            <ProductsListClient />
-        </section>
-    );
+    return <ProductsList />;
 }

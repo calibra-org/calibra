@@ -3,87 +3,199 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/**
- * shadcn/ui design tokens for the admin. Light mode defaults; dark mode is opt-in via `.dark` on
- * `<html>`. The shadcn CLI writes new components against these variable names — keep them in sync
- * if you swap palettes.
- *
- * @see https://ui.shadcn.com/docs/theming
- */
+/* -------------------------------------------------------------------------- */
+/*  Palette layer                                                              */
+/*  Raw color steps. Light scales go 50 → 900; dark mode inverts the gray      */
+/*  ramp so semantic tokens can keep using the same step names.                */
+/* -------------------------------------------------------------------------- */
 :root {
-    --radius: 0.625rem;
+    /**
+     * Light ramp. Off-white surfaces with the faintest cool-neutral tint (Linear has a
+     * barely-visible blue cast that prevents the UI from feeling sterile). Very low saturation
+     * so semantic accents stay loud.
+     */
+    --color-gray-50: 0 0% 100%;
+    --color-gray-75: 240 16% 98.5%;
+    --color-gray-100: 240 12% 96.5%;
+    --color-gray-150: 240 10% 93.5%;
+    --color-gray-200: 240 8% 90%;
+    --color-gray-300: 240 7% 80%;
+    --color-gray-400: 240 6% 62%;
+    --color-gray-500: 240 5% 45%;
+    --color-gray-600: 240 6% 32%;
+    --color-gray-700: 240 9% 20%;
+    --color-gray-800: 240 12% 13%;
+    --color-gray-900: 240 16% 9%;
 
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /** Linear's signature indigo-violet (`#5e6ad2` ≈ HSL 232 60% 60%). */
+    --color-brand-100: 232 100% 96%;
+    --color-brand-200: 232 90% 90%;
+    --color-brand-400: 232 75% 72%;
+    --color-brand-500: 232 65% 65%;
+    --color-brand-600: 232 60% 60%;
+    --color-brand-700: 232 56% 52%;
 
-    --sidebar: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 240 5.9% 90%;
-    --sidebar-ring: 240 10% 3.9%;
+    /** Semantic accents (status). */
+    --color-success: 152 64% 38%;
+    --color-warning: 35 92% 50%;
+    --color-danger: 0 84% 60%;
+    --color-info: 210 95% 55%;
 }
 
 .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 5.9% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 5.9% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
+    /**
+     * Dark ramp — Linear-style deep cool-neutral. Surfaces stair-step *lighter* as elevation
+     * increases, but only by 1.5–2% at a time so the UI reads as a single calm slab instead of
+     * stacked cards. Text foreground is pushed brighter (95% lightness) so dense tables stay
+     * readable without raising contrast on every secondary element.
+     */
+    --color-gray-50: 240 12% 4.5%;
+    --color-gray-75: 240 10% 6%;
+    --color-gray-100: 240 9% 7.5%;
+    --color-gray-150: 240 8% 10%;
+    --color-gray-200: 240 7% 13%;
+    --color-gray-300: 240 6% 20%;
+    --color-gray-400: 240 5% 38%;
+    --color-gray-500: 240 5% 62%;
+    --color-gray-600: 240 5% 74%;
+    --color-gray-700: 240 6% 84%;
+    --color-gray-800: 240 8% 92%;
+    --color-gray-900: 240 14% 96%;
+
+    --color-brand-100: 232 60% 18%;
+    --color-brand-200: 232 60% 30%;
+    --color-brand-400: 232 60% 55%;
+    --color-brand-500: 232 60% 65%;
+    --color-brand-600: 232 65% 70%;
+    --color-brand-700: 232 70% 80%;
+
+    --color-success: 152 60% 50%;
+    --color-warning: 35 92% 60%;
+    --color-danger: 0 72% 55%;
+    --color-info: 210 95% 65%;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Semantic layer                                                             */
+/*  Surfaces, foreground, intents. All component CSS reads from this layer so  */
+/*  the palette can change without touching components.                        */
+/* -------------------------------------------------------------------------- */
+:root {
+    --radius: 0.625rem;
+
+    /** Background elevation steps — page → card → popover → tooltip. */
+    --background-base: var(--color-gray-75);
+    --background-layer-1: var(--color-gray-50);
+    --background-layer-2: var(--color-gray-50);
+    --background-subdued: var(--color-gray-100);
+    --background-elevated: var(--color-gray-150);
+
+    /** Foreground tones — body → muted helper → disabled → heading. */
+    --foreground-base: var(--color-gray-900);
+    --foreground-subdued: var(--color-gray-500);
+    --foreground-disabled: var(--color-gray-400);
+    --foreground-heading: var(--color-gray-900);
+
+    /** Shadcn-shaped token surface so every existing class (bg-card, text-foreground, …) lights up. */
+    --background: var(--background-base);
+    --foreground: var(--foreground-base);
+    --card: var(--background-layer-1);
+    --card-foreground: var(--foreground-base);
+    --popover: var(--background-layer-2);
+    --popover-foreground: var(--foreground-base);
+
+    --primary: var(--color-brand-600);
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: var(--color-gray-150);
+    --secondary-foreground: var(--color-gray-900);
+
+    --muted: var(--background-subdued);
+    --muted-foreground: var(--foreground-subdued);
+
+    --accent: var(--background-elevated);
+    --accent-foreground: var(--foreground-base);
+
+    --destructive: var(--color-danger);
+    --destructive-foreground: 0 0% 100%;
+
+    --border: var(--color-gray-200);
+    --input: var(--color-gray-200);
+    --ring: var(--color-brand-600);
+
+    --chart-1: var(--color-brand-600);
+    --chart-2: var(--color-success);
+    --chart-3: var(--color-warning);
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
-    --sidebar: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar: var(--background-base);
+    --sidebar-foreground: var(--color-gray-700);
+    --sidebar-primary: var(--color-brand-600);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 240 4.9% 83.9%;
+    --sidebar-accent: var(--background-elevated);
+    --sidebar-accent-foreground: var(--foreground-base);
+    --sidebar-border: var(--color-gray-200);
+    --sidebar-ring: var(--color-brand-600);
 }
 
+.dark {
+    --background-base: var(--color-gray-50);
+    --background-layer-1: var(--color-gray-75);
+    --background-layer-2: var(--color-gray-100);
+    --background-subdued: var(--color-gray-150);
+    --background-elevated: var(--color-gray-200);
+
+    --foreground-base: var(--color-gray-900);
+    --foreground-subdued: var(--color-gray-500);
+    --foreground-disabled: var(--color-gray-400);
+    --foreground-heading: var(--color-gray-900);
+
+    --background: var(--background-base);
+    --foreground: var(--foreground-base);
+    --card: var(--background-layer-1);
+    --card-foreground: var(--foreground-base);
+    --popover: var(--background-layer-2);
+    --popover-foreground: var(--foreground-base);
+
+    --primary: var(--color-brand-500);
+    --primary-foreground: var(--color-gray-50);
+
+    --secondary: var(--background-subdued);
+    --secondary-foreground: var(--foreground-base);
+
+    --muted: var(--background-subdued);
+    --muted-foreground: var(--foreground-subdued);
+
+    --accent: var(--background-elevated);
+    --accent-foreground: var(--foreground-base);
+
+    --destructive: var(--color-danger);
+    --destructive-foreground: 0 0% 100%;
+
+    --border: var(--color-gray-200);
+    --input: var(--color-gray-200);
+    --ring: var(--color-brand-500);
+
+    --chart-1: var(--color-brand-500);
+    --chart-2: var(--color-success);
+    --chart-3: var(--color-warning);
+    --chart-4: 280 65% 65%;
+    --chart-5: 340 75% 60%;
+
+    --sidebar: var(--background-base);
+    --sidebar-foreground: var(--color-gray-600);
+    --sidebar-primary: var(--color-brand-500);
+    --sidebar-primary-foreground: var(--color-gray-50);
+    --sidebar-accent: var(--background-elevated);
+    --sidebar-accent-foreground: var(--foreground-base);
+    --sidebar-border: var(--color-gray-200);
+    --sidebar-ring: var(--color-brand-500);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Tailwind v4 theme map                                                       */
+/* -------------------------------------------------------------------------- */
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
@@ -148,5 +260,37 @@ html[lang="fa"] {
     body {
         @apply bg-background text-foreground antialiased;
         font-family: var(--font-sans);
+        /** No horizontal page scroll — admin chrome is column-bounded; runaway X scroll is always a bug. */
+        overflow-x: hidden;
     }
+}
+
+/**
+ * Slim scrollbar styling applied via opt-in `.custom-scrollbar` class. Used by surfaces where we
+ * need a *real* native scrollbar (e.g. tables with sticky `<th>` cells that don't play nicely
+ * with virtualized scroll viewports) but still want the visual language of our `<ScrollArea>`
+ * primitive — same 8px width, same translucent thumb that fades toward stronger on hover.
+ */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--foreground) / 0.25) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--foreground) / 0.25);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--foreground) / 0.4);
+}
+.custom-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
 }
