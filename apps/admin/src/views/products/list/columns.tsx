@@ -225,11 +225,11 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         {
             id: "price",
             header: sortableHeader("price", ctx.t("columns.price")),
-            meta: { cellClassName: "text-end" },
+            meta: { cellClassName: "text-start" },
             cell: ({ row }) => {
                 const product = row.original;
                 return (
-                    <div className="flex flex-col items-end text-end tabular-nums">
+                    <div className="flex flex-col items-start text-start tabular-nums">
                         <span className="font-medium">{formatMoney(product.salePrice ?? product.regularPrice, ctx.locale)}</span>
                         {product.salePrice !== null && (
                             <span className="text-muted-foreground text-xs line-through">
