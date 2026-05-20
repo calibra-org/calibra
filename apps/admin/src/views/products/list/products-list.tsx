@@ -138,11 +138,14 @@ export function ProductsList() {
     const columnVisibilityItems = useMemo(
         () =>
             columns
-                .filter((col) => col.id !== undefined)
+                .filter(
+                    (col): col is typeof col & { id: string } =>
+                        typeof col.id === "string" && col.id !== "select" && col.id !== "actions",
+                )
                 .map((col) => ({
-                    id: col.id as string,
+                    id: col.id,
                     label: t(`columns.${col.id}` as never),
-                    canHide: col.enableHiding !== false && col.id !== "select" && col.id !== "actions",
+                    canHide: col.enableHiding !== false,
                 })),
         [columns, t],
     );
