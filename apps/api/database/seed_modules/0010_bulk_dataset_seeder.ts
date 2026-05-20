@@ -97,8 +97,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
      * Encapsulates the derivation rules so the run loop just sees four numbers.
      */
     private resolveTotals(): { products: number; users: number; orders: number; reviews: number } {
-        const products = this.options.products ?? 100_000;
-        const users = this.options.users ?? 500_000;
+        const products = this.options.products ?? 1_000;
+        const users = this.options.users ?? 5_000;
         const orders = this.options.orders ?? Math.floor(users * ORDER_OF_CUSTOMERS_RATIO);
         const reviews = this.options.reviews ?? Math.floor(orders * REVIEW_OF_ORDERS_RATIO);
         return { products, users, orders, reviews };
