@@ -274,7 +274,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             cell: ({ row }) => {
                 const product = row.original;
                 return (
-                    <div className="flex flex-col">
+                    <div className="flex flex-col items-start gap-1">
                         <StatusBadge tone={productStatusTone[product.status]}>{ctx.statusT(product.status)}</StatusBadge>
                         <time
                             dateTime={product.updatedAt}
