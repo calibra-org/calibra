@@ -2136,6 +2136,52 @@ export interface components {
             };
         };
         /**
+         * TopProduct
+         * @description One product row inside a top-sellers report. Aggregates units sold and gross revenue across every line item the product appeared in within the report window. `name` is resolved from the locale matching `Accept-Language` with a fallback to the order's line-item snapshot, so historical bestsellers still render correctly after a rename or product deletion.
+         * @example {
+         *       "product_id": 30941,
+         *       "name": "دوربین دیجیتال Nikon مدل Z6 II",
+         *       "sku": "BULK-000541-5KMK",
+         *       "units": 7,
+         *       "revenue": 1440694241
+         *     }
+         */
+        TopProduct: {
+            /** @description Primary key of the product the line items reference. */
+            product_id: number;
+            /** @description Locale-resolved product name (or the order-time snapshot when the product was deleted / has no matching translation). */
+            name: string;
+            /** @description SKU as captured on the order line at sale time. Null only if the original product had no SKU. */
+            sku?: string | null;
+            /** @description Total number of units sold across all line items contributing to the row. */
+            units: number;
+            /** @description Gross revenue (sum of `total` across contributing line items) in Rial minor units. */
+            revenue: components["schemas"]["Money"];
+        };
+        /**
+         * ReportRange
+         * @description Time window a report was computed over. `start_date` / `end_date` are inclusive calendar dates in ISO-8601 (`YYYY-MM-DD`) at UTC; `days` is the convenience integer the request asked for (echoed back so clients can re-issue the same query without re-deriving it).
+         * @example {
+         *       "start_date": "2026-04-19",
+         *       "end_date": "2026-05-19",
+         *       "days": 30
+         *     }
+         */
+        ReportRange: {
+            /**
+             * Format: date
+             * @description Inclusive start of the window (UTC calendar date).
+             */
+            start_date: string;
+            /**
+             * Format: date
+             * @description Inclusive end of the window (UTC calendar date).
+             */
+            end_date: string;
+            /** @description Trailing-window length in days that was requested. */
+            days: number;
+        };
+        /**
          * AdminProduct
          * @description Admin product card. The detail variant {@link AdminProductDetail} adds the full image gallery, every translation row, the variation list, and the attribute → terms map. Money fields are in Rial minor units.
          */
@@ -3771,20 +3817,8 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: {
-                            product_id: number;
-                            name: string;
-                            sku?: string | null;
-                            units: number;
-                            revenue: components["schemas"]["Money"];
-                        }[];
-                        range: {
-                            /** Format: date */
-                            start_date: string;
-                            /** Format: date */
-                            end_date: string;
-                            days: number;
-                        };
+                        data: components["schemas"]["TopProduct"][];
+                        range: components["schemas"]["ReportRange"];
                     };
                 };
             };

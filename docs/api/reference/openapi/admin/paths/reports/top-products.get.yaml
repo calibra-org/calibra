@@ -34,21 +34,9 @@ responses:
                         data:
                             type: array
                             items:
-                                type: object
-                                required: [product_id, name, units, revenue]
-                                properties:
-                                    product_id: { type: integer }
-                                    name: { type: string }
-                                    sku: { type: [string, "null"] }
-                                    units: { type: integer }
-                                    revenue: { $ref: "../../../common/components/schemas/Money.yaml" }
+                                $ref: "../../../common/components/schemas/TopProduct.yaml"
                         range:
-                            type: object
-                            required: [start_date, end_date, days]
-                            properties:
-                                start_date: { type: string, format: date }
-                                end_date: { type: string, format: date }
-                                days: { type: integer }
+                            $ref: "../../../common/components/schemas/ReportRange.yaml"
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "403":

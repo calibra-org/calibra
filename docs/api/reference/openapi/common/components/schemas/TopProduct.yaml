@@ -1,0 +1,27 @@
+title: TopProduct
+description: >
+    One product row inside a top-sellers report. Aggregates units sold and gross revenue across
+    every line item the product appeared in within the report window. `name` is resolved from the
+    locale matching `Accept-Language` with a fallback to the order's line-item snapshot, so
+    historical bestsellers still render correctly after a rename or product deletion.
+type: object
+required: [product_id, name, units, revenue]
+properties:
+    product_id:
+        type: integer
+        description: Primary key of the product the line items reference.
+    name:
+        type: string
+        description: Locale-resolved product name (or the order-time snapshot when the product was deleted / has no matching translation).
+    sku:
+        type: [string, "null"]
+        description: SKU as captured on the order line at sale time. Null only if the original product had no SKU.
+    units:
+        type: integer
+        minimum: 0
+        description: Total number of units sold across all line items contributing to the row.
+    revenue:
+        $ref: "./Money.yaml"
+        description: Gross revenue (sum of `total` across contributing line items) in Rial minor units.
+examples:
+    - { product_id: 30941, name: "دوربین دیجیتال Nikon مدل Z6 II", sku: "BULK-000541-5KMK", units: 7, revenue: 1440694241 }
