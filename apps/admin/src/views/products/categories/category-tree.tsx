@@ -9,7 +9,6 @@ import {
     DragOverlay,
     type DragStartEvent,
     KeyboardSensor,
-    MeasuringStrategy,
     PointerSensor,
     useSensor,
     useSensors,
@@ -98,7 +97,6 @@ export function CategoryTree({
         <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
             onDragStart={onDragStart}
             onDragMove={onDragMove}
             onDragEnd={onDragEnd}
@@ -124,7 +122,6 @@ export function CategoryTree({
                                 showAboveLine={showAboveLine}
                                 showBelowLine={showBelowLine}
                                 overrideDepth={overrideDepth}
-                                nestingParentName={isActive && projection?.kind === "inside" ? dropParentName : null}
                                 onSelect={onSelect}
                                 onToggleExpand={onToggleExpand}
                                 onAddChild={onAddChild}

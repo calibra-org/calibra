@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronRight, CornerDownRight, FolderTree, GripVertical, ImageIcon, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, FolderTree, GripVertical, ImageIcon, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 
@@ -28,8 +28,6 @@ interface CategoryTreeRowViewProps {
     showBelowLine: boolean;
     /** Override the row's indent while dragging — reflects the projected post-drop depth. */
     overrideDepth: number | null;
-    /** Localized name of the projected parent — shown inline on the active row while nesting. */
-    nestingParentName: string | null;
     onSelect: (id: number) => void;
     onToggleExpand: (id: number) => void;
     onAddChild: (parentId: number) => void;
@@ -57,7 +55,6 @@ export function CategoryTreeRowView({
     showAboveLine,
     showBelowLine,
     overrideDepth,
-    nestingParentName,
     onSelect,
     onToggleExpand,
     onAddChild,
@@ -110,10 +107,13 @@ export function CategoryTreeRowView({
             className={cn(
                 "group relative touch-none transition-transform",
                 /**
-                 * Active row stays in the list as a dashed destination outline — the solid
-                 * "moving card" is rendered into the DragOverlay so it can follow the cursor.
+                 * Active row stays in the list (dimmed) so siblings can animate around it,
+                 * but it carries no other treatment — the DragOverlay ghost is the visual
+                 * focus, and the drop-parent / insertion-line indicators show where the row
+                 * will land. Layering a primary outline on the active row competed with the
+                 * drop-parent halo and made it hard to tell which row was the target.
                  */
-                isActive && "opacity-50",
+                isActive && "pointer-events-none opacity-40",
             )}
             {...attributes}
             {...listeners}
@@ -172,12 +172,10 @@ export function CategoryTreeRowView({
                     "hover:bg-accent/40",
                     "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30",
                     isSelected && !isActive && "border-primary/30 bg-primary/5 shadow-xs",
-                    /** Active row reads as the destination outline — dashed primary, light fill. */
-                    isActive && "border-primary/50 border-dashed bg-primary/5",
                     /**
-                     * Drop-parent treatment: solid primary border + saturated tint. No heavy
-                     * spread shadow — the flag accent + border do the heavy lifting and stay
-                     * crisp in dense lists.
+                     * Drop-parent treatment: solid primary border + saturated tint. The flag
+                     * accent on the start side + this border read as "this row will adopt the
+                     * incoming row" without any compositing tricks.
                      */
                     isDropParent && "border-primary bg-primary/15",
                 )}
@@ -229,12 +227,11 @@ export function CategoryTreeRowView({
                     <span className="hidden truncate font-mono text-muted-foreground text-xs sm:inline" dir="ltr">
                         /{row.category.slug[locale] || "—"}
                     </span>
-                    {isActive && nestingParentName !== null && (
-                        <Badge className="gap-1 border-primary/60 bg-primary/10 px-2 font-medium text-primary text-xs">
-                            <CornerDownRight className="size-3" data-rtl-flip aria-hidden="true" />
-                            <span className="max-w-32 truncate">{nestingParentName}</span>
-                        </Badge>
-                    )}
+                    {/**
+                     * The inline "↳ parent" badge previously lived here; it doubled the
+                     * caption already attached to the DragOverlay ghost and cluttered the
+                     * dimmed active row. The ghost carries the parent name now.
+                     */}
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">

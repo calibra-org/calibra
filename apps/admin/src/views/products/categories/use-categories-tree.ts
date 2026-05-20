@@ -1,7 +1,7 @@
 "use client";
 
 import type { DragEndEvent, DragMoveEvent, DragStartEvent } from "@dnd-kit/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type { AdminCategory } from "#/lib/types";
 
@@ -19,7 +19,6 @@ interface CategoriesTreeApi {
     flatRowsForDrag: CategoryTreeRow[];
     activeId: number | null;
     activeRow: CategoryTreeRow | null;
-    overId: number | null;
     projection: DropProjection | null;
     /** Active row's projected depth — fed back to the row renderer so its indent tracks the cursor. */
     activeProjectedDepth: number | null;
@@ -41,36 +40,19 @@ interface CategoriesTreeApi {
  * Owns the categories tree state — the flat-list cache, expand/collapse, drag selection, and
  * the projected drop position. Drop semantics follow the cursor-Y-zone pattern (see
  * {@link projectDrop}): top quarter of a row = drop above, bottom quarter = drop below, middle
- * half = nest inside. Predictable, jitter-free, and matches the convention every operator has
- * internalised from desktop file managers.
+ * half = nest inside.
  *
- * Persistence is local-only for now (no PATCH endpoint); the drag controller commits to the
- * client state via {@link moveCategory} and emits a TODO so future work can swap in a server
- * mutation.
+ * Performance note: the projection is computed inside `onDragMove` and stored as a single piece
+ * of state with a structural equality check, so React only re-renders when the projection
+ * actually changes between frames. Earlier iterations tracked raw pointer Y in state via a
+ * global `pointermove` listener, which fired ~120 Hz and produced enough state churn to trip
+ * React's max-update-depth guard during long drags.
  */
 export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): CategoriesTreeApi {
     const [rows, setRows] = useState<AdminCategory[]>(() => sortIntoDfsOrder(initialRows));
     const [expanded, setExpanded] = useState<Set<number>>(() => topLevelIds(initialRows));
     const [activeId, setActiveId] = useState<number | null>(null);
-    const [overId, setOverId] = useState<number | null>(null);
-    const [overRect, setOverRect] = useState<{ top: number; height: number } | null>(null);
-    const [pointerY, setPointerY] = useState<number | null>(null);
-
-    /**
-     * Track raw pointer Y throughout the drag. dnd-kit gives us `event.delta` but the cursor's
-     * absolute viewport position is what determines which zone of the over row it sits in — a
-     * single `pointermove` listener is cheaper than reading `activatorEvent` + summing deltas
-     * on every render.
-     */
-    useEffect(() => {
-        if (activeId === null) {
-            setPointerY(null);
-            return;
-        }
-        const handler = (event: PointerEvent) => setPointerY(event.clientY);
-        window.addEventListener("pointermove", handler);
-        return () => window.removeEventListener("pointermove", handler);
-    }, [activeId]);
+    const [projection, setProjection] = useState<DropProjection | null>(null);
 
     const flatRows = useMemo(() => flattenCategoryTree(rows, expanded), [rows, expanded]);
 
@@ -90,18 +72,6 @@ export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): Categ
         () => (activeId === null ? null : (flatRows.find((row) => row.category.id === activeId) ?? null)),
         [activeId, flatRows],
     );
-
-    const projection = useMemo<DropProjection | null>(() => {
-        if (activeId === null || overId === null || overRect === null || pointerY === null || movingSubtree === null) return null;
-        const positionInRow = (pointerY - overRect.top) / overRect.height;
-        return projectDrop({
-            flatRows: flatRowsForDrag,
-            activeId,
-            overId,
-            positionInRow,
-            movingSubtree,
-        });
-    }, [activeId, overId, overRect, pointerY, flatRowsForDrag, movingSubtree]);
 
     const activeProjectedDepth = projection?.depth ?? null;
 
@@ -142,28 +112,37 @@ export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): Categ
         const id = Number(event.active.id);
         if (!Number.isFinite(id)) return;
         setActiveId(id);
-        setOverId(id);
+        setProjection(null);
         if (typeof document !== "undefined") {
             document.body.style.cursor = "grabbing";
         }
     }, []);
 
-    const onDragMove = useCallback((event: DragMoveEvent) => {
-        if (event.over !== null) {
-            const id = Number(event.over.id);
-            if (Number.isFinite(id)) {
-                setOverId(id);
-                const rect = event.over.rect;
-                setOverRect({ top: rect.top, height: rect.height });
-            }
-        }
-    }, []);
+    const onDragMove = useCallback(
+        (event: DragMoveEvent) => {
+            if (event.over === null || activeId === null || movingSubtree === null) return;
+            const activator = event.activatorEvent as PointerEvent;
+            if (typeof activator.clientY !== "number") return;
+            const pointerY = activator.clientY + event.delta.y;
+            const rect = event.over.rect;
+            const positionInRow = (pointerY - rect.top) / rect.height;
+            const overId = Number(event.over.id);
+            if (!Number.isFinite(overId)) return;
+            const next = projectDrop({
+                flatRows: flatRowsForDrag,
+                activeId,
+                overId,
+                positionInRow,
+                movingSubtree,
+            });
+            setProjection((prev) => (projectionsEqual(prev, next) ? prev : next));
+        },
+        [activeId, movingSubtree, flatRowsForDrag],
+    );
 
     const resetDrag = useCallback(() => {
         setActiveId(null);
-        setOverId(null);
-        setOverRect(null);
-        setPointerY(null);
+        setProjection(null);
         if (typeof document !== "undefined") {
             document.body.style.cursor = "";
         }
@@ -203,7 +182,6 @@ export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): Categ
         flatRowsForDrag,
         activeId,
         activeRow,
-        overId,
         projection,
         activeProjectedDepth,
         expanded,
@@ -226,4 +204,16 @@ function topLevelIds(rows: AdminCategory[]): Set<number> {
     const ids = new Set<number>();
     for (const row of rows) if (row.parentId === null) ids.add(row.id);
     return ids;
+}
+
+/**
+ * Structural compare for {@link DropProjection}. Two projections are equal when they share the
+ * same `kind`, `targetId`, `parentId`, and `depth` — that's the entire surface the renderer
+ * reads, so a stable reference here means React can skip the cascade of useMemos / context
+ * updates downstream and keep the drag responsive at 120 Hz.
+ */
+function projectionsEqual(a: DropProjection | null, b: DropProjection | null): boolean {
+    if (a === b) return true;
+    if (a === null || b === null) return false;
+    return a.kind === b.kind && a.targetId === b.targetId && a.parentId === b.parentId && a.depth === b.depth;
 }
