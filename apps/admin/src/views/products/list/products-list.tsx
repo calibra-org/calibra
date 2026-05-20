@@ -5,17 +5,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { Plus, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { Fragment, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { ActiveFilterChips, type ColumnDef, DataTable, DataTableToolbar, DataTableViewOptions } from "#/components/data-table";
 import { useDataTable } from "#/components/data-table/use-data-table";
 import { Button } from "#/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
 import { useProductCountsByStatus, useProductsList } from "#/lib/products/queries";
 import type { AdminProduct, ProductStatus, ProductType, StockStatus } from "#/lib/types";
-import { cn } from "#/lib/utils";
 
 import { BulkActions } from "./bulk-actions";
 import { buildProductColumns } from "./columns";
@@ -209,44 +209,28 @@ export function ProductsList() {
             </header>
 
             {/**
-             * WordPress-style status filter row: text links with parenthetical counts, separated by
-             * `|`. Compact, scannable, and behaves naturally for any number of statuses. Active
-             * status is bold + primary tinted; hover lifts to `text-foreground`.
+             * Line-variant tabs with always-on full-width bottom border + animated primary
+             * underline that slides between active selections. Each tab label inlines the
+             * parenthetical count exactly like the Positions / Open Orders bar in the reference.
              */}
-            <nav className="flex flex-wrap items-center text-muted-foreground text-sm" aria-label={t("title")}>
-                {STATUS_TABS.map((value, index) => {
-                    const count = statusCounts?.[value];
-                    const isActive = status === value;
-                    const label = value === "any" ? t("status.any") : statusT(value as ProductStatus);
-                    return (
-                        <Fragment key={value}>
-                            {index > 0 && (
-                                <span className="px-2 text-border" aria-hidden="true">
-                                    |
-                                </span>
-                            )}
-                            <button
-                                type="button"
-                                onClick={() => onTabChange(value)}
-                                className={cn(
-                                    "rounded outline-none transition-colors",
-                                    "hover:text-foreground",
-                                    "focus-visible:ring-2 focus-visible:ring-ring/40",
-                                    isActive && "font-semibold text-primary",
-                                )}
-                                aria-current={isActive ? "page" : undefined}
-                            >
+            <Tabs value={status} onValueChange={onTabChange} variant="line" aria-label={t("title")}>
+                <TabsList className="h-10 gap-6 px-0">
+                    {STATUS_TABS.map((value) => {
+                        const count = statusCounts?.[value];
+                        const label = value === "any" ? t("status.any") : statusT(value as ProductStatus);
+                        return (
+                            <TabsTrigger key={value} value={value} className="px-0">
                                 <span>{label}</span>
                                 {count !== undefined && (
                                     <span className="ms-1 tabular-nums text-muted-foreground/80">
                                         ({formatNumber(count, locale)})
                                     </span>
                                 )}
-                            </button>
-                        </Fragment>
-                    );
-                })}
-            </nav>
+                            </TabsTrigger>
+                        );
+                    })}
+                </TabsList>
+            </Tabs>
 
             <DataTable<AdminProduct>
                 data={rows}

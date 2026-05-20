@@ -142,11 +142,19 @@ function TabsIndicator({ className, variant: variantProp, ...props }: TabsIndica
             data-variant={variant}
             className={cn(
                 "absolute origin-center transition-all duration-200 ease-out",
-                "start-[var(--active-tab-left)] w-[var(--active-tab-width)]",
-                "rtl:end-[var(--active-tab-right)] rtl:start-auto",
+                /**
+                 * Position with explicit `left` / `right` rather than logical `start` / `end`.
+                 * Base UI emits `--active-tab-left` (px offset from list start) and
+                 * `--active-tab-right` (px offset from list end) — Tailwind's logical utilities
+                 * would re-flip these under RTL, so the indicator ends up at the wrong end of
+                 * the list. Pinning to physical sides keeps the math consistent in both
+                 * directions.
+                 */
+                "[left:var(--active-tab-left)] w-[var(--active-tab-width)]",
+                "rtl:[left:auto] rtl:[right:var(--active-tab-right)]",
                 variant === "default" &&
                     "top-[var(--active-tab-top)] h-[var(--active-tab-height)] rounded-md bg-background shadow-sm",
-                variant === "line" && "bottom-[-1px] h-[2px] rounded-full bg-primary",
+                variant === "line" && "bottom-[-1px] h-[2px] rounded-full bg-foreground",
                 className,
             )}
             {...props}
