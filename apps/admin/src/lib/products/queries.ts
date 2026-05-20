@@ -174,3 +174,36 @@ export function useProductFacets() {
 export type ProductFacetOption<T extends string | number = string> = AdminProductFacetEntry<T>;
 
 export type { AdminBrand, AdminCategory, AdminTag };
+
+/**
+ * Per-status row counts powering the WP-style status tabs. Fans out one `?perPage=1` request per
+ * status the page knows about — each lands on its own cached query key so flipping tabs reuses
+ * the count without a refetch. `any` is the unfiltered total.
+ */
+export function useProductCountsByStatus() {
+    const locale = useLocale() as Locale;
+    return useQuery({
+        queryKey: ["admin", "product-counts", { locale }],
+        queryFn: async (): Promise<Record<"any" | ProductStatus, number>> => {
+            const fetchTotal = async (status?: SdkProductStatus): Promise<number> => {
+                try {
+                    const payload = await apiGet<ProductListEnvelope>("products", {
+                        locale,
+                        query: { perPage: 1, status },
+                    });
+                    return payload.meta?.total ?? payload.data?.length ?? 0;
+                } catch {
+                    return 0;
+                }
+            };
+            const [any, draft, publish] = await Promise.all([
+                fetchTotal(undefined),
+                fetchTotal("draft"),
+                fetchTotal("published"),
+            ]);
+            /** API doesn't model `pending` / `private` separately — clamp them to zero for now. */
+            return { any, draft, publish, pending: 0, private: 0 };
+        },
+        staleTime: 30 * 1000,
+    });
+}

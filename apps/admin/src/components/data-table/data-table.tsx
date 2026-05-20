@@ -454,6 +454,23 @@ function DataTableBodyRow<TData>({
     onRowOpen,
 }: BodyRowProps<TData>) {
     const isExpanded = row.getIsExpanded();
+    const visibleCellCount = row.getVisibleCells().length;
+
+    /**
+     * Quick Edit takes over the entire row WordPress-style — when expanded, the row's regular
+     * cells are replaced by a single full-width cell hosting the editor. Saves us a stacked
+     * sub-row that competed with the original row for context.
+     */
+    if (isExpanded && renderSubComponent !== undefined) {
+        return (
+            <TableRow className="border-y border-primary/30 bg-muted/30">
+                <TableCell colSpan={visibleCellCount} className="p-0">
+                    {renderSubComponent(row)}
+                </TableCell>
+            </TableRow>
+        );
+    }
+
     return (
         <>
             <TableRow
@@ -486,13 +503,6 @@ function DataTableBodyRow<TData>({
                     </TableCell>
                 ))}
             </TableRow>
-            {isExpanded && renderSubComponent !== undefined && (
-                <TableRow className="border-primary/20 border-t bg-muted/30">
-                    <TableCell colSpan={row.getVisibleCells().length} className="p-0">
-                        {renderSubComponent(row)}
-                    </TableCell>
-                </TableRow>
-            )}
         </>
     );
 }

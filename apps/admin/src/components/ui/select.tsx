@@ -17,10 +17,11 @@ function SelectTrigger({ className, children, ...props }: React.ComponentProps<t
         <BaseSelect.Trigger
             data-slot="select-trigger"
             className={cn(
-                "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow]",
-                "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-                "disabled:cursor-not-allowed disabled:opacity-50",
+                "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow,border-color]",
+                "hover:border-ring/40",
+                "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40",
                 "data-[popup-open]:border-ring",
+                "disabled:cursor-not-allowed disabled:opacity-50",
                 className,
             )}
             {...props}
@@ -40,9 +41,9 @@ function SelectContent({ className, children, ...props }: React.ComponentProps<t
                 <BaseSelect.Popup
                     data-slot="select-content"
                     className={cn(
-                        "max-h-80 min-w-[--anchor-width] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none",
-                        "data-[ending-style]:translate-y-1 data-[starting-style]:translate-y-1 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
-                        "transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none",
+                        "max-h-80 min-w-[--anchor-width] origin-[var(--transform-origin)] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none",
+                        "data-[starting-style]:scale-95 data-[starting-style]:opacity-0 data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
+                        "transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none",
                         className,
                     )}
                     {...props}

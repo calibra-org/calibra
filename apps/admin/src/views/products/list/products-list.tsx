@@ -9,13 +9,12 @@ import { useCallback, useMemo, useState } from "react";
 
 import { ActiveFilterChips, type ColumnDef, DataTable, DataTableToolbar, DataTableViewOptions } from "#/components/data-table";
 import { useDataTable } from "#/components/data-table/use-data-table";
-import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
-import { useProductsList } from "#/lib/products/queries";
+import { useProductCountsByStatus, useProductsList } from "#/lib/products/queries";
 import type { AdminProduct, ProductStatus, ProductType, StockStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
@@ -65,6 +64,8 @@ export function ProductsList() {
     const brandId = numericFirst(tableState.facetValues.brand);
     const tagId = numericFirst(tableState.facetValues.tag);
     const favOnly = tableState.toggleValues.fav === true;
+
+    const { data: statusCounts } = useProductCountsByStatus();
 
     const { data, isPending, isError, refetch } = useProductsList({
         page: tableState.page,
@@ -208,16 +209,19 @@ export function ProductsList() {
 
             <Tabs value={status} onValueChange={onTabChange}>
                 <TabsList>
-                    {STATUS_TABS.map((value) => (
-                        <TabsTrigger key={value} value={value} className="gap-2">
-                            <span>{value === "any" ? t("status.any") : statusT(value as ProductStatus)}</span>
-                            {value === "any" && data !== undefined ? (
-                                <Badge variant="secondary" className="font-mono text-[10px]">
-                                    {formatNumber(meta.total, locale)}
-                                </Badge>
-                            ) : null}
-                        </TabsTrigger>
-                    ))}
+                    {STATUS_TABS.map((value) => {
+                        const count = statusCounts?.[value];
+                        return (
+                            <TabsTrigger key={value} value={value} className="gap-2">
+                                <span>{value === "any" ? t("status.any") : statusT(value as ProductStatus)}</span>
+                                {count !== undefined && (
+                                    <span className="tabular-nums text-[10px] text-muted-foreground">
+                                        {formatNumber(count, locale)}
+                                    </span>
+                                )}
+                            </TabsTrigger>
+                        );
+                    })}
                 </TabsList>
             </Tabs>
 

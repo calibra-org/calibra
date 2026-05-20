@@ -3,115 +3,189 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/**
- * shadcn/ui design tokens for the admin. Light mode defaults; dark mode is opt-in via `.dark` on
- * `<html>`. The shadcn CLI writes new components against these variable names — keep them in sync
- * if you swap palettes.
- *
- * @see https://ui.shadcn.com/docs/theming
- */
-/**
- * Light palette. Linear's marketing surfaces are dark-first but the admin needs a competent
- * light mode for daytime ops. Same Linear purple accent (`#5e6ad2`-ish, HSL ≈ 232 60% 60%) and
- * cool slate grays carry across, so the look feels consistent when an operator flips themes.
- *
- * @see https://frontend-research-linear-design-tok.vercel.app/tokens
- */
+/* -------------------------------------------------------------------------- */
+/*  Palette layer                                                              */
+/*  Raw color steps. Light scales go 50 → 900; dark mode inverts the gray      */
+/*  ramp so semantic tokens can keep using the same step names.                */
+/* -------------------------------------------------------------------------- */
+:root {
+    --color-gray-50: 0 0% 100%;
+    --color-gray-75: 220 20% 98.5%;
+    --color-gray-100: 220 16% 96%;
+    --color-gray-150: 220 14% 93%;
+    --color-gray-200: 220 13% 91%;
+    --color-gray-300: 220 11% 80%;
+    --color-gray-400: 220 9% 64%;
+    --color-gray-500: 220 9% 46%;
+    --color-gray-600: 222 12% 36%;
+    --color-gray-700: 222 18% 22%;
+    --color-gray-800: 222 28% 14%;
+    --color-gray-900: 222 47% 11%;
+
+    /** Linear-style indigo-violet brand ramp. */
+    --color-brand-100: 232 100% 96%;
+    --color-brand-200: 232 90% 90%;
+    --color-brand-400: 232 75% 72%;
+    --color-brand-500: 232 65% 65%;
+    --color-brand-600: 232 60% 60%;
+    --color-brand-700: 232 56% 52%;
+
+    /** Semantic accents (status). */
+    --color-success: 152 64% 38%;
+    --color-warning: 35 92% 50%;
+    --color-danger: 0 84% 60%;
+    --color-info: 210 95% 55%;
+}
+
+.dark {
+    /** Dark ramp — surfaces stair-step LIGHTER as elevation increases. */
+    --color-gray-50: 225 12% 5%;
+    --color-gray-75: 225 12% 7%;
+    --color-gray-100: 225 11% 9%;
+    --color-gray-150: 225 10% 12%;
+    --color-gray-200: 225 10% 15%;
+    --color-gray-300: 225 9% 22%;
+    --color-gray-400: 225 7% 38%;
+    --color-gray-500: 225 6% 60%;
+    --color-gray-600: 225 6% 72%;
+    --color-gray-700: 225 7% 82%;
+    --color-gray-800: 225 9% 92%;
+    --color-gray-900: 220 14% 96%;
+
+    --color-brand-100: 232 60% 18%;
+    --color-brand-200: 232 60% 30%;
+    --color-brand-400: 232 60% 55%;
+    --color-brand-500: 232 60% 65%;
+    --color-brand-600: 232 65% 70%;
+    --color-brand-700: 232 70% 80%;
+
+    --color-success: 152 60% 50%;
+    --color-warning: 35 92% 60%;
+    --color-danger: 0 72% 55%;
+    --color-info: 210 95% 65%;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Semantic layer                                                             */
+/*  Surfaces, foreground, intents. All component CSS reads from this layer so  */
+/*  the palette can change without touching components.                        */
+/* -------------------------------------------------------------------------- */
 :root {
     --radius: 0.625rem;
 
-    --background: 220 20% 98%;
-    --foreground: 226 27% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 226 27% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 226 27% 12%;
+    /** Background elevation steps — page → card → popover → tooltip. */
+    --background-base: var(--color-gray-75);
+    --background-layer-1: var(--color-gray-50);
+    --background-layer-2: var(--color-gray-50);
+    --background-subdued: var(--color-gray-100);
+    --background-elevated: var(--color-gray-150);
 
-    /** Linear's signature indigo-violet. Single brand accent — buttons, focus rings, active tabs. */
-    --primary: 232 60% 60%;
+    /** Foreground tones — body → muted helper → disabled → heading. */
+    --foreground-base: var(--color-gray-900);
+    --foreground-subdued: var(--color-gray-500);
+    --foreground-disabled: var(--color-gray-400);
+    --foreground-heading: var(--color-gray-900);
+
+    /** Shadcn-shaped token surface so every existing class (bg-card, text-foreground, …) lights up. */
+    --background: var(--background-base);
+    --foreground: var(--foreground-base);
+    --card: var(--background-layer-1);
+    --card-foreground: var(--foreground-base);
+    --popover: var(--background-layer-2);
+    --popover-foreground: var(--foreground-base);
+
+    --primary: var(--color-brand-600);
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 226 27% 12%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 222 10% 46%;
-    --accent: 220 14% 94%;
-    --accent-foreground: 226 27% 12%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 232 60% 60%;
+    --secondary: var(--color-gray-150);
+    --secondary-foreground: var(--color-gray-900);
 
-    --chart-1: 232 60% 60%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 27 87% 67%;
+    --muted: var(--background-subdued);
+    --muted-foreground: var(--foreground-subdued);
+
+    --accent: var(--background-elevated);
+    --accent-foreground: var(--foreground-base);
+
+    --destructive: var(--color-danger);
+    --destructive-foreground: 0 0% 100%;
+
+    --border: var(--color-gray-200);
+    --input: var(--color-gray-200);
+    --ring: var(--color-brand-600);
+
+    --chart-1: var(--color-brand-600);
+    --chart-2: var(--color-success);
+    --chart-3: var(--color-warning);
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
-    --sidebar: 220 20% 98%;
-    --sidebar-foreground: 226 18% 26%;
-    --sidebar-primary: 232 60% 60%;
+    --sidebar: var(--background-base);
+    --sidebar-foreground: var(--color-gray-700);
+    --sidebar-primary: var(--color-brand-600);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 94%;
-    --sidebar-accent-foreground: 226 27% 12%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 232 60% 60%;
+    --sidebar-accent: var(--background-elevated);
+    --sidebar-accent-foreground: var(--foreground-base);
+    --sidebar-border: var(--color-gray-200);
+    --sidebar-ring: var(--color-brand-600);
 }
 
-/**
- * Dark palette — modelled directly on Linear's published LCH tokens (lch values translated to
- * the HSL space shadcn uses). Five elevation steps from page → card → popover, very low-chroma
- * cool borders, plus a saturated Linear indigo-violet (≈ `lch(48 59 288)` ≈ `#5e6ad2`).
- *
- * Linear LCH → HSL conversion:
- *  - bg            `lch(2.4 0 285)`   ≈ `225 12% 5%`
- *  - card          `lch(4.7 1.1 285)` ≈ `225 10% 7%`
- *  - popover       `lch(10.5 2.3 285)` ≈ `225 8% 12%`
- *  - border        `lch(20.5 5.1 285)` ≈ `225 9% 22%`
- *  - text muted    `lch(62.5 1.6 285)` ≈ `225 5% 60%`
- *  - text bright   `lch(90.6 1.6 285)` ≈ `225 6% 88%`
- *  - accent        `lch(48 59 288)`    ≈ `232 60% 65%`
- */
 .dark {
-    --background: 225 12% 5%;
-    --foreground: 225 10% 92%;
-    --card: 225 11% 8%;
-    --card-foreground: 225 10% 92%;
-    --popover: 225 10% 12%;
-    --popover-foreground: 225 10% 92%;
+    --background-base: var(--color-gray-50);
+    --background-layer-1: var(--color-gray-75);
+    --background-layer-2: var(--color-gray-100);
+    --background-subdued: var(--color-gray-150);
+    --background-elevated: var(--color-gray-200);
 
-    --primary: 232 60% 65%;
-    --primary-foreground: 225 12% 5%;
+    --foreground-base: var(--color-gray-900);
+    --foreground-subdued: var(--color-gray-500);
+    --foreground-disabled: var(--color-gray-400);
+    --foreground-heading: var(--color-gray-900);
 
-    --secondary: 225 10% 14%;
-    --secondary-foreground: 225 10% 92%;
-    --muted: 225 10% 14%;
-    --muted-foreground: 225 6% 60%;
-    --accent: 225 10% 18%;
-    --accent-foreground: 225 10% 92%;
-    --destructive: 0 72% 51%;
+    --background: var(--background-base);
+    --foreground: var(--foreground-base);
+    --card: var(--background-layer-1);
+    --card-foreground: var(--foreground-base);
+    --popover: var(--background-layer-2);
+    --popover-foreground: var(--foreground-base);
+
+    --primary: var(--color-brand-500);
+    --primary-foreground: var(--color-gray-50);
+
+    --secondary: var(--background-subdued);
+    --secondary-foreground: var(--foreground-base);
+
+    --muted: var(--background-subdued);
+    --muted-foreground: var(--foreground-subdued);
+
+    --accent: var(--background-elevated);
+    --accent-foreground: var(--foreground-base);
+
+    --destructive: var(--color-danger);
     --destructive-foreground: 0 0% 100%;
-    --border: 225 9% 18%;
-    --input: 225 9% 18%;
-    --ring: 232 60% 65%;
 
-    --chart-1: 232 60% 65%;
-    --chart-2: 160 60% 50%;
-    --chart-3: 30 80% 62%;
+    --border: var(--color-gray-200);
+    --input: var(--color-gray-200);
+    --ring: var(--color-brand-500);
+
+    --chart-1: var(--color-brand-500);
+    --chart-2: var(--color-success);
+    --chart-3: var(--color-warning);
     --chart-4: 280 65% 65%;
     --chart-5: 340 75% 60%;
 
-    --sidebar: 225 12% 6%;
-    --sidebar-foreground: 225 8% 70%;
-    --sidebar-primary: 232 60% 65%;
-    --sidebar-primary-foreground: 225 12% 5%;
-    --sidebar-accent: 225 10% 14%;
-    --sidebar-accent-foreground: 225 10% 92%;
-    --sidebar-border: 225 9% 18%;
-    --sidebar-ring: 232 60% 65%;
+    --sidebar: var(--background-base);
+    --sidebar-foreground: var(--color-gray-600);
+    --sidebar-primary: var(--color-brand-500);
+    --sidebar-primary-foreground: var(--color-gray-50);
+    --sidebar-accent: var(--background-elevated);
+    --sidebar-accent-foreground: var(--foreground-base);
+    --sidebar-border: var(--color-gray-200);
+    --sidebar-ring: var(--color-brand-500);
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Tailwind v4 theme map                                                       */
+/* -------------------------------------------------------------------------- */
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);

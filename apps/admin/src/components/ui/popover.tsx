@@ -29,8 +29,8 @@ function PopoverContent({ className, sideOffset = 6, align = "start", side = "bo
                     data-slot="popover-content"
                     className={cn(
                         "min-w-44 rounded-md border border-border bg-popover p-2 text-popover-foreground text-sm shadow-md outline-none",
-                        "data-[ending-style]:translate-y-1 data-[starting-style]:translate-y-1 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
-                        "transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none",
+                        "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0",
+                        "transition-opacity duration-120 ease-out motion-reduce:transition-none",
                         className,
                     )}
                     {...props}

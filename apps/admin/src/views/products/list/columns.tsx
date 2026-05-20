@@ -202,7 +202,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                 return (
                     <span className="inline-flex items-center gap-2">
                         {product.stockQuantity !== null && (
-                            <span className="font-mono text-muted-foreground text-xs">
+                            <span className="tabular-nums text-muted-foreground text-xs">
                                 {formatNumber(product.stockQuantity, ctx.locale)}
                             </span>
                         )}
@@ -343,7 +343,7 @@ function CategoriesCell({ ids, t }: CategoriesCellProps) {
                     <HoverCardTrigger
                         render={(props) => (
                             <button {...props} type="button" className={cn("rounded")}>
-                                <Badge variant="secondary" className="font-mono text-[10px]">
+                                <Badge variant="secondary" className="tabular-nums text-[10px]">
                                     +{tail.length}
                                 </Badge>
                             </button>

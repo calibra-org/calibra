@@ -12,7 +12,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof BaseTabs.
         <BaseTabs.List
             data-slot="tabs-list"
             className={cn(
-                "relative inline-flex h-9 w-fit items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
+                "relative -mb-px inline-flex h-10 w-fit items-center gap-1 border-border border-b text-muted-foreground",
                 className,
             )}
             {...props}
@@ -25,10 +25,13 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof BaseTa
         <BaseTabs.Tab
             data-slot="tabs-trigger"
             className={cn(
-                "inline-flex h-7 items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium text-sm outline-none transition-all",
-                "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                "relative inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap px-3 font-medium text-sm outline-none transition-colors",
+                /** 2px underline that sits flush on the parent's border-bottom. Linear-style. */
+                "before:pointer-events-none before:absolute before:start-2 before:end-2 before:bottom-0 before:h-[2px] before:rounded-t-sm before:bg-foreground before:opacity-0 before:transition-opacity",
+                "hover:text-foreground",
+                "focus-visible:bg-accent",
                 "disabled:pointer-events-none disabled:opacity-50",
-                "data-[selected]:bg-background data-[selected]:text-foreground data-[selected]:shadow-sm",
+                "data-[selected]:font-semibold data-[selected]:text-foreground data-[selected]:before:opacity-100",
                 className,
             )}
             {...props}
