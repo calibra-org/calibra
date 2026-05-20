@@ -578,16 +578,17 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
                     "relative sticky top-0 z-10 bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
                     "group/header",
                     /**
-                     * Vertical separator drawn as an absolutely positioned pseudo-element rather
-                     * than a CSS border. `<th>` + `border-collapse: collapse` + logical-property
-                     * borders (`border-s`) are rendered inconsistently across browsers when the
-                     * cell also has a backdrop-filter / sticky positioning combo. A 1px pseudo
-                     * element shrinks the question to "is this element visible on screen?", which
-                     * is far more deterministic. `foreground/15` keeps it tone-neutral and visible
-                     * in both light and dark modes regardless of the muted background colour.
+                     * Full-height vertical separator drawn as an absolutely positioned pseudo-
+                     * element. `<th>` + `border-collapse: collapse` + logical-property borders are
+                     * rendered inconsistently across browsers when the cell also has a
+                     * backdrop-filter / sticky positioning combo — a pseudo element is the most
+                     * deterministic way to draw the divider. `foreground/15` stays tone-neutral
+                     * and visible in both modes regardless of the muted header background.
                      */
-                    "before:absolute before:start-0 before:top-2 before:bottom-2 before:w-px before:bg-foreground/15 before:content-['']",
+                    "before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/15 before:content-['']",
                     "first:before:hidden",
+                    /** Pinned cells (select / favorite / actions) sit visually flush with the row gutter — no leading divider. */
+                    isPinned && "before:hidden",
                     headerMeta?.headerClassName,
                 )}
                 style={{ ...widthStyle, ...dragStyle }}
