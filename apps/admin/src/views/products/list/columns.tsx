@@ -68,7 +68,10 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
     return [
         {
             id: "select",
-            meta: { headerClassName: "!px-2", cellClassName: "!px-2" },
+            meta: {
+                headerClassName: "!px-2 sticky start-0 z-20 bg-muted",
+                cellClassName: "!px-2 sticky start-0 z-10 bg-card",
+            },
             header: ({ table }) => {
                 const all = table.getIsAllRowsSelected();
                 const some = table.getIsSomeRowsSelected();
@@ -95,7 +98,15 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         },
         {
             id: "favorite",
-            meta: { headerClassName: "!px-2", cellClassName: "!px-2" },
+            /**
+             * Sticky-start offset of `start-11` (44px) puts the favorite column flush with the
+             * trailing edge of the select column, so on horizontal scroll the checkbox + star
+             * sit pinned together as a single 92px gutter.
+             */
+            meta: {
+                headerClassName: "!px-2 sticky start-11 z-20 bg-muted",
+                cellClassName: "!px-2 sticky start-11 z-10 bg-card",
+            },
             header: () => (
                 <span className="sr-only" aria-hidden="true">
                     {ctx.t("columns.favorite")}
