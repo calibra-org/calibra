@@ -181,6 +181,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         {
             id: "sku",
             header: sortableHeader("sku", ctx.t("columns.sku")),
+            size: 160,
             cell: ({ row }) => (
                 <button
                     type="button"
@@ -188,13 +189,12 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                         event.stopPropagation();
                         void navigator.clipboard?.writeText(row.original.sku);
                     }}
-                    className="font-mono text-muted-foreground text-xs hover:text-foreground"
-                    title={ctx.t("copySku")}
+                    className="block max-w-full truncate font-mono text-muted-foreground text-xs hover:text-foreground"
+                    title={row.original.sku || ctx.t("copySku")}
                 >
                     {row.original.sku || "—"}
                 </button>
             ),
-            size: 110,
         },
         {
             id: "stock",

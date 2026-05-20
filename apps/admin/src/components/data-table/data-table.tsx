@@ -661,8 +661,8 @@ function DataTableBodyRow<TData>({
                             key={cell.id}
                             className={cn(
                                 cellClass,
-                                /** Mirror of the header pseudo-divider — full-height, hidden on first + pinned cells. */
-                                "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
+                                /** Mirror of the header pseudo-divider — same opacity so header + body grid read as one. */
+                                "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/15 before:content-['']",
                                 "first:before:hidden",
                                 isCellPinned && "before:hidden",
                                 (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
