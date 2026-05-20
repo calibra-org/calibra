@@ -227,17 +227,14 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             meta: { headerClassName: "text-end", cellClassName: "text-end" },
             cell: ({ row }) => {
                 const product = row.original;
-                const onSale = product.salePrice !== null;
                 return (
-                    <span className="inline-flex items-baseline gap-1.5 tabular-nums">
-                        {onSale && (
+                    <span className="inline-flex flex-col items-end text-end tabular-nums">
+                        <span className="font-medium">{formatMoney(product.salePrice ?? product.regularPrice, ctx.locale)}</span>
+                        {product.salePrice !== null && (
                             <span className="text-muted-foreground text-xs line-through">
                                 {formatMoney(product.regularPrice, ctx.locale)}
                             </span>
                         )}
-                        <span className={cn("font-medium", onSale && "text-rose-600 dark:text-rose-400")}>
-                            {formatMoney(product.salePrice ?? product.regularPrice, ctx.locale)}
-                        </span>
                     </span>
                 );
             },
