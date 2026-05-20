@@ -72,10 +72,7 @@ function ScrollAreaScrollbar({ className, orientation = "vertical", ...props }: 
         >
             <BaseScrollArea.Thumb
                 data-slot="scroll-area-thumb"
-                className={cn(
-                    "relative flex-1 rounded-full bg-foreground/25 transition-colors",
-                    "hover:bg-foreground/40",
-                )}
+                className={cn("relative flex-1 rounded-full bg-foreground/25 transition-colors", "hover:bg-foreground/40")}
             />
         </BaseScrollArea.Scrollbar>
     );

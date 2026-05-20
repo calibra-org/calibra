@@ -415,86 +415,86 @@ export function DataTable<TData>({
                                         {table.getHeaderGroups().map((headerGroup) => (
                                             <TableRow key={headerGroup.id} className="border-border border-b">
                                                 {headerGroup.headers.map((header) => (
-                                                    <SortableHeader
-                                                        key={header.id}
-                                                        header={header}
-                                                        cellClass={cellClass}
-                                                    />
+                                                    <SortableHeader key={header.id} header={header} cellClass={cellClass} />
                                                 ))}
                                             </TableRow>
                                         ))}
                                     </TableHeader>
-                            <TableBody>
-                                {isError && (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={table.getVisibleLeafColumns().length}
-                                            className="bg-destructive/5 px-4 py-3"
-                                        >
-                                            <div className="flex items-center gap-3 text-destructive">
-                                                <AlertTriangle className="size-4" aria-hidden="true" />
-                                                <span className="text-sm">{labels.errorTitle}</span>
-                                                {onRetry !== undefined && (
-                                                    <Button size="sm" variant="ghost" onClick={onRetry}>
-                                                        {labels.errorRetry}
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
+                                    <TableBody>
+                                        {isError && (
+                                            <TableRow>
+                                                <TableCell
+                                                    colSpan={table.getVisibleLeafColumns().length}
+                                                    className="bg-destructive/5 px-4 py-3"
+                                                >
+                                                    <div className="flex items-center gap-3 text-destructive">
+                                                        <AlertTriangle className="size-4" aria-hidden="true" />
+                                                        <span className="text-sm">{labels.errorTitle}</span>
+                                                        {onRetry !== undefined && (
+                                                            <Button size="sm" variant="ghost" onClick={onRetry}>
+                                                                {labels.errorRetry}
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
 
-                                {isLoading ? (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={table.getVisibleLeafColumns().length}
-                                            className="p-0 [&]:px-0 [&]:py-0"
-                                        >
-                                            <DataTableSkeleton
-                                                columnWidths={skeletonColumnWidths ?? table.getVisibleLeafColumns().map(() => 1)}
-                                                rowHeightClass={rowHeightClass}
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ) : visibleRows.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={table.getVisibleLeafColumns().length}
-                                            className="p-0 [&]:px-0 [&]:py-0"
-                                        >
-                                            <DataTableEmpty
-                                                variant={hasActiveFilters === true ? "filtered" : "empty"}
-                                                title={hasActiveFilters === true ? labels.filtered.title : labels.empty.title}
-                                                description={
-                                                    hasActiveFilters === true
-                                                        ? labels.filtered.description
-                                                        : labels.empty.description
-                                                }
-                                                secondaryAction={
-                                                    hasActiveFilters === true && onClearFilters !== undefined
-                                                        ? {
-                                                              label: labels.clearFiltersLabel ?? "Clear",
-                                                              onClick: onClearFilters,
-                                                          }
-                                                        : undefined
-                                                }
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    visibleRows.map((row, rowIndex) => (
-                                        <DataTableBodyRow
-                                            key={row.id}
-                                            row={row}
-                                            rowIndex={rowIndex}
-                                            cellClass={cellClass}
-                                            rowHeightClass={rowHeightClass}
-                                            renderSubComponent={renderSubComponent}
-                                            onRowOpen={onRowOpen}
-                                        />
-                                    ))
-                                )}
-                            </TableBody>
+                                        {isLoading ? (
+                                            <TableRow>
+                                                <TableCell
+                                                    colSpan={table.getVisibleLeafColumns().length}
+                                                    className="p-0 [&]:px-0 [&]:py-0"
+                                                >
+                                                    <DataTableSkeleton
+                                                        columnWidths={
+                                                            skeletonColumnWidths ?? table.getVisibleLeafColumns().map(() => 1)
+                                                        }
+                                                        rowHeightClass={rowHeightClass}
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : visibleRows.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell
+                                                    colSpan={table.getVisibleLeafColumns().length}
+                                                    className="p-0 [&]:px-0 [&]:py-0"
+                                                >
+                                                    <DataTableEmpty
+                                                        variant={hasActiveFilters === true ? "filtered" : "empty"}
+                                                        title={
+                                                            hasActiveFilters === true ? labels.filtered.title : labels.empty.title
+                                                        }
+                                                        description={
+                                                            hasActiveFilters === true
+                                                                ? labels.filtered.description
+                                                                : labels.empty.description
+                                                        }
+                                                        secondaryAction={
+                                                            hasActiveFilters === true && onClearFilters !== undefined
+                                                                ? {
+                                                                      label: labels.clearFiltersLabel ?? "Clear",
+                                                                      onClick: onClearFilters,
+                                                                  }
+                                                                : undefined
+                                                        }
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            visibleRows.map((row, rowIndex) => (
+                                                <DataTableBodyRow
+                                                    key={row.id}
+                                                    row={row}
+                                                    rowIndex={rowIndex}
+                                                    cellClass={cellClass}
+                                                    rowHeightClass={rowHeightClass}
+                                                    renderSubComponent={renderSubComponent}
+                                                    onRowOpen={onRowOpen}
+                                                />
+                                            ))
+                                        )}
+                                    </TableBody>
                                 </Table>
                             </SortableContext>
                         </DndContext>

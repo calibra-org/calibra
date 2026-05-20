@@ -65,35 +65,35 @@ export function DataTableViewOptions({
                         {labels.columnsHeading}
                     </p>
                     <ScrollArea viewportClassName="max-h-72">
-                    <ul className="flex flex-col">
-                        {columns.map((column) => {
-                            const checked = visibility[column.id] !== false;
-                            return (
-                                <li key={column.id}>
-                                    <button
-                                        type="button"
-                                        disabled={!column.canHide}
-                                        onClick={() => column.canHide && toggle(column.id)}
-                                        className={cn(
-                                            "flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-sm outline-none",
-                                            "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
-                                            !column.canHide && "cursor-not-allowed opacity-50",
-                                        )}
-                                    >
-                                        <Checkbox
-                                            checked={checked}
+                        <ul className="flex flex-col">
+                            {columns.map((column) => {
+                                const checked = visibility[column.id] !== false;
+                                return (
+                                    <li key={column.id}>
+                                        <button
+                                            type="button"
                                             disabled={!column.canHide}
-                                            tabIndex={-1}
-                                            onCheckedChange={() => {
-                                                /** Handled by the surrounding button. */
-                                            }}
-                                        />
-                                        <span className="flex-1 truncate">{column.label}</span>
-                                    </button>
-                                </li>
-                            );
-                        })}
-                    </ul>
+                                            onClick={() => column.canHide && toggle(column.id)}
+                                            className={cn(
+                                                "flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-sm outline-none",
+                                                "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
+                                                !column.canHide && "cursor-not-allowed opacity-50",
+                                            )}
+                                        >
+                                            <Checkbox
+                                                checked={checked}
+                                                disabled={!column.canHide}
+                                                tabIndex={-1}
+                                                onCheckedChange={() => {
+                                                    /** Handled by the surrounding button. */
+                                                }}
+                                            />
+                                            <span className="flex-1 truncate">{column.label}</span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </ScrollArea>
                 </div>
                 <hr className="border-border" />

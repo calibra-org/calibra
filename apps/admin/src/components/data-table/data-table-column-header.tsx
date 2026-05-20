@@ -50,9 +50,7 @@ export function DataTableColumnHeader({
     const dragHandle = useColumnDragHandle();
 
     const titleNode = (
-        <span className="min-w-0 flex-1 truncate font-medium text-muted-foreground text-xs uppercase tracking-wide">
-            {title}
-        </span>
+        <span className="min-w-0 flex-1 truncate font-medium text-muted-foreground text-xs uppercase tracking-wide">{title}</span>
     );
 
     const gripNode = dragHandle.isDraggable ? <ColumnDragGrip /> : null;

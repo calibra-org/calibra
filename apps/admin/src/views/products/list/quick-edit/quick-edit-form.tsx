@@ -157,13 +157,7 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                         <ExternalLink className="size-3.5" aria-hidden="true" />
                         {t("openFullEdit")}
                     </Link>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={onClose}
-                    >
+                    <Button type="button" variant="ghost" size="sm" className="h-7 px-2" onClick={onClose}>
                         {t("cancel")}
                     </Button>
                     <Button
@@ -236,16 +230,8 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                     control={control}
                     name="status"
                     render={({ field }) => (
-                        <Field
-                            id="status"
-                            label={t("status")}
-                            error={errors.status?.message}
-                            span="col-span-6 md:col-span-3"
-                        >
-                            <Select
-                                value={field.value}
-                                onValueChange={(value) => field.onChange(value as ProductStatus)}
-                            >
+                        <Field id="status" label={t("status")} error={errors.status?.message} span="col-span-6 md:col-span-3">
+                            <Select value={field.value} onValueChange={(value) => field.onChange(value as ProductStatus)}>
                                 <SelectTrigger id="status">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -321,10 +307,7 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                         name="stockStatus"
                         render={({ field }) => (
                             <Field id="stockStatus" label={t("stockStatus")} span="col-span-6 md:col-span-4">
-                                <Select
-                                    value={field.value}
-                                    onValueChange={(value) => field.onChange(value as StockStatus)}
-                                >
+                                <Select value={field.value} onValueChange={(value) => field.onChange(value as StockStatus)}>
                                     <SelectTrigger id="stockStatus">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -362,12 +345,7 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                     control={control}
                     name="categoryIdsCsv"
                     render={({ field }) => (
-                        <Field
-                            id="categoryIdsCsv"
-                            label={t("categories")}
-                            hint={t("idCsvHint")}
-                            span="col-span-12 md:col-span-6"
-                        >
+                        <Field id="categoryIdsCsv" label={t("categories")} hint={t("idCsvHint")} span="col-span-12 md:col-span-6">
                             <TokenInput
                                 id="categoryIdsCsv"
                                 value={field.value}
@@ -382,12 +360,7 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                     control={control}
                     name="tagIdsCsv"
                     render={({ field }) => (
-                        <Field
-                            id="tagIdsCsv"
-                            label={t("tags")}
-                            hint={t("idCsvHint")}
-                            span="col-span-12 md:col-span-6"
-                        >
+                        <Field id="tagIdsCsv" label={t("tags")} hint={t("idCsvHint")} span="col-span-12 md:col-span-6">
                             <TokenInput
                                 id="tagIdsCsv"
                                 value={field.value}
