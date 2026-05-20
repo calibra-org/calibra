@@ -227,14 +227,17 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             meta: { headerClassName: "text-end", cellClassName: "text-end" },
             cell: ({ row }) => {
                 const product = row.original;
+                const onSale = product.salePrice !== null;
                 return (
-                    <span className="inline-flex flex-col items-stretch text-end">
-                        <span className="font-medium">{formatMoney(product.salePrice ?? product.regularPrice, ctx.locale)}</span>
-                        {product.salePrice !== null && (
+                    <span className="inline-flex items-baseline gap-1.5 tabular-nums">
+                        {onSale && (
                             <span className="text-muted-foreground text-xs line-through">
                                 {formatMoney(product.regularPrice, ctx.locale)}
                             </span>
                         )}
+                        <span className={cn("font-medium", onSale && "text-rose-600 dark:text-rose-400")}>
+                            {formatMoney(product.salePrice ?? product.regularPrice, ctx.locale)}
+                        </span>
                     </span>
                 );
             },
@@ -243,20 +246,45 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         {
             id: "categories",
             header: () => (
-                <span className="text-muted-foreground text-xs uppercase tracking-wide">{ctx.t("columns.categories")}</span>
+                <DataTableColumnHeader
+                    columnId="categories"
+                    title={ctx.t("columns.categories")}
+                    canSort={false}
+                    sort={ctx.sort}
+                    onSort={ctx.onSort}
+                    labels={ctx.sortLabels}
+                />
             ),
             cell: ({ row }) => <CategoriesCell ids={row.original.categoryIds} t={ctx.t} />,
             enableSorting: false,
         },
         {
             id: "tags",
-            header: () => <span className="text-muted-foreground text-xs uppercase tracking-wide">{ctx.t("columns.tags")}</span>,
+            header: () => (
+                <DataTableColumnHeader
+                    columnId="tags"
+                    title={ctx.t("columns.tags")}
+                    canSort={false}
+                    sort={ctx.sort}
+                    onSort={ctx.onSort}
+                    labels={ctx.sortLabels}
+                />
+            ),
             cell: ({ row }) => <CategoriesCell ids={row.original.tagIds} t={ctx.t} />,
             enableSorting: false,
         },
         {
             id: "brand",
-            header: () => <span className="text-muted-foreground text-xs uppercase tracking-wide">{ctx.t("columns.brand")}</span>,
+            header: () => (
+                <DataTableColumnHeader
+                    columnId="brand"
+                    title={ctx.t("columns.brand")}
+                    canSort={false}
+                    sort={ctx.sort}
+                    onSort={ctx.onSort}
+                    labels={ctx.sortLabels}
+                />
+            ),
             cell: ({ row }) =>
                 row.original.brandId !== null ? (
                     <Badge variant="outline" className="font-normal">
