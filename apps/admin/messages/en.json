@@ -322,7 +322,16 @@
     "Categories": {
         "title": "Categories",
         "subtitle": "Tree of product categories.",
-        "addCategory": "Add category",
+        "subtitleStats": "{total} categories • {topLevel} top-level • {products} products organized",
+        "addCategory": "New category",
+        "untitled": "Untitled category",
+        "untitledHeader": "New category",
+        "expand": "Expand",
+        "collapse": "Collapse",
+        "addChild": "Add child",
+        "delete": "Delete",
+        "dragHandle": "Drag to reorder or reparent",
+        "dropAsChild": "Drop to make a child",
         "table": {
             "name": "Name",
             "slug": "Slug",
@@ -330,7 +339,115 @@
             "productCount": "Products",
             "actions": "Actions"
         },
-        "noParent": "—"
+        "noParent": "—",
+        "tree": {
+            "label": "Category tree"
+        },
+        "toolbar": {
+            "searchPlaceholder": "Search categories by name or slug",
+            "clearSearch": "Clear search",
+            "expandAll": "Expand all",
+            "collapseAll": "Collapse all",
+            "filters": {
+                "all": "All",
+                "topLevel": "Top-level",
+                "withProducts": "With products",
+                "empty": "Empty"
+            }
+        },
+        "hints": {
+            "dragRoot": "Drag a row to reorder",
+            "dragIndent": "Drag sideways to nest"
+        },
+        "emptyTree": {
+            "empty": {
+                "title": "No categories yet",
+                "description": "Categories give your storefront its shape — start with a top-level one like \"Clothing\" or \"Home\".",
+                "cta": "Create first category"
+            },
+            "noResults": {
+                "title": "Nothing matches",
+                "description": "Try a shorter term, or change the filter pill above."
+            }
+        },
+        "inspector": {
+            "badgeNew": "New",
+            "badgeEdit": "Editing",
+            "inspecting": "{name}",
+            "untitled": "Untitled",
+            "untitledHeader": "New category",
+            "close": "Close inspector",
+            "toggleOtherLocale": "Toggle {locale} translation",
+            "menu": {
+                "createSibling": "Create sibling",
+                "createChild": "Add a child category",
+                "delete": "Delete category"
+            },
+            "fields": {
+                "name": {
+                    "label": "Name",
+                    "placeholder": "e.g. Apparel",
+                    "otherPlaceholder": "{locale} translation"
+                },
+                "slug": {
+                    "label": "Slug",
+                    "placeholder": "auto-generated",
+                    "hint": "Used in the storefront URL. Lowercase letters, numbers and dashes only.",
+                    "regenerate": "Regenerate from name"
+                },
+                "parent": {
+                    "label": "Parent"
+                },
+                "description": {
+                    "label": "Description",
+                    "placeholder": "Optional — appears on the category landing page.",
+                    "otherPlaceholder": "{locale} translation",
+                    "todo": "Backend doesn't persist descriptions yet — content is saved locally for preview."
+                }
+            },
+            "cover": {
+                "label": "Cover image",
+                "placeholder": "Drop an image or click to upload",
+                "remove": "Remove",
+                "todo": "Upload endpoint pending"
+            },
+            "parent": {
+                "none": "No parent (top-level)",
+                "untitled": "Untitled",
+                "searchPlaceholder": "Search parents",
+                "noMatches": "No matching categories"
+            },
+            "stats": {
+                "products": "Products",
+                "children": "Direct children",
+                "depth": "Depth"
+            },
+            "buttons": {
+                "save": "Save changes",
+                "create": "Create category",
+                "cancel": "Cancel"
+            },
+            "footer": {
+                "newHint": "Press Enter or Save to add this category.",
+                "editHint": "Changes apply locally until the backend save endpoint ships."
+            },
+            "empty": {
+                "title": "Select a category to edit",
+                "subtitle": "Pick a row from the tree, or start a new one. Categories live in a hierarchy — drag rows in the tree to reorder or to nest one under another.",
+                "cta": "Start a new category",
+                "tip1": "Drag the grip handle to move a row.",
+                "tip2": "Drag horizontally while moving to nest under a sibling.",
+                "tip3": "Use \"Add child\" inside the row menu for quick branching."
+            }
+        },
+        "dropCaption": {
+            "inside": "Nest under {name}",
+            "top": "Move to top level",
+            "reorder": "Reorder",
+            "above": "Place above {name}",
+            "below": "Place below {name}",
+            "dragHint": "Drop somewhere to move"
+        }
     },
     "Tags": {
         "title": "Tags",

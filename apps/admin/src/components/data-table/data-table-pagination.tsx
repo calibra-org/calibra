@@ -33,8 +33,9 @@ interface DataTablePaginationProps {
 }
 
 /**
- * Pagination footer rendered below the table body. Chevron icons are directional: we apply
- * `rtl:rotate-180` to the icon container so a single icon set serves both writing systems.
+ * Pagination footer rendered below the table body. Chevron icons are directional — the
+ * {@link PaginationIconButton} carries `data-rtl-flip` so a single icon set serves both writing
+ * systems (the matching CSS rule lives in `styles/globals.css`).
  */
 export function DataTablePagination({
     meta,
@@ -108,7 +109,8 @@ function PaginationIconButton({
         <Button
             variant="ghost"
             size="icon"
-            className={cn("size-7", "[&_svg]:rtl:rotate-180")}
+            data-rtl-flip
+            className={cn("size-7")}
             disabled={disabled}
             onClick={onClick}
             aria-label={ariaLabel}

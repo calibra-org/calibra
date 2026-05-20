@@ -67,9 +67,14 @@ export async function requireSession(locale: string): Promise<AdminSession> {
         await api.storefront.GET("/api/v1/auth/me", {});
     } catch (err) {
         if (err instanceof BackendError && (err.status === 401 || err.status === 403)) {
-            const store = await cookies();
-            store.delete(SESSION_COOKIE);
-            store.delete(CSRF_COOKIE);
+            /**
+             * Next.js 16 forbids `cookies().delete()` outside server actions / route handlers,
+             * and {@link requireSession} runs during the authenticated layout render — a
+             * server component context where mutation throws. The stale cookie is harmless:
+             * {@link getSession} only checks for presence, and {@link loginAction} overwrites
+             * both cookies on the next successful sign-in. Explicit sign-out still routes
+             * through {@link logoutAction} which clears them in a valid context.
+             */
             redirect({ href: "/login", locale });
             return null as unknown as AdminSession;
         }
