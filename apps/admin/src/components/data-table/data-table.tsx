@@ -592,7 +592,7 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
                      * deterministic way to draw the divider. `foreground/15` stays tone-neutral
                      * and visible in both modes regardless of the muted header background.
                      */
-                    "before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/15 before:content-['']",
+                    "before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
                     "first:before:hidden",
                     /** Start-side pinned cells (select / favorite) sit flush with the row gutter — actions keeps its leading divider. */
                     SORTABLE_HEADER_NO_LEADING_DIVIDER.has(header.column.id) && "before:hidden",
@@ -668,7 +668,7 @@ function DataTableBodyRow<TData>({
                             className={cn(
                                 cellClass,
                                 /** Mirror of the header pseudo-divider — same opacity so header + body grid read as one. */
-                                "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/15 before:content-['']",
+                                "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
                                 "first:before:hidden",
                                 SORTABLE_HEADER_NO_LEADING_DIVIDER.has(cell.column.id) && "before:hidden",
                                 (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
