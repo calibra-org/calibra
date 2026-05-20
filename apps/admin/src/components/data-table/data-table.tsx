@@ -385,7 +385,14 @@ export function DataTable<TData>({
             <div className="overflow-hidden rounded-lg border border-border bg-card" onKeyDown={onTableKeyDown} role="grid">
                 {/** Desktop / tablet: real <table>. */}
                 <div className={cn("hidden md:block", renderCard !== undefined && "md:block")}>
-                    <div className="max-h-[calc(100dvh-22rem)] overflow-y-auto [&_[data-slot=table-container]]:overflow-x-hidden">
+                    {/**
+                     * Sticky positioning on `<th>` anchors to the nearest *scrollable* ancestor.
+                     * The `Table` primitive wraps its `<table>` in a `<div overflow-x-auto>`,
+                     * which would catch the sticky and prevent the header from reacting to *this*
+                     * div's vertical scroll. Forcing that inner container to `overflow-visible`
+                     * lets the sticky bubble up to the outer scroll viewport where it belongs.
+                     */}
+                    <div className="max-h-[calc(100dvh-22rem)] overflow-y-auto [&_[data-slot=table-container]]:overflow-visible">
                         <DndContext
                             sensors={dndSensors}
                             collisionDetection={closestCenter}
