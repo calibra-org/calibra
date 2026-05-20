@@ -69,12 +69,6 @@ export function DataTableColumnHeader({
     const isActive = sort !== undefined && sort.id === columnId;
     const direction = isActive ? sort.direction : undefined;
 
-    const cycle = () => {
-        if (!isActive) return onSort({ id: columnId, direction: "asc" });
-        if (direction === "asc") return onSort({ id: columnId, direction: "desc" });
-        return onSort(undefined);
-    };
-
     const Icon = direction === "asc" ? ArrowUp : direction === "desc" ? ArrowDown : ArrowUpDown;
 
     return (
@@ -93,14 +87,6 @@ export function DataTableColumnHeader({
                                 "text-muted-foreground/60 hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:text-foreground",
                                 isActive && "text-foreground",
                             )}
-                            onClick={(event) => {
-                                event.preventDefault();
-                                cycle();
-                            }}
-                            onContextMenu={(event) => {
-                                event.preventDefault();
-                                cycle();
-                            }}
                         >
                             <Icon className="size-3.5" aria-hidden="true" />
                         </button>

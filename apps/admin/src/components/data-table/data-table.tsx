@@ -394,7 +394,7 @@ export function DataTable<TData>({
                         >
                             <SortableContext items={sortableHeaderIds} strategy={horizontalListSortingStrategy}>
                                 <Table className="w-full">
-                                    <TableHeader className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
+                                    <TableHeader>
                                         {table.getHeaderGroups().map((headerGroup) => (
                                             <TableRow key={headerGroup.id} className="border-border border-b">
                                                 {headerGroup.headers.map((header) => (
@@ -404,9 +404,9 @@ export function DataTable<TData>({
                                                         cellClass={cellClass}
                                                     />
                                                 ))}
-                                    </TableRow>
-                                ))}
-                            </TableHeader>
+                                            </TableRow>
+                                        ))}
+                                    </TableHeader>
                             <TableBody>
                                 {isError && (
                                     <TableRow>
@@ -564,7 +564,17 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
         <ColumnDragHandleProvider attributes={attributes} listeners={listeners} isDragging={isDragging} isDraggable={!isPinned}>
             <TableHead
                 ref={setNodeRef}
-                className={cn(cellClass, "text-start text-xs", "group/header", headerMeta?.headerClassName)}
+                /**
+                 * Sticky on each `<th>` (not the `<thead>`) — `<thead>` sticky breaks when there's
+                 * an inner `overflow-x-auto` ancestor. Cell-level sticky anchors directly to the
+                 * outer scroll viewport every time.
+                 */
+                className={cn(
+                    cellClass,
+                    "sticky top-0 z-10 bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
+                    "group/header",
+                    headerMeta?.headerClassName,
+                )}
                 style={{ ...widthStyle, ...dragStyle }}
             >
                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
