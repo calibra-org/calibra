@@ -42,7 +42,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
     const t = useTranslations("Categories");
     const locale = useLocale() as Locale;
 
-    const tree = useCategoriesTree({ initialRows, locale });
+    const tree = useCategoriesTree({ initialRows });
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<FilterMode>("all");
     const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -79,7 +79,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
          * they were.
          */
         const term = search.trim().toLowerCase();
-        const allFlat = flattenCategoryTree(tree.rows, null, locale);
+        const allFlat = flattenCategoryTree(tree.rows, null);
         const matches = new Set<number>();
         const parents = new Map<number, number | null>();
         for (const row of allFlat) parents.set(row.category.id, row.category.parentId);
@@ -183,7 +183,21 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                 </div>
             </header>
 
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="grid gap-5 lg:grid-cols-[400px_minmax(0,1fr)]">
+                <aside className="lg:sticky lg:top-6 lg:self-start">
+                    <CategoryInspector
+                        rows={tree.rows as AdminCategoryLike[]}
+                        selected={selected}
+                        draft={draft}
+                        locale={locale}
+                        onDraftChange={setDraft}
+                        onCreateNew={handleAddChild}
+                        onSave={handleSave}
+                        onDelete={handleDelete}
+                        onClose={handleClose}
+                    />
+                </aside>
+
                 <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
                     <Toolbar
                         search={search}
@@ -206,6 +220,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                                 activeRow={tree.activeRow}
                                 overId={tree.overId}
                                 projection={tree.projection}
+                                activeProjectedDepth={tree.activeProjectedDepth}
                                 selectedId={selectedId}
                                 locale={locale}
                                 onSelect={handleSelect}
@@ -222,20 +237,6 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
 
                     <KeyboardHints />
                 </div>
-
-                <aside className="lg:sticky lg:top-6 lg:self-start">
-                    <CategoryInspector
-                        rows={tree.rows as AdminCategoryLike[]}
-                        selected={selected}
-                        draft={draft}
-                        locale={locale}
-                        onDraftChange={setDraft}
-                        onCreateNew={handleAddChild}
-                        onSave={handleSave}
-                        onDelete={handleDelete}
-                        onClose={handleClose}
-                    />
-                </aside>
             </div>
         </section>
     );

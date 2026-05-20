@@ -44,7 +44,7 @@ export function ParentPicker({ rows, excludeId, excludeDescendants, value, onCha
             productCount: row.productCount ?? 0,
             imageUrl: row.imageUrl ?? null,
         }));
-        return flattenCategoryTree(adminLike, null, locale).filter((row) => {
+        return flattenCategoryTree(adminLike, null).filter((row) => {
             if (excludeId !== null && row.category.id === excludeId) return false;
             if (excludeDescendants.has(row.category.id)) return false;
             if (query.length === 0) return true;

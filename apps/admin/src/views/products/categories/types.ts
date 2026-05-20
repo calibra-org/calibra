@@ -24,20 +24,17 @@ export interface CategoryTreeRow {
 }
 
 /**
- * Pending drop projection emitted by the drag controller. We don't move the tree until the drop
- * actually commits, but we still need to feed the renderer something to draw the drop indicator
- * and the projected indentation while the row hovers.
+ * Pending drop projection emitted by the drag controller. The renderer reads this to (a) draw
+ * the projected indent on the active row, (b) flag the projected parent for the "drop as child"
+ * halo, and (c) surface the live caption near the cursor.
  */
 export interface DropProjection {
-    /** Target parent id, or `null` for top-level placement. */
+    /** Target parent id after drop, or `null` for top-level placement. */
     parentId: number | null;
     /** 0-based depth the row will live at after the drop. Capped by {@link MAX_TREE_DEPTH}. */
     depth: number;
-    /**
-     * Drop kind — `between` slides the row in between its new siblings; `inside` reparents it
-     * as the first child of `parentId`.
-     */
-    kind: "between" | "inside";
+    /** Whether the projection nests the active row under {@link parentId} (`inside`) or keeps it as a sibling (`reorder`). */
+    kind: "inside" | "reorder";
 }
 
 /** Hard ceiling on visible nesting. Past this point the tree gets unreadable; keep it sensible. */

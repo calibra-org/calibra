@@ -5,7 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronRight, FolderTree, GripVertical, ImageIcon, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
+import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -18,9 +18,12 @@ interface CategoryTreeRowViewProps {
     row: CategoryTreeRow;
     locale: Locale;
     isSelected: boolean;
-    isDragging: boolean;
-    isDropTarget: boolean;
-    projectedDepth: number | null;
+    /** This row is the one currently being dragged — render it dim + slightly scaled. */
+    isActive: boolean;
+    /** The active row's projection lands inside this row (drop-as-child halo). */
+    isDropParent: boolean;
+    /** Override the row's indent while dragging — reflects the projected post-drop depth. */
+    overrideDepth: number | null;
     onSelect: (id: number) => void;
     onToggleExpand: (id: number) => void;
     onAddChild: (parentId: number) => void;
@@ -28,18 +31,24 @@ interface CategoryTreeRowViewProps {
 }
 
 /**
- * Single row in the category tree. Behaves like a button (Enter / Space activate, ←/→ toggle
- * expand, ⋯ for the row menu). Tree-rail rendering happens through `parentChain` rather than
- * dashed name prefixes — every depth gets a thin vertical guide that ends in a soft `⌐` at
- * the row's start so even five-level nestings stay readable.
+ * One row in the category tree. The whole row is the drag activator (with an 8px distance
+ * constraint so clicks still navigate) — the grip handle is purely a visual cue and stays
+ * visible at low opacity so the affordance is discoverable without hovering. The chevron and
+ * action buttons stop pointer propagation so their tap targets stay clickable.
+ *
+ * Visual feedback during drag:
+ *
+ *   - Active row: dimmed + scaled, its indent animates toward the projected depth.
+ *   - Drop-parent row: primary-tinted halo + ring so the user knows where the row will land.
+ *   - Other rows: dnd-kit's transition shifts them out of the way automatically.
  */
 export function CategoryTreeRowView({
     row,
     locale,
     isSelected,
-    isDragging,
-    isDropTarget,
-    projectedDepth,
+    isActive,
+    isDropParent,
+    overrideDepth,
     onSelect,
     onToggleExpand,
     onAddChild,
@@ -47,9 +56,9 @@ export function CategoryTreeRowView({
 }: CategoryTreeRowViewProps) {
     const t = useTranslations("Categories");
     const sortable = useSortable({ id: row.category.id });
-    const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition } = sortable;
+    const { setNodeRef, attributes, listeners, transform, transition } = sortable;
 
-    const depth = projectedDepth ?? row.depth;
+    const depth = overrideDepth ?? row.depth;
     const indentPx = depth * TREE_INDENT_PX;
 
     const style: CSSProperties = {
@@ -77,13 +86,22 @@ export function CategoryTreeRowView({
         onToggleExpand(row.category.id);
     };
 
+    /**
+     * Action buttons live inside the row; without this they'd fight the row's drag listener and
+     * the user would either start a drag instead of clicking, or never click at all.
+     */
+    const stopPointer = (event: PointerEvent) => {
+        event.stopPropagation();
+    };
+
     return (
-        <div ref={setNodeRef} style={style} className={cn("group relative", isDragging && "z-10 opacity-60")}>
-            {/**
-             * Tree rails — one thin vertical line per ancestor. Drawn behind the row so the
-             * gripper / chevron / thumbnail sit on top. The lines stop one row above the last
-             * sibling thanks to `last-of-type:before:h-1/2` styling on the container parent.
-             */}
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={cn("group relative touch-none", isActive && "z-10 scale-[1.01] opacity-60 shadow-md")}
+            {...attributes}
+            {...listeners}
+        >
             <TreeRails depth={row.depth} />
 
             <div
@@ -95,33 +113,29 @@ export function CategoryTreeRowView({
                 onClick={() => onSelect(row.category.id)}
                 onKeyDown={handleRowKeyDown}
                 className={cn(
-                    "flex h-12 items-center gap-2 rounded-lg border border-transparent bg-transparent pe-2 transition-colors",
+                    "flex h-12 items-center gap-2 rounded-lg border border-transparent bg-transparent pe-2 transition-[padding,background,border,box-shadow] duration-150",
                     "hover:bg-accent/40",
                     "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30",
-                    isSelected && "border-primary/30 bg-primary/5 shadow-xs",
-                    isDropTarget && "border-primary/60 bg-primary/10 ring-2 ring-primary/30",
+                    isSelected && !isActive && "border-primary/30 bg-primary/5 shadow-xs",
+                    isDropParent && "border-primary/60 bg-primary/10 ring-2 ring-primary/30",
                 )}
                 style={{ paddingInlineStart: `${indentPx + 8}px` }}
             >
-                <button
-                    ref={setActivatorNodeRef}
-                    type="button"
-                    aria-label={t("dragHandle")}
+                <span
+                    aria-hidden="true"
                     className={cn(
-                        "flex size-7 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-foreground/60 transition-opacity active:cursor-grabbing",
-                        "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
-                        isSelected && "opacity-100",
+                        "flex size-7 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-foreground/50 transition-opacity",
+                        "group-focus-within:text-muted-foreground group-hover:text-muted-foreground",
+                        isActive && "cursor-grabbing text-muted-foreground",
                     )}
-                    onClick={(event) => event.stopPropagation()}
-                    {...attributes}
-                    {...listeners}
                 >
                     <GripVertical className="size-4" aria-hidden="true" />
-                </button>
+                </span>
 
                 <button
                     type="button"
                     onClick={handleChevronClick}
+                    onPointerDown={stopPointer}
                     aria-label={row.isExpanded ? t("collapse") : t("expand")}
                     className={cn(
                         "flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-transform",
@@ -166,6 +180,7 @@ export function CategoryTreeRowView({
                             "flex items-center gap-0.5 opacity-0 transition-opacity",
                             "group-focus-within:opacity-100 group-hover:opacity-100",
                             isSelected && "opacity-100",
+                            isActive && "opacity-0",
                         )}
                     >
                         <Button
@@ -173,6 +188,7 @@ export function CategoryTreeRowView({
                             variant="ghost"
                             size="icon"
                             aria-label={t("addChild")}
+                            onPointerDown={stopPointer}
                             onClick={(event) => {
                                 event.stopPropagation();
                                 onAddChild(row.category.id);
@@ -186,6 +202,7 @@ export function CategoryTreeRowView({
                             variant="ghost"
                             size="icon"
                             aria-label={t("delete")}
+                            onPointerDown={stopPointer}
                             onClick={(event) => {
                                 event.stopPropagation();
                                 onDelete(row.category.id);
@@ -206,10 +223,9 @@ interface TreeRailsProps {
 }
 
 /**
- * Renders `depth` thin vertical guide lines, one per ancestor level. Positioned absolutely
- * inside the row container — they don't take part in the row's flex layout, so changes to row
- * height / padding leave them untouched. The last rail terminates with a short horizontal
- * stub so the eye can connect a parent to its first-child row without dashes in the name.
+ * Renders one thin vertical guide line per ancestor. Drawn behind the row so the grip /
+ * chevron / thumbnail stay on top, and positioned with `insetInlineStart` so the rails flip
+ * naturally under RTL.
  */
 function TreeRails({ depth }: TreeRailsProps) {
     if (depth === 0) return null;
@@ -249,7 +265,7 @@ function CategoryThumb({ url, alt }: CategoryThumbProps) {
         );
     }
     return (
-        // biome-ignore lint/performance/noImgElement: mock CDN, no Next/Image loader for now
+        // biome-ignore lint/performance/noImgElement: mock CDN, no Next/Image loader configured
         <img src={url} alt={alt} loading="lazy" className="size-8 shrink-0 rounded-md border border-border/40 object-cover" />
     );
 }

@@ -439,6 +439,11 @@
                 "tip2": "Drag horizontally while moving to nest under a sibling.",
                 "tip3": "Use \"Add child\" inside the row menu for quick branching."
             }
+        },
+        "dropCaption": {
+            "inside": "Nest under {name}",
+            "top": "Move to top level",
+            "reorder": "Reorder"
         }
     },
     "Tags": {

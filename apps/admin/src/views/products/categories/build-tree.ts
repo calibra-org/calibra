@@ -1,34 +1,50 @@
-import type { Locale } from "@calibra/shared/i18n";
+import { arrayMove } from "@dnd-kit/sortable";
 
 import type { AdminCategory } from "#/lib/types";
 
 import { type CategoryTreeRow, MAX_TREE_DEPTH } from "./types";
 
 /**
- * Build a depth-aware ordered list from the flat category response. Top-level rows are sorted
- * by name in the active locale, and each subtree is sorted the same way. Subtrees of collapsed
- * parents are omitted from the flat output so the renderer can iterate one array.
- *
- * `expandedIds` controls which subtrees are present; pass an empty set to collapse everything.
- * Pass `null` to expand every node (useful for parent-picker dropdowns that always need the
- * full tree visible).
+ * Source-of-truth ordering for the categories list. Sibling rank is encoded by array order — the
+ * drag controller calls {@link moveCategory} with `arrayMove` semantics, and the renderer walks
+ * the array in document order when emitting the flat tree. Initial fetches come back in API
+ * order (typically by id); {@link sortIntoDfsOrder} once at boot keeps the rows in DFS pre-order
+ * so the drag math has a stable index space.
  */
-export function flattenCategoryTree(
-    rows: AdminCategory[],
-    expandedIds: ReadonlySet<number> | null,
-    locale: Locale,
-): CategoryTreeRow[] {
+export function sortIntoDfsOrder(rows: AdminCategory[]): AdminCategory[] {
     const byParent = new Map<number | null, AdminCategory[]>();
     for (const row of rows) {
         const bucket = byParent.get(row.parentId) ?? [];
         bucket.push(row);
         byParent.set(row.parentId, bucket);
     }
-    for (const bucket of byParent.values()) {
-        bucket.sort((a, b) => collator(locale).compare(a.name[locale] ?? "", b.name[locale] ?? ""));
+    const out: AdminCategory[] = [];
+    const walk = (parentId: number | null) => {
+        const bucket = byParent.get(parentId) ?? [];
+        for (const child of bucket) {
+            out.push(child);
+            walk(child.id);
+        }
+    };
+    walk(null);
+    return out;
+}
+
+/**
+ * Build a depth-aware ordered list from the flat category source. Siblings appear in the order
+ * they live in `rows` — no implicit alpha sort, because operators expect their drag-to-reorder
+ * commits to stick. Subtrees of collapsed parents are skipped (pass `expandedIds = null` to
+ * force every node visible, e.g. for the parent-picker dropdown).
+ */
+export function flattenCategoryTree(rows: AdminCategory[], expandedIds: ReadonlySet<number> | null): CategoryTreeRow[] {
+    const byParent = new Map<number | null, AdminCategory[]>();
+    for (const row of rows) {
+        const bucket = byParent.get(row.parentId) ?? [];
+        bucket.push(row);
+        byParent.set(row.parentId, bucket);
     }
 
-    const descendantCount = countDescendants(rows);
+    const descendantCount = countDescendants(byParent);
     const out: CategoryTreeRow[] = [];
 
     const walk = (parentId: number | null, depth: number, chain: number[]) => {
@@ -54,18 +70,7 @@ export function flattenCategoryTree(
     return out;
 }
 
-/**
- * Count descendants (own children + all transitive descendants) for every category id in `rows`.
- * One linear pass over `rows`, one DFS per root — fine for the few-hundred-category ceiling the
- * admin panel realistically renders.
- */
-function countDescendants(rows: AdminCategory[]): Map<number, number> {
-    const byParent = new Map<number | null, AdminCategory[]>();
-    for (const row of rows) {
-        const bucket = byParent.get(row.parentId) ?? [];
-        bucket.push(row);
-        byParent.set(row.parentId, bucket);
-    }
+function countDescendants(byParent: Map<number | null, AdminCategory[]>): Map<number, number> {
     const cache = new Map<number, number>();
     const count = (id: number): number => {
         const cached = cache.get(id);
@@ -76,37 +81,15 @@ function countDescendants(rows: AdminCategory[]): Map<number, number> {
         cache.set(id, total);
         return total;
     };
-    for (const row of rows) count(row.id);
+    for (const bucket of byParent.values()) {
+        for (const row of bucket) count(row.id);
+    }
     return cache;
 }
 
 /**
- * Find the next legal `parentId` for a node dropped at `(overIndex, projectedDepth)` inside the
- * flat tree. The projected parent is the closest preceding row whose depth is one less than
- * the projection. Returns `null` for top-level placement.
- *
- * Caller is responsible for blocking drops onto descendants of the dragged node — that check
- * lives in the drag controller because it needs access to the *original* subtree, not the
- * post-drop projection.
- */
-export function resolveProjectedParent(
-    flatRows: CategoryTreeRow[],
-    overIndex: number,
-    projectedDepth: number,
-): { parentId: number | null; depth: number } {
-    const clampedDepth = Math.max(0, Math.min(projectedDepth, MAX_TREE_DEPTH));
-    if (clampedDepth === 0) return { parentId: null, depth: 0 };
-    for (let i = overIndex; i >= 0; i -= 1) {
-        const row = flatRows[i];
-        if (row === undefined) continue;
-        if (row.depth === clampedDepth - 1) return { parentId: row.category.id, depth: clampedDepth };
-    }
-    return { parentId: null, depth: 0 };
-}
-
-/**
  * IDs of `nodeId` and every descendant. Used by the drag controller to (a) hide the moving
- * subtree from the flat list while dragging, and (b) reject self-parent / cycle drops.
+ * subtree's descendants while dragging, and (b) reject self-parent / cycle drops.
  */
 export function collectSubtreeIds(rows: AdminCategory[], nodeId: number): Set<number> {
     const byParent = new Map<number | null, AdminCategory[]>();
@@ -131,27 +114,93 @@ export function collectSubtreeIds(rows: AdminCategory[], nodeId: number): Set<nu
 }
 
 /**
- * Move `nodeId` so its new parent is `newParentId`. Returns a new array — the source list is
- * left untouched so callers can roll back if the server mutation fails.
+ * Move `activeId` to sit at `overId`'s position with a new `parentId`. Implements the dnd-kit
+ * Sortable Tree pattern: arrayMove on the flat rows array — siblings preserve their relative
+ * order via the array, parent-child structure follows from {@link AdminCategory.parentId}.
  *
- * `siblings` ordering inside a parent is recomputed by the renderer's locale-aware sort, so we
- * deliberately do not thread a position index here. When the API grows a `display_order` field
- * we'll layer that in by writing an explicit `order` column instead of relying on name.
+ * Cycle-safe: callers are expected to have screened out drops that would parent the active row
+ * inside its own subtree (the drag controller does this via {@link collectSubtreeIds}).
  */
-export function reparentCategory(rows: AdminCategory[], nodeId: number, newParentId: number | null): AdminCategory[] {
-    return rows.map((row) => (row.id === nodeId ? { ...row, parentId: newParentId } : row));
+export function moveCategory(
+    rows: AdminCategory[],
+    activeId: number,
+    overId: number,
+    newParentId: number | null,
+): AdminCategory[] {
+    const activeIndex = rows.findIndex((r) => r.id === activeId);
+    const overIndex = rows.findIndex((r) => r.id === overId);
+    if (activeIndex === -1 || overIndex === -1) return rows;
+    const updated = rows.slice();
+    updated[activeIndex] = { ...updated[activeIndex], parentId: newParentId } as AdminCategory;
+    return arrayMove(updated, activeIndex, overIndex);
 }
 
 /**
- * Locale-aware string comparator. Persian (`fa`) uses the `fa-IR` collation; everything else
- * defaults to the locale's own collation. Cached because `Intl.Collator` is non-trivial to
- * construct on every compare callback.
+ * Compute a drop projection from the canonical dnd-kit Sortable Tree rules. The active row
+ * conceptually lands at `overIndex` (an `arrayMove` on the visible flat list). The depth is
+ * derived from the cursor's accumulated horizontal offset, then clamped by the depth of the
+ * post-move predecessor and successor so we never produce orphaned indentation.
+ *
+ * Returns `null` when no legal drop exists (cursor over self, projected parent inside the
+ * moving subtree, etc.) so the renderer can hide the indicator instead of showing a bad target.
  */
-const collators = new Map<Locale, Intl.Collator>();
-function collator(locale: Locale): Intl.Collator {
-    const cached = collators.get(locale);
-    if (cached !== undefined) return cached;
-    const next = new Intl.Collator(locale === "fa" ? "fa-IR" : locale, { sensitivity: "base", numeric: true });
-    collators.set(locale, next);
+export function projectDrop(args: {
+    flatRows: CategoryTreeRow[];
+    activeId: number;
+    overId: number;
+    dragOffsetX: number;
+    indentPx: number;
+    movingSubtree: ReadonlySet<number>;
+}): { depth: number; parentId: number | null; projectedIndex: number } | null {
+    const { flatRows, activeId, overId, dragOffsetX, indentPx, movingSubtree } = args;
+    const overIndex = flatRows.findIndex((r) => r.category.id === overId);
+    const activeIndex = flatRows.findIndex((r) => r.category.id === activeId);
+    if (overIndex === -1 || activeIndex === -1) return null;
+
+    const activeRow = flatRows[activeIndex];
+    const reordered = simulateMove(flatRows, activeIndex, overIndex);
+    const previous = reordered[overIndex - 1];
+    const next = reordered[overIndex + 1];
+    const dragDepth = Math.round(dragOffsetX / indentPx);
+    const projectedDepth = activeRow.depth + dragDepth;
+    const maxDepth = previous === undefined ? 0 : Math.min(previous.depth + 1, MAX_TREE_DEPTH);
+    const minDepth = next === undefined ? 0 : next.depth;
+    const depth = clampDepth(projectedDepth, minDepth, maxDepth);
+
+    const parentId = resolveParentId({ depth, previous, reordered, overIndex });
+    if (parentId !== null && movingSubtree.has(parentId)) return null;
+    return { depth, parentId, projectedIndex: overIndex };
+}
+
+function simulateMove(items: CategoryTreeRow[], fromIndex: number, toIndex: number): CategoryTreeRow[] {
+    if (fromIndex === toIndex) return items;
+    const next = items.slice();
+    const [moved] = next.splice(fromIndex, 1);
+    if (moved === undefined) return items;
+    next.splice(toIndex, 0, moved);
     return next;
+}
+
+function clampDepth(value: number, minDepth: number, maxDepth: number): number {
+    if (value >= maxDepth) return maxDepth;
+    if (value < minDepth) return minDepth;
+    return value;
+}
+
+function resolveParentId(args: {
+    depth: number;
+    previous: CategoryTreeRow | undefined;
+    reordered: CategoryTreeRow[];
+    overIndex: number;
+}): number | null {
+    const { depth, previous, reordered, overIndex } = args;
+    if (depth === 0 || previous === undefined) return null;
+    if (depth === previous.depth) return previous.category.parentId;
+    if (depth > previous.depth) return previous.category.id;
+    for (let i = overIndex - 1; i >= 0; i -= 1) {
+        const row = reordered[i];
+        if (row === undefined) continue;
+        if (row.depth === depth - 1) return row.category.id;
+    }
+    return null;
 }
