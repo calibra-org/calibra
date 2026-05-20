@@ -388,11 +388,13 @@ export function DataTable<TData>({
                     {/**
                      * Table uses native overflow scrolling so the sticky `<th>` cells anchor to a
                      * real CSS scroll context (Base UI's `ScrollArea` `Viewport` clips children
-                     * in a way that confuses `position: sticky` on `<th>`). The `custom-scrollbar`
-                     * utility in `globals.css` repaints the native bar to match the slim aesthetic
-                     * of the rest of the app — same visual language, native behaviour underneath.
+                     * in a way that confuses `position: sticky` on `<th>`). `overflow-auto` lets
+                     * the table scroll horizontally *within its card* when columns don't fit the
+                     * viewport — the global `body { overflow-x: hidden }` still prevents
+                     * page-level horizontal scrolling. The `custom-scrollbar` utility in
+                     * `globals.css` repaints both bars to the slim aesthetic of `<ScrollArea>`.
                      */}
-                    <div className="custom-scrollbar max-h-[calc(100dvh-22rem)] overflow-y-auto [&_[data-slot=table-container]]:overflow-visible">
+                    <div className="custom-scrollbar max-h-[calc(100dvh-22rem)] overflow-auto [&_[data-slot=table-container]]:overflow-visible">
                         <DndContext
                             /**
                              * Stable id prevents the hydration mismatch coming from dnd-kit's
