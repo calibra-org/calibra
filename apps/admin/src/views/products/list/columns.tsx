@@ -229,17 +229,17 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             cell: ({ row }) => {
                 const product = row.original;
                 return (
-                    <span className="inline-flex flex-col items-end text-end tabular-nums">
+                    <div className="flex flex-col items-end text-end tabular-nums">
                         <span className="font-medium">{formatMoney(product.salePrice ?? product.regularPrice, ctx.locale)}</span>
                         {product.salePrice !== null && (
                             <span className="text-muted-foreground text-xs line-through">
                                 {formatMoney(product.regularPrice, ctx.locale)}
                             </span>
                         )}
-                    </span>
+                    </div>
                 );
             },
-            size: 140,
+            size: 200,
         },
         {
             id: "categories",

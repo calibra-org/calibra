@@ -568,11 +568,16 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
                  * Sticky on each `<th>` (not the `<thead>`) — `<thead>` sticky breaks when there's
                  * an inner `overflow-x-auto` ancestor. Cell-level sticky anchors directly to the
                  * outer scroll viewport every time.
+                 *
+                 * The `[&+th]:border-s` selector adds a 1px leading separator to every header cell
+                 * *after* the first, drawing a thin divider between header columns without needing
+                 * to track the index here.
                  */
                 className={cn(
                     cellClass,
                     "sticky top-0 z-10 bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
                     "group/header",
+                    "[tr_th+&]:border-s [tr_th+&]:border-border/60",
                     headerMeta?.headerClassName,
                 )}
                 style={{ ...widthStyle, ...dragStyle }}
