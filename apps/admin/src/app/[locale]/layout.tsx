@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { TooltipProvider } from "#/components/ui/tooltip";
 import { routing } from "#/lib/i18n/routing";
 import { getResolvedTheme } from "#/lib/theme";
+import { cn } from "#/lib/utils";
 import "#/styles/globals.css";
 
 const inter = Inter({
@@ -49,7 +50,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
         <html
             lang={locale}
             dir={directionFor(locale)}
-            className={`${inter.variable} ${vazirmatn.variable}${theme === "dark" ? "dark" : ""}`}
+            className={cn(inter.variable, vazirmatn.variable, theme === "dark" && "dark")}
             style={{ colorScheme: theme }}
             suppressHydrationWarning
         >
