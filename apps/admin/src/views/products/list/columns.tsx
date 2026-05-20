@@ -199,7 +199,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         {
             id: "stock",
             header: sortableHeader("stock", ctx.t("columns.stock")),
-            meta: { headerClassName: "text-end", cellClassName: "text-end" },
+            meta: { cellClassName: "text-end" },
             cell: ({ row }) => {
                 const product = row.original;
                 const showLow =
@@ -225,7 +225,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         {
             id: "price",
             header: sortableHeader("price", ctx.t("columns.price")),
-            meta: { headerClassName: "text-end", cellClassName: "text-end" },
+            meta: { cellClassName: "text-end" },
             cell: ({ row }) => {
                 const product = row.original;
                 return (
@@ -317,7 +317,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         {
             id: "views",
             header: sortableHeader("views", ctx.t("columns.views")),
-            meta: { headerClassName: "text-end", cellClassName: "text-end" },
+            meta: { cellClassName: "text-end" },
             cell: () => <span className="text-muted-foreground text-xs">—</span>,
             size: 100,
         },
