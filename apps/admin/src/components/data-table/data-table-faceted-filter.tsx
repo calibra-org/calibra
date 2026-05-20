@@ -1,9 +1,10 @@
 "use client";
 
-import { Check, PlusCircle } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { type ReactNode, useMemo } from "react";
 
 import { Badge } from "#/components/ui/badge";
+import { Checkbox } from "#/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { ScrollArea } from "#/components/ui/scroll-area";
 import { cn } from "#/lib/utils";
@@ -93,15 +94,13 @@ export function DataTableFacetedFilter({
                                                 "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
                                             )}
                                         >
-                                            <span
-                                                className={cn(
-                                                    "grid size-4 shrink-0 place-items-center rounded-sm border border-primary/40",
-                                                    isSelected && "bg-primary text-primary-foreground",
-                                                )}
-                                                aria-hidden="true"
-                                            >
-                                                {isSelected && <Check className="size-3" />}
-                                            </span>
+                                            <Checkbox
+                                                checked={isSelected}
+                                                tabIndex={-1}
+                                                onCheckedChange={() => {
+                                                    /** Handled by the surrounding button. */
+                                                }}
+                                            />
                                             {option.icon !== undefined && <span aria-hidden="true">{option.icon}</span>}
                                             <span className="flex-1 truncate">{option.label}</span>
                                             {option.count !== undefined && (
