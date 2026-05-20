@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronRight, CornerDownRight, FolderTree, GripVertical, ImageIcon, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, CornerDownRight, FolderTree, GripVertical, ImageIcon, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 
@@ -160,15 +160,25 @@ export function CategoryTreeRowView({
                     onClick={handleChevronClick}
                     onPointerDown={stopPointer}
                     aria-label={row.isExpanded ? t("collapse") : t("expand")}
-                    data-rtl-flip
                     className={cn(
-                        "flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-transform",
+                        "flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors",
                         "hover:bg-muted/70 hover:text-foreground",
                         row.hasChildren ? "opacity-100" : "pointer-events-none opacity-0",
-                        row.isExpanded && "rotate-90",
                     )}
                 >
-                    <ChevronRight className="size-3.5" aria-hidden="true" />
+                    {/**
+                     * Two icons rather than rotating one — under RTL the `data-rtl-flip` scale
+                     * composes with a rotation in the wrong order (CSS spec applies scale
+                     * before rotate on individual transform properties), producing an
+                     * upward-pointing chevron when expanded. Picking the right icon per state
+                     * sidesteps the math entirely: `ChevronDown` is vertically symmetric so it
+                     * doesn't need a flip; `ChevronRight` does.
+                     */}
+                    {row.isExpanded ? (
+                        <ChevronDown className="size-3.5" aria-hidden="true" />
+                    ) : (
+                        <ChevronRight className="size-3.5" data-rtl-flip aria-hidden="true" />
+                    )}
                 </button>
 
                 <CategoryThumb url={row.category.imageUrl} alt={row.category.name[locale] ?? ""} />
