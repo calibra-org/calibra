@@ -575,15 +575,19 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
                  */
                 className={cn(
                     cellClass,
-                    "sticky top-0 z-10 bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
+                    "relative sticky top-0 z-10 bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
                     "group/header",
                     /**
-                     * Every header cell except the first draws a 1px leading divider against the
-                     * previous one. Using `:not(:first-child)` to avoid the dangling start-edge
-                     * border, and `border-s` so the divider follows writing direction (left edge
-                     * in LTR, right edge in RTL).
+                     * Vertical separator drawn as an absolutely positioned pseudo-element rather
+                     * than a CSS border. `<th>` + `border-collapse: collapse` + logical-property
+                     * borders (`border-s`) are rendered inconsistently across browsers when the
+                     * cell also has a backdrop-filter / sticky positioning combo. A 1px pseudo
+                     * element shrinks the question to "is this element visible on screen?", which
+                     * is far more deterministic. `foreground/15` keeps it tone-neutral and visible
+                     * in both light and dark modes regardless of the muted background colour.
                      */
-                    "[&:not(:first-child)]:border-border [&:not(:first-child)]:border-s",
+                    "before:absolute before:start-0 before:top-2 before:bottom-2 before:w-px before:bg-foreground/15 before:content-['']",
+                    "first:before:hidden",
                     headerMeta?.headerClassName,
                 )}
                 style={{ ...widthStyle, ...dragStyle }}
