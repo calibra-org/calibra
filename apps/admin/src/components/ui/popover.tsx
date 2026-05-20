@@ -28,9 +28,10 @@ function PopoverContent({ className, sideOffset = 6, align = "start", side = "bo
                 <BasePopover.Popup
                     data-slot="popover-content"
                     className={cn(
-                        "min-w-44 rounded-md border border-border bg-popover p-2 text-popover-foreground text-sm shadow-md outline-none",
-                        "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0",
-                        "transition-opacity duration-120 ease-out motion-reduce:transition-none",
+                        "min-w-44 origin-[var(--transform-origin)] rounded-md border border-border bg-popover p-2 text-popover-foreground text-sm shadow-md outline-none",
+                        /** Match dropdown-menu / select / hover-card animation so every floating surface in the app reads the same. */
+                        "data-[starting-style]:scale-95 data-[starting-style]:opacity-0 data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
+                        "transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none",
                         className,
                     )}
                     {...props}

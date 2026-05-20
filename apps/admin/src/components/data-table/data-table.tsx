@@ -36,7 +36,6 @@ import { AlertTriangle, type LucideIcon } from "lucide-react";
 import { type CSSProperties, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "#/components/ui/button";
-import { ScrollArea } from "#/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
 
@@ -387,15 +386,13 @@ export function DataTable<TData>({
                 {/** Desktop / tablet: real <table>. */}
                 <div className={cn("hidden md:block", renderCard !== undefined && "md:block")}>
                     {/**
-                     * Custom ScrollArea replaces the native browser scrollbars with the slim
-                     * auto-hiding pair on top of Base UI's primitive. The inner table-container
-                     * is forced to `overflow-visible` so the sticky `<th>` cells can anchor to
-                     * this scroll viewport instead of getting trapped in the table primitive.
+                     * Table uses native overflow scrolling so the sticky `<th>` cells anchor to a
+                     * real CSS scroll context (Base UI's `ScrollArea` `Viewport` clips children
+                     * in a way that confuses `position: sticky` on `<th>`). The `custom-scrollbar`
+                     * utility in `globals.css` repaints the native bar to match the slim aesthetic
+                     * of the rest of the app — same visual language, native behaviour underneath.
                      */}
-                    <ScrollArea
-                        className="[&_[data-slot=table-container]]:overflow-visible"
-                        viewportClassName="max-h-[calc(100dvh-22rem)]"
-                    >
+                    <div className="custom-scrollbar max-h-[calc(100dvh-22rem)] overflow-y-auto [&_[data-slot=table-container]]:overflow-visible">
                         <DndContext
                             sensors={dndSensors}
                             collisionDetection={closestCenter}
@@ -491,7 +488,7 @@ export function DataTable<TData>({
                                 </Table>
                             </SortableContext>
                         </DndContext>
-                    </ScrollArea>
+                    </div>
                 </div>
 
                 {/** Mobile: stacked cards. Only mounted when the caller provides a card renderer. */}

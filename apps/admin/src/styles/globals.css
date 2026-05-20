@@ -264,3 +264,33 @@ html[lang="fa"] {
         overflow-x: hidden;
     }
 }
+
+/**
+ * Slim scrollbar styling applied via opt-in `.custom-scrollbar` class. Used by surfaces where we
+ * need a *real* native scrollbar (e.g. tables with sticky `<th>` cells that don't play nicely
+ * with virtualized scroll viewports) but still want the visual language of our `<ScrollArea>`
+ * primitive — same 8px width, same translucent thumb that fades toward stronger on hover.
+ */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--foreground) / 0.25) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--foreground) / 0.25);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--foreground) / 0.4);
+}
+.custom-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+}
