@@ -104,7 +104,7 @@ export function CategoryTree({
         >
             <SortableContext items={items} strategy={verticalListSortingStrategy}>
                 <div role="tree" aria-label={t("tree.label")} className="flex flex-col gap-0.5">
-                    {flatRowsForDrag.map((row) => {
+                    {flatRowsForDrag.map((row, index) => {
                         const isActive = activeId === row.category.id;
                         const isTarget = projection?.targetId === row.category.id && activeId !== null;
                         const isDropParent = isTarget && projection?.kind === "inside";
@@ -121,6 +121,7 @@ export function CategoryTree({
                                 isDropParent={isDropParent}
                                 showAboveLine={showAboveLine}
                                 showBelowLine={showBelowLine}
+                                isFirst={index === 0}
                                 overrideDepth={overrideDepth}
                                 onSelect={onSelect}
                                 onToggleExpand={onToggleExpand}

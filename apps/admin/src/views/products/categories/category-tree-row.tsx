@@ -26,6 +26,8 @@ interface CategoryTreeRowViewProps {
     showAboveLine: boolean;
     /** Drop indicator below this row — render an insertion line at the bottom edge. */
     showBelowLine: boolean;
+    /** First row in the visible list — skips the top divider. */
+    isFirst: boolean;
     /** Override the row's indent while dragging — reflects the projected post-drop depth. */
     overrideDepth: number | null;
     onSelect: (id: number) => void;
@@ -54,6 +56,7 @@ export function CategoryTreeRowView({
     isDropParent,
     showAboveLine,
     showBelowLine,
+    isFirst,
     overrideDepth,
     onSelect,
     onToggleExpand,
@@ -121,16 +124,28 @@ export function CategoryTreeRowView({
             <TreeRails depth={row.depth} />
 
             {/**
-             * Single drop indicator — a thin horizontal bar in the gap between rows. One
-             * pattern covers all three drop kinds; the bar's `inset-inline-start` encodes
-             * depth, so "nest under target" reads as the same line starting one indent step
-             * deeper, rather than a separate halo on the row. Logical positioning + a
-             * transitioned start so the line slides between depths as the cursor crosses
-             * zones.
+             * Always-visible divider in the gap above this row (skipped on the first row).
+             * Faint by default — operators see where the "insert between" zones are so they
+             * can aim for them. Logical inset-inline so it spans the writing direction
+             * cleanly.
+             */}
+            {!isFirst && (
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute start-3 end-3 h-px bg-border/60"
+                    style={{ top: "-1px" }}
+                />
+            )}
+
+            {/**
+             * Drop indicator — the same thin horizontal bar as the divider, just primary
+             * coloured and thicker, anchored at the projected insertion depth.
              *
-             *   - above target → top edge, line starts at `row.depth` indent
-             *   - below target → bottom edge, line starts at `row.depth` indent
-             *   - inside target → bottom edge, line starts at `row.depth + 1` indent
+             *   - above target → top edge, starts at `row.depth` indent (sits on the
+             *     divider line above this row)
+             *   - below target → bottom edge, starts at `row.depth` indent
+             *   - inside target → bottom edge, starts at `row.depth + 1` indent (deeper
+             *     than the row's own indent, so the bar reads as "new child under this")
              */}
             {(showAboveLine || showBelowLine || isDropParent) && (
                 <span

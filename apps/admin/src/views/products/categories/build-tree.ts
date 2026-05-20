@@ -139,12 +139,19 @@ export function projectDrop(args: {
     const overRow = flatRows.find((r) => r.category.id === overId);
     if (overRow === undefined) return null;
 
+    /**
+     * Zone thresholds — operators aim for the visible divider lines between rows to drop
+     * between items, and for the row body to nest as a child. Borders get a narrow
+     * trigger band (~17 % of the row's height on each edge) and the rest of the row is the
+     * generous "drop into" target. This matches the discoverability pattern every desktop
+     * file manager uses.
+     */
     const canNestInside = overRow.depth < MAX_TREE_DEPTH && !movingSubtree.has(overId);
     const clamped = Math.max(0, Math.min(1, positionInRow));
     let kind: DropProjection["kind"];
     if (canNestInside) {
-        if (clamped < 0.25) kind = "above";
-        else if (clamped > 0.75) kind = "below";
+        if (clamped < 0.17) kind = "above";
+        else if (clamped > 0.83) kind = "below";
         else kind = "inside";
     } else {
         kind = clamped < 0.5 ? "above" : "below";
