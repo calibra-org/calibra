@@ -140,17 +140,17 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             cell: ({ row }) => {
                 const product = row.original;
                 return (
-                    <div className="flex min-w-0 flex-col">
+                    <div className="flex min-w-0 flex-col overflow-hidden">
                         <Link
                             href={`/products/${product.id}` as never}
                             className="truncate font-medium text-foreground hover:text-primary hover:underline"
                         >
                             {product.name[ctx.locale] || `#${product.id}`}
                         </Link>
-                        <div className="invisible flex items-center gap-3 text-xs opacity-0 transition-opacity group-focus-within/row:visible group-focus-within/row:opacity-100 group-hover/row:visible group-hover/row:opacity-100">
+                        <div className="invisible flex min-w-0 items-center gap-2 overflow-hidden whitespace-nowrap text-xs opacity-0 transition-opacity group-focus-within/row:visible group-focus-within/row:opacity-100 group-hover/row:visible group-hover/row:opacity-100">
                             <button
                                 type="button"
-                                className="text-muted-foreground hover:text-foreground hover:underline"
+                                className="shrink-0 text-muted-foreground hover:text-foreground hover:underline"
                                 onClick={() => ctx.onOpenDetail(product)}
                             >
                                 {ctx.t("actions.edit")}
@@ -158,7 +158,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                             <Separator />
                             <button
                                 type="button"
-                                className="text-muted-foreground hover:text-foreground hover:underline"
+                                className="shrink-0 text-muted-foreground hover:text-foreground hover:underline"
                                 onClick={() => ctx.onToggleQuickEdit(String(product.id))}
                             >
                                 {ctx.t("actions.quickEdit")}
@@ -167,7 +167,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                             <Link
                                 href={`/product/${product.slug[ctx.locale]}` as never}
                                 target="_blank"
-                                className="text-muted-foreground hover:text-foreground hover:underline"
+                                className="shrink-0 text-muted-foreground hover:text-foreground hover:underline"
                             >
                                 {ctx.t("actions.view")}
                             </Link>
