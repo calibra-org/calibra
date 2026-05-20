@@ -177,15 +177,17 @@ export type { AdminBrand, AdminCategory, AdminTag };
 
 /**
  * Per-status row counts powering the WP-style status tabs. Fans out one `?perPage=1` request per
- * status the page knows about — each lands on its own cached query key so flipping tabs reuses
- * the count without a refetch. `any` is the unfiltered total.
+ * status the page knows about — each lands on the same cached query key so flipping tabs reuses
+ * the count without a refetch. `any` is the unfiltered total. Statuses the API can't actually
+ * distinguish (`pending` / `private`) return `undefined`, so the UI knows to omit the badge
+ * entirely instead of misleading operators with a phantom `0`.
  */
 export function useProductCountsByStatus() {
     const locale = useLocale() as Locale;
     return useQuery({
         queryKey: ["admin", "product-counts", { locale }],
-        queryFn: async (): Promise<Record<"any" | ProductStatus, number>> => {
-            const fetchTotal = async (status?: SdkProductStatus): Promise<number> => {
+        queryFn: async (): Promise<Partial<Record<"any" | ProductStatus, number>>> => {
+            const fetchTotal = async (status?: SdkProductStatus): Promise<number | undefined> => {
                 try {
                     const payload = await apiGet<ProductListEnvelope>("products", {
                         locale,
@@ -193,7 +195,7 @@ export function useProductCountsByStatus() {
                     });
                     return payload.meta?.total ?? payload.data?.length ?? 0;
                 } catch {
-                    return 0;
+                    return undefined;
                 }
             };
             const [any, draft, publish] = await Promise.all([
@@ -201,8 +203,7 @@ export function useProductCountsByStatus() {
                 fetchTotal("draft"),
                 fetchTotal("published"),
             ]);
-            /** API doesn't model `pending` / `private` separately — clamp them to zero for now. */
-            return { any, draft, publish, pending: 0, private: 0 };
+            return { any, draft, publish };
         },
         staleTime: 30 * 1000,
     });
