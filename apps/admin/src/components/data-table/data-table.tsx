@@ -393,7 +393,7 @@ export function DataTable<TData>({
                             onDragEnd={onDragEnd}
                         >
                             <SortableContext items={sortableHeaderIds} strategy={horizontalListSortingStrategy}>
-                                <Table className="w-full">
+                                <Table className="w-full border-collapse">
                                     <TableHeader>
                                         {table.getHeaderGroups().map((headerGroup) => (
                                             <TableRow key={headerGroup.id} className="border-border border-b">
