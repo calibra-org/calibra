@@ -218,7 +218,6 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                                 flatRowsForDrag={filteredFlatRows}
                                 activeId={tree.activeId}
                                 activeRow={tree.activeRow}
-                                overId={tree.overId}
                                 projection={tree.projection}
                                 activeProjectedDepth={tree.activeProjectedDepth}
                                 selectedId={selectedId}

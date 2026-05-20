@@ -87,12 +87,13 @@ export function useCategoriesTree({ initialRows }: UseCategoriesTreeArgs): Categ
 
     const projection = useMemo<DropProjection | null>(() => {
         if (dropResult === null) return null;
-        const sameParentAsActive = activeRow !== null && activeRow.category.parentId === dropResult.parentId;
-        return {
-            parentId: dropResult.parentId,
-            depth: dropResult.depth,
-            kind: sameParentAsActive ? "reorder" : "inside",
-        };
+        const currentParent = activeRow?.category.parentId ?? null;
+        const nextParent = dropResult.parentId;
+        let kind: DropProjection["kind"] = "reorder";
+        if (nextParent !== currentParent) {
+            kind = nextParent === null ? "promote" : "nest";
+        }
+        return { parentId: nextParent, depth: dropResult.depth, kind };
     }, [dropResult, activeRow]);
 
     const activeProjectedDepth = dropResult?.depth ?? null;

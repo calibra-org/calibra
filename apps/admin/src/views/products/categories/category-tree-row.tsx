@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronRight, FolderTree, GripVertical, ImageIcon, Plus, Trash2 } from "lucide-react";
+import { ChevronRight, CornerDownRight, FolderTree, GripVertical, ImageIcon, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 
@@ -18,12 +18,14 @@ interface CategoryTreeRowViewProps {
     row: CategoryTreeRow;
     locale: Locale;
     isSelected: boolean;
-    /** This row is the one currently being dragged — render it dim + slightly scaled. */
+    /** This row is the one currently being dragged — render it as a destination outline. */
     isActive: boolean;
-    /** The active row's projection lands inside this row (drop-as-child halo). */
+    /** The active row's projection lands inside this row — render with full nesting halo. */
     isDropParent: boolean;
     /** Override the row's indent while dragging — reflects the projected post-drop depth. */
     overrideDepth: number | null;
+    /** Localized name of the projected parent — shown inline on the active row while nesting. */
+    nestingParentName: string | null;
     onSelect: (id: number) => void;
     onToggleExpand: (id: number) => void;
     onAddChild: (parentId: number) => void;
@@ -49,6 +51,7 @@ export function CategoryTreeRowView({
     isActive,
     isDropParent,
     overrideDepth,
+    nestingParentName,
     onSelect,
     onToggleExpand,
     onAddChild,
@@ -98,11 +101,27 @@ export function CategoryTreeRowView({
         <div
             ref={setNodeRef}
             style={style}
-            className={cn("group relative touch-none", isActive && "z-10 scale-[1.01] opacity-60 shadow-md")}
+            className={cn(
+                "group relative touch-none transition-transform",
+                /**
+                 * Active row stays in the list as a dashed destination outline — the solid
+                 * "moving card" is rendered into the DragOverlay so it can follow the cursor.
+                 */
+                isActive && "opacity-50",
+            )}
             {...attributes}
             {...listeners}
         >
             <TreeRails depth={row.depth} />
+
+            {/**
+             * Accent bar on the start side of the projected parent — reads as "this is the
+             * row about to gain a new child" even at a glance, before the eye registers the
+             * background tint or the inline badge.
+             */}
+            {isDropParent && (
+                <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 start-0 w-1 rounded-full bg-primary" />
+            )}
 
             <div
                 role="treeitem"
@@ -117,7 +136,11 @@ export function CategoryTreeRowView({
                     "hover:bg-accent/40",
                     "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30",
                     isSelected && !isActive && "border-primary/30 bg-primary/5 shadow-xs",
-                    isDropParent && "border-primary/60 bg-primary/10 ring-2 ring-primary/30",
+                    /** Active row renders as the destination outline — dashed, no fill. */
+                    isActive && "border-2 border-primary/50 border-dashed bg-primary/5",
+                    /** Drop-parent treatment: bright primary tint, primary border, soft glow. */
+                    isDropParent &&
+                        "border-primary bg-primary/15 shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-primary)_15%,transparent)]",
                 )}
                 style={{ paddingInlineStart: `${indentPx + 8}px` }}
             >
@@ -156,6 +179,12 @@ export function CategoryTreeRowView({
                     <span className="hidden truncate font-mono text-muted-foreground text-xs sm:inline" dir="ltr">
                         /{row.category.slug[locale] || "—"}
                     </span>
+                    {isActive && nestingParentName !== null && (
+                        <Badge className="gap-1 border-primary/60 bg-primary/10 px-2 font-medium text-primary text-xs">
+                            <CornerDownRight className="size-3" aria-hidden="true" />
+                            <span className="max-w-32 truncate">{nestingParentName}</span>
+                        </Badge>
+                    )}
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">

@@ -33,8 +33,15 @@ export interface DropProjection {
     parentId: number | null;
     /** 0-based depth the row will live at after the drop. Capped by {@link MAX_TREE_DEPTH}. */
     depth: number;
-    /** Whether the projection nests the active row under {@link parentId} (`inside`) or keeps it as a sibling (`reorder`). */
-    kind: "inside" | "reorder";
+    /**
+     * What the drop will do, split into three intents so the caption / target halo can speak in
+     * the user's language:
+     *
+     *   - `reorder`  — same parent, different sibling rank.
+     *   - `nest`     — the active row becomes a child of a different row.
+     *   - `promote`  — the active row moves to the top level (no parent).
+     */
+    kind: "reorder" | "nest" | "promote";
 }
 
 /** Hard ceiling on visible nesting. Past this point the tree gets unreadable; keep it sensible. */
