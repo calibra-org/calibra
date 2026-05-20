@@ -121,37 +121,27 @@ export function CategoryTreeRowView({
             <TreeRails depth={row.depth} />
 
             {/**
-             * Flag-style accent on the projected parent's start side — full row height with
-             * the end (inner) edge rounded so it reads as a tab sticking out of the row's
-             * leading edge. `rounded-e-full` is logical so the curved side flips with the
-             * writing direction.
+             * Single drop indicator — a thin vertical bar sitting in the gap between rows.
+             * One pattern covers all three drop kinds; horizontal position encodes depth, so
+             * "nest under target" reads as the same indicator at a deeper indent rather than
+             * a separate halo on the target row. Logical `insetInlineStart` flips the side
+             * automatically under RTL.
+             *
+             *   - above target → above this row, indented to `row.depth`
+             *   - below target → below this row, indented to `row.depth`
+             *   - inside target (this row) → below this row, indented to `row.depth + 1`
              */}
-            {isDropParent && (
-                <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-y-0 start-0 w-1.5 rounded-e-full bg-primary"
-                />
-            )}
-
-            {/**
-             * Insertion line indicators for above/below drops. Drawn between rows (just above
-             * or just below the row's box) and indented to the projected depth. Logical
-             * `start` / `end` so they flip with writing direction.
-             */}
-            {(showAboveLine || showBelowLine) && (
+            {(showAboveLine || showBelowLine || isDropParent) && (
                 <span
                     aria-hidden="true"
                     className={cn(
-                        "pointer-events-none absolute end-2 z-10 h-0.5 rounded-full bg-primary shadow-primary/40 shadow-sm",
-                        showAboveLine ? "-top-px" : "-bottom-px",
+                        "pointer-events-none absolute z-10 h-4 w-[3px] rounded-full bg-primary shadow-md shadow-primary/30 transition-[inset-inline-start] duration-100 ease-out",
+                        showAboveLine ? "-top-2" : "-bottom-2",
                     )}
-                    style={{ insetInlineStart: `${indentPx + 8}px` }}
-                >
-                    <span
-                        className="absolute -top-1 size-2 rounded-full border-2 border-primary bg-background"
-                        style={{ insetInlineStart: "-4px" }}
-                    />
-                </span>
+                    style={{
+                        insetInlineStart: `${(isDropParent ? row.depth + 1 : row.depth) * TREE_INDENT_PX + 12}px`,
+                    }}
+                />
             )}
 
             <div
@@ -173,11 +163,11 @@ export function CategoryTreeRowView({
                     "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30",
                     isSelected && !isActive && "border-primary/30 bg-primary/5 shadow-xs",
                     /**
-                     * Drop-parent treatment: solid primary border + saturated tint. The flag
-                     * accent on the start side + this border read as "this row will adopt the
-                     * incoming row" without any compositing tricks.
+                     * No row-level treatment for the drop target — the vertical indicator bar
+                     * above carries the entire signal. Layering background tint / border here
+                     * fought the indicator for attention and made it harder to tell which row
+                     * the line "belonged" to.
                      */
-                    isDropParent && "border-primary bg-primary/15",
                 )}
                 style={{ paddingInlineStart: `${indentPx + 8}px` }}
             >
