@@ -577,7 +577,13 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
                     cellClass,
                     "sticky top-0 z-10 bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
                     "group/header",
-                    "[tr_th+&]:border-s [tr_th+&]:border-border/60",
+                    /**
+                     * Every header cell except the first draws a 1px leading divider against the
+                     * previous one. Using `:not(:first-child)` to avoid the dangling start-edge
+                     * border, and `border-s` so the divider follows writing direction (left edge
+                     * in LTR, right edge in RTL).
+                     */
+                    "[&:not(:first-child)]:border-border [&:not(:first-child)]:border-s",
                     headerMeta?.headerClassName,
                 )}
                 style={{ ...widthStyle, ...dragStyle }}
