@@ -61,6 +61,9 @@
         "disabled": "Disabled",
         "loading": "Loading…",
         "noResults": "No results found",
+        "refresh": "Refresh",
+        "retry": "Retry",
+        "errorLoading": "Couldn't load the data.",
         "today": "Today",
         "yesterday": "Yesterday",
         "thisWeek": "This week",
@@ -276,7 +279,11 @@
                 "history": "History",
                 "notes": "Notes",
                 "refunds": "Refunds"
-            }
+            },
+            "changeStatus": "Change status",
+            "statusUpdated": "Order status updated.",
+            "statusUpdateFailed": "Couldn't update the order status.",
+            "notFound": "This order doesn't exist."
         }
     },
     "OrderStatus": {

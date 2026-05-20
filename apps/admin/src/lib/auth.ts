@@ -16,6 +16,13 @@ import { redirect } from "#/lib/i18n/navigation";
 
 export const SESSION_COOKIE = "admin_session";
 
+/**
+ * Double-submit CSRF cookie. Readable by client JS (the React Query mutation helpers echo the
+ * value into the `X-CSRF-Token` header); the route-handler proxy compares header against cookie
+ * and rejects mutations that don't match.
+ */
+export const CSRF_COOKIE = "admin_csrf";
+
 export interface AdminSession {
     userId: number;
     email: string;
@@ -62,6 +69,7 @@ export async function requireSession(locale: string): Promise<AdminSession> {
         if (err instanceof BackendError && (err.status === 401 || err.status === 403)) {
             const store = await cookies();
             store.delete(SESSION_COOKIE);
+            store.delete(CSRF_COOKIE);
             redirect({ href: "/login", locale });
             return null as unknown as AdminSession;
         }

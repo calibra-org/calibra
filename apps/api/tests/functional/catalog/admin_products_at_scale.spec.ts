@@ -2,7 +2,7 @@ import testUtils from "@adonisjs/core/services/test_utils";
 import db from "@adonisjs/lucid/services/db";
 import { test } from "@japa/runner";
 
-import BulkDatasetSeeder from "#database/seed_modules/0010_bulk_dataset_seeder";
+import BulkDatasetSeeder, { FIXED_ADMINS } from "#database/seed_modules/0010_bulk_dataset_seeder";
 
 /**
  * Scale-test coverage that runs against a real bulk-seeded dataset (≈1k products / 100 customers
@@ -66,14 +66,15 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
         assert.equal(response.body().meta.total, linkCount);
     });
 
-    test("admin roster is exactly the 3 fixed bulk admins", async ({ assert }) => {
+    test("admin roster matches the FIXED_ADMINS list exactly", async ({ assert }) => {
         const rows = (await db
             .from("users")
             .select("email")
             .where("role", "admin")
             .where("email", "like", "%@bulk.calibra.dev")) as Array<{ email: string }>;
-        const emails = rows.map((r) => r.email).sort();
-        assert.deepEqual(emails, ["admin@bulk.calibra.dev", "ali.admin@bulk.calibra.dev", "sara.admin@bulk.calibra.dev"]);
+        const seeded = rows.map((r) => r.email).sort();
+        const expected = FIXED_ADMINS.map((a) => a.email).sort();
+        assert.deepEqual(seeded, expected);
     });
 
     test("category tree carries the BULK_CATEGORY_TREE shape (8 roots, ≈56 leaves)", async ({ assert }) => {

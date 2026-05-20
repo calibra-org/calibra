@@ -1,0 +1,22 @@
+title: ReportRange
+description: >
+    Time window a report was computed over. `start_date` / `end_date` are inclusive calendar dates
+    in ISO-8601 (`YYYY-MM-DD`) at UTC; `days` is the convenience integer the request asked for
+    (echoed back so clients can re-issue the same query without re-deriving it).
+type: object
+required: [start_date, end_date, days]
+properties:
+    start_date:
+        type: string
+        format: date
+        description: Inclusive start of the window (UTC calendar date).
+    end_date:
+        type: string
+        format: date
+        description: Inclusive end of the window (UTC calendar date).
+    days:
+        type: integer
+        minimum: 1
+        description: Trailing-window length in days that was requested.
+examples:
+    - { start_date: "2026-04-19", end_date: "2026-05-19", days: 30 }

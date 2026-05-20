@@ -779,6 +779,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/reports/top-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Top-selling products (admin)
+         * @description Ranks products by gross revenue over a trailing window (default 30 days). Only `processing` and `completed` orders contribute — refunded / cancelled / failed / draft orders are excluded so the chart matches what the merchant actually billed. Names are resolved from the locale matching `Accept-Language`, falling back to the order's line-item name snapshot when no translation is available (so deleted-product bestsellers still render correctly).
+         *     Window and result-size are capped (`days` ≤ 365, `limit` ≤ 50) to keep the aggregation bounded; it always scans the `order_line_items` ⋈ `orders` join, so very large windows are intentionally rejected upstream of the SQL.
+         */
+        get: operations["adminReportsTopProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products": {
         parameters: {
             query?: never;
@@ -2095,6 +2134,52 @@ export interface components {
             gateway_payload?: {
                 [key: string]: unknown;
             };
+        };
+        /**
+         * TopProduct
+         * @description One product row inside a top-sellers report. Aggregates units sold and gross revenue across every line item the product appeared in within the report window. `name` is resolved from the locale matching `Accept-Language` with a fallback to the order's line-item snapshot, so historical bestsellers still render correctly after a rename or product deletion.
+         * @example {
+         *       "product_id": 30941,
+         *       "name": "دوربین دیجیتال Nikon مدل Z6 II",
+         *       "sku": "BULK-000541-5KMK",
+         *       "units": 7,
+         *       "revenue": 1440694241
+         *     }
+         */
+        TopProduct: {
+            /** @description Primary key of the product the line items reference. */
+            product_id: number;
+            /** @description Locale-resolved product name (or the order-time snapshot when the product was deleted / has no matching translation). */
+            name: string;
+            /** @description SKU as captured on the order line at sale time. Null only if the original product had no SKU. */
+            sku?: string | null;
+            /** @description Total number of units sold across all line items contributing to the row. */
+            units: number;
+            /** @description Gross revenue (sum of `total` across contributing line items) in Rial minor units. */
+            revenue: components["schemas"]["Money"];
+        };
+        /**
+         * ReportRange
+         * @description Time window a report was computed over. `start_date` / `end_date` are inclusive calendar dates in ISO-8601 (`YYYY-MM-DD`) at UTC; `days` is the convenience integer the request asked for (echoed back so clients can re-issue the same query without re-deriving it).
+         * @example {
+         *       "start_date": "2026-04-19",
+         *       "end_date": "2026-05-19",
+         *       "days": 30
+         *     }
+         */
+        ReportRange: {
+            /**
+             * Format: date
+             * @description Inclusive start of the window (UTC calendar date).
+             */
+            start_date: string;
+            /**
+             * Format: date
+             * @description Inclusive end of the window (UTC calendar date).
+             */
+            end_date: string;
+            /** @description Trailing-window length in days that was requested. */
+            days: number;
         };
         /**
          * AdminProduct
@@ -3709,6 +3794,36 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    adminReportsTopProducts: {
+        parameters: {
+            query?: {
+                /** @description Trailing window in days. Defaults to 30; capped at 365. */
+                days?: number;
+                /** @description Maximum number of rows to return. Defaults to 5; capped at 50. */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Top products ranked by gross revenue, descending. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TopProduct"][];
+                        range: components["schemas"]["ReportRange"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     adminProductsIndex: {

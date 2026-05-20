@@ -69,6 +69,8 @@ apps/api/
 - **Validators are VineJS, called inside the controller** until they grow more than a handful of lines — then extract into `app/validators/<resource>_validator.ts` and import.
 - **Migrations are immutable once shipped.** Use a new migration to alter an existing table, never edit history. Seeders must be idempotent (`updateOrCreate`, not `create`).
 - **Pagination response envelope:** `{ data: T[], meta: { page, perPage, total, lastPage } }` — produced by `Transformer.paginate(paginator)`. The SDK's `Paginated<T>` matches this exactly; keep them in sync.
+- **Every new endpoint ships with a Japa functional test.** Mandatory, no exceptions. Live under `tests/functional/<domain>/<resource>.spec.ts` (mirror the controller layout — e.g. `app/controllers/admin/reports_controller.ts` → `tests/functional/admin/reports.spec.ts`). Cover at minimum: the unauthenticated 401, an unauthorized 403 (if the route is admin-only or otherwise gated), the happy-path 200 with `response.assertAgainstApiSpec()` (this is what enforces the schema is real), and each meaningful query/filter dimension as its own test. Don't open a PR with a new endpoint and "I tested manually with curl" — the spec assertion *is* the contract and CI runs it.
+- **Response shapes are named components, never inlined.** Anything that returns a domain object (product row, report row, range window, …) gets a schema file at `docs/api/reference/openapi/common/components/schemas/<Entity>.yaml` and is `$ref`'d from the path file. Inlined `properties: { ... }` blocks in path files are a code smell — they hide the entity, prevent reuse, bloat the bundle, and produce anonymous types in the generated SDK. The litmus test: if the same shape might appear in a sibling endpoint *ever*, extract now. Examples already in `common/components/schemas/`: `Money`, `PaginationMeta`, `Address`, `Region`, `Translation`, `BasicMessage`, `ValidationErrorMessage`, `TopProduct`, `ReportRange`.
 
 ## Common commands
 
@@ -89,7 +91,7 @@ pnpm --filter @calibra/api dev          # api only (node ace serve --hmr)
 just migrate                            # node ace migration:run
 just migrate-rollback                   # node ace migration:rollback
 just seed                               # node ace db:seed (runs MainSeeder — small demo dataset)
-just ace 'db:bulk-seed'                 # ~10k products / 1k users / 5k orders (idempotent, opt-in)
+just ace 'db:bulk-seed'                 # ~100k products / 500k users + 20 admins / ~100k orders (derived from --users at 20%); idempotent, opt-in
 just ace 'db:bulk-seed --reset'         # wipe just the bulk dataset and re-seed
 just ace 'make:controller orders'       # scaffold a controller
 just ace 'make:model Order -m'          # model + migration in one go

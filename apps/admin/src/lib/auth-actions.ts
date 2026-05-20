@@ -1,11 +1,12 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { BackendError, createApiClient } from "@calibra/sdk";
 import { cookies } from "next/headers";
 
 import { redirect } from "#/lib/i18n/navigation";
 
-import { getSession, SESSION_COOKIE } from "./auth";
+import { CSRF_COOKIE, getSession, SESSION_COOKIE } from "./auth";
 
 interface LoginState {
     ok: boolean;
@@ -80,6 +81,19 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 7,
     });
+    /**
+     * Companion CSRF token: readable by client JS so the React Query mutation helpers can echo it
+     * into the `X-CSRF-Token` header. The route handler proxy rejects mutations whose header value
+     * doesn't match this cookie, blocking cross-origin requests even if the SameSite policy ever
+     * relaxes.
+     */
+    store.set(CSRF_COOKIE, randomUUID(), {
+        httpOnly: false,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7,
+    });
     /** `redirect` throws an internal Next.js exception, so this never returns. The explicit
      * unreachable success object satisfies TypeScript's control-flow analysis. */
     redirect({ href: "/dashboard", locale });
@@ -101,5 +115,6 @@ export async function logoutAction(): Promise<void> {
         }
     }
     store.delete(SESSION_COOKIE);
+    store.delete(CSRF_COOKIE);
     redirect({ href: "/login", locale: "fa" });
 }

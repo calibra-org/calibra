@@ -1,0 +1,119 @@
+"use client";
+
+import type { AdminSchemas } from "@calibra/sdk";
+import type { Locale } from "@calibra/shared/i18n";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocale } from "next-intl";
+
+import { type SdkAdminOrderListRow, toAdminOrderDetail, toAdminOrderListRow } from "#/lib/adapters/orders";
+import { apiGet, apiMutate } from "#/lib/queries/api-client";
+import type { AdminOrder, OrderStatus, Paginated } from "#/lib/types";
+
+type Schemas = AdminSchemas["schemas"];
+
+interface OrderEnvelope {
+    data: Schemas["AdminOrderDetail"];
+}
+
+interface OrderListEnvelope {
+    data: SdkAdminOrderListRow[];
+    meta?: { page: number; perPage: number; total: number; lastPage: number };
+}
+
+export interface OrdersListParams {
+    page?: number;
+    perPage?: number;
+    status?: OrderStatus | "any";
+    search?: string;
+}
+
+/**
+ * Paginated admin orders list. `status === "any"` (and `undefined`) skip the filter; non-`any`
+ * values feed the API's `status=` query. Search is forwarded verbatim. Every filter dimension
+ * lives in the query key so toggles refetch instead of mutating the same cache entry.
+ */
+export function useOrdersList(params: OrdersListParams = {}) {
+    const locale = useLocale() as Locale;
+    const page = params.page ?? 1;
+    const perPage = params.perPage ?? 20;
+    const status = params.status === "any" ? undefined : params.status;
+    const search = params.search;
+    return useQuery<OrderListEnvelope, Error, Paginated<AdminOrder>>({
+        queryKey: ["admin", "orders", "list", { locale, page, perPage, status, search }],
+        queryFn: () =>
+            apiGet<OrderListEnvelope>("orders", {
+                locale,
+                query: { page, perPage, status, search },
+            }),
+        select: (payload) => ({
+            data: (payload.data ?? []).map(toAdminOrderListRow),
+            meta: payload.meta ?? { page, perPage, total: payload.data?.length ?? 0, lastPage: 1 },
+        }),
+    });
+}
+
+/**
+ * Single order detail. Keyed by `id` only — locale lives in the query key so a language flip
+ * refetches the localized payload, but the actual data shape doesn't depend on it.
+ *
+ * `enabled: id > 0` guards against rendering a hook before the route param resolves; this keeps
+ * the empty-state path in the page component simple.
+ */
+export function useOrder(id: number) {
+    const locale = useLocale() as Locale;
+    return useQuery<OrderEnvelope, Error, AdminOrder>({
+        queryKey: ["admin", "orders", "detail", id, { locale }],
+        queryFn: () => apiGet<OrderEnvelope>(`orders/${id}`, { locale }),
+        select: (payload) => toAdminOrderDetail(payload.data),
+        enabled: id > 0,
+    });
+}
+
+export interface OrderStatusTransitionInput {
+    id: number;
+    to_status: OrderStatus;
+    reason?: string;
+}
+
+/**
+ * Posts `/api/v1/admin/orders/{id}/status` through the proxy. The optimistic-update wrapper lives
+ * in the order-detail view and pivots on this mutation via React Query's onMutate / onError / onSettled.
+ */
+export function useUpdateOrderStatus() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+
+    return useMutation<OrderEnvelope, Error, OrderStatusTransitionInput, { previous?: OrderEnvelope }>({
+        mutationFn: ({ id, to_status, reason }) =>
+            apiMutate<OrderEnvelope>("POST", `orders/${id}/status`, {
+                locale,
+                body: reason !== undefined ? { to_status, reason } : { to_status },
+            }),
+        /**
+         * Snapshot the current order envelope, optimistically patch the visible status, and stash
+         * the snapshot for rollback. Note we patch the raw envelope (`data.status`) because the
+         * query's `select` runs `toAdminOrderDetail` again every render.
+         */
+        onMutate: async ({ id, to_status }) => {
+            const detailKeyMatch = { queryKey: ["admin", "orders", "detail", id] };
+            await queryClient.cancelQueries(detailKeyMatch);
+            const previous = queryClient.getQueryData<OrderEnvelope>(["admin", "orders", "detail", id, { locale }]);
+            if (previous) {
+                queryClient.setQueryData<OrderEnvelope>(["admin", "orders", "detail", id, { locale }], {
+                    ...previous,
+                    data: { ...previous.data, status: to_status as Schemas["AdminOrderDetail"]["status"] },
+                });
+            }
+            return { previous };
+        },
+        onError: (_err, { id }, context) => {
+            if (context?.previous) {
+                queryClient.setQueryData(["admin", "orders", "detail", id, { locale }], context.previous);
+            }
+        },
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard", "orders"] });
+        },
+    });
+}

@@ -30,48 +30,78 @@ const BULK_SKU_PREFIX = "BULK-";
 const SHARED_PASSWORD = "Passw0rd1!";
 
 /**
- * Optional knobs for callers. The `db:bulk-seed` ace command surfaces these as CLI flags.
+ * Optional knobs for callers. The `db:bulk-seed` ace command surfaces these as CLI flags. Leaving
+ * `orders` / `reviews` unset triggers the realistic-ratio derivation in {@link BulkDatasetSeeder}
+ * (orders ≈ 20% of customers ever buy, reviews ≈ 60% of completed orders); pass an explicit
+ * number to override.
  */
 export interface BulkSeederOptions {
     products?: number;
     users?: number;
     orders?: number;
+    reviews?: number;
     reset?: boolean;
 }
 
 /**
+ * Share of customers who place at least one order in the seeded window. Anchors `orders` to the
+ * `users` count when the caller doesn't override `--orders` — picked to model a real merchant
+ * where most signups never convert. Tweak together with {@link REVIEW_OF_ORDERS_RATIO} if the
+ * dashboard charts need denser data.
+ */
+const ORDER_OF_CUSTOMERS_RATIO = 0.2;
+
+/**
+ * Share of orders that earn a product review. Real-world e-commerce sees 5–15%; we run higher so
+ * the admin review-moderation page has enough rows to exercise filters and pagination.
+ */
+const REVIEW_OF_ORDERS_RATIO = 0.6;
+
+/**
  * Realistic Iranian e-commerce dataset generator. Produces:
  *
- *   - `users` users (≈99.5% `customer`, ≈0.5% `admin`) tagged with `@bulk.calibra.dev`
+ *   - `users` users (a fixed roster of 20 named admins from {@link FIXED_ADMINS}, all other rows
+ *     get `role: customer`) tagged with `@bulk.calibra.dev`
  *   - one `customers` row per user, 1–3 addresses each, IR profile + valid `national_id`
  *     checksum on ~70% of customers
  *   - `products` products tagged with `BULK-` SKU prefix, ~80% simple / ~18% variable /
  *     ~2% grouped, status mix ~85% publish / ~10% draft / ~5% pending, ~30–40% on sale, 1–4
  *     images per product (picsum URLs keyed off the slug), `fa`+`en` translations, 1–3 category
  *     links and a ~50% brand link, one `inventory_items` row per simple product and per variation
- *   - ~`orders` orders distributed across the customers with realistic status, internally
+ *   - `orders` orders distributed across the customers with realistic status, internally
  *     consistent totals (subtotal + shipping + tax − discount = grand_total), 1–8 line items
  *     each, spread across the last 18 months
- *   - ~3,000 product reviews tied to completed orders so `verified` is meaningful
+ *   - `reviews` product reviews tied to completed orders so `verified` is meaningful
  *
  * Idempotent — re-running with no flags changes zero rows. Use `--reset` to wipe just the bulk
  * dataset (the demo seeders' `@calibra.dev` users and non-`BULK-` products are untouched).
  *
- * Performance target: full default run (10k products / 1k users / 5k orders) completes in under
- * 90 seconds on a developer laptop against the docker-compose Postgres. Inserts go through
- * `multiInsert` in batches of {@link BATCH} rows.
+ * Default volumes target a mature merchant snapshot: **100,000 products / 500,000 users + 20
+ * admins / 100,000 orders / 60,000 reviews**. Orders and reviews derive from the resolved
+ * customer count via {@link ORDER_OF_CUSTOMERS_RATIO} and {@link REVIEW_OF_ORDERS_RATIO} when
+ * the caller doesn't supply `--orders` / `--reviews`, so shrinking `--users` automatically
+ * shrinks the downstream volumes proportionally. A fresh full run takes roughly 10–15 minutes on
+ * the dev docker-compose Postgres. Inserts go through `multiInsert` in batches of {@link BATCH}
+ * rows.
  */
 export default class BulkDatasetSeeder extends BaseSeeder {
-    private options: Required<BulkSeederOptions> = {
-        products: 10_000,
-        users: 1_000,
-        orders: 5_000,
-        reset: false,
-    };
+    private options: BulkSeederOptions = {};
 
     setOptions(options: BulkSeederOptions): this {
         this.options = { ...this.options, ...options };
         return this;
+    }
+
+    /**
+     * Resolves the raw option object into the four concrete row targets the seeder writes against.
+     * Encapsulates the derivation rules so the run loop just sees four numbers.
+     */
+    private resolveTotals(): { products: number; users: number; orders: number; reviews: number } {
+        const products = this.options.products ?? 100_000;
+        const users = this.options.users ?? 500_000;
+        const orders = this.options.orders ?? Math.floor(users * ORDER_OF_CUSTOMERS_RATIO);
+        const reviews = this.options.reviews ?? Math.floor(orders * REVIEW_OF_ORDERS_RATIO);
+        return { products, users, orders, reviews };
     }
 
     async run() {
@@ -79,9 +109,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         fakerFa.seed(42);
         fakerEn.seed(42);
 
-        const totals = this.options;
+        const totals = this.resolveTotals();
 
-        if (totals.reset) await this.reset();
+        if (this.options.reset) await this.reset();
 
         const now = DateTime.utc().toSQL();
 
@@ -106,11 +136,16 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         const usersNeeded = Math.max(0, totals.users - existing.users);
         const productsNeeded = Math.max(0, totals.products - existing.products);
         const ordersNeeded = Math.max(0, totals.orders - existing.orders);
+        const earlyReviewsNeeded = Math.max(0, totals.reviews - existing.reviews);
 
-        if (usersNeeded === 0 && productsNeeded === 0 && ordersNeeded === 0) {
+        if (usersNeeded === 0 && productsNeeded === 0 && ordersNeeded === 0 && earlyReviewsNeeded === 0) {
             console.log("Bulk dataset already at or above target — nothing to insert. Pass --reset to start over.");
             return;
         }
+
+        console.log(
+            `Targets: users=${totals.users}, products=${totals.products}, orders=${totals.orders}, reviews=${totals.reviews}`,
+        );
 
         const passwordHash = usersNeeded > 0 ? await hash.use("scrypt").make(SHARED_PASSWORD) : "";
 
@@ -139,9 +174,10 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             );
         }
 
-        if (existing.reviews < 3_000 && ordersNeeded > 0) {
+        const reviewsNeeded = Math.max(0, totals.reviews - existing.reviews);
+        if (reviewsNeeded > 0 && ordersNeeded > 0) {
             console.time("[bulk-seed] reviews");
-            const reviewInserted = await this.seedReviews(3_000 - existing.reviews, now);
+            const reviewInserted = await this.seedReviews(reviewsNeeded, now);
             console.timeEnd("[bulk-seed] reviews");
             console.log(`Inserted ${reviewInserted} reviews`);
         }
@@ -424,9 +460,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         if (userRows.length === 0) return { users: 0, customers: 0 };
 
         /**
-         * Fixed admin roster. Real ops teams have a handful of named admins, not a
-         * percentage-based slice — pre-pend each missing entry so a fresh `--reset` always lands
-         * the same four logins regardless of `--users`.
+         * Pre-pend the {@link FIXED_ADMINS} roster so a fresh `--reset` always lands the same 20
+         * named operator logins regardless of `--users`. Already-present admin emails are skipped
+         * so re-running with a larger `--users` flag doesn't duplicate them.
          */
         for (const admin of FIXED_ADMINS) {
             if (existingEmails.has(admin.email)) continue;
@@ -1297,14 +1333,35 @@ const PERSIAN_REVIEW_SAMPLES = [
 ];
 
 /**
- * Fixed admin roster. Real ops teams have a handful of named admins, not a percentage of the
+ * Fixed admin roster. Real ops teams have a named roster of admins, not a percentage of the
  * customer base. Each entry seeds one user with `role: admin` and the password is the shared
  * `Passw0rd1!`. Idempotent — already-present emails are skipped on subsequent runs.
+ *
+ * Exported so tests can assert against the canonical list without duplicating emails. If you add
+ * or remove entries, the scale test in `tests/functional/catalog/admin_products_at_scale.spec.ts`
+ * picks the change up automatically.
  */
-const FIXED_ADMINS: Array<{ email: string; firstName: string; lastName: string }> = [
+export const FIXED_ADMINS: ReadonlyArray<{ email: string; firstName: string; lastName: string }> = [
     { email: "admin@bulk.calibra.dev", firstName: "مدیر", lastName: "ارشد" },
     { email: "ali.admin@bulk.calibra.dev", firstName: "علی", lastName: "صادقی" },
     { email: "sara.admin@bulk.calibra.dev", firstName: "سارا", lastName: "محمدی" },
+    { email: "reza.admin@bulk.calibra.dev", firstName: "رضا", lastName: "کریمی" },
+    { email: "maryam.admin@bulk.calibra.dev", firstName: "مریم", lastName: "احمدی" },
+    { email: "hossein.admin@bulk.calibra.dev", firstName: "حسین", lastName: "جعفری" },
+    { email: "fatemeh.admin@bulk.calibra.dev", firstName: "فاطمه", lastName: "حسینی" },
+    { email: "mehdi.admin@bulk.calibra.dev", firstName: "مهدی", lastName: "رحیمی" },
+    { email: "zahra.admin@bulk.calibra.dev", firstName: "زهرا", lastName: "موسوی" },
+    { email: "amir.admin@bulk.calibra.dev", firstName: "امیر", lastName: "طاهری" },
+    { email: "elahe.admin@bulk.calibra.dev", firstName: "الهه", lastName: "شریفی" },
+    { email: "hamid.admin@bulk.calibra.dev", firstName: "حمید", lastName: "رضایی" },
+    { email: "niloofar.admin@bulk.calibra.dev", firstName: "نیلوفر", lastName: "فرهادی" },
+    { email: "saeed.admin@bulk.calibra.dev", firstName: "سعید", lastName: "کاظمی" },
+    { email: "nazanin.admin@bulk.calibra.dev", firstName: "نازنین", lastName: "صفری" },
+    { email: "pouya.admin@bulk.calibra.dev", firstName: "پویا", lastName: "نوری" },
+    { email: "shirin.admin@bulk.calibra.dev", firstName: "شیرین", lastName: "داوودی" },
+    { email: "bahram.admin@bulk.calibra.dev", firstName: "بهرام", lastName: "مهرابی" },
+    { email: "yasaman.admin@bulk.calibra.dev", firstName: "یاسمن", lastName: "قاسمی" },
+    { email: "arash.admin@bulk.calibra.dev", firstName: "آرش", lastName: "بهرامی" },
 ];
 
 /**

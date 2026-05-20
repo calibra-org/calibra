@@ -2,6 +2,11 @@ import "server-only";
 
 import type { AdminSchemas } from "@calibra/sdk";
 
+import { toAdminCoupon } from "./adapters/coupons";
+import { toAdminCustomer } from "./adapters/customers";
+import { type SdkAdminOrderListRow, toAdminOrderDetail, toAdminOrderListRow } from "./adapters/orders";
+import { toAdminProduct } from "./adapters/products";
+import { toAdminReview } from "./adapters/reviews";
 import { apiServer } from "./api";
 import type {
     AdminAttribute,
@@ -11,13 +16,6 @@ import type {
     AdminCoupon,
     AdminCustomer,
     AdminOrder,
-    AdminOrderAddress,
-    AdminOrderCouponLine,
-    AdminOrderLineItem,
-    AdminOrderNote,
-    AdminOrderShippingLine,
-    AdminOrderStatusHistoryEntry,
-    AdminOrderTaxLine,
     AdminPaymentGateway,
     AdminProduct,
     AdminRefund,
@@ -29,10 +27,8 @@ import type {
     AdminTag,
     AdminTaxClass,
     AdminTaxRate,
-    DashboardStats,
     LocalizedString,
     MoneyMinor,
-    OrderStatus,
     Paginated,
     PaymentGatewayCode,
     ProductStatus,
@@ -51,20 +47,6 @@ type SdkAdminReview = Schemas["AdminReview"];
 type SdkAdminCustomer = Schemas["AdminCustomer"];
 type SdkAdminCoupon = Schemas["AdminCoupon"];
 type SdkAdminPaymentGateway = Schemas["AdminPaymentGateway"];
-type SdkOrderAddress = Schemas["OrderAddress"];
-type SdkAdminOrderDetail = Schemas["AdminOrderDetail"];
-
-/** The /admin/orders index endpoint returns this trimmed shape, not OrderDetail. */
-interface SdkAdminOrderListRow {
-    id?: number;
-    order_number?: number;
-    status?: string;
-    customer_id?: number | null;
-    billing_email?: string | null;
-    grand_total?: number;
-    currency?: string;
-    created_at?: string;
-}
 
 interface ListParams {
     page?: number;
@@ -106,33 +88,6 @@ const SDK_PRODUCT_STATUS_MAP: Record<ProductStatus, "draft" | "published" | "arc
 interface ProductListParams extends ListParams {
     status?: ProductStatus | "any";
     categoryId?: number;
-}
-
-function toAdminProduct(p: SdkAdminProduct): AdminProduct {
-    const status = VIEW_PRODUCT_STATUS_MAP[p.status] ?? "draft";
-    const type = (p.type === "virtual" || p.type === "downloadable" ? "simple" : p.type) as AdminProduct["type"];
-    return {
-        id: p.id,
-        sku: p.sku ?? "",
-        type,
-        status,
-        name: dup(p.name),
-        slug: dup(p.slug),
-        shortDescription: dup(p.short_description),
-        regularPrice: Number(p.regular_price ?? 0) as MoneyMinor,
-        salePrice: p.sale_price === null || p.sale_price === undefined ? null : (Number(p.sale_price) as MoneyMinor),
-        stockQuantity: null,
-        stockStatus: "instock",
-        manageStock: false,
-        featured: Boolean(p.featured),
-        categoryIds: [],
-        brandId: null,
-        tagIds: [],
-        imageUrl: p.featured_image_url ?? null,
-        weightGrams: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    };
 }
 
 function toAdminProductFromDetail(p: SdkAdminProductDetail): AdminProduct {
@@ -333,26 +288,6 @@ interface ReviewListParams extends ListParams {
     status?: ReviewStatus | "any";
 }
 
-function toAdminReview(r: SdkAdminReview): AdminReview {
-    const status: ReviewStatus = r.status === "rejected" ? "spam" : r.status === "approved" ? "approved" : "pending";
-    return {
-        id: r.id,
-        productId: r.product_id,
-        productName: dup(""),
-        reviewerName: r.reviewer_name,
-        reviewerEmail: r.reviewer_email ?? "",
-        rating: clampRating(r.rating),
-        body: r.body,
-        status,
-        verified: Boolean(r.verified),
-        createdAt: r.created_at ?? new Date().toISOString(),
-    };
-}
-
-function clampRating(n: number): 1 | 2 | 3 | 4 | 5 {
-    return Math.min(5, Math.max(1, Math.round(n))) as 1 | 2 | 3 | 4 | 5;
-}
-
 export async function listReviews(params: ReviewListParams = {}): Promise<Paginated<AdminReview>> {
     const api = await apiServer();
     let sdkStatus: "pending" | "approved" | "rejected" | undefined;
@@ -378,27 +313,6 @@ export async function listReviews(params: ReviewListParams = {}): Promise<Pagina
 /* -------------------------------------------------------------------------- */
 /*  Customers                                                                  */
 /* -------------------------------------------------------------------------- */
-
-function toAdminCustomer(c: SdkAdminCustomer): AdminCustomer {
-    const iran = c.profile_extensions?.iran;
-    return {
-        id: Number(c.id),
-        userId: c.user?.id !== undefined ? Number(c.user.id) : null,
-        firstName: c.first_name ?? "",
-        lastName: c.last_name ?? "",
-        email: c.user?.email ?? "",
-        phone: c.phone ?? "",
-        nationalId: iran?.national_id ?? null,
-        companyName: iran?.legal_company_name_fa ?? null,
-        isPayingCustomer: Boolean(c.is_paying_customer),
-        ordersCount: 0,
-        totalSpent: 0 as MoneyMinor,
-        lastOrderAt: null,
-        createdAt: c.created_at ?? new Date().toISOString(),
-        addresses: [],
-        downloads: [],
-    };
-}
 
 export async function listCustomers(params: ListParams = {}): Promise<Paginated<AdminCustomer>> {
     const api = await apiServer();
@@ -429,160 +343,7 @@ export async function getCustomer(id: number): Promise<AdminCustomer | null> {
 /* -------------------------------------------------------------------------- */
 
 interface OrderListParams extends ListParams {
-    status?: OrderStatus | "any";
-}
-
-const ORDER_STATUS_MAP: Record<string, OrderStatus> = {
-    draft: "draft",
-    pending: "pending",
-    on_hold: "on_hold",
-    processing: "processing",
-    completed: "completed",
-    cancelled: "cancelled",
-    refunded: "refunded",
-    failed: "failed",
-};
-
-function normaliseStatus(raw: string | null | undefined): OrderStatus {
-    return ORDER_STATUS_MAP[String(raw ?? "pending")] ?? "pending";
-}
-
-function toAdminOrderAddress(a: SdkOrderAddress | null | undefined): AdminOrderAddress {
-    if (!a) {
-        return {
-            firstName: "",
-            lastName: "",
-            company: null,
-            addressLine1: "",
-            addressLine2: null,
-            city: "",
-            provinceCode: "",
-            postcode: "",
-            country: "",
-            phone: "",
-            nationalId: null,
-        };
-    }
-    return {
-        firstName: a.first_name ?? "",
-        lastName: a.last_name ?? "",
-        company: a.company ?? null,
-        addressLine1: a.address_line_1 ?? "",
-        addressLine2: a.address_line_2 ?? null,
-        city: a.city ?? "",
-        provinceCode: a.region_id !== null && a.region_id !== undefined ? String(a.region_id) : "",
-        postcode: a.postcode ?? "",
-        country: a.country ?? "",
-        phone: a.phone ?? "",
-        nationalId: null,
-    };
-}
-
-function toAdminOrderListRow(o: SdkAdminOrderListRow): AdminOrder {
-    return {
-        id: o.id ?? 0,
-        orderNumber: Number(o.order_number ?? o.id ?? 0),
-        orderKey: "",
-        status: normaliseStatus(o.status),
-        customerId: o.customer_id !== null && o.customer_id !== undefined ? Number(o.customer_id) : null,
-        customerName: o.billing_email ?? "",
-        billingEmail: o.billing_email ?? "",
-        currency: "IRR",
-        currencyDisplay: "IRR",
-        grandTotal: Number(o.grand_total ?? 0) as MoneyMinor,
-        itemsTotal: 0 as MoneyMinor,
-        shippingTotal: 0 as MoneyMinor,
-        discountTotal: 0 as MoneyMinor,
-        taxTotal: 0 as MoneyMinor,
-        paymentMethodTitle: dup(""),
-        createdAt: o.created_at ?? new Date().toISOString(),
-        paidAt: null,
-        completedAt: null,
-        billingAddress: toAdminOrderAddress(undefined),
-        shippingAddress: toAdminOrderAddress(undefined),
-        lineItems: [],
-        shippingLines: [],
-        couponLines: [],
-        taxLines: [],
-        history: [],
-        notes: [],
-    };
-}
-
-function toAdminOrderDetail(o: SdkAdminOrderDetail): AdminOrder {
-    const totals = o.totals ?? {
-        items_total: 0,
-        items_tax_total: 0,
-        shipping_total: 0,
-        shipping_tax_total: 0,
-        fees_total: 0,
-        fees_tax_total: 0,
-        discount_total: 0,
-        discount_tax_total: 0,
-        tax_total: 0,
-        grand_total: 0,
-    };
-    const lineItems: AdminOrderLineItem[] = (o.line_items ?? []).map((li) => ({
-        id: li.id,
-        productId: li.product_id ?? 0,
-        name: dup(li.name),
-        sku: li.sku ?? "",
-        quantity: li.quantity,
-        unitPrice: Number(li.price) as MoneyMinor,
-        subtotal: Number(li.subtotal) as MoneyMinor,
-        taxTotal: Number(li.subtotal_tax ?? 0) as MoneyMinor,
-        total: Number(li.total) as MoneyMinor,
-        imageUrl: null,
-    }));
-    const shippingLines: AdminOrderShippingLine[] = (o.shipping_lines ?? []).map((s) => ({
-        id: s.id,
-        methodTitle: dup(s.title),
-        total: Number(s.total) as MoneyMinor,
-    }));
-    const taxLines: AdminOrderTaxLine[] = (o.tax_lines ?? []).map((t) => ({
-        id: t.id,
-        label: dup(t.label),
-        rate: Number(t.rate_percent ?? 0),
-        total: Number(t.tax_total) as MoneyMinor,
-    }));
-    const history: AdminOrderStatusHistoryEntry[] = (o.status_history ?? []).map((h) => ({
-        id: h.id,
-        fromStatus: h.from_status ? normaliseStatus(h.from_status) : null,
-        toStatus: normaliseStatus(h.to_status),
-        occurredAt: h.occurred_at ?? new Date().toISOString(),
-        changedBy: h.changed_by_user_id !== null && h.changed_by_user_id !== undefined ? String(h.changed_by_user_id) : null,
-        reason: h.reason ?? null,
-    }));
-    const payment = o.payment ?? { gateway_id: null, method_code: null, method_title: null, transaction_id: null };
-    return {
-        id: o.id,
-        orderNumber: Number(o.order_number ?? o.id),
-        orderKey: o.order_key ?? "",
-        status: normaliseStatus(o.status),
-        customerId: o.customer_id !== null && o.customer_id !== undefined ? Number(o.customer_id) : null,
-        customerName:
-            `${o.billing_address?.first_name ?? ""} ${o.billing_address?.last_name ?? ""}`.trim() || (o.billing_email ?? ""),
-        billingEmail: o.billing_email ?? "",
-        currency: "IRR",
-        currencyDisplay: "IRR",
-        grandTotal: Number(totals.grand_total) as MoneyMinor,
-        itemsTotal: Number(totals.items_total) as MoneyMinor,
-        shippingTotal: Number(totals.shipping_total) as MoneyMinor,
-        discountTotal: Number(totals.discount_total) as MoneyMinor,
-        taxTotal: Number(totals.tax_total) as MoneyMinor,
-        paymentMethodTitle: dup(payment.method_title ?? ""),
-        createdAt: o.created_at ?? new Date().toISOString(),
-        paidAt: null,
-        completedAt: null,
-        billingAddress: toAdminOrderAddress(o.billing_address),
-        shippingAddress: toAdminOrderAddress(o.shipping_address ?? o.billing_address),
-        lineItems,
-        shippingLines,
-        couponLines: [] as AdminOrderCouponLine[],
-        taxLines,
-        history,
-        notes: [] as AdminOrderNote[],
-    };
+    status?: AdminOrder["status"] | "any";
 }
 
 export async function listOrders(params: OrderListParams = {}): Promise<Paginated<AdminOrder>> {
@@ -629,34 +390,6 @@ export async function listRefunds(params: ListParams = {}): Promise<Paginated<Ad
 
 interface CouponListParams extends ListParams {
     status?: AdminCoupon["status"] | "any";
-}
-
-function toAdminCoupon(c: SdkAdminCoupon): AdminCoupon {
-    const description = (c.translations ?? []).reduce<{ fa?: string; en?: string }>((acc, t) => {
-        if (t.locale === "fa") acc.fa = t.description ?? "";
-        if (t.locale === "en") acc.en = t.description ?? "";
-        return acc;
-    }, {});
-    return {
-        id: c.id,
-        code: c.code,
-        discountType: c.discount_type,
-        amountMinor: c.amount_minor === null || c.amount_minor === undefined ? null : (Number(c.amount_minor) as MoneyMinor),
-        amountPercent: c.amount_percent ?? null,
-        description: { fa: description.fa ?? "", en: description.en ?? description.fa ?? "" },
-        expiresAt: c.expires_at ?? null,
-        individualUse: Boolean(c.individual_use),
-        excludeSaleItems: Boolean(c.exclude_sale_items),
-        minimumAmount:
-            c.minimum_amount === null || c.minimum_amount === undefined ? null : (Number(c.minimum_amount) as MoneyMinor),
-        maximumAmount:
-            c.maximum_amount === null || c.maximum_amount === undefined ? null : (Number(c.maximum_amount) as MoneyMinor),
-        usageLimitGlobal: c.usage_limit_global ?? null,
-        usageLimitPerUser: c.usage_limit_per_user ?? null,
-        freeShipping: Boolean(c.free_shipping),
-        status: c.status === "active" ? "active" : "disabled",
-        usageCount: 0,
-    };
 }
 
 export async function listCoupons(params: CouponListParams = {}): Promise<Paginated<AdminCoupon>> {
@@ -824,55 +557,18 @@ export async function getSettingsGroup(key: SettingsGroupKey): Promise<AdminSett
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Dashboard + reports — composed from existing admin endpoints                */
+/*  Reports — composed from existing admin endpoints                           */
 /*                                                                             */
-/*  TODO(spec): no first-party dashboard or reports operation; this composes   */
-/*  metrics from /api/v1/admin/orders, /products, /customers. Sales-series and */
-/*  status counts are computed in TypeScript. When a real report endpoint      */
-/*  lands, swap this implementation for a single SDK call.                     */
+/*  TODO(spec): no first-party reports operation; this composes a sales report */
+/*  from /api/v1/admin/orders. When a real report endpoint lands, swap this    */
+/*  implementation for a single SDK call.                                      */
+/*                                                                             */
+/*  Dashboard aggregation lives in `lib/queries/dashboard.ts` — the dashboard  */
+/*  fetches client-side through the same-origin proxy so widgets can stream    */
+/*  independently. Add helpers there for new dashboard widgets, not here.      */
 /* -------------------------------------------------------------------------- */
 
-export async function getDashboardStats(): Promise<DashboardStats> {
-    const api = await apiServer();
-    const [ordersRes, productsRes, customersRes] = await Promise.all([
-        api.admin.GET("/api/v1/admin/orders", { params: { query: { perPage: 100 } } }),
-        api.admin.GET("/api/v1/admin/products", { params: { query: { perPage: 1, status: "published" } } }),
-        api.admin.GET("/api/v1/admin/customers", { params: { query: { perPage: 10 } } }),
-    ]);
-
-    const orderRows = ((ordersRes.data?.data ?? []) as SdkAdminOrderListRow[]).map(toAdminOrderListRow);
-    const recentOrders = orderRows.slice(0, 8);
-
-    const now = Date.now();
-    const dayMs = 24 * 60 * 60 * 1000;
-    const ordersToday = orderRows.filter((o) => now - new Date(o.createdAt).getTime() <= dayMs).length;
-    const revenueToday = orderRows
-        .filter((o) => now - new Date(o.createdAt).getTime() <= dayMs)
-        .reduce((sum, o) => sum + Number(o.grandTotal), 0) as MoneyMinor;
-    const pendingFulfilments = orderRows.filter((o) => o.status === "pending" || o.status === "processing").length;
-
-    const customerRows = (customersRes.data?.data ?? []).map(toAdminCustomer);
-    const newCustomersToday = customerRows.filter((c) => now - new Date(c.createdAt).getTime() <= dayMs).length;
-
-    return {
-        ordersToday,
-        ordersDeltaPercent: 0,
-        revenueToday,
-        revenueDeltaPercent: 0,
-        activeProducts: productsRes.data?.meta?.total ?? 0,
-        activeProductsDeltaPercent: 0,
-        pendingFulfilments,
-        newCustomersToday,
-        newCustomersDeltaPercent: 0,
-        recentCustomers: customerRows.slice(0, 5),
-        salesSeries: buildSalesSeries(orderRows),
-        ordersByStatus: countByStatus(orderRows),
-        topProducts: [],
-        recentOrders,
-    };
-}
-
-function buildSalesSeries(orders: AdminOrder[]): DashboardStats["salesSeries"] {
+function buildSalesSeries(orders: AdminOrder[]): { date: string; revenue: MoneyMinor; orders: number }[] {
     const buckets = new Map<string, { revenue: number; orders: number }>();
     const today = new Date();
     for (let i = 13; i >= 0; i -= 1) {
@@ -889,12 +585,6 @@ function buildSalesSeries(orders: AdminOrder[]): DashboardStats["salesSeries"] {
         bucket.orders += 1;
     }
     return [...buckets.entries()].map(([date, v]) => ({ date, revenue: v.revenue as MoneyMinor, orders: v.orders }));
-}
-
-function countByStatus(orders: AdminOrder[]): DashboardStats["ordersByStatus"] {
-    const counts = new Map<OrderStatus, number>();
-    for (const o of orders) counts.set(o.status, (counts.get(o.status) ?? 0) + 1);
-    return [...counts.entries()].map(([status, count]) => ({ status, count }));
 }
 
 export async function getSalesReport(): Promise<SalesReport> {

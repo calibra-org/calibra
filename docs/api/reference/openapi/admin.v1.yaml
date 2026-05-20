@@ -62,6 +62,8 @@ tags:
       description: Shipping-class CRUD.
     - name: Admin / Catalog / Reviews
       description: Review moderation.
+    - name: Admin / Reports
+      description: Dashboard-shaped aggregations (top sellers, …). Narrow surface, not a BI replacement.
 
 components:
     securitySchemes:
@@ -200,6 +202,12 @@ paths:
     /api/v1/admin/payment-attempts/{id}:
         get:
             $ref: "./admin/paths/payments/payment-attempts-id.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+
+    /api/v1/admin/reports/top-products:
+        get:
+            $ref: "./admin/paths/reports/top-products.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
 

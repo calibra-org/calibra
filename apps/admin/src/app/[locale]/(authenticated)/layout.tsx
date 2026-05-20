@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Sidebar } from "#/components/Sidebar";
 import { Topbar } from "#/components/Topbar";
 import { requireSession } from "#/lib/auth";
+import { QueryProvider } from "#/lib/queries/QueryProvider";
 
 interface LayoutProps {
     children: ReactNode;
@@ -21,12 +22,14 @@ export default async function AuthenticatedLayout({ children, params }: LayoutPr
     const session = await requireSession(locale);
 
     return (
-        <div className="flex min-h-dvh">
-            <Sidebar />
-            <div className="flex flex-1 flex-col">
-                <Topbar user={{ email: session.email, displayName: session.displayName }} />
-                <main className="flex-1 overflow-y-auto bg-muted/20 p-6">{children}</main>
+        <QueryProvider>
+            <div className="flex min-h-dvh">
+                <Sidebar />
+                <div className="flex flex-1 flex-col">
+                    <Topbar user={{ email: session.email, displayName: session.displayName }} />
+                    <main className="flex-1 overflow-y-auto bg-muted/20 p-6">{children}</main>
+                </div>
             </div>
-        </div>
+        </QueryProvider>
     );
 }

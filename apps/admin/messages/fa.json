@@ -61,6 +61,9 @@
         "disabled": "غیرفعال",
         "loading": "در حال بارگذاری…",
         "noResults": "نتیجه‌ای یافت نشد",
+        "refresh": "بروزرسانی",
+        "retry": "تلاش مجدد",
+        "errorLoading": "بارگذاری اطلاعات با خطا مواجه شد.",
         "today": "امروز",
         "yesterday": "دیروز",
         "thisWeek": "این هفته",
@@ -276,7 +279,11 @@
                 "history": "تاریخچه",
                 "notes": "یادداشت‌ها",
                 "refunds": "بازگشت‌ها"
-            }
+            },
+            "changeStatus": "تغییر وضعیت",
+            "statusUpdated": "وضعیت سفارش به‌روزرسانی شد.",
+            "statusUpdateFailed": "به‌روزرسانی وضعیت با خطا مواجه شد.",
+            "notFound": "این سفارش یافت نشد."
         }
     },
     "OrderStatus": {
