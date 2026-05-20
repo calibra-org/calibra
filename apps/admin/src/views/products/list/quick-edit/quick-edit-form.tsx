@@ -12,6 +12,7 @@ import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { NumberField } from "#/components/ui/number-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
@@ -275,15 +276,13 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                     name="brandId"
                     render={({ field }) => (
                         <Field id="brandId" label={t("brand")} span="col-span-6 md:col-span-3">
-                            <Input
+                            <NumberField
                                 id="brandId"
-                                type="number"
-                                inputMode="numeric"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                nullable
+                                min={1}
                                 placeholder="#42"
-                                value={field.value ?? ""}
-                                onChange={(event) =>
-                                    field.onChange(event.target.value === "" ? null : Number(event.target.value))
-                                }
                             />
                         </Field>
                     )}
@@ -316,14 +315,12 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                                 error={errors.stockQuantity?.message}
                                 span="col-span-6 md:col-span-4"
                             >
-                                <Input
+                                <NumberField
                                     id="stockQuantity"
-                                    type="number"
-                                    inputMode="numeric"
-                                    value={field.value ?? ""}
-                                    onChange={(event) =>
-                                        field.onChange(event.target.value === "" ? null : Number(event.target.value))
-                                    }
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    nullable
+                                    min={0}
                                 />
                             </Field>
                         )}
@@ -486,24 +483,16 @@ interface CurrencyInputProps {
 function CurrencyInput({ id, value, onChange, nullable }: CurrencyInputProps) {
     const t = useTranslations("Products.list.quickEdit");
     return (
-        <div className="relative">
-            <Input
-                id={id}
-                type="number"
-                inputMode="numeric"
-                value={value ?? ""}
-                dir="ltr"
-                onChange={(event) => {
-                    const raw = event.target.value;
-                    if (raw === "") return onChange(nullable === true ? null : 0);
-                    return onChange(Number(raw));
-                }}
-                className="pe-16 font-mono text-sm"
-            />
-            <span className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground uppercase tracking-wide">
-                {t("currency")}
-            </span>
-        </div>
+        <NumberField
+            id={id}
+            value={value}
+            onValueChange={onChange}
+            nullable={nullable}
+            min={0}
+            step={1000}
+            suffix={t("currency")}
+            inputClassName="pe-12"
+        />
     );
 }
 
