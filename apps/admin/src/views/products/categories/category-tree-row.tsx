@@ -160,14 +160,15 @@ export function CategoryTreeRowView({
                     onClick={handleChevronClick}
                     onPointerDown={stopPointer}
                     aria-label={row.isExpanded ? t("collapse") : t("expand")}
+                    data-rtl-flip
                     className={cn(
                         "flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-transform",
                         "hover:bg-muted/70 hover:text-foreground",
                         row.hasChildren ? "opacity-100" : "pointer-events-none opacity-0",
-                        row.isExpanded && "rotate-90 rtl:-rotate-90",
+                        row.isExpanded && "rotate-90",
                     )}
                 >
-                    <ChevronRight className="size-3.5 rtl:scale-x-[-1]" aria-hidden="true" />
+                    <ChevronRight className="size-3.5" aria-hidden="true" />
                 </button>
 
                 <CategoryThumb url={row.category.imageUrl} alt={row.category.name[locale] ?? ""} />
@@ -181,7 +182,7 @@ export function CategoryTreeRowView({
                     </span>
                     {isActive && nestingParentName !== null && (
                         <Badge className="gap-1 border-primary/60 bg-primary/10 px-2 font-medium text-primary text-xs">
-                            <CornerDownRight className="size-3" aria-hidden="true" />
+                            <CornerDownRight className="size-3" data-rtl-flip aria-hidden="true" />
                             <span className="max-w-32 truncate">{nestingParentName}</span>
                         </Badge>
                     )}

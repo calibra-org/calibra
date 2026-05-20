@@ -183,7 +183,7 @@ function DragGhost({ row, projection, dropParentName, locale, t }: DragGhostProp
                 )}
             >
                 {kind === "nest" ? (
-                    <CornerDownRight className="size-3.5" aria-hidden="true" />
+                    <CornerDownRight className="size-3.5" data-rtl-flip aria-hidden="true" />
                 ) : kind === "promote" ? (
                     <ArrowUpToLine className="size-3.5" aria-hidden="true" />
                 ) : (

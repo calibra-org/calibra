@@ -294,3 +294,24 @@ html[lang="fa"] {
 .custom-scrollbar::-webkit-scrollbar-corner {
     background: transparent;
 }
+
+/* -------------------------------------------------------------------------- */
+/*  RTL helpers                                                                */
+/*                                                                             */
+/*  Declarative direction-aware transforms. The pattern is: tag an element     */
+/*  with a `data-rtl-*` attribute, and the matching rule below applies the     */
+/*  transform when the document is RTL. Uses the modern individual transform   */
+/*  properties (`scale`, `rotate`, `translate`) so they compose cleanly with   */
+/*  Tailwind v4's `rotate-*` / `scale-*` / `translate-*` utilities instead of  */
+/*  overriding a combined `transform`.                                         */
+/*                                                                             */
+/*  Selectors use `:where(...)` to keep specificity at 0, so component-level   */
+/*  classes still win without `!important` gymnastics.                         */
+/*                                                                             */
+/*  Add new transforms here by following the same shape:                       */
+/*    :where([dir="rtl"]) [data-rtl-rotate-180] { rotate: 180deg; }            */
+/*    :where([dir="rtl"]) [data-rtl-translate-x] { translate: -100% 0; }       */
+/* -------------------------------------------------------------------------- */
+:where([dir="rtl"]) [data-rtl-flip] {
+    scale: -1 1;
+}
