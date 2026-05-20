@@ -7,7 +7,14 @@ import { Plus, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
-import { ActiveFilterChips, type ColumnDef, DataTable, DataTableToolbar, DataTableViewOptions } from "#/components/data-table";
+import {
+    ActiveFilterChips,
+    type ColumnDef,
+    DataTable,
+    DataTableToolbar,
+    DataTableViewOptions,
+    type FacetedFilterDef,
+} from "#/components/data-table";
 import { useDataTable } from "#/components/data-table/use-data-table";
 import { Button } from "#/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
@@ -45,9 +52,20 @@ export function ProductsList() {
 
     const { facets, toggles } = useProductFilters();
 
+    /**
+     * Status is driven by the tab strip rather than a faceted-filter popover, but it still needs
+     * to be a URL-backed facet so `tableState.setFacetValues("status", …)` from `onTabChange`
+     * actually round-trips through nuqs. Register it alongside the toolbar facets — the empty
+     * `options` array means it never renders as a filter chip / popover.
+     */
+    const facetsWithStatus = useMemo<FacetedFilterDef[]>(
+        () => [...facets, { paramKey: "status", label: "status", multiple: false, options: [] }],
+        [facets],
+    );
+
     const tableState = useDataTable({
         id: TABLE_ID,
-        facets,
+        facets: facetsWithStatus,
         toggles,
         defaultColumnVisibility: { tags: false, views: false },
     });
