@@ -199,7 +199,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         {
             id: "stock",
             header: sortableHeader("stock", ctx.t("columns.stock")),
-            meta: { cellClassName: "text-center" },
+            meta: { cellClassName: "text-end" },
             cell: ({ row }) => {
                 const product = row.original;
                 const showLow =
