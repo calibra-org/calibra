@@ -1,14 +1,8 @@
-import type { Locale } from "@calibra/shared/i18n";
-import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { DataTable } from "#/components/DataTable";
-import { PageHeader } from "#/components/PageHeader";
-import { Button } from "#/components/ui/button";
-import { formatNumber } from "#/lib/format";
 import { listCategories } from "#/lib/server-repos";
-import type { AdminCategory } from "#/lib/types";
+import { CategoriesView } from "#/views/products/categories";
 
 interface PageProps {
     params: Promise<{ locale: string }>;
@@ -20,56 +14,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: t("title") };
 }
 
+/**
+ * Server entry point. Fetches the flat category list (with product-count fan-out) and hands it
+ * to the client view as the SSR seed — every interaction afterwards stays on the client until
+ * the user reloads.
+ */
 export default async function CategoriesPage({ params }: PageProps) {
-    const { locale: rawLocale } = await params;
-    setRequestLocale(rawLocale);
-    const locale = rawLocale as Locale;
-    const t = await getTranslations("Categories");
-    const cols = t.raw("table") as Record<string, string>;
-    const { data } = await listCategories({ perPage: 100 });
-    const byId = new Map<number, AdminCategory>(data.map((c) => [c.id, c]));
+    const { locale } = await params;
+    setRequestLocale(locale);
+    const { data } = await listCategories({ perPage: 200 });
 
-    return (
-        <section className="flex flex-col gap-6">
-            <PageHeader
-                title={t("title")}
-                subtitle={t("subtitle")}
-                actions={
-                    <Button>
-                        <Plus className="size-4" aria-hidden="true" />
-                        {t("addCategory")}
-                    </Button>
-                }
-            />
-            <DataTable<AdminCategory>
-                columns={[
-                    { id: "name", header: cols.name, cell: (row) => <span className="font-medium">{row.name[locale]}</span> },
-                    {
-                        id: "slug",
-                        header: cols.slug,
-                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug[locale]}</span>,
-                    },
-                    {
-                        id: "parent",
-                        header: cols.parent,
-                        cell: (row) =>
-                            row.parentId === null ? (
-                                <span className="text-muted-foreground">{t("noParent")}</span>
-                            ) : (
-                                (byId.get(row.parentId)?.name[locale] ?? "—")
-                            ),
-                    },
-                    {
-                        id: "products",
-                        header: cols.productCount,
-                        cell: (row) => formatNumber(row.productCount, locale),
-                        className: "text-end",
-                    },
-                ]}
-                rows={data}
-                getRowKey={(row) => row.id}
-                emptyState="—"
-            />
-        </section>
-    );
+    return <CategoriesView initialRows={data} />;
 }
