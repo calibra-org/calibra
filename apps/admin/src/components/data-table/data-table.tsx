@@ -1,0 +1,514 @@
+"use client";
+
+import {
+    type ColumnDef,
+    type ExpandedState,
+    flexRender,
+    getCoreRowModel,
+    getExpandedRowModel,
+    type Row,
+    type RowSelectionState,
+    useReactTable,
+    type VisibilityState,
+} from "@tanstack/react-table";
+import { AlertTriangle, type LucideIcon } from "lucide-react";
+import { type KeyboardEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+
+import { Button } from "#/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { cn } from "#/lib/utils";
+
+import { DataTableEmpty } from "./data-table-empty";
+import { DataTablePagination } from "./data-table-pagination";
+import { DataTableSkeleton } from "./data-table-skeleton";
+import {
+    type BulkActionsRenderer,
+    type CardRenderer,
+    type DataTableDensity,
+    DENSITY_CLASSES,
+    type PaginationMeta,
+    type SortState,
+    type SubRowRenderer,
+} from "./types";
+
+export interface DataTableProps<TData> {
+    data: TData[];
+    columns: ColumnDef<TData, unknown>[];
+    /** Tracks state of the in-page selection. Resolved by id, not array index. */
+    getRowId: (row: TData) => string;
+    meta: PaginationMeta;
+    perPageOptions: readonly number[];
+
+    /** Pagination handlers — server-driven. */
+    onPageChange: (page: number) => void;
+    onPerPageChange: (perPage: number) => void;
+
+    /**
+     * Active sort state and setter. Kept on the props surface so the toolbar and consumer code
+     * can serialize them through the same hook; the table itself doesn't consume them — column
+     * headers are wired with the same state via {@link DataTableColumnHeader}.
+     */
+    sort?: SortState | undefined;
+    onSortChange?: (next: SortState | undefined) => void;
+
+    /** Selection state — owned outside the table for cross-page persistence. */
+    selectedIds: ReadonlySet<string>;
+    onSelectedIdsChange: (next: ReadonlySet<string>) => void;
+
+    /** Column visibility map. Undefined keys = visible. */
+    columnVisibility: Record<string, boolean>;
+    onColumnVisibilityChange: (next: Record<string, boolean>) => void;
+
+    density: DataTableDensity;
+
+    /** Loading + error states from the consumer's query. */
+    isLoading?: boolean;
+    isError?: boolean;
+    onRetry?: () => void;
+
+    /** Toolbar rendered above the body. Pass a {@link DataTableToolbar} or a custom node. */
+    toolbar?: ReactNode;
+    /** Bulk-action bar rendered when ≥1 row is selected. */
+    bulkActions?: BulkActionsRenderer<TData>;
+
+    /** Inline sub-row, e.g. the Quick Edit panel. Single-row expansion is enforced. */
+    renderSubComponent?: SubRowRenderer<TData>;
+    /** Controlled expanded row id (single-row expansion). Pass `undefined` to collapse. */
+    expandedRowId?: string;
+    /** Setter for the controlled expanded row id. Called with `undefined` when the row collapses. */
+    onExpandedRowIdChange?: (rowId: string | undefined) => void;
+
+    /** Optional renderer for the stacked mobile layout. When omitted, the table is shown on all sizes. */
+    renderCard?: CardRenderer<TData>;
+
+    /** Labels rendered by the embedded pagination/empty/error pieces. */
+    labels: {
+        empty: { title: ReactNode; description?: ReactNode };
+        filtered: { title: ReactNode; description?: ReactNode };
+        clearFiltersLabel?: string;
+        errorTitle: ReactNode;
+        errorRetry: string;
+        pagination: {
+            rowsPerPage: string;
+            showing: (from: number, to: number, total: number) => string;
+            selectedOf: (selected: number, total: number) => string;
+            first: string;
+            previous: string;
+            next: string;
+            last: string;
+            pageOf: (page: number, lastPage: number) => string;
+        };
+    };
+
+    /** Locale-aware number formatter (Persian digits in `fa`). */
+    formatNumber: (value: number) => string;
+
+    /** Skeleton column widths so the loading state mirrors the real column layout. */
+    skeletonColumnWidths?: number[];
+
+    /** Optional helper rendered when filters yielded no rows; called by the empty state's secondary button. */
+    onClearFilters?: () => void;
+    hasActiveFilters?: boolean;
+
+    /** Keyboard nav: `j`/`k` step through rows, `x` toggles selection, `e` opens sub-row, `Enter` opens detail. */
+    onRowOpen?: (row: TData) => void;
+}
+
+/**
+ * Generic data table built on TanStack Table v8. Pagination, sort, and filtering are server
+ * driven — the consumer hands in a controlled slice of data and the table renders it. Selection
+ * is tracked by row id externally so it survives pagination.
+ *
+ * Keyboard navigation is intentional: `j`/`k` step focus through rows, `x` toggles selection,
+ * `e` opens the sub-row when {@link renderSubComponent} is provided, `Enter` calls
+ * {@link onRowOpen}. We don't flip these keys under RTL — bindings stay reading-order agnostic.
+ */
+export function DataTable<TData>({
+    data,
+    columns,
+    getRowId,
+    meta,
+    perPageOptions,
+    onPageChange,
+    onPerPageChange,
+    sort: _sort,
+    onSortChange: _onSortChange,
+    selectedIds,
+    onSelectedIdsChange,
+    columnVisibility,
+    onColumnVisibilityChange,
+    density,
+    isLoading = false,
+    isError = false,
+    onRetry,
+    toolbar,
+    bulkActions,
+    renderSubComponent,
+    expandedRowId,
+    onExpandedRowIdChange,
+    renderCard,
+    labels,
+    formatNumber,
+    skeletonColumnWidths,
+    onClearFilters,
+    hasActiveFilters,
+    onRowOpen,
+}: DataTableProps<TData>) {
+    /**
+     * Single-row expansion driven by the controlled `expandedRowId` prop when provided. Falls
+     * back to local state for callers that don't need to drive expansion from the outside.
+     */
+    const [internalExpanded, setInternalExpanded] = useState<ExpandedState>({});
+    const expanded: ExpandedState = expandedRowId !== undefined ? { [expandedRowId]: true } : internalExpanded;
+    const setExpanded = (updater: ExpandedState | ((prev: ExpandedState) => ExpandedState)) => {
+        const next = typeof updater === "function" ? updater(expanded) : updater;
+        if (onExpandedRowIdChange !== undefined) {
+            const keys = Object.keys(next as Record<string, boolean>).filter(
+                (id) => (next as Record<string, boolean>)[id] === true,
+            );
+            onExpandedRowIdChange(keys[0]);
+        } else {
+            setInternalExpanded(next);
+        }
+    };
+
+    /** Mirror selection state into the shape TanStack Table expects so flexRender access works. */
+    const rowSelection = useMemo<RowSelectionState>(() => {
+        const out: RowSelectionState = {};
+        for (const id of selectedIds) out[id] = true;
+        return out;
+    }, [selectedIds]);
+
+    const visibilityState = useMemo<VisibilityState>(() => {
+        const out: VisibilityState = {};
+        for (const [id, visible] of Object.entries(columnVisibility)) out[id] = visible;
+        return out;
+    }, [columnVisibility]);
+
+    const table = useReactTable<TData>({
+        data,
+        columns,
+        getRowId,
+        state: {
+            rowSelection,
+            columnVisibility: visibilityState,
+            expanded,
+        },
+        enableRowSelection: true,
+        manualPagination: true,
+        manualSorting: true,
+        manualFiltering: true,
+        pageCount: meta.lastPage,
+        onRowSelectionChange: (updater) => {
+            const next = typeof updater === "function" ? updater(rowSelection) : updater;
+            const ids = new Set<string>(selectedIds);
+            const visibleIds = new Set(data.map((row) => getRowId(row)));
+            for (const id of visibleIds) {
+                if (next[id] === true) ids.add(id);
+                else ids.delete(id);
+            }
+            onSelectedIdsChange(ids);
+        },
+        onColumnVisibilityChange: (updater) => {
+            const next = typeof updater === "function" ? updater(visibilityState) : updater;
+            onColumnVisibilityChange(next as Record<string, boolean>);
+        },
+        onExpandedChange: setExpanded,
+        getCoreRowModel: getCoreRowModel(),
+        getExpandedRowModel: getExpandedRowModel(),
+        getRowCanExpand: () => renderSubComponent !== undefined,
+    });
+
+    const visibleRows = table.getRowModel().rows;
+    const cellClass = DENSITY_CLASSES[density].cell;
+    const rowHeightClass = DENSITY_CLASSES[density].row;
+
+    const lastFocusedIndex = useRef<number>(0);
+
+    const onTableKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        if (visibleRows.length === 0) return;
+        const target = event.target as HTMLElement;
+        // Don't hijack typing inside inputs / contenteditable.
+        if (target.matches('input, textarea, [contenteditable="true"]')) return;
+
+        const move = (delta: number) => {
+            const next = (lastFocusedIndex.current + delta + visibleRows.length) % visibleRows.length;
+            lastFocusedIndex.current = next;
+            const targetRow = event.currentTarget.querySelector<HTMLElement>(`[data-row-index="${next}"]`);
+            targetRow?.focus();
+        };
+
+        switch (event.key) {
+            case "j":
+            case "ArrowDown":
+                event.preventDefault();
+                move(1);
+                break;
+            case "k":
+            case "ArrowUp":
+                event.preventDefault();
+                move(-1);
+                break;
+            case "x": {
+                event.preventDefault();
+                const row = visibleRows[lastFocusedIndex.current];
+                row.toggleSelected();
+                break;
+            }
+            case "e": {
+                if (renderSubComponent === undefined) return;
+                event.preventDefault();
+                const row = visibleRows[lastFocusedIndex.current];
+                /** Single-row expansion: collapse everything else first. */
+                setExpanded({ [row.id]: !(expanded as Record<string, boolean>)[row.id] });
+                break;
+            }
+            case "Enter": {
+                if (onRowOpen === undefined) return;
+                event.preventDefault();
+                const row = visibleRows[lastFocusedIndex.current];
+                onRowOpen(row.original);
+                break;
+            }
+        }
+    };
+
+    /** Ensure the focused index doesn't fall outside the new page after pagination changes. */
+    useEffect(() => {
+        if (lastFocusedIndex.current >= visibleRows.length) {
+            lastFocusedIndex.current = Math.max(0, visibleRows.length - 1);
+        }
+    }, [visibleRows.length]);
+
+    return (
+        <div className="flex flex-col gap-3">
+            {toolbar}
+            {/**
+             * The wrapper traps `j` / `k` / `x` / `e` / `Enter` for row navigation. Individual
+             * rows are focusable (tabIndex 0) and reachable via Tab; the wrapper just listens for
+             * key events bubbling up from the active row.
+             */}
+            {/* biome-ignore lint/a11y/useSemanticElements: a single <table> can't host the toolbar / pagination siblings; the inner <table> still carries the grid semantics */}
+            <div className="overflow-hidden rounded-lg border border-border bg-card" onKeyDown={onTableKeyDown} role="grid">
+                {/** Desktop / tablet: real <table>. */}
+                <div className={cn("hidden md:block", renderCard !== undefined && "md:block")}>
+                    <div className="max-h-[calc(100dvh-22rem)] overflow-auto">
+                        <Table>
+                            <TableHeader className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
+                                {table.getHeaderGroups().map((headerGroup) => (
+                                    <TableRow key={headerGroup.id} className="border-border border-b">
+                                        {headerGroup.headers.map((header) => (
+                                            <TableHead
+                                                key={header.id}
+                                                className={cn(
+                                                    cellClass,
+                                                    "text-start text-xs",
+                                                    /** `meta.cellClass` lets columns add stick/align classes. */
+                                                    (header.column.columnDef.meta as { headerClassName?: string } | undefined)
+                                                        ?.headerClassName,
+                                                )}
+                                                style={{
+                                                    width: header.column.columnDef.size,
+                                                }}
+                                            >
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(header.column.columnDef.header, header.getContext())}
+                                            </TableHead>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableHeader>
+                            <TableBody>
+                                {isError && (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={table.getVisibleLeafColumns().length}
+                                            className="bg-destructive/5 px-4 py-3"
+                                        >
+                                            <div className="flex items-center gap-3 text-destructive">
+                                                <AlertTriangle className="size-4" aria-hidden="true" />
+                                                <span className="text-sm">{labels.errorTitle}</span>
+                                                {onRetry !== undefined && (
+                                                    <Button size="sm" variant="ghost" onClick={onRetry}>
+                                                        {labels.errorRetry}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={table.getVisibleLeafColumns().length}
+                                            className="p-0 [&]:px-0 [&]:py-0"
+                                        >
+                                            <DataTableSkeleton
+                                                columnWidths={skeletonColumnWidths ?? table.getVisibleLeafColumns().map(() => 1)}
+                                                rowHeightClass={rowHeightClass}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : visibleRows.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={table.getVisibleLeafColumns().length}
+                                            className="p-0 [&]:px-0 [&]:py-0"
+                                        >
+                                            <DataTableEmpty
+                                                variant={hasActiveFilters === true ? "filtered" : "empty"}
+                                                title={hasActiveFilters === true ? labels.filtered.title : labels.empty.title}
+                                                description={
+                                                    hasActiveFilters === true
+                                                        ? labels.filtered.description
+                                                        : labels.empty.description
+                                                }
+                                                secondaryAction={
+                                                    hasActiveFilters === true && onClearFilters !== undefined
+                                                        ? {
+                                                              label: labels.clearFiltersLabel ?? "Clear",
+                                                              onClick: onClearFilters,
+                                                          }
+                                                        : undefined
+                                                }
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    visibleRows.map((row, rowIndex) => (
+                                        <DataTableBodyRow
+                                            key={row.id}
+                                            row={row}
+                                            rowIndex={rowIndex}
+                                            cellClass={cellClass}
+                                            rowHeightClass={rowHeightClass}
+                                            renderSubComponent={renderSubComponent}
+                                            onRowOpen={onRowOpen}
+                                        />
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </div>
+
+                {/** Mobile: stacked cards. Only mounted when the caller provides a card renderer. */}
+                {renderCard !== undefined && (
+                    <div className="flex flex-col divide-y divide-border md:hidden">
+                        {visibleRows.length === 0 && !isLoading ? (
+                            <DataTableEmpty
+                                variant={hasActiveFilters === true ? "filtered" : "empty"}
+                                title={hasActiveFilters === true ? labels.filtered.title : labels.empty.title}
+                                description={hasActiveFilters === true ? labels.filtered.description : labels.empty.description}
+                            />
+                        ) : (
+                            visibleRows.map((row) => (
+                                <div key={row.id} className="px-4 py-3">
+                                    {renderCard(row)}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
+
+                <DataTablePagination
+                    meta={meta}
+                    perPageOptions={perPageOptions}
+                    onPageChange={onPageChange}
+                    onPerPageChange={onPerPageChange}
+                    selectedCount={selectedIds.size}
+                    labels={labels.pagination}
+                    formatNumber={formatNumber}
+                />
+            </div>
+            {selectedIds.size > 0 && bulkActions !== undefined ? (
+                <BulkActionsHost
+                    selectedCount={selectedIds.size}
+                    render={bulkActions}
+                    table={table}
+                    selectedIds={selectedIds}
+                    onClear={() => onSelectedIdsChange(new Set())}
+                />
+            ) : null}
+        </div>
+    );
+}
+
+interface BodyRowProps<TData> {
+    row: Row<TData>;
+    rowIndex: number;
+    cellClass: string;
+    rowHeightClass: string;
+    renderSubComponent?: SubRowRenderer<TData>;
+    onRowOpen?: (row: TData) => void;
+}
+
+function DataTableBodyRow<TData>({
+    row,
+    rowIndex,
+    cellClass,
+    rowHeightClass,
+    renderSubComponent,
+    onRowOpen,
+}: BodyRowProps<TData>) {
+    const isExpanded = row.getIsExpanded();
+    return (
+        <>
+            <TableRow
+                tabIndex={0}
+                data-row-index={rowIndex}
+                data-state={row.getIsSelected() ? "selected" : undefined}
+                className={cn(
+                    rowHeightClass,
+                    "outline-none transition-colors focus-visible:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring",
+                    "group/row hover:bg-muted/40",
+                    row.getIsSelected() && "bg-accent/40",
+                )}
+                onClick={(event) => {
+                    if (onRowOpen === undefined) return;
+                    const target = event.target as HTMLElement;
+                    /** Don't navigate when the click landed on an interactive descendant. */
+                    if (target.closest("button, a, input, label, [role='menuitem']") !== null) return;
+                }}
+            >
+                {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                        key={cell.id}
+                        className={cn(
+                            cellClass,
+                            (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
+                        )}
+                        style={{ width: cell.column.columnDef.size }}
+                    >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                ))}
+            </TableRow>
+            {isExpanded && renderSubComponent !== undefined && (
+                <TableRow className="border-primary/20 border-t bg-muted/30">
+                    <TableCell colSpan={row.getVisibleCells().length} className="p-0">
+                        {renderSubComponent(row)}
+                    </TableCell>
+                </TableRow>
+            )}
+        </>
+    );
+}
+
+interface BulkActionsHostProps<TData> {
+    selectedCount: number;
+    selectedIds: ReadonlySet<string>;
+    render: BulkActionsRenderer<TData>;
+    table: ReturnType<typeof useReactTable<TData>>;
+    onClear: () => void;
+}
+
+function BulkActionsHost<TData>({ selectedCount, selectedIds, render, table, onClear }: BulkActionsHostProps<TData>) {
+    if (selectedCount === 0) return null;
+    return <>{render({ table, selectedIds, clearSelection: onClear })}</>;
+}
+
+/** Re-export a small grab-bag so consumers can avoid deep imports. */
+export type { LucideIcon };
