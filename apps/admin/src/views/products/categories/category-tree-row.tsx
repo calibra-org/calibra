@@ -18,14 +18,8 @@ interface CategoryTreeRowViewProps {
     row: CategoryTreeRow;
     locale: Locale;
     isSelected: boolean;
-    /** This row is the one currently being dragged — render it as a destination outline. */
+    /** This row is the one currently being dragged — render it dimmed in place. */
     isActive: boolean;
-    /** The active row's projection lands inside this row — render with full nesting halo. */
-    isDropParent: boolean;
-    /** Drop indicator above this row — render an insertion line at the top edge. */
-    showAboveLine: boolean;
-    /** Drop indicator below this row — render an insertion line at the bottom edge. */
-    showBelowLine: boolean;
     /** First row in the visible list — skips the top divider. */
     isFirst: boolean;
     /** Override the row's indent while dragging — reflects the projected post-drop depth. */
@@ -53,9 +47,6 @@ export function CategoryTreeRowView({
     locale,
     isSelected,
     isActive,
-    isDropParent,
-    showAboveLine,
-    showBelowLine,
     isFirst,
     overrideDepth,
     onSelect,
@@ -125,38 +116,14 @@ export function CategoryTreeRowView({
 
             {/**
              * Always-visible divider in the gap above this row (skipped on the first row).
-             * Faint by default — operators see where the "insert between" zones are so they
-             * can aim for them. Logical inset-inline so it spans the writing direction
-             * cleanly.
+             * Faint structural separator — operators read the list as a stack of cards even
+             * at rest. Logical inset-inline so the line spans the writing direction cleanly.
              */}
             {!isFirst && (
                 <span
                     aria-hidden="true"
                     className="pointer-events-none absolute start-3 end-3 h-px bg-border/60"
                     style={{ top: "-1px" }}
-                />
-            )}
-
-            {/**
-             * Drop indicator — the same thin horizontal bar as the divider, just primary
-             * coloured and thicker, anchored at the projected insertion depth.
-             *
-             *   - above target → top edge, starts at `row.depth` indent (sits on the
-             *     divider line above this row)
-             *   - below target → bottom edge, starts at `row.depth` indent
-             *   - inside target → bottom edge, starts at `row.depth + 1` indent (deeper
-             *     than the row's own indent, so the bar reads as "new child under this")
-             */}
-            {(showAboveLine || showBelowLine || isDropParent) && (
-                <span
-                    aria-hidden="true"
-                    className={cn(
-                        "pointer-events-none absolute end-3 z-10 h-[3px] rounded-full bg-primary shadow-sm shadow-primary/30 transition-[inset-inline-start] duration-100 ease-out",
-                        showAboveLine ? "-top-[2px]" : "-bottom-[2px]",
-                    )}
-                    style={{
-                        insetInlineStart: `${(isDropParent ? row.depth + 1 : row.depth) * TREE_INDENT_PX + 12}px`,
-                    }}
                 />
             )}
 
@@ -179,10 +146,10 @@ export function CategoryTreeRowView({
                     "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30",
                     isSelected && !isActive && "border-primary/30 bg-primary/5 shadow-xs",
                     /**
-                     * No row-level treatment for the drop target — the vertical indicator bar
-                     * above carries the entire signal. Layering background tint / border here
-                     * fought the indicator for attention and made it harder to tell which row
-                     * the line "belonged" to.
+                     * No row-level treatment for the drop target. The DragOverlay ghost +
+                     * caption + the dimmed in-list active row (which animates to the
+                     * projected indent via {@link overrideDepth}) carry the entire signal of
+                     * "where will this land".
                      */
                 )}
                 style={{ paddingInlineStart: `${indentPx + 8}px` }}

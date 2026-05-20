@@ -106,10 +106,6 @@ export function CategoryTree({
                 <div role="tree" aria-label={t("tree.label")} className="flex flex-col gap-0.5">
                     {flatRowsForDrag.map((row, index) => {
                         const isActive = activeId === row.category.id;
-                        const isTarget = projection?.targetId === row.category.id && activeId !== null;
-                        const isDropParent = isTarget && projection?.kind === "inside";
-                        const showAboveLine = isTarget && projection?.kind === "above";
-                        const showBelowLine = isTarget && projection?.kind === "below";
                         const overrideDepth = isActive ? activeProjectedDepth : null;
                         return (
                             <CategoryTreeRowView
@@ -118,9 +114,6 @@ export function CategoryTree({
                                 locale={locale}
                                 isSelected={selectedId === row.category.id}
                                 isActive={isActive}
-                                isDropParent={isDropParent}
-                                showAboveLine={showAboveLine}
-                                showBelowLine={showBelowLine}
                                 isFirst={index === 0}
                                 overrideDepth={overrideDepth}
                                 onSelect={onSelect}
