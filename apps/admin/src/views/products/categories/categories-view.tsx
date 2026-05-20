@@ -8,7 +8,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import { ScrollArea } from "#/components/ui/scroll-area";
 import { formatNumber } from "#/lib/format";
 import type { AdminCategory } from "#/lib/types";
 import { cn } from "#/lib/utils";
@@ -210,7 +209,12 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                         locale={locale}
                     />
 
-                    <ScrollArea viewportClassName="max-h-[calc(100dvh-280px)] min-h-[420px]">
+                    {/**
+                     * Native browser scroll so wheel + auto-scroll work during a drag. The
+                     * Base UI {@link ScrollArea} swallows the wheel during dnd-kit's pointer
+                     * capture, making mid-drag scrolling effectively impossible.
+                     */}
+                    <div className="custom-scrollbar max-h-[calc(100dvh-280px)] min-h-[420px] overflow-y-auto">
                         {filteredFlatRows.length === 0 ? (
                             <EmptyTreeState onCreate={() => handleAddChild(null)} hasSearch={search.length > 0} />
                         ) : (
@@ -232,7 +236,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                                 onDragCancel={tree.onDragCancel}
                             />
                         )}
-                    </ScrollArea>
+                    </div>
 
                     <KeyboardHints />
                 </div>

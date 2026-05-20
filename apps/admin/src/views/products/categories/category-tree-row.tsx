@@ -115,12 +115,16 @@ export function CategoryTreeRowView({
             <TreeRails depth={row.depth} />
 
             {/**
-             * Accent bar on the start side of the projected parent — reads as "this is the
-             * row about to gain a new child" even at a glance, before the eye registers the
-             * background tint or the inline badge.
+             * Flag-style accent on the projected parent's start side — full row height with
+             * the end (inner) edge rounded so it reads as a tab sticking out of the row's
+             * leading edge. `rounded-e-full` is logical so the curved side flips with the
+             * writing direction.
              */}
             {isDropParent && (
-                <span aria-hidden="true" className="pointer-events-none absolute inset-y-1 start-0 w-1 rounded-full bg-primary" />
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 start-0 w-1.5 rounded-e-full bg-primary"
+                />
             )}
 
             <div
@@ -132,15 +136,23 @@ export function CategoryTreeRowView({
                 onClick={() => onSelect(row.category.id)}
                 onKeyDown={handleRowKeyDown}
                 className={cn(
-                    "flex h-12 items-center gap-2 rounded-lg border border-transparent bg-transparent pe-2 transition-[padding,background,border,box-shadow] duration-150",
+                    /**
+                     * Base border stays at 2 px (transparent) so toggling the active /
+                     * drop-parent states doesn't shift the row down by 1 px when borders
+                     * thicken — every state below picks the same border width.
+                     */
+                    "flex h-12 items-center gap-2 rounded-lg border-2 border-transparent bg-transparent pe-2 transition-[padding,background,border,box-shadow] duration-150",
                     "hover:bg-accent/40",
                     "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30",
                     isSelected && !isActive && "border-primary/30 bg-primary/5 shadow-xs",
-                    /** Active row renders as the destination outline — dashed, no fill. */
-                    isActive && "border-2 border-primary/50 border-dashed bg-primary/5",
-                    /** Drop-parent treatment: bright primary tint, primary border, soft glow. */
-                    isDropParent &&
-                        "border-primary bg-primary/15 shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-primary)_15%,transparent)]",
+                    /** Active row reads as the destination outline — dashed primary, light fill. */
+                    isActive && "border-primary/50 border-dashed bg-primary/5",
+                    /**
+                     * Drop-parent treatment: solid primary border + saturated tint. No heavy
+                     * spread shadow — the flag accent + border do the heavy lifting and stay
+                     * crisp in dense lists.
+                     */
+                    isDropParent && "border-primary bg-primary/15",
                 )}
                 style={{ paddingInlineStart: `${indentPx + 8}px` }}
             >
