@@ -24,6 +24,7 @@ function applyTheme(theme: Theme): void {
      * Persist the resolved value (not the user's "system" intent) so SSR can render the matching
      * `.dark` class on `<html>` without an inline boot script — no FOUC, no React 19 warning.
      */
+    // biome-ignore lint/suspicious/noDocumentCookie: theme preference must be readable from the server during SSR; a cookie is the only option
     document.cookie = `${COOKIE_NAME}=${resolved};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
 }
 

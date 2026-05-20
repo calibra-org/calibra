@@ -42,7 +42,7 @@ function SelectContent({ className, children, ...props }: React.ComponentProps<t
                     data-slot="select-content"
                     className={cn(
                         "max-h-80 min-w-[--anchor-width] origin-[var(--transform-origin)] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none",
-                        "data-[starting-style]:scale-95 data-[starting-style]:opacity-0 data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
+                        "data-[ending-style]:scale-95 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
                         "transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none",
                         className,
                     )}

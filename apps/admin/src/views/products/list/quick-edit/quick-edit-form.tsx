@@ -417,7 +417,7 @@ interface ToggleRowProps {
     span?: string;
 }
 
-function ToggleRow({ id, title, description, icon, checked, onChange, compact, span }: ToggleRowProps) {
+function ToggleRow({ id, title, icon, checked, onChange, compact, span }: ToggleRowProps) {
     return (
         <label
             htmlFor={id}

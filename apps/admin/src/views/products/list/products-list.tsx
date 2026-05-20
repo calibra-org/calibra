@@ -240,7 +240,7 @@ export function ProductsList() {
                             <TabsTrigger key={value} value={value} className="px-0">
                                 <span>{label}</span>
                                 {count !== undefined && (
-                                    <span className="ms-1 tabular-nums text-muted-foreground/80">
+                                    <span className="ms-1 text-muted-foreground/80 tabular-nums">
                                         ({formatNumber(count, locale)})
                                     </span>
                                 )}

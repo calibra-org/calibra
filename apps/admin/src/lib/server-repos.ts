@@ -43,9 +43,6 @@ type SdkAdminProduct = Schemas["AdminProduct"];
 type SdkAdminProductDetail = Schemas["AdminProductDetail"];
 type SdkAdminTaxonomy = Schemas["AdminTaxonomy"];
 type SdkAdminAttribute = Schemas["AdminAttribute"];
-type SdkAdminReview = Schemas["AdminReview"];
-type SdkAdminCustomer = Schemas["AdminCustomer"];
-type SdkAdminCoupon = Schemas["AdminCoupon"];
 type SdkAdminPaymentGateway = Schemas["AdminPaymentGateway"];
 
 interface ListParams {
@@ -68,7 +65,7 @@ function emptyPage<T>(perPage = 20): Paginated<T> {
     return { data: [], meta: { page: 1, perPage, total: 0, lastPage: 1 } };
 }
 
-const VIEW_PRODUCT_STATUS_MAP: Record<string, ProductStatus> = {
+const _VIEW_PRODUCT_STATUS_MAP: Record<string, ProductStatus> = {
     draft: "draft",
     published: "publish",
     archived: "draft",

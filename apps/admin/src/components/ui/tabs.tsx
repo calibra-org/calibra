@@ -1,8 +1,8 @@
 "use client";
 
 import { Tabs as BaseTabs } from "@base-ui/react/tabs";
-import { createContext, useContext } from "react";
 import type * as React from "react";
+import { createContext, useContext } from "react";
 
 import { cn } from "#/lib/utils";
 
@@ -150,7 +150,7 @@ function TabsIndicator({ className, variant: variantProp, ...props }: TabsIndica
                  * the list. Pinning to physical sides keeps the math consistent in both
                  * directions.
                  */
-                "[left:var(--active-tab-left)] w-[var(--active-tab-width)]",
+                "w-[var(--active-tab-width)] [left:var(--active-tab-left)]",
                 "rtl:[left:auto] rtl:[right:var(--active-tab-right)]",
                 variant === "default" &&
                     "top-[var(--active-tab-top)] h-[var(--active-tab-height)] rounded-md bg-background shadow-sm",

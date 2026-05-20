@@ -650,7 +650,7 @@ function DataTableBodyRow<TData>({
      */
     if (isExpanded && renderSubComponent !== undefined) {
         return (
-            <TableRow className="border-y border-primary/30 bg-muted/30">
+            <TableRow className="border-primary/30 border-y bg-muted/30">
                 <TableCell colSpan={visibleCellCount} className="p-0">
                     {renderSubComponent(row)}
                 </TableCell>
@@ -659,49 +659,47 @@ function DataTableBodyRow<TData>({
     }
 
     return (
-        <>
-            <TableRow
-                tabIndex={0}
-                data-row-index={rowIndex}
-                data-state={row.getIsSelected() ? "selected" : undefined}
-                className={cn(
-                    rowHeightClass,
-                    "outline-none transition-colors focus-visible:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring",
-                    "group/row hover:bg-muted/40",
-                    row.getIsSelected() && "bg-accent/40",
-                )}
-                onClick={(event) => {
-                    if (onRowOpen === undefined) return;
-                    const target = event.target as HTMLElement;
-                    /** Don't navigate when the click landed on an interactive descendant. */
-                    if (target.closest("button, a, input, label, [role='menuitem']") !== null) return;
-                }}
-            >
-                {row.getVisibleCells().map((cell) => {
-                    const explicitWidth = cell.column.columnDef.size;
-                    return (
-                        <TableCell
-                            key={cell.id}
-                            className={cn(
-                                cellClass,
-                                /** Mirror of the header pseudo-divider — same opacity so header + body grid read as one. */
-                                "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
-                                "first:before:hidden",
-                                SORTABLE_HEADER_NO_LEADING_DIVIDER.has(cell.column.id) && "before:hidden",
-                                (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
-                            )}
-                            style={
-                                explicitWidth !== undefined
-                                    ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth }
-                                    : undefined
-                            }
-                        >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                    );
-                })}
-            </TableRow>
-        </>
+        <TableRow
+            tabIndex={0}
+            data-row-index={rowIndex}
+            data-state={row.getIsSelected() ? "selected" : undefined}
+            className={cn(
+                rowHeightClass,
+                "outline-none transition-colors focus-visible:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring",
+                "group/row hover:bg-muted/40",
+                row.getIsSelected() && "bg-accent/40",
+            )}
+            onClick={(event) => {
+                if (onRowOpen === undefined) return;
+                const target = event.target as HTMLElement;
+                /** Don't navigate when the click landed on an interactive descendant. */
+                if (target.closest("button, a, input, label, [role='menuitem']") !== null) return;
+            }}
+        >
+            {row.getVisibleCells().map((cell) => {
+                const explicitWidth = cell.column.columnDef.size;
+                return (
+                    <TableCell
+                        key={cell.id}
+                        className={cn(
+                            cellClass,
+                            /** Mirror of the header pseudo-divider — same opacity so header + body grid read as one. */
+                            "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
+                            "first:before:hidden",
+                            SORTABLE_HEADER_NO_LEADING_DIVIDER.has(cell.column.id) && "before:hidden",
+                            (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
+                        )}
+                        style={
+                            explicitWidth !== undefined
+                                ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth }
+                                : undefined
+                        }
+                    >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                );
+            })}
+        </TableRow>
     );
 }
 

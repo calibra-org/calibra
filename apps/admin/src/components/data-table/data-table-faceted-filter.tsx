@@ -68,7 +68,7 @@ export function DataTableFacetedFilter({
                         {selectedSet.size > 0 && (
                             <>
                                 <span className="h-4 w-px bg-border" aria-hidden="true" />
-                                <Badge variant="secondary" className="rounded-sm px-1 tabular-nums text-[10px]">
+                                <Badge variant="secondary" className="rounded-sm px-1 text-[10px] tabular-nums">
                                     {selectedLabelFormat(selectedSet.size)}
                                 </Badge>
                             </>
@@ -104,7 +104,7 @@ export function DataTableFacetedFilter({
                                             {option.icon !== undefined && <span aria-hidden="true">{option.icon}</span>}
                                             <span className="flex-1 truncate">{option.label}</span>
                                             {option.count !== undefined && (
-                                                <span className="tabular-nums text-muted-foreground text-xs">{option.count}</span>
+                                                <span className="text-muted-foreground text-xs tabular-nums">{option.count}</span>
                                             )}
                                         </button>
                                     </li>

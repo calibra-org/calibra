@@ -73,7 +73,7 @@ export function NumberField({
                     placeholder={placeholder}
                     dir="ltr"
                     className={cn(
-                        "min-w-0 flex-1 bg-transparent px-3 text-foreground outline-none placeholder:text-muted-foreground/70 tabular-nums",
+                        "min-w-0 flex-1 bg-transparent px-3 text-foreground tabular-nums outline-none placeholder:text-muted-foreground/70",
                         inputClassName,
                     )}
                 />

@@ -137,8 +137,8 @@ function ColumnDragGrip() {
             {...(handle.listeners ?? {})}
             className={cn(
                 "grid size-4 shrink-0 cursor-grab touch-none place-items-center text-transparent outline-none transition-colors",
-                "group-hover/header:text-muted-foreground hover:!text-foreground focus-visible:!text-foreground",
-                handle.isDragging && "cursor-grabbing !text-foreground",
+                "hover:!text-foreground focus-visible:!text-foreground group-hover/header:text-muted-foreground",
+                handle.isDragging && "!text-foreground cursor-grabbing",
             )}
         >
             <GripVertical className="size-3.5" aria-hidden="true" />

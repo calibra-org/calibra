@@ -107,6 +107,7 @@ export function DataTableViewOptions({
                         className="flex flex-col gap-0.5"
                     >
                         {(["comfortable", "cozy", "compact"] as const).map((option) => (
+                            // biome-ignore lint/a11y/noLabelWithoutControl: Radio.Root is a focusable button — wrapping it in a label is the right click-into pattern for Base UI's RadioGroup
                             <label
                                 key={option}
                                 className={cn(
