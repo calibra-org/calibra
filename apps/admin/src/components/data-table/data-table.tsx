@@ -297,25 +297,32 @@ export function DataTable<TData>({
                             <TableHeader className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id} className="border-border border-b">
-                                        {headerGroup.headers.map((header) => (
-                                            <TableHead
-                                                key={header.id}
-                                                className={cn(
-                                                    cellClass,
-                                                    "text-start text-xs",
-                                                    /** `meta.cellClass` lets columns add stick/align classes. */
-                                                    (header.column.columnDef.meta as { headerClassName?: string } | undefined)
-                                                        ?.headerClassName,
-                                                )}
-                                                style={{
-                                                    width: header.column.columnDef.size,
-                                                }}
-                                            >
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(header.column.columnDef.header, header.getContext())}
-                                            </TableHead>
-                                        ))}
+                                        {headerGroup.headers.map((header) => {
+                                            const explicitWidth = header.column.columnDef.size;
+                                            return (
+                                                <TableHead
+                                                    key={header.id}
+                                                    className={cn(
+                                                        cellClass,
+                                                        "text-start text-xs",
+                                                        (
+                                                            header.column.columnDef.meta as
+                                                                | { headerClassName?: string }
+                                                                | undefined
+                                                        )?.headerClassName,
+                                                    )}
+                                                    style={
+                                                        explicitWidth !== undefined
+                                                            ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth }
+                                                            : undefined
+                                                    }
+                                                >
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(header.column.columnDef.header, header.getContext())}
+                                                </TableHead>
+                                            );
+                                        })}
                                     </TableRow>
                                 ))}
                             </TableHeader>
@@ -490,18 +497,25 @@ function DataTableBodyRow<TData>({
                     if (target.closest("button, a, input, label, [role='menuitem']") !== null) return;
                 }}
             >
-                {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                        key={cell.id}
-                        className={cn(
-                            cellClass,
-                            (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
-                        )}
-                        style={{ width: cell.column.columnDef.size }}
-                    >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                ))}
+                {row.getVisibleCells().map((cell) => {
+                    const explicitWidth = cell.column.columnDef.size;
+                    return (
+                        <TableCell
+                            key={cell.id}
+                            className={cn(
+                                cellClass,
+                                (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
+                            )}
+                            style={
+                                explicitWidth !== undefined
+                                    ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth }
+                                    : undefined
+                            }
+                        >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                    );
+                })}
             </TableRow>
         </>
     );
