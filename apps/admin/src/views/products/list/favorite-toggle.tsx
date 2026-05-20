@@ -58,7 +58,7 @@ export function FavoriteToggle({ productId, initialIsFavorite }: FavoriteToggleP
             className={cn(
                 "grid size-7 place-items-center rounded-full outline-none transition-colors",
                 "hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
-                isFavorite ? "text-amber-500" : "text-muted-foreground/60 hover:text-amber-500",
+                isFavorite ? "text-amber-500" : "text-foreground/40 hover:text-amber-500",
             )}
         >
             <Star className={cn("size-4 transition-transform", isFavorite && "fill-amber-500")} aria-hidden="true" />

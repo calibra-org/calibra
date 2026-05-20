@@ -22,7 +22,7 @@ export function DataTableRowActions({ children, label, align = "end" }: DataTabl
                         {...props}
                         variant="ghost"
                         size="icon"
-                        className="size-7 text-muted-foreground hover:text-foreground"
+                        className="size-7 text-foreground/70 hover:bg-accent hover:text-foreground"
                         aria-label={label}
                     >
                         <MoreHorizontal className="size-4" aria-hidden="true" />
