@@ -15,7 +15,6 @@ import { Label } from "#/components/ui/label";
 import { NumberField } from "#/components/ui/number-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Switch } from "#/components/ui/switch";
-import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/toast";
 import { Link } from "#/lib/i18n/navigation";
 import { useQuickEditProduct } from "#/lib/products/mutations";
@@ -197,15 +196,6 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                 </Field>
                 <Field id="sku" label={t("sku")} error={errors.sku?.message} span="col-span-6 md:col-span-3">
                     <Input id="sku" dir="ltr" className="font-mono text-xs" {...register("sku")} />
-                </Field>
-
-                <Field
-                    id="shortDescription"
-                    label={t("shortDescription")}
-                    error={errors.shortDescription?.message}
-                    span="col-span-12"
-                >
-                    <Textarea id="shortDescription" rows={2} {...register("shortDescription")} />
                 </Field>
 
                 <Controller
