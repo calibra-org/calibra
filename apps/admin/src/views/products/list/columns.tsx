@@ -68,7 +68,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
     return [
         {
             id: "select",
-            meta: { headerClassName: "w-10", cellClassName: "w-10" },
+            meta: { headerClassName: "!px-2", cellClassName: "!px-2" },
             header: ({ table }) => {
                 const all = table.getIsAllRowsSelected();
                 const some = table.getIsSomeRowsSelected();
@@ -91,19 +91,19 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             ),
             enableSorting: false,
             enableHiding: false,
-            size: 36,
+            size: 44,
         },
         {
             id: "favorite",
-            meta: { headerClassName: "w-10", cellClassName: "w-10" },
+            meta: { headerClassName: "!px-2", cellClassName: "!px-2" },
             header: sortableHeader("favorite", ctx.t("columns.favorite"), "px-0"),
             cell: ({ row }) => <FavoriteToggle productId={row.original.id} initialIsFavorite={ctx.isFavorite(row.original.id)} />,
             enableSorting: true,
-            size: 40,
+            size: 48,
         },
         {
             id: "image",
-            meta: { headerClassName: "w-14", cellClassName: "w-14" },
+            meta: { headerClassName: "!px-2", cellClassName: "!px-2" },
             header: () => (
                 <span className="sr-only" aria-hidden="true">
                     {ctx.t("columns.image")}
@@ -293,7 +293,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         },
         {
             id: "actions",
-            meta: { headerClassName: "w-12", cellClassName: "w-12 sticky end-0 bg-card" },
+            meta: { headerClassName: "!px-2", cellClassName: "!px-2 sticky end-0 bg-card" },
             header: () => (
                 <span className="sr-only" aria-hidden="true">
                     {ctx.t("columns.actions")}

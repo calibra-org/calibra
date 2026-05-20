@@ -239,6 +239,8 @@ export function ProductsList() {
                 onSelectedIdsChange={tableState.setSelected}
                 columnVisibility={tableState.columnVisibility}
                 onColumnVisibilityChange={tableState.setColumnVisibility}
+                columnOrder={tableState.columnOrder}
+                onColumnOrderChange={tableState.setColumnOrder}
                 density={tableState.density}
                 isLoading={isPending}
                 isError={isError}

@@ -153,6 +153,13 @@ export function useDataTable(options: UseDataTableOptions) {
         options.defaultColumnVisibility ?? {},
     );
 
+    /**
+     * Persisted column order. Empty array means "follow the column definition order"; the
+     * consumer wires this up via TanStack's `onColumnOrderChange` so drag-reorder + the
+     * column-settings popover both feed the same key.
+     */
+    const [columnOrder, setColumnOrder] = useLocalStorageState<string[]>(`admin.dataTable.${options.id}.order`, []);
+
     const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
     const setSelected = useCallback((next: ReadonlySet<string>) => setSelectedIds(next), []);
     const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
@@ -184,6 +191,8 @@ export function useDataTable(options: UseDataTableOptions) {
         setDensity,
         columnVisibility,
         setColumnVisibility,
+        columnOrder,
+        setColumnOrder,
         selectedIds,
         setSelected,
         clearSelection,

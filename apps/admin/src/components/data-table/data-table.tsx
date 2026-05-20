@@ -1,23 +1,45 @@
 "use client";
 
 import {
+    closestCenter,
+    DndContext,
+    type DragEndEvent,
+    KeyboardSensor,
+    MouseSensor,
+    TouchSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
+import {
+    arrayMove,
+    horizontalListSortingStrategy,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
     type ColumnDef,
+    type ColumnOrderState,
     type ExpandedState,
     flexRender,
     getCoreRowModel,
     getExpandedRowModel,
+    type Header,
     type Row,
     type RowSelectionState,
     useReactTable,
     type VisibilityState,
 } from "@tanstack/react-table";
 import { AlertTriangle, type LucideIcon } from "lucide-react";
-import { type KeyboardEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "#/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
 
+import { ColumnDragHandleProvider } from "./column-drag-handle-context";
 import { DataTableEmpty } from "./data-table-empty";
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableSkeleton } from "./data-table-skeleton";
@@ -58,6 +80,10 @@ export interface DataTableProps<TData> {
     /** Column visibility map. Undefined keys = visible. */
     columnVisibility: Record<string, boolean>;
     onColumnVisibilityChange: (next: Record<string, boolean>) => void;
+
+    /** Persisted column order. Empty array means "follow column definition order". */
+    columnOrder?: string[];
+    onColumnOrderChange?: (next: string[]) => void;
 
     density: DataTableDensity;
 
@@ -137,6 +163,8 @@ export function DataTable<TData>({
     onSelectedIdsChange,
     columnVisibility,
     onColumnVisibilityChange,
+    columnOrder,
+    onColumnOrderChange,
     density,
     isLoading = false,
     isError = false,
@@ -185,6 +213,21 @@ export function DataTable<TData>({
         return out;
     }, [columnVisibility]);
 
+    /**
+     * Reconcile the persisted column order against the live column set: any persisted ids that
+     * no longer exist drop out; any newly-added columns slot in at the end. An empty persisted
+     * order falls back to TanStack's natural definition order.
+     */
+    const effectiveColumnOrder = useMemo<ColumnOrderState>(() => {
+        const allIds = columns.map((column) => column.id).filter((id): id is string => typeof id === "string");
+        if (columnOrder === undefined || columnOrder.length === 0) return allIds;
+        const known = new Set(allIds);
+        const ordered = columnOrder.filter((id) => known.has(id));
+        const seen = new Set(ordered);
+        const appended = allIds.filter((id) => !seen.has(id));
+        return [...ordered, ...appended];
+    }, [columns, columnOrder]);
+
     const table = useReactTable<TData>({
         data,
         columns,
@@ -192,6 +235,7 @@ export function DataTable<TData>({
         state: {
             rowSelection,
             columnVisibility: visibilityState,
+            columnOrder: effectiveColumnOrder,
             expanded,
         },
         enableRowSelection: true,
@@ -213,11 +257,43 @@ export function DataTable<TData>({
             const next = typeof updater === "function" ? updater(visibilityState) : updater;
             onColumnVisibilityChange(next as Record<string, boolean>);
         },
+        onColumnOrderChange: (updater) => {
+            if (onColumnOrderChange === undefined) return;
+            const next = typeof updater === "function" ? updater(effectiveColumnOrder) : updater;
+            onColumnOrderChange(next);
+        },
         onExpandedChange: setExpanded,
         getCoreRowModel: getCoreRowModel(),
         getExpandedRowModel: getExpandedRowModel(),
         getRowCanExpand: () => renderSubComponent !== undefined,
     });
+
+    /** DnD sensors — pointer / touch / keyboard with a small activation distance so clicks don't trigger a drag. */
+    const dndSensors = useSensors(
+        useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 6 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+
+    const onDragEnd = useCallback(
+        (event: DragEndEvent) => {
+            const { active, over } = event;
+            if (over === null || active.id === over.id) return;
+            const current = effectiveColumnOrder;
+            const oldIndex = current.indexOf(active.id as string);
+            const newIndex = current.indexOf(over.id as string);
+            if (oldIndex === -1 || newIndex === -1) return;
+            const next = arrayMove(current, oldIndex, newIndex);
+            onColumnOrderChange?.(next);
+        },
+        [effectiveColumnOrder, onColumnOrderChange],
+    );
+
+    /** Pinned columns (select / actions) stay put — only data columns participate in sorting. */
+    const sortableHeaderIds = useMemo(() => {
+        const PINNED = new Set(["select", "actions"]);
+        return effectiveColumnOrder.filter((id) => PINNED.has(id) === false);
+    }, [effectiveColumnOrder]);
 
     const visibleRows = table.getRowModel().rows;
     const cellClass = DENSITY_CLASSES[density].cell;
@@ -293,36 +369,24 @@ export function DataTable<TData>({
                 {/** Desktop / tablet: real <table>. */}
                 <div className={cn("hidden md:block", renderCard !== undefined && "md:block")}>
                     <div className="max-h-[calc(100dvh-22rem)] overflow-y-auto [&_[data-slot=table-container]]:overflow-x-hidden">
-                        <Table className="w-full">
-                            <TableHeader className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                    <TableRow key={headerGroup.id} className="border-border border-b">
-                                        {headerGroup.headers.map((header) => {
-                                            const explicitWidth = header.column.columnDef.size;
-                                            return (
-                                                <TableHead
-                                                    key={header.id}
-                                                    className={cn(
-                                                        cellClass,
-                                                        "text-start text-xs",
-                                                        (
-                                                            header.column.columnDef.meta as
-                                                                | { headerClassName?: string }
-                                                                | undefined
-                                                        )?.headerClassName,
-                                                    )}
-                                                    style={
-                                                        explicitWidth !== undefined
-                                                            ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth }
-                                                            : undefined
-                                                    }
-                                                >
-                                                    {header.isPlaceholder
-                                                        ? null
-                                                        : flexRender(header.column.columnDef.header, header.getContext())}
-                                                </TableHead>
-                                            );
-                                        })}
+                        <DndContext
+                            sensors={dndSensors}
+                            collisionDetection={closestCenter}
+                            modifiers={[restrictToHorizontalAxis]}
+                            onDragEnd={onDragEnd}
+                        >
+                            <SortableContext items={sortableHeaderIds} strategy={horizontalListSortingStrategy}>
+                                <Table className="w-full">
+                                    <TableHeader className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
+                                        {table.getHeaderGroups().map((headerGroup) => (
+                                            <TableRow key={headerGroup.id} className="border-border border-b">
+                                                {headerGroup.headers.map((header) => (
+                                                    <SortableHeader
+                                                        key={header.id}
+                                                        header={header}
+                                                        cellClass={cellClass}
+                                                    />
+                                                ))}
                                     </TableRow>
                                 ))}
                             </TableHeader>
@@ -397,7 +461,9 @@ export function DataTable<TData>({
                                     ))
                                 )}
                             </TableBody>
-                        </Table>
+                                </Table>
+                            </SortableContext>
+                        </DndContext>
                     </div>
                 </div>
 
@@ -440,6 +506,52 @@ export function DataTable<TData>({
                 />
             ) : null}
         </div>
+    );
+}
+
+interface SortableHeaderProps<TData> {
+    header: Header<TData, unknown>;
+    cellClass: string;
+}
+
+/**
+ * `<th>` wrapper that registers with the surrounding `SortableContext`. Pinned columns
+ * (`select` / `actions`) skip dnd and render in place. While dragging the cell is translated
+ * via the `transform` returned by `useSortable`; opacity drops so the source position is still
+ * visible under the cursor.
+ */
+function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>) {
+    const PINNED = new Set(["select", "actions"]);
+    const isPinned = PINNED.has(header.column.id);
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
+        id: header.column.id,
+        disabled: isPinned,
+    });
+
+    const explicitWidth = header.column.columnDef.size;
+    const widthStyle: CSSProperties =
+        explicitWidth !== undefined ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth } : {};
+    const dragStyle: CSSProperties = isPinned
+        ? {}
+        : {
+              transform: CSS.Translate.toString(transform),
+              opacity: isDragging ? 0.7 : 1,
+              zIndex: isDragging ? 2 : undefined,
+              position: isDragging ? ("relative" as const) : undefined,
+          };
+
+    const headerMeta = header.column.columnDef.meta as { headerClassName?: string } | undefined;
+
+    return (
+        <ColumnDragHandleProvider attributes={attributes} listeners={listeners} isDragging={isDragging} isDraggable={!isPinned}>
+            <TableHead
+                ref={setNodeRef}
+                className={cn(cellClass, "text-start text-xs", headerMeta?.headerClassName)}
+                style={{ ...widthStyle, ...dragStyle }}
+            >
+                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+            </TableHead>
+        </ColumnDragHandleProvider>
     );
 }
 
