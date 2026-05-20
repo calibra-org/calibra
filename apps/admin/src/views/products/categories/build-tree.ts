@@ -133,16 +133,16 @@ export function projectDrop(args: {
     overId: number;
     positionInRow: number;
     nestOffset: number;
-    indentPx: number;
+    nestThreshold: number;
     movingSubtree: ReadonlySet<number>;
 }): DropProjection | null {
-    const { flatRows, activeId, overId, positionInRow, nestOffset, indentPx, movingSubtree } = args;
+    const { flatRows, activeId, overId, positionInRow, nestOffset, nestThreshold, movingSubtree } = args;
     if (overId === activeId) return null;
     const overRow = flatRows.find((r) => r.category.id === overId);
     if (overRow === undefined) return null;
 
     const canNestInside = overRow.depth < MAX_TREE_DEPTH && !movingSubtree.has(overId);
-    const wantsNest = canNestInside && nestOffset >= indentPx;
+    const wantsNest = canNestInside && nestOffset >= nestThreshold;
     const clamped = Math.max(0, Math.min(1, positionInRow));
 
     let kind: DropProjection["kind"];

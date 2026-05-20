@@ -6,7 +6,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { AdminCategory } from "#/lib/types";
 
 import { collectSubtreeIds, flattenCategoryTree, moveCategory, projectDrop, sortIntoDfsOrder } from "./build-tree";
-import { type CategoryTreeRow, type DropProjection, TREE_INDENT_PX } from "./types";
+import { type CategoryTreeRow, type DropProjection, NEST_HORIZONTAL_RATIO } from "./types";
 
 interface UseCategoriesTreeArgs {
     initialRows: AdminCategory[];
@@ -141,13 +141,18 @@ export function useCategoriesTree({ initialRows, direction }: UseCategoriesTreeA
              * "toward the deeper indent side" regardless of writing direction.
              */
             const nestOffset = direction === "rtl" ? -event.delta.x : event.delta.x;
+            /**
+             * Threshold scales with the hovered row's width, so the gesture stays
+             * proportional on narrow embedded trees and on full-page tables alike.
+             */
+            const nestThreshold = rect.width * NEST_HORIZONTAL_RATIO;
             const next = projectDrop({
                 flatRows: flatRowsForDrag,
                 activeId,
                 overId,
                 positionInRow,
                 nestOffset,
-                indentPx: TREE_INDENT_PX,
+                nestThreshold,
                 movingSubtree,
             });
             setProjection((prev) => (projectionsEqual(prev, next) ? prev : next));

@@ -51,5 +51,15 @@ export interface DropProjection {
 /** Hard ceiling on visible nesting. Past this point the tree gets unreadable; keep it sensible. */
 export const MAX_TREE_DEPTH = 5;
 
-/** Pixels of horizontal indent applied per depth level. Drag-to-indent uses the same constant. */
+/** Pixels of horizontal indent applied per depth level. */
 export const TREE_INDENT_PX = 22;
+
+/**
+ * Share of the hovered row's width the cursor must travel horizontally (in the deeper-indent
+ * direction) before the drop projection flips from "reorder" to "nest". A larger ratio gives
+ * a larger vertical-only "safe zone" — the user can drift sideways while reordering without
+ * accidentally nesting. 0.33 keeps a generous two-thirds of the row's width as the nest
+ * trigger but still requires a clearly intentional sideways gesture (≈ 200 px on a 600 px
+ * row, well past the noise floor of incidental cursor motion).
+ */
+export const NEST_HORIZONTAL_RATIO = 0.33;
