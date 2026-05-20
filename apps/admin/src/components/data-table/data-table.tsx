@@ -538,6 +538,13 @@ interface SortableHeaderProps<TData> {
  * visible under the cursor.
  */
 const SORTABLE_HEADER_PINNED = new Set(["select", "favorite", "actions"]);
+/**
+ * Subset of `SORTABLE_HEADER_PINNED` whose leading divider should be suppressed. The
+ * start-side cluster (`select`, `favorite`) sits flush with the row gutter, so a divider
+ * between them reads as noise. `actions` lives at the end and benefits from a leading
+ * divider that separates the row-actions cell from the last data column.
+ */
+const SORTABLE_HEADER_NO_LEADING_DIVIDER = new Set(["select", "favorite"]);
 
 function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>) {
     const isPinned = SORTABLE_HEADER_PINNED.has(header.column.id);
@@ -587,8 +594,8 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
                      */
                     "before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/15 before:content-['']",
                     "first:before:hidden",
-                    /** Pinned cells (select / favorite / actions) sit visually flush with the row gutter — no leading divider. */
-                    isPinned && "before:hidden",
+                    /** Start-side pinned cells (select / favorite) sit flush with the row gutter — actions keeps its leading divider. */
+                    SORTABLE_HEADER_NO_LEADING_DIVIDER.has(header.column.id) && "before:hidden",
                     headerMeta?.headerClassName,
                 )}
                 style={{ ...widthStyle, ...dragStyle }}
@@ -655,7 +662,6 @@ function DataTableBodyRow<TData>({
             >
                 {row.getVisibleCells().map((cell) => {
                     const explicitWidth = cell.column.columnDef.size;
-                    const isCellPinned = SORTABLE_HEADER_PINNED.has(cell.column.id);
                     return (
                         <TableCell
                             key={cell.id}
@@ -664,7 +670,7 @@ function DataTableBodyRow<TData>({
                                 /** Mirror of the header pseudo-divider — same opacity so header + body grid read as one. */
                                 "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/15 before:content-['']",
                                 "first:before:hidden",
-                                isCellPinned && "before:hidden",
+                                SORTABLE_HEADER_NO_LEADING_DIVIDER.has(cell.column.id) && "before:hidden",
                                 (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
                             )}
                             style={
