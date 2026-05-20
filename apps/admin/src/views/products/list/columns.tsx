@@ -193,14 +193,14 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         },
         {
             id: "stock",
-            header: sortableHeader("stock", ctx.t("columns.stock"), "text-end"),
-            meta: { cellClassName: "text-end" },
+            header: sortableHeader("stock", ctx.t("columns.stock")),
+            meta: { headerClassName: "text-end", cellClassName: "text-end" },
             cell: ({ row }) => {
                 const product = row.original;
                 const showLow =
                     product.stockQuantity !== null && product.stockQuantity > 0 && product.stockQuantity <= ctx.lowStockThreshold;
                 return (
-                    <div className="flex items-center justify-end gap-2">
+                    <span className="inline-flex items-center gap-2">
                         {product.stockQuantity !== null && (
                             <span className="font-mono text-muted-foreground text-xs">
                                 {formatNumber(product.stockQuantity, ctx.locale)}
@@ -212,26 +212,26 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                                 <AlertTriangle className="size-3.5" aria-hidden="true" />
                             </span>
                         )}
-                    </div>
+                    </span>
                 );
             },
             size: 160,
         },
         {
             id: "price",
-            header: sortableHeader("price", ctx.t("columns.price"), "text-end"),
-            meta: { cellClassName: "text-end" },
+            header: sortableHeader("price", ctx.t("columns.price")),
+            meta: { headerClassName: "text-end", cellClassName: "text-end" },
             cell: ({ row }) => {
                 const product = row.original;
                 return (
-                    <div className="flex flex-col text-end">
+                    <span className="inline-flex flex-col items-stretch text-end">
                         <span className="font-medium">{formatMoney(product.salePrice ?? product.regularPrice, ctx.locale)}</span>
                         {product.salePrice !== null && (
                             <span className="text-muted-foreground text-xs line-through">
                                 {formatMoney(product.regularPrice, ctx.locale)}
                             </span>
                         )}
-                    </div>
+                    </span>
                 );
             },
             size: 140,
@@ -286,8 +286,8 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         },
         {
             id: "views",
-            header: sortableHeader("views", ctx.t("columns.views"), "text-end"),
-            meta: { cellClassName: "text-end" },
+            header: sortableHeader("views", ctx.t("columns.views")),
+            meta: { headerClassName: "text-end", cellClassName: "text-end" },
             cell: () => <span className="text-muted-foreground text-xs">—</span>,
             size: 100,
         },
