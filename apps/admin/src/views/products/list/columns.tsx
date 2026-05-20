@@ -137,6 +137,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         {
             id: "name",
             header: sortableHeader("name", ctx.t("columns.name")),
+            size: 300,
             cell: ({ row }) => {
                 const product = row.original;
                 return (
