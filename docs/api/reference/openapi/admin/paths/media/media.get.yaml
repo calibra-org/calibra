@@ -1,0 +1,49 @@
+operationId: adminMediaIndex
+summary: List media library entries (admin)
+description: >
+    Paginated listing of every media row, ordered newest first. Filters match the WordPress
+    `/wp-admin/upload.php` filter pills — type group, month bucket, search, attached/unattached,
+    "mine".
+tags: [Admin / Media]
+
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - name: type
+      in: query
+      schema:
+          type: string
+          enum: [all, image, audio, video, document, spreadsheet, archive, unattached, mine]
+      description: >
+          MIME group (`image` / `audio` / `video` / `document` / `spreadsheet` / `archive`),
+          `unattached` for rows not linked to any product image, or `mine` for rows uploaded by
+          the calling user.
+    - name: month
+      in: query
+      schema: { type: string, pattern: "^\\d{4}-\\d{2}$" }
+      description: Filter to a single calendar month, formatted `YYYY-MM` (UTC).
+    - name: search
+      in: query
+      schema: { type: string }
+      description: Case-insensitive substring match against filename, title, alt, and URL.
+    - name: uploaded_by
+      in: query
+      schema: { type: integer, minimum: 1 }
+      description: Restrict to rows uploaded by the given user id.
+
+responses:
+    "200":
+        description: Paginated media list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminMedia.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

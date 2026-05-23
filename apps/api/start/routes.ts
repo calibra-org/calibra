@@ -24,4 +24,6 @@ await import("./routes/admin_refunds.js");
 await import("./routes/admin_notes.js");
 await import("./routes/admin_payments.js");
 await import("./routes/admin_reports.js");
+await import("./routes/admin_media.js");
+await import("./routes/uploads.js");
 await import("./routes/payment.js");

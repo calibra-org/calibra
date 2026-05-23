@@ -410,14 +410,20 @@ export class InventoryMovementSchema extends BaseModel {
 }
 
 export class MediaSchema extends BaseModel {
-  static $columns = ['alt', 'attributes', 'createdAt', 'height', 'id', 'kind', 'mime', 'sizeBytes', 'updatedAt', 'url', 'width'] as const
+  static $columns = ['alt', 'attributes', 'caption', 'createdAt', 'description', 'filename', 'height', 'id', 'kind', 'mime', 'sizeBytes', 'title', 'updatedAt', 'uploadedByUserId', 'url', 'width'] as const
   $columns = MediaSchema.$columns
   @column()
   declare alt: string | null
   @column()
   declare attributes: any
+  @column()
+  declare caption: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare description: string | null
+  @column()
+  declare filename: string | null
   @column()
   declare height: number | null
   @column({ isPrimary: true })
@@ -428,8 +434,12 @@ export class MediaSchema extends BaseModel {
   declare mime: string | null
   @column()
   declare sizeBytes: bigint | number | null
+  @column()
+  declare title: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+  @column()
+  declare uploadedByUserId: bigint | number | null
   @column()
   declare url: string
   @column()

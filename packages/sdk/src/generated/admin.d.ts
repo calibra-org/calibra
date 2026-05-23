@@ -1612,6 +1612,132 @@ export interface paths {
         patch: operations["adminReviewPatch"];
         trace?: never;
     };
+    "/api/v1/admin/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List media library entries (admin)
+         * @description Paginated listing of every media row, ordered newest first. Filters match the WordPress `/wp-admin/upload.php` filter pills — type group, month bucket, search, attached/unattached, "mine".
+         */
+        get: operations["adminMediaIndex"];
+        put?: never;
+        /**
+         * Upload a media file
+         * @description Single-file multipart upload. The form field name is `file`. The server persists the file on local disk under `storage/uploads/{yyyy}/{mm}/` and returns the row with the publicly fetchable URL. Files larger than the configured limit (20 MB by default) return 422.
+         */
+        post: operations["adminMediaUpload"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/media/months": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List media month buckets
+         * @description Returns every distinct `YYYY-MM` bucket present in the library, newest first. Used by the "Date" dropdown in the admin media workbench so the operator can scope the listing to a single calendar month without typing a date.
+         */
+        get: operations["adminMediaMonths"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/media/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a single media row
+         * @description Returns the full row, including editable metadata and the public URL.
+         */
+        get: operations["adminMediaShow"];
+        put?: never;
+        post?: never;
+        /**
+         * Permanently delete a media row
+         * @description Deletes the database row and best-effort removes the file from disk. Foreign-key references elsewhere (e.g. `product_images.media_id`) cascade or null per their migration definition; consult the schema before deleting a row attached to a published product.
+         */
+        delete: operations["adminMediaDelete"];
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Update media metadata
+         * @description Partial update — every field is optional, callers ship only what changed. The auto-save form in the admin media inspector uses this to persist alt / title / caption / description on blur.
+         */
+        patch: operations["adminMediaPatch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2420,6 +2546,40 @@ export interface components {
             verified?: boolean;
             /** Format: date-time */
             created_at?: string;
+        };
+        /**
+         * AdminMedia
+         * @description A single row from the media library. `kind` is `"image"` for image MIME types and `"file"` for everything else; the actual classification (audio / video / document / spreadsheet / archive) is driven from `mime`. `filename` is the displayable filename — derived from the URL for legacy seeded rows that have no stored filename, the original upload name for everything else. Sizes and dimensions are best-effort: `size_bytes` is reported by the upload pipeline; `width` / `height` are populated only when known.
+         */
+        AdminMedia: {
+            id: number;
+            /**
+             * @description Coarse classifier — `image` when the MIME is `image/*`, otherwise `file`.
+             * @enum {string}
+             */
+            kind: "image" | "file";
+            /**
+             * Format: uri
+             * @description Absolute URL the browser can fetch directly (no auth header required).
+             */
+            url: string;
+            /** @description Display filename. For uploads, the (sanitized) original filename; for legacy rows, derived from the URL. */
+            filename: string;
+            title?: string | null;
+            alt?: string | null;
+            caption?: string | null;
+            description?: string | null;
+            mime?: string | null;
+            width?: number | null;
+            height?: number | null;
+            /** @description File size in bytes. May be `null` for legacy / externally-sourced rows. */
+            size_bytes?: number | null;
+            /** @description User id of the operator who uploaded the file. `null` for seeded / system-imported rows. */
+            uploaded_by_user_id?: number | null;
+            /** Format: date-time */
+            created_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
         };
     };
     responses: {
@@ -5517,6 +5677,197 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminReview"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminMediaIndex: {
+        parameters: {
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1 when omitted. */
+                page?: components["parameters"]["PageQuery"];
+                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
+                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description MIME group (`image` / `audio` / `video` / `document` / `spreadsheet` / `archive`), `unattached` for rows not linked to any product image, or `mine` for rows uploaded by the calling user. */
+                type?: "all" | "image" | "audio" | "video" | "document" | "spreadsheet" | "archive" | "unattached" | "mine";
+                /** @description Filter to a single calendar month, formatted `YYYY-MM` (UTC). */
+                month?: string;
+                /** @description Case-insensitive substring match against filename, title, alt, and URL. */
+                search?: string;
+                /** @description Restrict to rows uploaded by the given user id. */
+                uploaded_by?: number;
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated media list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminMedia"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminMediaUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description The uploaded file.
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Media row created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminMedia"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminMediaMonths: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Distinct month buckets, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: string[];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminMediaShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Media row. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminMedia"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminMediaDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminMediaPatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string | null;
+                    alt?: string | null;
+                    caption?: string | null;
+                    description?: string | null;
+                    filename?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated media row. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminMedia"];
                     };
                 };
             };

@@ -15,6 +15,8 @@ import type {
     AdminCategory,
     AdminCoupon,
     AdminCustomer,
+    AdminMedia,
+    AdminMediaKind,
     AdminOrder,
     AdminPaymentGateway,
     AdminProduct,
@@ -323,6 +325,81 @@ export async function listAttributeTerms(attributeId: number): Promise<AdminAttr
         name: dup(t.name),
         slug: t.slug,
     }));
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Catalog: media library                                                     */
+/* -------------------------------------------------------------------------- */
+
+type SdkAdminMedia = Schemas["AdminMedia"];
+
+/** SSR-only filter mirror for the media listing. Optional — defaults give the full library. */
+export interface MediaListParams extends ListParams {
+    type?: "all" | "image" | "audio" | "video" | "document" | "spreadsheet" | "archive" | "unattached" | "mine";
+    month?: string;
+    uploadedBy?: number;
+}
+
+function toAdminMedia(m: SdkAdminMedia): AdminMedia {
+    return {
+        id: m.id,
+        kind: m.kind as AdminMediaKind,
+        url: m.url,
+        filename: m.filename,
+        title: m.title ?? null,
+        alt: m.alt ?? null,
+        caption: m.caption ?? null,
+        description: m.description ?? null,
+        mime: m.mime ?? null,
+        width: m.width ?? null,
+        height: m.height ?? null,
+        sizeBytes: m.size_bytes ?? null,
+        uploadedByUserId: m.uploaded_by_user_id ?? null,
+        createdAt: m.created_at ?? null,
+        updatedAt: m.updated_at ?? null,
+    };
+}
+
+/**
+ * Server-side media library listing. Caller decides paging — defaults to a generous 100 per page
+ * so the SSR seed covers the visible grid + the first "Load more" without a second fetch.
+ */
+export async function listMedia(params: MediaListParams = {}): Promise<Paginated<AdminMedia>> {
+    const api = await apiServer();
+    const { data, error } = await api.admin.GET("/api/v1/admin/media", {
+        params: {
+            query: {
+                ...(params.page !== undefined ? { page: params.page } : {}),
+                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+                ...(params.search ? { search: params.search } : {}),
+                ...(params.type !== undefined && params.type !== "all" ? { type: params.type } : {}),
+                ...(params.month !== undefined ? { month: params.month } : {}),
+                ...(params.uploadedBy !== undefined ? { uploaded_by: params.uploadedBy } : {}),
+            },
+        },
+    });
+    if (error !== undefined || !data) return emptyPage<AdminMedia>(params.perPage);
+    const rows = (data.data ?? []).map(toAdminMedia);
+    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    return { data: rows, meta };
+}
+
+export async function getMedia(id: number): Promise<AdminMedia | null> {
+    const api = await apiServer();
+    const { data, error } = await api.admin.GET("/api/v1/admin/media/{id}", { params: { path: { id } } });
+    if (error !== undefined || !data?.data) return null;
+    return toAdminMedia(data.data);
+}
+
+/**
+ * Returns the distinct `YYYY-MM` buckets present in the library, newest first. Used to seed the
+ * SSR snapshot of the date dropdown so the operator sees real values on first paint.
+ */
+export async function listMediaMonths(): Promise<string[]> {
+    const api = await apiServer();
+    const { data, error } = await api.admin.GET("/api/v1/admin/media/months", {});
+    if (error !== undefined || !data) return [];
+    return (data.data ?? []).filter((m): m is string => typeof m === "string");
 }
 
 /* -------------------------------------------------------------------------- */

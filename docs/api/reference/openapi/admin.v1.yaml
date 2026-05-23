@@ -62,6 +62,8 @@ tags:
       description: Shipping-class CRUD.
     - name: Admin / Catalog / Reviews
       description: Review moderation.
+    - name: Admin / Media
+      description: Media library — list, upload, edit metadata, delete.
     - name: Admin / Reports
       description: Dashboard-shaped aggregations (top sellers, …). Narrow surface, not a BI replacement.
 
@@ -369,3 +371,25 @@ paths:
             $ref: "./admin/paths/catalog/reviews-id.patch.yaml"
         delete:
             $ref: "./admin/paths/catalog/reviews-id.delete.yaml"
+
+    /api/v1/admin/media:
+        get:
+            $ref: "./admin/paths/media/media.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/media/media.post.yaml"
+    /api/v1/admin/media/months:
+        get:
+            $ref: "./admin/paths/media/media-months.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/media/{id}:
+        get:
+            $ref: "./admin/paths/media/media-id.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./admin/paths/media/media-id.patch.yaml"
+        delete:
+            $ref: "./admin/paths/media/media-id.delete.yaml"

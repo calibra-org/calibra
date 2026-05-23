@@ -16,6 +16,7 @@
         "brands": "Brands",
         "attributes": "Attributes",
         "reviews": "Reviews",
+        "media": "Media",
         "orders": "Orders",
         "refunds": "Refunds",
         "coupons": "Coupons",
@@ -1070,6 +1071,167 @@
         "spam": "Spam",
         "trash": "Trash",
         "any": "All"
+    },
+    "Media": {
+        "title": "Media library",
+        "subtitle": "Single source for the images, documents and files attached anywhere in the catalog.",
+        "subtitleStats": "{total} items · {images} images · {files} other files",
+        "addButton": "Add media",
+        "viewToggle": {
+            "grid": "Grid view",
+            "list": "List view"
+        },
+        "bulkToggle": "Bulk select",
+        "bulkToggleExit": "Exit bulk select",
+        "toolbar": {
+            "searchPlaceholder": "Search by filename or title",
+            "clearSearch": "Clear search"
+        },
+        "bulk": {
+            "selected": "{count} items selected",
+            "cancel": "Cancel",
+            "delete": "Delete permanently"
+        },
+        "table": {
+            "file": "File",
+            "author": "Uploaded by",
+            "uploadedIn": "Uploaded in",
+            "comments": "Comments",
+            "date": "Date",
+            "actions": "Actions",
+            "untitled": "Untitled",
+            "unknown": "—",
+            "selectAll": "Select all visible rows",
+            "selectRow": "Select {name}"
+        },
+        "row": {
+            "edit": "Edit",
+            "delete": "Permanently delete",
+            "view": "View",
+            "copyUrl": "Copy URL",
+            "download": "Download"
+        },
+        "tile": {
+            "selectAria": "Select {name}",
+            "openAria": "Open details for {name}",
+            "fallbackName": "Untitled"
+        },
+        "emptyList": {
+            "empty": {
+                "title": "No files uploaded yet",
+                "description": "Use “Add media” to drop the first file into the library — you can also drop multiple files anywhere on this page."
+            },
+            "noResults": {
+                "title": "Nothing matched",
+                "description": "Try a shorter term or change the filters."
+            }
+        },
+        "modal": {
+            "title": "Attachment details",
+            "previousAria": "Previous item",
+            "nextAria": "Next item",
+            "closeAria": "Close",
+            "savedToast": "Saved",
+            "saveButton": "Save changes",
+            "savingButton": "Saving…",
+            "copyToast": "URL copied",
+            "saveFailedToast": "Could not save changes",
+            "uploadedBy": "Uploaded by",
+            "uploadedAt": "Uploaded on",
+            "uploadedIn": "Uploaded in",
+            "metadata": {
+                "filename": "File name",
+                "filetype": "File type",
+                "filesize": "File size",
+                "dimensions": "Dimensions"
+            },
+            "fields": {
+                "alt": "Alternative text",
+                "altHelper": "Short description shown to screen readers — keep the first sentence telling.",
+                "title": "Title",
+                "caption": "Caption",
+                "description": "Description",
+                "url": "File URL"
+            },
+            "buttons": {
+                "copyUrl": "Copy URL to clipboard",
+                "editImage": "Edit image",
+                "editImageSoon": "Coming soon"
+            },
+            "footerLinks": {
+                "view": "View media file page",
+                "edit": "Edit more details",
+                "download": "Download file",
+                "delete": "Permanently delete"
+            },
+            "missing": {
+                "title": "That file could not be found",
+                "description": "It may have been deleted. Refresh the library."
+            },
+            "previewMissingAlt": "Preview unavailable"
+        },
+        "deleteDialog": {
+            "title": "Delete this file?",
+            "description": "This cannot be undone. If the file is attached to a product, category or brand, that link is removed.",
+            "cancel": "Cancel",
+            "confirm": "Delete",
+            "pending": "Deleting…"
+        },
+        "bulkDeleteDialog": {
+            "title": "Delete {count} files?",
+            "description": "This cannot be undone. Any attachments to products will be cleared.",
+            "cancel": "Cancel",
+            "confirm": "Delete permanently",
+            "pending": "Deleting…"
+        },
+        "loadMore": "Load more",
+        "loadMoreLoading": "Loading…",
+        "footerCount": {
+            "total": "Showing all {total} files",
+            "partial": "Showing {visible} of {total} files"
+        },
+        "mediaTypes": {
+            "all": "All media items",
+            "image": "Images",
+            "audio": "Audio",
+            "video": "Video",
+            "document": "Documents",
+            "spreadsheet": "Spreadsheets",
+            "archive": "Archives",
+            "unattached": "Unattached",
+            "mine": "Mine"
+        },
+        "dateFilter": {
+            "all": "All dates",
+            "monthLabel": "{month}"
+        },
+        "monthNames": {
+            "01": "January",
+            "02": "February",
+            "03": "March",
+            "04": "April",
+            "05": "May",
+            "06": "June",
+            "07": "July",
+            "08": "August",
+            "09": "September",
+            "10": "October",
+            "11": "November",
+            "12": "December"
+        },
+        "upload": {
+            "openButton": "Add media",
+            "title": "Upload files",
+            "subtitle": "Drop files onto the dropzone or click to pick from your computer.",
+            "dropHint": "Drop the file here",
+            "browse": "Browse files",
+            "remove": "Remove",
+            "uploading": "Uploading…",
+            "uploaded": "Uploaded",
+            "failed": "Upload failed",
+            "doneClose": "Done",
+            "filesCounter": "{done} of {total}"
+        }
     },
     "Orders": {
         "title": "Orders",

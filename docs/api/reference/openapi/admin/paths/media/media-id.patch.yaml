@@ -1,0 +1,38 @@
+operationId: adminMediaPatch
+summary: Update media metadata
+description: >
+    Partial update — every field is optional, callers ship only what changed. The auto-save form
+    in the admin media inspector uses this to persist alt / title / caption / description on blur.
+tags: [Admin / Media]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    title: { type: [string, "null"], maxLength: 512 }
+                    alt: { type: [string, "null"], maxLength: 512 }
+                    caption: { type: [string, "null"], maxLength: 2000 }
+                    description: { type: [string, "null"], maxLength: 4000 }
+                    filename: { type: string, maxLength: 512 }
+                additionalProperties: false
+
+responses:
+    "200":
+        description: Updated media row.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminMedia.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

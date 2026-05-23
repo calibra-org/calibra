@@ -5,6 +5,7 @@ import {
     BarChart3,
     Box,
     CreditCard,
+    Image as ImageIcon,
     LayoutDashboard,
     ListTree,
     Package,
@@ -50,6 +51,7 @@ const groups: NavGroup[] = [
             { href: "/products/brands", labelKey: "brands", icon: Ribbon },
             { href: "/products/attributes", labelKey: "attributes", icon: Sparkles },
             { href: "/products/reviews", labelKey: "reviews", icon: Star },
+            { href: "/media", labelKey: "media", icon: ImageIcon },
         ],
     },
     {
