@@ -51,6 +51,7 @@ export interface AdminCategory {
     name: LocalizedString;
     slug: LocalizedString;
     productCount: number;
+    imageMediaId: number | null;
     imageUrl: string | null;
 }
 
@@ -66,6 +67,7 @@ export interface AdminBrand {
     name: LocalizedString;
     slug: LocalizedString;
     productCount: number;
+    imageMediaId: number | null;
     logoUrl: string | null;
 }
 

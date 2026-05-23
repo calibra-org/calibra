@@ -19,6 +19,7 @@ export default class ProductCategoryTransformer extends BaseTransformer<ProductC
             parent_id: c.parentId === null ? null : Number(c.parentId),
             display: c.display,
             image_media_id: c.imageMediaId === null ? null : Number(c.imageMediaId),
+            image_url: c.image?.url ?? null,
             menu_order: c.menuOrder,
             name: translation?.name ?? null,
             slug: translation?.slug ?? null,

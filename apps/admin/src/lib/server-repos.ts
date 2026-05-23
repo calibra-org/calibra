@@ -140,6 +140,7 @@ function toAdminCategory(c: SdkAdminTaxonomy): AdminCategory {
         name: dup(c.name),
         slug: dup(c.slug),
         productCount: 0,
+        imageMediaId: c.image_media_id ?? null,
         imageUrl: c.image_url ?? null,
     };
 }
@@ -204,7 +205,14 @@ export async function listTags(params: ListParams = {}): Promise<Paginated<Admin
 }
 
 function toAdminBrand(b: SdkAdminTaxonomy): AdminBrand {
-    return { id: b.id, name: dup(b.name), slug: dup(b.slug), productCount: 0, logoUrl: b.image_url ?? null };
+    return {
+        id: b.id,
+        name: dup(b.name),
+        slug: dup(b.slug),
+        productCount: 0,
+        imageMediaId: b.image_media_id ?? null,
+        logoUrl: b.image_url ?? null,
+    };
 }
 
 export async function listBrands(params: ListParams = {}): Promise<Paginated<AdminBrand>> {

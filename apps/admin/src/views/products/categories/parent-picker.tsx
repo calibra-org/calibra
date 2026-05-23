@@ -42,6 +42,7 @@ export function ParentPicker({ rows, excludeId, excludeDescendants, value, onCha
             name: row.name,
             slug: row.slug,
             productCount: row.productCount ?? 0,
+            imageMediaId: row.imageMediaId ?? null,
             imageUrl: row.imageUrl ?? null,
         }));
         return flattenCategoryTree(adminLike, null).filter((row) => {

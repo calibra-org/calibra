@@ -10,12 +10,12 @@ const TAXONOMY_FIELDS = ["name", "slug", "description"] as const;
 
 export default class AdminCategoriesController {
     async index(ctx: HttpContext) {
-        const rows = await ProductCategory.query().preload("translations").orderBy("menu_order").orderBy("id");
+        const rows = await ProductCategory.query().preload("translations").preload("image").orderBy("menu_order").orderBy("id");
         return collection(ProductCategoryTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"));
     }
 
     async show(ctx: HttpContext) {
-        const row = await ProductCategory.query().where("id", ctx.params.id).preload("translations").first();
+        const row = await ProductCategory.query().where("id", ctx.params.id).preload("translations").preload("image").first();
         if (!row) return ctx.response.status(404).json({ error: "category_not_found" });
         return resource(ProductCategoryTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -41,6 +41,7 @@ export default class AdminCategoriesController {
             return created;
         });
         await row.load("translations");
+        await row.load("image");
         ctx.response.status(201);
         return resource(ProductCategoryTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -68,6 +69,7 @@ export default class AdminCategoriesController {
             }
         });
         await row.load("translations");
+        await row.load("image");
         return resource(ProductCategoryTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
 

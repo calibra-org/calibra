@@ -12,7 +12,12 @@ properties:
     name: { type: string, description: Resolved from the active locale. }
     slug: { type: string }
     locale: { type: string }
-    image_url: { type: [string, "null"] }
+    image_media_id:
+        type: [integer, "null"]
+        description: Foreign key into the media library. `null` clears the linked asset.
+    image_url:
+        type: [string, "null"]
+        description: Convenience read-only URL resolved from the linked media row; `null` when no asset is attached.
     menu_order: { type: integer }
     translations:
         type: array

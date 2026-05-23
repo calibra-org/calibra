@@ -71,6 +71,7 @@ export function BrandsView({ initialRows }: BrandsViewProps) {
                 name: row.name[locale],
                 slug: row.slug[locale],
                 parent_id: null,
+                image_media_id: row.imageMediaId,
                 image_url: row.logoUrl,
             })),
             meta: { page: 1, perPage: 200, total: initialRows.length, lastPage: 1 },
@@ -152,6 +153,7 @@ export function BrandsView({ initialRows }: BrandsViewProps) {
             name: { fa: "", en: "" },
             slug: { fa: "", en: "" },
             productCount: 0,
+            imageMediaId: null,
             logoUrl: null,
             description: { fa: "", en: "" },
         });
@@ -170,6 +172,7 @@ export function BrandsView({ initialRows }: BrandsViewProps) {
                         name: next.name[locale] ?? "",
                         slug: next.slug[locale] && next.slug[locale].length > 0 ? next.slug[locale] : null,
                         description,
+                        imageMediaId: next.imageMediaId,
                     },
                     {
                         onSuccess: (envelope) => {
@@ -180,6 +183,7 @@ export function BrandsView({ initialRows }: BrandsViewProps) {
                                 name: { fa: envelope.data.name, en: envelope.data.name },
                                 slug: { fa: envelope.data.slug, en: envelope.data.slug },
                                 productCount: 0,
+                                imageMediaId: envelope.data.image_media_id ?? null,
                                 logoUrl: envelope.data.image_url ?? null,
                                 description: next.description,
                             });
@@ -193,6 +197,7 @@ export function BrandsView({ initialRows }: BrandsViewProps) {
                 name: next.name[locale] ?? "",
                 slug: next.slug[locale] ?? "",
                 description,
+                imageMediaId: next.imageMediaId,
             });
         },
         [createMutation, locale, updateMutation],

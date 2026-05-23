@@ -32,6 +32,7 @@ function toAdminCategory(c: SdkAdminTaxonomy): AdminCategory {
         name: dup(c.name),
         slug: dup(c.slug),
         productCount: 0,
+        imageMediaId: c.image_media_id ?? null,
         imageUrl: c.image_url ?? null,
     };
 }
@@ -75,6 +76,7 @@ export interface CreateCategoryInput {
     slug: string | null;
     description: string | null;
     parentId: number | null;
+    imageMediaId?: number | null;
 }
 
 /** Create a category. Optional parent nesting; locale-resolved name + slug ship as one translation row. */
@@ -87,6 +89,9 @@ export function useCreateCategory() {
                 locale,
                 body: {
                     ...(input.parentId !== null ? { parent_id: input.parentId } : {}),
+                    ...(input.imageMediaId !== undefined && input.imageMediaId !== null
+                        ? { image_media_id: input.imageMediaId }
+                        : {}),
                     translations: [
                         {
                             locale,
@@ -111,6 +116,8 @@ export interface UpdateCategoryInput {
     slug: string;
     description: string | null;
     parentId: number | null;
+    /** Pass `undefined` to leave the linked media untouched, `null` to clear it. */
+    imageMediaId?: number | null;
 }
 
 /** Partial-update a category. */
@@ -118,11 +125,12 @@ export function useUpdateCategory() {
     const queryClient = useQueryClient();
     const locale = useLocale() as Locale;
     return useMutation<CategoryResourceEnvelope, Error, UpdateCategoryInput>({
-        mutationFn: ({ id, name, slug, description, parentId }) =>
+        mutationFn: ({ id, name, slug, description, parentId, imageMediaId }) =>
             apiMutate<CategoryResourceEnvelope>("PATCH", `categories/${id}`, {
                 locale,
                 body: {
                     parent_id: parentId,
+                    ...(imageMediaId !== undefined ? { image_media_id: imageMediaId } : {}),
                     translations: [
                         {
                             locale,

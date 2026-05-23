@@ -17,6 +17,7 @@ export default class ProductBrandTransformer extends BaseTransformer<ProductBran
         return {
             id: Number(b.id),
             image_media_id: b.imageMediaId === null ? null : Number(b.imageMediaId),
+            image_url: b.image?.url ?? null,
             menu_order: b.menuOrder,
             name: translation?.name ?? null,
             slug: translation?.slug ?? null,

@@ -168,6 +168,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
             name: { fa: "", en: "" },
             slug: { fa: "", en: "" },
             productCount: 0,
+            imageMediaId: null,
             imageUrl: null,
             description: { fa: "", en: "" },
         });
@@ -186,6 +187,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                         slug: slug.length > 0 ? slug : null,
                         description,
                         parentId: next.parentId,
+                        imageMediaId: next.imageMediaId,
                     },
                     {
                         onSuccess: (envelope) => {
@@ -195,6 +197,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                                 parentId: envelope.data.parent_id ?? null,
                                 name: { fa: envelope.data.name, en: envelope.data.name },
                                 slug: { fa: envelope.data.slug, en: envelope.data.slug },
+                                imageMediaId: envelope.data.image_media_id ?? null,
                                 imageUrl: envelope.data.image_url ?? null,
                             };
                             tree.upsert(created);
@@ -217,6 +220,7 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                     slug,
                     description,
                     parentId: next.parentId,
+                    imageMediaId: next.imageMediaId,
                 },
                 {
                     onError: () => {

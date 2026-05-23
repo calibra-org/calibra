@@ -1233,6 +1233,29 @@
             "filesCounter": "{done} of {total}"
         }
     },
+    "MediaPicker": {
+        "titleSingle": "Choose media",
+        "titleMultiple": "Choose media",
+        "tabs": {
+            "library": "Library",
+            "upload": "Upload"
+        },
+        "footer": {
+            "selectedSingle": "1 selected",
+            "selectedMultiple": "{count} selected",
+            "empty": "None selected"
+        },
+        "buttons": {
+            "cancel": "Cancel",
+            "select": "Select"
+        },
+        "field": {
+            "choose": "Choose image",
+            "change": "Change",
+            "remove": "Remove",
+            "previewAlt": "Selected image preview"
+        }
+    },
     "Orders": {
         "title": "Orders",
         "subtitle": "Track, filter and fulfil incoming orders.",
