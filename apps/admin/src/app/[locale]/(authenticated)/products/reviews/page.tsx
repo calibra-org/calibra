@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { PageHeader } from "#/components/PageHeader";
-
-import { ReviewsListClient } from "./ReviewsListClient";
+import { ReviewsList } from "#/views/products/reviews";
 
 interface PageProps {
     params: Promise<{ locale: string }>;
@@ -18,12 +16,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ReviewsPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const t = await getTranslations("Reviews");
-
-    return (
-        <section className="flex flex-col gap-6">
-            <PageHeader title={t("title")} subtitle={t("subtitle")} />
-            <ReviewsListClient />
-        </section>
-    );
+    return <ReviewsList />;
 }

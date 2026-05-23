@@ -91,6 +91,7 @@ export interface AdminReview {
     id: number;
     productId: number;
     productName: LocalizedString;
+    productSlug: LocalizedString;
     reviewerName: string;
     reviewerEmail: string;
     rating: 1 | 2 | 3 | 4 | 5;
@@ -98,6 +99,13 @@ export interface AdminReview {
     status: ReviewStatus;
     verified: boolean;
     createdAt: string;
+    /**
+     * Optional admin reply persisted client-side. The API does not yet expose a reply field on
+     * the review row; once it does, this becomes the canonical source.
+     */
+    reply: string | null;
+    /** ISO timestamp of the reply edit, when {@link reply} is non-null. Client-side only for now. */
+    repliedAt: string | null;
 }
 
 export type OrderStatus = "draft" | "pending" | "on_hold" | "processing" | "completed" | "cancelled" | "refunded" | "failed";
