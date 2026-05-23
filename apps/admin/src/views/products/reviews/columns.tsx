@@ -149,17 +149,77 @@ export function buildReviewColumns(ctx: ColumnContext): ColumnDef<AdminReview>[]
         {
             id: "body",
             header: staticHeader("body", ctx.t("columns.body")),
+            size: 560,
             cell: ({ row }) => {
                 const r = row.original;
+                const isTrashed = r.status === "trash";
+                const isSpam = r.status === "spam";
+                const isApproved = r.status === "approved";
                 return (
-                    <div className="flex max-w-[28rem] flex-col gap-1">
-                        <p className="line-clamp-2 text-sm">{r.body}</p>
+                    <div className="flex max-w-[36rem] flex-col gap-2">
+                        <p className="line-clamp-3 whitespace-pre-line text-foreground text-sm leading-relaxed">{r.body}</p>
                         {r.reply !== null && r.reply.length > 0 && (
-                            <p className="flex items-start gap-1.5 text-muted-foreground text-xs">
-                                <CornerDownRight className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
-                                <span className="line-clamp-1">{r.reply}</span>
-                            </p>
+                            <div className="flex items-start gap-2 rounded-md border-primary/40 border-s-2 bg-muted/40 px-3 py-1.5">
+                                <CornerDownRight className="mt-0.5 size-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                <p className="line-clamp-2 text-muted-foreground text-xs leading-relaxed">{r.reply}</p>
+                            </div>
                         )}
+                        <div className="invisible flex flex-wrap items-center gap-x-1.5 gap-y-1 whitespace-nowrap text-xs opacity-0 transition-opacity group-focus-within/row:visible group-focus-within/row:opacity-100 group-hover/row:visible group-hover/row:opacity-100">
+                            {!isTrashed && !isApproved && ctx.onApprove !== undefined && (
+                                <>
+                                    <InlineAction onClick={() => ctx.onApprove?.(r)} tone="success">
+                                        {ctx.t("actions.approve")}
+                                    </InlineAction>
+                                    <InlineSep />
+                                </>
+                            )}
+                            {!isTrashed && isApproved && ctx.onUnapprove !== undefined && (
+                                <>
+                                    <InlineAction onClick={() => ctx.onUnapprove?.(r)}>{ctx.t("actions.unapprove")}</InlineAction>
+                                    <InlineSep />
+                                </>
+                            )}
+                            {!isTrashed && ctx.onReply !== undefined && (
+                                <>
+                                    <InlineAction onClick={() => ctx.onReply?.(r)}>{ctx.t("actions.reply")}</InlineAction>
+                                    <InlineSep />
+                                </>
+                            )}
+                            {!isTrashed && ctx.onQuickEdit !== undefined && (
+                                <>
+                                    <InlineAction onClick={() => ctx.onQuickEdit?.(r)}>{ctx.t("actions.quickEdit")}</InlineAction>
+                                    <InlineSep />
+                                </>
+                            )}
+                            {!isTrashed && !isSpam && ctx.onMarkSpam !== undefined && (
+                                <>
+                                    <InlineAction onClick={() => ctx.onMarkSpam?.(r)} tone="danger">
+                                        {ctx.t("actions.spam")}
+                                    </InlineAction>
+                                    <InlineSep />
+                                </>
+                            )}
+                            {!isTrashed && ctx.onTrash !== undefined && (
+                                <InlineAction onClick={() => ctx.onTrash?.(r)} tone="danger">
+                                    {ctx.t("actions.trash")}
+                                </InlineAction>
+                            )}
+                            {isTrashed && ctx.onRestore !== undefined && (
+                                <>
+                                    <InlineAction onClick={() => ctx.onRestore?.(r)} tone="success">
+                                        {ctx.t("actions.restore")}
+                                    </InlineAction>
+                                    {ctx.onDelete !== undefined && (
+                                        <>
+                                            <InlineSep />
+                                            <InlineAction onClick={() => ctx.onDelete?.(r)} tone="danger">
+                                                {ctx.t("actions.delete")}
+                                            </InlineAction>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
                 );
             },
@@ -236,4 +296,38 @@ export function buildReviewColumns(ctx: ColumnContext): ColumnDef<AdminReview>[]
             size: 56,
         },
     ];
+}
+
+interface InlineActionProps {
+    onClick: () => void;
+    tone?: "default" | "success" | "danger";
+    children: React.ReactNode;
+}
+
+/**
+ * Hover-revealed inline action link — visually quiet by default, picks up a tone-coloured hover
+ * state. Mirrors the WordPress row-action strip beneath the review body.
+ */
+function InlineAction({ onClick, tone = "default", children }: InlineActionProps) {
+    return (
+        <button
+            type="button"
+            onClick={(event) => {
+                event.stopPropagation();
+                onClick();
+            }}
+            className={cn(
+                "shrink-0 rounded text-muted-foreground transition-colors hover:underline",
+                tone === "danger" && "hover:text-rose-600",
+                tone === "success" && "hover:text-emerald-600",
+                tone === "default" && "hover:text-foreground",
+            )}
+        >
+            {children}
+        </button>
+    );
+}
+
+function InlineSep() {
+    return <span className="size-1 shrink-0 rounded-full bg-muted-foreground/40" aria-hidden="true" />;
 }

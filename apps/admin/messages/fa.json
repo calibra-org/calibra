@@ -581,8 +581,12 @@
             "markedSpam": "به‌عنوان هرزنامه علامت‌گذاری شد",
             "unspammed": "از هرزنامه خارج شد",
             "trashed": "به زباله‌دان منتقل شد",
+            "trashedWithName": "دیدگاه‌های «{name}» به زباله‌دان منتقل شد.",
+            "pendingTrashMessage": "دیدگاه «{name}» به زباله‌دان منتقل شد. بازگردانی؟",
+            "pendingSpamMessage": "دیدگاه «{name}» به‌عنوان هرزنامه علامت‌گذاری شد. بازگردانی؟",
             "restored": "بازیابی شد",
             "deleted": "برای همیشه حذف شد",
+            "undo": "بازگردانی",
             "bulk": {
                 "status": "تغییر وضعیت",
                 "approve": "تأیید",
@@ -596,6 +600,7 @@
             "bulkUnapproved": "دیدگاه‌های انتخاب‌شده به انتظار بازگشتند",
             "bulkSpam": "به‌عنوان هرزنامه علامت‌گذاری شدند",
             "bulkTrashed": "به زباله‌دان منتقل شدند",
+            "bulkTrashedWithCount": "{count} دیدگاه به زباله‌دان منتقل شد.",
             "bulkRestored": "بازیابی شدند",
             "bulkDeleted": "برای همیشه حذف شدند",
             "bulkFailed": "عملیات گروهی با خطا مواجه شد",
@@ -611,7 +616,28 @@
                 "reply": "پاسخ مدیر",
                 "replyPlaceholder": "پاسخ خود را بنویسید…",
                 "replyHint": "پاسخ شما در زیر دیدگاه نمایش داده می‌شود.",
-                "repliedAlready": "پاسخ ثبت شده"
+                "repliedAlready": "پاسخ ثبت شده",
+                "reviewerName": "نام بازنگر",
+                "reviewerEmail": "ایمیل",
+                "reviewerUrl": "نشانی اینترنتی",
+                "toolbar": {
+                    "bold": "بولد",
+                    "boldPlaceholder": "متن بولد",
+                    "italic": "ایتالیک",
+                    "italicPlaceholder": "متن ایتالیک",
+                    "strike": "خط‌خورده",
+                    "strikePlaceholder": "متن خط‌خورده",
+                    "link": "پیوند",
+                    "linkPrompt": "نشانی پیوند را وارد کنید",
+                    "linkPlaceholder": "متن پیوند",
+                    "quote": "نقل قول",
+                    "quotePlaceholder": "متن نقل قول",
+                    "code": "کد",
+                    "codePlaceholder": "کد",
+                    "list": "فهرست نشانه‌دار",
+                    "listOrdered": "فهرست شماره‌دار",
+                    "listPlaceholder": "آیتم فهرست"
+                }
             }
         }
     },

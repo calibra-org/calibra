@@ -56,7 +56,20 @@ export function BulkActions({ selectedIds, onClear, tabStatus }: BulkActionsProp
     const trashAll = async () => {
         try {
             await trashMutation.mutateAsync({ ids });
-            toast.add({ title: t("bulkTrashed"), timeout: 2500, data: { tone: "success" } });
+            const trashedIds = [...ids];
+            toast.add({
+                title: t("bulkTrashedWithCount", { count: trashedIds.length }),
+                timeout: 6000,
+                data: {
+                    tone: "success",
+                    action: {
+                        label: t("undo"),
+                        onAction: () => {
+                            void restoreMutation.mutateAsync({ ids: trashedIds });
+                        },
+                    },
+                },
+            });
             onClear();
             setConfirmOpen(undefined);
         } catch {

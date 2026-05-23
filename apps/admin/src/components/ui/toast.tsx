@@ -11,6 +11,16 @@ export const toast = BaseToast.createToastManager();
 
 type ToastTone = "success" | "error" | "warning" | "info";
 
+/**
+ * Optional action button rendered inside the toast. When set on `data.action`, the toast renders
+ * a tertiary link-style button beneath its description; clicking it fires `onAction` and closes
+ * the toast.
+ */
+export interface ToastAction {
+    label: string;
+    onAction: () => void;
+}
+
 const toneIcons: Record<ToastTone, ReactNode> = {
     success: <CheckCircle2 className="size-4 text-emerald-500" aria-hidden="true" />,
     error: <XCircle className="size-4 text-rose-500" aria-hidden="true" />,
@@ -48,11 +58,27 @@ function ToastList({ closeLabel = "Close" }: ToastListProps) {
                         )}
                     >
                         <div className="mt-0.5">{toneIcons[tone]}</div>
-                        <div className="flex flex-col gap-0.5">
+                        <div className="flex flex-col gap-1">
                             {t.title !== undefined && (
                                 <BaseToast.Title className="font-medium text-foreground text-sm leading-tight" />
                             )}
                             {t.description !== undefined && <BaseToast.Description className="text-muted-foreground text-sm" />}
+                            {(() => {
+                                const action = (t.data as { action?: ToastAction } | undefined)?.action;
+                                if (action === undefined) return null;
+                                return (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            action.onAction();
+                                            toast.close(t.id);
+                                        }}
+                                        className="mt-1 self-start rounded font-medium text-primary text-xs underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                                    >
+                                        {action.label}
+                                    </button>
+                                );
+                            })()}
                         </div>
                         <BaseToast.Close
                             className="rounded-sm p-1 text-muted-foreground opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"

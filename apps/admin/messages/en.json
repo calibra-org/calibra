@@ -581,8 +581,12 @@
             "markedSpam": "Marked as spam",
             "unspammed": "No longer spam",
             "trashed": "Moved to trash",
+            "trashedWithName": "Review by {name} moved to trash.",
+            "pendingTrashMessage": "Review by {name} moved to trash.",
+            "pendingSpamMessage": "Review by {name} marked as spam.",
             "restored": "Restored",
             "deleted": "Permanently deleted",
+            "undo": "Undo",
             "bulk": {
                 "status": "Change status",
                 "approve": "Approve",
@@ -596,6 +600,7 @@
             "bulkUnapproved": "Selected reviews moved to pending",
             "bulkSpam": "Marked as spam",
             "bulkTrashed": "Moved to trash",
+            "bulkTrashedWithCount": "{count} review(s) moved to trash.",
             "bulkRestored": "Restored",
             "bulkDeleted": "Permanently deleted",
             "bulkFailed": "Bulk action failed",
@@ -611,7 +616,28 @@
                 "reply": "Admin reply",
                 "replyPlaceholder": "Write a public reply…",
                 "replyHint": "Your reply will appear under the review.",
-                "repliedAlready": "Reply saved"
+                "repliedAlready": "Reply saved",
+                "reviewerName": "Reviewer name",
+                "reviewerEmail": "Email",
+                "reviewerUrl": "URL",
+                "toolbar": {
+                    "bold": "Bold",
+                    "boldPlaceholder": "bold text",
+                    "italic": "Italic",
+                    "italicPlaceholder": "italic text",
+                    "strike": "Strikethrough",
+                    "strikePlaceholder": "strike",
+                    "link": "Link",
+                    "linkPrompt": "Enter a URL",
+                    "linkPlaceholder": "link text",
+                    "quote": "Quote",
+                    "quotePlaceholder": "quoted text",
+                    "code": "Code",
+                    "codePlaceholder": "code",
+                    "list": "Bulleted list",
+                    "listOrdered": "Numbered list",
+                    "listPlaceholder": "item"
+                }
             }
         }
     },
