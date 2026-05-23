@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Search, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ImageIcon, Pencil, Search, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -10,25 +10,25 @@ import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
 import { formatNumber } from "#/lib/format";
-import type { AdminTag } from "#/lib/types";
+import type { AdminBrand } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
-import type { TagFilterMode, TagSortKey, TagsStats } from "./tags-view";
+import type { BrandFilterMode, BrandSortKey, BrandsStats } from "./brands-view";
 
-interface TagsListProps {
-    rows: AdminTag[];
-    visibleRows: AdminTag[];
+interface BrandsListProps {
+    rows: AdminBrand[];
+    visibleRows: AdminBrand[];
     selectedId: number | null;
     selectedIds: Set<number>;
     search: string;
-    filter: TagFilterMode;
-    sortKey: TagSortKey;
+    filter: BrandFilterMode;
+    sortKey: BrandSortKey;
     sortDir: "asc" | "desc";
-    stats: TagsStats;
+    stats: BrandsStats;
     locale: Locale;
     onSearchChange: (value: string) => void;
-    onFilterChange: (value: TagFilterMode) => void;
-    onSort: (key: TagSortKey) => void;
+    onFilterChange: (value: BrandFilterMode) => void;
+    onSort: (key: BrandSortKey) => void;
     onSelectRow: (id: number) => void;
     onToggleSelected: (id: number) => void;
     onToggleAllSelected: () => void;
@@ -39,11 +39,11 @@ interface TagsListProps {
 }
 
 /**
- * The list pane. Renders the toolbar (search, filter pills, bulk-action bar) plus a sortable
- * table of tag rows. Selection state is hoisted to the parent so the inspector can react to
- * row clicks without an extra round of mounting and so bulk operations live in one place.
+ * The list pane. Mirrors the Tags list — toolbar (search + filter pills) + sortable table
+ * with bulk-select checkboxes and hover-only row actions. Each row carries a logo thumbnail
+ * (or a placeholder when none is set).
  */
-export function TagsList({
+export function BrandsList({
     rows,
     visibleRows,
     selectedId,
@@ -64,17 +64,17 @@ export function TagsList({
     onBulkDelete,
     onEdit,
     onDelete,
-}: TagsListProps) {
-    const t = useTranslations("Tags");
-    const tToolbar = useTranslations("Tags.toolbar");
-    const tTable = useTranslations("Tags.table");
+}: BrandsListProps) {
+    const t = useTranslations("Brands");
+    const tToolbar = useTranslations("Brands.toolbar");
+    const tTable = useTranslations("Brands.table");
     const allVisibleSelected = visibleRows.length > 0 && visibleRows.every((row) => selectedIds.has(row.id));
     const hasSelection = selectedIds.size > 0;
 
-    const filters: { key: TagFilterMode; label: string; count: number }[] = [
+    const filters: { key: BrandFilterMode; label: string; count: number }[] = [
         { key: "all", label: tToolbar("filters.all"), count: stats.total },
-        { key: "popular", label: tToolbar("filters.popular"), count: stats.popular },
-        { key: "unused", label: tToolbar("filters.unused"), count: stats.unused },
+        { key: "withProducts", label: tToolbar("filters.withProducts"), count: stats.withProducts },
+        { key: "empty", label: tToolbar("filters.empty"), count: stats.empty },
     ];
 
     return (
@@ -93,7 +93,7 @@ export function TagsList({
             )}
 
             {visibleRows.length === 0 ? (
-                <EmptyList hasSearch={search.length > 0 || filter !== "all"} totalTags={rows.length} />
+                <EmptyList hasSearch={search.length > 0 || filter !== "all"} totalBrands={rows.length} />
             ) : (
                 <div className="overflow-hidden rounded-xl border border-border/60">
                     <table className="w-full text-sm">
@@ -151,16 +151,19 @@ export function TagsList({
                                             />
                                         </td>
                                         <td className="px-3 py-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => onSelectRow(row.id)}
-                                                className={cn(
-                                                    "block max-w-full truncate text-start font-medium",
-                                                    isActive ? "text-primary" : "text-foreground hover:text-primary",
-                                                )}
-                                            >
-                                                {row.name[locale] || tTable("untitled")}
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <BrandLogo url={row.logoUrl} alt={row.name[locale] ?? ""} />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onSelectRow(row.id)}
+                                                    className={cn(
+                                                        "block max-w-full truncate text-start font-medium",
+                                                        isActive ? "text-primary" : "text-foreground hover:text-primary",
+                                                    )}
+                                                >
+                                                    {row.name[locale] || tTable("untitled")}
+                                                </button>
+                                            </div>
                                         </td>
                                         <td className="px-3 py-2">
                                             <span
@@ -223,14 +226,14 @@ export function TagsList({
 interface ToolbarProps {
     search: string;
     onSearchChange: (value: string) => void;
-    filter: TagFilterMode;
-    onFilterChange: (value: TagFilterMode) => void;
-    filters: { key: TagFilterMode; label: string; count: number }[];
+    filter: BrandFilterMode;
+    onFilterChange: (value: BrandFilterMode) => void;
+    filters: { key: BrandFilterMode; label: string; count: number }[];
     locale: Locale;
 }
 
 function Toolbar({ search, onSearchChange, filter, onFilterChange, filters, locale }: ToolbarProps) {
-    const t = useTranslations("Tags.toolbar");
+    const t = useTranslations("Brands.toolbar");
     return (
         <div className="flex flex-wrap items-center gap-2">
             <div className="relative min-w-0 flex-1">
@@ -298,7 +301,7 @@ interface BulkBarProps {
 }
 
 function BulkBar({ count, locale, onClear, onBulkDelete }: BulkBarProps) {
-    const t = useTranslations("Tags.bulk");
+    const t = useTranslations("Brands.bulk");
     return (
         <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
             <div className="inline-flex items-center gap-2 text-foreground">
@@ -355,6 +358,28 @@ function SortHeader({ label, active, direction, onClick, className }: SortHeader
     );
 }
 
+interface BrandLogoProps {
+    url: string | null;
+    alt: string;
+}
+
+function BrandLogo({ url, alt }: BrandLogoProps) {
+    if (url === null || url.length === 0) {
+        return (
+            <div
+                className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/60"
+                aria-hidden="true"
+            >
+                <ImageIcon className="size-3.5" />
+            </div>
+        );
+    }
+    return (
+        // biome-ignore lint/performance/noImgElement: mock CDN, no Next/Image loader configured
+        <img src={url} alt={alt} loading="lazy" className="size-8 shrink-0 rounded-md border border-border/40 object-cover" />
+    );
+}
+
 interface ProductCountPillProps {
     count: number;
     locale: Locale;
@@ -379,7 +404,7 @@ interface FooterCountProps {
     visible: number;
     total: number;
     locale: Locale;
-    t: ReturnType<typeof useTranslations<"Tags">>;
+    t: ReturnType<typeof useTranslations<"Brands">>;
 }
 
 function FooterCount({ visible, total, locale, t }: FooterCountProps) {
@@ -399,12 +424,12 @@ function FooterCount({ visible, total, locale, t }: FooterCountProps) {
 
 interface EmptyListProps {
     hasSearch: boolean;
-    totalTags: number;
+    totalBrands: number;
 }
 
-function EmptyList({ hasSearch, totalTags }: EmptyListProps): ReactNode {
-    const t = useTranslations("Tags.emptyList");
-    if (totalTags === 0 && !hasSearch) {
+function EmptyList({ hasSearch, totalBrands }: EmptyListProps): ReactNode {
+    const t = useTranslations("Brands.emptyList");
+    if (totalBrands === 0 && !hasSearch) {
         return (
             <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-muted/20 p-12 text-center">
                 <div className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">

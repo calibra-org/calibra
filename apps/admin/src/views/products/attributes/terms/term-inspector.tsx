@@ -11,38 +11,32 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
 import { formatNumber } from "#/lib/format";
-import type { AdminTag, LocalizedString } from "#/lib/types";
+import type { AdminAttributeTerm, LocalizedString } from "#/lib/types";
 
-import { slugify } from "../_taxonomy-shared/slugify";
+import { slugify } from "../../_taxonomy-shared/slugify";
 
 /**
- * Tag shape the inspector edits. `description` is a local-only field today (mirrors how the
- * category inspector treats it) — the API schema lets us POST/PATCH it via
- * `translations[].description`, but the listing doesn't surface it back, so we keep it on the
- * draft and ship it on save without reading it back into the row.
+ * Term shape the inspector edits. `description` is local-only today (mirrors tags / brands);
+ * the API persists it on POST/PATCH but the listing doesn't echo it back, so the draft
+ * carries it and we ship it on save.
  */
-export interface AdminTagDraft extends AdminTag {
+export interface AdminAttributeTermDraft extends AdminAttributeTerm {
     description?: LocalizedString;
 }
 
-interface TagInspectorProps {
-    draft: AdminTagDraft | null;
-    selected: AdminTagDraft | null;
+interface TermInspectorProps {
+    draft: AdminAttributeTermDraft | null;
+    selected: AdminAttributeTermDraft | null;
     locale: Locale;
     submitting: boolean;
-    onDraftChange: (draft: AdminTagDraft) => void;
+    onDraftChange: (draft: AdminAttributeTermDraft) => void;
     onCreateNew: () => void;
-    onSave: (draft: AdminTagDraft) => void;
+    onSave: (draft: AdminAttributeTermDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
 }
 
-/**
- * Right-hand pane. Doubles as a permanent "add tag" form when no row is selected — that is
- * how WordPress trains operators to expect this surface, and it keeps the empty state
- * actionable instead of a static placeholder.
- */
-export function TagInspector({
+export function TermInspector({
     draft,
     selected,
     locale,
@@ -52,17 +46,9 @@ export function TagInspector({
     onSave,
     onDelete,
     onClose,
-}: TagInspectorProps) {
-    const t = useTranslations("Tags.inspector");
-
-    if (draft === null) {
-        return <InspectorEmpty onCreate={onCreateNew} />;
-    }
-
-    /**
-     * `key={draft.id}` remounts the form whenever the inspector swaps to a different row, so
-     * `slugTouched` and any other inner state resets cleanly instead of leaking across rows.
-     */
+}: TermInspectorProps) {
+    const t = useTranslations("AttributeTerms.inspector");
+    if (draft === null) return <InspectorEmpty onCreate={onCreateNew} />;
     return (
         <InspectorForm
             key={draft.id}
@@ -84,7 +70,7 @@ interface InspectorEmptyProps {
 }
 
 function InspectorEmpty({ onCreate }: InspectorEmptyProps) {
-    const t = useTranslations("Tags.inspector.empty");
+    const t = useTranslations("AttributeTerms.inspector.empty");
     return (
         <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-card/40 p-8 text-center">
             <div className="grid size-14 place-items-center rounded-full bg-primary/10 text-primary">
@@ -101,20 +87,19 @@ function InspectorEmpty({ onCreate }: InspectorEmptyProps) {
             <ul className="mt-4 flex flex-col gap-2 text-muted-foreground text-xs">
                 <li>{t("tip1")}</li>
                 <li>{t("tip2")}</li>
-                <li>{t("tip3")}</li>
             </ul>
         </div>
     );
 }
 
 interface InspectorFormProps {
-    t: ReturnType<typeof useTranslations<"Tags.inspector">>;
-    draft: AdminTagDraft;
-    selected: AdminTagDraft | null;
+    t: ReturnType<typeof useTranslations<"AttributeTerms.inspector">>;
+    draft: AdminAttributeTermDraft;
+    selected: AdminAttributeTermDraft | null;
     locale: Locale;
     submitting: boolean;
-    onDraftChange: (draft: AdminTagDraft) => void;
-    onSave: (draft: AdminTagDraft) => void;
+    onDraftChange: (draft: AdminAttributeTermDraft) => void;
+    onSave: (draft: AdminAttributeTermDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
 }
@@ -123,30 +108,24 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
     const [slugTouched, setSlugTouched] = useState(false);
     const isNew = draft.id < 0;
 
-    /**
-     * Auto-derive the slug from the name until the user touches the slug field. The parent
-     * remounts this form on row change via `key={draft.id}`, so the touched flag starts fresh
-     * for every selection.
-     */
     useEffect(() => {
         if (slugTouched) return;
         const next = slugify(draft.name[locale] ?? "");
-        if ((draft.slug[locale] ?? "") === next) return;
-        onDraftChange({ ...draft, slug: { ...draft.slug, [locale]: next } });
+        if (draft.slug === next) return;
+        onDraftChange({ ...draft, slug: next });
     }, [draft, locale, onDraftChange, slugTouched]);
 
-    const updateLocalized = (field: "name" | "slug" | "description", value: string, l: Locale) => {
-        const current = (draft[field] ?? { fa: "", en: "" }) as LocalizedString;
-        onDraftChange({ ...draft, [field]: { ...current, [l]: value } });
+    const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+        onDraftChange({ ...draft, name: { ...draft.name, [locale]: event.target.value } });
     };
-
-    const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => updateLocalized("name", event.target.value, locale);
     const handleSlugChange = (event: ChangeEvent<HTMLInputElement>) => {
         setSlugTouched(true);
-        updateLocalized("slug", event.target.value, locale);
+        onDraftChange({ ...draft, slug: event.target.value });
     };
-    const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) =>
-        updateLocalized("description", event.target.value, locale);
+    const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+        const current = (draft.description ?? { fa: "", en: "" }) as LocalizedString;
+        onDraftChange({ ...draft, description: { ...current, [locale]: event.target.value } });
+    };
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -204,9 +183,9 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
 
             <div className="grid gap-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="tag-name">{t("fields.name.label")}</Label>
+                    <Label htmlFor="term-name">{t("fields.name.label")}</Label>
                     <Input
-                        id="tag-name"
+                        id="term-name"
                         value={draft.name[locale] ?? ""}
                         onChange={handleNameChange}
                         placeholder={t("fields.name.placeholder")}
@@ -218,13 +197,13 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
 
                 <div className="grid gap-2">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="tag-slug">{t("fields.slug.label")}</Label>
+                        <Label htmlFor="term-slug">{t("fields.slug.label")}</Label>
                         {slugTouched && (
                             <button
                                 type="button"
                                 onClick={() => {
                                     setSlugTouched(false);
-                                    updateLocalized("slug", slugify(draft.name[locale] ?? ""), locale);
+                                    onDraftChange({ ...draft, slug: slugify(draft.name[locale] ?? "") });
                                 }}
                                 className="inline-flex items-center gap-1 text-primary text-xs hover:underline"
                             >
@@ -239,8 +218,8 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                             aria-hidden="true"
                         />
                         <Input
-                            id="tag-slug"
-                            value={draft.slug[locale] ?? ""}
+                            id="term-slug"
+                            value={draft.slug}
                             onChange={handleSlugChange}
                             placeholder={t("fields.slug.placeholder")}
                             dir="ltr"
@@ -252,9 +231,9 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="tag-description">{t("fields.description.label")}</Label>
+                    <Label htmlFor="term-description">{t("fields.description.label")}</Label>
                     <Textarea
-                        id="tag-description"
+                        id="term-description"
                         value={draft.description?.[locale] ?? ""}
                         onChange={handleDescriptionChange}
                         placeholder={t("fields.description.placeholder")}
@@ -264,8 +243,7 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                 </div>
 
                 {!isNew && (
-                    <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/40 bg-muted/30 p-3 text-xs">
-                        <Stat label={t("stats.products")} value={formatNumber(draft.productCount, locale)} />
+                    <div className="grid grid-cols-1 gap-2 rounded-lg border border-border/40 bg-muted/30 p-3 text-xs">
                         <Stat label={t("stats.id")} value={`#${formatNumber(draft.id, locale)}`} />
                     </div>
                 )}

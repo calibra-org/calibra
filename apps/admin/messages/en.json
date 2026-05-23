@@ -329,9 +329,15 @@
         "expand": "Expand",
         "collapse": "Collapse",
         "addChild": "Add child",
+        "edit": "Edit",
         "delete": "Delete",
         "dragHandle": "Drag to reorder or reparent",
         "dropAsChild": "Drop to make a child",
+        "selectAllVisible": "Select all visible rows",
+        "selectRow": "Select {name}",
+        "editAria": "Edit {name}",
+        "deleteAria": "Delete {name}",
+        "addChildAria": "Add a child under {name}",
         "table": {
             "name": "Name",
             "slug": "Slug",
@@ -354,6 +360,26 @@
                 "withProducts": "With products",
                 "empty": "Empty"
             }
+        },
+        "bulk": {
+            "selected": "{count} categories selected",
+            "clear": "Clear selection",
+            "delete": "Delete selected"
+        },
+        "deleteDialog": {
+            "title": "Delete this category?",
+            "description": "Deleting \"{name}\" detaches it from every product and orphans its children to the next ancestor. This cannot be undone.",
+            "untitled": "this category",
+            "cancel": "Cancel",
+            "confirm": "Delete category",
+            "pending": "Deleting…"
+        },
+        "bulkDeleteDialog": {
+            "title": "Delete {count} categories?",
+            "description": "These categories are detached from every product and their children are orphaned to the next ancestor. This cannot be undone.",
+            "cancel": "Cancel",
+            "confirm": "Delete selected",
+            "pending": "Deleting…"
         },
         "hints": {
             "dragRoot": "Drag a row to reorder",
@@ -557,37 +583,338 @@
     "Brands": {
         "title": "Brands",
         "subtitle": "Brands available in the catalog.",
+        "subtitleStats": "{total} brands · {attachments} product links · {unused} with no products",
         "addBrand": "Add brand",
+        "footerCount": {
+            "total": "Showing all {total} brands",
+            "partial": "Showing {visible} of {total} brands"
+        },
         "table": {
             "name": "Name",
             "slug": "Slug",
             "productCount": "Products",
-            "actions": "Actions"
+            "actions": "Actions",
+            "untitled": "Untitled",
+            "editAria": "Edit {name}",
+            "deleteAria": "Delete {name}"
+        },
+        "toolbar": {
+            "searchPlaceholder": "Search by name or slug",
+            "clearSearch": "Clear search",
+            "selectAll": "Select all visible rows",
+            "selectRow": "Select {name}",
+            "filters": {
+                "all": "All",
+                "withProducts": "With products",
+                "empty": "Empty"
+            }
+        },
+        "bulk": {
+            "selected": "{count} brands selected",
+            "clear": "Clear selection",
+            "delete": "Delete selected"
+        },
+        "emptyList": {
+            "empty": {
+                "title": "No brands yet",
+                "description": "Brands help customers browse the catalog by maker. Add the first one with the form on the side."
+            },
+            "noResults": {
+                "title": "Nothing found",
+                "description": "Try a shorter search term or change the filter above."
+            }
+        },
+        "inspector": {
+            "badgeNew": "New",
+            "badgeEdit": "Editing",
+            "inspecting": "{name}",
+            "untitled": "Untitled",
+            "untitledHeader": "New brand",
+            "close": "Close panel",
+            "deleteAria": "Delete this brand",
+            "fields": {
+                "name": {
+                    "label": "Brand name",
+                    "placeholder": "e.g. Samsung",
+                    "hint": "Shown in store filters and on product pages."
+                },
+                "slug": {
+                    "label": "Slug",
+                    "placeholder": "Auto-generated",
+                    "hint": "Used in the storefront URL. Lowercase letters, digits, and dashes only.",
+                    "regenerate": "Regenerate slug"
+                },
+                "description": {
+                    "label": "Description",
+                    "placeholder": "Optional — shown on the brand archive page.",
+                    "hint": "Some themes render this on the brand archive page."
+                },
+                "logo": {
+                    "label": "Brand logo",
+                    "placeholder": "Drop an image or click",
+                    "remove": "Remove",
+                    "todo": "Upload endpoint isn't ready yet"
+                }
+            },
+            "stats": {
+                "products": "Products",
+                "id": "Brand ID"
+            },
+            "buttons": {
+                "save": "Save changes",
+                "create": "Create brand",
+                "cancel": "Cancel"
+            },
+            "footer": {
+                "newHint": "Press Enter or Save to add this brand.",
+                "editHint": "Changes are saved to the catalog immediately."
+            },
+            "empty": {
+                "title": "Select a brand or create a new one",
+                "subtitle": "Pick a row from the list to edit, or start a new brand.",
+                "cta": "Create the first brand",
+                "tip1": "Click any row to edit it inline.",
+                "tip2": "The slug is used in storefront URLs — a short ASCII name reads best.",
+                "tip3": "Use bulk delete to clear out brands with no products."
+            }
+        },
+        "deleteDialog": {
+            "title": "Delete this brand?",
+            "description": "Deleting \"{name}\" detaches it from every product. This cannot be undone.",
+            "untitled": "this brand",
+            "cancel": "Cancel",
+            "confirm": "Delete brand",
+            "pending": "Deleting…"
+        },
+        "bulkDeleteDialog": {
+            "title": "Delete {count} brands?",
+            "description": "Each brand is detached from its products. This cannot be undone.",
+            "cancel": "Cancel",
+            "confirm": "Delete selected",
+            "pending": "Deleting…"
         }
     },
     "Attributes": {
         "title": "Product attributes",
-        "subtitle": "Attributes like size and color used by product variations.",
+        "subtitle": "Attributes like color and material used by product variations.",
+        "subtitleStats": "{total} attributes · {terms} terms",
         "addAttribute": "Add attribute",
+        "footerCount": {
+            "total": "Showing all {total} attributes",
+            "partial": "Showing {visible} of {total} attributes"
+        },
         "table": {
             "name": "Name",
+            "slug": "Slug",
             "code": "Code",
             "termCount": "Terms",
             "orderBy": "Order by",
             "hasArchives": "Archive page",
-            "actions": "Actions"
+            "termsPreview": "Terms",
+            "termsPreviewMore": "+{count} more",
+            "termsConfigure": "Configure",
+            "termsConfigureFor": "Configure terms for {name}",
+            "actions": "Actions",
+            "untitled": "Untitled",
+            "editAria": "Edit {name}",
+            "deleteAria": "Delete {name}",
+            "termsAria": "Configure terms for {name}"
         },
         "orderBy": {
             "menu_order": "Manual",
             "name": "Name",
             "id": "ID"
         },
-        "termsTitle": "Attribute terms",
-        "termsSubtitle": "Allowed values for this attribute.",
-        "termsTable": {
+        "toolbar": {
+            "searchPlaceholder": "Search by name or slug",
+            "clearSearch": "Clear search",
+            "selectAll": "Select all visible rows",
+            "selectRow": "Select {name}"
+        },
+        "bulk": {
+            "selected": "{count} attributes selected",
+            "clear": "Clear selection",
+            "delete": "Delete selected"
+        },
+        "emptyList": {
+            "empty": {
+                "title": "No attributes yet",
+                "description": "Define attributes like \"color\" or \"size\" here, then configure the allowed terms on each attribute's page."
+            },
+            "noResults": {
+                "title": "Nothing found",
+                "description": "Try a shorter search term."
+            }
+        },
+        "inspector": {
+            "badgeNew": "New",
+            "badgeEdit": "Editing",
+            "inspecting": "{name}",
+            "untitled": "Untitled",
+            "untitledHeader": "New attribute",
+            "close": "Close panel",
+            "deleteAria": "Delete this attribute",
+            "fields": {
+                "name": {
+                    "label": "Name",
+                    "placeholder": "e.g. Color",
+                    "hint": "Shown in filters and in the variations form."
+                },
+                "slug": {
+                    "label": "Slug (code)",
+                    "placeholder": "Auto-generated",
+                    "hint": "Used in the URL and as the attribute code — lowercase letters, digits, and dashes only.",
+                    "regenerate": "Regenerate slug"
+                },
+                "hasArchives": {
+                    "label": "Enable archive page?",
+                    "hint": "When on, the storefront builds a dedicated archive page for each term of this attribute."
+                },
+                "orderBy": {
+                    "label": "Default term order",
+                    "hint": "Terms appear in the storefront in this order."
+                }
+            },
+            "stats": {
+                "terms": "Terms",
+                "id": "Attribute ID"
+            },
+            "buttons": {
+                "save": "Save changes",
+                "create": "Create attribute",
+                "cancel": "Cancel"
+            },
+            "footer": {
+                "newHint": "After creating, add allowed terms from the attribute's own page.",
+                "editHint": "Changes are saved to the catalog immediately."
+            },
+            "empty": {
+                "title": "Select an attribute or create a new one",
+                "subtitle": "Click any row to edit it, or use the form on the side to add a new attribute.",
+                "cta": "Create the first attribute",
+                "tip1": "The slug is also the attribute's API code — usable from integrations.",
+                "tip2": "Turn on the archive page to surface this attribute as a storefront filter.",
+                "tip3": "Manage each attribute's terms from its row via \"Configure\"."
+            }
+        },
+        "deleteDialog": {
+            "title": "Delete this attribute?",
+            "description": "Deleting \"{name}\" removes the attribute and every one of its terms from the catalog. This cannot be undone.",
+            "untitled": "this attribute",
+            "cancel": "Cancel",
+            "confirm": "Delete attribute",
+            "pending": "Deleting…"
+        },
+        "bulkDeleteDialog": {
+            "title": "Delete {count} attributes?",
+            "description": "The attributes and their terms are removed from the catalog. This cannot be undone.",
+            "cancel": "Cancel",
+            "confirm": "Delete selected",
+            "pending": "Deleting…"
+        }
+    },
+    "AttributeTerms": {
+        "title": "Attribute terms",
+        "titleFor": "Terms for \"{name}\"",
+        "subtitle": "Allowed values for this attribute.",
+        "subtitleStats": "{total} terms",
+        "backToAttributes": "Back to attributes",
+        "addTerm": "Add term",
+        "footerCount": {
+            "total": "Showing all {total} terms",
+            "partial": "Showing {visible} of {total} terms"
+        },
+        "table": {
             "name": "Name",
             "slug": "Slug",
-            "actions": "Actions"
+            "productCount": "Products",
+            "actions": "Actions",
+            "untitled": "Untitled",
+            "editAria": "Edit {name}",
+            "deleteAria": "Delete {name}"
+        },
+        "toolbar": {
+            "searchPlaceholder": "Search by name or slug",
+            "clearSearch": "Clear search",
+            "selectAll": "Select all visible rows",
+            "selectRow": "Select {name}"
+        },
+        "bulk": {
+            "selected": "{count} terms selected",
+            "clear": "Clear selection",
+            "delete": "Delete selected"
+        },
+        "emptyList": {
+            "empty": {
+                "title": "No terms yet",
+                "description": "Add the first term with the form on the side — e.g. \"Red\" under the \"Color\" attribute."
+            },
+            "noResults": {
+                "title": "Nothing found",
+                "description": "Try a shorter search term."
+            }
+        },
+        "inspector": {
+            "badgeNew": "New",
+            "badgeEdit": "Editing",
+            "inspecting": "{name}",
+            "untitled": "Untitled",
+            "untitledHeader": "New term",
+            "close": "Close panel",
+            "deleteAria": "Delete this term",
+            "fields": {
+                "name": {
+                    "label": "Term name",
+                    "placeholder": "e.g. Red",
+                    "hint": "Shown on filters and product cards."
+                },
+                "slug": {
+                    "label": "Slug",
+                    "placeholder": "Auto-generated",
+                    "hint": "Used in the term's archive URL — lowercase letters, digits, and dashes only.",
+                    "regenerate": "Regenerate slug"
+                },
+                "description": {
+                    "label": "Description",
+                    "placeholder": "Optional — shown on the term archive page.",
+                    "hint": "Some themes render this on the term archive page."
+                }
+            },
+            "stats": {
+                "products": "Products",
+                "id": "Term ID"
+            },
+            "buttons": {
+                "save": "Save changes",
+                "create": "Create term",
+                "cancel": "Cancel"
+            },
+            "footer": {
+                "newHint": "Press Enter or Save to add this term.",
+                "editHint": "Changes are saved to the catalog immediately."
+            },
+            "empty": {
+                "title": "Select a term or create a new one",
+                "subtitle": "Click any row to edit it, or use the form on the side to add a new term.",
+                "cta": "Create the first term",
+                "tip1": "Slugs must be unique among the terms of this attribute.",
+                "tip2": "Use bulk delete to clear out unused terms."
+            }
+        },
+        "deleteDialog": {
+            "title": "Delete this term?",
+            "description": "Deleting \"{name}\" detaches it from every product that uses it. This cannot be undone.",
+            "untitled": "this term",
+            "cancel": "Cancel",
+            "confirm": "Delete term",
+            "pending": "Deleting…"
+        },
+        "bulkDeleteDialog": {
+            "title": "Delete {count} terms?",
+            "description": "These terms are detached from every product that uses them. This cannot be undone.",
+            "cancel": "Cancel",
+            "confirm": "Delete selected",
+            "pending": "Deleting…"
         }
     },
     "Reviews": {

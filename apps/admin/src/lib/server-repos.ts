@@ -256,6 +256,54 @@ export async function listAttributes(): Promise<AdminAttribute[]> {
     return (data.data ?? []).map(toAdminAttribute);
 }
 
+/**
+ * Listing payload for the attributes workbench. The base list endpoint doesn't return term
+ * counts or term-name previews, so we fan out one terms listing per attribute (capped) and
+ * surface both back. Cost scales O(attributes); fine for the typical store with ≤ 20
+ * attributes, but document the fan-out so future callers know to swap for a single endpoint
+ * when one ships.
+ */
+export interface AdminAttributesIndex {
+    attributes: AdminAttribute[];
+    termCounts: Record<number, number>;
+    termPreviews: Record<number, string[]>;
+}
+
+/** Hard cap on the term names embedded in the list-row preview. Avoid unbounded fan-out cost. */
+const ATTRIBUTE_TERMS_PREVIEW_LIMIT = 8;
+
+/**
+ * Returns the attributes list along with each row's term count and a short list of term names
+ * for the row preview. Used by `apps/admin/.../products/attributes/page.tsx`. Fans out one
+ * `GET /api/v1/admin/attributes/{id}/terms` per attribute — acceptable for the small
+ * attributes table this surface manages.
+ *
+ * TODO(api): expose `term_count` + a small `term_preview` field on `GET /admin/attributes` so
+ * this fan-out can be dropped.
+ */
+export async function listAttributesWithTerms(): Promise<AdminAttributesIndex> {
+    const api = await apiServer();
+    const { data, error } = await api.admin.GET("/api/v1/admin/attributes", {});
+    if (error !== undefined || !data) return { attributes: [], termCounts: {}, termPreviews: {} };
+    const attributes = (data.data ?? []).map(toAdminAttribute);
+    const termCounts: Record<number, number> = {};
+    const termPreviews: Record<number, string[]> = {};
+    await Promise.all(
+        attributes.map(async (attribute) => {
+            const res = await api.admin.GET("/api/v1/admin/attributes/{attribute_id}/terms", {
+                params: {
+                    path: { attribute_id: attribute.id },
+                    query: { perPage: ATTRIBUTE_TERMS_PREVIEW_LIMIT },
+                },
+            });
+            termCounts[attribute.id] = res.data?.meta?.total ?? res.data?.data?.length ?? 0;
+            termPreviews[attribute.id] = (res.data?.data ?? []).map((term) => term.name);
+            attribute.termCount = termCounts[attribute.id];
+        }),
+    );
+    return { attributes, termCounts, termPreviews };
+}
+
 export async function getAttribute(id: number): Promise<AdminAttribute | null> {
     const api = await apiServer();
     const { data, error } = await api.admin.GET("/api/v1/admin/attributes/{id}", { params: { path: { id } } });
