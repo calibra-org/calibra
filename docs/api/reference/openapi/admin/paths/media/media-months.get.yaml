@@ -1,0 +1,24 @@
+operationId: adminMediaMonths
+summary: List media month buckets
+description: >
+    Returns every distinct `YYYY-MM` bucket present in the library, newest first. Used by the
+    "Date" dropdown in the admin media workbench so the operator can scope the listing to a single
+    calendar month without typing a date.
+tags: [Admin / Media]
+
+responses:
+    "200":
+        description: Distinct month buckets, newest first.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: string
+                                pattern: "^\\d{4}-\\d{2}$"
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

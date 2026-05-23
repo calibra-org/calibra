@@ -876,6 +876,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                     width: 600,
                     height: 600,
                     alt: link.alt,
+                    title: link.alt,
+                    filename: `${link.slug}-${n}.jpg`,
                     attributes: {},
                     created_at: now,
                     updated_at: now,

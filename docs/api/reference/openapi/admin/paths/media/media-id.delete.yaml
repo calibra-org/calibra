@@ -1,0 +1,17 @@
+operationId: adminMediaDelete
+summary: Permanently delete a media row
+description: >
+    Deletes the database row and best-effort removes the file from disk. Foreign-key references
+    elsewhere (e.g. `product_images.media_id`) cascade or null per their migration definition;
+    consult the schema before deleting a row attached to a published product.
+tags: [Admin / Media]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

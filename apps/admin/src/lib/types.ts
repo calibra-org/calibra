@@ -371,6 +371,31 @@ export interface TopSellersReport {
     rows: { productId: number; name: LocalizedString; sku: string; units: number; revenue: MoneyMinor }[];
 }
 
+/**
+ * Coarse media kind, mirroring the API. `image` covers anything with an `image/*` MIME; everything
+ * else lives under `file` and is further classified by inspecting the MIME string client-side
+ * (see {@link "#/views/media/types".classifyMediaType}).
+ */
+export type AdminMediaKind = "image" | "file";
+
+export interface AdminMedia {
+    id: number;
+    kind: AdminMediaKind;
+    url: string;
+    filename: string;
+    title: string | null;
+    alt: string | null;
+    caption: string | null;
+    description: string | null;
+    mime: string | null;
+    width: number | null;
+    height: number | null;
+    sizeBytes: number | null;
+    uploadedByUserId: number | null;
+    createdAt: string | null;
+    updatedAt: string | null;
+}
+
 export interface Paginated<T> {
     data: T[];
     meta: { page: number; perPage: number; total: number; lastPage: number };

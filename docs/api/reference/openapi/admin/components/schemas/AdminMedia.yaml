@@ -1,0 +1,42 @@
+title: AdminMedia
+description: >
+    A single row from the media library. `kind` is `"image"` for image MIME types and `"file"` for
+    everything else; the actual classification (audio / video / document / spreadsheet / archive)
+    is driven from `mime`. `filename` is the displayable filename — derived from the URL for
+    legacy seeded rows that have no stored filename, the original upload name for everything
+    else. Sizes and dimensions are best-effort: `size_bytes` is reported by the upload pipeline;
+    `width` / `height` are populated only when known.
+type: object
+required:
+    - id
+    - kind
+    - url
+    - filename
+properties:
+    id: { type: integer }
+    kind:
+        type: string
+        enum: [image, file]
+        description: Coarse classifier — `image` when the MIME is `image/*`, otherwise `file`.
+    url:
+        type: string
+        format: uri
+        description: Absolute URL the browser can fetch directly (no auth header required).
+    filename:
+        type: string
+        description: Display filename. For uploads, the (sanitized) original filename; for legacy rows, derived from the URL.
+    title: { type: [string, "null"] }
+    alt: { type: [string, "null"] }
+    caption: { type: [string, "null"] }
+    description: { type: [string, "null"] }
+    mime: { type: [string, "null"] }
+    width: { type: [integer, "null"] }
+    height: { type: [integer, "null"] }
+    size_bytes:
+        type: [integer, "null"]
+        description: File size in bytes. May be `null` for legacy / externally-sourced rows.
+    uploaded_by_user_id:
+        type: [integer, "null"]
+        description: User id of the operator who uploaded the file. `null` for seeded / system-imported rows.
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
