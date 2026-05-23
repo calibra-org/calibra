@@ -583,9 +583,12 @@
             "trashed": "Moved to trash",
             "trashedWithName": "Review by {name} moved to trash.",
             "markedSpamWithName": "Review by {name} marked as spam.",
+            "pendingTrashMessage": "Review by {name} moved to trash.",
+            "pendingSpamMessage": "Review by {name} marked as spam.",
             "restored": "Restored",
             "deleted": "Permanently deleted",
             "undo": "Undo",
+            "dismiss": "Dismiss",
             "bulk": {
                 "status": "Change status",
                 "approve": "Approve",

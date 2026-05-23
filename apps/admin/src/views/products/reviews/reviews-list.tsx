@@ -30,6 +30,15 @@ import { BulkActions } from "./bulk-actions";
 import { buildReviewColumns } from "./columns";
 import { useReviewFiltersConfig } from "./filters";
 import { ReplyPanel } from "./reply-panel";
+import { type PendingKind, UndoStrip } from "./undo-strip";
+
+interface PendingEntry {
+    kind: PendingKind;
+    /** Snapshot of the row at the moment the action fired — keeps the row visible after the mutation flips its status. */
+    review: AdminReview;
+    /** 1-indexed slot the row occupied in the rendered list, so the strip stays roughly where it was. */
+    originalIndex: number;
+}
 
 const TABLE_ID = "products.reviews";
 const STATUS_TABS: (ReviewStatus | "any")[] = ["any", "pending", "approved", "spam", "trash"];
@@ -105,8 +114,33 @@ export function ReviewsList() {
         search: tableState.q.length > 0 ? tableState.q : undefined,
     });
 
-    const rows = data?.data ?? [];
+    const baseRows = data?.data ?? [];
     const meta = data?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+
+    /**
+     * Rows that have been trashed or marked-as-spam through the row UI sit in this map. The
+     * underlying mutation has already fired — we just keep the snapshot around so the row stays
+     * visible (replaced by an undo strip) until the operator clicks Undo, dismisses it, or
+     * navigates away. Bulk actions skip this pattern; they use the toast Undo instead.
+     */
+    const [pendingUndo, setPendingUndo] = useState<Map<number, PendingEntry>>(() => new Map());
+
+    /**
+     * Merge the snapshotted pending rows back into the rendered list at (or near) their original
+     * positions, so the undo strip appears in place — not pinned at the top or bottom.
+     */
+    const rows = useMemo(() => {
+        if (pendingUndo.size === 0) return baseRows;
+        const baseIds = new Set(baseRows.map((row) => row.id));
+        const merged: AdminReview[] = [...baseRows];
+        const entries = Array.from(pendingUndo.values()).sort((a, b) => a.originalIndex - b.originalIndex);
+        for (const entry of entries) {
+            if (baseIds.has(entry.review.id)) continue;
+            const insertAt = Math.min(Math.max(0, entry.originalIndex), merged.length);
+            merged.splice(insertAt, 0, entry.review);
+        }
+        return merged;
+    }, [baseRows, pendingUndo]);
 
     /**
      * Inline expansion drives both Reply and Quick Edit — the same form is reused with a hint of
@@ -148,57 +182,76 @@ export function ReviewsList() {
     );
 
     /**
-     * Trash and Spam fire the mutation immediately — both are reversible API operations, so the
-     * undo affordance just enqueues the restore call (or moves the review back to `pending`).
-     * The toast stays on screen long enough for the operator to act on it; if they miss it, they
-     * can still restore from the Trash / Spam tab manually.
+     * Trash and Spam fire the mutation immediately and pin the row to the {@link pendingUndo}
+     * map. The row's regular cells are replaced by an undo strip via `renderRowOverride`; the
+     * strip stays until the operator acts (Undo / dismiss) or navigates away — no timer, no
+     * auto-commit. Restore + Unspam are real API calls, so the Undo button just kicks the
+     * reverse mutation.
      */
+    const pinPending = useCallback(
+        (review: AdminReview, kind: PendingKind) => {
+            const idx = baseRows.findIndex((row) => row.id === review.id);
+            const originalIndex = idx >= 0 ? idx : Number.MAX_SAFE_INTEGER;
+            setPendingUndo((prev) => {
+                const next = new Map(prev);
+                next.set(review.id, { kind, review, originalIndex });
+                return next;
+            });
+        },
+        [baseRows],
+    );
+
+    const clearPending = useCallback((id: number) => {
+        setPendingUndo((prev) => {
+            if (!prev.has(id)) return prev;
+            const next = new Map(prev);
+            next.delete(id);
+            return next;
+        });
+    }, []);
+
     const onMarkSpam = useCallback(
         async (review: AdminReview) => {
+            pinPending(review, "spam");
             try {
                 await moderate.mutateAsync({ id: review.id, status: "rejected" });
-                toast.add({
-                    title: t("markedSpamWithName", { name: review.reviewerName }),
-                    timeout: 8000,
-                    data: {
-                        tone: "success",
-                        action: {
-                            label: t("undo"),
-                            onAction: () => {
-                                void moderate.mutateAsync({ id: review.id, status: "pending" });
-                            },
-                        },
-                    },
-                });
             } catch {
+                clearPending(review.id);
                 toast.add({ title: t("saveFailed"), timeout: 4000, data: { tone: "error" } });
             }
         },
-        [moderate, t],
+        [clearPending, moderate, pinPending, t],
     );
     const onUnspam = useCallback((review: AdminReview) => runModerate(review.id, "pending", t("unspammed")), [runModerate, t]);
     const onTrash = useCallback(
         async (review: AdminReview) => {
+            pinPending(review, "trash");
             try {
                 await trashMutation.mutateAsync({ ids: [review.id] });
-                toast.add({
-                    title: t("trashedWithName", { name: review.reviewerName }),
-                    timeout: 8000,
-                    data: {
-                        tone: "success",
-                        action: {
-                            label: t("undo"),
-                            onAction: () => {
-                                void restoreMutation.mutateAsync({ ids: [review.id] });
-                            },
-                        },
-                    },
-                });
+            } catch {
+                clearPending(review.id);
+                toast.add({ title: t("saveFailed"), timeout: 4000, data: { tone: "error" } });
+            }
+        },
+        [clearPending, pinPending, t, trashMutation],
+    );
+
+    const onPendingUndo = useCallback(
+        async (id: number) => {
+            const entry = pendingUndo.get(id);
+            if (entry === undefined) return;
+            clearPending(id);
+            try {
+                if (entry.kind === "trash") {
+                    await restoreMutation.mutateAsync({ ids: [id] });
+                } else {
+                    await moderate.mutateAsync({ id, status: "pending" });
+                }
             } catch {
                 toast.add({ title: t("saveFailed"), timeout: 4000, data: { tone: "error" } });
             }
         },
-        [trashMutation, restoreMutation, t],
+        [clearPending, moderate, pendingUndo, restoreMutation, t],
     );
     const onRestore = useCallback(
         async (review: AdminReview) => {
@@ -381,6 +434,18 @@ export function ReviewsList() {
                 renderSubComponent={(row: Row<AdminReview>) => (
                     <ReplyPanel review={row.original} onClose={() => setExpandedRowId(undefined)} intent={intent} />
                 )}
+                renderRowOverride={(row: Row<AdminReview>) => {
+                    const entry = pendingUndo.get(row.original.id);
+                    if (entry === undefined) return undefined;
+                    return (
+                        <UndoStrip
+                            kind={entry.kind}
+                            reviewerName={entry.review.reviewerName}
+                            onUndo={() => onPendingUndo(row.original.id)}
+                            onDismiss={() => clearPending(row.original.id)}
+                        />
+                    );
+                }}
                 renderCard={(row) => (
                     <ReviewCard row={row.original} onOpen={() => onToggleQuickEdit(String(row.original.id), "edit")} />
                 )}

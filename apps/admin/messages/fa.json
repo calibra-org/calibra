@@ -583,9 +583,12 @@
             "trashed": "به زباله‌دان منتقل شد",
             "trashedWithName": "دیدگاه‌های «{name}» به زباله‌دان منتقل شد.",
             "markedSpamWithName": "دیدگاه «{name}» به‌عنوان هرزنامه علامت‌گذاری شد.",
+            "pendingTrashMessage": "دیدگاه «{name}» به زباله‌دان منتقل شد.",
+            "pendingSpamMessage": "دیدگاه «{name}» به‌عنوان هرزنامه علامت‌گذاری شد.",
             "restored": "بازیابی شد",
             "deleted": "برای همیشه حذف شد",
             "undo": "بازگردانی",
+            "dismiss": "بستن",
             "bulk": {
                 "status": "تغییر وضعیت",
                 "approve": "تأیید",
