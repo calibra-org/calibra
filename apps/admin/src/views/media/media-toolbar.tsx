@@ -27,7 +27,17 @@ interface MediaToolbarProps {
     locale: Locale;
 }
 
-const TYPE_OPTIONS: MediaTypeFilter[] = ["all", "image", "audio", "video", "document", "spreadsheet", "archive", "unattached", "mine"];
+const TYPE_OPTIONS: MediaTypeFilter[] = [
+    "all",
+    "image",
+    "audio",
+    "video",
+    "document",
+    "spreadsheet",
+    "archive",
+    "unattached",
+    "mine",
+];
 
 /**
  * Two-row toolbar. The action cluster (Add media · Bulk select · View toggle) sits at the start
@@ -70,10 +80,7 @@ export function MediaToolbar({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className={cn(
-                        "h-9 gap-1.5",
-                        bulkMode && "border-primary/40 bg-primary/5 text-primary hover:bg-primary/10",
-                    )}
+                    className={cn("h-9 gap-1.5", bulkMode && "border-primary/40 bg-primary/5 text-primary hover:bg-primary/10")}
                     onClick={() => onBulkModeChange(!bulkMode)}
                     aria-pressed={bulkMode}
                 >

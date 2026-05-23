@@ -160,9 +160,7 @@ export function MediaList({
                                                 >
                                                     {display}
                                                 </button>
-                                                <span
-                                                    className="block max-w-full truncate font-mono text-[11px] text-muted-foreground text-start"
-                                                >
+                                                <span className="block max-w-full truncate font-mono text-[11px] text-muted-foreground text-start">
                                                     {row.filename}
                                                 </span>
                                                 <div

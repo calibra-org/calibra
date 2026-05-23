@@ -292,13 +292,7 @@ function Body({ row, locale, saving, deleting, onSave, onDelete, onClose, labels
                     </FormField>
 
                     <div className="flex items-center justify-end gap-2 border-border/60 border-t pt-3">
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={handleSaveAll}
-                            disabled={!dirty || saving}
-                            className="gap-1.5"
-                        >
+                        <Button type="button" size="sm" onClick={handleSaveAll} disabled={!dirty || saving} className="gap-1.5">
                             {saving ? t("savingButton") : t("saveButton")}
                         </Button>
                     </div>
