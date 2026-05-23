@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Search, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Search, Settings2, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -10,25 +10,24 @@ import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
 import { formatNumber } from "#/lib/format";
-import type { AdminTag } from "#/lib/types";
+import { Link } from "#/lib/i18n/navigation";
+import type { AdminAttribute } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
-import type { TagFilterMode, TagSortKey, TagsStats } from "./tags-view";
+import type { AttributeSortKey } from "./attributes-view";
 
-interface TagsListProps {
-    rows: AdminTag[];
-    visibleRows: AdminTag[];
+interface AttributesListProps {
+    rows: AdminAttribute[];
+    visibleRows: AdminAttribute[];
+    termPreviews: Record<number, string[]>;
     selectedId: number | null;
     selectedIds: Set<number>;
     search: string;
-    filter: TagFilterMode;
-    sortKey: TagSortKey;
+    sortKey: AttributeSortKey;
     sortDir: "asc" | "desc";
-    stats: TagsStats;
     locale: Locale;
     onSearchChange: (value: string) => void;
-    onFilterChange: (value: TagFilterMode) => void;
-    onSort: (key: TagSortKey) => void;
+    onSort: (key: AttributeSortKey) => void;
     onSelectRow: (id: number) => void;
     onToggleSelected: (id: number) => void;
     onToggleAllSelected: () => void;
@@ -39,23 +38,21 @@ interface TagsListProps {
 }
 
 /**
- * The list pane. Renders the toolbar (search, filter pills, bulk-action bar) plus a sortable
- * table of tag rows. Selection state is hoisted to the parent so the inspector can react to
- * row clicks without an extra round of mounting and so bulk operations live in one place.
+ * Attributes list. Flat list with sortable columns (name / slug / term count) and three
+ * row-hover actions: Configure terms (primary — navigates to the per-attribute terms page),
+ * Edit, Delete. Bulk-select via the leading checkbox column.
  */
-export function TagsList({
+export function AttributesList({
     rows,
     visibleRows,
+    termPreviews,
     selectedId,
     selectedIds,
     search,
-    filter,
     sortKey,
     sortDir,
-    stats,
     locale,
     onSearchChange,
-    onFilterChange,
     onSort,
     onSelectRow,
     onToggleSelected,
@@ -64,36 +61,24 @@ export function TagsList({
     onBulkDelete,
     onEdit,
     onDelete,
-}: TagsListProps) {
-    const t = useTranslations("Tags");
-    const tToolbar = useTranslations("Tags.toolbar");
-    const tTable = useTranslations("Tags.table");
+}: AttributesListProps) {
+    const t = useTranslations("Attributes");
+    const tToolbar = useTranslations("Attributes.toolbar");
+    const tTable = useTranslations("Attributes.table");
+    const tOrderBy = useTranslations("Attributes.orderBy");
     const allVisibleSelected = visibleRows.length > 0 && visibleRows.every((row) => selectedIds.has(row.id));
     const hasSelection = selectedIds.size > 0;
 
-    const filters: { key: TagFilterMode; label: string; count: number }[] = [
-        { key: "all", label: tToolbar("filters.all"), count: stats.total },
-        { key: "popular", label: tToolbar("filters.popular"), count: stats.popular },
-        { key: "unused", label: tToolbar("filters.unused"), count: stats.unused },
-    ];
-
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-            <Toolbar
-                search={search}
-                onSearchChange={onSearchChange}
-                filter={filter}
-                onFilterChange={onFilterChange}
-                filters={filters}
-                locale={locale}
-            />
+            <Toolbar search={search} onSearchChange={onSearchChange} />
 
             {hasSelection && (
                 <BulkBar count={selectedIds.size} locale={locale} onClear={onClearSelected} onBulkDelete={onBulkDelete} />
             )}
 
             {visibleRows.length === 0 ? (
-                <EmptyList hasSearch={search.length > 0 || filter !== "all"} totalTags={rows.length} />
+                <EmptyList hasSearch={search.length > 0} totalAttributes={rows.length} />
             ) : (
                 <div className="overflow-hidden rounded-xl border border-border/60">
                     <table className="w-full text-sm">
@@ -118,20 +103,23 @@ export function TagsList({
                                     direction={sortDir}
                                     onClick={() => onSort("slug")}
                                 />
+                                <th className="px-3 py-2 text-start font-medium">{tTable("orderBy")}</th>
+                                <th className="px-3 py-2 text-start font-medium">{tTable("termsPreview")}</th>
                                 <SortHeader
-                                    label={tTable("productCount")}
-                                    active={sortKey === "productCount"}
+                                    label={tTable("termCount")}
+                                    active={sortKey === "termCount"}
                                     direction={sortDir}
-                                    onClick={() => onSort("productCount")}
+                                    onClick={() => onSort("termCount")}
                                     className="text-end"
                                 />
-                                <th className="w-32 px-3 py-2 text-end font-medium">{tTable("actions")}</th>
+                                <th className="w-40 px-3 py-2 text-end font-medium">{tTable("actions")}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {visibleRows.map((row) => {
                                 const isSelected = selectedIds.has(row.id);
                                 const isActive = selectedId === row.id;
+                                const preview = termPreviews[row.id] ?? [];
                                 return (
                                     <tr
                                         key={row.id}
@@ -167,13 +155,24 @@ export function TagsList({
                                                 dir="ltr"
                                                 className="block max-w-full truncate font-mono text-muted-foreground text-xs"
                                             >
-                                                {row.slug[locale]}
+                                                {row.code}
                                             </span>
                                         </td>
-                                        <td className="px-3 py-2 text-end">
-                                            <ProductCountPill count={row.productCount} locale={locale} />
+                                        <td className="px-3 py-2">
+                                            <span className="text-muted-foreground text-xs">{tOrderBy(row.orderBy)}</span>
                                         </td>
-                                        <td className="w-32 px-3 py-2 text-end">
+                                        <td className="px-3 py-2">
+                                            <TermsPreview
+                                                names={preview}
+                                                total={row.termCount}
+                                                attributeId={row.id}
+                                                attributeName={row.name[locale] || tTable("untitled")}
+                                            />
+                                        </td>
+                                        <td className="px-3 py-2 text-end">
+                                            <TermCountPill count={row.termCount} locale={locale} />
+                                        </td>
+                                        <td className="w-40 px-3 py-2 text-end">
                                             <div
                                                 className={cn(
                                                     "inline-flex items-center gap-1 opacity-0 transition-opacity",
@@ -181,6 +180,21 @@ export function TagsList({
                                                     isActive && "opacity-100",
                                                 )}
                                             >
+                                                <Button
+                                                    asChild
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={tTable("termsAria", {
+                                                        name: row.name[locale] || tTable("untitled"),
+                                                    })}
+                                                    className="size-8 text-muted-foreground hover:text-foreground"
+                                                >
+                                                    {/* biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware */}
+                                                    <Link href={`/products/attributes/${row.id}` as any}>
+                                                        <Settings2 className="size-3.5" aria-hidden="true" />
+                                                    </Link>
+                                                </Button>
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
@@ -223,14 +237,10 @@ export function TagsList({
 interface ToolbarProps {
     search: string;
     onSearchChange: (value: string) => void;
-    filter: TagFilterMode;
-    onFilterChange: (value: TagFilterMode) => void;
-    filters: { key: TagFilterMode; label: string; count: number }[];
-    locale: Locale;
 }
 
-function Toolbar({ search, onSearchChange, filter, onFilterChange, filters, locale }: ToolbarProps) {
-    const t = useTranslations("Tags.toolbar");
+function Toolbar({ search, onSearchChange }: ToolbarProps) {
+    const t = useTranslations("Attributes.toolbar");
     return (
         <div className="flex flex-wrap items-center gap-2">
             <div className="relative min-w-0 flex-1">
@@ -255,37 +265,6 @@ function Toolbar({ search, onSearchChange, filter, onFilterChange, filters, loca
                     </button>
                 )}
             </div>
-
-            <div className="flex flex-wrap items-center gap-1.5">
-                {filters.map((entry) => {
-                    const active = filter === entry.key;
-                    return (
-                        <button
-                            key={entry.key}
-                            type="button"
-                            onClick={() => onFilterChange(entry.key)}
-                            className={cn(
-                                "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-medium text-xs transition-colors",
-                                active
-                                    ? "border-primary/40 bg-primary/10 text-primary"
-                                    : "border-border/60 bg-background text-muted-foreground hover:border-border hover:text-foreground",
-                            )}
-                            aria-pressed={active}
-                        >
-                            <span>{entry.label}</span>
-                            <Badge
-                                variant="secondary"
-                                className={cn(
-                                    "h-4 min-w-5 justify-center bg-secondary/70 px-1 font-normal text-[10px] tabular-nums",
-                                    active && "bg-primary/15 text-primary",
-                                )}
-                            >
-                                {formatNumber(entry.count, locale)}
-                            </Badge>
-                        </button>
-                    );
-                })}
-            </div>
         </div>
     );
 }
@@ -298,7 +277,7 @@ interface BulkBarProps {
 }
 
 function BulkBar({ count, locale, onClear, onBulkDelete }: BulkBarProps) {
-    const t = useTranslations("Tags.bulk");
+    const t = useTranslations("Attributes.bulk");
     return (
         <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
             <div className="inline-flex items-center gap-2 text-foreground">
@@ -355,12 +334,49 @@ function SortHeader({ label, active, direction, onClick, className }: SortHeader
     );
 }
 
-interface ProductCountPillProps {
+interface TermsPreviewProps {
+    names: string[];
+    total: number;
+    attributeId: number;
+    attributeName: string;
+}
+
+function TermsPreview({ names, total, attributeId, attributeName }: TermsPreviewProps) {
+    const t = useTranslations("Attributes.table");
+    if (total === 0) {
+        return (
+            // biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware
+            <Link href={`/products/attributes/${attributeId}` as any} className="text-primary text-xs hover:underline">
+                {t("termsConfigureFor", { name: attributeName })}
+            </Link>
+        );
+    }
+    const overflow = total - names.length;
+    return (
+        <div className="flex flex-wrap items-center gap-1 text-xs">
+            {names.map((name) => (
+                <span
+                    key={`${attributeId}-term-${name}`}
+                    className="inline-flex items-center rounded-full bg-muted/60 px-2 py-0.5 text-foreground"
+                >
+                    {name}
+                </span>
+            ))}
+            {overflow > 0 && <span className="text-muted-foreground">{t("termsPreviewMore", { count: overflow })}</span>}
+            {/* biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware */}
+            <Link href={`/products/attributes/${attributeId}` as any} className="text-primary hover:underline">
+                ({t("termsConfigure")})
+            </Link>
+        </div>
+    );
+}
+
+interface TermCountPillProps {
     count: number;
     locale: Locale;
 }
 
-function ProductCountPill({ count, locale }: ProductCountPillProps) {
+function TermCountPill({ count, locale }: TermCountPillProps) {
     if (count === 0) {
         return (
             <span className="inline-flex h-6 min-w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 px-2 text-[11px] text-muted-foreground tabular-nums">
@@ -379,7 +395,7 @@ interface FooterCountProps {
     visible: number;
     total: number;
     locale: Locale;
-    t: ReturnType<typeof useTranslations<"Tags">>;
+    t: ReturnType<typeof useTranslations<"Attributes">>;
 }
 
 function FooterCount({ visible, total, locale, t }: FooterCountProps) {
@@ -399,12 +415,12 @@ function FooterCount({ visible, total, locale, t }: FooterCountProps) {
 
 interface EmptyListProps {
     hasSearch: boolean;
-    totalTags: number;
+    totalAttributes: number;
 }
 
-function EmptyList({ hasSearch, totalTags }: EmptyListProps): ReactNode {
-    const t = useTranslations("Tags.emptyList");
-    if (totalTags === 0 && !hasSearch) {
+function EmptyList({ hasSearch, totalAttributes }: EmptyListProps): ReactNode {
+    const t = useTranslations("Attributes.emptyList");
+    if (totalAttributes === 0 && !hasSearch) {
         return (
             <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-muted/20 p-12 text-center">
                 <div className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">

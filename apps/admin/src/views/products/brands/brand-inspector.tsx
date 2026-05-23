@@ -1,82 +1,80 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { FolderPlus, ImagePlus, MoreHorizontal, Save, Trash2, Wand2, X } from "lucide-react";
+import { BookmarkPlus, Hash, ImagePlus, Plus, Save, Sparkles, Trash2, Wand2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type ChangeEvent, useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
 import { formatNumber } from "#/lib/format";
-import type { AdminCategory, LocalizedString } from "#/lib/types";
+import type { AdminBrand, LocalizedString } from "#/lib/types";
 
 import { slugify } from "../_taxonomy-shared/slugify";
 
-import { collectSubtreeIds } from "./build-tree";
-import { ParentPicker } from "./parent-picker";
-
 /**
- * Loose category shape consumable by the inspector. The view binds against {@link AdminCategory}
- * plus a `description` field the API doesn't surface yet — declaring the loose type lets us add
- * the field locally and remove the union once the backend catches up.
- *
- * TODO(api): when `description` lands on the AdminCategory schema, fold it into the canonical
- * type and drop this alias.
+ * Brand shape the inspector edits. `description` is local-only today (mirrors how the tags +
+ * categories inspectors treat it) — the API schema accepts `translations[].description` on
+ * write, but the listing doesn't echo it back, so the draft carries it and we ship it on save
+ * without merging it into the row afterwards.
  */
-export interface AdminCategoryLike extends AdminCategory {
+export interface AdminBrandDraft extends AdminBrand {
     description?: LocalizedString;
 }
 
-interface CategoryInspectorProps {
-    rows: AdminCategoryLike[];
-    selected: AdminCategoryLike | null;
-    draft: AdminCategoryLike | null;
+interface BrandInspectorProps {
+    draft: AdminBrandDraft | null;
+    selected: AdminBrandDraft | null;
     locale: Locale;
-    onDraftChange: (draft: AdminCategoryLike | null) => void;
-    onCreateNew: (parentId: number | null) => void;
-    onSave: (draft: AdminCategoryLike) => void;
+    submitting: boolean;
+    onDraftChange: (draft: AdminBrandDraft) => void;
+    onCreateNew: () => void;
+    onSave: (draft: AdminBrandDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
 }
 
 /**
- * Right-hand inspector pane. Edits the currently-selected category; doubles as the "create new"
- * form when `draft.id` is negative (we use a sentinel id so the picker can still exclude the
- * row from the parent dropdown even before the server assigns a real one).
+ * Right-hand pane. Doubles as a permanent "add brand" form when no row is selected — that is
+ * how WordPress trains operators to expect this surface, and it keeps the empty state
+ * actionable instead of a static placeholder.
  */
-export function CategoryInspector({
-    rows,
-    selected,
+export function BrandInspector({
     draft,
+    selected,
     locale,
+    submitting,
     onDraftChange,
     onCreateNew,
     onSave,
     onDelete,
     onClose,
-}: CategoryInspectorProps) {
-    const t = useTranslations("Categories.inspector");
+}: BrandInspectorProps) {
+    const t = useTranslations("Brands.inspector");
 
     if (draft === null) {
-        return <InspectorEmpty onCreate={() => onCreateNew(null)} />;
+        return <InspectorEmpty onCreate={onCreateNew} />;
     }
 
+    /**
+     * `key={draft.id}` remounts the form whenever the inspector swaps to a different row, so
+     * `slugTouched` and any other inner state resets cleanly instead of leaking across rows.
+     */
     return (
         <InspectorForm
+            key={draft.id}
             t={t}
-            rows={rows}
-            selected={selected}
             draft={draft}
+            selected={selected}
             locale={locale}
+            submitting={submitting}
             onDraftChange={onDraftChange}
             onSave={onSave}
             onDelete={onDelete}
             onClose={onClose}
-            onCreateNew={onCreateNew}
         />
     );
 }
@@ -86,18 +84,18 @@ interface InspectorEmptyProps {
 }
 
 function InspectorEmpty({ onCreate }: InspectorEmptyProps) {
-    const t = useTranslations("Categories.inspector.empty");
+    const t = useTranslations("Brands.inspector.empty");
     return (
         <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-card/40 p-8 text-center">
             <div className="grid size-14 place-items-center rounded-full bg-primary/10 text-primary">
-                <FolderPlus className="size-6" aria-hidden="true" />
+                <BookmarkPlus className="size-6" aria-hidden="true" />
             </div>
             <div className="flex flex-col gap-1">
                 <h2 className="font-semibold text-foreground text-lg">{t("title")}</h2>
                 <p className="max-w-sm text-muted-foreground text-sm">{t("subtitle")}</p>
             </div>
             <Button onClick={onCreate}>
-                <FolderPlus className="size-4" aria-hidden="true" />
+                <Plus className="size-4" aria-hidden="true" />
                 {t("cta")}
             </Button>
             <ul className="mt-4 flex flex-col gap-2 text-muted-foreground text-xs">
@@ -110,56 +108,36 @@ function InspectorEmpty({ onCreate }: InspectorEmptyProps) {
 }
 
 interface InspectorFormProps {
-    t: ReturnType<typeof useTranslations<"Categories.inspector">>;
-    rows: AdminCategoryLike[];
-    selected: AdminCategoryLike | null;
-    draft: AdminCategoryLike;
+    t: ReturnType<typeof useTranslations<"Brands.inspector">>;
+    draft: AdminBrandDraft;
+    selected: AdminBrandDraft | null;
     locale: Locale;
-    onDraftChange: (draft: AdminCategoryLike) => void;
-    onSave: (draft: AdminCategoryLike) => void;
+    submitting: boolean;
+    onDraftChange: (draft: AdminBrandDraft) => void;
+    onSave: (draft: AdminBrandDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
-    onCreateNew: (parentId: number | null) => void;
 }
 
-function InspectorForm({
-    t,
-    rows,
-    selected,
-    draft,
-    locale,
-    onDraftChange,
-    onSave,
-    onDelete,
-    onClose,
-    onCreateNew,
-}: InspectorFormProps) {
+function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, onSave, onDelete, onClose }: InspectorFormProps) {
+    const [slugTouched, setSlugTouched] = useState(false);
     const isNew = draft.id < 0;
 
-    /** Auto-slug as the user types into name until they touch the slug field manually. */
-    const [slugTouched, setSlugTouched] = useState(false);
+    /**
+     * Auto-derive the slug from the name until the user touches the slug field. The parent
+     * remounts this form on row change via `key={draft.id}`, so the touched flag starts fresh
+     * for every selection.
+     */
     useEffect(() => {
         if (slugTouched) return;
         const next = slugify(draft.name[locale] ?? "");
         if ((draft.slug[locale] ?? "") === next) return;
-        onDraftChange({
-            ...draft,
-            slug: { ...draft.slug, [locale]: next },
-        });
+        onDraftChange({ ...draft, slug: { ...draft.slug, [locale]: next } });
     }, [draft, locale, onDraftChange, slugTouched]);
-
-    /** Descendant set of the row being edited — fed to {@link ParentPicker} to prevent cycles. */
-    const excludeDescendants = useMemo(() => {
-        if (isNew || draft.id < 0) return new Set<number>();
-        return collectSubtreeIds(rows, draft.id);
-    }, [rows, draft.id, isNew]);
 
     const updateLocalized = (field: "name" | "slug" | "description", value: string, l: Locale) => {
         const current = (draft[field] ?? { fa: "", en: "" }) as LocalizedString;
-        onDraftChange({
-            ...draft,
-            [field]: { ...current, [l]: value },
-        });
+        onDraftChange({ ...draft, [field]: { ...current, [l]: value } });
     };
 
     const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => updateLocalized("name", event.target.value, locale);
@@ -170,17 +148,16 @@ function InspectorForm({
     const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) =>
         updateLocalized("description", event.target.value, locale);
 
-    const childrenCount = useMemo(
-        () => rows.filter((row) => row.parentId === draft.id && draft.id >= 0).length,
-        [rows, draft.id],
-    );
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (submitting) return;
+        if (draft.name[locale]?.trim().length === 0) return;
+        onSave(draft);
+    };
 
     return (
         <form
-            onSubmit={(event) => {
-                event.preventDefault();
-                onSave(draft);
-            }}
+            onSubmit={handleSubmit}
             className="flex h-full flex-col gap-5 rounded-2xl border border-border/60 bg-card p-5 shadow-sm"
         >
             <header className="flex items-start justify-between gap-3">
@@ -190,7 +167,7 @@ function InspectorForm({
                             {isNew ? t("badgeNew") : t("badgeEdit")}
                         </Badge>
                         {!isNew && selected !== null && (
-                            <span className="text-muted-foreground text-xs">
+                            <span className="truncate text-muted-foreground text-xs">
                                 {t("inspecting", { name: selected.name[locale] || t("untitled") })}
                             </span>
                         )}
@@ -200,27 +177,18 @@ function InspectorForm({
                     </h2>
                 </div>
                 <div className="flex items-center gap-1">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger
-                            render={(props) => (
-                                <Button {...props} type="button" variant="ghost" size="icon" className="size-8">
-                                    <MoreHorizontal className="size-4" aria-hidden="true" />
-                                </Button>
-                            )}
-                        />
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onCreateNew(isNew ? null : draft.id)}>
-                                <FolderPlus className="size-3.5" aria-hidden="true" />
-                                {isNew ? t("menu.createSibling") : t("menu.createChild")}
-                            </DropdownMenuItem>
-                            {!isNew && (
-                                <DropdownMenuItem onClick={() => onDelete(draft.id)} className="text-destructive">
-                                    <Trash2 className="size-3.5" aria-hidden="true" />
-                                    {t("menu.delete")}
-                                </DropdownMenuItem>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    {!isNew && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={t("deleteAria")}
+                            onClick={() => onDelete(draft.id)}
+                            className="size-8 text-muted-foreground hover:text-destructive"
+                        >
+                            <Trash2 className="size-4" aria-hidden="true" />
+                        </Button>
+                    )}
                     <Button
                         type="button"
                         variant="ghost"
@@ -234,23 +202,25 @@ function InspectorForm({
                 </div>
             </header>
 
-            <CoverField imageUrl={draft.imageUrl} onChange={(url) => onDraftChange({ ...draft, imageUrl: url })} />
+            <LogoField logoUrl={draft.logoUrl} onChange={(url) => onDraftChange({ ...draft, logoUrl: url })} />
 
             <div className="grid gap-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="cat-name">{t("fields.name.label")}</Label>
+                    <Label htmlFor="brand-name">{t("fields.name.label")}</Label>
                     <Input
-                        id="cat-name"
+                        id="brand-name"
                         value={draft.name[locale] ?? ""}
                         onChange={handleNameChange}
                         placeholder={t("fields.name.placeholder")}
                         autoComplete="off"
+                        autoFocus={isNew}
                     />
+                    <p className="text-muted-foreground text-xs">{t("fields.name.hint")}</p>
                 </div>
 
                 <div className="grid gap-2">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="cat-slug">{t("fields.slug.label")}</Label>
+                        <Label htmlFor="brand-slug">{t("fields.slug.label")}</Label>
                         {slugTouched && (
                             <button
                                 type="button"
@@ -265,61 +235,54 @@ function InspectorForm({
                             </button>
                         )}
                     </div>
-                    <Input
-                        id="cat-slug"
-                        value={draft.slug[locale] ?? ""}
-                        onChange={handleSlugChange}
-                        placeholder={t("fields.slug.placeholder")}
-                        dir="ltr"
-                        autoComplete="off"
-                        className="font-mono"
-                    />
+                    <div className="relative">
+                        <Hash
+                            className="pointer-events-none absolute start-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+                            aria-hidden="true"
+                        />
+                        <Input
+                            id="brand-slug"
+                            value={draft.slug[locale] ?? ""}
+                            onChange={handleSlugChange}
+                            placeholder={t("fields.slug.placeholder")}
+                            dir="ltr"
+                            autoComplete="off"
+                            className="ps-9 font-mono"
+                        />
+                    </div>
                     <p className="text-muted-foreground text-xs">{t("fields.slug.hint")}</p>
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="cat-parent">{t("fields.parent.label")}</Label>
-                    <ParentPicker
-                        rows={rows}
-                        excludeId={isNew ? null : draft.id}
-                        excludeDescendants={excludeDescendants}
-                        value={draft.parentId}
-                        onChange={(parentId) => onDraftChange({ ...draft, parentId })}
-                        locale={locale}
-                    />
-                </div>
-
-                <div className="grid gap-2">
-                    <Label htmlFor="cat-description">{t("fields.description.label")}</Label>
+                    <Label htmlFor="brand-description">{t("fields.description.label")}</Label>
                     <Textarea
-                        id="cat-description"
+                        id="brand-description"
                         value={draft.description?.[locale] ?? ""}
                         onChange={handleDescriptionChange}
                         placeholder={t("fields.description.placeholder")}
                         rows={3}
                     />
-                    <p className="text-muted-foreground text-xs">
-                        {/* TODO(api): description isn't persisted yet — wire to /admin/categories/{id} once the field lands. */}
-                        {t("fields.description.todo")}
-                    </p>
+                    <p className="text-muted-foreground text-xs">{t("fields.description.hint")}</p>
                 </div>
 
                 {!isNew && (
-                    <div className="grid grid-cols-3 gap-2 rounded-lg border border-border/40 bg-muted/30 p-3 text-xs">
+                    <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/40 bg-muted/30 p-3 text-xs">
                         <Stat label={t("stats.products")} value={formatNumber(draft.productCount, locale)} />
-                        <Stat label={t("stats.children")} value={formatNumber(childrenCount, locale)} />
-                        <Stat label={t("stats.depth")} value={formatNumber(depthOf(rows, draft.id), locale)} />
+                        <Stat label={t("stats.id")} value={`#${formatNumber(draft.id, locale)}`} />
                     </div>
                 )}
             </div>
 
             <footer className="mt-auto flex items-center justify-between gap-2 pt-2">
-                <div className="text-muted-foreground text-xs">{isNew ? t("footer.newHint") : t("footer.editHint")}</div>
+                <div className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+                    <Sparkles className="size-3" aria-hidden="true" />
+                    {isNew ? t("footer.newHint") : t("footer.editHint")}
+                </div>
                 <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" onClick={onClose}>
+                    <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
                         {t("buttons.cancel")}
                     </Button>
-                    <Button type="submit" disabled={draft.name[locale]?.trim().length === 0}>
+                    <Button type="submit" disabled={submitting || draft.name[locale]?.trim().length === 0}>
                         <Save className="size-4" aria-hidden="true" />
                         {isNew ? t("buttons.create") : t("buttons.save")}
                     </Button>
@@ -329,19 +292,22 @@ function InspectorForm({
     );
 }
 
-interface CoverFieldProps {
-    imageUrl: string | null;
+interface LogoFieldProps {
+    logoUrl: string | null;
     onChange: (url: string | null) => void;
 }
 
-function CoverField({ imageUrl, onChange }: CoverFieldProps) {
-    const t = useTranslations("Categories.inspector.cover");
-
+/**
+ * Placeholder logo field — visually matches the category inspector's `CoverField`. Upload is
+ * not wired yet; once the media endpoint lands, swap the inner state for the real picker.
+ */
+function LogoField({ logoUrl, onChange }: LogoFieldProps) {
+    const t = useTranslations("Brands.inspector.fields.logo");
     return (
         <div className="grid gap-2">
             <Label>{t("label")}</Label>
             <div className="relative flex h-32 items-center justify-center overflow-hidden rounded-xl border border-border/60 border-dashed bg-muted/30 transition-colors hover:border-primary/40 hover:bg-muted/50">
-                {imageUrl === null || imageUrl.length === 0 ? (
+                {logoUrl === null || logoUrl.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <ImagePlus className="size-5" aria-hidden="true" />
                         <span className="text-xs">{t("placeholder")}</span>
@@ -350,8 +316,8 @@ function CoverField({ imageUrl, onChange }: CoverFieldProps) {
                     </div>
                 ) : (
                     <>
-                        {/* biome-ignore lint/performance/noImgElement: cover preview, no Next/Image loader configured */}
-                        <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+                        {/* biome-ignore lint/performance/noImgElement: logo preview, no Next/Image loader configured */}
+                        <img src={logoUrl} alt="" className="h-full w-full object-contain p-2" />
                         <Button
                             type="button"
                             variant="secondary"
@@ -381,17 +347,4 @@ function Stat({ label, value }: StatProps) {
             <span className="font-medium text-foreground text-sm tabular-nums">{value}</span>
         </div>
     );
-}
-
-/** Depth (0 = top level) of `id` inside the flat rows. Used by the inspector stats block. */
-function depthOf(rows: AdminCategoryLike[], id: number): number {
-    let depth = 0;
-    let current = rows.find((row) => row.id === id);
-    while (current?.parentId !== null && current !== undefined) {
-        depth += 1;
-        const parentId = current.parentId;
-        current = rows.find((row) => row.id === parentId);
-        if (depth > 64) break;
-    }
-    return depth;
 }

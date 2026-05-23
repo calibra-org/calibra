@@ -31,11 +31,14 @@ interface CategoryTreeProps {
     projection: DropProjection | null;
     activeProjectedDepth: number | null;
     selectedId: number | null;
+    checkedIds: Set<number>;
     locale: Locale;
     onSelect: (id: number) => void;
     onToggleExpand: (id: number) => void;
     onAddChild: (parentId: number) => void;
+    onEdit: (id: number) => void;
     onDelete: (id: number) => void;
+    onToggleChecked: (id: number) => void;
     onDragStart: (event: DragStartEvent) => void;
     onDragMove: (event: DragMoveEvent) => void;
     onDragEnd: (event: DragEndEvent) => void;
@@ -63,11 +66,14 @@ export function CategoryTree({
     projection,
     activeProjectedDepth,
     selectedId,
+    checkedIds,
     locale,
     onSelect,
     onToggleExpand,
     onAddChild,
+    onEdit,
     onDelete,
+    onToggleChecked,
     onDragStart,
     onDragMove,
     onDragEnd,
@@ -113,13 +119,16 @@ export function CategoryTree({
                                 row={row}
                                 locale={locale}
                                 isSelected={selectedId === row.category.id}
+                                isChecked={checkedIds.has(row.category.id)}
                                 isActive={isActive}
                                 isFirst={index === 0}
                                 overrideDepth={overrideDepth}
                                 onSelect={onSelect}
                                 onToggleExpand={onToggleExpand}
                                 onAddChild={onAddChild}
+                                onEdit={onEdit}
                                 onDelete={onDelete}
+                                onToggleChecked={onToggleChecked}
                             />
                         );
                     })}

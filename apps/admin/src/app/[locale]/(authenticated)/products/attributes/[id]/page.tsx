@@ -1,14 +1,10 @@
 import type { Locale } from "@calibra/shared/i18n";
-import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { DataTable } from "#/components/DataTable";
-import { PageHeader } from "#/components/PageHeader";
-import { Button } from "#/components/ui/button";
 import { getAttribute, listAttributeTerms } from "#/lib/server-repos";
-import type { AdminAttributeTerm } from "#/lib/types";
+import { AttributeTermsView } from "#/views/products/attributes/terms";
 
 interface PageProps {
     params: Promise<{ locale: string; id: string }>;
@@ -16,46 +12,28 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { locale, id } = await params;
-    const attribute = await getAttribute(Number(id));
-    if (attribute === null) return { title: "—" };
-    return { title: attribute.name[locale as Locale] };
+    const t = await getTranslations({ locale, namespace: "AttributeTerms" });
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId)) return { title: t("title") };
+    const attribute = await getAttribute(numericId);
+    if (attribute === null) return { title: t("title") };
+    return { title: t("titleFor", { name: attribute.name[locale as Locale] }) };
 }
 
+/**
+ * Server entry point for `/products/attributes/{id}`. Resolves the attribute (404s if it
+ * doesn't exist), seeds the terms list from the live API, and hands both to the client
+ * workbench. The view then drives every interaction through React Query against the
+ * `/admin/attributes/{attribute_id}/terms[/:id]` endpoints.
+ */
 export default async function AttributeTermsPage({ params }: PageProps) {
-    const { locale: rawLocale, id } = await params;
-    setRequestLocale(rawLocale);
-    const locale = rawLocale as Locale;
-    const attribute = await getAttribute(Number(id));
+    const { locale, id } = await params;
+    setRequestLocale(locale);
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId)) notFound();
+    const attribute = await getAttribute(numericId);
     if (attribute === null) notFound();
-    const t = await getTranslations("Attributes");
-    const cols = t.raw("termsTable") as Record<string, string>;
-    const terms = await listAttributeTerms(attribute.id);
+    const terms = await listAttributeTerms(numericId);
 
-    return (
-        <section className="flex flex-col gap-6">
-            <PageHeader
-                title={`${t("termsTitle")} — ${attribute.name[locale]}`}
-                subtitle={t("termsSubtitle")}
-                actions={
-                    <Button>
-                        <Plus className="size-4" aria-hidden="true" />
-                        {t("addAttribute")}
-                    </Button>
-                }
-            />
-            <DataTable<AdminAttributeTerm>
-                columns={[
-                    { id: "name", header: cols.name, cell: (row) => <span className="font-medium">{row.name[locale]}</span> },
-                    {
-                        id: "slug",
-                        header: cols.slug,
-                        cell: (row) => <span className="font-mono text-muted-foreground text-xs">{row.slug}</span>,
-                    },
-                ]}
-                rows={terms}
-                getRowKey={(row) => row.id}
-                emptyState="—"
-            />
-        </section>
-    );
+    return <AttributeTermsView attribute={attribute} initialRows={terms} />;
 }

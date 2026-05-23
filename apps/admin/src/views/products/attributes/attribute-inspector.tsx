@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { Hash, Plus, Save, Sparkles, Tag as TagIcon, Trash2, Wand2, X } from "lucide-react";
+import { Hash, Plus, Save, Settings2, Sparkles, Trash2, Wand2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 
@@ -9,40 +9,43 @@ import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
-import { Textarea } from "#/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
+import { Switch } from "#/components/ui/switch";
 import { formatNumber } from "#/lib/format";
-import type { AdminTag, LocalizedString } from "#/lib/types";
+import type { AdminAttribute, LocalizedString } from "#/lib/types";
 
-import { slugify } from "../_taxonomy-shared/slugify";
+import { slugifyAscii } from "../_taxonomy-shared/slugify";
 
 /**
- * Tag shape the inspector edits. `description` is a local-only field today (mirrors how the
- * category inspector treats it) — the API schema lets us POST/PATCH it via
- * `translations[].description`, but the listing doesn't surface it back, so we keep it on the
- * draft and ship it on save without reading it back into the row.
+ * Attribute shape the inspector edits. Extends the read model with a per-locale `name` draft
+ * (the API surface only ships the resolved locale's name on read, so the inspector keeps a
+ * pair of strings and ships the active one on save).
  */
-export interface AdminTagDraft extends AdminTag {
-    description?: LocalizedString;
+export interface AdminAttributeDraft extends AdminAttribute {
+    nameDraft: LocalizedString;
 }
 
-interface TagInspectorProps {
-    draft: AdminTagDraft | null;
-    selected: AdminTagDraft | null;
+interface AttributeInspectorProps {
+    draft: AdminAttributeDraft | null;
+    selected: AdminAttributeDraft | null;
     locale: Locale;
     submitting: boolean;
-    onDraftChange: (draft: AdminTagDraft) => void;
+    onDraftChange: (draft: AdminAttributeDraft) => void;
     onCreateNew: () => void;
-    onSave: (draft: AdminTagDraft) => void;
+    onSave: (draft: AdminAttributeDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
 }
 
+const ORDER_BY_OPTIONS: AdminAttribute["orderBy"][] = ["menu_order", "name", "id"];
+
 /**
- * Right-hand pane. Doubles as a permanent "add tag" form when no row is selected — that is
- * how WordPress trains operators to expect this surface, and it keeps the empty state
- * actionable instead of a static placeholder.
+ * Right-hand pane. Doubles as a permanent "add attribute" form when no row is selected.
+ * Fields: name, slug (== API `code`, immutable after create), has-archives switch, default
+ * term order. The slug input is disabled on edit because the API rejects `code` changes —
+ * operators rename via the translation, not the URL key.
  */
-export function TagInspector({
+export function AttributeInspector({
     draft,
     selected,
     locale,
@@ -52,17 +55,14 @@ export function TagInspector({
     onSave,
     onDelete,
     onClose,
-}: TagInspectorProps) {
-    const t = useTranslations("Tags.inspector");
+}: AttributeInspectorProps) {
+    const t = useTranslations("Attributes.inspector");
 
     if (draft === null) {
         return <InspectorEmpty onCreate={onCreateNew} />;
     }
 
-    /**
-     * `key={draft.id}` remounts the form whenever the inspector swaps to a different row, so
-     * `slugTouched` and any other inner state resets cleanly instead of leaking across rows.
-     */
+    /** Remount on row swap so inner state (`slugTouched`) resets. */
     return (
         <InspectorForm
             key={draft.id}
@@ -84,11 +84,11 @@ interface InspectorEmptyProps {
 }
 
 function InspectorEmpty({ onCreate }: InspectorEmptyProps) {
-    const t = useTranslations("Tags.inspector.empty");
+    const t = useTranslations("Attributes.inspector.empty");
     return (
         <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-card/40 p-8 text-center">
             <div className="grid size-14 place-items-center rounded-full bg-primary/10 text-primary">
-                <TagIcon className="size-6" aria-hidden="true" />
+                <Settings2 className="size-6" aria-hidden="true" />
             </div>
             <div className="flex flex-col gap-1">
                 <h2 className="font-semibold text-foreground text-lg">{t("title")}</h2>
@@ -108,13 +108,13 @@ function InspectorEmpty({ onCreate }: InspectorEmptyProps) {
 }
 
 interface InspectorFormProps {
-    t: ReturnType<typeof useTranslations<"Tags.inspector">>;
-    draft: AdminTagDraft;
-    selected: AdminTagDraft | null;
+    t: ReturnType<typeof useTranslations<"Attributes.inspector">>;
+    draft: AdminAttributeDraft;
+    selected: AdminAttributeDraft | null;
     locale: Locale;
     submitting: boolean;
-    onDraftChange: (draft: AdminTagDraft) => void;
-    onSave: (draft: AdminTagDraft) => void;
+    onDraftChange: (draft: AdminAttributeDraft) => void;
+    onSave: (draft: AdminAttributeDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
 }
@@ -122,36 +122,44 @@ interface InspectorFormProps {
 function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, onSave, onDelete, onClose }: InspectorFormProps) {
     const [slugTouched, setSlugTouched] = useState(false);
     const isNew = draft.id < 0;
+    const tOrderBy = useTranslations("Attributes.orderBy");
 
     /**
-     * Auto-derive the slug from the name until the user touches the slug field. The parent
-     * remounts this form on row change via `key={draft.id}`, so the touched flag starts fresh
-     * for every selection.
+     * Auto-derive the `code` (slug) from the name on create only — the field is locked on
+     * edit because the API rejects code changes after create.
      */
     useEffect(() => {
-        if (slugTouched) return;
-        const next = slugify(draft.name[locale] ?? "");
-        if ((draft.slug[locale] ?? "") === next) return;
-        onDraftChange({ ...draft, slug: { ...draft.slug, [locale]: next } });
-    }, [draft, locale, onDraftChange, slugTouched]);
+        if (!isNew || slugTouched) return;
+        const next = slugifyAscii(draft.nameDraft[locale] ?? "");
+        if (next.length === 0) return;
+        if (draft.code === next) return;
+        onDraftChange({ ...draft, code: next });
+    }, [draft, isNew, locale, onDraftChange, slugTouched]);
 
-    const updateLocalized = (field: "name" | "slug" | "description", value: string, l: Locale) => {
-        const current = (draft[field] ?? { fa: "", en: "" }) as LocalizedString;
-        onDraftChange({ ...draft, [field]: { ...current, [l]: value } });
+    const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+        onDraftChange({
+            ...draft,
+            nameDraft: { ...draft.nameDraft, [locale]: event.target.value },
+            name: { ...draft.name, [locale]: event.target.value },
+        });
     };
-
-    const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => updateLocalized("name", event.target.value, locale);
     const handleSlugChange = (event: ChangeEvent<HTMLInputElement>) => {
+        if (!isNew) return;
         setSlugTouched(true);
-        updateLocalized("slug", event.target.value, locale);
+        onDraftChange({ ...draft, code: slugifyAscii(event.target.value) });
     };
-    const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) =>
-        updateLocalized("description", event.target.value, locale);
+    const handleHasArchivesChange = (next: boolean | "indeterminate") => {
+        onDraftChange({ ...draft, hasArchives: next === true });
+    };
+    const handleOrderByChange = (value: AdminAttribute["orderBy"]) => {
+        onDraftChange({ ...draft, orderBy: value });
+    };
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (submitting) return;
-        if (draft.name[locale]?.trim().length === 0) return;
+        if (draft.nameDraft[locale]?.trim().length === 0) return;
+        if (isNew && draft.code.length === 0) return;
         onSave(draft);
     };
 
@@ -168,12 +176,12 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                         </Badge>
                         {!isNew && selected !== null && (
                             <span className="truncate text-muted-foreground text-xs">
-                                {t("inspecting", { name: selected.name[locale] || t("untitled") })}
+                                {t("inspecting", { name: selected.nameDraft[locale] || t("untitled") })}
                             </span>
                         )}
                     </div>
                     <h2 className="truncate font-semibold text-foreground text-lg">
-                        {draft.name[locale] || t("untitledHeader")}
+                        {draft.nameDraft[locale] || t("untitledHeader")}
                     </h2>
                 </div>
                 <div className="flex items-center gap-1">
@@ -204,10 +212,10 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
 
             <div className="grid gap-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="tag-name">{t("fields.name.label")}</Label>
+                    <Label htmlFor="attr-name">{t("fields.name.label")}</Label>
                     <Input
-                        id="tag-name"
-                        value={draft.name[locale] ?? ""}
+                        id="attr-name"
+                        value={draft.nameDraft[locale] ?? ""}
                         onChange={handleNameChange}
                         placeholder={t("fields.name.placeholder")}
                         autoComplete="off"
@@ -218,13 +226,13 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
 
                 <div className="grid gap-2">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="tag-slug">{t("fields.slug.label")}</Label>
-                        {slugTouched && (
+                        <Label htmlFor="attr-slug">{t("fields.slug.label")}</Label>
+                        {isNew && slugTouched && (
                             <button
                                 type="button"
                                 onClick={() => {
                                     setSlugTouched(false);
-                                    updateLocalized("slug", slugify(draft.name[locale] ?? ""), locale);
+                                    onDraftChange({ ...draft, code: slugifyAscii(draft.nameDraft[locale] ?? "") });
                                 }}
                                 className="inline-flex items-center gap-1 text-primary text-xs hover:underline"
                             >
@@ -239,12 +247,13 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                             aria-hidden="true"
                         />
                         <Input
-                            id="tag-slug"
-                            value={draft.slug[locale] ?? ""}
+                            id="attr-slug"
+                            value={draft.code}
                             onChange={handleSlugChange}
                             placeholder={t("fields.slug.placeholder")}
                             dir="ltr"
                             autoComplete="off"
+                            disabled={!isNew}
                             className="ps-9 font-mono"
                         />
                     </div>
@@ -252,20 +261,35 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="tag-description">{t("fields.description.label")}</Label>
-                    <Textarea
-                        id="tag-description"
-                        value={draft.description?.[locale] ?? ""}
-                        onChange={handleDescriptionChange}
-                        placeholder={t("fields.description.placeholder")}
-                        rows={3}
-                    />
-                    <p className="text-muted-foreground text-xs">{t("fields.description.hint")}</p>
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <Label htmlFor="attr-archives">{t("fields.hasArchives.label")}</Label>
+                            <p className="text-muted-foreground text-xs">{t("fields.hasArchives.hint")}</p>
+                        </div>
+                        <Switch id="attr-archives" checked={draft.hasArchives} onCheckedChange={handleHasArchivesChange} />
+                    </div>
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="attr-order-by">{t("fields.orderBy.label")}</Label>
+                    <Select value={draft.orderBy} onValueChange={(v) => handleOrderByChange(v as AdminAttribute["orderBy"])}>
+                        <SelectTrigger id="attr-order-by">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {ORDER_BY_OPTIONS.map((opt) => (
+                                <SelectItem key={opt} value={opt}>
+                                    {tOrderBy(opt)}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <p className="text-muted-foreground text-xs">{t("fields.orderBy.hint")}</p>
                 </div>
 
                 {!isNew && (
                     <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/40 bg-muted/30 p-3 text-xs">
-                        <Stat label={t("stats.products")} value={formatNumber(draft.productCount, locale)} />
+                        <Stat label={t("stats.terms")} value={formatNumber(draft.termCount, locale)} />
                         <Stat label={t("stats.id")} value={`#${formatNumber(draft.id, locale)}`} />
                     </div>
                 )}
@@ -280,7 +304,12 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                     <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
                         {t("buttons.cancel")}
                     </Button>
-                    <Button type="submit" disabled={submitting || draft.name[locale]?.trim().length === 0}>
+                    <Button
+                        type="submit"
+                        disabled={
+                            submitting || draft.nameDraft[locale]?.trim().length === 0 || (isNew && draft.code.length === 0)
+                        }
+                    >
                         <Save className="size-4" aria-hidden="true" />
                         {isNew ? t("buttons.create") : t("buttons.save")}
                     </Button>

@@ -3,12 +3,13 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronRight, FolderTree, GripVertical, ImageIcon, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, FolderTree, GripVertical, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
+import { Checkbox } from "#/components/ui/checkbox";
 import { formatNumber } from "#/lib/format";
 import { cn } from "#/lib/utils";
 
@@ -18,6 +19,8 @@ interface CategoryTreeRowViewProps {
     row: CategoryTreeRow;
     locale: Locale;
     isSelected: boolean;
+    /** This row is currently checked for bulk-action selection. Independent of `isSelected`. */
+    isChecked: boolean;
     /** This row is the one currently being dragged — render it dimmed in place. */
     isActive: boolean;
     /** First row in the visible list — skips the top divider. */
@@ -27,7 +30,9 @@ interface CategoryTreeRowViewProps {
     onSelect: (id: number) => void;
     onToggleExpand: (id: number) => void;
     onAddChild: (parentId: number) => void;
+    onEdit: (id: number) => void;
     onDelete: (id: number) => void;
+    onToggleChecked: (id: number) => void;
 }
 
 /**
@@ -46,13 +51,16 @@ export function CategoryTreeRowView({
     row,
     locale,
     isSelected,
+    isChecked,
     isActive,
     isFirst,
     overrideDepth,
     onSelect,
     onToggleExpand,
     onAddChild,
+    onEdit,
     onDelete,
+    onToggleChecked,
 }: CategoryTreeRowViewProps) {
     const t = useTranslations("Categories");
     const sortable = useSortable({ id: row.category.id });
@@ -145,6 +153,7 @@ export function CategoryTreeRowView({
                     "hover:bg-accent/40",
                     "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30",
                     isSelected && !isActive && "border-primary/30 bg-primary/5 shadow-xs",
+                    isChecked && !isActive && "bg-primary/10",
                     /**
                      * No row-level treatment for the drop target. The DragOverlay ghost +
                      * caption + the dimmed in-list active row (which animates to the
@@ -154,6 +163,15 @@ export function CategoryTreeRowView({
                 )}
                 style={{ paddingInlineStart: `${indentPx + 8}px` }}
             >
+                <Checkbox
+                    aria-label={t("selectRow", { name: row.category.name[locale] || t("untitled") })}
+                    checked={isChecked}
+                    onCheckedChange={() => onToggleChecked(row.category.id)}
+                    onClick={(event) => event.stopPropagation()}
+                    onPointerDown={stopPointer}
+                    className="ms-0.5 shrink-0"
+                />
+
                 <span
                     aria-hidden="true"
                     className={cn(
@@ -228,7 +246,6 @@ export function CategoryTreeRowView({
                         className={cn(
                             "flex items-center gap-0.5 opacity-0 transition-opacity",
                             "group-focus-within:opacity-100 group-hover:opacity-100",
-                            isSelected && "opacity-100",
                             isActive && "opacity-0",
                         )}
                     >
@@ -236,7 +253,21 @@ export function CategoryTreeRowView({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            aria-label={t("addChild")}
+                            aria-label={t("editAria", { name: row.category.name[locale] || t("untitled") })}
+                            onPointerDown={stopPointer}
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                onEdit(row.category.id);
+                            }}
+                            className="size-7 text-muted-foreground hover:text-foreground"
+                        >
+                            <Pencil className="size-3.5" aria-hidden="true" />
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={t("addChildAria", { name: row.category.name[locale] || t("untitled") })}
                             onPointerDown={stopPointer}
                             onClick={(event) => {
                                 event.stopPropagation();
@@ -250,7 +281,7 @@ export function CategoryTreeRowView({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            aria-label={t("delete")}
+                            aria-label={t("deleteAria", { name: row.category.name[locale] || t("untitled") })}
                             onPointerDown={stopPointer}
                             onClick={(event) => {
                                 event.stopPropagation();
