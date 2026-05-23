@@ -377,7 +377,6 @@
             "untitled": "Untitled",
             "untitledHeader": "New category",
             "close": "Close inspector",
-            "toggleOtherLocale": "Toggle {locale} translation",
             "menu": {
                 "createSibling": "Create sibling",
                 "createChild": "Add a child category",
@@ -386,8 +385,7 @@
             "fields": {
                 "name": {
                     "label": "Name",
-                    "placeholder": "e.g. Apparel",
-                    "otherPlaceholder": "{locale} translation"
+                    "placeholder": "e.g. Apparel"
                 },
                 "slug": {
                     "label": "Slug",
@@ -401,7 +399,6 @@
                 "description": {
                     "label": "Description",
                     "placeholder": "Optional — appears on the category landing page.",
-                    "otherPlaceholder": "{locale} translation",
                     "todo": "Backend doesn't persist descriptions yet — content is saved locally for preview."
                 }
             },

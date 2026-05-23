@@ -377,7 +377,6 @@
             "untitled": "بدون نام",
             "untitledHeader": "دستهٔ تازه",
             "close": "بستن پانل",
-            "toggleOtherLocale": "نمایش ترجمهٔ {locale}",
             "menu": {
                 "createSibling": "ساخت دستهٔ هم‌سطح",
                 "createChild": "افزودن زیرشاخه",
@@ -386,8 +385,7 @@
             "fields": {
                 "name": {
                     "label": "نام",
-                    "placeholder": "مثلاً پوشاک",
-                    "otherPlaceholder": "ترجمهٔ {locale}"
+                    "placeholder": "مثلاً پوشاک"
                 },
                 "slug": {
                     "label": "نامک",
@@ -401,7 +399,6 @@
                 "description": {
                     "label": "توضیحات",
                     "placeholder": "اختیاری — در صفحهٔ دسته نمایش داده می‌شود.",
-                    "otherPlaceholder": "ترجمهٔ {locale}",
                     "todo": "هنوز این فیلد روی بک‌اند ذخیره نمی‌شود — موقتاً برای پیش‌نمایش است."
                 }
             },
