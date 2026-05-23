@@ -302,7 +302,7 @@ export async function listReviews(params: ReviewListParams = {}): Promise<Pagina
         },
     });
     if (error !== undefined || !data) return emptyPage<AdminReview>(params.perPage);
-    const rows = (data.data ?? []).map(toAdminReview);
+    const rows = (data.data ?? []).map((row) => toAdminReview(row));
     const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
