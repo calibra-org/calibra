@@ -104,14 +104,6 @@ export interface DataTableProps<TData> {
     /** Setter for the controlled expanded row id. Called with `undefined` when the row collapses. */
     onExpandedRowIdChange?: (rowId: string | undefined) => void;
 
-    /**
-     * Optional per-row render override. When the function returns a non-`undefined` node, the
-     * row's regular cells are replaced by a single colspan cell hosting that node — mirrors the
-     * expansion mechanism but is keyed independently, so the table can stage multiple "pending"
-     * rows (Gmail-style trash-with-undo) without colliding with the single-row Quick Edit slot.
-     */
-    renderRowOverride?: (row: Row<TData>) => ReactNode | undefined;
-
     /** Optional renderer for the stacked mobile layout. When omitted, the table is shown on all sizes. */
     renderCard?: CardRenderer<TData>;
 
@@ -182,7 +174,6 @@ export function DataTable<TData>({
     renderSubComponent,
     expandedRowId,
     onExpandedRowIdChange,
-    renderRowOverride,
     renderCard,
     labels,
     formatNumber,
@@ -499,7 +490,6 @@ export function DataTable<TData>({
                                                     cellClass={cellClass}
                                                     rowHeightClass={rowHeightClass}
                                                     renderSubComponent={renderSubComponent}
-                                                    rowOverride={renderRowOverride?.(row)}
                                                     onRowOpen={onRowOpen}
                                                 />
                                             ))
@@ -639,8 +629,6 @@ interface BodyRowProps<TData> {
     cellClass: string;
     rowHeightClass: string;
     renderSubComponent?: SubRowRenderer<TData>;
-    /** When set, the row's cells are replaced by this node (Gmail-style trash-with-undo). */
-    rowOverride?: ReactNode;
     onRowOpen?: (row: TData) => void;
 }
 
@@ -650,25 +638,10 @@ function DataTableBodyRow<TData>({
     cellClass,
     rowHeightClass,
     renderSubComponent,
-    rowOverride,
     onRowOpen,
 }: BodyRowProps<TData>) {
     const isExpanded = row.getIsExpanded();
     const visibleCellCount = row.getVisibleCells().length;
-
-    /**
-     * Row override wins over the QuickEdit expansion — a pending-undo strip should keep showing
-     * even if the operator started a Quick Edit on the same row before clicking trash.
-     */
-    if (rowOverride !== undefined) {
-        return (
-            <TableRow className="border-border border-y bg-muted/40">
-                <TableCell colSpan={visibleCellCount} className="p-0">
-                    {rowOverride}
-                </TableCell>
-            </TableRow>
-        );
-    }
 
     /**
      * Quick Edit takes over the entire row WordPress-style — when expanded, the row's regular

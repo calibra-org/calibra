@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import {
     ActiveFilterChips,
@@ -30,16 +30,6 @@ import { BulkActions } from "./bulk-actions";
 import { buildReviewColumns } from "./columns";
 import { useReviewFiltersConfig } from "./filters";
 import { ReplyPanel } from "./reply-panel";
-import { type PendingKind, UndoStrip } from "./undo-strip";
-
-const UNDO_WINDOW_MS = 6000;
-
-interface PendingAction {
-    kind: PendingKind;
-    reviewerName: string;
-    expiresAt: number;
-    timerId: number;
-}
 
 const TABLE_ID = "products.reviews";
 const STATUS_TABS: (ReviewStatus | "any")[] = ["any", "pending", "approved", "spam", "trash"];
@@ -158,54 +148,58 @@ export function ReviewsList() {
     );
 
     /**
-     * Pending destructive actions sit in this map for the {@link UNDO_WINDOW_MS} grace period.
-     * The mutation only fires when the timer expires; clicking Undo cancels it. Lives in a ref
-     * (not state) so callbacks can read the latest entry without restarting the timer.
+     * Trash and Spam fire the mutation immediately — both are reversible API operations, so the
+     * undo affordance just enqueues the restore call (or moves the review back to `pending`).
+     * The toast stays on screen long enough for the operator to act on it; if they miss it, they
+     * can still restore from the Trash / Spam tab manually.
      */
-    const pendingRef = useRef<Map<number, PendingAction>>(new Map());
-    const [pendingTick, setPendingTick] = useState(0);
-    const repaint = useCallback(() => setPendingTick((n) => n + 1), []);
-
-    useEffect(() => {
-        return () => {
-            for (const entry of pendingRef.current.values()) window.clearTimeout(entry.timerId);
-            pendingRef.current.clear();
-        };
-    }, []);
-
-    const cancelPending = useCallback(
-        (id: number) => {
-            const entry = pendingRef.current.get(id);
-            if (entry === undefined) return;
-            window.clearTimeout(entry.timerId);
-            pendingRef.current.delete(id);
-            repaint();
+    const onMarkSpam = useCallback(
+        async (review: AdminReview) => {
+            try {
+                await moderate.mutateAsync({ id: review.id, status: "rejected" });
+                toast.add({
+                    title: t("markedSpamWithName", { name: review.reviewerName }),
+                    timeout: 8000,
+                    data: {
+                        tone: "success",
+                        action: {
+                            label: t("undo"),
+                            onAction: () => {
+                                void moderate.mutateAsync({ id: review.id, status: "pending" });
+                            },
+                        },
+                    },
+                });
+            } catch {
+                toast.add({ title: t("saveFailed"), timeout: 4000, data: { tone: "error" } });
+            }
         },
-        [repaint],
+        [moderate, t],
     );
-
-    const stagePending = useCallback(
-        (review: AdminReview, kind: PendingKind) => {
-            cancelPending(review.id);
-            const expiresAt = Date.now() + UNDO_WINDOW_MS;
-            const timerId = window.setTimeout(() => {
-                pendingRef.current.delete(review.id);
-                repaint();
-                if (kind === "trash") {
-                    void trashMutation.mutateAsync({ ids: [review.id] });
-                } else {
-                    void moderate.mutateAsync({ id: review.id, status: "rejected" });
-                }
-            }, UNDO_WINDOW_MS);
-            pendingRef.current.set(review.id, { kind, reviewerName: review.reviewerName, expiresAt, timerId });
-            repaint();
-        },
-        [cancelPending, moderate, repaint, trashMutation],
-    );
-
-    const onMarkSpam = useCallback((review: AdminReview) => stagePending(review, "spam"), [stagePending]);
     const onUnspam = useCallback((review: AdminReview) => runModerate(review.id, "pending", t("unspammed")), [runModerate, t]);
-    const onTrash = useCallback((review: AdminReview) => stagePending(review, "trash"), [stagePending]);
+    const onTrash = useCallback(
+        async (review: AdminReview) => {
+            try {
+                await trashMutation.mutateAsync({ ids: [review.id] });
+                toast.add({
+                    title: t("trashedWithName", { name: review.reviewerName }),
+                    timeout: 8000,
+                    data: {
+                        tone: "success",
+                        action: {
+                            label: t("undo"),
+                            onAction: () => {
+                                void restoreMutation.mutateAsync({ ids: [review.id] });
+                            },
+                        },
+                    },
+                });
+            } catch {
+                toast.add({ title: t("saveFailed"), timeout: 4000, data: { tone: "error" } });
+            }
+        },
+        [trashMutation, restoreMutation, t],
+    );
     const onRestore = useCallback(
         async (review: AdminReview) => {
             try {
@@ -387,21 +381,6 @@ export function ReviewsList() {
                 renderSubComponent={(row: Row<AdminReview>) => (
                     <ReplyPanel review={row.original} onClose={() => setExpandedRowId(undefined)} intent={intent} />
                 )}
-                renderRowOverride={(row: Row<AdminReview>) => {
-                    /** `pendingTick` is read to register a re-render dependency — Map mutation alone wouldn't. */
-                    void pendingTick;
-                    const entry = pendingRef.current.get(row.original.id);
-                    if (entry === undefined) return undefined;
-                    return (
-                        <UndoStrip
-                            kind={entry.kind}
-                            reviewerName={entry.reviewerName}
-                            durationMs={UNDO_WINDOW_MS}
-                            expiresAt={entry.expiresAt}
-                            onUndo={() => cancelPending(row.original.id)}
-                        />
-                    );
-                }}
                 renderCard={(row) => (
                     <ReviewCard row={row.original} onOpen={() => onToggleQuickEdit(String(row.original.id), "edit")} />
                 )}
