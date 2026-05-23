@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { FolderPlus, ImagePlus, Languages, MoreHorizontal, Save, Trash2, Wand2, X } from "lucide-react";
+import { FolderPlus, ImagePlus, MoreHorizontal, Save, Trash2, Wand2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 
@@ -121,8 +121,6 @@ interface InspectorFormProps {
     onCreateNew: (parentId: number | null) => void;
 }
 
-const OTHER_LOCALE: Record<Locale, Locale> = { fa: "en", en: "fa" };
-
 function InspectorForm({
     t,
     rows,
@@ -135,9 +133,7 @@ function InspectorForm({
     onClose,
     onCreateNew,
 }: InspectorFormProps) {
-    const [showOtherLocale, setShowOtherLocale] = useState(false);
     const isNew = draft.id < 0;
-    const otherLocale = OTHER_LOCALE[locale];
 
     /** Auto-slug as the user types into name until they touch the slug field manually. */
     const [slugTouched, setSlugTouched] = useState(false);
@@ -203,16 +199,6 @@ function InspectorForm({
                     </h2>
                 </div>
                 <div className="flex items-center gap-1">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t("toggleOtherLocale", { locale: otherLocale.toUpperCase() })}
-                        onClick={() => setShowOtherLocale((current) => !current)}
-                        className={cn("size-8 text-muted-foreground", showOtherLocale && "text-primary")}
-                    >
-                        <Languages className="size-4" aria-hidden="true" />
-                    </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger
                             render={(props) => (
@@ -259,16 +245,6 @@ function InspectorForm({
                         placeholder={t("fields.name.placeholder")}
                         autoComplete="off"
                     />
-                    {showOtherLocale && (
-                        <Input
-                            value={draft.name[otherLocale] ?? ""}
-                            onChange={(event) => updateLocalized("name", event.target.value, otherLocale)}
-                            placeholder={t("fields.name.otherPlaceholder", { locale: otherLocale.toUpperCase() })}
-                            dir={otherLocale === "fa" ? "rtl" : "ltr"}
-                            autoComplete="off"
-                            className="text-muted-foreground"
-                        />
-                    )}
                 </div>
 
                 <div className="grid gap-2">
@@ -297,16 +273,6 @@ function InspectorForm({
                         autoComplete="off"
                         className="font-mono"
                     />
-                    {showOtherLocale && (
-                        <Input
-                            value={draft.slug[otherLocale] ?? ""}
-                            onChange={(event) => updateLocalized("slug", event.target.value, otherLocale)}
-                            placeholder={t("fields.slug.placeholder")}
-                            dir="ltr"
-                            autoComplete="off"
-                            className="font-mono text-muted-foreground"
-                        />
-                    )}
                     <p className="text-muted-foreground text-xs">{t("fields.slug.hint")}</p>
                 </div>
 
@@ -331,16 +297,6 @@ function InspectorForm({
                         placeholder={t("fields.description.placeholder")}
                         rows={3}
                     />
-                    {showOtherLocale && (
-                        <Textarea
-                            value={draft.description?.[otherLocale] ?? ""}
-                            onChange={(event) => updateLocalized("description", event.target.value, otherLocale)}
-                            placeholder={t("fields.description.otherPlaceholder", { locale: otherLocale.toUpperCase() })}
-                            dir={otherLocale === "fa" ? "rtl" : "ltr"}
-                            rows={3}
-                            className="text-muted-foreground"
-                        />
-                    )}
                     <p className="text-muted-foreground text-xs">
                         {/* TODO(api): description isn't persisted yet — wire to /admin/categories/{id} once the field lands. */}
                         {t("fields.description.todo")}
