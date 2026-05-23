@@ -54,5 +54,8 @@ dist/
 .claude/research
 .claude/responses
 
+# Per-spin metadata written by scripts/spin.mjs.
+.claude/spin
+
 # Local backend response captures (not committed)
 tmp/

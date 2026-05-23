@@ -21,6 +21,17 @@ Scope-specific contracts (read these before authoring inside the scope):
 - [`packages/sdk/AGENTS.md`](packages/sdk/AGENTS.md) — framework-agnostic HTTP client, `BackendError` fallback chain, header sanitization, response envelopes (`Resource<T>` / `Paginated<T>`), locale forwarding.
 - [`packages/shared/AGENTS.md`](packages/shared/AGENTS.md) — utilities only; no UI components.
 
+## Spinning up a task
+
+For any new piece of work — feature, refactor, experiment — use the `pnpm spin` bootstrapper instead of hand-rolling a worktree:
+
+```sh
+pnpm spin <slug>            # worktree + branch + isolated containers + seeded DB + draft PR
+pnpm spin stop <slug>       # tear down (add --purge --remove to wipe DB and worktree)
+```
+
+Each spin gets a dedicated port block in the 13xxx range (deterministic per slug), its own docker compose project, and its own `.env` files, so multiple spins can run side by side without clobbering each other's data or ports. Full operator guide: [`scripts/spin.md`](scripts/spin.md). Design rationale: [#21](https://github.com/calibra-org/calibra/issues/21).
+
 ## Don't reinvent the wheel
 
 Before generating code, search for existing solutions first. Rephrase the request as: "I am looking for code that does [requested functionality], is there existing code that can do this?" If existing code is close but doesn't fully meet the need, prefer extending it (a prop, a variant, a configuration) over reimplementing. Only generate new code when no suitable solution exists and extending is not feasible.
