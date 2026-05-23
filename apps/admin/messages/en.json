@@ -449,12 +449,109 @@
     "Tags": {
         "title": "Tags",
         "subtitle": "Lightweight descriptors for products.",
+        "subtitleStats": "{total} tags · {attachments} product attachments · {unused} unused",
         "addTag": "Add tag",
+        "footerCount": {
+            "total": "Showing all {total} tags",
+            "partial": "Showing {visible} of {total} tags"
+        },
         "table": {
             "name": "Name",
             "slug": "Slug",
             "productCount": "Products",
-            "actions": "Actions"
+            "actions": "Actions",
+            "untitled": "Untitled",
+            "editAria": "Edit {name}",
+            "deleteAria": "Delete {name}"
+        },
+        "toolbar": {
+            "searchPlaceholder": "Search by name or slug",
+            "clearSearch": "Clear search",
+            "selectAll": "Select all visible tags",
+            "selectRow": "Select {name}",
+            "filters": {
+                "all": "All",
+                "popular": "Popular",
+                "unused": "Unused"
+            }
+        },
+        "bulk": {
+            "selected": "{count, plural, one {# tag selected} other {# tags selected}}",
+            "clear": "Clear",
+            "delete": "Delete selected"
+        },
+        "emptyList": {
+            "empty": {
+                "title": "No tags yet",
+                "description": "Tags let shoppers narrow the catalog by theme — \"sale\", \"new arrival\", \"limited edition\". Add your first one from the form on the left."
+            },
+            "noResults": {
+                "title": "Nothing matches",
+                "description": "Try a shorter search term, or switch the filter pill above."
+            }
+        },
+        "inspector": {
+            "badgeNew": "New",
+            "badgeEdit": "Editing",
+            "inspecting": "{name}",
+            "untitled": "Untitled",
+            "untitledHeader": "New tag",
+            "close": "Close inspector",
+            "deleteAria": "Delete this tag",
+            "fields": {
+                "name": {
+                    "label": "Name",
+                    "placeholder": "e.g. New arrival",
+                    "hint": "The label shoppers see on chips and filters."
+                },
+                "slug": {
+                    "label": "Slug",
+                    "placeholder": "auto-generated",
+                    "hint": "Used in the storefront URL. Lowercase letters, numbers and dashes only.",
+                    "regenerate": "Regenerate from name"
+                },
+                "description": {
+                    "label": "Description",
+                    "placeholder": "Optional — appears on the tag landing page.",
+                    "hint": "Some themes render this on the tag archive page."
+                }
+            },
+            "stats": {
+                "products": "Products",
+                "id": "Tag ID"
+            },
+            "buttons": {
+                "save": "Save changes",
+                "create": "Create tag",
+                "cancel": "Cancel"
+            },
+            "footer": {
+                "newHint": "Hit Enter or Save to add this tag.",
+                "editHint": "Changes save to the catalog immediately."
+            },
+            "empty": {
+                "title": "Pick a tag, or start a new one",
+                "subtitle": "Select a row from the list to edit it, or create a new tag from scratch. Tags are flat — there is no parent / child structure.",
+                "cta": "Add your first tag",
+                "tip1": "Click any row to edit it in place.",
+                "tip2": "Use the language toggle to author both fa and en at once.",
+                "tip3": "Bulk-delete from the list when cleaning up unused tags."
+            }
+        },
+        "deleteDialog": {
+            "title": "Delete this tag?",
+            "description": "Removing \"{name}\" detaches it from every product. The action cannot be undone.",
+            "untitled": "this tag",
+            "cancel": "Cancel",
+            "confirm": "Delete tag",
+            "pending": "Deleting…"
+        },
+        "bulkDeleteDialog": {
+            "title": "Delete {count} tags?",
+            "description": "Each selected tag is detached from every product it belonged to. The action cannot be undone.",
+            "cancel": "Cancel",
+            "confirm": "Delete selected",
+            "pending": "Deleting…"
         }
     },
     "Brands": {
