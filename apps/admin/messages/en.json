@@ -501,12 +501,10 @@
             "untitledHeader": "New tag",
             "close": "Close inspector",
             "deleteAria": "Delete this tag",
-            "toggleOtherLocale": "Toggle {locale} translation",
             "fields": {
                 "name": {
                     "label": "Name",
                     "placeholder": "e.g. New arrival",
-                    "otherPlaceholder": "{locale} translation",
                     "hint": "The label shoppers see on chips and filters."
                 },
                 "slug": {
@@ -518,7 +516,6 @@
                 "description": {
                     "label": "Description",
                     "placeholder": "Optional — appears on the tag landing page.",
-                    "otherPlaceholder": "{locale} translation",
                     "hint": "Some themes render this on the tag archive page."
                 }
             },

@@ -501,12 +501,10 @@
             "untitledHeader": "برچسب تازه",
             "close": "بستن پانل",
             "deleteAria": "حذف این برچسب",
-            "toggleOtherLocale": "نمایش ترجمهٔ {locale}",
             "fields": {
                 "name": {
                     "label": "نام",
                     "placeholder": "مثلاً جدید",
-                    "otherPlaceholder": "ترجمهٔ {locale}",
                     "hint": "نامی که در فیلترها و چیپ‌های فروشگاه دیده می‌شود."
                 },
                 "slug": {
@@ -518,7 +516,6 @@
                 "description": {
                     "label": "توضیحات",
                     "placeholder": "اختیاری — در صفحهٔ برچسب نمایش داده می‌شود.",
-                    "otherPlaceholder": "ترجمهٔ {locale}",
                     "hint": "بعضی قالب‌ها این متن را در صفحهٔ آرشیو برچسب نشان می‌دهند."
                 }
             },

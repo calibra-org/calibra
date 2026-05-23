@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { Hash, Languages, Plus, Save, Sparkles, Tag as TagIcon, Trash2, Wand2, X } from "lucide-react";
+import { Hash, Plus, Save, Sparkles, Tag as TagIcon, Trash2, Wand2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 
@@ -12,7 +12,6 @@ import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
 import { formatNumber } from "#/lib/format";
 import type { AdminTag, LocalizedString } from "#/lib/types";
-import { cn } from "#/lib/utils";
 
 import { slugify } from "./slugify";
 
@@ -37,8 +36,6 @@ interface TagInspectorProps {
     onDelete: (id: number) => void;
     onClose: () => void;
 }
-
-const OTHER_LOCALE: Record<Locale, Locale> = { fa: "en", en: "fa" };
 
 /**
  * Right-hand pane. Doubles as a permanent "add tag" form when no row is selected — that is
@@ -123,10 +120,8 @@ interface InspectorFormProps {
 }
 
 function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, onSave, onDelete, onClose }: InspectorFormProps) {
-    const [showOtherLocale, setShowOtherLocale] = useState(false);
     const [slugTouched, setSlugTouched] = useState(false);
     const isNew = draft.id < 0;
-    const otherLocale = OTHER_LOCALE[locale];
 
     /**
      * Auto-derive the slug from the name until the user touches the slug field. The parent
@@ -182,16 +177,6 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                     </h2>
                 </div>
                 <div className="flex items-center gap-1">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t("toggleOtherLocale", { locale: otherLocale.toUpperCase() })}
-                        onClick={() => setShowOtherLocale((current) => !current)}
-                        className={cn("size-8 text-muted-foreground", showOtherLocale && "text-primary")}
-                    >
-                        <Languages className="size-4" aria-hidden="true" />
-                    </Button>
                     {!isNew && (
                         <Button
                             type="button"
@@ -228,16 +213,6 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                         autoComplete="off"
                         autoFocus={isNew}
                     />
-                    {showOtherLocale && (
-                        <Input
-                            value={draft.name[otherLocale] ?? ""}
-                            onChange={(event) => updateLocalized("name", event.target.value, otherLocale)}
-                            placeholder={t("fields.name.otherPlaceholder", { locale: otherLocale.toUpperCase() })}
-                            dir={otherLocale === "fa" ? "rtl" : "ltr"}
-                            autoComplete="off"
-                            className="text-muted-foreground"
-                        />
-                    )}
                     <p className="text-muted-foreground text-xs">{t("fields.name.hint")}</p>
                 </div>
 
@@ -273,16 +248,6 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                             className="ps-9 font-mono"
                         />
                     </div>
-                    {showOtherLocale && (
-                        <Input
-                            value={draft.slug[otherLocale] ?? ""}
-                            onChange={(event) => updateLocalized("slug", event.target.value, otherLocale)}
-                            placeholder={t("fields.slug.placeholder")}
-                            dir="ltr"
-                            autoComplete="off"
-                            className="font-mono text-muted-foreground"
-                        />
-                    )}
                     <p className="text-muted-foreground text-xs">{t("fields.slug.hint")}</p>
                 </div>
 
@@ -295,16 +260,6 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                         placeholder={t("fields.description.placeholder")}
                         rows={3}
                     />
-                    {showOtherLocale && (
-                        <Textarea
-                            value={draft.description?.[otherLocale] ?? ""}
-                            onChange={(event) => updateLocalized("description", event.target.value, otherLocale)}
-                            placeholder={t("fields.description.otherPlaceholder", { locale: otherLocale.toUpperCase() })}
-                            dir={otherLocale === "fa" ? "rtl" : "ltr"}
-                            rows={3}
-                            className="text-muted-foreground"
-                        />
-                    )}
                     <p className="text-muted-foreground text-xs">{t("fields.description.hint")}</p>
                 </div>
 
