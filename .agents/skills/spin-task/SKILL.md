@@ -1,0 +1,144 @@
+---
+name: spin-task
+description: Use when the user wants a fresh isolated dev environment for a new task. Triggers on `/spin-task <summary>` or natural-language phrasing like "spin up a task for ...", "spin me an env to ...", "make me a worktree for ...", "start a new task: ...". Turns the summary into a kebab-case slug, runs `pnpm spin <slug>`, prints the handoff card. Forwards `--with-web` and `--no-pr` flags. Gracefully resumes if the slug is already provisioned.
+---
+
+# Spin a task
+
+One-shot bootstrap of an isolated worktree + docker stack + seeded DB + draft PR via `pnpm spin`. The operator describes the work; you turn that description into a slug, run the script, and hand them the URLs.
+
+The mechanics live in [`scripts/spin.mjs`](../../../scripts/spin.mjs); read [`scripts/spin.md`](../../../scripts/spin.md) if anything below is unclear. This skill is the natural-language gateway in front of that script.
+
+## Trigger
+
+Invoke this skill whenever the user signals "I want a new isolated env":
+
+- `/spin-task <summary>` — explicit slash command.
+- "spin (up) (a task|env|worktree) (for|to) …"
+- "make me a worktree for …"
+- "start a new task: …"
+- "kick off …" (when paired with what the work is about)
+- "I need a fresh env to …"
+
+Do **not** invoke for unrelated mentions of "spinner", "spin up the API", or other false positives. The signal is *new task* + *isolated env*.
+
+## Workflow
+
+1. **Parse the request.** Pull out:
+   - The user-facing task summary (everything after the trigger phrase).
+   - Any flags the user already typed (`--with-web`, `--no-pr`). Forward them verbatim.
+   - An explicit slug if the user supplied one (`/spin-task tags-fix: ...`). If present, validate it matches the slug rules below and skip slug-derivation.
+
+2. **Derive a slug** if one wasn't supplied.
+
+   Rules (enforced by `scripts/spin.mjs`):
+   - Lowercase letters, digits, and dashes only.
+   - 2–40 characters.
+   - Starts with a letter.
+
+   Heuristic for turning a free-form summary into a slug:
+   - Take the 2–4 most distinctive content words. Drop articles, prepositions, helper verbs (the, a, an, of, for, to, with, in, on, fix, add, make, build — unless they carry semantic weight like a verb prefix).
+   - Lowercase, dash-join.
+   - If the summary already contains a noun phrase like "tags workbench" or "checkout flow", prefer that — it's what the operator will mentally key off when listing spins later.
+   - Trim to ≤ 40 chars. Don't append timestamps or random suffixes; the slug should round-trip to a recognisable phrase.
+   - If the heuristic produces a slug already in use (`.claude/spin/<slug>.json` exists), DO NOT silently rename — show the operator the existing slug and ask whether they want to resume it or pick a different name.
+
+   **Show the chosen slug to the operator before invoking the script.** One short line, no preamble:
+
+   ```
+   Slug: tags-workbench
+   ```
+
+   If the operator pushes back, accept their alternative without re-running the heuristic.
+
+3. **Invoke the script.** Always from the repo root (or any worktree — the script self-locates the main repo). Stream stdout so the operator sees each step land:
+
+   ```bash
+   pnpm spin <slug> [flags]
+   ```
+
+   - Default flags: none. The script opens a draft PR by default.
+   - Forward `--with-web` when the task touches the storefront.
+   - Forward `--no-pr` when the operator is provisioning a throwaway exploration env or explicitly asks to skip the PR.
+
+   Expect the script to take 30–90 seconds. The slow steps (container provisioning, install, seed) are normal; do NOT interrupt unless the script fails or stalls past 5 minutes.
+
+4. **Hand off.** The script prints a handoff card on success. Re-print the relevant lines verbatim, plus the seed credentials and the stop command. Format:
+
+   ```
+   ready: <slug>
+     admin   http://localhost:<port>
+     api     http://localhost:<port>
+     pgadmin http://localhost:<port>
+     pr      <pr url, or "(skipped — pnpm spin pr <slug>)" if --no-pr>
+     login   admin@bulk.calibra.dev / Passw0rd1!
+     stop    pnpm spin stop <slug>
+   ```
+
+   Do not add a victory lap or summary after this card — the URLs and login are the only payload the operator needs.
+
+## Failure modes
+
+- **Script exits non-zero before "ready"**: surface the last 20 lines of stdout the script printed. Do not retry blindly. Common causes: docker daemon not running, gh CLI not authenticated, port range exhausted (very unlikely). Diagnose, suggest a fix, ask whether to retry.
+- **`gh pr create` fails on the PR step**: the rest of the env is up. Tell the operator they can run `pnpm spin pr <slug>` once they've fixed the gh auth.
+- **Slug already exists**: don't silently resume. Surface to the operator and let them choose (resume vs. new slug).
+- **User asks to spin against an existing branch / PR**: the script does not support this directly today. Surface the limitation, suggest either (a) starting a fresh spin from main and applying the changes manually, or (b) merging main into their branch in the existing worktree and pointing them at the manual flow used in conversation history. Do not invent a flag that doesn't exist.
+
+## Examples
+
+### Plain summary
+
+> User: `/spin-task tags workbench polish — search highlighting and a virtual scroll for big tag lists`
+>
+> Assistant:
+> ```
+> Slug: tags-workbench-polish
+> ```
+> (then runs `pnpm spin tags-workbench-polish`)
+>
+> ```
+> ready: tags-workbench-polish
+>   admin   http://localhost:13123
+>   api     http://localhost:13122
+>   pgadmin http://localhost:13121
+>   pr      https://github.com/calibra-org/calibra/pull/42
+>   login   admin@bulk.calibra.dev / Passw0rd1!
+>   stop    pnpm spin stop tags-workbench-polish
+> ```
+
+### Operator supplies the slug
+
+> User: `spin a task — slug "checkout-flow", I'm rewriting the checkout summary card`
+>
+> Assistant:
+> ```
+> Slug: checkout-flow
+> ```
+> (then runs `pnpm spin checkout-flow`)
+
+### Operator wants the storefront too
+
+> User: `/spin-task new homepage hero — needs to run web too`
+>
+> Assistant:
+> ```
+> Slug: homepage-hero
+> ```
+> (then runs `pnpm spin homepage-hero --with-web`)
+
+### Already exists
+
+> User: `/spin-task tags workbench review`
+>
+> Assistant:
+> ```
+> Slug: tags-workbench-review (existing — found .claude/spin/tags-workbench-review.json from 2026-05-22)
+> ```
+> Then: "There's already a spin under this slug from earlier. Resume it (`pnpm spin tags-workbench-review`) — that picks up where it left off, or pick a different slug?"
+
+## What this skill does not do
+
+- It does not pick the task to work on for the operator. The summary comes from them.
+- It does not commit code into the new worktree — only the bootstrap empty commit `scripts/spin.mjs` produces.
+- It does not babysit the dev servers after the handoff. Tail `.spin/logs/*.log` inside the worktree if something looks off.
+- It does not tear spins down — that's `pnpm spin stop <slug>` (the operator runs it directly, or asks for it explicitly).
