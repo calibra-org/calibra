@@ -13,6 +13,7 @@ import { applyCreate, applyUpdate, type ChangeRecord, type ProductRow } from "#s
 import { type ColumnMapping, type ProjectionError, projectRow } from "#services/product_import/row_projector";
 import { type ImportSnapshot, importsLocalPath, snapshotKey, writeSnapshot } from "#services/product_import/storage";
 import { newCounters } from "#services/product_import/taxonomy_resolver";
+import { notifyImportTerminal } from "#services/product_io_notifier";
 
 /**
  * `runImport` — the real run. Streams progress through the in-memory event bus on every chunk,
@@ -47,6 +48,7 @@ export async function runImport(opts: RunOptions): Promise<void> {
         return;
     }
 
+    const runStartedAt = Date.now();
     try {
         importRow.status = "validating";
         importRow.startedAt = DateTime.utc();
@@ -159,6 +161,7 @@ export async function runImport(opts: RunOptions): Promise<void> {
                 failed: importRow.failedCount,
             },
         });
+        await notifyImportTerminal({ row: importRow, status: finalStatus, durationMs: Date.now() - runStartedAt });
     } catch (err) {
         logger.error({ err, importId: opts.importId }, "runImport: unhandled exception");
         const message = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
@@ -171,6 +174,12 @@ export async function runImport(opts: RunOptions): Promise<void> {
             importId: opts.importId,
             at: new Date().toISOString(),
             payload: { message },
+        });
+        await notifyImportTerminal({
+            row: importRow,
+            status: "failed",
+            durationMs: Date.now() - runStartedAt,
+            failureMessage: message,
         });
     }
 }

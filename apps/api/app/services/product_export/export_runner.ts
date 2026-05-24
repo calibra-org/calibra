@@ -8,6 +8,7 @@ import { buildExportQuery, type ExportFilters } from "#services/product_export/e
 import { createRowEmitter, type EmitterOptions } from "#services/product_export/export_row_emitter";
 import { mintSignedUrl } from "#services/product_export/export_signed_url";
 import { fileSize, gzipExportKey, openExportWriter } from "#services/product_export/export_storage";
+import { notifyExportTerminal } from "#services/product_io_notifier";
 
 /**
  * Top-level orchestrator for an export run. Same shape as `import_runner.ts`:
@@ -43,6 +44,7 @@ export async function runExport(opts: RunExportOptions): Promise<void> {
         return;
     }
 
+    const runStartedAt = Date.now();
     try {
         row.status = "running";
         row.startedAt = DateTime.utc();
@@ -194,6 +196,7 @@ export async function runExport(opts: RunExportOptions): Promise<void> {
                 token: signed.token,
             },
         });
+        await notifyExportTerminal({ row, status: "completed", durationMs: Date.now() - runStartedAt });
     } catch (err) {
         logger.error({ err, exportId: opts.exportId }, "runExport: unhandled exception");
         const message = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
@@ -206,6 +209,12 @@ export async function runExport(opts: RunExportOptions): Promise<void> {
             exportId: opts.exportId,
             at: new Date().toISOString(),
             payload: { message },
+        });
+        await notifyExportTerminal({
+            row,
+            status: "failed",
+            durationMs: Date.now() - runStartedAt,
+            failureMessage: message,
         });
     }
 }

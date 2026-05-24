@@ -98,6 +98,7 @@ async function start(args) {
     await ensureWorktree(meta);
     await ensureEnvFiles(meta);
     await ensureContainers(meta);
+    await ensureMailpit(meta);
     await ensureInstall(meta);
     await ensureSdkBuild(meta);
     await ensureMigrationsAndSeed(meta);
@@ -192,6 +193,9 @@ async function doctor(args) {
     log(`  db           localhost:${meta.ports.db} ${(await isPortListening(meta.ports.db)) ? green("up") : red("down")}`);
     log(
         `  pgadmin      http://localhost:${meta.ports.pgadmin} ${(await isPortListening(meta.ports.pgadmin)) ? green("up") : red("down")}`,
+    );
+    log(
+        `  mailpit      http://localhost:${MAILPIT_WEB_PORT} ${(await isPortListening(MAILPIT_SMTP_PORT)) ? green("up") : red("down")} (shared)`,
     );
     log(`  compose      project=${meta.composeProject}`);
     log(`  PR           ${meta.prNumber ? `#${meta.prNumber}` : "—"}`);
@@ -305,9 +309,47 @@ async function ensureEnvFiles(meta) {
             `DB_PASSWORD=calibra`,
             `DB_DATABASE=calibra`,
             `ALLOWED_ORIGINS=http://localhost:${meta.ports.admin},http://localhost:${meta.ports.web}`,
+            /**
+             * Mailpit (shared across all spins on this machine). The container is brought up by
+             * `ensureMailpit()` on `spin start`. `MAIL_NOTIFICATIONS_ENABLED=true` opts the
+             * importer/exporter runners into sending operator emails on terminal events.
+             */
+            `MAIL_FROM_ADDRESS=ops@calibra.local`,
+            `MAIL_FROM_NAME=Calibra`,
+            `MAIL_NOTIFICATIONS_ENABLED=true`,
+            `SMTP_HOST=localhost`,
+            `SMTP_PORT=${MAILPIT_SMTP_PORT}`,
+            `MAILPIT_WEB_URL=http://localhost:${MAILPIT_WEB_PORT}`,
             "",
         ].join("\n"),
     );
+}
+
+/**
+ * Fixed ports for the shared Mailpit container. Picked above the per-spin 13xxx range so they
+ * never collide with allocated slots, and small enough to be memorable.
+ */
+const MAILPIT_SMTP_PORT = 11025;
+const MAILPIT_WEB_PORT = 18025;
+const MAILPIT_COMPOSE_PROJECT = "calibra-mailpit";
+
+/**
+ * Bring up the shared Mailpit container if it isn't already listening. One per dev machine, used
+ * by every spin's API. Idempotent — `docker compose up -d` is a no-op when the container is
+ * already healthy. Stop is intentionally NOT exposed via `spin stop` because killing it would
+ * also nuke other concurrent spins' inboxes; operators tear it down by hand if they need to.
+ *
+ * @param {SpinMeta} meta
+ */
+async function ensureMailpit(meta) {
+    if (await isPortListening(MAILPIT_SMTP_PORT)) {
+        step("mailpit", `running on :${MAILPIT_WEB_PORT}`);
+        return;
+    }
+    step("mailpit", "docker compose up");
+    const composeFile = join(meta.worktreePath, "scripts/mailpit-compose.yml");
+    const env = { ...process.env, COMPOSE_PROJECT_NAME: MAILPIT_COMPOSE_PROJECT };
+    await run("docker", ["compose", "-f", composeFile, "up", "-d"], { env });
 }
 
 /**
@@ -555,6 +597,7 @@ function printHandoffCard(meta, opts) {
     log(`  api     ${cyan(`http://localhost:${meta.ports.api}`)}`);
     if (opts.withWeb) log(`  web     ${cyan(`http://localhost:${meta.ports.web}`)}`);
     log(`  pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
+    log(`  mailpit ${cyan(`http://localhost:${MAILPIT_WEB_PORT}`)} (smtp :${MAILPIT_SMTP_PORT})`);
     log(`  pr      ${meta.prUrl ?? `(skipped — run pnpm spin pr ${meta.slug})`}`);
     log(`  login   ${cyan("admin@bulk.calibra.dev")} / ${cyan("Passw0rd1!")}`);
     log(`  stop    ${cyan(`pnpm spin stop ${meta.slug}`)}`);

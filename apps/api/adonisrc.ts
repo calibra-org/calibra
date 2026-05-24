@@ -33,6 +33,7 @@ export default defineConfig({
         () => import("@adonisjs/auth/auth_provider"),
         () => import("@adonisjs/drive/drive_provider"),
         () => import("@adonisjs/cache/cache_provider"),
+        () => import("@adonisjs/mail/mail_provider"),
         () => import("@adonisjs/transmit/transmit_provider"),
     ],
 
