@@ -62,7 +62,7 @@ export function RefundsCard({ order, locale }: RefundsCardProps) {
     return (
         <div className="flex flex-col gap-3">
             <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => setOpen((value) => !value)}>
+                <Button variant="outline" size="sm" onClick={() => setOpen((value) => !value)} data-detail-action="open-refund">
                     {t("addRefund")}
                 </Button>
             </div>

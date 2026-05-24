@@ -2318,6 +2318,8 @@ export interface components {
             phone?: string | null;
             /** Format: email */
             email?: string | null;
+            /** @description Iran national-ID surfaced from the row's `attributes` JSON when present. */
+            national_id?: string | null;
         };
         /**
          * OrderDetail

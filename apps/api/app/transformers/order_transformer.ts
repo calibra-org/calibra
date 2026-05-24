@@ -260,6 +260,7 @@ export default class OrderTransformer extends BaseTransformer<Order> {
     }
 
     private serializeAddress(address: OrderAddress) {
+        const attrs = (address.attributes as Record<string, unknown>) ?? {};
         return {
             kind: address.kind,
             first_name: address.firstName,
@@ -274,6 +275,7 @@ export default class OrderTransformer extends BaseTransformer<Order> {
             country: address.country,
             phone: address.phone,
             email: address.email,
+            national_id: typeof attrs.national_id === "string" ? attrs.national_id : null,
         };
     }
 

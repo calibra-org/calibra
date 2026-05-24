@@ -2,7 +2,7 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { OrderStatusBadge } from "#/components/OrderStatusBadge";
 import { PageHeader } from "#/components/PageHeader";
@@ -27,6 +27,7 @@ import { ActionsCard } from "./actions-card";
 import { AddressesCard } from "./addresses-card";
 import { CustomerCard } from "./customer-card";
 import { CustomerHistoryCard } from "./customer-history-card";
+import { DetailKeyboardHelp } from "./detail-keyboard-help";
 import { ItemsCard } from "./items-card";
 import { LockedBanner } from "./locked-banner";
 import { MetaFieldsCard } from "./meta-fields-card";
@@ -65,6 +66,54 @@ export function OrdersDetail({ id }: OrdersDetailProps) {
     const deleteOrder = useDeleteOrder();
 
     const { data: order, isPending, isError, refetch } = useOrder(id);
+
+    const [helpOpen, setHelpOpen] = useState(false);
+    useEffect(() => {
+        const handler = (event: KeyboardEvent) => {
+            const target = event.target as HTMLElement | null;
+            if (target?.matches('input, textarea, [contenteditable="true"]')) return;
+            if (event.metaKey || event.ctrlKey) {
+                if (event.key === "p" && order !== undefined) {
+                    event.preventDefault();
+                    const url = event.shiftKey
+                        ? `/orders/${order.id}/packing-slip?print=1`
+                        : `/orders/${order.id}/invoice?print=1`;
+                    window.open(url, "_blank");
+                }
+                return;
+            }
+            if (order === undefined) return;
+            switch (event.key) {
+                case "a": {
+                    event.preventDefault();
+                    document.querySelector<HTMLInputElement>('[data-detail-action="add-item"]')?.focus();
+                    break;
+                }
+                case "r": {
+                    event.preventDefault();
+                    document.querySelector<HTMLButtonElement>('[data-detail-action="open-refund"]')?.click();
+                    break;
+                }
+                case "n": {
+                    event.preventDefault();
+                    document.querySelector<HTMLTextAreaElement>('[data-detail-action="note-body"]')?.focus();
+                    break;
+                }
+                case "s": {
+                    event.preventDefault();
+                    document.querySelector<HTMLButtonElement>('[data-detail-action="save-all"]')?.click();
+                    break;
+                }
+                case "?": {
+                    event.preventDefault();
+                    setHelpOpen(true);
+                    break;
+                }
+            }
+        };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, [order]);
 
     const mainSections = useMemo<SectionSpec[]>(() => {
         if (order === undefined) return [];
@@ -182,6 +231,7 @@ export function OrdersDetail({ id }: OrdersDetailProps) {
                                     {tActions("printPacking")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setHelpOpen(true)}>{tGrid("shortcuts")}</DropdownMenuItem>
                                 <DropdownMenuItem onClick={onResetLayout}>{tGrid("resetOrder")}</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -210,6 +260,8 @@ export function OrdersDetail({ id }: OrdersDetailProps) {
                     labels={{ grabHandle: tGrid("grab"), collapse: tGrid("collapse"), expand: tGrid("expand") }}
                 />
             </div>
+
+            <DetailKeyboardHelp open={helpOpen} onOpenChange={setHelpOpen} />
         </section>
     );
 }

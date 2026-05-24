@@ -94,6 +94,7 @@ export function TimelineCard({ order, locale }: TimelineCardProps) {
                     value={body}
                     onChange={(event) => setBody(event.target.value)}
                     placeholder={t("addNotePlaceholder")}
+                    data-detail-action="note-body"
                 />
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm">

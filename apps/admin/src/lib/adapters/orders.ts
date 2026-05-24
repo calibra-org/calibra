@@ -99,7 +99,7 @@ export function toAdminOrderAddress(a: SdkOrderAddress | null | undefined): Admi
         postcode: a.postcode ?? "",
         country: a.country ?? "",
         phone: a.phone ?? "",
-        nationalId: null,
+        nationalId: (a as { national_id?: string | null }).national_id ?? null,
     };
 }
 
