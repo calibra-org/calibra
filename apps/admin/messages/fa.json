@@ -1233,6 +1233,29 @@
             "filesCounter": "{done} از {total}"
         }
     },
+    "MediaPicker": {
+        "titleSingle": "انتخاب رسانه",
+        "titleMultiple": "انتخاب رسانه‌ها",
+        "tabs": {
+            "library": "کتابخانه",
+            "upload": "بارگذاری"
+        },
+        "footer": {
+            "selectedSingle": "۱ مورد انتخاب شده",
+            "selectedMultiple": "{count} مورد انتخاب شده",
+            "empty": "موردی انتخاب نشده است"
+        },
+        "buttons": {
+            "cancel": "انصراف",
+            "select": "انتخاب"
+        },
+        "field": {
+            "choose": "انتخاب تصویر",
+            "change": "تغییر",
+            "remove": "حذف",
+            "previewAlt": "پیش‌نمایش تصویر انتخاب‌شده"
+        }
+    },
     "Orders": {
         "title": "سفارش‌ها",
         "subtitle": "پیگیری، فیلتر و انجام سفارش‌های ورودی.",

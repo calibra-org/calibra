@@ -2503,6 +2503,9 @@ export interface components {
             name: string;
             slug: string;
             locale?: string;
+            /** @description Foreign key into the media library. `null` clears the linked asset. */
+            image_media_id?: number | null;
+            /** @description Convenience read-only URL resolved from the linked media row; `null` when no asset is attached. */
             image_url?: string | null;
             menu_order?: number;
             translations?: {

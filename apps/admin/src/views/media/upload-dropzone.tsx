@@ -23,6 +23,11 @@ interface QueueEntry {
     file: File;
     status: "queued" | "uploading" | "uploaded" | "failed";
     percent: number;
+    /**
+     * Object URL for image files, used as a client-side thumbnail before the server URL is known.
+     * `null` for non-images. Always revoked on entry removal / dialog close to avoid leaking.
+     */
+    previewUrl: string | null;
 }
 
 /**
@@ -44,7 +49,14 @@ export function UploadDropzone({ open, onClose, onUploaded }: UploadDropzoneProp
         const fresh: QueueEntry[] = [];
         for (const file of Array.from(files)) {
             counter.current += 1;
-            fresh.push({ id: `${Date.now()}-${counter.current}`, file, status: "queued", percent: 0 });
+            const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
+            fresh.push({
+                id: `${Date.now()}-${counter.current}`,
+                file,
+                status: "queued",
+                percent: 0,
+                previewUrl,
+            });
         }
         if (fresh.length > 0) setQueue((current) => [...current, ...fresh]);
     }, []);
@@ -72,7 +84,15 @@ export function UploadDropzone({ open, onClose, onUploaded }: UploadDropzoneProp
     );
 
     const removeEntry = useCallback((id: string) => {
-        setQueue((current) => current.filter((entry) => entry.id !== id || entry.status === "uploading"));
+        setQueue((current) => {
+            const next: QueueEntry[] = [];
+            for (const entry of current) {
+                const drop = entry.id === id && entry.status !== "uploading";
+                if (drop && entry.previewUrl !== null) URL.revokeObjectURL(entry.previewUrl);
+                if (!drop) next.push(entry);
+            }
+            return next;
+        });
     }, []);
 
     useEffect(() => {
@@ -113,7 +133,12 @@ export function UploadDropzone({ open, onClose, onUploaded }: UploadDropzoneProp
     const done = queue.filter((entry) => entry.status === "uploaded" || entry.status === "failed").length;
 
     const handleClose = useCallback(() => {
-        setQueue([]);
+        setQueue((current) => {
+            for (const entry of current) {
+                if (entry.previewUrl !== null) URL.revokeObjectURL(entry.previewUrl);
+            }
+            return [];
+        });
         onClose();
     }, [onClose]);
 
@@ -157,7 +182,7 @@ export function UploadDropzone({ open, onClose, onUploaded }: UploadDropzoneProp
                                 key={entry.id}
                                 className="flex items-center gap-2 rounded-md border border-border/60 px-2 py-1.5 text-sm"
                             >
-                                <StatusIcon status={entry.status} />
+                                <QueueThumbnail entry={entry} />
                                 <span className="min-w-0 flex-1 truncate" dir="ltr">
                                     {entry.file.name}
                                 </span>
@@ -190,12 +215,49 @@ export function UploadDropzone({ open, onClose, onUploaded }: UploadDropzoneProp
     );
 }
 
-interface StatusIconProps {
-    status: QueueEntry["status"];
+interface QueueThumbnailProps {
+    entry: QueueEntry;
 }
 
-function StatusIcon({ status }: StatusIconProps) {
-    if (status === "uploaded") return <Check className="size-3.5 text-emerald-500" aria-hidden="true" />;
-    if (status === "failed") return <X className="size-3.5 text-destructive" aria-hidden="true" />;
-    return <FileIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />;
+/**
+ * Leading cell of each queue row. Renders a tiny preview of the file the operator just dropped:
+ *
+ *   - Images get a thumbnail painted from the local blob URL — instant feedback, no waiting on
+ *     the server to round-trip the upload.
+ *   - Non-images fall back to a generic file icon on a muted square.
+ *
+ * Status (uploaded ✓ / failed ✕) shows as a corner badge so the row still communicates state at
+ * a glance without the thumbnail itself changing. While uploading/queued, the thumbnail stays
+ * clean — the progress bar to the right carries the activity signal.
+ */
+function QueueThumbnail({ entry }: QueueThumbnailProps) {
+    const hasPreview = entry.previewUrl !== null;
+    return (
+        <div className="relative size-9 shrink-0 overflow-hidden rounded-md border border-border/60 bg-muted/40">
+            {hasPreview ? (
+                /* biome-ignore lint/performance/noImgElement: local blob preview, no Next/Image loader configured */
+                <img src={entry.previewUrl ?? ""} alt="" className="size-full object-cover" />
+            ) : (
+                <div className="flex size-full items-center justify-center">
+                    <FileIcon className="size-4 text-muted-foreground" aria-hidden="true" />
+                </div>
+            )}
+            {entry.status === "uploaded" && (
+                <span
+                    aria-hidden="true"
+                    className="absolute end-[-3px] top-[-3px] inline-flex size-4 items-center justify-center rounded-full border-2 border-card bg-emerald-500 text-white"
+                >
+                    <Check className="size-2.5" />
+                </span>
+            )}
+            {entry.status === "failed" && (
+                <span
+                    aria-hidden="true"
+                    className="absolute end-[-3px] top-[-3px] inline-flex size-4 items-center justify-center rounded-full border-2 border-card bg-destructive text-destructive-foreground"
+                >
+                    <X className="size-2.5" />
+                </span>
+            )}
+        </div>
+    );
 }

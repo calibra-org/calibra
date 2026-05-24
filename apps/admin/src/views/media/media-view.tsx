@@ -15,13 +15,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
+import { BulkSelectionBar } from "#/components/ui/bulk-selection-bar";
 import { Button } from "#/components/ui/button";
 import { toast } from "#/components/ui/toast";
 import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
 import type { AdminMedia, Paginated } from "#/lib/types";
 
-import { MediaBulkBar } from "./media-bulk-bar";
 import { MediaDetailsModal } from "./media-details-modal";
 import { MediaGrid } from "./media-grid";
 import { MediaList } from "./media-list";
@@ -59,6 +59,7 @@ const SEARCH_DEBOUNCE_MS = 250;
  */
 export function MediaView({ initialPage, initialMonths, initialOpenId, initialOpenRow }: MediaViewProps) {
     const t = useTranslations("Media");
+    const tBulkBar = useTranslations("Media.bulk");
     const tBulk = useTranslations("Media.bulkDeleteDialog");
     const locale = useLocale() as Locale;
     const queryClient = useQueryClient();
@@ -325,15 +326,6 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
             </header>
 
             <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-                {selectedIds.size > 0 && (
-                    <MediaBulkBar
-                        count={selectedIds.size}
-                        locale={locale}
-                        onCancel={handleBulkCancel}
-                        onBulkDelete={() => setPendingBulkDelete(true)}
-                    />
-                )}
-
                 <MediaToolbar
                     search={search}
                     onSearchChange={setSearchWithReset}
@@ -390,6 +382,18 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
 
                 <FooterCount visible={rows.length} total={total} locale={locale} />
             </div>
+
+            <BulkSelectionBar
+                count={selectedIds.size}
+                locale={locale}
+                labels={{
+                    selected: tBulkBar("selected", { count: selectedIds.size }),
+                    cancel: tBulkBar("cancel"),
+                    delete: tBulkBar("delete"),
+                }}
+                onCancel={handleBulkCancel}
+                onDelete={() => setPendingBulkDelete(true)}
+            />
 
             <MediaDetailsModal
                 open={activeId !== null}

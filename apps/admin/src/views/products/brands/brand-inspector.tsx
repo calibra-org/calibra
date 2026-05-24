@@ -1,10 +1,11 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { BookmarkPlus, Hash, ImagePlus, Plus, Save, Sparkles, Trash2, Wand2, X } from "lucide-react";
+import { BookmarkPlus, Hash, Plus, Save, Sparkles, Trash2, Wand2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 
+import { MediaFieldPreview, type MediaFieldValue } from "#/components/media-picker";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
@@ -202,7 +203,12 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                 </div>
             </header>
 
-            <LogoField logoUrl={draft.logoUrl} onChange={(url) => onDraftChange({ ...draft, logoUrl: url })} />
+            <LogoField
+                value={
+                    draft.imageMediaId !== null && draft.logoUrl !== null ? { id: draft.imageMediaId, url: draft.logoUrl } : null
+                }
+                onChange={(next) => onDraftChange({ ...draft, imageMediaId: next?.id ?? null, logoUrl: next?.url ?? null })}
+            />
 
             <div className="grid gap-4">
                 <div className="grid gap-2">
@@ -293,46 +299,14 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
 }
 
 interface LogoFieldProps {
-    logoUrl: string | null;
-    onChange: (url: string | null) => void;
+    value: MediaFieldValue | null;
+    onChange: (next: MediaFieldValue | null) => void;
 }
 
-/**
- * Placeholder logo field — visually matches the category inspector's `CoverField`. Upload is
- * not wired yet; once the media endpoint lands, swap the inner state for the real picker.
- */
-function LogoField({ logoUrl, onChange }: LogoFieldProps) {
+/** Thin wrapper that maps the inspector's brand-specific label onto the shared media field. */
+function LogoField({ value, onChange }: LogoFieldProps) {
     const t = useTranslations("Brands.inspector.fields.logo");
-    return (
-        <div className="grid gap-2">
-            <Label>{t("label")}</Label>
-            <div className="relative flex h-32 items-center justify-center overflow-hidden rounded-xl border border-border/60 border-dashed bg-muted/30 transition-colors hover:border-primary/40 hover:bg-muted/50">
-                {logoUrl === null || logoUrl.length === 0 ? (
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <ImagePlus className="size-5" aria-hidden="true" />
-                        <span className="text-xs">{t("placeholder")}</span>
-                        {/* TODO(api): wire an upload endpoint; for now the field is read-only. */}
-                        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">{t("todo")}</span>
-                    </div>
-                ) : (
-                    <>
-                        {/* biome-ignore lint/performance/noImgElement: logo preview, no Next/Image loader configured */}
-                        <img src={logoUrl} alt="" className="h-full w-full object-contain p-2" />
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => onChange(null)}
-                            className="absolute end-2 top-2 h-7 gap-1 bg-background/80 px-2 text-xs backdrop-blur"
-                        >
-                            <X className="size-3" aria-hidden="true" />
-                            {t("remove")}
-                        </Button>
-                    </>
-                )}
-            </div>
-        </div>
-    );
+    return <MediaFieldPreview label={t("label")} value={value} onChange={onChange} />;
 }
 
 interface StatProps {

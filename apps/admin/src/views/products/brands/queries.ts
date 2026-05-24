@@ -26,7 +26,14 @@ function dup(value: string | null | undefined): LocalizedString {
 }
 
 function toAdminBrand(b: SdkAdminTaxonomy): AdminBrand {
-    return { id: b.id, name: dup(b.name), slug: dup(b.slug), productCount: 0, logoUrl: b.image_url ?? null };
+    return {
+        id: b.id,
+        name: dup(b.name),
+        slug: dup(b.slug),
+        productCount: 0,
+        imageMediaId: b.image_media_id ?? null,
+        logoUrl: b.image_url ?? null,
+    };
 }
 
 const LIST_KEY = ["admin", "brands", "list"] as const;
@@ -65,6 +72,7 @@ export interface CreateBrandInput {
     name: string;
     slug: string | null;
     description: string | null;
+    imageMediaId?: number | null;
 }
 
 /**
@@ -80,6 +88,9 @@ export function useCreateBrand() {
             apiMutate<BrandResourceEnvelope>("POST", "brands", {
                 locale,
                 body: {
+                    ...(input.imageMediaId !== undefined && input.imageMediaId !== null
+                        ? { image_media_id: input.imageMediaId }
+                        : {}),
                     translations: [
                         {
                             locale,
@@ -103,6 +114,8 @@ export interface UpdateBrandInput {
     name: string;
     slug: string;
     description: string | null;
+    /** Pass `undefined` to leave the linked media untouched, `null` to clear it. */
+    imageMediaId?: number | null;
 }
 
 /**
@@ -119,10 +132,11 @@ export function useUpdateBrand() {
         UpdateBrandInput,
         { previous: [readonly unknown[], BrandListEnvelope | undefined][] }
     >({
-        mutationFn: ({ id, name, slug, description }) =>
+        mutationFn: ({ id, name, slug, description, imageMediaId }) =>
             apiMutate<BrandResourceEnvelope>("PATCH", `brands/${id}`, {
                 locale,
                 body: {
+                    ...(imageMediaId !== undefined ? { image_media_id: imageMediaId } : {}),
                     translations: [
                         {
                             locale,

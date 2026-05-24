@@ -1,10 +1,11 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { FolderPlus, ImagePlus, MoreHorizontal, Save, Trash2, Wand2, X } from "lucide-react";
+import { FolderPlus, MoreHorizontal, Save, Trash2, Wand2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 
+import { MediaFieldPreview, type MediaFieldValue } from "#/components/media-picker";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
@@ -234,7 +235,14 @@ function InspectorForm({
                 </div>
             </header>
 
-            <CoverField imageUrl={draft.imageUrl} onChange={(url) => onDraftChange({ ...draft, imageUrl: url })} />
+            <CoverField
+                value={
+                    draft.imageMediaId !== null && draft.imageUrl !== null
+                        ? { id: draft.imageMediaId, url: draft.imageUrl }
+                        : null
+                }
+                onChange={(next) => onDraftChange({ ...draft, imageMediaId: next?.id ?? null, imageUrl: next?.url ?? null })}
+            />
 
             <div className="grid gap-4">
                 <div className="grid gap-2">
@@ -330,43 +338,14 @@ function InspectorForm({
 }
 
 interface CoverFieldProps {
-    imageUrl: string | null;
-    onChange: (url: string | null) => void;
+    value: MediaFieldValue | null;
+    onChange: (next: MediaFieldValue | null) => void;
 }
 
-function CoverField({ imageUrl, onChange }: CoverFieldProps) {
+/** Thin wrapper that maps the category-specific label onto the shared media field. */
+function CoverField({ value, onChange }: CoverFieldProps) {
     const t = useTranslations("Categories.inspector.cover");
-
-    return (
-        <div className="grid gap-2">
-            <Label>{t("label")}</Label>
-            <div className="relative flex h-32 items-center justify-center overflow-hidden rounded-xl border border-border/60 border-dashed bg-muted/30 transition-colors hover:border-primary/40 hover:bg-muted/50">
-                {imageUrl === null || imageUrl.length === 0 ? (
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <ImagePlus className="size-5" aria-hidden="true" />
-                        <span className="text-xs">{t("placeholder")}</span>
-                        {/* TODO(api): wire an upload endpoint; for now the field is read-only. */}
-                        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">{t("todo")}</span>
-                    </div>
-                ) : (
-                    <>
-                        {/* biome-ignore lint/performance/noImgElement: cover preview, no Next/Image loader configured */}
-                        <img src={imageUrl} alt="" className="h-full w-full object-cover" />
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => onChange(null)}
-                            className="absolute end-2 top-2 h-7 gap-1 bg-background/80 px-2 text-xs backdrop-blur"
-                        >
-                            <X className="size-3" aria-hidden="true" />
-                            {t("remove")}
-                        </Button>
-                    </>
-                )}
-            </div>
-        </div>
-    );
+    return <MediaFieldPreview label={t("label")} value={value} onChange={onChange} />;
 }
 
 interface StatProps {
