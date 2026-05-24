@@ -176,7 +176,7 @@ export function DraggableSectionGrid({ storageKey, sections, labels, onOrderChan
     );
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2.5">
             <DndContext
                 id={storageKey}
                 sensors={sensors}
@@ -189,23 +189,22 @@ export function DraggableSectionGrid({ storageKey, sections, labels, onOrderChan
                         const isCollapsedFlag = state.collapsed[section.id] === true;
                         const isOpen = !(section.isCollapsible === false ? false : isCollapsedFlag);
                         return (
-                            <div key={section.id} className="group/section">
-                                <SectionCard
-                                    sectionId={section.id}
-                                    title={section.title}
-                                    badge={section.badge}
-                                    actions={section.actions}
-                                    isCollapsible={section.isCollapsible}
-                                    isDraggable={section.isDraggable}
-                                    isOpen={section.isCollapsible === false ? true : isOpen}
-                                    onOpenChange={(open) => toggleCollapse(section.id, open)}
-                                    collapseLabel={labels.collapse}
-                                    expandLabel={labels.expand}
-                                    grabLabel={labels.grabHandle}
-                                >
-                                    {section.body}
-                                </SectionCard>
-                            </div>
+                            <SectionCard
+                                key={section.id}
+                                sectionId={section.id}
+                                title={section.title}
+                                badge={section.badge}
+                                actions={section.actions}
+                                isCollapsible={section.isCollapsible}
+                                isDraggable={section.isDraggable}
+                                isOpen={section.isCollapsible === false ? true : isOpen}
+                                onOpenChange={(open) => toggleCollapse(section.id, open)}
+                                collapseLabel={labels.collapse}
+                                expandLabel={labels.expand}
+                                grabLabel={labels.grabHandle}
+                            >
+                                {section.body}
+                            </SectionCard>
                         );
                     })}
                 </SortableContext>
