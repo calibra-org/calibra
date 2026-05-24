@@ -1,15 +1,16 @@
-import { writeFile } from "node:fs/promises";
+import drive from "@adonisjs/drive/services/main";
 
 import type ProductImportError from "#models/product_import_error";
-import { errorReportPath } from "#services/product_import/storage";
+import { errorReportKey } from "#services/product_import/storage";
 
 /**
  * Write the on-disk error-report CSV that the wizard's "اطخ شرازگ دولناد" button serves. Format
  * matches the spec literally — headers in Persian, severity stringified, original value preserved
- * verbatim so the operator can paste it back into the source spreadsheet.
+ * verbatim so the operator can paste it back into the source spreadsheet. Returns the Drive key
+ * so the caller can persist it on the import row.
  */
 export async function writeErrorReport(importId: number, errors: ProductImportError[]): Promise<string> {
-    const path = errorReportPath(importId);
+    const key = errorReportKey(importId);
     const header = ["فیدر", "SKU", "نوتس", "یلصا رادقم", "دک", "مایپ", "تدش"];
     const lines: string[] = [header.join(",")];
     for (const row of errors) {
@@ -26,8 +27,8 @@ export async function writeErrorReport(importId: number, errors: ProductImportEr
         );
     }
     /** UTF-8 BOM so Excel opens the file with Persian glyphs rendered correctly. */
-    await writeFile(path, `﻿${lines.join("\n")}\n`, "utf-8");
-    return path;
+    await drive.use("imports").put(key, `﻿${lines.join("\n")}\n`);
+    return key;
 }
 
 function csvCell(value: string): string {

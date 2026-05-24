@@ -1,4 +1,3 @@
-import { rename } from "node:fs/promises";
 import type { HttpContext } from "@adonisjs/core/http";
 import logger from "@adonisjs/core/services/logger";
 import { DateTime } from "luxon";
@@ -12,7 +11,7 @@ import { publishImportEvent, subscribeToImport, TERMINAL_EVENT_TYPES } from "#se
 import { hashHeaderSet, suggestMapping } from "#services/product_import/import_field_catalog";
 import { runImport } from "#services/product_import/import_runner";
 import { runPreview } from "#services/product_import/preview_runner";
-import { ensureImportsRoot, importsRoot, readSnapshot, uploadedFilePath } from "#services/product_import/storage";
+import { importsLocalPath, readSnapshot, uploadKey } from "#services/product_import/storage";
 import { TEMPLATE_HEADERS, TEMPLATE_SAMPLE_ROWS } from "#services/product_import/template_columns";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductImportChangeTransformer from "#transformers/product_import_change_transformer";
@@ -73,8 +72,6 @@ export default class AdminProductImportsController {
             });
         }
 
-        await ensureImportsRoot();
-
         const userId = auth.user!.id;
         const row = new ProductImport();
         row.userId = userId;
@@ -89,14 +86,19 @@ export default class AdminProductImportsController {
         row.updateExisting = false;
         await row.save();
 
-        const finalPath = uploadedFilePath(Number(row.id), row.originalFilename);
-        await rename(file.tmpPath ?? `${importsRoot()}/temp`, finalPath);
-        row.filePath = finalPath;
+        /**
+         * `row.filePath` stores the Drive **key** going forward, not an absolute filesystem
+         * path. `moveToDisk` handles the tmp → storage transfer atomically via the configured
+         * disk's driver (S3 + R2 use server-side copy under the hood when the tmp file is local).
+         */
+        const key = uploadKey(Number(row.id), row.originalFilename);
+        await file.moveToDisk(key, "imports");
+        row.filePath = key;
         await row.save();
 
         let parsed: Awaited<ReturnType<typeof parseFile>>;
         try {
-            parsed = await parseFile(finalPath, {
+            parsed = await parseFile(importsLocalPath(key), {
                 delimiter: "auto",
                 encoding: "auto",
                 limit: 200,
@@ -156,7 +158,7 @@ export default class AdminProductImportsController {
         await row.save();
 
         const result = await runPreview({
-            filePath: row.filePath,
+            filePath: importsLocalPath(row.filePath),
             mapping: payload.mapping,
             updateExisting: payload.update_existing ?? false,
             delimiter: row.detectedDelimiter,

@@ -11,7 +11,7 @@ import { writeErrorReport } from "#services/product_import/error_report";
 import { publishImportEvent } from "#services/product_import/event_bus";
 import { applyCreate, applyUpdate, type ChangeRecord, type ProductRow } from "#services/product_import/product_writer";
 import { type ColumnMapping, type ProjectionError, projectRow } from "#services/product_import/row_projector";
-import { type ImportSnapshot, writeSnapshot } from "#services/product_import/storage";
+import { type ImportSnapshot, importsLocalPath, snapshotKey, writeSnapshot } from "#services/product_import/storage";
 import { newCounters } from "#services/product_import/taxonomy_resolver";
 
 /**
@@ -58,7 +58,7 @@ export async function runImport(opts: RunOptions): Promise<void> {
             payload: { status: "validating", processed: 0, total: importRow.totalRows },
         });
 
-        const parsed = await parseFile(importRow.filePath, {
+        const parsed = await parseFile(importsLocalPath(importRow.filePath), {
             delimiter: importRow.detectedDelimiter === "auto" ? "auto" : importRow.detectedDelimiter,
             encoding: importRow.detectedEncoding === "auto" ? "auto" : importRow.detectedEncoding,
         });
@@ -442,14 +442,15 @@ async function writePreImportSnapshot(
             featured: row.featured as boolean,
         };
     }
-    const path = await writeSnapshotResolved(importId, snapshot);
-    await ProductImport.query().where("id", importId).update({ snapshot_path: path });
-}
-
-async function writeSnapshotResolved(importId: number, snapshot: ImportSnapshot): Promise<string> {
     await writeSnapshot(importId, snapshot);
-    const { snapshotPath } = await import("#services/product_import/storage");
-    return snapshotPath(importId);
+    /**
+     * `snapshot_path` now stores the Drive **key**, not an absolute fs path. The rollback
+     * endpoint reads it via {@link readSnapshot} which goes through the disk, so the column's
+     * historical name is misleading but the value's meaning is consistent across this codebase.
+     */
+    await ProductImport.query()
+        .where("id", importId)
+        .update({ snapshot_path: snapshotKey(importId) });
 }
 
 async function isCancellationRequested(importId: number): Promise<boolean> {

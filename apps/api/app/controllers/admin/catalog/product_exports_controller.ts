@@ -1,6 +1,6 @@
-import { createReadStream } from "node:fs";
 import type { HttpContext } from "@adonisjs/core/http";
 import logger from "@adonisjs/core/services/logger";
+import drive from "@adonisjs/drive/services/main";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
@@ -11,6 +11,7 @@ import { type ExportableProduct, resolveRow } from "#services/product_export/exp
 import { buildExportQuery, type ExportFilters } from "#services/product_export/export_query_builder";
 import { runExport } from "#services/product_export/export_runner";
 import { mintSignedUrl, verifySignedUrl } from "#services/product_export/export_signed_url";
+import { deleteExportArtifact } from "#services/product_export/export_storage";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductExportFilterPresetTransformer from "#transformers/product_export_filter_preset_transformer";
 import ProductExportTransformer from "#transformers/product_export_transformer";
@@ -254,11 +255,13 @@ export default class AdminProductExportsController {
         ctx.response.header("content-length", String(row.fileSizeBytes));
         ctx.response.header("content-disposition", `attachment; filename="${downloadName}"`);
         /**
-         * AdonisJS does NOT auto-pipe a returned ReadStream — returning the stream object would
-         * just serialize it to JSON. `response.stream()` is the explicit pipe-to-response API;
-         * it terminates the request lifecycle itself, so the handler returns nothing after.
+         * `row.filePath` is a Drive key, not an absolute path — `disk.getStream(key)` returns a
+         * Readable from whatever driver the `exports` disk is configured with (local fs today,
+         * S3/R2 tomorrow). `response.stream()` is the explicit pipe-to-response API; it
+         * terminates the request lifecycle itself, so the handler returns nothing after.
          */
-        ctx.response.stream(createReadStream(row.filePath));
+        const stream = await drive.use("exports").getStream(row.filePath);
+        ctx.response.stream(stream);
     }
 
     /** `GET /api/v1/admin/products/export/history` — paginated history (user-scoped). */
@@ -280,10 +283,7 @@ export default class AdminProductExportsController {
         if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
             return ctx.response.status(404).json({ errors: [{ message: "export not found", code: "E_NOT_FOUND" }] });
         }
-        if (row.filePath !== null && row.filePath !== undefined) {
-            const { removeExportFile } = await import("#services/product_export/export_storage");
-            await removeExportFile(row.filePath);
-        }
+        await deleteExportArtifact(row.filePath);
         await row.delete();
         return ctx.response.status(204);
     }

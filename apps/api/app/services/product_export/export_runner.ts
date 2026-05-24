@@ -7,7 +7,7 @@ import type { ExportableProduct } from "#services/product_export/export_field_re
 import { buildExportQuery, type ExportFilters } from "#services/product_export/export_query_builder";
 import { createRowEmitter, type EmitterOptions } from "#services/product_export/export_row_emitter";
 import { mintSignedUrl } from "#services/product_export/export_signed_url";
-import { fileSize, gzipFile, openExportWriter } from "#services/product_export/export_storage";
+import { fileSize, gzipExportKey, openExportWriter } from "#services/product_export/export_storage";
 
 /**
  * Top-level orchestrator for an export run. Same shape as `import_runner.ts`:
@@ -74,7 +74,12 @@ export async function runExport(opts: RunExportOptions): Promise<void> {
         const writer = await openExportWriter(opts.exportId, extension);
         const filename = `products-${opts.exportId}-${Date.now()}${extension}`;
         row.originalFilename = filename;
-        row.filePath = writer.path;
+        /**
+         * `row.filePath` stores the Drive **key** going forward, never an absolute path. The
+         * download endpoint passes it back through `drive.use("exports").getStream(key)` so the
+         * actual file location stays opaque (swap to S3/R2 with a config-only change).
+         */
+        row.filePath = writer.key;
         await row.save();
 
         const emitter = createRowEmitter(columns, normalizeEmitterOptions(formatOptions));
@@ -146,12 +151,16 @@ export async function runExport(opts: RunExportOptions): Promise<void> {
         }
 
         writer.stream.write(emitter.close());
-        await new Promise<void>((resolve, reject) => {
-            writer.stream.end((err: NodeJS.ErrnoException | null | undefined) => (err ? reject(err) : resolve()));
-        });
+        writer.stream.end();
+        /**
+         * `uploadDone` resolves once Drive has finished consuming the PassThrough — for the fs
+         * driver that means the local file is fully written. Awaiting before checking size
+         * avoids the classic "zero-byte stat" race.
+         */
+        await writer.uploadDone;
 
-        let finalPath = writer.path;
-        const rawSize = await fileSize(finalPath);
+        let finalKey = writer.key;
+        const rawSize = await fileSize(finalKey);
         const wantCompress = decideCompress(formatOptions.compress ?? "auto", rawSize);
         if (wantCompress) {
             publishExportEvent({
@@ -159,11 +168,11 @@ export async function runExport(opts: RunExportOptions): Promise<void> {
                 exportId: opts.exportId,
                 at: new Date().toISOString(),
             });
-            finalPath = await gzipFile(finalPath);
+            finalKey = await gzipExportKey(finalKey);
             row.compressed = true;
         }
-        row.filePath = finalPath;
-        row.fileSizeBytes = wantCompress ? await fileSize(finalPath) : rawSize;
+        row.filePath = finalKey;
+        row.fileSizeBytes = wantCompress ? await fileSize(finalKey) : rawSize;
 
         const expiresAt = Date.now() + DOWNLOAD_TTL_MS;
         const signed = mintSignedUrl({ userId: Number(row.userId), exportId: Number(row.id), expiresAt });
