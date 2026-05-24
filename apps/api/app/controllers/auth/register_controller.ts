@@ -39,6 +39,8 @@ export default class RegisterController {
                     phone: normalizedPhone,
                     countryDefault: country,
                     isPayingCustomer: false,
+                    status: "active",
+                    acquisitionChannel: "web",
                 },
                 { client: trx },
             );

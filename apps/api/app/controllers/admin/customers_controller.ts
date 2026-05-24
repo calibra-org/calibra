@@ -84,9 +84,20 @@ export default class AdminCustomersController {
             });
         }
 
+        /**
+         * SECURITY: by default the customers list hides any row whose linked user is an admin
+         * operator — the Customer ≠ User rule forbids them from surfacing here. Admins manage
+         * other admins on the team page. Passing `role=admin` opts back in (the role filter is
+         * needed for operator-management views) but `role=customer` and the no-role default both
+         * exclude admins.
+         */
         if (payload.role) {
             const roleFilter = payload.role;
             query.whereHas("user", (uq) => uq.where("role", roleFilter));
+        } else {
+            query.where((q) =>
+                q.whereNull("customers.user_id").orWhereHas("user", (uq) => uq.where("role", "customer")),
+            );
         }
         if (payload.is_paying_customer !== undefined) {
             query.where("is_paying_customer", payload.is_paying_customer);

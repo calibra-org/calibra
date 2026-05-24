@@ -55,7 +55,8 @@ test.group("/api/v1/admin/customers", (group) => {
         const list = await client.get("/api/v1/admin/customers").withGuard("api").loginAs(admin);
         list.assertStatus(200);
         list.assertAgainstApiSpec();
-        assert.isAtLeast(list.body().data.length, 3);
+        /** Default list excludes admins per Customer ≠ User: only the two plain customers come back. */
+        assert.equal(list.body().data.length, 2);
 
         const search = await client.get("/api/v1/admin/customers").qs({ search: "alice" }).withGuard("api").loginAs(admin);
         search.assertStatus(200);
@@ -184,6 +185,38 @@ test.group("/api/v1/admin/customers", (group) => {
             assert.isNumber(row.lifetime_order_count);
             assert.isNumber(row.lifetime_spend_minor);
             assert.isArray(row.tags);
+        }
+    });
+
+    test("SECURITY: admin operators never surface in the customers list, regardless of tab", async ({ client, assert }) => {
+        /**
+         * Architectural guarantee: every row returned by `/admin/customers` must either be a
+         * customer with `user.role === 'customer'` or a guest with `user_id === null`. An admin
+         * with `role === 'admin'` who happens to ALSO have a customer row (the bulk-seeder pattern)
+         * is still a customer-row, but the underlying USER is an admin — the test asserts the
+         * list does not include the admin's row.
+         */
+        const admin = await createAdmin();
+        await createPlainCustomer("regular@calibra.dev");
+
+        const tabs = ["any", "account", "guest", "new"] as const;
+        for (const tab of tabs) {
+            const response = await client
+                .get("/api/v1/admin/customers")
+                .qs({ tab, perPage: 100 })
+                .withGuard("api")
+                .loginAs(admin);
+            response.assertStatus(200);
+            const body = response.body() as { data: Array<{ user: { role?: string } | null }> };
+            for (const row of body.data) {
+                if (row.user !== null) {
+                    assert.notEqual(
+                        row.user.role,
+                        "admin",
+                        `admin user leaked into tab=${tab} — Customer ≠ User rule violated`,
+                    );
+                }
+            }
         }
     });
 
