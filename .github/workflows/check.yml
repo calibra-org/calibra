@@ -21,6 +21,7 @@ env:
 jobs:
     format-lint:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -35,6 +36,7 @@ jobs:
 
     typecheck:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -49,6 +51,7 @@ jobs:
 
     test:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         services:
             postgres:
                 image: postgres:17-alpine
@@ -81,6 +84,7 @@ jobs:
 
     build:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -95,6 +99,7 @@ jobs:
 
     api-docs-sync:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -134,6 +139,7 @@ jobs:
 
     sdk-codegen-sync:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
