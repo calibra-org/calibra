@@ -1,4 +1,0 @@
-sku,name,regular_price,sale_price,stock_quantity,categories,tags,brand
-test-001,محصول تست یک,۲۹۹٬۰۰۰ تومان,۲۴۹٬۰۰۰,۱۰,کفش > روزانه,"تست,جدید",برند یک
-test-002,محصول تست دو,1500000,,5,پوشاک,"تابستان",برند دو
-test-003,محصول تست سه,abc,not-a-num,3,,,

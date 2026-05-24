@@ -7,3 +7,4 @@ coverage/
 .cache/
 .adonisjs/
 storage/uploads/
+storage/imports/
