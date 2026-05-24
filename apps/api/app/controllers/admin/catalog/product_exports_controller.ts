@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
 import logger from "@adonisjs/core/services/logger";
 import drive from "@adonisjs/drive/services/main";
@@ -282,19 +284,37 @@ export default class AdminProductExportsController {
         const showHidden = payload.show_hidden === true;
         const search = payload.search;
 
-        /**
-         * Inline subquery via `db.raw` keeps the meta-keys lookup honest with the user's active
-         * filters — Knex's `.from(subquery)` typings cap at `string | Knex.Raw`, so we render
-         * the subquery to SQL first and re-bind its bindings against the outer query.
-         */
-        const inner = buildExportQuery(stripDistinctExtras(payload)).select("attributes");
-        const compiled = (inner as unknown as { toSQL: () => { sql: string; bindings: unknown[] } }).toSQL();
-        const rows = (await db.rawQuery(
-            `SELECT jsonb_object_keys(attributes) AS key FROM (${compiled.sql}) AS p GROUP BY key`,
-            compiled.bindings as never,
-        )) as unknown as { rows: Array<{ key: string }> };
+        const filters = stripDistinctExtras(payload);
 
-        let keys = rows.rows.map((r) => r.key).filter((k) => typeof k === "string");
+        /**
+         * Cache only the (expensive) full key list per filter shape — `show_hidden` and
+         * `search` are cheap in-memory filters applied below, so excluding them from the cache
+         * key collapses a combinatorial explosion of variants down to one entry per filter
+         * envelope. 60s TTL gives wizard responsiveness without hiding real catalog changes for
+         * long; if an operator adds a meta key, they'll see it within a minute.
+         */
+        const cacheKey = `meta-keys:${hashFilters(filters as unknown as Record<string, unknown>)}`;
+        const allKeys = await cache.getOrSet({
+            key: cacheKey,
+            ttl: "60s",
+            factory: async () => {
+                /**
+                 * Inline subquery via `db.raw` keeps the meta-keys lookup honest with the
+                 * user's active filters — Knex's `.from(subquery)` typings cap at
+                 * `string | Knex.Raw`, so we render the subquery to SQL first and re-bind its
+                 * bindings against the outer query.
+                 */
+                const inner = buildExportQuery(filters).select("attributes");
+                const compiled = (inner as unknown as { toSQL: () => { sql: string; bindings: unknown[] } }).toSQL();
+                const rows = (await db.rawQuery(
+                    `SELECT jsonb_object_keys(attributes) AS key FROM (${compiled.sql}) AS p GROUP BY key`,
+                    compiled.bindings as never,
+                )) as unknown as { rows: Array<{ key: string }> };
+                return rows.rows.map((r) => r.key).filter((k) => typeof k === "string");
+            },
+        });
+
+        let keys = [...allKeys];
         if (!showHidden) keys = keys.filter((k) => !k.startsWith("_"));
         if (search !== undefined && search.trim() !== "") {
             const needle = search.toLowerCase();
@@ -394,6 +414,22 @@ function stripDistinctExtras(payload: Record<string, unknown>): ExportFilters {
     void _s;
     void _q;
     return rest as ExportFilters;
+}
+
+/**
+ * Deterministic SHA-256 of the filter envelope — sorted-key JSON so semantically-identical
+ * filter shapes collapse to the same cache key regardless of operator click order. Hex digest
+ * keeps the key safe for any backend (no `:` or `/` reserved characters).
+ */
+function hashFilters(filters: Record<string, unknown>): string {
+    return createHash("sha256").update(stableStringify(filters)).digest("hex");
+}
+
+function stableStringify(value: unknown): string {
+    if (value === null || typeof value !== "object") return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(",")}}`;
 }
 
 function pickFormatOptions(payload: Record<string, unknown>): Record<string, unknown> {
