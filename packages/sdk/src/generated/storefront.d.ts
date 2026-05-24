@@ -1705,6 +1705,13 @@ export interface components {
             created_at?: string | null;
             /** Format: date-time */
             updated_at?: string | null;
+            customer_id?: number | null;
+            customer_name?: string;
+            billing_email?: string | null;
+            payment_method_title?: string | null;
+            item_count?: number;
+            coupon_codes?: string[];
+            risk_flags?: string[];
         };
         /**
          * OrderAddress
@@ -1802,6 +1809,18 @@ export interface components {
                 /** Format: date-time */
                 occurred_at?: string | null;
             }[];
+            coupon_lines?: {
+                id: number;
+                code: string;
+                discount: number;
+            }[];
+            shipping_info?: null | {
+                tracking_number?: string | null;
+                tracking_url?: string | null;
+                carrier?: string | null;
+                /** Format: date-time */
+                shipped_at?: string | null;
+            };
         };
         /**
          * Address

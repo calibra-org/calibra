@@ -83,6 +83,11 @@ paths:
             $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
             $ref: "./admin/paths/orders/orders.post.yaml"
+    /api/v1/admin/orders/counts:
+        get:
+            $ref: "./admin/paths/orders/orders-counts.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/orders/batch:
         post:
             $ref: "./admin/paths/orders/orders-batch.post.yaml"
@@ -100,6 +105,12 @@ paths:
     /api/v1/admin/orders/{id}/status:
         post:
             $ref: "./admin/paths/orders/orders-id-status.post.yaml"
+    /api/v1/admin/orders/{id}/mark-shipped:
+        post:
+            $ref: "./admin/paths/orders/orders-id-mark-shipped.post.yaml"
+    /api/v1/admin/orders/{id}/resend-confirmation:
+        post:
+            $ref: "./admin/paths/orders/orders-id-resend-confirmation.post.yaml"
     /api/v1/admin/orders/{order_id}/history:
         get:
             $ref: "./admin/paths/orders/orders-id-history.get.yaml"

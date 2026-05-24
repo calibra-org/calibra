@@ -27,12 +27,22 @@ export const adminOrderListValidator = vine.compile(
     vine.object({
         page: vine.number().positive().optional(),
         perPage: vine.number().positive().max(100).optional(),
-        status: vine.enum(ORDER_STATUS_VALUES as unknown as readonly string[]).optional(),
+        status: vine.enum([...(ORDER_STATUS_VALUES as unknown as readonly string[]), "trashed"]).optional(),
         customer_id: vine.number().positive().optional(),
         created_via: vine.enum(["checkout", "admin", "api", "import"]).optional(),
         search: vine.string().trim().minLength(1).maxLength(120).optional(),
         after: vine.string().trim().optional(),
         before: vine.string().trim().optional(),
+        sort: vine.string().trim().maxLength(40).optional(),
+    }),
+);
+
+export const adminOrderMarkShippedValidator = vine.compile(
+    vine.object({
+        tracking_number: vine.string().trim().maxLength(120).optional().nullable(),
+        tracking_url: vine.string().trim().url().maxLength(500).optional().nullable(),
+        carrier: vine.string().trim().maxLength(80).optional().nullable(),
+        notify_customer: vine.boolean().optional(),
     }),
 );
 

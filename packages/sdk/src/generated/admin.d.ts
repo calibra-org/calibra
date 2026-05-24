@@ -46,6 +46,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/orders/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Order counts by status (admin)
+         * @description Single grouped query returning the number of non-deleted orders per status, plus an `all` aggregate and a `trashed` bucket sourced from soft-deleted rows. Powers the admin Orders tab strip; the response is short-cached (10 s) so a heavy filter switch doesn't re-hit the DB.
+         */
+        get: operations["adminOrdersCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/orders/batch": {
         parameters: {
             query?: never;
@@ -130,6 +168,46 @@ export interface paths {
          * @description Runs the {@link OrderStateMachine} transition `from → to`. The state machine validates the edge (illegal transitions return 422 with `E_ILLEGAL_ORDER_TRANSITION`), executes per-edge side effects (`reserve_stock`, `restore_stock`, `set_paid_at`, `set_completed_at`, `grant_downloads`), and appends an audit row to `order_status_history`. The actor user is pulled from the bearer token; `reason` is written verbatim to the audit row.
          */
         post: operations["adminOrderTransitionStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/mark-shipped": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark an order as shipped (admin)
+         * @description Stamps tracking metadata on the order's `attributes.shipping` blob and transitions a `processing` order to `completed`. Idempotent — a tracking update against an already-shipped order overwrites metadata without re-triggering the transition or the email. Sends a customer notification unless `notify_customer` is `false`.
+         */
+        post: operations["adminOrderMarkShipped"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/resend-confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Re-send the customer confirmation email (admin)
+         * @description Enqueues a fresh confirmation email for the order's billing address. Returns 202 to advertise the async nature — actual delivery is the mailer's responsibility (currently a structured log line stub until templates land).
+         */
+        post: operations["adminOrderResendConfirmation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1905,6 +1983,13 @@ export interface components {
             created_at?: string | null;
             /** Format: date-time */
             updated_at?: string | null;
+            customer_id?: number | null;
+            customer_name?: string;
+            billing_email?: string | null;
+            payment_method_title?: string | null;
+            item_count?: number;
+            coupon_codes?: string[];
+            risk_flags?: string[];
         };
         /**
          * OrderAddress
@@ -2002,6 +2087,18 @@ export interface components {
                 /** Format: date-time */
                 occurred_at?: string | null;
             }[];
+            coupon_lines?: {
+                id: number;
+                code: string;
+                discount: number;
+            }[];
+            shipping_info?: null | {
+                tracking_number?: string | null;
+                tracking_url?: string | null;
+                carrier?: string | null;
+                /** Format: date-time */
+                shipped_at?: string | null;
+            };
         };
         /**
          * AdminOrderDetail
@@ -2671,6 +2768,8 @@ export interface operations {
                 created_from?: string;
                 created_to?: string;
                 include_drafts?: boolean;
+                /** @description Sort key. Hyphen prefix for descending. Allowed keys&#58; `id`, `order_number`, `created_at`, `grand_total`, `status`, `paid`, `completed`. */
+                sort?: string;
             };
             header?: never;
             path?: never;
@@ -2690,11 +2789,28 @@ export interface operations {
                             order_number?: number;
                             status?: string;
                             customer_id?: number | null;
+                            customer_name?: string;
                             billing_email?: string | null;
                             grand_total?: components["schemas"]["Money"];
+                            items_total?: number;
+                            shipping_total?: number;
+                            tax_total?: number;
+                            discount_total?: number;
                             currency?: string;
+                            currency_display?: string;
                             /** Format: date-time */
                             created_at?: string;
+                            /** Format: date-time */
+                            updated_at?: string | null;
+                            created_via?: string | null;
+                            /** Format: date-time */
+                            date_paid_at?: string | null;
+                            /** Format: date-time */
+                            date_completed_at?: string | null;
+                            payment_method_title?: string | null;
+                            item_count?: number;
+                            coupon_codes?: string[];
+                            risk_flags?: string[];
                         }[];
                         meta: components["schemas"]["PaginationMeta"];
                     };
@@ -2759,6 +2875,41 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrdersCounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Grouped status counts. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            all: number;
+                            draft: number;
+                            pending: number;
+                            on_hold: number;
+                            processing: number;
+                            completed: number;
+                            cancelled: number;
+                            refunded: number;
+                            failed: number;
+                            trashed: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     adminOrdersBatch: {
@@ -2948,6 +3099,78 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderMarkShipped: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    tracking_number?: string | null;
+                    /** Format: uri */
+                    tracking_url?: string | null;
+                    carrier?: string | null;
+                    /** @default true */
+                    notify_customer?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderResendConfirmation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Confirmation queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            order_id: number;
+                            queued: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     adminOrderHistoryIndex: {
