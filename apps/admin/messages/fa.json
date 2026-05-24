@@ -1451,6 +1451,7 @@
         },
         "detail": {
             "title": "سفارش #{number}",
+            "titleEditable": "ویرایش سفارش #{number}",
             "subtitle": "ثبت‌شده در {date}",
             "items": "آیتم‌های سفارش",
             "billing": "آدرس صورتحساب",
@@ -1460,10 +1461,87 @@
             "shippingTotal": "هزینه ارسال",
             "taxTotal": "مالیات",
             "discountTotal": "تخفیف",
+            "feesTotal": "هزینه‌های افزوده",
             "grandTotal": "مبلغ نهایی",
             "history": "تاریخچه وضعیت",
             "notes": "یادداشت‌ها",
             "addNote": "افزودن یادداشت",
+            "sections": {
+                "summary": "خلاصه سفارش",
+                "items": "آیتم‌ها",
+                "shipping": "ارسال",
+                "refunds": "بازگشت وجه",
+                "meta": "زمینه‌های سفارشی",
+                "timeline": "زمان‌بندی",
+                "actions": "عملیات سفارش",
+                "customer": "مشتری",
+                "addresses": "آدرس‌ها",
+                "customerHistory": "سوابق مشتری",
+                "source": "مبدا سفارش",
+                "grab": "جا‌به‌جایی این بخش",
+                "collapse": "بستن بخش",
+                "expand": "باز کردن بخش",
+                "resetOrder": "بازنشانی به ترتیب پیش‌فرض",
+                "resetDone": "ترتیب بخش‌ها بازنشانی شد"
+            },
+            "actionsCard": {
+                "placeholder": "یک عمل را انتخاب کنید…",
+                "apply": "اجرا",
+                "trash": "انتقال به حذف‌شده‌ها",
+                "options": {
+                    "resend_confirmation": "ارسال مجدد ایمیل تأیید سفارش",
+                    "mark_shipped": "ثبت ارسال",
+                    "print_invoice": "چاپ فاکتور",
+                    "print_packing": "چاپ برگه ارسال"
+                }
+            },
+            "sourceCard": {
+                "origin": "مبدا",
+                "ip": "آی‌پی",
+                "browser": "مرورگر",
+                "referrer": "ارجاع",
+                "unknown": "ناشناس",
+                "channels": {
+                    "web": "وب‌سایت",
+                    "admin": "پنل مدیریت",
+                    "api": "API",
+                    "import": "وارد کردن CSV",
+                    "checkout-block": "صفحه پرداخت",
+                    "checkout": "صفحه پرداخت"
+                }
+            },
+            "customerHistory": {
+                "totalOrders": "مجموع سفارش‌ها",
+                "totalRevenue": "درآمد کل",
+                "aov": "میانگین مقدار سفارش",
+                "refresh": "تازه‌سازی",
+                "guest": {
+                    "title": "خرید مهمان",
+                    "description": "این سفارش بدون حساب کاربری ثبت شده است."
+                }
+            },
+            "meta": {
+                "empty": "هیچ زمینه سفارشی ثبت نشده است.",
+                "addNew": "افزودن زمینهٔ سفارشی",
+                "add": "افزودن",
+                "keyPlaceholder": "نام زمینه",
+                "valuePlaceholder": "مقدار",
+                "remove": "حذف زمینه",
+                "removed": "زمینه حذف شد",
+                "removeFailed": "حذف زمینه با خطا مواجه شد",
+                "saveFailed": "ذخیره زمینه با خطا مواجه شد",
+                "duplicateKey": "این نام زمینه قبلاً ثبت شده است",
+                "showHidden": "نمایش زمینه‌های مخفی"
+            },
+            "lockedBanner": {
+                "title": "این سفارش دیگر قابل ویرایش نیست.",
+                "unlock": "ویرایش به هر حال",
+                "confirmTitle": "آیا قفل سفارش را بشکنیم؟",
+                "confirmDescription": "برای ادامه عبارت {token} را وارد کنید.",
+                "cancel": "انصراف",
+                "unlocked": "سفارش از حالت قفل خارج شد",
+                "unlockFailed": "خارج کردن از حالت قفل با خطا مواجه شد"
+            },
             "refunds": "بازگشت وجه",
             "addRefund": "ثبت بازگشت وجه",
             "refundReason": "علت بازگشت",

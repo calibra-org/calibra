@@ -62,11 +62,11 @@ export default class AdminOrderEditController {
             row.postcode = payload.postcode ?? null;
             row.country = payload.country.toUpperCase();
             row.phone = payload.phone ?? null;
-            row.email = kind === "billing" ? payload.email ?? null : null;
+            row.email = kind === "billing" ? (payload.email ?? null) : null;
             row.attributes = {
                 ...((row.attributes as Record<string, unknown>) ?? {}),
                 national_id: payload.national_id ?? null,
-                customer_note: kind === "shipping" ? payload.customer_note ?? null : undefined,
+                customer_note: kind === "shipping" ? (payload.customer_note ?? null) : undefined,
             };
             await row.save();
 

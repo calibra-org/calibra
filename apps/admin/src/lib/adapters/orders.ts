@@ -4,6 +4,7 @@ import type {
     AdminOrder,
     AdminOrderAddress,
     AdminOrderCouponLine,
+    AdminOrderFeeLine,
     AdminOrderLineItem,
     AdminOrderNote,
     AdminOrderShippingLine,
@@ -132,11 +133,22 @@ export function toAdminOrderListRow(o: SdkAdminOrderListRow): AdminOrder {
         shippingAddress: toAdminOrderAddress(undefined),
         lineItems: [],
         shippingLines: [],
+        feeLines: [],
         couponLines: [],
         taxLines: [],
         history: [],
         notes: [],
         shippingInfo: null,
+        source: null,
+        ipAddress: null,
+        userAgent: null,
+        referrer: null,
+        isLocked: false,
+        unlockOverride: false,
+        meta: {},
+        metaVisible: {},
+        metaHidden: {},
+        feesTotal: 0 as MoneyMinor,
     };
 }
 
@@ -186,6 +198,19 @@ export function toAdminOrderDetail(o: SdkAdminOrderDetail): AdminOrder {
     }));
     const payment = o.payment ?? { gateway_id: null, method_code: null, method_title: null, transaction_id: null };
     const couponSource = (o as { coupon_lines?: { id: number; code: string; discount: number }[] }).coupon_lines ?? [];
+    const feeSource =
+        (
+            o as {
+                fee_lines?: {
+                    id: number;
+                    name: string;
+                    total: number;
+                    total_tax: number;
+                    taxable?: boolean;
+                    tax_class_id?: number | null;
+                }[];
+            }
+        ).fee_lines ?? [];
     const shippingSource = (
         o as {
             shipping_info?: {
@@ -201,6 +226,25 @@ export function toAdminOrderDetail(o: SdkAdminOrderDetail): AdminOrder {
         code: row.code,
         discount: Number(row.discount) as MoneyMinor,
     }));
+    const feeLines: AdminOrderFeeLine[] = feeSource.map((row) => ({
+        id: row.id,
+        name: row.name,
+        total: Number(row.total) as MoneyMinor,
+        totalTax: Number(row.total_tax) as MoneyMinor,
+        taxable: row.taxable === true,
+        taxClassId: row.tax_class_id === null || row.tax_class_id === undefined ? null : Number(row.tax_class_id),
+    }));
+    const extra = o as {
+        source?: string | null;
+        is_locked?: boolean;
+        unlock_override?: boolean;
+        ip_address?: string | null;
+        user_agent?: string | null;
+        referrer?: string | null;
+        meta?: Record<string, string>;
+        meta_visible?: Record<string, string>;
+        meta_hidden?: Record<string, string>;
+    };
     return {
         id: o.id,
         orderNumber: Number(o.order_number ?? o.id),
@@ -230,6 +274,7 @@ export function toAdminOrderDetail(o: SdkAdminOrderDetail): AdminOrder {
         shippingAddress: toAdminOrderAddress(o.shipping_address ?? o.billing_address),
         lineItems,
         shippingLines,
+        feeLines,
         couponLines,
         taxLines,
         history,
@@ -242,5 +287,15 @@ export function toAdminOrderDetail(o: SdkAdminOrderDetail): AdminOrder {
                   shippedAt: shippingSource.shipped_at ?? null,
               }
             : null,
+        source: (extra.source ?? null) as AdminOrder["source"],
+        ipAddress: extra.ip_address ?? null,
+        userAgent: extra.user_agent ?? null,
+        referrer: extra.referrer ?? null,
+        isLocked: extra.is_locked === true,
+        unlockOverride: extra.unlock_override === true,
+        meta: extra.meta ?? {},
+        metaVisible: extra.meta_visible ?? {},
+        metaHidden: extra.meta_hidden ?? {},
+        feesTotal: Number(totals.fees_total ?? 0) as MoneyMinor,
     };
 }

@@ -1,12 +1,11 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { Copy, Truck } from "lucide-react";
+import { Copy } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Button } from "#/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
@@ -23,7 +22,7 @@ interface ShippingCardProps {
 /**
  * Tracking + carrier capture. Save calls `POST /mark-shipped` which doubles as the processing →
  * completed transition; idempotent re-saves just update the metadata. `notify_customer` controls
- * whether the (stubbed) shipping email goes out.
+ * whether the (stubbed) shipping email goes out. Renders as a section body.
  */
 export function ShippingCard({ order, locale }: ShippingCardProps) {
     const t = useTranslations("Orders.detail.shippingCard");
@@ -59,17 +58,9 @@ export function ShippingCard({ order, locale }: ShippingCardProps) {
     };
 
     return (
-        <Card>
-            <CardHeader className="flex items-center justify-between border-b pb-4">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <Truck className="size-4" aria-hidden="true" />
-                    {t("title")}
-                </CardTitle>
-                {info?.shippedAt && (
-                    <span className="text-muted-foreground text-xs">{formatDateTime(info.shippedAt, locale)}</span>
-                )}
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-3 pt-4 md:grid-cols-2">
+        <div className="flex flex-col gap-3">
+            {info?.shippedAt && <p className="text-muted-foreground text-xs">{formatDateTime(info.shippedAt, locale)}</p>}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                     <Label htmlFor="shipping-tracking">{t("tracking")}</Label>
                     <div className="flex gap-2">
@@ -99,16 +90,16 @@ export function ShippingCard({ order, locale }: ShippingCardProps) {
                         placeholder={t("carrierPlaceholder")}
                     />
                 </div>
-                <div className="flex items-center justify-between md:col-span-2">
-                    <div className="flex items-center gap-2 text-sm">
-                        <Switch checked={notify} onCheckedChange={(value) => setNotify(value === true)} aria-label={t("save")} />
-                        <span>{t("save")}</span>
-                    </div>
-                    <Button onClick={save} disabled={mutation.isPending}>
-                        {t("save")}
-                    </Button>
+            </div>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm">
+                    <Switch checked={notify} onCheckedChange={(value) => setNotify(value === true)} aria-label={t("save")} />
+                    <span>{t("save")}</span>
                 </div>
-            </CardContent>
-        </Card>
+                <Button onClick={save} disabled={mutation.isPending}>
+                    {t("save")}
+                </Button>
+            </div>
+        </div>
     );
 }

@@ -25,10 +25,14 @@ router
         router.patch("/:id/addresses/:kind", [AdminOrderEditController, "updateAddress"]).as("admin.orders.address.update");
         router.post("/:id/line-items", [AdminOrderEditController, "createLineItem"]).as("admin.orders.lineItems.create");
         router.patch("/:id/line-items/:lineId", [AdminOrderEditController, "updateLineItem"]).as("admin.orders.lineItems.update");
-        router.delete("/:id/line-items/:lineId", [AdminOrderEditController, "deleteLineItem"]).as("admin.orders.lineItems.delete");
+        router
+            .delete("/:id/line-items/:lineId", [AdminOrderEditController, "deleteLineItem"])
+            .as("admin.orders.lineItems.delete");
         router.post("/:id/fee-lines", [AdminOrderEditController, "createFee"]).as("admin.orders.fees.create");
         router.delete("/:id/fee-lines/:feeId", [AdminOrderEditController, "deleteFee"]).as("admin.orders.fees.delete");
-        router.post("/:id/shipping-lines", [AdminOrderEditController, "createShippingLine"]).as("admin.orders.shippingLines.create");
+        router
+            .post("/:id/shipping-lines", [AdminOrderEditController, "createShippingLine"])
+            .as("admin.orders.shippingLines.create");
         router
             .patch("/:id/shipping-lines/:lineId", [AdminOrderEditController, "updateShippingLine"])
             .as("admin.orders.shippingLines.update");

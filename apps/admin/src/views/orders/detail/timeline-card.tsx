@@ -7,7 +7,6 @@ import { useMemo, useState } from "react";
 
 import { OrderStatusBadge } from "#/components/OrderStatusBadge";
 import { Button } from "#/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
@@ -87,50 +86,42 @@ export function TimelineCard({ order, locale }: TimelineCardProps) {
     };
 
     return (
-        <Card>
-            <CardHeader className="border-b pb-4">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <Activity className="size-4" aria-hidden="true" />
-                    {t("title")}
-                </CardTitle>
-                <p className="text-muted-foreground text-xs">{t("subtitle")}</p>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 pt-5">
-                <div className="flex flex-col gap-2">
-                    <Textarea
-                        rows={2}
-                        value={body}
-                        onChange={(event) => setBody(event.target.value)}
-                        placeholder={t("addNotePlaceholder")}
-                    />
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm">
-                            <Switch
-                                checked={!internal}
-                                onCheckedChange={(value) => setInternal(!(value === true))}
-                                aria-label={internal ? t("internal") : t("customer")}
-                            />
-                            <span>{internal ? t("internal") : t("customer")}</span>
-                        </div>
-                        <Button size="sm" onClick={submit} disabled={addNote.isPending || body.trim().length === 0}>
-                            {t("send")}
-                        </Button>
+        <div className="flex flex-col gap-4">
+            <p className="text-muted-foreground text-xs">{t("subtitle")}</p>
+            <div className="flex flex-col gap-2">
+                <Textarea
+                    rows={2}
+                    value={body}
+                    onChange={(event) => setBody(event.target.value)}
+                    placeholder={t("addNotePlaceholder")}
+                />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                        <Switch
+                            checked={!internal}
+                            onCheckedChange={(value) => setInternal(!(value === true))}
+                            aria-label={internal ? t("internal") : t("customer")}
+                        />
+                        <span>{internal ? t("internal") : t("customer")}</span>
                     </div>
+                    <Button size="sm" onClick={submit} disabled={addNote.isPending || body.trim().length === 0}>
+                        {t("send")}
+                    </Button>
                 </div>
+            </div>
 
-                <Separator />
+            <Separator />
 
-                {entries.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">{t("empty")}</p>
-                ) : (
-                    <ol className="flex flex-col gap-3">
-                        {entries.map((entry) => (
-                            <TimelineRow key={entry.id} entry={entry} locale={locale} tStatus={tStatus} t={t} />
-                        ))}
-                    </ol>
-                )}
-            </CardContent>
-        </Card>
+            {entries.length === 0 ? (
+                <p className="text-muted-foreground text-sm">{t("empty")}</p>
+            ) : (
+                <ol className="flex flex-col gap-3">
+                    {entries.map((entry) => (
+                        <TimelineRow key={entry.id} entry={entry} locale={locale} tStatus={tStatus} t={t} />
+                    ))}
+                </ol>
+            )}
+        </div>
     );
 }
 

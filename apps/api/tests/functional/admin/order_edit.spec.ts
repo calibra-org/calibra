@@ -36,19 +36,16 @@ test.group("Order edit — addresses + line items + fees + shipping", (group) =>
         const product = await createTaxableProduct({ regularPrice: 500_000 });
         const order = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
 
-        const res = await client
-            .patch(`/api/v1/admin/orders/${order.id}/addresses/billing`)
-            .loginAs(admin)
-            .json({
-                first_name: "Sara",
-                last_name: "Karimi",
-                address_line_1: "خیابان آزادی",
-                city: "تهران",
-                country: "IR",
-                email: "sara@example.com",
-                phone: "+989120000000",
-                national_id: "0079472056",
-            });
+        const res = await client.patch(`/api/v1/admin/orders/${order.id}/addresses/billing`).loginAs(admin).json({
+            first_name: "Sara",
+            last_name: "Karimi",
+            address_line_1: "خیابان آزادی",
+            city: "تهران",
+            country: "IR",
+            email: "sara@example.com",
+            phone: "+989120000000",
+            national_id: "0079472056",
+        });
         res.assertStatus(200);
         res.assertAgainstApiSpec();
         const body = res.body().data;

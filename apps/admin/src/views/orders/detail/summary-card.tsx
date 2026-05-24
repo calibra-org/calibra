@@ -3,7 +3,6 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useTranslations } from "next-intl";
 
-import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { formatMoney } from "#/lib/format";
 import type { AdminOrder } from "#/lib/types";
@@ -13,33 +12,49 @@ interface SummaryCardProps {
     locale: Locale;
 }
 
-/** Money breakdown sidebar — items / shipping / tax / discount / grand total. */
+/** Money breakdown — items / shipping / tax / discount / grand total. Renders as a section body. */
 export function SummaryCard({ order, locale }: SummaryCardProps) {
     const t = useTranslations("Orders.detail");
     return (
-        <Card>
-            <CardHeader className="border-b pb-4">
-                <CardTitle className="text-sm">{t("summary")}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2 pt-4 text-sm">
-                <Row label={t("itemsTotal")} value={formatMoney(order.itemsTotal, locale)} />
-                <Row label={t("shippingTotal")} value={formatMoney(order.shippingTotal, locale)} />
-                <Row label={t("taxTotal")} value={formatMoney(order.taxTotal, locale)} />
-                {order.discountTotal > 0 && (
-                    <Row label={t("discountTotal")} value={`− ${formatMoney(order.discountTotal, locale)}`} tone="emerald-600" />
-                )}
-                <Separator />
-                <Row label={t("grandTotal")} value={formatMoney(order.grandTotal, locale)} emphasis />
-            </CardContent>
-        </Card>
+        <div className="flex flex-col gap-2 text-sm">
+            <Row label={t("itemsTotal")} value={formatMoney(order.itemsTotal, locale)} />
+            <Row label={t("shippingTotal")} value={formatMoney(order.shippingTotal, locale)} />
+            <Row label={t("taxTotal")} value={formatMoney(order.taxTotal, locale)} />
+            {order.feesTotal > 0 && <Row label={t("feesTotal")} value={formatMoney(order.feesTotal, locale)} />}
+            {order.discountTotal > 0 && (
+                <Row label={t("discountTotal")} value={`− ${formatMoney(order.discountTotal, locale)}`} muted />
+            )}
+            <Separator />
+            <Row label={t("grandTotal")} value={formatMoney(order.grandTotal, locale)} emphasis />
+        </div>
     );
 }
 
-function Row({ label, value, tone, emphasis }: { label: string; value: string; tone?: string; emphasis?: boolean }) {
+function Row({ label, value, muted, emphasis }: { label: string; value: string; muted?: boolean; emphasis?: boolean }) {
     return (
-        <div className={`flex justify-between ${tone ? `text-${tone}` : ""}`}>
-            <span className={emphasis ? "font-semibold text-base" : "text-muted-foreground"}>{label}</span>
-            <span className={emphasis ? "font-semibold text-base" : ""}>{value}</span>
+        <div className="flex justify-between">
+            <span
+                className={
+                    emphasis
+                        ? "font-semibold text-base"
+                        : muted
+                          ? "text-emerald-700 dark:text-emerald-300"
+                          : "text-muted-foreground"
+                }
+            >
+                {label}
+            </span>
+            <span
+                className={
+                    emphasis
+                        ? "font-semibold text-base tabular-nums"
+                        : muted
+                          ? "text-emerald-700 tabular-nums dark:text-emerald-300"
+                          : "tabular-nums"
+                }
+            >
+                {value}
+            </span>
         </div>
     );
 }

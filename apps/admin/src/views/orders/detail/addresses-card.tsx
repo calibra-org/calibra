@@ -1,10 +1,8 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import type { AdminOrder, AdminOrderAddress } from "#/lib/types";
 
 interface AddressesCardProps {
@@ -12,22 +10,18 @@ interface AddressesCardProps {
     locale: Locale;
 }
 
-/** Right-rail billing + shipping addresses. Edit dialogs are a follow-up — the PATCH endpoint only accepts customer_note/billing_email today. */
+/**
+ * Sidebar billing + shipping addresses. Renders as a section body. The Phase 2 inline edit
+ * mode (pencil-to-form with react-hook-form + zod, autosave on blur, copy billing→shipping)
+ * lands in the address-form follow-up commit on this PR.
+ */
 export function AddressesCard({ order, locale: _locale }: AddressesCardProps) {
     const t = useTranslations("Orders.detail");
     return (
-        <Card>
-            <CardHeader className="border-b pb-4">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <MapPin className="size-4" aria-hidden="true" />
-                    {t("billing")}
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 pt-4 text-xs">
-                <AddressBlock heading={t("billing")} address={order.billingAddress} />
-                <AddressBlock heading={t("shipping")} address={order.shippingAddress} />
-            </CardContent>
-        </Card>
+        <div className="flex flex-col gap-4 text-xs">
+            <AddressBlock heading={t("billing")} address={order.billingAddress} />
+            <AddressBlock heading={t("shipping")} address={order.shippingAddress} />
+        </div>
     );
 }
 

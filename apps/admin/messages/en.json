@@ -1451,6 +1451,7 @@
         },
         "detail": {
             "title": "Order #{number}",
+            "titleEditable": "Edit order #{number}",
             "subtitle": "Placed on {date}",
             "items": "Line items",
             "billing": "Billing address",
@@ -1460,10 +1461,87 @@
             "shippingTotal": "Shipping",
             "taxTotal": "Tax",
             "discountTotal": "Discount",
+            "feesTotal": "Fees",
             "grandTotal": "Grand total",
             "history": "Status history",
             "notes": "Notes",
             "addNote": "Add note",
+            "sections": {
+                "summary": "Order summary",
+                "items": "Items",
+                "shipping": "Shipping",
+                "refunds": "Refunds",
+                "meta": "Custom fields",
+                "timeline": "Timeline",
+                "actions": "Order actions",
+                "customer": "Customer",
+                "addresses": "Addresses",
+                "customerHistory": "Customer history",
+                "source": "Order source",
+                "grab": "Drag to reorder this section",
+                "collapse": "Collapse section",
+                "expand": "Expand section",
+                "resetOrder": "Reset to default order",
+                "resetDone": "Section order reset"
+            },
+            "actionsCard": {
+                "placeholder": "Choose an action…",
+                "apply": "Apply",
+                "trash": "Move to trash",
+                "options": {
+                    "resend_confirmation": "Resend order confirmation",
+                    "mark_shipped": "Mark as shipped",
+                    "print_invoice": "Print invoice",
+                    "print_packing": "Print packing slip"
+                }
+            },
+            "sourceCard": {
+                "origin": "Origin",
+                "ip": "IP",
+                "browser": "Browser",
+                "referrer": "Referrer",
+                "unknown": "Unknown",
+                "channels": {
+                    "web": "Website",
+                    "admin": "Admin panel",
+                    "api": "API",
+                    "import": "CSV import",
+                    "checkout-block": "Checkout page",
+                    "checkout": "Checkout page"
+                }
+            },
+            "customerHistory": {
+                "totalOrders": "Total orders",
+                "totalRevenue": "Lifetime revenue",
+                "aov": "Average order value",
+                "refresh": "Refresh",
+                "guest": {
+                    "title": "Guest checkout",
+                    "description": "This order was placed without a customer account."
+                }
+            },
+            "meta": {
+                "empty": "No custom fields yet.",
+                "addNew": "Add a custom field",
+                "add": "Add",
+                "keyPlaceholder": "Key",
+                "valuePlaceholder": "Value",
+                "remove": "Remove field",
+                "removed": "Field removed",
+                "removeFailed": "Couldn't remove the field",
+                "saveFailed": "Couldn't save the field",
+                "duplicateKey": "A field with this key already exists",
+                "showHidden": "Show hidden fields"
+            },
+            "lockedBanner": {
+                "title": "This order is no longer editable.",
+                "unlock": "Edit anyway",
+                "confirmTitle": "Break the lock?",
+                "confirmDescription": "Type {token} to continue.",
+                "cancel": "Cancel",
+                "unlocked": "Order unlocked",
+                "unlockFailed": "Couldn't unlock the order"
+            },
             "refunds": "Refunds",
             "addRefund": "Issue refund",
             "refundReason": "Reason",

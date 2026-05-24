@@ -429,3 +429,289 @@ export function useCreateOrder() {
         },
     });
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Phase 2 — order editor mutations                                          */
+/*  Each hook owns its own invalidation of the affected resource so the       */
+/*  detail page never has to chain `await Promise.all([refetchA, refetchB])`. */
+/* -------------------------------------------------------------------------- */
+
+export interface AddressUpdateInput {
+    id: number;
+    kind: "billing" | "shipping";
+    address: {
+        first_name: string;
+        last_name: string;
+        company?: string | null;
+        address_line_1: string;
+        address_line_2?: string | null;
+        city: string;
+        region_id?: number | null;
+        region_text?: string | null;
+        postcode?: string | null;
+        country: string;
+        phone?: string | null;
+        email?: string | null;
+        national_id?: string | null;
+        customer_note?: string | null;
+    };
+}
+
+export function useUpdateOrderAddress() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, AddressUpdateInput>({
+        mutationFn: ({ id, kind, address }) =>
+            apiMutate<OrderEnvelope>("PATCH", `orders/${id}/addresses/${kind}`, { locale, body: address }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export interface AddLineItemInput {
+    id: number;
+    product_id: number;
+    variation_id?: number | null;
+    quantity: number;
+    price_override_minor?: number | null;
+}
+
+export function useAddOrderLineItem() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, AddLineItemInput>({
+        mutationFn: ({ id, ...body }) => apiMutate<OrderEnvelope>("POST", `orders/${id}/line-items`, { locale, body }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export interface UpdateLineItemInput {
+    id: number;
+    line_id: number;
+    quantity?: number;
+    price_override_minor?: number | null;
+    name?: string;
+}
+
+export function useUpdateOrderLineItem() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, UpdateLineItemInput>({
+        mutationFn: ({ id, line_id, ...body }) =>
+            apiMutate<OrderEnvelope>("PATCH", `orders/${id}/line-items/${line_id}`, { locale, body }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export function useDeleteOrderLineItem() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, { id: number; line_id: number }>({
+        mutationFn: ({ id, line_id }) => apiMutate<OrderEnvelope>("DELETE", `orders/${id}/line-items/${line_id}`, { locale }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export interface AddFeeInput {
+    id: number;
+    title: string;
+    amount_minor: number;
+    taxable?: boolean;
+    tax_class_id?: number | null;
+}
+
+export function useAddOrderFee() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, AddFeeInput>({
+        mutationFn: ({ id, ...body }) => apiMutate<OrderEnvelope>("POST", `orders/${id}/fee-lines`, { locale, body }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export function useDeleteOrderFee() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, { id: number; fee_id: number }>({
+        mutationFn: ({ id, fee_id }) => apiMutate<OrderEnvelope>("DELETE", `orders/${id}/fee-lines/${fee_id}`, { locale }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export interface AddShippingLineInput {
+    id: number;
+    method_code: string;
+    title: string;
+    total_minor: number;
+    tax_class_id?: number | null;
+}
+
+export function useAddOrderShippingLine() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, AddShippingLineInput>({
+        mutationFn: ({ id, ...body }) => apiMutate<OrderEnvelope>("POST", `orders/${id}/shipping-lines`, { locale, body }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export interface UpdateShippingLineInput {
+    id: number;
+    line_id: number;
+    method_code?: string;
+    title?: string;
+    total_minor?: number;
+    tax_class_id?: number | null;
+}
+
+export function useUpdateOrderShippingLine() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, UpdateShippingLineInput>({
+        mutationFn: ({ id, line_id, ...body }) =>
+            apiMutate<OrderEnvelope>("PATCH", `orders/${id}/shipping-lines/${line_id}`, { locale, body }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export function useDeleteOrderShippingLine() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, { id: number; line_id: number }>({
+        mutationFn: ({ id, line_id }) => apiMutate<OrderEnvelope>("DELETE", `orders/${id}/shipping-lines/${line_id}`, { locale }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export function useApplyOrderCoupon() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, { id: number; code: string }>({
+        mutationFn: ({ id, code }) => apiMutate<OrderEnvelope>("POST", `orders/${id}/coupons`, { locale, body: { code } }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export function useRemoveOrderCoupon() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, { id: number; code: string }>({
+        mutationFn: ({ id, code }) =>
+            apiMutate<OrderEnvelope>("DELETE", `orders/${id}/coupons/${encodeURIComponent(code)}`, { locale }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export interface RecalculateTotalsPreview {
+    itemsTotal: number;
+    itemsTaxTotal: number;
+    shippingTotal: number;
+    shippingTaxTotal: number;
+    feesTotal: number;
+    feesTaxTotal: number;
+    discountTotal: number;
+    discountTaxTotal: number;
+    taxTotal: number;
+    grandTotal: number;
+}
+
+interface RecalculatePreviewEnvelope {
+    data: { preview: RecalculateTotalsPreview; current: RecalculateTotalsPreview };
+}
+
+export function useRecalculateOrderTotals() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope | RecalculatePreviewEnvelope, Error, { id: number; preview?: boolean }>({
+        mutationFn: ({ id, preview }) =>
+            apiMutate("POST", `orders/${id}/recalculate-totals`, {
+                locale,
+                body: preview === true ? { preview: true } : {},
+            }),
+        onSettled: (_data, _err, { id, preview }) => {
+            if (preview === true) return;
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export interface UpdateOrderHeaderInput {
+    id: number;
+    created_at?: string;
+    customer_id?: number | null;
+    billing_email?: string | null;
+    is_locked?: boolean;
+}
+
+export function useUpdateOrderHeader() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, UpdateOrderHeaderInput>({
+        mutationFn: ({ id, ...body }) => apiMutate<OrderEnvelope>("PATCH", `orders/${id}/header`, { locale, body }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export interface CustomerStats {
+    lifetime_order_count: number;
+    lifetime_revenue_minor: number;
+    average_order_value_minor: number;
+}
+
+export function useOrderCustomerStats(orderId: number) {
+    const locale = useLocale() as Locale;
+    return useQuery<{ data: CustomerStats }, Error, CustomerStats>({
+        queryKey: ["admin", "orders", "customer-stats", orderId, { locale }],
+        queryFn: () => apiGet(`orders/${orderId}/customer-stats`, { locale }),
+        select: (payload) => payload.data,
+        enabled: orderId > 0,
+        staleTime: 60_000,
+    });
+}
+
+export function useUpsertOrderMeta() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, { id: number; key: string; value: string }>({
+        mutationFn: ({ id, key, value }) =>
+            apiMutate<OrderEnvelope>("PATCH", `orders/${id}/meta`, { locale, body: { key, value } }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}
+
+export function useDeleteOrderMeta() {
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<OrderEnvelope, Error, { id: number; key: string }>({
+        mutationFn: ({ id, key }) =>
+            apiMutate<OrderEnvelope>("DELETE", `orders/${id}/meta/${encodeURIComponent(key)}`, { locale }),
+        onSettled: (_data, _err, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "orders", "detail", id] });
+        },
+    });
+}

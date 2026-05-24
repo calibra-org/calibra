@@ -2,9 +2,11 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { useLocale, useTranslations } from "next-intl";
+import { useMemo } from "react";
 
 import { OrderStatusBadge } from "#/components/OrderStatusBadge";
 import { PageHeader } from "#/components/PageHeader";
+import { DraggableSectionGrid, resetSectionGridStorage, type SectionSpec } from "#/components/sections/draggable-section-grid";
 import { Button } from "#/components/ui/button";
 import {
     DropdownMenu,
@@ -21,11 +23,16 @@ import { useDeleteOrder, useMarkShipped, useOrder, useResendConfirmation } from 
 
 import { StatusFlyout } from "../list/quick-preview-drawer";
 
+import { ActionsCard } from "./actions-card";
 import { AddressesCard } from "./addresses-card";
 import { CustomerCard } from "./customer-card";
+import { CustomerHistoryCard } from "./customer-history-card";
 import { ItemsCard } from "./items-card";
+import { LockedBanner } from "./locked-banner";
+import { MetaFieldsCard } from "./meta-fields-card";
 import { RefundsCard } from "./refunds-card";
 import { ShippingCard } from "./shipping-card";
+import { SourceCard } from "./source-card";
 import { SummaryCard } from "./summary-card";
 import { TimelineCard } from "./timeline-card";
 
@@ -33,11 +40,16 @@ interface OrdersDetailProps {
     id: number;
 }
 
+const MAIN_GRID_KEY = "orders.detail.sections.main";
+const SIDEBAR_GRID_KEY = "orders.detail.sections.sidebar";
+
 /**
- * The detail page. Two-column on desktop (8/4), single-column stacked on mobile. Every card is
- * its own component so the file stays scan-readable; mutations live inside their respective
- * cards (refunds, shipping, status). The header dropdown collects the rare actions (mark shipped,
- * resend, delete) that don't deserve their own card.
+ * The detail page, Phase 2. Two columns on desktop (8/4), single column stacked on mobile.
+ * Every card lives inside a {@link DraggableSectionGrid} so each admin can shape the page how
+ * they like; the order + collapsed state of both columns persists in localStorage. A
+ * "Reset to default order" affordance in the page-level "More" menu wipes both grids when an
+ * operator wants to start over. The {@link LockedBanner} above the grid handles terminal orders
+ * past the auto-lock window.
  */
 export function OrdersDetail({ id }: OrdersDetailProps) {
     const locale = useLocale() as Locale;
@@ -46,12 +58,40 @@ export function OrdersDetail({ id }: OrdersDetailProps) {
     const tStatus = useTranslations("OrderStatus");
     const tList = useTranslations("Orders.list");
     const tActions = useTranslations("Orders.detail.headerActions");
+    const tGrid = useTranslations("Orders.detail.sections");
     const router = useRouter();
     const resend = useResendConfirmation();
     const markShipped = useMarkShipped();
     const deleteOrder = useDeleteOrder();
 
     const { data: order, isPending, isError, refetch } = useOrder(id);
+
+    const mainSections = useMemo<SectionSpec[]>(() => {
+        if (order === undefined) return [];
+        return [
+            { id: "summary", title: tGrid("summary"), body: <SummaryCard order={order} locale={locale} /> },
+            { id: "items", title: tGrid("items"), body: <ItemsCard order={order} locale={locale} /> },
+            { id: "shipping", title: tGrid("shipping"), body: <ShippingCard order={order} locale={locale} /> },
+            { id: "refunds", title: tGrid("refunds"), body: <RefundsCard order={order} locale={locale} /> },
+            { id: "meta", title: tGrid("meta"), body: <MetaFieldsCard order={order} /> },
+            { id: "timeline", title: tGrid("timeline"), body: <TimelineCard order={order} locale={locale} /> },
+        ];
+    }, [order, locale, tGrid]);
+
+    const sidebarSections = useMemo<SectionSpec[]>(() => {
+        if (order === undefined) return [];
+        return [
+            { id: "actions", title: tGrid("actions"), body: <ActionsCard order={order} /> },
+            { id: "customer", title: tGrid("customer"), body: <CustomerCard order={order} locale={locale} /> },
+            { id: "addresses", title: tGrid("addresses"), body: <AddressesCard order={order} locale={locale} /> },
+            {
+                id: "customer-history",
+                title: tGrid("customerHistory"),
+                body: <CustomerHistoryCard orderId={order.id} customerId={order.customerId} locale={locale} />,
+            },
+            { id: "source", title: tGrid("source"), body: <SourceCard order={order} locale={locale} /> },
+        ];
+    }, [order, locale, tGrid]);
 
     if (isPending) return <OrderDetailSkeleton />;
     if (isError || order === undefined) {
@@ -93,12 +133,19 @@ export function OrdersDetail({ id }: OrdersDetailProps) {
         }
     };
 
+    const onResetLayout = () => {
+        resetSectionGridStorage(MAIN_GRID_KEY);
+        resetSectionGridStorage(SIDEBAR_GRID_KEY);
+        toast.add({ title: tGrid("resetDone"), timeout: 2500, data: { tone: "success" } });
+        window.location.reload();
+    };
+
     return (
         <section className="flex flex-col gap-6">
             <PageHeader
                 title={
                     <span className="flex items-center gap-3">
-                        {t("title", { number: order.orderNumber })}
+                        {t("titleEditable", { number: order.orderNumber })}
                         <OrderStatusBadge status={order.status} />
                     </span>
                 }
@@ -135,6 +182,8 @@ export function OrdersDetail({ id }: OrdersDetailProps) {
                                     {tActions("printPacking")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={onResetLayout}>{tGrid("resetOrder")}</DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                     onClick={onDelete}
                                     className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
@@ -147,18 +196,19 @@ export function OrdersDetail({ id }: OrdersDetailProps) {
                 }
             />
 
+            <LockedBanner order={order} />
+
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
-                <div className="flex flex-col gap-4">
-                    <ItemsCard order={order} locale={locale} />
-                    <ShippingCard order={order} locale={locale} />
-                    <RefundsCard order={order} locale={locale} />
-                    <TimelineCard order={order} locale={locale} />
-                </div>
-                <aside className="flex flex-col gap-4">
-                    <CustomerCard order={order} locale={locale} />
-                    <AddressesCard order={order} locale={locale} />
-                    <SummaryCard order={order} locale={locale} />
-                </aside>
+                <DraggableSectionGrid
+                    storageKey={MAIN_GRID_KEY}
+                    sections={mainSections}
+                    labels={{ grabHandle: tGrid("grab"), collapse: tGrid("collapse"), expand: tGrid("expand") }}
+                />
+                <DraggableSectionGrid
+                    storageKey={SIDEBAR_GRID_KEY}
+                    sections={sidebarSections}
+                    labels={{ grabHandle: tGrid("grab"), collapse: tGrid("collapse"), expand: tGrid("expand") }}
+                />
             </div>
         </section>
     );

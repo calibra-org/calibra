@@ -175,6 +175,17 @@ export interface AdminOrderTaxLine {
     total: MoneyMinor;
 }
 
+export interface AdminOrderFeeLine {
+    id: number;
+    name: string;
+    total: MoneyMinor;
+    totalTax: MoneyMinor;
+    taxable: boolean;
+    taxClassId: number | null;
+}
+
+export type AdminOrderSource = "web" | "admin" | "api" | "import" | "checkout-block" | "checkout" | null;
+
 export type OrderRiskFlag = "high_value" | "shipping_mismatch" | "failed_payment" | (string & {});
 
 export type OrderCreatedVia = "checkout" | "admin" | "api" | "import" | (string & {});
@@ -201,12 +212,22 @@ export interface AdminOrder {
     shippingTotal: MoneyMinor;
     discountTotal: MoneyMinor;
     taxTotal: MoneyMinor;
+    feesTotal: MoneyMinor;
     paymentMethodTitle: LocalizedString;
     createdAt: string;
     updatedAt: string | null;
     paidAt: string | null;
     completedAt: string | null;
     createdVia: OrderCreatedVia;
+    source: AdminOrderSource;
+    ipAddress: string | null;
+    userAgent: string | null;
+    referrer: string | null;
+    isLocked: boolean;
+    unlockOverride: boolean;
+    meta: Record<string, string>;
+    metaVisible: Record<string, string>;
+    metaHidden: Record<string, string>;
     itemCount: number;
     couponCodes: string[];
     riskFlags: OrderRiskFlag[];
@@ -214,6 +235,7 @@ export interface AdminOrder {
     shippingAddress: AdminOrderAddress;
     lineItems: AdminOrderLineItem[];
     shippingLines: AdminOrderShippingLine[];
+    feeLines: AdminOrderFeeLine[];
     couponLines: AdminOrderCouponLine[];
     taxLines: AdminOrderTaxLine[];
     history: AdminOrderStatusHistoryEntry[];
