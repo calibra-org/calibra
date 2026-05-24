@@ -13,7 +13,11 @@ export default defineConfig({
     /**
      * Ace commands. The `./commands/` directory auto-scans — list only third-party packages here.
      */
-    commands: [() => import("@adonisjs/core/commands"), () => import("@adonisjs/lucid/commands")],
+    commands: [
+        () => import("@adonisjs/core/commands"),
+        () => import("@adonisjs/lucid/commands"),
+        () => import("@adonisjs/queue/commands"),
+    ],
 
     /**
      * Service providers registered in boot order. Lucid must come before Auth (auth queries users
@@ -34,6 +38,7 @@ export default defineConfig({
         () => import("@adonisjs/drive/drive_provider"),
         () => import("@adonisjs/cache/cache_provider"),
         () => import("@adonisjs/mail/mail_provider"),
+        () => import("@adonisjs/queue/queue_provider"),
         () => import("@adonisjs/transmit/transmit_provider"),
     ],
 

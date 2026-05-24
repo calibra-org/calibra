@@ -37,4 +37,10 @@ export default await Env.create(new URL("../", import.meta.url), {
     SMTP_USERNAME: Env.schema.string.optional(),
     SMTP_PASSWORD: Env.schema.string.optional(),
     MAILPIT_WEB_URL: Env.schema.string.optional(),
+
+    /**
+     * Job queue driver. `sync` for tests (runs the job inline), `database` for dev + prod (uses
+     * the existing Postgres connection — needs `node ace queue:work` running alongside the API).
+     */
+    QUEUE_DRIVER: Env.schema.enum(["sync", "database"] as const),
 });

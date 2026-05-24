@@ -320,6 +320,11 @@ async function ensureEnvFiles(meta) {
             `SMTP_HOST=localhost`,
             `SMTP_PORT=${MAILPIT_SMTP_PORT}`,
             `MAILPIT_WEB_URL=http://localhost:${MAILPIT_WEB_PORT}`,
+            /**
+             * Background-job queue. `database` reuses the per-spin Postgres; the spin starts a
+             * tracked `node ace queue:work` process alongside the api so jobs actually fire.
+             */
+            `QUEUE_DRIVER=database`,
             "",
         ].join("\n"),
     );
@@ -444,6 +449,25 @@ async function startServers(meta, opts) {
         args: ["--filter", "@calibra/api", "dev"],
         cwd: meta.worktreePath,
         env: { ...process.env, PORT: String(meta.ports.api), HOST: "0.0.0.0" },
+    });
+
+    /**
+     * Background-job worker for @adonisjs/queue's `database` driver. Tracked the same way as the
+     * api/admin processes so `spin stop` cleans it up. The `queue:work` command stays alive until
+     * SIGTERM and handles graceful shutdown of in-flight jobs.
+     */
+    await startServer({
+        name: "queue",
+        meta,
+        cmd: "pnpm",
+        /**
+         * `--queue=imports,exports` matches the queues declared on `RunImportJob` and
+         * `RunExportJob`. Without it the worker only polls `default` and the dispatched jobs
+         * sit unprocessed in `queue_jobs`. The `default` queue stays empty in this repo for now.
+         */
+        args: ["--filter", "@calibra/api", "exec", "node", "ace", "queue:work", "--queue=imports,exports"],
+        cwd: meta.worktreePath,
+        env: { ...process.env },
     });
 
     await startServer({
@@ -611,7 +635,7 @@ function printHandoffCard(meta, opts) {
  * @param {SpinMeta} meta
  */
 async function killTrackedProcesses(meta) {
-    for (const name of ["api", "admin", "web"]) {
+    for (const name of ["api", "admin", "queue", "web"]) {
         const pidPath = join(meta.worktreePath, `.spin/${name}.pid`);
         if (!existsSync(pidPath)) continue;
         const pid = Number(await readFile(pidPath, "utf8"));

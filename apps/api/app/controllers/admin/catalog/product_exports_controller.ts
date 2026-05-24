@@ -1,16 +1,15 @@
 import { createHash } from "node:crypto";
 import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
-import logger from "@adonisjs/core/services/logger";
 import drive from "@adonisjs/drive/services/main";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
+import RunExportJob from "#jobs/run_export_job";
 import ProductExport from "#models/product_export";
 import ProductExportFilterPreset from "#models/product_export_filter_preset";
 import { type ExportableProduct, resolveRow } from "#services/product_export/export_field_resolver";
 import { buildExportQuery, type ExportFilters } from "#services/product_export/export_query_builder";
-import { runExport } from "#services/product_export/export_runner";
 import { mintSignedUrl, verifySignedUrl } from "#services/product_export/export_signed_url";
 import { deleteExportArtifact } from "#services/product_export/export_storage";
 import { paginated, resource } from "#transformers/api_envelope";
@@ -98,9 +97,8 @@ export default class AdminProductExportsController {
             });
         }
 
-        void runExport({ exportId: Number(row.id), locale: ctx.i18n.locale }).catch((err) => {
-            logger.error({ err, exportId: row.id }, "runExport: top-level rejection");
-        });
+        /** Hand off to the queue worker — see {@link RunImportJob} comment for `sync` vs `database`. */
+        await RunExportJob.dispatch({ exportId: Number(row.id), locale: ctx.i18n.locale });
 
         ctx.response.status(202);
         return resource(ProductExportTransformer.transform(row));

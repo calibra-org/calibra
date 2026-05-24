@@ -1,7 +1,7 @@
 import type { HttpContext } from "@adonisjs/core/http";
-import logger from "@adonisjs/core/services/logger";
 import { DateTime } from "luxon";
 
+import RunImportJob from "#jobs/run_import_job";
 import ProductImport from "#models/product_import";
 import ProductImportChange from "#models/product_import_change";
 import ProductImportError from "#models/product_import_error";
@@ -9,7 +9,6 @@ import ProductImportMappingPreset from "#models/product_import_mapping_preset";
 import { parseFile } from "#services/product_import/csv_parser";
 import { publishImportEvent } from "#services/product_import/event_bus";
 import { hashHeaderSet, suggestMapping } from "#services/product_import/import_field_catalog";
-import { runImport } from "#services/product_import/import_runner";
 import { runPreview } from "#services/product_import/preview_runner";
 import { importsLocalPath, readSnapshot, uploadKey } from "#services/product_import/storage";
 import { TEMPLATE_HEADERS, TEMPLATE_SAMPLE_ROWS } from "#services/product_import/template_columns";
@@ -203,14 +202,18 @@ export default class AdminProductImportsController {
             );
         }
 
-        void runImport({
+        /**
+         * The run is handed off to the queue worker via `RunImportJob.dispatch(...)`. Under the
+         * `sync` driver (tests) the job runs inline; under `database` (dev + prod) the worker
+         * picks it up within `idleDelay`. Either way the controller returns 202 immediately —
+         * the wizard subscribes to Transmit for live progress.
+         */
+        await RunImportJob.dispatch({
             importId: Number(row.id),
             locale: ctx.i18n.locale,
             skipNew: payload.skip_new === true,
             skipUpdates: payload.skip_updates === true,
             skipWarningRows: payload.skip_warning_rows === true,
-        }).catch((err) => {
-            logger.error({ err, importId: row.id }, "runImport: top-level rejection");
         });
 
         ctx.response.status(202);
