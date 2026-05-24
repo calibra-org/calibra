@@ -6,13 +6,7 @@ export default class extends BaseSchema {
     async up() {
         this.schema.createTable(this.tableName, (table) => {
             table.bigIncrements("id").notNullable();
-            table
-                .bigInteger("actor_user_id")
-                .unsigned()
-                .nullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("SET NULL");
+            table.bigInteger("actor_user_id").unsigned().nullable().references("id").inTable("users").onDelete("SET NULL");
             table.string("action", 64).notNullable();
             table.string("entity_kind", 32).notNullable();
             table.bigInteger("entity_id").nullable();

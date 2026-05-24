@@ -5,7 +5,6 @@ import { Mail, Phone } from "lucide-react";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
-import { PageHeader } from "#/components/PageHeader";
 import { formatRelativeTime } from "#/lib/format";
 import type { AdminCustomer } from "#/lib/types";
 
@@ -20,29 +19,32 @@ interface DetailHeaderProps {
 function Initials({ first, last }: { first: string; last: string }) {
     const value = `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "?";
     return (
-        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/12 font-semibold text-primary text-base ring-1 ring-primary/20">
+        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/12 font-semibold text-base text-primary ring-1 ring-primary/20">
             {value}
         </span>
     );
 }
 
+/**
+ * Detail-page header. Rolls its own layout instead of using `<PageHeader>` because the subtitle
+ * slot here is a flex row of badges + contact chips — wrapping that in PageHeader's `<p>` would
+ * nest a `<div>` inside a `<p>` and trip Next.js hydration.
+ */
 export function DetailHeader({ customer, locale, t, statusT, onSendReset }: DetailHeaderProps) {
     const memberSince = formatRelativeTime(customer.createdAt, locale);
     return (
-        <PageHeader
-            title={
+        <header className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex min-w-0 flex-col gap-2">
                 <div className="flex items-center gap-3">
                     <Initials first={customer.firstName} last={customer.lastName} />
-                    <div className="flex flex-col">
-                        <span className="text-lg font-semibold">
+                    <div className="flex min-w-0 flex-col">
+                        <h1 className="truncate font-semibold text-lg">
                             {customer.firstName} {customer.lastName}
-                        </span>
-                        <span className="text-muted-foreground text-sm">{t("subtitle", { since: memberSince })}</span>
+                        </h1>
+                        <span className="text-muted-foreground text-sm">{t("detail.subtitle", { since: memberSince })}</span>
                     </div>
                 </div>
-            }
-            subtitle={
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
                     <Badge
                         variant={
                             customer.status === "active"
@@ -79,14 +81,14 @@ export function DetailHeader({ customer, locale, t, statusT, onSendReset }: Deta
                         </a>
                     )}
                 </div>
-            }
-            actions={
-                onSendReset && customer.hasAccount ? (
+            </div>
+            {onSendReset && customer.hasAccount && (
+                <div className="flex flex-wrap items-center gap-2">
                     <Button variant="outline" onClick={onSendReset}>
                         {t("detail.sendPasswordReset")}
                     </Button>
-                ) : null
-            }
-        />
+                </div>
+            )}
+        </header>
     );
 }

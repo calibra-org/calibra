@@ -13,7 +13,11 @@ import { adminCustomerMarketingPatchValidator } from "#validators/admin/customer
 
 const CHANNEL_TO_FIELDS: Record<
     string,
-    { optIn: "emailOptIn" | "smsOptIn" | "phoneCallOptIn"; at: "emailOptInAt" | "smsOptInAt" | "phoneCallOptInAt"; source: "emailOptInSource" | "smsOptInSource" | "phoneCallOptInSource" }
+    {
+        optIn: "emailOptIn" | "smsOptIn" | "phoneCallOptIn";
+        at: "emailOptInAt" | "smsOptInAt" | "phoneCallOptInAt";
+        source: "emailOptInSource" | "smsOptInSource" | "phoneCallOptInSource";
+    }
 > = {
     email: { optIn: "emailOptIn", at: "emailOptInAt", source: "emailOptInSource" },
     sms: { optIn: "smsOptIn", at: "smsOptInAt", source: "smsOptInSource" },

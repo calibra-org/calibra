@@ -22,9 +22,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 export function CustomerStatsFooter({ counts, locale, t }: StatsFooterProps) {
     if (counts === undefined) {
-        return (
-            <div className="border-t bg-muted/30 text-muted-foreground text-sm py-3 px-4">{t("footer.loading")}</div>
-        );
+        return <div className="border-t bg-muted/30 px-4 py-3 text-muted-foreground text-sm">{t("footer.loading")}</div>;
     }
     return (
         <div className="flex flex-wrap items-center divide-x divide-border border-t bg-muted/30 rtl:divide-x-reverse">

@@ -13,13 +13,7 @@ export default class extends BaseSchema {
                 .references("id")
                 .inTable("users")
                 .onDelete("RESTRICT");
-            table
-                .bigInteger("customer_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("customers")
-                .onDelete("CASCADE");
+            table.bigInteger("customer_id").unsigned().notNullable().references("id").inTable("customers").onDelete("CASCADE");
             table.timestamp("started_at", { useTz: true }).notNullable().defaultTo(this.now());
             table.timestamp("ended_at", { useTz: true }).nullable();
             table.string("ip_address", 45).nullable();

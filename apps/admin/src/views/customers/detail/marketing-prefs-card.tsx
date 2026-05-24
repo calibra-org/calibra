@@ -4,11 +4,7 @@ import type { Locale } from "@calibra/shared/i18n";
 
 import { Switch } from "#/components/ui/switch";
 import { formatRelativeTime } from "#/lib/format";
-import {
-    useCustomerMarketingHistory,
-    useCustomerMarketingPrefs,
-    useUpdateCustomerMarketingPref,
-} from "#/lib/queries/customers";
+import { useCustomerMarketingHistory, useCustomerMarketingPrefs, useUpdateCustomerMarketingPref } from "#/lib/queries/customers";
 
 interface MarketingPrefsCardProps {
     customerId: number;

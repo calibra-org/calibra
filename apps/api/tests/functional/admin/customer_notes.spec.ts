@@ -44,10 +44,7 @@ test.group("/api/v1/admin/customers/:customer_id/notes", (group) => {
         });
         await Customer.create({ userId: user.id, firstName: "U", lastName: "U", countryDefault: "IR", status: "active" });
         const customer = await createCustomer();
-        const response = await client
-            .get(`/api/v1/admin/customers/${customer.id}/notes`)
-            .withGuard("api")
-            .loginAs(user);
+        const response = await client.get(`/api/v1/admin/customers/${customer.id}/notes`).withGuard("api").loginAs(user);
         response.assertStatus(403);
     });
 
@@ -64,10 +61,7 @@ test.group("/api/v1/admin/customers/:customer_id/notes", (group) => {
         create.assertAgainstApiSpec();
         const noteId = create.body().data.id as string;
 
-        const list = await client
-            .get(`/api/v1/admin/customers/${customer.id}/notes`)
-            .withGuard("api")
-            .loginAs(admin);
+        const list = await client.get(`/api/v1/admin/customers/${customer.id}/notes`).withGuard("api").loginAs(admin);
         list.assertStatus(200);
         list.assertAgainstApiSpec();
         assert.equal(list.body().data.length, 1);
@@ -83,10 +77,7 @@ test.group("/api/v1/admin/customers/:customer_id/notes", (group) => {
         update.assertAgainstApiSpec();
         assert.equal(update.body().data.body, "updated body");
 
-        const del = await client
-            .delete(`/api/v1/admin/customers/${customer.id}/notes/${noteId}`)
-            .withGuard("api")
-            .loginAs(admin);
+        const del = await client.delete(`/api/v1/admin/customers/${customer.id}/notes/${noteId}`).withGuard("api").loginAs(admin);
         del.assertStatus(204);
     });
 

@@ -4,10 +4,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 import Customer from "#models/customer";
 import CustomerNote from "#models/customer_note";
 import CustomerNoteTransformer from "#transformers/customer_note_transformer";
-import {
-    adminCustomerNoteCreateValidator,
-    adminCustomerNoteUpdateValidator,
-} from "#validators/admin/customer_validator";
+import { adminCustomerNoteCreateValidator, adminCustomerNoteUpdateValidator } from "#validators/admin/customer_validator";
 
 export default class AdminCustomerNotesController {
     /** GET /api/v1/admin/customers/:customer_id/notes — newest first. */

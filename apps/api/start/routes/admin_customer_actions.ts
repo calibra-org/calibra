@@ -9,33 +9,21 @@ const AdminCustomerTimelineController = () => import("#controllers/admin/custome
 
 router
     .group(() => {
-        router
-            .get("/:id/marketing", [AdminCustomerMarketingController, "show"])
-            .as("admin.customers.marketing.show");
-        router
-            .patch("/:id/marketing", [AdminCustomerMarketingController, "update"])
-            .as("admin.customers.marketing.update");
+        router.get("/:id/marketing", [AdminCustomerMarketingController, "show"]).as("admin.customers.marketing.show");
+        router.patch("/:id/marketing", [AdminCustomerMarketingController, "update"]).as("admin.customers.marketing.update");
         router
             .get("/:id/marketing/history", [AdminCustomerMarketingController, "history"])
             .as("admin.customers.marketing.history");
-        router
-            .patch("/:id/status", [AdminCustomerStatusController, "update"])
-            .as("admin.customers.status.update");
-        router
-            .get("/:id/status-history", [AdminCustomerStatusController, "history"])
-            .as("admin.customers.status.history");
+        router.patch("/:id/status", [AdminCustomerStatusController, "update"]).as("admin.customers.status.update");
+        router.get("/:id/status-history", [AdminCustomerStatusController, "history"]).as("admin.customers.status.history");
         router
             .post("/:id/convert-to-account", [AdminCustomerActionsController, "convertToAccount"])
             .as("admin.customers.convertToAccount");
         router
             .post("/:id/send-password-reset", [AdminCustomerActionsController, "sendPasswordReset"])
             .as("admin.customers.sendPasswordReset");
-        router
-            .post("/:id/impersonate", [AdminCustomerActionsController, "impersonate"])
-            .as("admin.customers.impersonate");
-        router
-            .get("/:id/timeline", [AdminCustomerTimelineController, "index"])
-            .as("admin.customers.timeline");
+        router.post("/:id/impersonate", [AdminCustomerActionsController, "impersonate"]).as("admin.customers.impersonate");
+        router.get("/:id/timeline", [AdminCustomerTimelineController, "index"]).as("admin.customers.timeline");
     })
     .prefix("/api/v1/admin/customers")
     .use(middleware.auth({ guards: ["api"] }))

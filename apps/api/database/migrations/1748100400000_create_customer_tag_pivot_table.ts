@@ -5,20 +5,8 @@ export default class extends BaseSchema {
 
     async up() {
         this.schema.createTable(this.tableName, (table) => {
-            table
-                .bigInteger("customer_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("customers")
-                .onDelete("CASCADE");
-            table
-                .bigInteger("tag_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("customer_tags")
-                .onDelete("CASCADE");
+            table.bigInteger("customer_id").unsigned().notNullable().references("id").inTable("customers").onDelete("CASCADE");
+            table.bigInteger("tag_id").unsigned().notNullable().references("id").inTable("customer_tags").onDelete("CASCADE");
             table.timestamp("created_at", { useTz: true }).notNullable().defaultTo(this.now());
 
             table.primary(["customer_id", "tag_id"], "customer_tag_pivot_pkey");

@@ -34,15 +34,7 @@ import type {
 
 type SortableColumn = "last_name" | "created_at" | "last_seen_at";
 
-export type CustomerTabKey =
-    | "any"
-    | "account"
-    | "guest"
-    | "big"
-    | "new"
-    | "inactive"
-    | "no_address"
-    | "trashed";
+export type CustomerTabKey = "any" | "account" | "guest" | "big" | "new" | "inactive" | "no_address" | "trashed";
 
 export interface CustomersListParams {
     page?: number;
@@ -106,13 +98,12 @@ export function useCustomersList(params: CustomersListParams = {}) {
         queryFn: () => apiGet<ListEnvelope>("customers", { locale, query }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminCustomer),
-            meta:
-                payload.meta ?? {
-                    page: Number(query.page),
-                    perPage: Number(query.perPage),
-                    total: payload.data?.length ?? 0,
-                    lastPage: 1,
-                },
+            meta: payload.meta ?? {
+                page: Number(query.page),
+                perPage: Number(query.perPage),
+                total: payload.data?.length ?? 0,
+                lastPage: 1,
+            },
         }),
     });
 }
@@ -150,11 +141,7 @@ export function useCustomerStats(id: number | null) {
 
 export function useCustomerNotes(customerId: number | null) {
     const locale = useLocale() as Locale;
-    return useQuery<
-        { data: Parameters<typeof toAdminCustomerNote>[0][] },
-        Error,
-        AdminCustomerNote[]
-    >({
+    return useQuery<{ data: Parameters<typeof toAdminCustomerNote>[0][] }, Error, AdminCustomerNote[]>({
         queryKey: ["admin", "customers", "notes", { locale, customerId }],
         queryFn: () => apiGet(`customers/${customerId}/notes`, { locale }),
         select: (payload) => payload.data.map(toAdminCustomerNote),
@@ -202,11 +189,7 @@ export function useDeleteCustomerNote(customerId: number) {
 
 export function useCustomerTagSuggestions(q: string) {
     const locale = useLocale() as Locale;
-    return useQuery<
-        { data: Parameters<typeof toAdminCustomerTag>[0][] },
-        Error,
-        AdminCustomerTagRow[]
-    >({
+    return useQuery<{ data: Parameters<typeof toAdminCustomerTag>[0][] }, Error, AdminCustomerTagRow[]>({
         queryKey: ["admin", "customer-tags", { locale, q }],
         queryFn: () => apiGet("customer-tags", { locale, query: { q, perPage: 50 } }),
         select: (payload) => payload.data.map(toAdminCustomerTag),
@@ -233,8 +216,7 @@ export function useDetachCustomerTag(customerId: number) {
     const locale = useLocale() as Locale;
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: (tagId: number) =>
-            apiMutate("DELETE", `customers/${customerId}/tags/${tagId}`, { locale }),
+        mutationFn: (tagId: number) => apiMutate("DELETE", `customers/${customerId}/tags/${tagId}`, { locale }),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["admin", "customers", "list"] });
             qc.invalidateQueries({ queryKey: ["admin", "customers", "detail", { locale, id: customerId }] });
@@ -244,11 +226,7 @@ export function useDetachCustomerTag(customerId: number) {
 
 export function useCustomerSegments() {
     const locale = useLocale() as Locale;
-    return useQuery<
-        { data: Parameters<typeof toAdminCustomerSegment>[0][] },
-        Error,
-        AdminCustomerSegment[]
-    >({
+    return useQuery<{ data: Parameters<typeof toAdminCustomerSegment>[0][] }, Error, AdminCustomerSegment[]>({
         queryKey: ["admin", "customer-segments", { locale }],
         queryFn: () => apiGet("customer-segments", { locale }),
         select: (payload) => payload.data.map(toAdminCustomerSegment),
@@ -272,15 +250,7 @@ export function useUpdateCustomerSegment() {
     const locale = useLocale() as Locale;
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({
-            id,
-            ...input
-        }: {
-            id: number;
-            name: string;
-            filters: Record<string, unknown>;
-            is_pinned?: boolean;
-        }) =>
+        mutationFn: ({ id, ...input }: { id: number; name: string; filters: Record<string, unknown>; is_pinned?: boolean }) =>
             apiMutate<{ data: Parameters<typeof toAdminCustomerSegment>[0] }>("PATCH", `customer-segments/${id}`, {
                 locale,
                 body: input,
@@ -300,11 +270,7 @@ export function useDeleteCustomerSegment() {
 
 export function useCustomerMarketingPrefs(customerId: number | null) {
     const locale = useLocale() as Locale;
-    return useQuery<
-        { data: Parameters<typeof toAdminCustomerMarketingPrefs>[0] },
-        Error,
-        AdminCustomerMarketingPrefs
-    >({
+    return useQuery<{ data: Parameters<typeof toAdminCustomerMarketingPrefs>[0] }, Error, AdminCustomerMarketingPrefs>({
         queryKey: ["admin", "customers", "marketing", { locale, customerId }],
         queryFn: () => apiGet(`customers/${customerId}/marketing`, { locale }),
         select: (payload) => toAdminCustomerMarketingPrefs(payload.data),
@@ -331,11 +297,7 @@ export function useUpdateCustomerMarketingPref(customerId: number) {
 
 export function useCustomerMarketingHistory(customerId: number | null) {
     const locale = useLocale() as Locale;
-    return useQuery<
-        { data: Parameters<typeof toAdminCustomerMarketingHistory>[0][] },
-        Error,
-        AdminCustomerMarketingHistory[]
-    >({
+    return useQuery<{ data: Parameters<typeof toAdminCustomerMarketingHistory>[0][] }, Error, AdminCustomerMarketingHistory[]>({
         queryKey: ["admin", "customers", "marketing-history", { locale, customerId }],
         queryFn: () => apiGet(`customers/${customerId}/marketing/history`, { locale }),
         select: (payload) => payload.data.map(toAdminCustomerMarketingHistory),
@@ -361,13 +323,49 @@ export function useUpdateCustomerStatus(customerId: number) {
     });
 }
 
+/**
+ * Row-level status mutation for the list page where the id is only known per row. Same wire
+ * shape as {@link useUpdateCustomerStatus} but the id comes through the mutation arg, so the
+ * hook stays unconditional at the top of the component (rules-of-hooks).
+ */
+export function useBulkRowStatusMutation() {
+    const locale = useLocale() as Locale;
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            customerId,
+            status,
+            reason,
+            force,
+        }: {
+            customerId: number;
+            status: "active" | "suspended";
+            reason?: string;
+            force?: boolean;
+        }) =>
+            apiMutate("PATCH", `customers/${customerId}/status`, {
+                locale,
+                body: { status, reason },
+                query: force === true ? { force: "1" } : undefined,
+            }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["admin", "customers"] });
+            qc.invalidateQueries({ queryKey: ["admin", "customers", "counts"] });
+        },
+    });
+}
+
+/** Row-level password reset trigger — mirrors {@link useSendPasswordReset} with id in the mutation arg. */
+export function useBulkRowPasswordResetMutation() {
+    const locale = useLocale() as Locale;
+    return useMutation({
+        mutationFn: (customerId: number) => apiMutate("POST", `customers/${customerId}/send-password-reset`, { locale }),
+    });
+}
+
 export function useCustomerStatusHistory(customerId: number | null) {
     const locale = useLocale() as Locale;
-    return useQuery<
-        { data: Parameters<typeof toAdminCustomerStatusHistory>[0][] },
-        Error,
-        AdminCustomerStatusHistory[]
-    >({
+    return useQuery<{ data: Parameters<typeof toAdminCustomerStatusHistory>[0][] }, Error, AdminCustomerStatusHistory[]>({
         queryKey: ["admin", "customers", "status-history", { locale, customerId }],
         queryFn: () => apiGet(`customers/${customerId}/status-history`, { locale }),
         select: (payload) => payload.data.map(toAdminCustomerStatusHistory),
@@ -378,14 +376,9 @@ export function useCustomerStatusHistory(customerId: number | null) {
 export function useCustomerTimeline(customerId: number | null, types: string[] = []) {
     const locale = useLocale() as Locale;
     const typesParam = types.length > 0 ? types.join(",") : undefined;
-    return useQuery<
-        { data: Array<Parameters<typeof toAdminCustomerTimeline>[0][number]> },
-        Error,
-        AdminCustomerTimelineEntry[]
-    >({
+    return useQuery<{ data: Array<Parameters<typeof toAdminCustomerTimeline>[0][number]> }, Error, AdminCustomerTimelineEntry[]>({
         queryKey: ["admin", "customers", "timeline", { locale, customerId, typesParam }],
-        queryFn: () =>
-            apiGet(`customers/${customerId}/timeline`, { locale, query: { types: typesParam, limit: 100 } }),
+        queryFn: () => apiGet(`customers/${customerId}/timeline`, { locale, query: { types: typesParam, limit: 100 } }),
         select: (payload) => toAdminCustomerTimeline(payload.data),
         enabled: customerId !== null && customerId > 0,
     });

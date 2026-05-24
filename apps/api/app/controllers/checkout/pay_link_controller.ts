@@ -36,7 +36,7 @@ export default class PayLinkController {
 
         const payload = await ctx.request.validateUsing(payLinkValidator);
         const gateway = await PaymentGateway.find(payload.payment_gateway_id);
-        if (!gateway || !gateway.enabled) {
+        if (!gateway?.enabled) {
             throw new Exception("Payment method is unavailable", {
                 status: 422,
                 code: "E_PAYMENT_GATEWAY_INVALID",

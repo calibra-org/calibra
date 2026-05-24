@@ -6,20 +6,8 @@ export default class extends BaseSchema {
     async up() {
         this.schema.createTable(this.tableName, (table) => {
             table.bigIncrements("id").notNullable();
-            table
-                .bigInteger("customer_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("customers")
-                .onDelete("CASCADE");
-            table
-                .bigInteger("author_user_id")
-                .unsigned()
-                .nullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("SET NULL");
+            table.bigInteger("customer_id").unsigned().notNullable().references("id").inTable("customers").onDelete("CASCADE");
+            table.bigInteger("author_user_id").unsigned().nullable().references("id").inTable("users").onDelete("SET NULL");
             table.text("body").notNullable();
             table.timestamp("created_at", { useTz: true }).notNullable().defaultTo(this.now());
             table.timestamp("updated_at", { useTz: true }).notNullable().defaultTo(this.now());

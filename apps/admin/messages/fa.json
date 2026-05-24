@@ -1794,6 +1794,23 @@
         "selectRow": "انتخاب ردیف",
         "empty": "هنوز مشتری‌ای ثبت نشده است.",
         "emptyFiltered": "هیچ مشتری‌ای با این فیلترها پیدا نشد.",
+        "emptyFilteredHint": "فیلترها را تغییر دهید یا پاک کنید تا نتایج بیشتری ببینید.",
+        "sort": {
+            "asc": "مرتب‌سازی صعودی",
+            "desc": "مرتب‌سازی نزولی",
+            "hide": "پنهان‌کردن ستون"
+        },
+        "toolbar": {
+            "clearAll": "پاک کردن فیلترها",
+            "clearFilter": "پاک کردن",
+            "searchLabel": "جستجو",
+            "viewOptions": "نمایش",
+            "density": "تراکم",
+            "densityComfortable": "راحت",
+            "densityCozy": "متوسط",
+            "densityCompact": "فشرده",
+            "columns": "ستون‌ها"
+        },
         "errorTitle": "بارگذاری مشتری‌ها ممکن نشد.",
         "errorRetry": "تلاش دوباره",
         "tabs": {
@@ -1921,6 +1938,49 @@
             "save": "ذخیره",
             "cancel": "انصراف",
             "delete": "حذف",
+            "loading": "در حال بارگذاری…",
+            "lifetimeStats": "آمار طول عمر",
+            "copyEmail": "کپی ایمیل",
+            "copyPhone": "کپی تلفن",
+            "impersonateNoStorefrontTitle": "آدرس فروشگاه تنظیم نشده — توکن در کلیپ‌بورد کپی شد",
+            "section": {
+                "grabHandle": "برای جابه‌جایی بکشید",
+                "collapse": "بستن",
+                "expand": "گشودن"
+            },
+            "summary": {
+                "firstName": "نام",
+                "lastName": "نام خانوادگی",
+                "phone": "تلفن",
+                "country": "کشور",
+                "email": "ایمیل",
+                "nationalId": "کد ملی",
+                "company": "شرکت",
+                "createdAt": "تاریخ عضویت"
+            },
+            "convertDialog": {
+                "hint": "برای ساخت حساب کاربری مرتبط، یک ایمیل و رمز عبور وارد کنید.",
+                "email": "ایمیل",
+                "password": "رمز عبور"
+            },
+            "timelineSection": {
+                "title": "خط زمانی فعالیت",
+                "filter": { "all": "همه" },
+                "kind": {
+                    "order": "سفارش",
+                    "note": "یادداشت",
+                    "status": "وضعیت",
+                    "marketing": "بازاریابی",
+                    "impersonation": "ورود ادمین"
+                },
+                "order": { "summary": "سفارش #{number} — {status} — {total}" },
+                "status": {
+                    "summary": "{from} ← {to}",
+                    "summaryWithReason": "{from} ← {to} — {reason}"
+                },
+                "marketing": { "summary": "{channel}: {onOff}" },
+                "impersonation": { "summary": "ادمین به‌عنوان این مشتری وارد شد" }
+            },
             "marketing": "ترجیحات بازاریابی",
             "marketingHint": "تغییر این ترجیحات، تاریخ رضایت جدیدی ثبت می‌کند.",
             "channelEmail": "اشتراک ایمیلی",

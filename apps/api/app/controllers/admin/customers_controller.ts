@@ -6,8 +6,8 @@ import { DateTime } from "luxon";
 import Customer from "#models/customer";
 import CustomerDownload from "#models/customer_download";
 import User from "#models/user";
-import phoneService from "#services/phone_service";
 import { aggregateForCustomerIds, fetchCounts, forSingleCustomer } from "#services/customer_stats_service";
+import phoneService from "#services/phone_service";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
@@ -95,9 +95,7 @@ export default class AdminCustomersController {
             const roleFilter = payload.role;
             query.whereHas("user", (uq) => uq.where("role", roleFilter));
         } else {
-            query.where((q) =>
-                q.whereNull("customers.user_id").orWhereHas("user", (uq) => uq.where("role", "customer")),
-            );
+            query.where((q) => q.whereNull("customers.user_id").orWhereHas("user", (uq) => uq.where("role", "customer")));
         }
         if (payload.is_paying_customer !== undefined) {
             query.where("is_paying_customer", payload.is_paying_customer);
@@ -181,9 +179,7 @@ export default class AdminCustomersController {
             Boolean(payload.last_order_before);
         if (wantOrderFilter) {
             query.whereExists((sub) => {
-                sub.from("orders")
-                    .whereRaw("orders.customer_id = customers.id")
-                    .whereIn("status", ORDER_COUNTED_STATUSES);
+                sub.from("orders").whereRaw("orders.customer_id = customers.id").whereIn("status", ORDER_COUNTED_STATUSES);
                 if (payload.last_order_after) sub.where("orders.created_at", ">=", payload.last_order_after);
                 if (payload.last_order_before) sub.where("orders.created_at", "<=", payload.last_order_before);
             });
@@ -252,9 +248,17 @@ export default class AdminCustomersController {
         await customer.load("tags");
         await customer.load("marketingPref");
         const stats = await forSingleCustomer(Number(customer.id));
+        const transformer = new CustomerTransformer(customer);
+        /**
+         * `forAdmin(stats)` spreads `lifetime_order_count` / `lifetime_spend_minor` / etc. at the
+         * top level — same shape the list endpoint emits — so the admin adapter's `toAdminCustomer`
+         * picks them up without a separate detail-only code path. The legacy `stats: { … }`
+         * sub-envelope is kept too for any consumer that addresses it nested.
+         */
         return {
             data: {
-                ...new CustomerTransformer(customer).withProfileExtensions(),
+                ...transformer.forAdmin(stats),
+                ...transformer.withProfileExtensions(),
                 user: customer.user ? new UserTransformer(customer.user).forAdmin() : null,
                 tags: customer.tags?.map((t) => t.name) ?? [],
                 stats: {
@@ -393,9 +397,7 @@ export default class AdminCustomersController {
 
     async downloads(ctx: HttpContext) {
         const customer = await this.findOrFail(ctx.params.id);
-        const rows = await CustomerDownload.query()
-            .where("customer_id", Number(customer.id))
-            .orderBy("granted_at", "desc");
+        const rows = await CustomerDownload.query().where("customer_id", Number(customer.id)).orderBy("granted_at", "desc");
         return { data: rows.map((r) => new CustomerDownloadTransformer(r).toObject()) };
     }
 

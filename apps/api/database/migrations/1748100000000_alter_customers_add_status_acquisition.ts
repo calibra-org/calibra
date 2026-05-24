@@ -15,9 +15,7 @@ export default class extends BaseSchema {
         );
 
         this.schema.raw(`CREATE INDEX "customers_status_idx" ON "${this.tableName}" (status)`);
-        this.schema.raw(
-            `CREATE INDEX "customers_acquisition_channel_idx" ON "${this.tableName}" (acquisition_channel)`,
-        );
+        this.schema.raw(`CREATE INDEX "customers_acquisition_channel_idx" ON "${this.tableName}" (acquisition_channel)`);
     }
 
     async down() {

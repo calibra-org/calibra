@@ -5,7 +5,6 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Search, Settings2, Trash2, X }
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-import { Badge } from "#/components/ui/badge";
 import { BulkSelectionBar } from "#/components/ui/bulk-selection-bar";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";

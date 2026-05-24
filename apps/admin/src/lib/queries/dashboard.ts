@@ -5,9 +5,9 @@ import type { Locale } from "@calibra/shared/i18n";
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
+import { toAdminCustomer } from "#/lib/adapters/customers";
 import { type SdkAdminOrderListRow, toAdminOrderListRow } from "#/lib/adapters/orders";
 import { apiGet } from "#/lib/queries/api-client";
-import { toAdminCustomer } from "#/lib/adapters/customers";
 import type { AdminCustomer, AdminOrder, MoneyMinor, OrderStatus } from "#/lib/types";
 
 /**

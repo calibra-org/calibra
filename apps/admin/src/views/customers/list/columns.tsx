@@ -1,9 +1,11 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
 import type { Locale } from "@calibra/shared/i18n";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpRight, MoreHorizontal, ShieldCheck, ShieldOff, UserCheck, UserX } from "lucide-react";
 
+import { DataTableColumnHeader } from "#/components/data-table/data-table-column-header";
+import type { SortState } from "#/components/data-table/types";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -30,6 +32,10 @@ function Initials({ first, last }: { first: string; last: string }) {
 
 interface ColumnContext {
     locale: Locale;
+    sort: SortState | undefined;
+    onSort: (next: SortState | undefined) => void;
+    onHideColumn: (columnId: string) => void;
+    sortLabels: { asc: string; desc: string; hide: string };
     t: (key: string, values?: Record<string, string | number>) => string;
     statusT: (key: string) => string;
     onOpenPreview: (row: AdminCustomer) => void;
@@ -42,6 +48,17 @@ interface ColumnContext {
 
 export function buildCustomerColumns(ctx: ColumnContext): ColumnDef<AdminCustomer>[] {
     const { locale, t, statusT, onOpenPreview, onSuspend, onUnsuspend, onSendReset, onSoftDelete, onRestore } = ctx;
+    const sortableHeader = (columnId: string, title: string, className?: string) => () => (
+        <DataTableColumnHeader
+            columnId={columnId}
+            title={title}
+            sort={ctx.sort}
+            onSort={ctx.onSort}
+            onHide={() => ctx.onHideColumn(columnId)}
+            labels={ctx.sortLabels}
+            className={className}
+        />
+    );
     return [
         {
             id: "select",
@@ -71,19 +88,17 @@ export function buildCustomerColumns(ctx: ColumnContext): ColumnDef<AdminCustome
         },
         {
             id: "customer",
-            header: t("table.customer"),
+            header: sortableHeader("last_name", t("table.customer")),
             cell: ({ row }) => {
                 const c = row.original;
                 return (
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex min-w-0 items-center gap-3">
                         <Initials first={c.firstName} last={c.lastName} />
-                        <div className="flex flex-col min-w-0">
+                        <div className="flex min-w-0 flex-col">
                             <Link href={`/customers/${c.id}` as never} className="truncate font-medium hover:underline">
                                 {c.firstName} {c.lastName}
                             </Link>
-                            <span className="truncate text-muted-foreground text-xs">
-                                {c.hasAccount ? c.email : t("guest")}
-                            </span>
+                            <span className="truncate text-muted-foreground text-xs">{c.hasAccount ? c.email : t("guest")}</span>
                         </div>
                     </div>
                 );
@@ -147,7 +162,7 @@ export function buildCustomerColumns(ctx: ColumnContext): ColumnDef<AdminCustome
         },
         {
             id: "createdAt",
-            header: t("table.createdAt"),
+            header: sortableHeader("created_at", t("table.createdAt")),
             cell: ({ row }) => (
                 <span title={formatDate(row.original.createdAt, locale)} className="text-muted-foreground text-xs">
                     {formatRelativeTime(row.original.createdAt, locale)}
@@ -239,32 +254,30 @@ export function buildCustomerColumns(ctx: ColumnContext): ColumnDef<AdminCustome
                                 />
                                 {c.hasAccount ? (
                                     <DropdownMenuItem onClick={() => onSendReset(c)}>
-                                        <ShieldCheck className="size-4 me-2" aria-hidden="true" />
+                                        <ShieldCheck className="me-2 size-4" aria-hidden="true" />
                                         {t("rowActions.sendPasswordReset")}
                                     </DropdownMenuItem>
                                 ) : null}
                                 {c.hasAccount && c.status === "active" ? (
                                     <DropdownMenuItem onClick={() => onSuspend(c)}>
-                                        <UserX className="size-4 me-2" aria-hidden="true" />
+                                        <UserX className="me-2 size-4" aria-hidden="true" />
                                         {t("rowActions.suspend")}
                                     </DropdownMenuItem>
                                 ) : null}
                                 {c.hasAccount && c.status === "suspended" ? (
                                     <DropdownMenuItem onClick={() => onUnsuspend(c)}>
-                                        <UserCheck className="size-4 me-2" aria-hidden="true" />
+                                        <UserCheck className="me-2 size-4" aria-hidden="true" />
                                         {t("rowActions.activate")}
                                     </DropdownMenuItem>
                                 ) : null}
                                 <DropdownMenuSeparator />
                                 {c.status !== "deleted" ? (
                                     <DropdownMenuItem onClick={() => onSoftDelete(c)} className="text-destructive">
-                                        <ShieldOff className="size-4 me-2" aria-hidden="true" />
+                                        <ShieldOff className="me-2 size-4" aria-hidden="true" />
                                         {t("rowActions.delete")}
                                     </DropdownMenuItem>
                                 ) : (
-                                    <DropdownMenuItem onClick={() => onRestore(c)}>
-                                        {t("rowActions.restore")}
-                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onRestore(c)}>{t("rowActions.restore")}</DropdownMenuItem>
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>

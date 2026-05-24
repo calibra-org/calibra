@@ -1,18 +1,13 @@
 "use client";
 
+import type { Locale } from "@calibra/shared/i18n";
 import { useState } from "react";
 
 import { Button } from "#/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { toast } from "#/components/ui/toast";
 import {
     useConvertCustomerToAccount,
     useImpersonateCustomer,
@@ -23,7 +18,32 @@ import type { AdminCustomer } from "#/lib/types";
 
 interface ActionsCardProps {
     customer: AdminCustomer;
+    locale: Locale;
     t: (key: string) => string;
+}
+
+/**
+ * Resolves the storefront origin for impersonation. The spin script provisions admin + api but not
+ * a web service, so `NEXT_PUBLIC_WEB_BASE_URL` is often unset; rather than building an invalid
+ * `http:/` URL we fall back to swapping the admin port for the conventional web port (`13153 → 13154`),
+ * matching the spin's ALLOWED_ORIGINS list. Returns `null` when we genuinely cannot resolve.
+ */
+function resolveStorefrontOrigin(): string | null {
+    const envUrl = process.env.NEXT_PUBLIC_WEB_BASE_URL;
+    if (typeof envUrl === "string" && envUrl.length > 1 && envUrl !== "/") {
+        return envUrl.replace(/\/+$/, "");
+    }
+    if (typeof window === "undefined") return null;
+    try {
+        const here = new URL(window.location.origin);
+        const adminPort = Number(here.port);
+        if (Number.isFinite(adminPort) && adminPort > 0) {
+            here.port = String(adminPort + 1);
+        }
+        return here.origin;
+    } catch {
+        return null;
+    }
 }
 
 export function ActionsCard({ customer, t }: ActionsCardProps) {
@@ -50,9 +70,22 @@ export function ActionsCard({ customer, t }: ActionsCardProps) {
     const onReset = () => reset.mutate();
     const onImpersonate = async () => {
         const res = await impersonate.mutateAsync();
+        const storefront = resolveStorefrontOrigin();
+        if (storefront === null) {
+            try {
+                await navigator.clipboard.writeText(res.data.token);
+            } catch {
+                /** ignore — toast still informs the operator. */
+            }
+            toast.add({
+                title: t("detail.impersonateNoStorefrontTitle"),
+                data: { tone: "warning" },
+                timeout: 6000,
+            });
+            return;
+        }
         const params = new URLSearchParams({ [res.data.token_query_param]: res.data.token });
-        const storefront = process.env.NEXT_PUBLIC_WEB_BASE_URL ?? "/";
-        window.open(`${storefront}/?${params.toString()}`, "_blank");
+        window.open(`${storefront}/?${params.toString()}`, "_blank", "noopener,noreferrer");
     };
     const onSubmitConvert = async () => {
         await convert.mutateAsync({ email, password: password.length > 0 ? password : undefined });
@@ -91,11 +124,11 @@ export function ActionsCard({ customer, t }: ActionsCardProps) {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{t("detail.convertToAccount")}</DialogTitle>
-                        <DialogDescription>Provide an email + password to create the linked account.</DialogDescription>
+                        <DialogDescription>{t("detail.convertDialog.hint")}</DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col gap-3 py-2">
                         <div className="flex flex-col gap-1">
-                            <Label htmlFor="convert-email">Email</Label>
+                            <Label htmlFor="convert-email">{t("detail.convertDialog.email")}</Label>
                             <Input
                                 id="convert-email"
                                 type="email"
@@ -105,7 +138,7 @@ export function ActionsCard({ customer, t }: ActionsCardProps) {
                             />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <Label htmlFor="convert-password">Password</Label>
+                            <Label htmlFor="convert-password">{t("detail.convertDialog.password")}</Label>
                             <Input
                                 id="convert-password"
                                 type="password"

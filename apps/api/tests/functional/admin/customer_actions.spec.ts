@@ -131,21 +131,14 @@ test.group("/api/v1/admin/customers actions", (group) => {
             countryDefault: "IR",
             status: "active",
         });
-        await client
-            .post(`/api/v1/admin/customers/${customer.id}/notes`)
-            .withGuard("api")
-            .loginAs(admin)
-            .json({ body: "noted" });
+        await client.post(`/api/v1/admin/customers/${customer.id}/notes`).withGuard("api").loginAs(admin).json({ body: "noted" });
         await client
             .patch(`/api/v1/admin/customers/${customer.id}/status`)
             .withGuard("api")
             .loginAs(admin)
             .json({ status: "suspended" });
 
-        const response = await client
-            .get(`/api/v1/admin/customers/${customer.id}/timeline`)
-            .withGuard("api")
-            .loginAs(admin);
+        const response = await client.get(`/api/v1/admin/customers/${customer.id}/timeline`).withGuard("api").loginAs(admin);
         response.assertStatus(200);
         response.assertAgainstApiSpec();
         const body = response.body() as { data: Array<{ kind: string }> };

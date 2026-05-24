@@ -96,7 +96,7 @@ export default class OrderTransformer extends BaseTransformer<Order> {
         const history = (order as Order & { statusHistory?: OrderStatusHistory[] }).statusHistory ?? [];
         const couponLines = (order as Order & { couponLines?: OrderCouponLine[] }).couponLines ?? [];
         const feeLines = (order as Order & { feeLines?: OrderFeeLine[] }).feeLines ?? [];
-        const shippingAttr = ((order.attributes as Record<string, unknown>) ?? {}).shipping as
+        const shippingAttr = (order.attributes as Record<string, unknown>)?.shipping as
             | {
                   tracking_number?: string | null;
                   tracking_url?: string | null;
@@ -172,9 +172,9 @@ export default class OrderTransformer extends BaseTransformer<Order> {
             user_agent: order.userAgent,
             cart_hash: null,
             source: this.resolveSource(order.createdVia),
-            referrer: ((order.attributes as Record<string, unknown>) ?? {}).referrer ?? null,
+            referrer: (order.attributes as Record<string, unknown>)?.referrer ?? null,
             is_locked: this.computeLocked(order),
-            unlock_override: Boolean(((order.attributes as Record<string, unknown>) ?? {}).unlock_override),
+            unlock_override: Boolean((order.attributes as Record<string, unknown>)?.unlock_override),
             meta,
             meta_visible: metaVisible,
             meta_hidden: metaHidden,

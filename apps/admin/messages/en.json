@@ -1794,6 +1794,23 @@
         "selectRow": "Select row",
         "empty": "No customers yet.",
         "emptyFiltered": "No customers match your filters.",
+        "emptyFilteredHint": "Adjust or clear the filters to see more results.",
+        "sort": {
+            "asc": "Sort ascending",
+            "desc": "Sort descending",
+            "hide": "Hide column"
+        },
+        "toolbar": {
+            "clearAll": "Clear filters",
+            "clearFilter": "Clear",
+            "searchLabel": "Search",
+            "viewOptions": "View",
+            "density": "Density",
+            "densityComfortable": "Comfortable",
+            "densityCozy": "Cozy",
+            "densityCompact": "Compact",
+            "columns": "Columns"
+        },
         "errorTitle": "Could not load customers.",
         "errorRetry": "Retry",
         "tabs": {
@@ -1921,6 +1938,49 @@
             "save": "Save",
             "cancel": "Cancel",
             "delete": "Delete",
+            "loading": "Loading…",
+            "lifetimeStats": "Lifetime stats",
+            "copyEmail": "Copy email",
+            "copyPhone": "Copy phone",
+            "impersonateNoStorefrontTitle": "Storefront URL not configured — token copied to clipboard",
+            "section": {
+                "grabHandle": "Drag to reorder",
+                "collapse": "Collapse",
+                "expand": "Expand"
+            },
+            "summary": {
+                "firstName": "First name",
+                "lastName": "Last name",
+                "phone": "Phone",
+                "country": "Country",
+                "email": "Email",
+                "nationalId": "National ID",
+                "company": "Company",
+                "createdAt": "Joined"
+            },
+            "convertDialog": {
+                "hint": "Provide an email and password to create the linked auth account.",
+                "email": "Email",
+                "password": "Password"
+            },
+            "timelineSection": {
+                "title": "Activity timeline",
+                "filter": { "all": "All" },
+                "kind": {
+                    "order": "Order",
+                    "note": "Note",
+                    "status": "Status",
+                    "marketing": "Marketing",
+                    "impersonation": "Impersonation"
+                },
+                "order": { "summary": "Order #{number} — {status} — {total}" },
+                "status": {
+                    "summary": "{from} → {to}",
+                    "summaryWithReason": "{from} → {to} — {reason}"
+                },
+                "marketing": { "summary": "{channel}: {onOff}" },
+                "impersonation": { "summary": "Admin logged in as this customer" }
+            },
             "marketing": "Marketing preferences",
             "marketingHint": "Toggling these records a new consent timestamp.",
             "channelEmail": "Email subscription",

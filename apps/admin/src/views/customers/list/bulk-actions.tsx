@@ -3,8 +3,9 @@
 import { Tag, Trash2, UserCheck, UserX } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "#/components/ui/button";
 import { DataTableBulkBar } from "#/components/data-table/data-table-bulk-bar";
+import { Button } from "#/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -13,14 +14,6 @@ import {
     DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "#/components/ui/dialog";
 import { useBulkCustomerAction } from "#/lib/queries/customers";
 
 interface BulkActionsProps {
@@ -76,23 +69,15 @@ export function CustomerBulkActions({ selectedIds, onClear, t }: BulkActionsProp
                 <DropdownMenu>
                     <DropdownMenuTrigger
                         render={(props) => (
-                            <Button
-                                {...props}
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="text-primary-foreground"
-                            >
-                                <Tag className="size-3.5 me-2" aria-hidden="true" />
+                            <Button {...props} type="button" variant="ghost" size="sm" className="text-primary-foreground">
+                                <Tag className="me-2 size-3.5" aria-hidden="true" />
                                 {t("bulk.tags")}
                             </Button>
                         )}
                     />
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => setTagDialogMode("add")}>{t("bulk.addTag")}</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setTagDialogMode("remove")}>
-                            {t("bulk.removeTag")}
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTagDialogMode("remove")}>{t("bulk.removeTag")}</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <Button
@@ -103,7 +88,7 @@ export function CustomerBulkActions({ selectedIds, onClear, t }: BulkActionsProp
                     onClick={() => submitStatus("suspended")}
                     disabled={bulk.isPending}
                 >
-                    <UserX className="size-3.5 me-2" aria-hidden="true" />
+                    <UserX className="me-2 size-3.5" aria-hidden="true" />
                     {t("bulk.suspend")}
                 </Button>
                 <Button
@@ -114,19 +99,13 @@ export function CustomerBulkActions({ selectedIds, onClear, t }: BulkActionsProp
                     onClick={() => submitStatus("active")}
                     disabled={bulk.isPending}
                 >
-                    <UserCheck className="size-3.5 me-2" aria-hidden="true" />
+                    <UserCheck className="me-2 size-3.5" aria-hidden="true" />
                     {t("bulk.activate")}
                 </Button>
                 <DropdownMenu>
                     <DropdownMenuTrigger
                         render={(props) => (
-                            <Button
-                                {...props}
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="text-primary-foreground"
-                            >
+                            <Button {...props} type="button" variant="ghost" size="sm" className="text-primary-foreground">
                                 …
                             </Button>
                         )}
@@ -134,7 +113,7 @@ export function CustomerBulkActions({ selectedIds, onClear, t }: BulkActionsProp
                     <DropdownMenuContent align="end">
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setDeleteOpen(true)} className="text-destructive">
-                            <Trash2 className="size-3.5 me-2" aria-hidden="true" />
+                            <Trash2 className="me-2 size-3.5" aria-hidden="true" />
                             {t("bulk.delete")}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -168,9 +147,7 @@ export function CustomerBulkActions({ selectedIds, onClear, t }: BulkActionsProp
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{t("bulk.confirmDeleteTitle")}</DialogTitle>
-                        <DialogDescription>
-                            {t("bulk.confirmDeleteBody", { count: selectedIds.size })}
-                        </DialogDescription>
+                        <DialogDescription>{t("bulk.confirmDeleteBody", { count: selectedIds.size })}</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteOpen(false)}>

@@ -128,13 +128,7 @@ export default class AdminCustomerTimelineController {
             const imp = await db
                 .from("customer_impersonation_events as e")
                 .leftJoin("users as u", "u.id", "e.impersonator_user_id")
-                .select(
-                    "e.id",
-                    "e.started_at",
-                    "e.ended_at",
-                    "u.id as actor_id",
-                    "u.email as actor_email",
-                )
+                .select("e.id", "e.started_at", "e.ended_at", "u.id as actor_id", "u.email as actor_email")
                 .where("e.customer_id", customerId)
                 .orderBy("e.started_at", "desc")
                 .limit(limit);

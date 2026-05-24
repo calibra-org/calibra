@@ -146,10 +146,7 @@ test.group("/api/v1/admin/customers", (group) => {
         const admin = await createAdmin();
         const { customer } = await createPlainCustomer("stats@calibra.dev");
 
-        const response = await client
-            .get(`/api/v1/admin/customers/${customer.id}/stats`)
-            .withGuard("api")
-            .loginAs(admin);
+        const response = await client.get(`/api/v1/admin/customers/${customer.id}/stats`).withGuard("api").loginAs(admin);
         response.assertStatus(200);
         response.assertAgainstApiSpec();
         const body = response.body() as {
@@ -210,11 +207,7 @@ test.group("/api/v1/admin/customers", (group) => {
             const body = response.body() as { data: Array<{ user: { role?: string } | null }> };
             for (const row of body.data) {
                 if (row.user !== null) {
-                    assert.notEqual(
-                        row.user.role,
-                        "admin",
-                        `admin user leaked into tab=${tab} — Customer ≠ User rule violated`,
-                    );
+                    assert.notEqual(row.user.role, "admin", `admin user leaked into tab=${tab} — Customer ≠ User rule violated`);
                 }
             }
         }
@@ -243,11 +236,7 @@ test.group("/api/v1/admin/customers", (group) => {
         const del = await client.delete(`/api/v1/admin/customers/${customer.id}`).withGuard("api").loginAs(admin);
         del.assertStatus(204);
 
-        const visible = await client
-            .get("/api/v1/admin/customers")
-            .qs({ perPage: 100 })
-            .withGuard("api")
-            .loginAs(admin);
+        const visible = await client.get("/api/v1/admin/customers").qs({ perPage: 100 }).withGuard("api").loginAs(admin);
         visible.assertStatus(200);
         const visibleEmails = (visible.body() as { data: Array<{ user: { email: string } | null }> }).data.map(
             (r) => r.user?.email,
@@ -272,10 +261,7 @@ test.group("/api/v1/admin/customers", (group) => {
         const { user, customer } = await createPlainCustomer("restorable@calibra.dev");
         await client.delete(`/api/v1/admin/customers/${customer.id}`).withGuard("api").loginAs(admin);
 
-        const restore = await client
-            .post(`/api/v1/admin/customers/${customer.id}/restore`)
-            .withGuard("api")
-            .loginAs(admin);
+        const restore = await client.post(`/api/v1/admin/customers/${customer.id}/restore`).withGuard("api").loginAs(admin);
         restore.assertStatus(200);
         restore.assertAgainstApiSpec();
 

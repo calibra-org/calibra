@@ -16,13 +16,7 @@ export default class extends BaseSchema {
             table.bigInteger("merged_customer_id").unsigned().notNullable();
             table.jsonb("strategy").notNullable().defaultTo(this.raw("'{}'::jsonb"));
             table.jsonb("snapshot").notNullable().defaultTo(this.raw("'{}'::jsonb"));
-            table
-                .bigInteger("actor_user_id")
-                .unsigned()
-                .nullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("SET NULL");
+            table.bigInteger("actor_user_id").unsigned().nullable().references("id").inTable("users").onDelete("SET NULL");
             table.timestamp("occurred_at", { useTz: true }).notNullable().defaultTo(this.now());
 
             table.index(["primary_customer_id"], "customer_merge_history_primary_idx");

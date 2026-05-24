@@ -31,8 +31,14 @@ export function CustomersDetailClient({ initialCustomerId, locale }: CustomersDe
     const reset = useSendPasswordReset(initialCustomerId);
 
     if (!customer) {
-        return <div className="text-muted-foreground text-sm p-6">Loading…</div>;
+        return <div className="p-6 text-muted-foreground text-sm">{detailT("loading")}</div>;
     }
+
+    const dragLabels = {
+        grabHandle: detailT("section.grabHandle"),
+        collapse: detailT("section.collapse"),
+        expand: detailT("section.expand"),
+    };
 
     const mainSections: SectionSpec[] = [
         {
@@ -42,12 +48,12 @@ export function CustomersDetailClient({ initialCustomerId, locale }: CustomersDe
         },
         {
             id: "lifetime-stats",
-            title: detailT("totalOrders"),
+            title: detailT("lifetimeStats"),
             body: <LifetimeStatsCard customer={customer} locale={locale} t={(key) => detailT(key as never)} />,
         },
         {
             id: "timeline",
-            title: detailT("timeline"),
+            title: detailT("timelineSection.title"),
             body: <TimelineCard customerId={customer.id} locale={locale} t={(key) => detailT(key as never)} />,
         },
         {
@@ -64,14 +70,10 @@ export function CustomersDetailClient({ initialCustomerId, locale }: CustomersDe
             body: (
                 <ActionsCard
                     customer={customer}
+                    locale={locale}
                     t={(key) => {
-                        if (key.startsWith("detail.") || key.startsWith("rowActions.") || key === "cancel") {
-                            return key.startsWith("detail.")
-                                ? detailT(key.slice("detail.".length) as never)
-                                : key === "cancel"
-                                  ? detailT("cancel")
-                                  : t(key);
-                        }
+                        if (key.startsWith("detail.")) return detailT(key.slice("detail.".length) as never);
+                        if (key === "cancel") return detailT("cancel");
                         return t(key);
                     }}
                 />
@@ -100,24 +102,8 @@ export function CustomersDetailClient({ initialCustomerId, locale }: CustomersDe
             />
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-                <DraggableSectionGrid
-                    storageKey={MAIN_GRID_KEY}
-                    sections={mainSections}
-                    labels={{
-                        grabHandle: "Drag to reorder",
-                        collapse: "Collapse",
-                        expand: "Expand",
-                    }}
-                />
-                <DraggableSectionGrid
-                    storageKey={SIDEBAR_GRID_KEY}
-                    sections={sidebarSections}
-                    labels={{
-                        grabHandle: "Drag to reorder",
-                        collapse: "Collapse",
-                        expand: "Expand",
-                    }}
-                />
+                <DraggableSectionGrid storageKey={MAIN_GRID_KEY} sections={mainSections} labels={dragLabels} />
+                <DraggableSectionGrid storageKey={SIDEBAR_GRID_KEY} sections={sidebarSections} labels={dragLabels} />
             </div>
         </section>
     );

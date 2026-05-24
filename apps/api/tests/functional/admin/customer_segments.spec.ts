@@ -52,10 +52,7 @@ test.group("/api/v1/admin/customer-segments (owner-scoped)", (group) => {
         update.assertAgainstApiSpec();
         assert.equal(update.body().data.name, "Best VIPs");
 
-        const del = await client
-            .delete(`/api/v1/admin/customer-segments/${id}`)
-            .withGuard("api")
-            .loginAs(admin);
+        const del = await client.delete(`/api/v1/admin/customer-segments/${id}`).withGuard("api").loginAs(admin);
         del.assertStatus(204);
     });
 

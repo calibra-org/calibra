@@ -45,9 +45,7 @@ export function toAdminCustomer(c: SdkAdminCustomer): AdminCustomer {
         tags: ((c as { tags?: string[] }).tags ?? []).slice(),
         ordersCount: Number((c as { lifetime_order_count?: number }).lifetime_order_count ?? 0),
         totalSpent: Number((c as { lifetime_spend_minor?: number }).lifetime_spend_minor ?? 0) as MoneyMinor,
-        averageOrderValue: Number(
-            (c as { average_order_value_minor?: number }).average_order_value_minor ?? 0,
-        ) as MoneyMinor,
+        averageOrderValue: Number((c as { average_order_value_minor?: number }).average_order_value_minor ?? 0) as MoneyMinor,
         lastOrderAt: (c as { last_order_at?: string | null }).last_order_at ?? null,
         firstOrderAt: (c as { first_order_at?: string | null }).first_order_at ?? null,
         daysSinceLastOrder: (c as { days_since_last_order?: number | null }).days_since_last_order ?? null,

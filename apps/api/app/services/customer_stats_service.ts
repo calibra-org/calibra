@@ -47,13 +47,7 @@ export async function aggregateForCustomerIds(customerIds: ReadonlyArray<number>
          FROM orders
          WHERE customer_id IN (${idPlaceholders})
          GROUP BY customer_id`,
-        [
-            ...ORDER_COUNTED_STATUSES,
-            ...ORDER_PAID_STATUSES,
-            ...ORDER_COUNTED_STATUSES,
-            ...ORDER_COUNTED_STATUSES,
-            ...customerIds,
-        ],
+        [...ORDER_COUNTED_STATUSES, ...ORDER_PAID_STATUSES, ...ORDER_COUNTED_STATUSES, ...ORDER_COUNTED_STATUSES, ...customerIds],
     );
 
     const now = DateTime.utc();

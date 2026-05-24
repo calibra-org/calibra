@@ -41,10 +41,7 @@ test.group("/api/v1/admin/customers/:id/marketing + status", (group) => {
     test("marketing GET returns defaults when no prefs row exists", async ({ client }) => {
         const admin = await createAdmin();
         const customer = await createCustomer();
-        const response = await client
-            .get(`/api/v1/admin/customers/${customer.id}/marketing`)
-            .withGuard("api")
-            .loginAs(admin);
+        const response = await client.get(`/api/v1/admin/customers/${customer.id}/marketing`).withGuard("api").loginAs(admin);
         response.assertStatus(200);
         response.assertAgainstApiSpec();
         const body = response.body() as {
@@ -77,9 +74,7 @@ test.group("/api/v1/admin/customers/:id/marketing + status", (group) => {
         assert.equal(history[0].channel, "email");
         assert.equal(history[0].optedIn, true);
 
-        const audit = await AdminAuditLog.query()
-            .where("entity_kind", "customer")
-            .where("action", "customer.marketing.patch");
+        const audit = await AdminAuditLog.query().where("entity_kind", "customer").where("action", "customer.marketing.patch");
         assert.equal(audit.length, 1);
     });
 
@@ -101,9 +96,7 @@ test.group("/api/v1/admin/customers/:id/marketing + status", (group) => {
         assert.equal(history[0].fromStatus, "active");
         assert.equal(history[0].toStatus, "suspended");
         assert.equal(history[0].reason, "abuse");
-        const audit = await AdminAuditLog.query()
-            .where("entity_kind", "customer")
-            .where("action", "customer.status.patch");
+        const audit = await AdminAuditLog.query().where("entity_kind", "customer").where("action", "customer.status.patch");
         assert.equal(audit.length, 1);
     });
 

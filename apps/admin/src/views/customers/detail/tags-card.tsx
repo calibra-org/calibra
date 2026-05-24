@@ -6,11 +6,7 @@ import { useState } from "react";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import {
-    useAttachCustomerTag,
-    useCustomerTagSuggestions,
-    useDetachCustomerTag,
-} from "#/lib/queries/customers";
+import { useAttachCustomerTag, useCustomerTagSuggestions, useDetachCustomerTag } from "#/lib/queries/customers";
 import type { AdminCustomer } from "#/lib/types";
 
 interface TagsCardProps {
@@ -44,7 +40,7 @@ export function TagsCard({ customer, t }: TagsCardProps) {
                                 {tagRow !== undefined && (
                                     <button
                                         type="button"
-                                        className="rounded-full hover:bg-muted-foreground/15 p-0.5"
+                                        className="rounded-full p-0.5 hover:bg-muted-foreground/15"
                                         onClick={() => detach.mutate(tagRow.id)}
                                         aria-label={`Remove ${tag}`}
                                     >

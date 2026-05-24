@@ -98,10 +98,7 @@ test.group("/api/v1/admin/customer-tags + per-customer attach/detach", (group) =
             .json({ tag: "wholesale" });
         const tagId = create.body().data.id as string;
 
-        const del = await client
-            .delete(`/api/v1/admin/customer-tags/${tagId}`)
-            .withGuard("api")
-            .loginAs(admin);
+        const del = await client.delete(`/api/v1/admin/customer-tags/${tagId}`).withGuard("api").loginAs(admin);
         del.assertStatus(204);
 
         const listing = await client

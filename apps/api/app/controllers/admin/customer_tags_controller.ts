@@ -5,10 +5,7 @@ import db from "@adonisjs/lucid/services/db";
 import Customer from "#models/customer";
 import CustomerTag from "#models/customer_tag";
 import CustomerTagTransformer from "#transformers/customer_tag_transformer";
-import {
-    adminCustomerTagAttachValidator,
-    adminCustomerTagCreateValidator,
-} from "#validators/admin/customer_validator";
+import { adminCustomerTagAttachValidator, adminCustomerTagCreateValidator } from "#validators/admin/customer_validator";
 
 const TAG_NAME_RE = /^[a-z0-9._-]{1,40}$/;
 
@@ -90,11 +87,7 @@ export default class AdminCustomerTagsController {
         const customer = await this.findCustomerOrFail(ctx.params.id);
         const tagId = Number(ctx.params.tagId);
         if (!Number.isFinite(tagId)) throw new Exception("Tag not found", { status: 404, code: "E_NOT_FOUND" });
-        await db
-            .from("customer_tag_pivot")
-            .where("customer_id", Number(customer.id))
-            .where("tag_id", tagId)
-            .delete();
+        await db.from("customer_tag_pivot").where("customer_id", Number(customer.id)).where("tag_id", tagId).delete();
         return ctx.response.noContent();
     }
 

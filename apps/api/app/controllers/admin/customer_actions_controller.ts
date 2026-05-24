@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import logger from "@adonisjs/core/services/logger";
@@ -14,10 +13,7 @@ import User from "#models/user";
 import { recordAudit } from "#services/admin_audit_log_service";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
-import {
-    adminCustomerConvertToAccountValidator,
-    adminCustomerMergeValidator,
-} from "#validators/admin/customer_validator";
+import { adminCustomerConvertToAccountValidator, adminCustomerMergeValidator } from "#validators/admin/customer_validator";
 
 const PASSWORD_RESET_TTL_MINUTES = 60;
 const IMPERSONATION_TTL_MINUTES = 15;
@@ -49,8 +45,7 @@ export default class AdminCustomerActionsController {
             throw new Exception("Email already in use", { status: 422, code: "E_VALIDATION_ERROR" });
         }
 
-        const placeholderPassword =
-            payload.password ?? `tmp-${crypto.randomBytes(16).toString("hex")}A1`;
+        const placeholderPassword = payload.password ?? `tmp-${crypto.randomBytes(16).toString("hex")}A1`;
 
         const { user, resetTokenPlain } = await db.transaction(async (trx) => {
             const created = await User.create(
@@ -229,9 +224,7 @@ export default class AdminCustomerActionsController {
         await db.transaction(async (trx) => {
             const primary = await Customer.query({ client: trx }).where("id", payload.primary_id).first();
             if (!primary) throw new Exception("Primary customer not found", { status: 404, code: "E_NOT_FOUND" });
-            const duplicates = await Customer.query({ client: trx })
-                .whereIn("id", payload.duplicate_ids)
-                .preload("user");
+            const duplicates = await Customer.query({ client: trx }).whereIn("id", payload.duplicate_ids).preload("user");
             if (duplicates.length !== payload.duplicate_ids.length) {
                 throw new Exception("One or more duplicate customers not found", {
                     status: 404,
@@ -242,7 +235,10 @@ export default class AdminCustomerActionsController {
             for (const dup of duplicates) {
                 const snapshot = new CustomerTransformer(dup).toObject();
                 /** Reassign orders + notes + downloads. */
-                await trx.from("orders").where("customer_id", Number(dup.id)).update({ customer_id: Number(primary.id) });
+                await trx
+                    .from("orders")
+                    .where("customer_id", Number(dup.id))
+                    .update({ customer_id: Number(primary.id) });
                 await trx
                     .from("customer_notes")
                     .where("customer_id", Number(dup.id))
@@ -262,21 +258,17 @@ export default class AdminCustomerActionsController {
                 }
 
                 if (strategy.tags === "union") {
-                    await trx
-                        .raw(
-                            `INSERT INTO customer_tag_pivot (customer_id, tag_id, created_at)
+                    await trx.raw(
+                        `INSERT INTO customer_tag_pivot (customer_id, tag_id, created_at)
                              SELECT ?, tag_id, NOW() FROM customer_tag_pivot WHERE customer_id = ?
                              ON CONFLICT (customer_id, tag_id) DO NOTHING`,
-                            [Number(primary.id), Number(dup.id)],
-                        );
+                        [Number(primary.id), Number(dup.id)],
+                    );
                 }
                 await trx.from("customer_tag_pivot").where("customer_id", Number(dup.id)).delete();
 
                 if (strategy.marketing_prefs === "most_recent") {
-                    const dupPrefs = await trx
-                        .from("customer_marketing_prefs")
-                        .where("customer_id", Number(dup.id))
-                        .first();
+                    const dupPrefs = await trx.from("customer_marketing_prefs").where("customer_id", Number(dup.id)).first();
                     const primaryPrefs = await trx
                         .from("customer_marketing_prefs")
                         .where("customer_id", Number(primary.id))
@@ -287,10 +279,7 @@ export default class AdminCustomerActionsController {
                         const { customer_id: _customerId, ...prefData } = dupPrefs;
                         void _customerId;
                         if (primaryPrefs) {
-                            await trx
-                                .from("customer_marketing_prefs")
-                                .where("customer_id", Number(primary.id))
-                                .update(prefData);
+                            await trx.from("customer_marketing_prefs").where("customer_id", Number(primary.id)).update(prefData);
                         } else {
                             await trx.table("customer_marketing_prefs").insert({
                                 ...prefData,
@@ -340,11 +329,7 @@ export default class AdminCustomerActionsController {
             },
         });
 
-        const refreshed = await Customer.query()
-            .where("id", payload.primary_id)
-            .preload("user")
-            .preload("tags")
-            .firstOrFail();
+        const refreshed = await Customer.query().where("id", payload.primary_id).preload("user").preload("tags").firstOrFail();
         return {
             data: {
                 ...new CustomerTransformer(refreshed).forAdmin(),

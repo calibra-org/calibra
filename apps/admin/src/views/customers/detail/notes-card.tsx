@@ -29,12 +29,7 @@ export function NotesCard({ customerId, locale, t }: NotesCardProps) {
     return (
         <div className="flex flex-col gap-3 text-sm">
             <div className="flex flex-col gap-2">
-                <Textarea
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    placeholder={t("notePlaceholder")}
-                    rows={3}
-                />
+                <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder={t("notePlaceholder")} rows={3} />
                 <div className="flex justify-end">
                     <Button onClick={submit} disabled={add.isPending || body.trim().length === 0}>
                         {t("addNote")}
@@ -43,10 +38,7 @@ export function NotesCard({ customerId, locale, t }: NotesCardProps) {
             </div>
             <ul className="flex flex-col gap-2">
                 {notes.map((note) => (
-                    <li
-                        key={note.id}
-                        className="flex flex-col gap-1 rounded-md border bg-muted/30 p-3 text-sm"
-                    >
+                    <li key={note.id} className="flex flex-col gap-1 rounded-md border bg-muted/30 p-3 text-sm">
                         <div className="flex items-center justify-between text-muted-foreground text-xs">
                             <span>{note.authorEmail ?? "—"}</span>
                             <span>{formatRelativeTime(note.createdAt, locale)}</span>
