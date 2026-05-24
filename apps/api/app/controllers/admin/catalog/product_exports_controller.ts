@@ -6,7 +6,6 @@ import { DateTime } from "luxon";
 
 import ProductExport from "#models/product_export";
 import ProductExportFilterPreset from "#models/product_export_filter_preset";
-import { subscribeToExport, TERMINAL_EXPORT_EVENT_TYPES } from "#services/product_export/export_event_bus";
 import { type ExportableProduct, resolveRow } from "#services/product_export/export_field_resolver";
 import { buildExportQuery, type ExportFilters } from "#services/product_export/export_query_builder";
 import { runExport } from "#services/product_export/export_runner";
@@ -138,73 +137,6 @@ export default class AdminProductExportsController {
         }
         const envelope = await resource(ProductExportTransformer.transform(row));
         return { ...envelope, download_token: token };
-    }
-
-    /**
-     * `GET /api/v1/admin/products/export/{id}/stream` — SSE feed mirroring the importer's
-     * handler. Sends an initial `reading_products`-or-current-state event so a late-joining
-     * client sees the latest counters before the next chunk lands.
-     */
-    async stream(ctx: HttpContext) {
-        const row = await ProductExport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "export not found", code: "E_NOT_FOUND" }] });
-        }
-
-        const { response } = ctx;
-        response.header("content-type", "text/event-stream");
-        response.header("cache-control", "no-cache, no-transform");
-        response.header("connection", "keep-alive");
-        response.header("x-accel-buffering", "no");
-        response.response.flushHeaders();
-
-        const send = (event: { type: string; payload?: unknown; at?: string }) => {
-            response.response.write(`event: ${event.type}\n`);
-            response.response.write(`data: ${JSON.stringify(event)}\n\n`);
-        };
-
-        send({
-            type: "reading_products",
-            at: new Date().toISOString(),
-            payload: {
-                status: row.status,
-                processed: row.processedRows,
-                total: row.totalRows,
-            },
-        });
-
-        if (TERMINAL_EXPORT_EVENT_TYPES.has(row.status as never)) {
-            response.response.end();
-            return;
-        }
-
-        const exportId = Number(row.id);
-        let closed = false;
-        const heartbeat = setInterval(() => {
-            if (closed) return;
-            response.response.write(": ping\n\n");
-        }, 15_000);
-        heartbeat.unref();
-
-        const unsubscribe = subscribeToExport(exportId, (event) => {
-            if (closed) return;
-            send({ type: event.type, at: event.at, payload: event.payload });
-            if (TERMINAL_EXPORT_EVENT_TYPES.has(event.type)) {
-                closed = true;
-                clearInterval(heartbeat);
-                response.response.end();
-            }
-        });
-
-        ctx.request.request.on("close", () => {
-            closed = true;
-            clearInterval(heartbeat);
-            unsubscribe();
-        });
-
-        return new Promise<void>((resolve) => {
-            ctx.request.request.on("close", resolve);
-        });
     }
 
     /** `POST /api/v1/admin/products/export/{id}/cancel` — flag for the runner to observe. */

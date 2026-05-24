@@ -15,6 +15,7 @@ import type {
     ProductImportUploadResponse,
 } from "#/lib/imports/types";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
+import { getTransmit } from "#/lib/transmit";
 
 function getCsrfToken(): string | undefined {
     if (typeof document === "undefined") return undefined;
@@ -191,42 +192,41 @@ export function listImportChanges(
     });
 }
 
-/**
- * Open an SSE stream for one import. Returns an unsubscriber. The browser EventSource doesn't
- * support custom headers, but the same-origin proxy reads the session cookie automatically, so
- * the bearer + locale flow through as on any other request.
- */
 export interface StreamHandlers {
     onEvent: (event: ProductImportStreamEvent) => void;
     onError?: (event: Event) => void;
     onOpen?: () => void;
 }
 
+/**
+ * Subscribe to live importer progress via `@adonisjs/transmit-client`. Returns an unsubscriber
+ * the caller MUST invoke on unmount — otherwise the subscription leaks across navigations.
+ *
+ * The shared Transmit instance multiplexes channels over a single SSE connection so opening N
+ * import streams in N tabs doesn't open N EventSources per tab. Auth + locale + CSRF flow
+ * through the same-origin `/__transmit/*` proxy; the bearer never reaches client JS.
+ */
 export function streamImport(id: number, handlers: StreamHandlers): () => void {
-    const source = new EventSource(`/api/admin/products/import/${id}/stream`);
-    source.addEventListener("open", () => handlers.onOpen?.());
-    source.addEventListener("error", (event) => handlers.onError?.(event));
-    const dispatch = (e: MessageEvent<string>) => {
-        try {
-            const parsed = JSON.parse(e.data) as ProductImportStreamEvent;
-            handlers.onEvent(parsed);
-            if (
-                parsed.type === "complete" ||
-                parsed.type === "failed" ||
-                parsed.type === "cancelled" ||
-                parsed.type === "rolled_back"
-            ) {
-                source.close();
-            }
-        } catch {
-            /** Malformed payload — surface as error so the UI can fall back to polling. */
-            handlers.onError?.(new Event("parse_error"));
+    const subscription = getTransmit().subscription(`imports/${id}`);
+    let alive = true;
+    const off = subscription.onMessage<ProductImportStreamEvent>((event) => {
+        if (!alive) return;
+        handlers.onEvent(event);
+        if (event.type === "complete" || event.type === "failed" || event.type === "cancelled" || event.type === "rolled_back") {
+            alive = false;
+            void subscription.delete();
         }
+    });
+    void subscription
+        .create()
+        .then(() => handlers.onOpen?.())
+        .catch(() => handlers.onError?.(new Event("subscribe_failed")));
+    return () => {
+        if (!alive) return;
+        alive = false;
+        off();
+        void subscription.delete();
     };
-    for (const type of ["progress", "chunk_start", "chunk_complete", "complete", "failed", "cancelled", "rolled_back"]) {
-        source.addEventListener(type, dispatch as EventListener);
-    }
-    return () => source.close();
 }
 
 export function importTemplateUrl(): string {

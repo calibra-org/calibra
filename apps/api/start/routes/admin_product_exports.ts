@@ -8,6 +8,9 @@ const AdminProductExportsController = () => import("#controllers/admin/catalog/p
  * CSV product exporter endpoints. All gated by the standard admin middleware chain. Path order
  * matters — literal segments (`/count`, `/preview`, `/start`, `/history`, `/presets`, …) MUST
  * come before the `/:id` routes so Adonis matches them first.
+ *
+ * Live progress is delivered via `@adonisjs/transmit` (channel `exports/:id`) — see
+ * `start/transmit.ts`. There is no `/stream` route here anymore.
  */
 router
     .group(() => {
@@ -22,7 +25,6 @@ router
         router.delete("/presets/:id", [AdminProductExportsController, "destroyPreset"]).as("admin.exports.presets.destroy");
 
         router.get("/:id", [AdminProductExportsController, "show"]).as("admin.exports.show");
-        router.get("/:id/stream", [AdminProductExportsController, "stream"]).as("admin.exports.stream");
         router.post("/:id/cancel", [AdminProductExportsController, "cancel"]).as("admin.exports.cancel");
         router.get("/:id/download", [AdminProductExportsController, "download"]).as("admin.exports.download");
         router.delete("/:id", [AdminProductExportsController, "destroy"]).as("admin.exports.destroy");

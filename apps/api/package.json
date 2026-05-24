@@ -45,6 +45,7 @@
         "@adonisjs/drive": "^4.0.0",
         "@adonisjs/i18n": "^3.0.0",
         "@adonisjs/lucid": "^22.4.2",
+        "@adonisjs/transmit": "^3.0.1",
         "@faker-js/faker": "^10.4.0",
         "@vinejs/vine": "^4.4.0",
         "jalaali-js": "^1.2.8",

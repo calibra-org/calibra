@@ -1,13 +1,10 @@
-import { EventEmitter } from "node:events";
+import transmit from "@adonisjs/transmit/services/main";
 
 /**
- * Parallel in-process progress bus for the product exporter — same pattern as the importer's
- * bus, with its own event-type union so TS narrows correctly on each side. Single-process
- * AdonisJS deployment, so no broker; if we ever go multi-process the bus becomes a per-instance
- * cache and `pg_notify` carries cross-process events.
- *
- * The DB row (`product_exports`) is the source of truth for counters + status; the bus is just
- * the accelerator that lets the SSE stream feel instant.
+ * Exporter progress event contract. Mirrors the importer's `event_bus.ts` — broadcast goes out
+ * on the `exports/${exportId}` channel via `@adonisjs/transmit`, authorized in
+ * `start/transmit.ts`. The DB row (`product_exports`) is the source of truth for counters; SSE
+ * is the accelerator.
  */
 
 export type ExportEventType =
@@ -30,34 +27,8 @@ export interface ExportEvent {
 
 export const TERMINAL_EXPORT_EVENT_TYPES: ReadonlySet<ExportEventType> = new Set(["complete", "failed", "cancelled"]);
 
-const buses = new Map<number, EventEmitter>();
-
-function getBus(exportId: number): EventEmitter {
-    let bus = buses.get(exportId);
-    if (bus === undefined) {
-        bus = new EventEmitter();
-        bus.setMaxListeners(20);
-        buses.set(exportId, bus);
-    }
-    return bus;
-}
-
-/** Publish an event to every subscriber of this export id. Drops terminal buses after 30s. */
+/** Publish an event to every subscriber of this export's Transmit channel. */
 export function publishExportEvent(event: ExportEvent): void {
-    const bus = getBus(event.exportId);
-    bus.emit("event", event);
-    if (TERMINAL_EXPORT_EVENT_TYPES.has(event.type)) {
-        setTimeout(() => {
-            buses.delete(event.exportId);
-        }, 30_000).unref();
-    }
-}
-
-/** Subscribe to events for one export. Returns the unsubscriber the SSE handler must call on close. */
-export function subscribeToExport(exportId: number, listener: (event: ExportEvent) => void): () => void {
-    const bus = getBus(exportId);
-    bus.on("event", listener);
-    return () => {
-        bus.off("event", listener);
-    };
+    /** See `product_import/event_bus.ts` for the `as never` rationale. */
+    transmit.broadcast(`exports/${event.exportId}`, event as never);
 }

@@ -9,6 +9,9 @@ const AdminProductImportsController = () => import("#controllers/admin/catalog/p
  * is gated by the standard admin middleware chain. Path order matters: the literal segments
  * (`/template`, `/history`, `/upload`, `/preview`, `/start`) MUST come before the `/:id` routes
  * so Adonis matches them first.
+ *
+ * Live progress is delivered via `@adonisjs/transmit` (channel `imports/:id`) — see
+ * `start/transmit.ts`. There is no `/stream` route here anymore.
  */
 router
     .group(() => {
@@ -19,7 +22,6 @@ router
         router.post("/start", [AdminProductImportsController, "start"]).as("admin.imports.start");
 
         router.get("/:id", [AdminProductImportsController, "show"]).as("admin.imports.show");
-        router.get("/:id/stream", [AdminProductImportsController, "stream"]).as("admin.imports.stream");
         router.post("/:id/cancel", [AdminProductImportsController, "cancel"]).as("admin.imports.cancel");
         router.get("/:id/errors", [AdminProductImportsController, "errors"]).as("admin.imports.errors");
         router.post("/:id/retry-row", [AdminProductImportsController, "retryRow"]).as("admin.imports.retryRow");

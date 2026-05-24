@@ -15,6 +15,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
+        "@adonisjs/transmit-client": "catalog:",
         "@base-ui/react": "catalog:",
         "@calibra/sdk": "workspace:*",
         "@calibra/shared": "workspace:*",

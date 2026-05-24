@@ -32,9 +32,10 @@ export default defineConfig({
         () => import("@adonisjs/lucid/database_provider"),
         () => import("@adonisjs/auth/auth_provider"),
         () => import("@adonisjs/drive/drive_provider"),
+        () => import("@adonisjs/transmit/transmit_provider"),
     ],
 
-    preloads: [() => import("#start/routes"), () => import("#start/kernel")],
+    preloads: [() => import("#start/routes"), () => import("#start/kernel"), () => import("#start/transmit")],
 
     tests: {
         suites: [

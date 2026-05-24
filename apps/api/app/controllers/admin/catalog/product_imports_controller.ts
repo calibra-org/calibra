@@ -7,7 +7,7 @@ import ProductImportChange from "#models/product_import_change";
 import ProductImportError from "#models/product_import_error";
 import ProductImportMappingPreset from "#models/product_import_mapping_preset";
 import { parseFile } from "#services/product_import/csv_parser";
-import { publishImportEvent, subscribeToImport, TERMINAL_EVENT_TYPES } from "#services/product_import/event_bus";
+import { publishImportEvent } from "#services/product_import/event_bus";
 import { hashHeaderSet, suggestMapping } from "#services/product_import/import_field_catalog";
 import { runImport } from "#services/product_import/import_runner";
 import { runPreview } from "#services/product_import/preview_runner";
@@ -224,77 +224,6 @@ export default class AdminProductImportsController {
             return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
         }
         return resource(ProductImportTransformer.transform(row));
-    }
-
-    /**
-     * `GET /api/v1/admin/products/import/{id}/stream` — SSE feed of progress events for one job.
-     * Sends an initial `progress` event so a late-joining client sees the current counters before
-     * the next chunk fires, then bridges every event-bus emit to a `data: ...` line.
-     */
-    async stream(ctx: HttpContext) {
-        const row = await ProductImport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
-
-        const { response } = ctx;
-        response.header("content-type", "text/event-stream");
-        response.header("cache-control", "no-cache, no-transform");
-        response.header("connection", "keep-alive");
-        response.header("x-accel-buffering", "no");
-        response.response.flushHeaders();
-
-        const send = (event: { type: string; payload?: unknown; at?: string }) => {
-            response.response.write(`event: ${event.type}\n`);
-            response.response.write(`data: ${JSON.stringify(event)}\n\n`);
-        };
-
-        send({
-            type: "progress",
-            at: new Date().toISOString(),
-            payload: {
-                status: row.status,
-                processed: row.processedRows,
-                total: row.totalRows,
-                created: row.createdCount,
-                updated: row.updatedCount,
-                skipped: row.skippedCount,
-                failed: row.failedCount,
-            },
-        });
-
-        if (TERMINAL_EVENT_TYPES.has(row.status as never)) {
-            response.response.end();
-            return;
-        }
-
-        const importId = Number(row.id);
-        let closed = false;
-        const heartbeat = setInterval(() => {
-            if (closed) return;
-            response.response.write(": ping\n\n");
-        }, 15_000);
-        heartbeat.unref();
-
-        const unsubscribe = subscribeToImport(importId, (event) => {
-            if (closed) return;
-            send({ type: event.type, at: event.at, payload: event.payload });
-            if (TERMINAL_EVENT_TYPES.has(event.type)) {
-                closed = true;
-                clearInterval(heartbeat);
-                response.response.end();
-            }
-        });
-
-        ctx.request.request.on("close", () => {
-            closed = true;
-            clearInterval(heartbeat);
-            unsubscribe();
-        });
-
-        return new Promise<void>((resolve) => {
-            ctx.request.request.on("close", resolve);
-        });
     }
 
     /** `POST /api/v1/admin/products/import/{id}/cancel` — set the cancellation flag. */

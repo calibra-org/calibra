@@ -23,6 +23,7 @@ import type {
     ProductExportStreamEvent,
 } from "#/lib/exports/types";
 import { apiMutate } from "#/lib/queries/api-client";
+import { getTransmit } from "#/lib/transmit";
 
 function buildExportQueryString(filters: Record<string, unknown>): string {
     const params = new URLSearchParams();
@@ -148,44 +149,38 @@ export function getDistinctMetaKeys(
     return getProxy("products/distinct-meta-keys", locale, buildExportQueryString(filters as unknown as Record<string, unknown>));
 }
 
-/**
- * Open the SSE stream for one export. Returns an unsubscriber. The browser's `EventSource` can't
- * carry custom headers, but the same-origin proxy reads the session cookie automatically.
- */
 export interface ExportStreamHandlers {
     onEvent: (event: ProductExportStreamEvent) => void;
     onError?: (event: Event) => void;
     onOpen?: () => void;
 }
 
+/**
+ * Subscribe to live exporter progress via `@adonisjs/transmit-client`. Returns an unsubscriber
+ * the caller MUST invoke on unmount. The shared Transmit instance multiplexes channels over a
+ * single SSE connection — see `apps/admin/src/lib/transmit.ts`.
+ */
 export function streamExport(id: number, handlers: ExportStreamHandlers): () => void {
-    const source = new EventSource(`/api/admin/products/export/${id}/stream`);
-    source.addEventListener("open", () => handlers.onOpen?.());
-    source.addEventListener("error", (event) => handlers.onError?.(event));
-    const dispatch = (e: MessageEvent<string>) => {
-        try {
-            const parsed = JSON.parse(e.data) as ProductExportStreamEvent;
-            handlers.onEvent(parsed);
-            if (parsed.type === "complete" || parsed.type === "failed" || parsed.type === "cancelled") {
-                source.close();
-            }
-        } catch {
-            handlers.onError?.(new Event("parse_error"));
+    const subscription = getTransmit().subscription(`exports/${id}`);
+    let alive = true;
+    const off = subscription.onMessage<ProductExportStreamEvent>((event) => {
+        if (!alive) return;
+        handlers.onEvent(event);
+        if (event.type === "complete" || event.type === "failed" || event.type === "cancelled") {
+            alive = false;
+            void subscription.delete();
         }
+    });
+    void subscription
+        .create()
+        .then(() => handlers.onOpen?.())
+        .catch(() => handlers.onError?.(new Event("subscribe_failed")));
+    return () => {
+        if (!alive) return;
+        alive = false;
+        off();
+        void subscription.delete();
     };
-    for (const type of [
-        "reading_products",
-        "chunk_start",
-        "chunk_complete",
-        "slow_chunk",
-        "compressing",
-        "complete",
-        "failed",
-        "cancelled",
-    ]) {
-        source.addEventListener(type, dispatch as EventListener);
-    }
-    return () => source.close();
 }
 
 /** Build the download URL the wizard puts on the "Download" / "Copy link" buttons. */

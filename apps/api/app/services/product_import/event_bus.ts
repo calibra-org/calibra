@@ -1,14 +1,13 @@
-import { EventEmitter } from "node:events";
+import transmit from "@adonisjs/transmit/services/main";
 
 /**
- * In-process progress bus for active import jobs. Per the spec point 17 we prefer SSE over
- * polling — the SSE controller subscribes to this bus and pipes events to the open response, so
- * the storefront feels instant. Polling fallback still hits `GET .../status`, which reads the DB
- * row instead. The DB row is the source of truth; the bus is just an accelerator.
+ * Importer progress event contract. Broadcast goes out on the `imports/${importId}` channel via
+ * `@adonisjs/transmit` — the browser opens the SSE connection through Transmit's first-party
+ * `__transmit/events` route (authorized in `start/transmit.ts`) and receives every event we
+ * publish here.
  *
- * No external broker (Redis / RabbitMQ): a single-process AdonisJS deployment is the current
- * shape. If we ever go multi-process the bus becomes a per-instance cache that publishes through
- * `pg_notify` — see the worker service when that happens.
+ * The DB row (`product_imports`) remains the source of truth for counters + status; the SSE
+ * feed is the accelerator that lets the wizard's progress UI feel instant.
  */
 
 export type ImportEventType =
@@ -33,47 +32,23 @@ export interface ImportEvent {
 }
 
 /**
- * `terminal` events end the SSE stream — controller closes the response right after emitting.
- * Keep this set in sync with the runner's exit paths.
+ * Terminal event types end the run — the client stops listening once it sees one. Kept exported
+ * for the (admin-side) UI to drive the "show success banner / rollback offer" branch off it.
  */
 export const TERMINAL_EVENT_TYPES: ReadonlySet<ImportEventType> = new Set(["complete", "failed", "cancelled", "rolled_back"]);
 
-const buses = new Map<number, EventEmitter>();
-
-function getBus(importId: number): EventEmitter {
-    let bus = buses.get(importId);
-    if (bus === undefined) {
-        bus = new EventEmitter();
-        bus.setMaxListeners(20);
-        buses.set(importId, bus);
-    }
-    return bus;
-}
-
 /**
- * Publish an event to every subscriber of this import id. Subscribers may not exist yet (the
- * operator is still on Step 2) — that's fine; the runner publishes regardless and the DB row
- * holds the counters that a late-joining SSE / polling client reads on first frame.
+ * Publish an event to every subscriber of this import's Transmit channel. Subscribers may not
+ * exist yet (the operator is still on Step 2) — that's fine; transmit silently drops broadcasts
+ * with no listeners, and the DB row holds the counters that a late-joining client reads via
+ * `GET /api/v1/admin/products/import/{id}` on its first paint.
  */
 export function publishImportEvent(event: ImportEvent): void {
-    const bus = getBus(event.importId);
-    bus.emit("event", event);
-    if (TERMINAL_EVENT_TYPES.has(event.type)) {
-        /** Drop the bus once the job is done so memory doesn't grow with completed-job history. */
-        setTimeout(() => {
-            buses.delete(event.importId);
-        }, 30_000).unref();
-    }
-}
-
-/**
- * Subscribe to events for one import. Returns an unsubscriber the caller must invoke on
- * disconnect / connection close — otherwise listeners pile up.
- */
-export function subscribeToImport(importId: number, listener: (event: ImportEvent) => void): () => void {
-    const bus = getBus(importId);
-    bus.on("event", listener);
-    return () => {
-        bus.off("event", listener);
-    };
+    /**
+     * `Broadcastable` from `@boringnode/transmit/types` is a strict recursive value type; our
+     * `ImportEvent` is structurally compatible (JSON-safe) but TS can't prove that without
+     * importing a non-direct dep. `as never` keeps the strict tsconfig happy without pulling
+     * `@boringnode/transmit` into `apps/api/package.json`.
+     */
+    transmit.broadcast(`imports/${event.importId}`, event as never);
 }

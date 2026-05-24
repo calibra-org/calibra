@@ -20,6 +20,7 @@ catalogs:
         "@dnd-kit/modifiers": ^9.0.0
         "@dnd-kit/sortable": ^10.0.0
         "@dnd-kit/utilities": ^3.2.2
+        "@adonisjs/transmit-client": ^1.1.0
         "@radix-ui/react-slot": ^1.1.2
         recharts: ^2.15.0
         "@hookform/resolvers": ^5.2.2
