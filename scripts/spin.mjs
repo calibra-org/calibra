@@ -98,7 +98,7 @@ async function start(args) {
     await ensureWorktree(meta);
     await ensureEnvFiles(meta);
     await ensureContainers(meta);
-    await ensureMailpit(meta);
+    await ensureDevUis(meta);
     await ensureInstall(meta);
     await ensureSdkBuild(meta);
     await ensureMigrationsAndSeed(meta);
@@ -197,7 +197,20 @@ async function doctor(args) {
     log(
         `  mailpit      http://localhost:${MAILPIT_WEB_PORT} ${(await isPortListening(MAILPIT_SMTP_PORT)) ? green("up") : red("down")} (shared)`,
     );
+    log(`  redis        localhost:${REDIS_PORT} ${(await isPortListening(REDIS_PORT)) ? green("up") : red("down")} (shared)`);
+    log(
+        `  redisinsight http://localhost:${REDIS_INSIGHT_PORT} ${(await isPortListening(REDIS_INSIGHT_PORT)) ? green("up") : red("down")} (shared)`,
+    );
+    log(
+        `  adminer      http://localhost:${ADMINER_PORT} ${(await isPortListening(ADMINER_PORT)) ? green("up") : red("down")} (shared, queue_jobs)`,
+    );
     log(`  compose      project=${meta.composeProject}`);
+    /**
+     * Show queue-worker status alongside infra — it's a tracked process (see `startServers`)
+     * and the importer/exporter wizards depend on it picking up dispatched jobs.
+     */
+    const queuePid = await readPidIfAlive(join(meta.worktreePath, ".spin/queue.pid"));
+    log(`  queue worker pid=${queuePid ?? "—"} ${queuePid !== null ? green("up") : red("down")}`);
     log(`  PR           ${meta.prNumber ? `#${meta.prNumber}` : "—"}`);
 }
 
@@ -321,8 +334,18 @@ async function ensureEnvFiles(meta) {
             `SMTP_PORT=${MAILPIT_SMTP_PORT}`,
             `MAILPIT_WEB_URL=http://localhost:${MAILPIT_WEB_PORT}`,
             /**
-             * Background-job queue. `database` reuses the per-spin Postgres; the spin starts a
-             * tracked `node ace queue:work` process alongside the api so jobs actually fire.
+             * Redis points at the shared dev-ui container (`scripts/dev-ui-compose.yml`).
+             * Per-spin keyspace isolation lives in `config/redis.ts` via `keyPrefix: ${APP_NAME}:`,
+             * so two spins on the same Redis don't collide on cache/lock/queue/transmit pub-sub.
+             */
+            `REDIS_HOST=localhost`,
+            `REDIS_PORT=${REDIS_PORT}`,
+            /**
+             * Background-job queue.
+             *  - `database`: jobs persisted in Postgres; the spin's `queue:work` process polls.
+             *    Transmit's redis transport (config/transmit.ts) bridges broadcasts back to the
+             *    api process so the wizard's SSE subscription sees live progress.
+             *  - `sync` (set in .env.test only): runs jobs inline; no worker, no transport needed.
              */
             `QUEUE_DRIVER=database`,
             "",
@@ -331,30 +354,54 @@ async function ensureEnvFiles(meta) {
 }
 
 /**
- * Fixed ports for the shared Mailpit container. Picked above the per-spin 13xxx range so they
- * never collide with allocated slots, and small enough to be memorable.
+ * Fixed ports for the shared dev-ui containers (Mailpit, Redis, RedisInsight, Adminer).
+ * Picked above the per-spin 13xxx range so they never collide with allocated slots, and small
+ * enough to be memorable.
  */
 const MAILPIT_SMTP_PORT = 11025;
 const MAILPIT_WEB_PORT = 18025;
-const MAILPIT_COMPOSE_PROJECT = "calibra-mailpit";
+const REDIS_PORT = 16379;
+const REDIS_INSIGHT_PORT = 15540;
+const ADMINER_PORT = 18080;
+const DEV_UI_COMPOSE_PROJECT = "calibra-dev-ui";
 
 /**
- * Bring up the shared Mailpit container if it isn't already listening. One per dev machine, used
- * by every spin's API. Idempotent — `docker compose up -d` is a no-op when the container is
- * already healthy. Stop is intentionally NOT exposed via `spin stop` because killing it would
- * also nuke other concurrent spins' inboxes; operators tear it down by hand if they need to.
+ * Bring up the shared dev-ui containers (Mailpit + Redis + RedisInsight + Adminer) if any of
+ * them isn't already listening. One container set per dev machine, used by every spin.
+ * Idempotent — `docker compose up -d` is a no-op when services are healthy. Stop is
+ * intentionally NOT exposed via `spin stop` because killing it would also nuke other concurrent
+ * spins' Mailpit inboxes / Redis state; operators tear it down by hand if they need to.
  *
  * @param {SpinMeta} meta
  */
-async function ensureMailpit(meta) {
-    if (await isPortListening(MAILPIT_SMTP_PORT)) {
-        step("mailpit", `running on :${MAILPIT_WEB_PORT}`);
+async function ensureDevUis(meta) {
+    /**
+     * Only `redis` is load-bearing for the wizard (Transmit's redis transport bridges the
+     * worker ↔ api SSE broadcasts). The rest are quality-of-life UIs — bring them up
+     * best-effort, log warnings if any service fails to pull, but never fail the whole
+     * `spin start` over an Adminer image that needs a corporate proxy to download.
+     */
+    const composeFile = join(meta.worktreePath, "scripts/dev-ui-compose.yml");
+    const env = { ...process.env, COMPOSE_PROJECT_NAME: DEV_UI_COMPOSE_PROJECT };
+
+    if (await isPortListening(REDIS_PORT)) {
+        step(
+            "dev-ui",
+            `running (mailpit :${MAILPIT_WEB_PORT}, redis :${REDIS_PORT}, insight :${REDIS_INSIGHT_PORT}, adminer :${ADMINER_PORT})`,
+        );
         return;
     }
-    step("mailpit", "docker compose up");
-    const composeFile = join(meta.worktreePath, "scripts/mailpit-compose.yml");
-    const env = { ...process.env, COMPOSE_PROJECT_NAME: MAILPIT_COMPOSE_PROJECT };
-    await run("docker", ["compose", "-f", composeFile, "up", "-d"], { env });
+    step("dev-ui", "docker compose up");
+    const result = spawnSync("docker", ["compose", "-f", composeFile, "up", "-d"], {
+        env,
+        stdio: "inherit",
+    });
+    if (result.status !== 0) {
+        log(`  ${yellow("⚠")} dev-ui partial start — see docker output above. Critical (redis) status below.`);
+    }
+    if (!(await isPortListening(REDIS_PORT))) {
+        throw new Error("redis (:16379) did not come up — the wizard's live progress needs it");
+    }
 }
 
 /**
@@ -540,6 +587,18 @@ async function waitForServersReady(meta, opts) {
             throw new Error(`${target.name} did not start within 60s — check .spin/logs/${target.name}.log`);
         }
     }
+    /**
+     * Queue worker has no port — give it a beat to boot, then verify the pid file resolves to
+     * a live process AND the log shows the "Starting worker for queues:" line. Failure here
+     * is non-fatal (operator can still hit the api) but loud so it's not silently broken.
+     */
+    await sleep(1_500);
+    const queuePid = await readPidIfAlive(join(meta.worktreePath, ".spin/queue.pid"));
+    if (queuePid === null) {
+        log(`  ${red("✗")} queue worker not running — check .spin/logs/queue.log`);
+    } else {
+        step("queue", `ready (pid ${queuePid})`);
+    }
 }
 
 /**
@@ -622,6 +681,10 @@ function printHandoffCard(meta, opts) {
     if (opts.withWeb) log(`  web     ${cyan(`http://localhost:${meta.ports.web}`)}`);
     log(`  pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
     log(`  mailpit ${cyan(`http://localhost:${MAILPIT_WEB_PORT}`)} (smtp :${MAILPIT_SMTP_PORT})`);
+    log(`  redis   ${cyan(`http://localhost:${REDIS_INSIGHT_PORT}`)} (insight UI; redis on :${REDIS_PORT})`);
+    log(
+        `  queue   ${cyan(`http://localhost:${ADMINER_PORT}/?pgsql=&server=host.docker.internal&port=${meta.ports.db}&username=calibra&db=calibra&select=queue_jobs`)}`,
+    );
     log(`  pr      ${meta.prUrl ?? `(skipped — run pnpm spin pr ${meta.slug})`}`);
     log(`  login   ${cyan("admin@bulk.calibra.dev")} / ${cyan("Passw0rd1!")}`);
     log(`  stop    ${cyan(`pnpm spin stop ${meta.slug}`)}`);
@@ -648,6 +711,18 @@ async function killTrackedProcesses(meta) {
             }
         }
         await rm(pidPath, { force: true });
+    }
+    /**
+     * Wait until tracked ports are actually free. HMR child workers from `node ace serve --hmr`
+     * sometimes outlive their parent for a beat — without this wait the next `spin start` hits
+     * `EADDRINUSE: 13737` and the api never recovers. 5s is enough in practice.
+     */
+    const portsToFree = [meta.ports.api, meta.ports.admin, meta.ports.web];
+    const deadline = Date.now() + 5_000;
+    while (Date.now() < deadline) {
+        const busy = await Promise.all(portsToFree.map(isPortListening));
+        if (busy.every((b) => !b)) return;
+        await sleep(200);
     }
 }
 
@@ -890,6 +965,19 @@ function isProcessAlive(pid) {
     } catch {
         return false;
     }
+}
+
+/**
+ * Read a pidfile and return the PID iff the process is alive. Used by `doctor` to surface
+ * background processes (queue worker) that have no port to probe.
+ *
+ * @param {string} pidPath
+ * @returns {Promise<number | null>}
+ */
+async function readPidIfAlive(pidPath) {
+    if (!existsSync(pidPath)) return null;
+    const pid = Number(await readFile(pidPath, "utf8"));
+    return Number.isFinite(pid) && isProcessAlive(pid) ? pid : null;
 }
 
 function findMainRepoRoot() {

@@ -1,0 +1,82 @@
+name: calibra-dev-ui
+
+# Shared dev-only services + UIs across every spin on this machine. `pnpm spin start`
+# brings these up on demand; `pnpm spin stop` does NOT touch them (other spins may need
+# them). One container per machine — per-spin keyspace / DB isolation is preserved at the
+# application layer:
+#   - Redis      keys are namespaced by `keyPrefix: ${APP_NAME}:` (see config/redis.ts)
+#   - Postgres   each spin has its own DB on a deterministic port (see scripts/spin.mjs)
+#   - Mailpit    inbox is shared (operator workflow: trigger from spin A, view in same UI)
+#   - Adminer    pick the spin's DB on the login screen via host port
+#
+# Ports:
+#   - localhost:11025    Mailpit SMTP
+#   - localhost:18025    Mailpit web UI
+#   - localhost:16379    Redis (no auth, no TLS — dev-only)
+#   - localhost:15540    RedisInsight web UI
+#   - localhost:18080    Adminer (queue_jobs viewer + general-purpose DB browser)
+#
+# Login DSN for Adminer:
+#   system   PostgreSQL
+#   server   host.docker.internal
+#   port     <spin's DB port — see `pnpm spin doctor <slug>`>
+#   user     calibra
+#   pass     calibra
+#   db       calibra
+
+services:
+    mailpit:
+        image: axllent/mailpit:latest
+        restart: unless-stopped
+        ports:
+            - "11025:1025"
+            - "18025:8025"
+        environment:
+            MP_MAX_MESSAGES: 5000
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
+        healthcheck:
+            test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8025/livez"]
+            interval: 10s
+            timeout: 3s
+            retries: 5
+
+    redis:
+        image: redis:7-alpine
+        restart: unless-stopped
+        command: ["redis-server", "--appendonly", "yes"]
+        ports:
+            - "16379:6379"
+        volumes:
+            - redis_data:/data
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+
+    redisinsight:
+        image: redis/redisinsight:latest
+        restart: unless-stopped
+        ports:
+            - "15540:5540"
+        volumes:
+            - redisinsight_data:/data
+        depends_on:
+            redis:
+                condition: service_healthy
+
+    adminer:
+        image: adminer:5
+        restart: unless-stopped
+        ports:
+            - "18080:8080"
+        environment:
+            ADMINER_DEFAULT_SERVER: host.docker.internal
+            ADMINER_DESIGN: pepa-linha-dark
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+
+volumes:
+    redis_data:
+    redisinsight_data:

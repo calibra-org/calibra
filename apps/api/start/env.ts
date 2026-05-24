@@ -43,4 +43,14 @@ export default await Env.create(new URL("../", import.meta.url), {
      * the existing Postgres connection — needs `node ace queue:work` running alongside the API).
      */
     QUEUE_DRIVER: Env.schema.enum(["sync", "database"] as const),
+
+    /**
+     * Redis — used by Transmit's redis transport (cross-process SSE) and any future cache /
+     * limiter / lock store. Dev spins point at the shared Redis container from
+     * `scripts/redis-compose.yml` on `localhost:16379`. Per-spin keyspace isolation lives in
+     * `config/redis.ts` via `keyPrefix: ${APP_NAME}:`.
+     */
+    REDIS_HOST: Env.schema.string({ format: "host" }),
+    REDIS_PORT: Env.schema.number(),
+    REDIS_PASSWORD: Env.schema.string.optional(),
 });
