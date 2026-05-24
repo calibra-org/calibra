@@ -136,6 +136,7 @@ jobs:
                   REDIS_PORT: "6379"
                   TRANSMIT_TRANSPORT: none
                   QUEUE_DRIVER: sync
+                  LIMITER_STORE: memory
               run: node ace check:api-docs
 
     sdk-codegen-sync:
