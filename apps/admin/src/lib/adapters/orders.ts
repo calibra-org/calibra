@@ -186,12 +186,16 @@ export function toAdminOrderDetail(o: SdkAdminOrderDetail): AdminOrder {
     }));
     const payment = o.payment ?? { gateway_id: null, method_code: null, method_title: null, transaction_id: null };
     const couponSource = (o as { coupon_lines?: { id: number; code: string; discount: number }[] }).coupon_lines ?? [];
-    const shippingSource = (o as { shipping_info?: {
-        tracking_number: string | null;
-        tracking_url: string | null;
-        carrier: string | null;
-        shipped_at: string | null;
-    } | null }).shipping_info;
+    const shippingSource = (
+        o as {
+            shipping_info?: {
+                tracking_number: string | null;
+                tracking_url: string | null;
+                carrier: string | null;
+                shipped_at: string | null;
+            } | null;
+        }
+    ).shipping_info;
     const couponLines: AdminOrderCouponLine[] = couponSource.map((row) => ({
         id: row.id,
         code: row.code,

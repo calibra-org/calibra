@@ -96,15 +96,11 @@ export function RowActions({ order, onOpenPreview, onOpenDetail }: RowActionsPro
                     {t("actions.resendConfirmation")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                    onClick={() => window.open(`/orders/${order.id}/invoice?print=1`, "_blank")}
-                >
+                <DropdownMenuItem onClick={() => window.open(`/orders/${order.id}/invoice?print=1`, "_blank")}>
                     <Printer className="size-3.5" aria-hidden="true" />
                     {t("actions.printInvoice")}
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                    onClick={() => window.open(`/orders/${order.id}/packing-slip?print=1`, "_blank")}
-                >
+                <DropdownMenuItem onClick={() => window.open(`/orders/${order.id}/packing-slip?print=1`, "_blank")}>
                     <FileText className="size-3.5" aria-hidden="true" />
                     {t("actions.printPackingSlip")}
                 </DropdownMenuItem>

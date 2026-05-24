@@ -16,7 +16,9 @@ router
         router.delete("/:id", [AdminOrdersController, "destroy"]).as("admin.orders.destroy");
         router.post("/:id/status", [AdminOrdersController, "transitionStatus"]).as("admin.orders.status");
         router.post("/:id/mark-shipped", [AdminOrdersController, "markShipped"]).as("admin.orders.markShipped");
-        router.post("/:id/resend-confirmation", [AdminOrdersController, "resendConfirmation"]).as("admin.orders.resendConfirmation");
+        router
+            .post("/:id/resend-confirmation", [AdminOrdersController, "resendConfirmation"])
+            .as("admin.orders.resendConfirmation");
     })
     .prefix("/api/v1/admin/orders")
     .use(middleware.auth({ guards: ["api"] }))

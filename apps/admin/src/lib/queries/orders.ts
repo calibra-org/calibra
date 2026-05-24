@@ -277,7 +277,15 @@ export function useCreateRefund() {
 export function useOrderNotes(orderId: number) {
     const locale = useLocale() as Locale;
     return useQuery<
-        { data: { id: number; body: string; visibility: "internal" | "customer"; author_user_id: number | null; created_at: string }[] },
+        {
+            data: {
+                id: number;
+                body: string;
+                visibility: "internal" | "customer";
+                author_user_id: number | null;
+                created_at: string;
+            }[];
+        },
         Error
     >({
         queryKey: ["admin", "orders", "notes", orderId, { locale }],
@@ -353,7 +361,9 @@ export function useBulkUpdateOrders() {
                         slice.map((change) =>
                             apiMutate("POST", `orders/${change.id}/status`, {
                                 locale,
-                                body: change.reason ? { to_status: change.to_status, reason: change.reason } : { to_status: change.to_status },
+                                body: change.reason
+                                    ? { to_status: change.to_status, reason: change.reason }
+                                    : { to_status: change.to_status },
                             }),
                         ),
                     );

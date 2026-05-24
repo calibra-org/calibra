@@ -25,6 +25,7 @@ import { useMarkShipped, useOrderCounts, useOrdersList } from "#/lib/queries/ord
 import type { AdminOrder } from "#/lib/types";
 
 import { RiskFlagsRow } from "../shared/risk-flag-chip";
+
 import { BulkActions } from "./bulk-actions";
 import { buildOrderColumns } from "./columns";
 import { useOrderFilters } from "./filters";
@@ -166,7 +167,18 @@ export function OrdersList() {
                 statusT,
                 sortLabels: { asc: t("sortAsc"), desc: t("sortDesc"), hide: t("hideColumn") },
             }),
-        [locale, tableState.sort, tableState.setSort, onHideColumn, openPreview, onOpenDetail, onMarkCompleted, markingId, t, statusT],
+        [
+            locale,
+            tableState.sort,
+            tableState.setSort,
+            onHideColumn,
+            openPreview,
+            onOpenDetail,
+            onMarkCompleted,
+            markingId,
+            t,
+            statusT,
+        ],
     );
 
     const columnVisibilityItems = useMemo(
@@ -404,11 +416,7 @@ interface OrderCardProps {
 /** Mobile card renderer. The desktop columns collapse to a stack with status pill + total + total + relative date. */
 function OrderCard({ order, locale, onOpenPreview }: OrderCardProps) {
     return (
-        <button
-            type="button"
-            onClick={() => onOpenPreview(order)}
-            className="flex w-full flex-col items-start gap-2 text-start"
-        >
+        <button type="button" onClick={() => onOpenPreview(order)} className="flex w-full flex-col items-start gap-2 text-start">
             <div className="flex w-full items-center justify-between">
                 <span className="font-medium text-sm">#{formatNumber(order.orderNumber, locale)}</span>
                 <span className="font-medium text-sm tabular-nums">{formatMoney(order.grandTotal, locale)}</span>

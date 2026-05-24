@@ -86,7 +86,12 @@ export default class OrderTransformer extends BaseTransformer<Order> {
         const history = (order as Order & { statusHistory?: OrderStatusHistory[] }).statusHistory ?? [];
         const couponLines = (order as Order & { couponLines?: OrderCouponLine[] }).couponLines ?? [];
         const shippingAttr = ((order.attributes as Record<string, unknown>) ?? {}).shipping as
-            | { tracking_number?: string | null; tracking_url?: string | null; carrier?: string | null; shipped_at?: string | null }
+            | {
+                  tracking_number?: string | null;
+                  tracking_url?: string | null;
+                  carrier?: string | null;
+                  shipped_at?: string | null;
+              }
             | undefined;
 
         return {

@@ -84,7 +84,12 @@ export default class AdminOrdersController {
      * cancelled, refunded, failed, trashed }`.
      */
     async counts(ctx: HttpContext) {
-        const liveRows = (await db.from("orders").whereNull("deleted_at").groupBy("status").select("status").count("* as count")) as {
+        const liveRows = (await db
+            .from("orders")
+            .whereNull("deleted_at")
+            .groupBy("status")
+            .select("status")
+            .count("* as count")) as {
             status: string;
             count: string | number;
         }[];
@@ -222,8 +227,8 @@ export default class AdminOrdersController {
             tracking_url: payload.tracking_url ?? null,
             carrier: payload.carrier ?? null,
             shipped_at: alreadyShipped
-                ? ((order.attributes as Record<string, unknown>)?.shipping as Record<string, unknown> | undefined)?.shipped_at ??
-                  DateTime.utc().toISO()
+                ? (((order.attributes as Record<string, unknown>)?.shipping as Record<string, unknown> | undefined)?.shipped_at ??
+                  DateTime.utc().toISO())
                 : DateTime.utc().toISO(),
         };
         order.attributes = { ...((order.attributes as Record<string, unknown>) ?? {}), shipping: shippingAttr };

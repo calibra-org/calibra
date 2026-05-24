@@ -66,7 +66,7 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                     </div>
                 ) : (
                     <>
-                        <SheetHeader className="border-b border-border p-6 pb-4">
+                        <SheetHeader className="border-border border-b p-6 pb-4">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex flex-col gap-1.5">
                                     <SheetTitle className="flex items-center gap-2">
@@ -106,7 +106,10 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                 </div>
                             </div>
                             <div className="mt-2 flex items-center justify-between">
-                                <Link href={`/orders/${view.id}` as never} className="inline-flex items-center gap-1 text-primary text-xs hover:underline">
+                                <Link
+                                    href={`/orders/${view.id}` as never}
+                                    className="inline-flex items-center gap-1 text-primary text-xs hover:underline"
+                                >
                                     <ExternalLink className="size-3" aria-hidden="true" />
                                     {t("openFull")}
                                 </Link>
@@ -121,7 +124,7 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                         </SheetHeader>
 
                         <Tabs defaultValue="items" className="flex-1 overflow-hidden">
-                            <TabsList className="border-b border-border px-6">
+                            <TabsList className="border-border border-b px-6">
                                 <TabsTrigger value="items">{t("tabs.items")}</TabsTrigger>
                                 <TabsTrigger value="addresses">{t("tabs.addresses")}</TabsTrigger>
                                 <TabsTrigger value="payment">{t("tabs.payment")}</TabsTrigger>
@@ -134,9 +137,14 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                         <p className="text-muted-foreground">{t("noItems")}</p>
                                     ) : (
                                         view.lineItems.map((line) => (
-                                            <div key={line.id} className="flex items-start justify-between gap-3 border-b border-border/60 pb-2 last:border-0">
+                                            <div
+                                                key={line.id}
+                                                className="flex items-start justify-between gap-3 border-border/60 border-b pb-2 last:border-0"
+                                            >
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="truncate font-medium">{line.name[locale] || `#${line.productId}`}</p>
+                                                    <p className="truncate font-medium">
+                                                        {line.name[locale] || `#${line.productId}`}
+                                                    </p>
                                                     <p className="font-mono text-muted-foreground text-xs">
                                                         {line.sku || "—"} · ×{formatNumber(line.quantity, locale)}
                                                     </p>
@@ -170,8 +178,14 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                                     type="button"
                                                     className="inline-flex items-center gap-1 font-mono hover:underline"
                                                     onClick={() => {
-                                                        void navigator.clipboard?.writeText(view.shippingInfo?.trackingNumber ?? "");
-                                                        toast.add({ title: t("trackingCopied"), timeout: 2000, data: { tone: "success" } });
+                                                        void navigator.clipboard?.writeText(
+                                                            view.shippingInfo?.trackingNumber ?? "",
+                                                        );
+                                                        toast.add({
+                                                            title: t("trackingCopied"),
+                                                            timeout: 2000,
+                                                            data: { tone: "success" },
+                                                        });
                                                     }}
                                                 >
                                                     {view.shippingInfo.trackingNumber}
@@ -190,7 +204,10 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                             .slice()
                                             .reverse()
                                             .map((entry) => (
-                                                <div key={entry.id} className="flex items-start gap-3 border-l-2 border-primary/30 ps-3">
+                                                <div
+                                                    key={entry.id}
+                                                    className="flex items-start gap-3 border-primary/30 border-l-2 ps-3"
+                                                >
                                                     <div className="flex flex-1 flex-col gap-1">
                                                         <span className="inline-flex items-center gap-2 text-xs">
                                                             <OrderStatusBadge status={entry.toStatus} />
@@ -210,7 +227,7 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                         </Tabs>
 
                         <Separator />
-                        <div className="flex items-center justify-between gap-3 border-t border-border px-6 py-4">
+                        <div className="flex items-center justify-between gap-3 border-border border-t px-6 py-4">
                             <span className="text-muted-foreground text-xs">{t("changeStatus")}</span>
                             <StatusFlyout
                                 orderId={view.id}

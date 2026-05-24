@@ -33,24 +33,22 @@ export function RiskFlagChip({ flag }: RiskFlagChipProps) {
     const t = useTranslations("Orders.list.riskFlags");
     const Icon = ICONS[flag] ?? AlertTriangle;
     const tone = TONES[flag] ?? "bg-muted text-foreground ring-border";
-    const labelKey = (`${flag}.label` as never);
-    const descriptionKey = (`${flag}.description` as never);
+    const labelKey = `${flag}.label` as never;
+    const descriptionKey = `${flag}.description` as never;
     const label = safeT(t, labelKey, flag);
     const description = safeT(t, descriptionKey, label);
     return (
         <HoverCard>
             <HoverCardTrigger
                 render={(props) => (
-                    <span
+                    <button
                         {...props}
-                        className={cn(
-                            "inline-flex size-5 items-center justify-center rounded-full ring-1 ring-inset",
-                            tone,
-                        )}
+                        type="button"
+                        className={cn("inline-flex size-5 items-center justify-center rounded-full ring-1 ring-inset", tone)}
                         aria-label={label}
                     >
                         <Icon className="size-3" aria-hidden="true" />
-                    </span>
+                    </button>
                 )}
             />
             <HoverCardContent className="text-xs">

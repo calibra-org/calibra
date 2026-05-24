@@ -67,11 +67,7 @@ function countFor(counts: OrderCountsMap | undefined, key: StatusTabKey): number
     return counts[key];
 }
 
-function labelFor(
-    key: StatusTabKey,
-    t: ReturnType<typeof useTranslations>,
-    statusT: ReturnType<typeof useTranslations>,
-): string {
+function labelFor(key: StatusTabKey, t: ReturnType<typeof useTranslations>, statusT: ReturnType<typeof useTranslations>): string {
     if (key === "any") return t("tabs.all");
     if (key === "trashed") return t("tabs.trashed");
     return statusT(key);
