@@ -25,6 +25,7 @@ import {
     AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Badge } from "#/components/ui/badge";
+import { BulkSelectionBar } from "#/components/ui/bulk-selection-bar";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
@@ -64,6 +65,7 @@ type FilterMode = "all" | "topLevel" | "withProducts" | "empty";
  */
 export function CategoriesView({ initialRows }: CategoriesViewProps) {
     const t = useTranslations("Categories");
+    const tBulk = useTranslations("Categories.bulk");
     const locale = useLocale() as Locale;
 
     const tree = useCategoriesTree({ initialRows, direction: directionFor(locale) });
@@ -323,7 +325,6 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
     }, []);
 
     const allVisibleChecked = visibleIds.length > 0 && visibleIds.every((id) => checkedIds.has(id));
-    const hasSelection = checkedIds.size > 0;
 
     const pendingDeleteRow = pendingDeleteId === null ? null : (tree.rows.find((row) => row.id === pendingDeleteId) ?? null);
 
@@ -375,14 +376,17 @@ export function CategoriesView({ initialRows }: CategoriesViewProps) {
                         locale={locale}
                     />
 
-                    {hasSelection && (
-                        <BulkBar
-                            count={checkedIds.size}
-                            locale={locale}
-                            onClear={handleClearChecked}
-                            onBulkDelete={handleBulkDelete}
-                        />
-                    )}
+                    <BulkSelectionBar
+                        count={checkedIds.size}
+                        locale={locale}
+                        labels={{
+                            selected: tBulk("selected", { count: checkedIds.size }),
+                            cancel: tBulk("clear"),
+                            delete: tBulk("delete"),
+                        }}
+                        onCancel={handleClearChecked}
+                        onDelete={handleBulkDelete}
+                    />
 
                     {filteredFlatRows.length > 0 && (
                         <TreeSelectionHeader
@@ -574,43 +578,6 @@ function TreeSelectionHeader({ allChecked, visibleCount, locale, onToggleAll }: 
             <span className="text-muted-foreground">
                 {t("selectAllVisible")} <span className="tabular-nums">({formatNumber(visibleCount, locale)})</span>
             </span>
-        </div>
-    );
-}
-
-interface BulkBarProps {
-    count: number;
-    locale: Locale;
-    onClear: () => void;
-    onBulkDelete: () => void;
-}
-
-function BulkBar({ count, locale, onClear, onBulkDelete }: BulkBarProps) {
-    const t = useTranslations("Categories.bulk");
-    return (
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
-            <div className="inline-flex items-center gap-2 text-foreground">
-                <Badge className="bg-primary px-2 font-medium text-primary-foreground tabular-nums">
-                    {formatNumber(count, locale)}
-                </Badge>
-                <span>{t("selected", { count })}</span>
-            </div>
-            <div className="flex items-center gap-1">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={onClear}
-                    className="h-8 gap-1 px-2 text-muted-foreground"
-                >
-                    <X className="size-3.5" aria-hidden="true" />
-                    {t("clear")}
-                </Button>
-                <Button type="button" variant="destructive" size="sm" onClick={onBulkDelete} className="h-8 gap-1.5 px-3">
-                    <Trash2 className="size-3.5" aria-hidden="true" />
-                    {t("delete")}
-                </Button>
-            </div>
         </div>
     );
 }

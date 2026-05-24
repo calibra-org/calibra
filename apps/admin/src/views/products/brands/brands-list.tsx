@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { Badge } from "#/components/ui/badge";
+import { BulkSelectionBar } from "#/components/ui/bulk-selection-bar";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
@@ -68,8 +69,8 @@ export function BrandsList({
     const t = useTranslations("Brands");
     const tToolbar = useTranslations("Brands.toolbar");
     const tTable = useTranslations("Brands.table");
+    const tBulk = useTranslations("Brands.bulk");
     const allVisibleSelected = visibleRows.length > 0 && visibleRows.every((row) => selectedIds.has(row.id));
-    const hasSelection = selectedIds.size > 0;
 
     const filters: { key: BrandFilterMode; label: string; count: number }[] = [
         { key: "all", label: tToolbar("filters.all"), count: stats.total },
@@ -88,9 +89,17 @@ export function BrandsList({
                 locale={locale}
             />
 
-            {hasSelection && (
-                <BulkBar count={selectedIds.size} locale={locale} onClear={onClearSelected} onBulkDelete={onBulkDelete} />
-            )}
+            <BulkSelectionBar
+                count={selectedIds.size}
+                locale={locale}
+                labels={{
+                    selected: tBulk("selected", { count: selectedIds.size }),
+                    cancel: tBulk("clear"),
+                    delete: tBulk("delete"),
+                }}
+                onCancel={onClearSelected}
+                onDelete={onBulkDelete}
+            />
 
             {visibleRows.length === 0 ? (
                 <EmptyList hasSearch={search.length > 0 || filter !== "all"} totalBrands={rows.length} />
@@ -288,43 +297,6 @@ function Toolbar({ search, onSearchChange, filter, onFilterChange, filters, loca
                         </button>
                     );
                 })}
-            </div>
-        </div>
-    );
-}
-
-interface BulkBarProps {
-    count: number;
-    locale: Locale;
-    onClear: () => void;
-    onBulkDelete: () => void;
-}
-
-function BulkBar({ count, locale, onClear, onBulkDelete }: BulkBarProps) {
-    const t = useTranslations("Brands.bulk");
-    return (
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
-            <div className="inline-flex items-center gap-2 text-foreground">
-                <Badge className="bg-primary px-2 font-medium text-primary-foreground tabular-nums">
-                    {formatNumber(count, locale)}
-                </Badge>
-                <span>{t("selected", { count })}</span>
-            </div>
-            <div className="flex items-center gap-1">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={onClear}
-                    className="h-8 gap-1 px-2 text-muted-foreground"
-                >
-                    <X className="size-3.5" aria-hidden="true" />
-                    {t("clear")}
-                </Button>
-                <Button type="button" variant="destructive" size="sm" onClick={onBulkDelete} className="h-8 gap-1.5 px-3">
-                    <Trash2 className="size-3.5" aria-hidden="true" />
-                    {t("delete")}
-                </Button>
             </div>
         </div>
     );

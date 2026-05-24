@@ -71,7 +71,7 @@ function ToastList({ closeLabel = "Close" }: ToastListProps) {
                         className={cn(
                             /** Base layout — pinned to the viewport's bottom-end anchor. */
                             "absolute end-0 bottom-0 box-border w-full cursor-default select-none",
-                            "rounded-xl border border-border bg-card p-4 text-card-foreground shadow-2xl bg-clip-padding outline-none",
+                            "rounded-xl border border-border bg-card bg-clip-padding p-4 text-card-foreground shadow-2xl outline-none",
                             /**
                              * Layer order: each toast keeps the visually-front one on top of the
                              * stack by subtracting its index from the viewport's z-1090 base.
