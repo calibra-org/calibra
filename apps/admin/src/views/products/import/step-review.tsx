@@ -9,7 +9,6 @@ import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Label } from "#/components/ui/label";
 import { Spinner } from "#/components/ui/spinner";
-import { StickyActionBar } from "#/components/ui/sticky-action-bar";
 import { previewImport, startImport } from "#/lib/imports/api";
 import type { ProductImportRow } from "#/lib/imports/types";
 import { cn } from "#/lib/utils";
@@ -104,25 +103,9 @@ export function StepReview({ state, onChange, onBackToMapping, onStart }: StepRe
 
     return (
         <article className="flex flex-col gap-4">
-            <section className="flex flex-col gap-3 rounded-lg border bg-card p-5 text-card-foreground shadow-xs sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col gap-1">
-                    <h2 className="font-semibold text-xl tracking-tight">{t("title")}</h2>
-                    <p className="text-muted-foreground text-sm">{t("subtitle")}</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="ghost" onClick={onBackToMapping}>
-                        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden />
-                        {t("backToMapping")}
-                    </Button>
-                    <Button variant="outline" onClick={refreshPreview} disabled={previewLoading}>
-                        {previewLoading ? <Spinner /> : <RefreshCw className="size-4" aria-hidden />}
-                        {t("rePreview")}
-                    </Button>
-                    <Button onClick={handleStart} disabled={startLoading} size="lg">
-                        {startLoading ? <Spinner /> : <Play className="size-4" aria-hidden />}
-                        {t("start")}
-                    </Button>
-                </div>
+            <section className="rounded-lg border bg-card p-5 text-card-foreground shadow-xs">
+                <h2 className="font-semibold text-xl tracking-tight">{t("title")}</h2>
+                <p className="mt-1 text-muted-foreground text-sm">{t("subtitle")}</p>
             </section>
 
             {error !== null ? (
@@ -190,46 +173,24 @@ export function StepReview({ state, onChange, onBackToMapping, onStart }: StepRe
                     </section>
                 </aside>
 
-                <PreviewPane preview={state.preview} />
-            </div>
-
-            <StickyActionBar open className="gap-3 px-4 py-2">
-                <div className="flex items-center gap-3 text-xs">
-                    <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                        {fmt(effective.willCreate)} <span className="text-muted-foreground">{t("counters.willCreate")}</span>
-                    </span>
-                    <span className="text-border" aria-hidden>
-                        ·
-                    </span>
-                    <span className="font-medium text-sky-600 dark:text-sky-400">
-                        {fmt(effective.willUpdate)} <span className="text-muted-foreground">{t("counters.willUpdate")}</span>
-                    </span>
-                    <span className="text-border" aria-hidden>
-                        ·
-                    </span>
-                    <span className="font-medium text-muted-foreground">
-                        {fmt(effective.willSkip)} {t("counters.willSkip")}
-                    </span>
-                    {effective.willFail > 0 ? (
-                        <>
-                            <span className="text-border" aria-hidden>
-                                ·
-                            </span>
-                            <span className="font-medium text-destructive">
-                                {fmt(effective.willFail)} {t("counters.willFail")}
-                            </span>
-                        </>
-                    ) : null}
+                <div className="flex flex-col gap-4">
+                    <PreviewPane preview={state.preview} />
+                    <div className="flex flex-wrap items-center justify-end gap-2 rounded-lg border bg-card p-4 text-card-foreground shadow-xs">
+                        <Button variant="ghost" onClick={onBackToMapping}>
+                            <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden />
+                            {t("backToMapping")}
+                        </Button>
+                        <Button variant="outline" onClick={refreshPreview} disabled={previewLoading}>
+                            {previewLoading ? <Spinner /> : <RefreshCw className="size-4" aria-hidden />}
+                            {t("rePreview")}
+                        </Button>
+                        <Button onClick={handleStart} disabled={startLoading} size="lg">
+                            {startLoading ? <Spinner /> : <Play className="size-4" aria-hidden />}
+                            {t("start")}
+                        </Button>
+                    </div>
                 </div>
-                <Button size="sm" variant="ghost" onClick={refreshPreview} disabled={previewLoading}>
-                    {previewLoading ? <Spinner /> : <RefreshCw className="size-4" aria-hidden />}
-                    {t("rePreview")}
-                </Button>
-                <Button size="sm" onClick={handleStart} disabled={startLoading}>
-                    {startLoading ? <Spinner /> : <Play className="size-4" aria-hidden />}
-                    {t("start")}
-                </Button>
-            </StickyActionBar>
+            </div>
         </article>
     );
 }
