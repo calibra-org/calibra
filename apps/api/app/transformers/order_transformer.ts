@@ -1,12 +1,23 @@
 import { BaseTransformer } from "@adonisjs/core/transformers";
 
+import { DateTime } from "luxon";
+
 import type Order from "#models/order";
 import type OrderAddress from "#models/order_address";
 import type OrderCouponLine from "#models/order_coupon_line";
+import type OrderFeeLine from "#models/order_fee_line";
 import type OrderLineItem from "#models/order_line_item";
+import type OrderMeta from "#models/order_meta";
 import type OrderShippingLine from "#models/order_shipping_line";
 import type OrderStatusHistory from "#models/order_status_history";
 import type OrderTaxLine from "#models/order_tax_line";
+
+/**
+ * Window after which a terminal order (refunded/cancelled/failed/completed) automatically locks
+ * for accidental edits. Operators can still unlock via the explicit "Edit anyway" affordance.
+ */
+const AUTO_LOCK_DAYS = 30;
+const AUTO_LOCK_TERMINAL_STATUSES = new Set(["refunded", "cancelled", "failed"]);
 
 /**
  * Owns the `/api/v1/.../orders/*` response shape. Sensitive columns (`idempotency_key`,
@@ -85,6 +96,7 @@ export default class OrderTransformer extends BaseTransformer<Order> {
         const taxLines = (order as Order & { taxLines?: OrderTaxLine[] }).taxLines ?? [];
         const history = (order as Order & { statusHistory?: OrderStatusHistory[] }).statusHistory ?? [];
         const couponLines = (order as Order & { couponLines?: OrderCouponLine[] }).couponLines ?? [];
+        const feeLines = (order as Order & { feeLines?: OrderFeeLine[] }).feeLines ?? [];
         const shippingAttr = ((order.attributes as Record<string, unknown>) ?? {}).shipping as
             | {
                   tracking_number?: string | null;
@@ -121,6 +133,7 @@ export default class OrderTransformer extends BaseTransformer<Order> {
             prices_include_tax: order.pricesIncludeTax,
             line_items: lineItems.map((line) => this.serializeLine(line)),
             shipping_lines: shippingLines.map((line) => this.serializeShipping(line)),
+            fee_lines: feeLines.map((fee) => this.serializeFee(fee)),
             coupon_lines: couponLines.map((line) => ({
                 id: Number(line.id),
                 code: line.codeSnapshot ?? "",
@@ -143,12 +156,57 @@ export default class OrderTransformer extends BaseTransformer<Order> {
 
     forAdmin() {
         const order = this.resource;
+        const metaRows = (order as Order & { meta?: OrderMeta[] }).meta ?? [];
+        const metaVisible: Record<string, string> = {};
+        const metaHidden: Record<string, string> = {};
+        const meta: Record<string, string> = {};
+        for (const row of metaRows) {
+            const key = row.key;
+            const value = row.value ?? "";
+            meta[key] = value;
+            if (key.startsWith("_")) metaHidden[key] = value;
+            else metaVisible[key] = value;
+        }
         return {
             ...this.forDetail(),
             ip_address: order.ipAddress,
             user_agent: order.userAgent,
             cart_hash: null,
+            source: this.resolveSource(order.createdVia),
+            referrer: ((order.attributes as Record<string, unknown>) ?? {}).referrer ?? null,
+            is_locked: this.computeLocked(order),
+            unlock_override: Boolean(((order.attributes as Record<string, unknown>) ?? {}).unlock_override),
+            meta,
+            meta_visible: metaVisible,
+            meta_hidden: metaHidden,
         };
+    }
+
+    /**
+     * Maps the raw `created_via` column to the narrower enum the admin sidebar Source card
+     * understands. Unknown values fall through to `null` so the UI can render its "unknown" state
+     * rather than echo a junk value.
+     */
+    private resolveSource(createdVia: string | null | undefined): string | null {
+        if (typeof createdVia !== "string" || createdVia.length === 0) return null;
+        const KNOWN = ["web", "admin", "api", "import", "checkout-block", "checkout"];
+        return KNOWN.includes(createdVia) ? createdVia : null;
+    }
+
+    /**
+     * Compute the lock flag. An explicit admin override on `attributes.unlock_override` wins; the
+     * automatic rule otherwise kicks in for terminal statuses past the {@link AUTO_LOCK_DAYS}
+     * grace window. The frontend uses this flag to decide whether to render the warning banner +
+     * the "Edit anyway" affordance.
+     */
+    private computeLocked(order: Order): boolean {
+        const attrs = (order.attributes as Record<string, unknown>) ?? {};
+        if (attrs.unlock_override === true) return false;
+        if (!AUTO_LOCK_TERMINAL_STATUSES.has(order.status)) return false;
+        const anchor = order.dateCompletedAt ?? order.updatedAt ?? null;
+        if (!anchor) return false;
+        const diffDays = DateTime.utc().diff(anchor, "days").days;
+        return diffDays >= AUTO_LOCK_DAYS;
     }
 
     private serializeLine(line: OrderLineItem) {
@@ -176,6 +234,17 @@ export default class OrderTransformer extends BaseTransformer<Order> {
             title: line.titleSnapshot,
             total: Number(line.total),
             total_tax: Number(line.totalTax),
+        };
+    }
+
+    private serializeFee(line: OrderFeeLine) {
+        return {
+            id: Number(line.id),
+            name: line.nameSnapshot,
+            total: Number(line.total),
+            total_tax: Number(line.totalTax),
+            taxable: Boolean(line.taxable),
+            tax_class_id: line.taxClassIdSnapshot === null ? null : Number(line.taxClassIdSnapshot),
         };
     }
 

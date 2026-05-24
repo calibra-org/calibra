@@ -1814,6 +1814,14 @@ export interface components {
                 code: string;
                 discount: number;
             }[];
+            fee_lines?: {
+                id: number;
+                name: string;
+                total: number;
+                total_tax: number;
+                taxable?: boolean;
+                tax_class_id?: number | null;
+            }[];
             shipping_info?: null | {
                 tracking_number?: string | null;
                 tracking_url?: string | null;

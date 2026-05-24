@@ -397,6 +397,8 @@ export default class AdminOrdersController {
         await order.load("taxLines");
         await order.load("statusHistory");
         await order.load("couponLines");
+        await order.load("feeLines");
+        await order.load("meta");
     }
 }
 

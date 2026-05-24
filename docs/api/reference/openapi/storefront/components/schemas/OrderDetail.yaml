@@ -121,6 +121,18 @@ allOf:
                       id: { type: integer }
                       code: { type: string }
                       discount: { type: integer }
+          fee_lines:
+              type: array
+              items:
+                  type: object
+                  required: [id, name, total, total_tax]
+                  properties:
+                      id: { type: integer }
+                      name: { type: string }
+                      total: { type: integer }
+                      total_tax: { type: integer }
+                      taxable: { type: boolean }
+                      tax_class_id: { type: [integer, "null"] }
           shipping_info:
               anyOf:
                   - type: "null"

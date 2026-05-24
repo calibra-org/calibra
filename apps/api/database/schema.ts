@@ -643,6 +643,23 @@ export class OrderLineItemSchema extends BaseModel {
   declare variationId: bigint | number | null
 }
 
+export class OrderMetaSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'key', 'orderId', 'updatedAt', 'value'] as const
+  $columns = OrderMetaSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare key: string
+  @column()
+  declare orderId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare value: string
+}
+
 export class OrderNoteSchema extends BaseModel {
   static $columns = ['attributes', 'authorUserId', 'body', 'createdAt', 'id', 'orderId', 'updatedAt', 'visibility'] as const
   $columns = OrderNoteSchema.$columns

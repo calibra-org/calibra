@@ -214,6 +214,312 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/orders/{id}/addresses/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update billing or shipping address (admin)
+         * @description Replaces the full address row for the given `kind`. Email is honored only when `kind=billing`; `customer_note` only when `kind=shipping`. National-ID is stored on the row's `attributes` JSON bag. When the billing email changes, the order's `billing_email` column is updated in the same transaction so list views stay consistent.
+         */
+        patch: operations["adminOrderUpdateAddress"];
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/line-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Append a line item to an order (admin)
+         * @description Snapshots the product (name, SKU, tax class, price) onto a new `order_line_items` row, then re-runs the simple line-sum recalculation against the order's totals. Use `price_override_minor` to capture a one-off negotiated price; otherwise the variation / product `regular_price` is taken.
+         */
+        post: operations["adminOrderAddLineItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/line-items/{lineId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an order line item (admin)
+         * @description Removes a line item; rejects with 409 when a refund references the line.
+         */
+        delete: operations["adminOrderDeleteLineItem"];
+        options?: never;
+        head?: never;
+        /**
+         * Update an order line item (admin)
+         * @description Update a line's quantity, snapshot price, or name. Recomputes totals after save.
+         */
+        patch: operations["adminOrderUpdateLineItem"];
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/fee-lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a fee line to an order (admin)
+         * @description Appends a manual fee line (e.g. handling, gift wrap) and recomputes order totals.
+         */
+        post: operations["adminOrderAddFee"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/fee-lines/{feeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a fee line (admin)
+         * @description Removes a fee line and recomputes order totals.
+         */
+        delete: operations["adminOrderDeleteFee"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/shipping-lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a shipping line (admin)
+         * @description Appends a shipping line (carrier + cost) to the order and recomputes totals.
+         */
+        post: operations["adminOrderAddShippingLine"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/shipping-lines/{lineId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a shipping line (admin)
+         * @description Removes a shipping line and recomputes totals.
+         */
+        delete: operations["adminOrderDeleteShippingLine"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a shipping line (admin)
+         * @description Updates carrier code, title, or cost on a shipping line.
+         */
+        patch: operations["adminOrderUpdateShippingLine"];
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply a coupon (admin)
+         * @description Looks up the coupon, snapshots it as a coupon line on the order, and recomputes totals.
+         */
+        post: operations["adminOrderApplyCoupon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/coupons/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a coupon (admin)
+         * @description Removes the snapshotted coupon line and recomputes totals.
+         */
+        delete: operations["adminOrderRemoveCoupon"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/recalculate-totals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recalculate order totals (admin)
+         * @description Re-sums line items, shipping lines, fees, and coupon discounts. When `preview=true`, returns the proposed totals AND the current totals so the client can diff before committing.
+         */
+        post: operations["adminOrderRecalculateTotals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/header": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update order header (admin)
+         * @description Patches the order-level header fields — `created_at`, `customer_id`, `billing_email`, and the `is_locked` override flag. Does NOT auto-rewrite billing/shipping addresses on customer change; that's a separate client-side opt-in.
+         */
+        patch: operations["adminOrderUpdateHeader"];
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Upsert order meta (admin)
+         * @description Sets the value for the given `(order_id, key)` pair. Keys prefixed with `_` are conventionally hidden from the default admin editor.
+         */
+        patch: operations["adminOrderUpsertMeta"];
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/meta/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete order meta (admin)
+         * @description Removes the `(order_id, key)` row. Key is URL-encoded path segment.
+         */
+        delete: operations["adminOrderDeleteMeta"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/customer-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Customer lifetime stats for this order's customer (admin)
+         * @description Returns lifetime order count, lifetime revenue, and AOV for the order's customer. When the order has no customer (guest checkout), every field is `0`. Cached 60s.
+         */
+        get: operations["adminOrderCustomerStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/orders/{order_id}/history": {
         parameters: {
             query?: never;
@@ -2092,6 +2398,14 @@ export interface components {
                 code: string;
                 discount: number;
             }[];
+            fee_lines?: {
+                id: number;
+                name: string;
+                total: number;
+                total_tax: number;
+                taxable?: boolean;
+                tax_class_id?: number | null;
+            }[];
             shipping_info?: null | {
                 tracking_number?: string | null;
                 tracking_url?: string | null;
@@ -2102,13 +2416,29 @@ export interface components {
         };
         /**
          * AdminOrderDetail
-         * @description Admin order detail payload. Matches `OrderTransformer.forAdmin()` exactly — `forDetail()` plus `ip_address`, `user_agent`, and a (currently always-null) `cart_hash` audit field. Money is integer Rial minor units.
+         * @description Admin order detail payload. Matches `OrderTransformer.forAdmin()` exactly — `forDetail()` plus `ip_address`, `user_agent`, a (currently always-null) `cart_hash` audit field, the resolved `source` enum, the `is_locked` flag, and the split `meta` bags. Money is integer Rial minor units.
          */
         AdminOrderDetail: components["schemas"]["OrderDetail"] & {
             ip_address?: string | null;
             user_agent?: string | null;
             /** @description Always null — the column is reserved for a future cart-anti-tamper check. */
             cart_hash: string | null;
+            /** @description Resolved channel that placed the order (`web`, `admin`, `api`, `import`, `checkout-block`, `checkout`). */
+            source?: string | null;
+            referrer?: string | null;
+            /** @description True when the order is in a terminal status past the auto-lock window AND no override is set. */
+            is_locked?: boolean;
+            /** @description True when an admin explicitly unlocked a terminal order. */
+            unlock_override?: boolean;
+            meta?: {
+                [key: string]: string;
+            };
+            meta_visible?: {
+                [key: string]: string;
+            };
+            meta_hidden?: {
+                [key: string]: string;
+            };
         };
         /**
          * ValidationErrorMessage
@@ -2169,6 +2499,22 @@ export interface components {
                 [key: string]: unknown;
             })[];
             deleted?: number[];
+        };
+        /**
+         * OrderTotalsBreakdown
+         * @description Camel-cased money breakdown returned by the recalculate-totals preview endpoint. Each field is an integer Rial-minor amount; the controller produces this shape directly from `calculateTotals()` without re-serializing through the order transformer.
+         */
+        OrderTotalsBreakdown: {
+            itemsTotal: number;
+            itemsTaxTotal: number;
+            shippingTotal: number;
+            shippingTaxTotal: number;
+            feesTotal: number;
+            feesTaxTotal: number;
+            discountTotal: number;
+            discountTaxTotal: number;
+            taxTotal: number;
+            grandTotal: number;
         };
         /**
          * AdminRefund
@@ -3170,6 +3516,577 @@ export interface operations {
                         data: {
                             order_id: number;
                             queued: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminOrderUpdateAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                kind: "billing" | "shipping";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    first_name: string;
+                    last_name: string;
+                    company?: string | null;
+                    address_line_1: string;
+                    address_line_2?: string | null;
+                    city: string;
+                    region_id?: number | null;
+                    region_text?: string | null;
+                    postcode?: string | null;
+                    country: string;
+                    phone?: string | null;
+                    /** Format: email */
+                    email?: string | null;
+                    national_id?: string | null;
+                    customer_note?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderAddLineItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    product_id: number;
+                    variation_id?: number | null;
+                    quantity: number;
+                    price_override_minor?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderDeleteLineItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                lineId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Line item has refunds and cannot be removed. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasicMessage"];
+                };
+            };
+        };
+    };
+    adminOrderUpdateLineItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                lineId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    quantity?: number;
+                    price_override_minor?: number | null;
+                    name?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderAddFee: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    amount_minor: number;
+                    taxable?: boolean;
+                    tax_class_id?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderDeleteFee: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                feeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminOrderAddShippingLine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    method_code: string;
+                    title: string;
+                    total_minor: number;
+                    tax_class_id?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderDeleteShippingLine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                lineId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminOrderUpdateShippingLine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                lineId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    method_code?: string;
+                    title?: string;
+                    total_minor?: number;
+                    tax_class_id?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderApplyCoupon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Coupon already applied to this order. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasicMessage"];
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderRemoveCoupon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminOrderRecalculateTotals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @default false */
+                    preview?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description When preview=true, returns the diff. Otherwise returns the updated order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    } | {
+                        data: {
+                            preview: components["schemas"]["OrderTotalsBreakdown"];
+                            current: components["schemas"]["OrderTotalsBreakdown"];
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminOrderUpdateHeader: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: date-time */
+                    created_at?: string;
+                    customer_id?: number | null;
+                    /** Format: email */
+                    billing_email?: string | null;
+                    is_locked?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderUpsertMeta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    key: string;
+                    value?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOrderDeleteMeta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated order envelope. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminOrderCustomerStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer lifetime stats. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            lifetime_order_count: number;
+                            lifetime_revenue_minor: number;
+                            average_order_value_minor: number;
                         };
                     };
                 };

@@ -1,0 +1,34 @@
+operationId: adminOrderUpdateHeader
+summary: Update order header (admin)
+description: >
+    Patches the order-level header fields — `created_at`, `customer_id`, `billing_email`, and the
+    `is_locked` override flag. Does NOT auto-rewrite billing/shipping addresses on customer
+    change; that's a separate client-side opt-in.
+tags: [Admin / Orders]
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    created_at: { type: string, format: date-time }
+                    customer_id: { type: [integer, "null"] }
+                    billing_email: { type: [string, "null"], format: email, maxLength: 254 }
+                    is_locked: { type: boolean }
+responses:
+    "200":
+        description: Updated order envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }
