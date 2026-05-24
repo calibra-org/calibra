@@ -230,6 +230,17 @@
             "noWarnings": "هشداری وجود ندارد.",
             "createSummary": "{count} محصول جدید ساخته می‌شود.",
             "skipSummary": "{count} ردیف رد می‌شود.",
+            "skipMore": "{count} ردیف دیگر نیز با همین دلایل رد می‌شوند.",
+            "skipReason": {
+                "duplicate_sku": "SKU تکراری",
+                "empty_row": "ردیف خالی",
+                "all_columns_unmapped": "هیچ ستونی تطبیق داده نشده"
+            },
+            "skipReasonHelp": {
+                "duplicate_sku": "محصولی با این SKU وجود دارد و گزینه «به‌روزرسانی محصولات موجود» خاموش است.",
+                "empty_row": "هیچ ستون تطبیق‌داده‌شده‌ای در این ردیف مقدار نداشت.",
+                "all_columns_unmapped": "هیچ ستونی به فیلد محصول تطبیق داده نشده — مقادیر این ردیف اعمال نمی‌شوند."
+            },
             "rowLabel": "ردیف {n}",
             "rowsLabel": "{n} ردیف",
             "anomaly": {

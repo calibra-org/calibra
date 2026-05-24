@@ -135,9 +135,41 @@ export function PreviewPane({ preview }: PreviewPaneProps): React.JSX.Element {
 
                 <TabsContent value="skip">
                     <EmptyOrMessage shown={preview.totals.skip === 0} message={t("noSkip")}>
-                        <p className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
-                            {t("skipSummary", { count: fmt(preview.totals.skip) })}
-                        </p>
+                        <div className="flex flex-col gap-3">
+                            <p className="text-muted-foreground text-sm">
+                                {t("skipSummary", { count: fmt(preview.totals.skip) })}
+                            </p>
+                            {preview.skips.length > 0 ? (
+                                <ul className="space-y-2">
+                                    {preview.skips.map((skip) => (
+                                        <li
+                                            key={`${skip.rowNumber}-${skip.code}`}
+                                            className="rounded-md border bg-muted/30 p-3 text-sm"
+                                        >
+                                            <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant="outline" className="text-xs">
+                                                        {t(`skipReason.${skip.code}`)}
+                                                    </Badge>
+                                                    <span className="font-mono text-sm">{skip.sku ?? "—"}</span>
+                                                </div>
+                                                <span className="text-muted-foreground text-xs">
+                                                    {t("rowLabel", { n: fmt(skip.rowNumber) })}
+                                                </span>
+                                            </div>
+                                            <p className="mt-1 text-muted-foreground text-xs">
+                                                {t(`skipReasonHelp.${skip.code}`)}
+                                            </p>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : null}
+                            {preview.totals.skip > preview.skips.length ? (
+                                <p className="text-muted-foreground text-xs">
+                                    {t("skipMore", { count: fmt(preview.totals.skip - preview.skips.length) })}
+                                </p>
+                            ) : null}
+                        </div>
                     </EmptyOrMessage>
                 </TabsContent>
 

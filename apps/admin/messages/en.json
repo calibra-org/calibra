@@ -230,6 +230,17 @@
             "noWarnings": "No warnings.",
             "createSummary": "{count} new products will be created.",
             "skipSummary": "{count} rows will be skipped.",
+            "skipMore": "{count} more rows will be skipped for the same reasons.",
+            "skipReason": {
+                "duplicate_sku": "Duplicate SKU",
+                "empty_row": "Empty row",
+                "all_columns_unmapped": "No columns mapped"
+            },
+            "skipReasonHelp": {
+                "duplicate_sku": "A product with this SKU already exists and \"Update existing products\" is off.",
+                "empty_row": "None of the mapped columns held a value for this row.",
+                "all_columns_unmapped": "No columns are mapped to product fields — nothing in this row will be applied."
+            },
             "rowLabel": "Row {n}",
             "rowsLabel": "{n} rows",
             "anomaly": {

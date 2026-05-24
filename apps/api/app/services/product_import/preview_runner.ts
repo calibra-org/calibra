@@ -35,6 +35,22 @@ export interface PreviewFailure {
     originalValue: string | null;
 }
 
+/**
+ * One skipped row, with the machine-readable reason the preview decided to skip it. Codes are a
+ * subset of the runner's outcome codes — the wizard renders a localized label for each so the
+ * operator sees *why* every skipped row was skipped, not just a count.
+ */
+export interface PreviewSkip {
+    rowNumber: number;
+    sku: string | null;
+    /**
+     * - `duplicate_sku` — a product with this SKU already exists and `update_existing` is off.
+     * - `empty_row` — none of the mapped columns held content for this row.
+     * - `all_columns_unmapped` — the row had data but no column maps to a real field.
+     */
+    code: "duplicate_sku" | "empty_row" | "all_columns_unmapped";
+}
+
 export interface PreviewResult {
     totals: {
         create: number;
@@ -46,6 +62,7 @@ export interface PreviewResult {
     updatesPreview: PreviewUpdate[];
     warnings: AnomalyFinding[];
     failures: PreviewFailure[];
+    skips: PreviewSkip[];
 }
 
 export interface PreviewOptions {
@@ -94,8 +111,12 @@ export async function runPreview(opts: PreviewOptions): Promise<PreviewResult> {
     let skip = 0;
     let fail = 0;
     const failures: PreviewFailure[] = [];
+    const skips: PreviewSkip[] = [];
     const updates: PreviewUpdate[] = [];
     const previewRows: PreviewRow[] = [];
+
+    /** No-op: spec point — the `images` field on a row can have data without being mapped. */
+    const hasAnyMapped = Object.values(opts.mapping).some((v) => v !== null);
 
     for (const row of projectedRows) {
         const sku = typeof row.dto.sku === "string" ? row.dto.sku.trim() : "";
@@ -124,12 +145,18 @@ export async function runPreview(opts: PreviewOptions): Promise<PreviewResult> {
 
         if (!row.hasContent) {
             skip++;
+            skips.push({
+                rowNumber: row.rowNumber,
+                sku: sku === "" ? null : sku,
+                code: hasAnyMapped ? "empty_row" : "all_columns_unmapped",
+            });
             continue;
         }
 
         if (existing !== undefined) {
             if (!opts.updateExisting) {
                 skip++;
+                skips.push({ rowNumber: row.rowNumber, sku, code: "duplicate_sku" });
                 continue;
             }
             update++;
@@ -168,6 +195,7 @@ export async function runPreview(opts: PreviewOptions): Promise<PreviewResult> {
         updatesPreview: updates,
         warnings,
         failures: failures.slice(0, opts.expandedFailures ?? DEFAULT_EXPANSION),
+        skips: skips.slice(0, opts.expandedFailures ?? DEFAULT_EXPANSION),
     };
 }
 

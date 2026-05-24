@@ -100,6 +100,17 @@ export interface PreviewFailure {
     originalValue: string | null;
 }
 
+/**
+ * One skipped row from the preview pass. `code` is the machine-readable reason — the wizard
+ * renders a localized label per code so the skip tab actually explains why every row was skipped
+ * instead of just showing a count.
+ */
+export interface PreviewSkip {
+    rowNumber: number;
+    sku: string | null;
+    code: "duplicate_sku" | "empty_row" | "all_columns_unmapped";
+}
+
 export interface AnomalyFinding {
     code:
         | "price_jump"
@@ -125,6 +136,7 @@ export interface PreviewResult {
     updatesPreview: PreviewUpdate[];
     warnings: AnomalyFinding[];
     failures: PreviewFailure[];
+    skips: PreviewSkip[];
 }
 
 export interface ProductImportErrorRow {
