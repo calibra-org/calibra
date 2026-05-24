@@ -2,12 +2,14 @@
 
 /**
  * Browser-side client for the CSV exporter endpoints. Same shape as `lib/imports/api.ts` —
- * `apiGet` / `apiMutate` for JSON paths, raw EventSource for the SSE stream, and a download
+ * `apiMutate` for POST/PATCH/DELETE bodies, raw EventSource for the SSE stream, and a download
  * helper that builds the signed URL the wizard hands to a real `<a download>`.
  *
- * Filter envelopes go into the URL query string for GET endpoints; the helper here serializes
- * arrays with bracketed indices (`?status[]=publish&status[]=draft`) so the AdonisJS validator
- * sees them as a real array.
+ * GET endpoints with array filters can't use the shared `apiGet` — its underlying
+ * `URLSearchParams.set` call collapses duplicate keys, which would smash `["sku","name"]` into a
+ * single `columns%5B%5D=sku%2Cname` value the AdonisJS `vine.array(...)` validator rejects.
+ * Instead, we build the query string here with `URLSearchParams.append` so every element of an
+ * array becomes its own `key[]=value` pair.
  */
 
 import type {
@@ -19,42 +21,47 @@ import type {
     ProductExportRow,
     ProductExportStreamEvent,
 } from "#/lib/exports/types";
-import { apiGet, apiMutate } from "#/lib/queries/api-client";
+import { apiMutate } from "#/lib/queries/api-client";
 
-/**
- * Convert a filter envelope into a query-string object the underlying helper can consume. The
- * helper turns arrays into bracketed-index pairs and skips undefined / null values.
- */
-function filtersToQuery(filters: Record<string, unknown>): Record<string, string | number | boolean | undefined | null> {
-    const out: Record<string, string | number | boolean | undefined | null> = {};
+function buildExportQueryString(filters: Record<string, unknown>): string {
+    const params = new URLSearchParams();
     for (const [k, v] of Object.entries(filters)) {
         if (v === undefined || v === null) continue;
         if (Array.isArray(v)) {
-            for (const item of v) {
-                /** Bracketed-indices: the helper appends each separately when key ends with `[]`. */
-                appendInto(out, `${k}[]`, item);
-            }
+            for (const item of v) params.append(`${k}[]`, String(item));
         } else if (typeof v === "object") {
-            out[k] = JSON.stringify(v);
+            params.set(k, JSON.stringify(v));
         } else {
-            out[k] = v as string | number | boolean;
+            params.set(k, String(v));
         }
     }
-    return out;
+    return params.toString();
 }
 
-function appendInto(out: Record<string, string | number | boolean | undefined | null>, key: string, value: unknown): void {
-    /** URLSearchParams supports duplicate keys, so we just keep appending; the GET helper iterates entries. */
-    const existing = out[key];
-    if (existing === undefined) {
-        out[key] = String(value);
-        return;
+async function getProxy<T>(path: string, locale: string, query: string = "", signal?: AbortSignal): Promise<T> {
+    const url = query.length > 0 ? `/api/admin/${path}?${query}` : `/api/admin/${path}`;
+    const res = await fetch(url, {
+        method: "GET",
+        headers: { "accept-language": locale, accept: "application/json" },
+        signal,
+    });
+    if (!res.ok) {
+        const body = await safeParseJson(res);
+        throw Object.assign(new Error(`admin proxy returned ${res.status}`), { status: res.status, body });
     }
-    out[key] = `${existing as string},${String(value)}`;
+    return (await res.json()) as T;
+}
+
+async function safeParseJson(res: Response): Promise<unknown> {
+    try {
+        return await res.json();
+    } catch {
+        return await res.text();
+    }
 }
 
 export function getExportCount(filters: ExportFilters, locale: string): Promise<{ data: ExportCount }> {
-    return apiGet("products/export/count", { locale, query: filtersToQuery(filters as unknown as Record<string, unknown>) });
+    return getProxy("products/export/count", locale, buildExportQueryString(filters as unknown as Record<string, unknown>));
 }
 
 export function getExportPreview(
@@ -64,7 +71,7 @@ export function getExportPreview(
         >,
     locale: string,
 ): Promise<{ data: ExportPreviewResult }> {
-    return apiGet("products/export/preview", { locale, query: filtersToQuery(body as unknown as Record<string, unknown>) });
+    return getProxy("products/export/preview", locale, buildExportQueryString(body as unknown as Record<string, unknown>));
 }
 
 export function startExport(
@@ -82,7 +89,7 @@ export function startExport(
 }
 
 export function getExport(id: number, locale: string, signal?: AbortSignal): Promise<{ data: ProductExportRow }> {
-    return apiGet(`products/export/${id}`, { locale, signal });
+    return getProxy(`products/export/${id}`, locale, "", signal);
 }
 
 export function cancelExport(id: number, locale: string): Promise<{ data: ProductExportRow }> {
@@ -93,16 +100,17 @@ export function listExportHistory(
     locale: string,
     options: { page?: number; perPage?: number; status?: string; from?: string; to?: string } = {},
 ): Promise<{ data: ProductExportRow[]; meta: { page: number; perPage: number; total: number; lastPage: number } }> {
-    return apiGet("products/export/history", {
+    return getProxy(
+        "products/export/history",
         locale,
-        query: {
+        buildExportQueryString({
             page: options.page,
             per_page: options.perPage,
             status: options.status,
             from: options.from,
             to: options.to,
-        },
-    });
+        }),
+    );
 }
 
 export function deleteExport(id: number, locale: string): Promise<void> {
@@ -110,7 +118,7 @@ export function deleteExport(id: number, locale: string): Promise<void> {
 }
 
 export function listExportPresets(locale: string): Promise<{ data: ProductExportPreset[] }> {
-    return apiGet("products/export/presets", { locale });
+    return getProxy("products/export/presets", locale);
 }
 
 export function createExportPreset(
@@ -136,10 +144,7 @@ export function getDistinctMetaKeys(
     filters: ExportFilters & { show_hidden?: boolean; search?: string },
     locale: string,
 ): Promise<{ data: { keys: Array<{ key: string; count: number }> } }> {
-    return apiGet("products/distinct-meta-keys", {
-        locale,
-        query: filtersToQuery(filters as unknown as Record<string, unknown>),
-    });
+    return getProxy("products/distinct-meta-keys", locale, buildExportQueryString(filters as unknown as Record<string, unknown>));
 }
 
 /**

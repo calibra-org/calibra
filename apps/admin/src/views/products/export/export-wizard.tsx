@@ -12,10 +12,11 @@ import { useRouter } from "#/lib/i18n/navigation";
 import { StepDone } from "./step-done";
 import { StepExporting } from "./step-exporting";
 import { StepFilterAndColumns } from "./step-filter-and-columns";
+import { StepReview } from "./step-review";
 import { Stepper } from "./stepper";
-import { type FilterState, initialFilterState, stepFromStatus, type WizardState } from "./wizard-state";
+import { type FilterState, initialFilterState, type ReviewState, stepFromStatus, type WizardState } from "./wizard-state";
 
-const STEP_ORDER: WizardState["step"][] = ["filter", "exporting", "done"];
+const STEP_ORDER: WizardState["step"][] = ["filter", "review", "exporting", "done"];
 
 export interface ExportWizardProps {
     /** Pre-applied scope (e.g. when entered from the bulk-action bar or filter chips). */
@@ -79,12 +80,25 @@ export function ExportWizard({ initialScope = "filter", initialSelectedIds = [] 
         (target: WizardState["step"]) => {
             if (target === state.step) return;
             if (target === "filter") {
+                if (state.step === "review") {
+                    setState({
+                        step: "filter",
+                        scope: state.scope,
+                        filters: state.filters,
+                        columns: state.columns,
+                        format: state.format,
+                        selectedIds: state.selectedIds,
+                    });
+                    setFarthest("filter");
+                    writeQueryId(null);
+                    return;
+                }
                 setState(initialFilterState(initialScope, initialSelectedIds));
                 setFarthest("filter");
                 writeQueryId(null);
             }
         },
-        [initialScope, initialSelectedIds, state.step, writeQueryId],
+        [initialScope, initialSelectedIds, state, writeQueryId],
     );
 
     const filterNode = useMemo(() => {
@@ -93,6 +107,38 @@ export function ExportWizard({ initialScope = "filter", initialSelectedIds = [] 
             <StepFilterAndColumns
                 state={state}
                 onChange={(next: Partial<FilterState>) => setState({ ...state, ...next })}
+                onReview={({ preview, matchCount }) => {
+                    setState({
+                        step: "review",
+                        scope: state.scope,
+                        filters: state.filters,
+                        columns: state.columns,
+                        format: state.format,
+                        selectedIds: state.selectedIds,
+                        preview,
+                        matchCount,
+                    });
+                }}
+            />
+        );
+    }, [state]);
+
+    const reviewNode = useMemo(() => {
+        if (state.step !== "review") return null;
+        return (
+            <StepReview
+                state={state}
+                onChange={(next: Partial<ReviewState>) => setState({ ...state, ...next })}
+                onBackToFilter={() => {
+                    setState({
+                        step: "filter",
+                        scope: state.scope,
+                        filters: state.filters,
+                        columns: state.columns,
+                        format: state.format,
+                        selectedIds: state.selectedIds,
+                    });
+                }}
                 onStart={(row: ProductExportRow) => {
                     writeQueryId(row.id);
                     setState({ step: "exporting", exportRow: row });
@@ -143,6 +189,7 @@ export function ExportWizard({ initialScope = "filter", initialSelectedIds = [] 
             </header>
 
             {filterNode}
+            {reviewNode}
             {exportingNode}
             {doneNode}
         </section>

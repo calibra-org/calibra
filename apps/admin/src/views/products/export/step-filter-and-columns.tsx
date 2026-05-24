@@ -1,7 +1,7 @@
 "use client";
 
 import { toPersianDigits } from "@calibra/shared/digits";
-import { ChevronDown, Eye, FileDown, Filter, GripVertical, Loader2, Sliders, X } from "lucide-react";
+import { ArrowRight, ChevronDown, FileDown, Filter, GripVertical, Loader2, Sliders, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -11,14 +11,13 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Spinner } from "#/components/ui/spinner";
-import { getExportCount, getExportPreview, startExport } from "#/lib/exports/api";
+import { getExportCount, getExportPreview } from "#/lib/exports/api";
 import { type ColumnPresetId, columnsForPreset, DEFAULT_EXPORT_COLUMNS } from "#/lib/exports/default-columns";
 import type {
     ExportCount,
     ExportFilters,
     ExportFormatOptions,
     ExportPreviewResult,
-    ProductExportRow,
     ProductExportScope,
 } from "#/lib/exports/types";
 import { cn } from "#/lib/utils";
@@ -28,7 +27,14 @@ import type { FilterState } from "./wizard-state";
 export interface StepFilterAndColumnsProps {
     state: FilterState;
     onChange: (next: Partial<FilterState>) => void;
-    onStart: (row: ProductExportRow) => void;
+    /**
+     * Hand-off to the review step. Receives the preview server returned + the match count so the
+     * wizard owner can build the ReviewState in one shot.
+     */
+    onReview: (args: {
+        preview: ExportPreviewResult;
+        matchCount: { products: number; variations: number; total_rows: number };
+    }) => void;
 }
 
 const PRODUCT_STATUSES = ["publish", "draft", "pending", "private"] as const;
@@ -47,15 +53,13 @@ const COLUMN_PRESET_IDS: ColumnPresetId[] = ["default", "all", "required", "pric
  * The column picker is a single grouped checklist; reordering uses HTML5 drag-and-drop without
  * pulling in a new dep — the move handle stamps the drop target index when the operator releases.
  */
-export function StepFilterAndColumns({ state, onChange, onStart }: StepFilterAndColumnsProps): React.JSX.Element {
+export function StepFilterAndColumns({ state, onChange, onReview }: StepFilterAndColumnsProps): React.JSX.Element {
     const t = useTranslations("ProductsExport.step1");
     const locale = useLocale();
     const fmt = useCallback((n: number) => (locale === "fa" ? toPersianDigits(n) : String(n)), [locale]);
 
     const [count, setCount] = useState<ExportCount | null>(null);
     const [countLoading, setCountLoading] = useState(false);
-    const [preview, setPreview] = useState<ExportPreviewResult | null>(null);
-    const [previewLoading, setPreviewLoading] = useState(false);
     const [startLoading, setStartLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -110,9 +114,14 @@ export function StepFilterAndColumns({ state, onChange, onStart }: StepFilterAnd
         [onChange, state.columns],
     );
 
-    const handlePreview = useCallback(async () => {
+    /**
+     * "Continue to review" — fetches the 5-row preview against the current filter + column
+     * selection, then hands off to Step 2 so the operator can inspect before pulling the
+     * trigger. The actual `startExport` call now lives in the review step.
+     */
+    const handleContinue = useCallback(async () => {
         setError(null);
-        setPreviewLoading(true);
+        setStartLoading(true);
         try {
             const { data } = await getExportPreview(
                 {
@@ -125,34 +134,16 @@ export function StepFilterAndColumns({ state, onChange, onStart }: StepFilterAnd
                 },
                 locale,
             );
-            setPreview(data);
+            onReview({
+                preview: data,
+                matchCount: count ?? { products: 0, variations: 0, total_rows: 0 },
+            });
         } catch (err) {
             setError(err instanceof Error ? err.message : t("previewFailed"));
         } finally {
-            setPreviewLoading(false);
-        }
-    }, [filtersForRequest, locale, state.columns, state.format, t]);
-
-    const handleStart = useCallback(async () => {
-        setError(null);
-        setStartLoading(true);
-        try {
-            const { data } = await startExport(
-                {
-                    ...filtersForRequest,
-                    columns: state.columns,
-                    scope: state.scope,
-                    ...state.format,
-                },
-                locale,
-            );
-            onStart(data);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : t("startFailed"));
-        } finally {
             setStartLoading(false);
         }
-    }, [filtersForRequest, locale, onStart, state.columns, state.format, state.scope, t]);
+    }, [count, filtersForRequest, locale, onReview, state.columns, state.format, t]);
 
     const canStart = state.columns.length > 0 && (count?.total_rows ?? 0) > 0 && !startLoading && !countLoading;
 
@@ -192,8 +183,6 @@ export function StepFilterAndColumns({ state, onChange, onStart }: StepFilterAnd
                 </aside>
             </div>
 
-            {preview !== null ? <PreviewTable preview={preview} t={t} /> : null}
-
             {error !== null ? (
                 <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-destructive text-sm">
                     {error}
@@ -201,12 +190,8 @@ export function StepFilterAndColumns({ state, onChange, onStart }: StepFilterAnd
             ) : null}
 
             <footer className="flex flex-wrap items-center justify-end gap-2 rounded-lg border bg-card p-4 text-card-foreground shadow-xs">
-                <Button variant="outline" onClick={handlePreview} disabled={previewLoading || state.columns.length === 0}>
-                    {previewLoading ? <Spinner /> : <Eye className="size-4" aria-hidden />}
-                    {t("preview")}
-                </Button>
                 <Button
-                    onClick={handleStart}
+                    onClick={handleContinue}
                     disabled={!canStart}
                     size="lg"
                     title={
@@ -217,8 +202,8 @@ export function StepFilterAndColumns({ state, onChange, onStart }: StepFilterAnd
                               : undefined
                     }
                 >
-                    {startLoading ? <Spinner /> : <FileDown className="size-4" aria-hidden />}
-                    {t("generate")}
+                    {startLoading ? <Spinner /> : <ArrowRight className="size-4 rtl:rotate-180" aria-hidden />}
+                    {t("continueToReview")}
                 </Button>
             </footer>
         </article>
@@ -745,45 +730,6 @@ function SelectRow({
                 ))}
             </select>
         </div>
-    );
-}
-
-function PreviewTable({
-    preview,
-    t,
-}: {
-    preview: ExportPreviewResult;
-    t: (key: string, params?: Record<string, string | number | Date>) => string;
-}): React.JSX.Element {
-    return (
-        <section className="rounded-lg border bg-card p-4 text-card-foreground shadow-xs">
-            <h3 className="font-semibold text-sm">{t("previewTitle")}</h3>
-            <div className="mt-2 overflow-x-auto rounded-md border">
-                <table className="w-full text-xs">
-                    <thead className="bg-muted/40 text-muted-foreground">
-                        <tr>
-                            {preview.columns.map((c) => (
-                                <th key={c} scope="col" className="whitespace-nowrap px-2 py-1.5 text-start font-medium">
-                                    {c}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {preview.rows.map((row, idx) => (
-                            // biome-ignore lint/suspicious/noArrayIndexKey: preview rows have no stable identity beyond position
-                            <tr key={`preview-${idx}`} className="border-t">
-                                {preview.columns.map((c) => (
-                                    <td key={c} className="max-w-48 truncate px-2 py-1.5">
-                                        {row[c] ?? ""}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </section>
     );
 }
 

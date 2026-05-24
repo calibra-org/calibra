@@ -114,6 +114,7 @@
         "steps": {
             "aria": "Export steps",
             "filter": "Filter & columns",
+            "review": "Review",
             "exporting": "Exporting",
             "done": "Done"
         },
@@ -134,12 +135,44 @@
             "subtitle": "Decide which products to export and which columns to include.",
             "scopeTitle": "Export scope",
             "preview": "Preview 5 rows",
+            "continueToReview": "Continue to review",
             "generate": "Generate",
             "disabledNoColumns": "Pick at least one column",
             "disabledNoMatches": "No products match the current filter",
             "previewFailed": "Preview failed.",
             "startFailed": "Could not start the export.",
             "previewTitle": "Preview — first 5 rows"
+        },
+        "review": {
+            "title": "Review and confirm",
+            "subtitle": "Inspect a sample of the output and tweak format options before pulling the trigger.",
+            "totals": {
+                "products": "Matching products",
+                "variations": "Variations",
+                "columns": "Output columns",
+                "format": "Format"
+            },
+            "formatTitle": "Output format",
+            "formatHelp": "Changing any of these auto-refreshes the preview below.",
+            "digitStyle": "Digit style",
+            "digitStyleAscii": "ASCII",
+            "digitStylePersian": "Persian",
+            "dateFormat": "Date format",
+            "jalali": "Jalali",
+            "moneyFormat": "Money format",
+            "moneyMinor": "Rial (minor units)",
+            "moneyMajor": "Toman",
+            "headerLanguage": "Header language",
+            "headerEn": "English (round-trip safe)",
+            "headerFa": "Persian",
+            "previewTitle": "Sample — first 5 rows",
+            "previewSubtitle": "Showing the first {rows} rows of the final output",
+            "previewCapNote": "Only {rows} sample rows are shown here for performance — rendering thousands of rows in a preview table would freeze your browser. When you click Generate, all {total} matching rows are processed.",
+            "refresh": "Refresh preview",
+            "generate": "Confirm and generate",
+            "backToFilter": "Back to filter",
+            "previewFailed": "Could not refresh preview.",
+            "startFailed": "Could not start the export."
         },
         "filters": {
             "title": "Filters",

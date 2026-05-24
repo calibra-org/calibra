@@ -259,9 +259,15 @@ export default class AdminProductExportsController {
 
     /** `GET /api/v1/admin/products/export/presets` — user's saved profiles. */
     async listPresets(ctx: HttpContext) {
+        /**
+         * `ORDER BY last_used_at DESC NULLS LAST, created_at DESC` — freshly-created presets
+         * (`last_used_at IS NULL` until the operator picks them at least once) still appear at
+         * the bottom of the most-recently-used pile, but never disappear from the dropdown.
+         */
         const rows = await ProductExportFilterPreset.query()
             .where("user_id", Number(ctx.auth.user!.id))
-            .orderBy("last_used_at", "desc");
+            .orderByRaw("last_used_at DESC NULLS LAST")
+            .orderBy("created_at", "desc");
         return { data: rows.map((r) => ProductExportFilterPresetTransformer.transform(r)) };
     }
 

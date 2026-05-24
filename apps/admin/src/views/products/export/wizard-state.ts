@@ -1,19 +1,27 @@
 "use client";
 
 /**
- * State machine for the export wizard. Three steps, much simpler than the importer's:
+ * State machine for the export wizard. Four steps to mirror the importer's UX rhythm:
  *
  *   1. `filter`     — operator picks scope (all / filter / selected) + filters + columns + format.
- *   2. `exporting`  — runner streams progress.
- *   3. `done`       — summary + download.
- *
- * State is held in the top-level `ExportWizard`; each step view receives a slice as props.
+ *   2. `review`     — dedicated workspace showing the actual 5-row preview + a chance to tweak
+ *                     digit_style / date_format / money_format / header_language before pulling
+ *                     the trigger. Mirrors the import wizard's deliberate "review before commit"
+ *                     pattern.
+ *   3. `exporting`  — runner streams progress.
+ *   4. `done`       — summary + download.
  */
 
 import { DEFAULT_EXPORT_COLUMNS } from "#/lib/exports/default-columns";
-import type { ExportFilters, ExportFormatOptions, ProductExportRow, ProductExportScope } from "#/lib/exports/types";
+import type {
+    ExportFilters,
+    ExportFormatOptions,
+    ExportPreviewResult,
+    ProductExportRow,
+    ProductExportScope,
+} from "#/lib/exports/types";
 
-export type WizardStep = "filter" | "exporting" | "done";
+export type WizardStep = "filter" | "review" | "exporting" | "done";
 
 export interface FilterState {
     step: "filter";
@@ -22,6 +30,17 @@ export interface FilterState {
     columns: string[];
     format: ExportFormatOptions;
     selectedIds: number[];
+}
+
+export interface ReviewState {
+    step: "review";
+    scope: ProductExportScope;
+    filters: ExportFilters;
+    columns: string[];
+    format: ExportFormatOptions;
+    selectedIds: number[];
+    preview: ExportPreviewResult;
+    matchCount: { products: number; variations: number; total_rows: number };
 }
 
 export interface ExportingState {
@@ -36,7 +55,7 @@ export interface DoneState {
     token: string | null;
 }
 
-export type WizardState = FilterState | ExportingState | DoneState;
+export type WizardState = FilterState | ReviewState | ExportingState | DoneState;
 
 export function initialFilterState(scope: ProductExportScope = "filter", selectedIds: number[] = []): FilterState {
     return {

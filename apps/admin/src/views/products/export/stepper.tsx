@@ -13,7 +13,7 @@ export interface StepperProps {
     onStepClick?: (step: WizardStep) => void;
 }
 
-const ORDER: WizardStep[] = ["filter", "exporting", "done"];
+const ORDER: WizardStep[] = ["filter", "review", "exporting", "done"];
 
 export function Stepper({ current, farthest, onStepClick }: StepperProps): React.JSX.Element {
     const t = useTranslations("ProductsExport.steps");
