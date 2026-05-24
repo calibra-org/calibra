@@ -1,6 +1,7 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import { ExceptionHandler, type HttpContext } from "@adonisjs/core/http";
 import app from "@adonisjs/core/services/app";
+import * as Sentry from "@sentry/node";
 
 /**
  * Map of domain error codes → i18n keys, looked up by `ctx.i18n.t()`. Adding a translation entry
@@ -41,6 +42,17 @@ export default class HttpExceptionHandler extends ExceptionHandler {
     }
 
     async report(error: unknown, ctx: HttpContext) {
+        /**
+         * Forward to Sentry only when `shouldReport(...)` agrees — that filter sees 4xx
+         * exceptions as expected and drops them, so the noise floor stays low. Sentry's
+         * `init()` is gated on `SENTRY_DSN`; without a DSN `captureException` is a noop.
+         */
+        if (this.shouldReport(error as Parameters<typeof this.shouldReport>[0])) {
+            const requestId = (ctx.request as unknown as { id?: () => string }).id?.();
+            Sentry.captureException(error, {
+                tags: requestId ? { request_id: requestId } : undefined,
+            });
+        }
         return super.report(error, ctx);
     }
 

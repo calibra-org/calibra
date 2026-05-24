@@ -47,6 +47,7 @@ export default defineConfig({
         () => import("@adonisjs/limiter/limiter_provider"),
         () => import("@adonisjs/shield/shield_provider"),
         () => import("@adonisjs/lock/lock_provider"),
+        () => import("@adonisjs/otel/otel_provider"),
     ],
 
     preloads: [

@@ -4,6 +4,7 @@
  */
 
 import "reflect-metadata";
+import "./sentry.js";
 import { Ignitor, prettyPrintError } from "@adonisjs/core";
 
 const APP_ROOT = new URL("../", import.meta.url);
