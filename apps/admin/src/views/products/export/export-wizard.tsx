@@ -46,11 +46,11 @@ export function ExportWizard({ initialScope = "filter", initialSelectedIds = [] 
         let cancelled = false;
         (async () => {
             try {
-                const { data } = await getExport(Number(id), locale);
+                const response = await getExport(Number(id), locale);
                 if (cancelled) return;
-                const next = stepFromStatus(data);
-                if (next === "exporting") setState({ step: "exporting", exportRow: data });
-                else if (next === "done") setState({ step: "done", exportRow: data, token: null });
+                const next = stepFromStatus(response.data);
+                if (next === "exporting") setState({ step: "exporting", exportRow: response.data });
+                else if (next === "done") setState({ step: "done", exportRow: response.data, token: response.download_token });
             } catch {
                 /** Stale id; remain on Step 1. */
             }

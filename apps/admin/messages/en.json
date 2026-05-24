@@ -273,6 +273,7 @@
             "rows": "Rows",
             "columns": "Columns",
             "duration": "Duration",
+            "scopeLabel": "Scope",
             "scope": {
                 "all": "All",
                 "filter": "Custom filter",

@@ -71,7 +71,7 @@ export function StepDone({ exportRow, token, onAnother, onBackToList }: StepDone
                     <Stat label={t("rows")} value={fmt(exportRow.processed_rows)} />
                     <Stat label={t("columns")} value={fmt(exportRow.columns.length)} />
                     <Stat label={t("duration")} value={computeDuration(exportRow)} />
-                    <Stat label={t("scope")} value={t(`scope.${exportRow.scope}`)} />
+                    <Stat label={t("scopeLabel")} value={t(`scope.${exportRow.scope}`)} />
                 </dl>
 
                 {exportRow.is_downloadable && downloadUrl !== null ? (

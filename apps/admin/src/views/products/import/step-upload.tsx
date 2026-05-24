@@ -185,32 +185,50 @@ export function StepUpload({ onFileSelected, isUploading, uploadPercent, error }
                             <Label className="text-xs" htmlFor="delimiter">
                                 {t("advanced.delimiter")}
                             </Label>
-                            <select
-                                id="delimiter"
-                                value={delimiter}
-                                onChange={(e) => setDelimiter(e.target.value as never)}
-                                className="rounded-md border bg-background p-2 text-sm"
-                            >
-                                <option value="auto">{tCommon("auto")}</option>
-                                <option value=",">,</option>
-                                <option value=";">;</option>
-                                <option value="\t">{tCommon("tab")}</option>
-                            </select>
+                            <div className="relative">
+                                <select
+                                    id="delimiter"
+                                    value={delimiter}
+                                    onChange={(e) => setDelimiter(e.target.value as never)}
+                                    className={cn(
+                                        "h-9 w-full appearance-none rounded-md border bg-background ps-3 pe-9 text-sm shadow-xs outline-none",
+                                        "hover:border-ring/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                                    )}
+                                >
+                                    <option value="auto">{tCommon("auto")}</option>
+                                    <option value=",">,</option>
+                                    <option value=";">;</option>
+                                    <option value="\t">{tCommon("tab")}</option>
+                                </select>
+                                <ChevronDown
+                                    className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                                    aria-hidden
+                                />
+                            </div>
                         </div>
                         <div className="flex flex-col gap-1">
                             <Label className="text-xs" htmlFor="encoding">
                                 {t("advanced.encoding")}
                             </Label>
-                            <select
-                                id="encoding"
-                                value={encoding}
-                                onChange={(e) => setEncoding(e.target.value as never)}
-                                className="rounded-md border bg-background p-2 text-sm"
-                            >
-                                <option value="auto">{tCommon("auto")}</option>
-                                <option value="utf-8">UTF-8</option>
-                                <option value="windows-1256">Windows-1256</option>
-                            </select>
+                            <div className="relative">
+                                <select
+                                    id="encoding"
+                                    value={encoding}
+                                    onChange={(e) => setEncoding(e.target.value as never)}
+                                    className={cn(
+                                        "h-9 w-full appearance-none rounded-md border bg-background ps-3 pe-9 text-sm shadow-xs outline-none",
+                                        "hover:border-ring/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                                    )}
+                                >
+                                    <option value="auto">{tCommon("auto")}</option>
+                                    <option value="utf-8">UTF-8</option>
+                                    <option value="windows-1256">Windows-1256</option>
+                                </select>
+                                <ChevronDown
+                                    className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                                    aria-hidden
+                                />
+                            </div>
                         </div>
                     </div>
                 </details>

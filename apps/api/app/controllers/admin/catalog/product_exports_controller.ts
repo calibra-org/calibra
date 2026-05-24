@@ -10,7 +10,7 @@ import { subscribeToExport, TERMINAL_EXPORT_EVENT_TYPES } from "#services/produc
 import { type ExportableProduct, resolveRow } from "#services/product_export/export_field_resolver";
 import { buildExportQuery, type ExportFilters } from "#services/product_export/export_query_builder";
 import { runExport } from "#services/product_export/export_runner";
-import { verifySignedUrl } from "#services/product_export/export_signed_url";
+import { mintSignedUrl, verifySignedUrl } from "#services/product_export/export_signed_url";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductExportFilterPresetTransformer from "#transformers/product_export_filter_preset_transformer";
 import ProductExportTransformer from "#transformers/product_export_transformer";
@@ -104,13 +104,39 @@ export default class AdminProductExportsController {
         return resource(ProductExportTransformer.transform(row));
     }
 
-    /** `GET /api/v1/admin/products/export/{id}` — single export row (polling fallback). */
+    /**
+     * `GET /api/v1/admin/products/export/{id}` — single export row (polling fallback).
+     *
+     * When the row is downloadable, also mints a fresh signed-URL token + persists its hash so
+     * the wizard can render a working download link even when the SSE `complete` event was
+     * missed (operator opened the page after the job finished, refreshed mid-stream, etc.).
+     * Each call invalidates the previous token (rolling hash) — that's a security feature, not
+     * a bug.
+     */
     async show(ctx: HttpContext) {
         const row = await ProductExport.find(ctx.params.id);
         if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
             return ctx.response.status(404).json({ errors: [{ message: "export not found", code: "E_NOT_FOUND" }] });
         }
-        return resource(ProductExportTransformer.transform(row));
+        let token: string | null = null;
+        if (
+            row.status === "completed" &&
+            row.filePath !== null &&
+            row.downloadExpiresAt !== null &&
+            row.downloadExpiresAt !== undefined &&
+            Date.now() < row.downloadExpiresAt.toMillis()
+        ) {
+            const minted = mintSignedUrl({
+                userId: Number(row.userId),
+                exportId: Number(row.id),
+                expiresAt: row.downloadExpiresAt.toMillis(),
+            });
+            row.downloadTokenHash = minted.hash;
+            await row.save();
+            token = minted.token;
+        }
+        const envelope = await resource(ProductExportTransformer.transform(row));
+        return { ...envelope, download_token: token };
     }
 
     /**

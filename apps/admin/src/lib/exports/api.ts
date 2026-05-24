@@ -19,6 +19,7 @@ import type {
     ExportPreviewResult,
     ProductExportPreset,
     ProductExportRow,
+    ProductExportShowResponse,
     ProductExportStreamEvent,
 } from "#/lib/exports/types";
 import { apiMutate } from "#/lib/queries/api-client";
@@ -88,7 +89,7 @@ export function startExport(
     return apiMutate("POST", "products/export/start", { locale, body });
 }
 
-export function getExport(id: number, locale: string, signal?: AbortSignal): Promise<{ data: ProductExportRow }> {
+export function getExport(id: number, locale: string, signal?: AbortSignal): Promise<ProductExportShowResponse> {
     return getProxy(`products/export/${id}`, locale, "", signal);
 }
 

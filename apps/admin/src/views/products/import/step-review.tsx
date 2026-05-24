@@ -128,7 +128,7 @@ export function StepReview({ state, onChange, onBackToMapping, onStart }: StepRe
                 </div>
             ) : null}
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[20rem_1fr]">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
                 <aside className="flex flex-col gap-4">
                     <section className="rounded-lg border bg-card p-5 text-card-foreground shadow-xs">
                         <header className="flex items-center gap-2">

@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
-import { deleteExport, exportDownloadUrl, listExportHistory } from "#/lib/exports/api";
+import { deleteExport, exportDownloadUrl, getExport, listExportHistory } from "#/lib/exports/api";
 import type { ProductExportRow } from "#/lib/exports/types";
 import { Link, useRouter } from "#/lib/i18n/navigation";
 
@@ -128,11 +128,32 @@ export function ExportHistory(): React.JSX.Element {
                                     <td className="px-3 py-2">
                                         <div className="flex items-center justify-end gap-1">
                                             {row.is_downloadable ? (
-                                                <Button asChild size="icon" variant="ghost" aria-label={t("col.download")}>
-                                                    {/** No token here — we don't keep the raw token. UI shows download link only from Step 3 right after completion. */}
-                                                    <a href={exportDownloadUrl(row.id, "")} download>
-                                                        <Download className="size-4" aria-hidden />
-                                                    </a>
+                                                /**
+                                                 * Click hands off to `getExport` to mint a fresh
+                                                 * signed-URL token, then triggers a hidden `<a>`
+                                                 * with the resulting URL. We don't keep tokens in
+                                                 * memory between visits, so each download is a
+                                                 * single round-trip.
+                                                 */
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    aria-label={t("col.download")}
+                                                    onClick={async () => {
+                                                        const response = await getExport(row.id, locale);
+                                                        if (response.download_token === null) return;
+                                                        const url = exportDownloadUrl(row.id, response.download_token);
+                                                        const link = document.createElement("a");
+                                                        link.href = url;
+                                                        link.download = row.compressed
+                                                            ? `${row.original_filename}.gz`
+                                                            : row.original_filename;
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        link.remove();
+                                                    }}
+                                                >
+                                                    <Download className="size-4" aria-hidden />
                                                 </Button>
                                             ) : null}
                                             <Button

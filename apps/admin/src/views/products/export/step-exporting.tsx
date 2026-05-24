@@ -56,13 +56,18 @@ export function StepExporting({ exportRow, onFinished, onBackToList }: StepExpor
             if (finishedRef.current) return;
             finishedRef.current = true;
             try {
-                const { data } = await getExport(exportRow.id, locale);
+                const response = await getExport(exportRow.id, locale);
                 if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-                    new Notification(deriveNotificationTitle(data.status), {
-                        body: deriveNotificationBody(data),
+                    new Notification(deriveNotificationTitle(response.data.status), {
+                        body: deriveNotificationBody(response.data),
                     });
                 }
-                onFinished(data, tokenRef.current);
+                /**
+                 * Prefer the token from the SSE complete event (already in `tokenRef`); fall
+                 * back to the freshly minted one the /show endpoint hands back when SSE was
+                 * missed (operator refreshed mid-stream, came back from a deep-link, etc.).
+                 */
+                onFinished(response.data, tokenRef.current ?? response.download_token);
             } catch {
                 onFinished(row, tokenRef.current);
             }
@@ -117,19 +122,19 @@ export function StepExporting({ exportRow, onFinished, onBackToList }: StepExpor
         if (!pollingActive || finishedRef.current) return;
         const interval = setInterval(() => {
             getExport(exportRow.id, locale)
-                .then(({ data }) => {
-                    setRow(data);
+                .then((response) => {
+                    setRow(response.data);
                     setLastEventAt(Date.now());
                     setSlow(false);
                     if (
-                        data.status === "completed" ||
-                        data.status === "completed_with_errors" ||
-                        data.status === "failed" ||
-                        data.status === "cancelled"
+                        response.data.status === "completed" ||
+                        response.data.status === "completed_with_errors" ||
+                        response.data.status === "failed" ||
+                        response.data.status === "cancelled"
                     ) {
                         if (!finishedRef.current) {
                             finishedRef.current = true;
-                            onFinished(data, tokenRef.current);
+                            onFinished(response.data, tokenRef.current ?? response.download_token);
                         }
                     }
                 })

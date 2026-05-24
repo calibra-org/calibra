@@ -159,7 +159,7 @@ export function StepFilterAndColumns({ state, onChange, onReview }: StepFilterAn
                 </header>
             </section>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_22rem]">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
                 <section className="flex flex-col gap-4">
                     <ScopeToggle state={state} onChange={onChange} t={t} fmt={fmt} count={count} />
                     <FilterPanel state={state} updateFilter={updateFilter} toggleArrayFilter={toggleArrayFilter} t={t} />
@@ -715,20 +715,34 @@ function SelectRow({
     onChange: (next: string) => void;
     options: Array<{ value: string; label: string }>;
 }): React.JSX.Element {
+    /**
+     * Native `<select>` ships a browser-default chevron that doesn't match our design system and
+     * sits on the wrong side under RTL. Strip it with `appearance-none` and overlay a real Lucide
+     * chevron at the LOGICAL end (`end-3` flips with locale direction).
+     */
     return (
         <div className="flex flex-col gap-1">
             <Label className="text-muted-foreground text-xs">{label}</Label>
-            <select
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="h-9 rounded-md border bg-background px-3 text-sm"
-            >
-                {options.map((o) => (
-                    <option key={o.value} value={o.value}>
-                        {o.label}
-                    </option>
-                ))}
-            </select>
+            <div className="relative">
+                <select
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className={cn(
+                        "h-9 w-full appearance-none rounded-md border bg-background ps-3 pe-9 text-sm shadow-xs outline-none",
+                        "hover:border-ring/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                    )}
+                >
+                    {options.map((o) => (
+                        <option key={o.value} value={o.value}>
+                            {o.label}
+                        </option>
+                    ))}
+                </select>
+                <ChevronDown
+                    className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden
+                />
+            </div>
         </div>
     );
 }

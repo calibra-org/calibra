@@ -1,7 +1,7 @@
 "use client";
 
 import { toPersianDigits } from "@calibra/shared/digits";
-import { ArrowLeft, FileDown, Info, RefreshCw, Sliders } from "lucide-react";
+import { ArrowLeft, ChevronDown, FileDown, Info, RefreshCw, Sliders } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -146,7 +146,7 @@ export function StepReview({ state, onChange, onBackToFilter, onStart }: StepRev
                 </div>
             ) : null}
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[20rem_1fr]">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
                 <aside className="flex flex-col gap-4">
                     <section className="rounded-lg border bg-card p-5 text-card-foreground shadow-xs">
                         <header className="flex items-center gap-2">
@@ -301,20 +301,35 @@ function SelectField({
     onChange: (next: string) => void;
     options: Array<{ value: string; label: string }>;
 }): React.JSX.Element {
+    /**
+     * Native `<select>` ships a browser-default chevron that doesn't match our design system and
+     * gets stuck on the wrong side under RTL. Strip it with `appearance-none` and overlay a real
+     * Lucide chevron positioned at the LOGICAL end (`end-3` flips with locale direction). The
+     * select keeps `pe-9` so the rendered text never collides with the icon.
+     */
     return (
         <div className="flex flex-col gap-1">
             <Label className="text-muted-foreground text-xs">{label}</Label>
-            <select
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="h-9 rounded-md border bg-background px-3 text-sm"
-            >
-                {options.map((o) => (
-                    <option key={o.value} value={o.value}>
-                        {o.label}
-                    </option>
-                ))}
-            </select>
+            <div className="relative">
+                <select
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className={cn(
+                        "h-9 w-full appearance-none rounded-md border bg-background ps-3 pe-9 text-sm shadow-xs outline-none",
+                        "hover:border-ring/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                    )}
+                >
+                    {options.map((o) => (
+                        <option key={o.value} value={o.value}>
+                            {o.label}
+                        </option>
+                    ))}
+                </select>
+                <ChevronDown
+                    className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden
+                />
+            </div>
         </div>
     );
 }

@@ -63,6 +63,16 @@ export interface ExportFormatOptions {
     include_variations?: boolean;
 }
 
+/**
+ * Show-endpoint envelope. Extends the standard `{ data }` shape with an optional
+ * `download_token` the controller mints on each call so the wizard always has a fresh signed-URL
+ * token — the raw token otherwise only lives in the SSE complete event.
+ */
+export interface ProductExportShowResponse {
+    data: ProductExportRow;
+    download_token: string | null;
+}
+
 export interface ProductExportRow {
     id: number;
     user_id: number;
