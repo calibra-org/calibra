@@ -51,40 +51,34 @@ export function MediaTile({ row, selected, isActive, bulkMode, onClick, onToggle
                 )}
             </button>
 
-            {bulkMode ? (
-                <button
-                    type="button"
-                    onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onToggleSelect();
-                    }}
-                    aria-label={tTile("selectAria", { name: display })}
-                    aria-pressed={selected}
-                    className={cn(
-                        "absolute end-2 top-2 inline-flex size-7 items-center justify-center rounded-full border-2 transition-colors",
-                        selected
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-white/80 bg-background/70 text-transparent hover:text-foreground",
-                    )}
-                >
-                    <Check className="size-4" aria-hidden="true" />
-                </button>
-            ) : (
-                <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onToggleSelect();
-                    }}
-                    aria-label={tTile("selectAria", { name: display })}
-                    className="absolute end-2 top-2 inline-flex size-7 items-center justify-center rounded-full border-2 border-white/80 bg-background/70 text-transparent opacity-0 transition-opacity hover:text-foreground group-focus-within:opacity-100 group-hover:opacity-100"
-                >
-                    <Check className="size-4" aria-hidden="true" />
-                </button>
-            )}
+            <button
+                type="button"
+                tabIndex={bulkMode ? 0 : -1}
+                onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onToggleSelect();
+                }}
+                aria-label={tTile("selectAria", { name: display })}
+                aria-pressed={selected}
+                className={cn(
+                    "absolute end-2 top-2 inline-flex size-7 items-center justify-center rounded-full border-2 transition-[colors,opacity]",
+                    /**
+                     * Visibility rule. Selected tiles always render the filled-primary badge so
+                     * the operator can scan a grid and instantly see what's checked, even after
+                     * they've moved the cursor away. Bulk mode keeps the empty affordance always
+                     * visible so the operator knows the tile is clickable as a checkbox. Plain
+                     * mode hides the empty affordance until the tile is hovered or focused.
+                     */
+                    selected
+                        ? "border-primary bg-primary text-primary-foreground opacity-100"
+                        : bulkMode
+                          ? "border-white/80 bg-background/70 text-transparent opacity-100 hover:text-foreground"
+                          : "border-white/80 bg-background/70 text-transparent opacity-0 hover:text-foreground group-focus-within:opacity-100 group-hover:opacity-100",
+                )}
+            >
+                <Check className="size-4" aria-hidden="true" />
+            </button>
 
             <div className="pointer-events-none absolute inset-x-0 bottom-0 truncate rounded-b-lg bg-gradient-to-t from-black/70 to-transparent px-2 pt-6 pb-1.5 text-start text-white text-xs">
                 {display}
