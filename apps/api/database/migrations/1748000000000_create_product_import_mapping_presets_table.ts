@@ -21,13 +21,7 @@ export default class extends BaseSchema {
             table.string("name", 200).notNullable();
             table.jsonb("mapping").notNullable().defaultTo(this.raw("'{}'::jsonb"));
             table.boolean("update_existing").notNullable().defaultTo(false);
-            table
-                .bigInteger("created_by_user_id")
-                .unsigned()
-                .nullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("SET NULL");
+            table.bigInteger("created_by_user_id").unsigned().nullable().references("id").inTable("users").onDelete("SET NULL");
             table.timestamp("last_used_at", { useTz: true }).nullable();
             table.integer("use_count").notNullable().defaultTo(0);
             table.timestamp("created_at", { useTz: true }).notNullable().defaultTo(this.now());

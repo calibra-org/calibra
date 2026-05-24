@@ -1,78 +1,78 @@
 [
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/products/import/{id}/changes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/products/import/{id}/errors"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/products/import/{id}/stream"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/products/import/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/products/import/history"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "GET /api/v1/admin/products/import/template"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/products/import/{id}/changes"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/products/import/{id}/errors"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/products/import/{id}/stream"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/products/import/{id}"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/products/import/history"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "HEAD /api/v1/admin/products/import/template"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/import/{id}/cancel"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/import/{id}/retry-failed"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/import/{id}/retry-row"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/import/{id}/rollback"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/import/preview"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/import/start"
-  },
-  {
-    "severity": "missing-in-spec",
-    "codeKey": "POST /api/v1/admin/products/import/upload"
-  }
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/products/import/{id}/changes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/products/import/{id}/errors"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/products/import/{id}/stream"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/products/import/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/products/import/history"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "GET /api/v1/admin/products/import/template"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/products/import/{id}/changes"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/products/import/{id}/errors"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/products/import/{id}/stream"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/products/import/{id}"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/products/import/history"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "HEAD /api/v1/admin/products/import/template"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/import/{id}/cancel"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/import/{id}/retry-failed"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/import/{id}/retry-row"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/import/{id}/rollback"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/import/preview"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/import/start"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/admin/products/import/upload"
+    }
 ]

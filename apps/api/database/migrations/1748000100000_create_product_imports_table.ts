@@ -25,13 +25,7 @@ export default class extends BaseSchema {
 
         this.schema.createTable(this.tableName, (table) => {
             table.bigIncrements("id").notNullable();
-            table
-                .bigInteger("user_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("RESTRICT");
+            table.bigInteger("user_id").unsigned().notNullable().references("id").inTable("users").onDelete("RESTRICT");
             table.specificType("status", "product_import_status_enum").notNullable().defaultTo("queued");
 
             table.string("original_filename", 512).notNullable();

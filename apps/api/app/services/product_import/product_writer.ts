@@ -1,8 +1,6 @@
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
 
-import { slugify } from "#services/slug_service";
-
 import type { ProductImportDTO } from "#services/product_import/row_projector";
 import {
     type NewRowCounters,
@@ -11,6 +9,7 @@ import {
     resolveTags,
     resolveTaxClass,
 } from "#services/product_import/taxonomy_resolver";
+import { slugify } from "#services/slug_service";
 
 /**
  * Bridge between a projected `ProductImportDTO` and the products table + its satellites. Owns the
@@ -37,13 +36,7 @@ export interface WriteOutcome {
     queuedImageCount: number;
 }
 
-const PRODUCT_TRANSLATION_FIELDS = [
-    "name",
-    "slug",
-    "description",
-    "short_description",
-    "purchase_note",
-] as const;
+const PRODUCT_TRANSLATION_FIELDS = ["name", "slug", "description", "short_description", "purchase_note"] as const;
 
 type ProductRow = {
     id: number | bigint;
@@ -89,8 +82,12 @@ export async function applyUpdate(
         await trx.from("products").where("id", String(existing.id)).update(productUpdates);
     }
 
-    if (dto.name !== undefined || dto.description !== undefined || dto.short_description !== undefined
-        || dto.purchase_note !== undefined) {
+    if (
+        dto.name !== undefined ||
+        dto.description !== undefined ||
+        dto.short_description !== undefined ||
+        dto.purchase_note !== undefined
+    ) {
         await upsertProductTranslation(trx, Number(existing.id), dto, locale, existing.name);
     }
 
@@ -152,10 +149,12 @@ export async function applyCreate(
         featured: dto.featured ?? false,
         virtual: false,
         downloadable: false,
-        regular_price: dto.regular_price_major !== undefined && dto.regular_price_major !== null
-            ? Math.round(dto.regular_price_major * 10) : null,
-        sale_price: dto.sale_price_major !== undefined && dto.sale_price_major !== null
-            ? Math.round(dto.sale_price_major * 10) : null,
+        regular_price:
+            dto.regular_price_major !== undefined && dto.regular_price_major !== null
+                ? Math.round(dto.regular_price_major * 10)
+                : null,
+        sale_price:
+            dto.sale_price_major !== undefined && dto.sale_price_major !== null ? Math.round(dto.sale_price_major * 10) : null,
         sale_starts_at: dto.sale_price_start ?? null,
         sale_ends_at: dto.sale_price_end ?? null,
         tax_status: dto.tax_status ?? "taxable",
@@ -271,7 +270,11 @@ function applyProductFields(
     }
     if (dto.weight_grams !== undefined && dto.weight_grams !== existing.weight_grams) {
         target.weight_grams = dto.weight_grams;
-        changes.push({ field: "weight_grams", oldValue: existing.weight_grams === null ? null : String(existing.weight_grams), newValue: dto.weight_grams === null ? null : String(dto.weight_grams) });
+        changes.push({
+            field: "weight_grams",
+            oldValue: existing.weight_grams === null ? null : String(existing.weight_grams),
+            newValue: dto.weight_grams === null ? null : String(dto.weight_grams),
+        });
     }
     if (dto.length_mm !== undefined && dto.length_mm !== existing.length_mm) target.length_mm = dto.length_mm;
     if (dto.width_mm !== undefined && dto.width_mm !== existing.width_mm) target.width_mm = dto.width_mm;
@@ -326,27 +329,27 @@ async function syncCategoryLinks(trx: TransactionClientContract, productId: numb
     await trx.from("product_category_links").where("product_id", String(productId)).delete();
     if (ids.length === 0) return;
     const now = DateTime.utc().toSQL();
-    await trx.table("product_category_links").insert(
-        ids.map((id) => ({ product_id: productId, category_id: id, created_at: now, updated_at: now })),
-    );
+    await trx
+        .table("product_category_links")
+        .insert(ids.map((id) => ({ product_id: productId, category_id: id, created_at: now, updated_at: now })));
 }
 
 async function syncTagLinks(trx: TransactionClientContract, productId: number, ids: number[]): Promise<void> {
     await trx.from("product_tag_links").where("product_id", String(productId)).delete();
     if (ids.length === 0) return;
     const now = DateTime.utc().toSQL();
-    await trx.table("product_tag_links").insert(
-        ids.map((id) => ({ product_id: productId, tag_id: id, created_at: now, updated_at: now })),
-    );
+    await trx
+        .table("product_tag_links")
+        .insert(ids.map((id) => ({ product_id: productId, tag_id: id, created_at: now, updated_at: now })));
 }
 
 async function syncBrandLinks(trx: TransactionClientContract, productId: number, ids: number[]): Promise<void> {
     await trx.from("product_brand_links").where("product_id", String(productId)).delete();
     if (ids.length === 0) return;
     const now = DateTime.utc().toSQL();
-    await trx.table("product_brand_links").insert(
-        ids.map((id) => ({ product_id: productId, brand_id: id, created_at: now, updated_at: now })),
-    );
+    await trx
+        .table("product_brand_links")
+        .insert(ids.map((id) => ({ product_id: productId, brand_id: id, created_at: now, updated_at: now })));
 }
 
 async function upsertInventory(trx: TransactionClientContract, productId: number, dto: ProductImportDTO): Promise<void> {

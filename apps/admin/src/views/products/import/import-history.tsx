@@ -1,10 +1,9 @@
 "use client";
 
+import { toPersianDigits } from "@calibra/shared/digits";
 import { ArrowLeft, Download, History as HistoryIcon, RotateCcw } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
-
-import { toPersianDigits } from "@calibra/shared/digits";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -60,7 +59,12 @@ export function ImportHistory(): React.JSX.Element {
     return (
         <section className="flex flex-col gap-6">
             <header className="flex flex-col gap-3">
-                <Button variant="ghost" size="sm" className="w-fit text-muted-foreground" onClick={() => router.push("/products" as never)}>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-fit text-muted-foreground"
+                    onClick={() => router.push("/products" as never)}
+                >
                     <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden />
                     {t("backToProducts")}
                 </Button>
@@ -86,14 +90,30 @@ export function ImportHistory(): React.JSX.Element {
                     <table className="w-full text-sm">
                         <thead className="bg-muted/40 text-muted-foreground">
                             <tr>
-                                <th scope="col" className="px-3 py-2 text-start font-medium">{t("col.file")}</th>
-                                <th scope="col" className="px-3 py-2 text-start font-medium">{t("col.date")}</th>
-                                <th scope="col" className="px-3 py-2 text-start font-medium">{t("col.status")}</th>
-                                <th scope="col" className="px-3 py-2 text-start font-medium">{t("col.created")}</th>
-                                <th scope="col" className="px-3 py-2 text-start font-medium">{t("col.updated")}</th>
-                                <th scope="col" className="px-3 py-2 text-start font-medium">{t("col.skipped")}</th>
-                                <th scope="col" className="px-3 py-2 text-start font-medium">{t("col.failed")}</th>
-                                <th scope="col" className="px-3 py-2 text-end font-medium">{t("col.actions")}</th>
+                                <th scope="col" className="px-3 py-2 text-start font-medium">
+                                    {t("col.file")}
+                                </th>
+                                <th scope="col" className="px-3 py-2 text-start font-medium">
+                                    {t("col.date")}
+                                </th>
+                                <th scope="col" className="px-3 py-2 text-start font-medium">
+                                    {t("col.status")}
+                                </th>
+                                <th scope="col" className="px-3 py-2 text-start font-medium">
+                                    {t("col.created")}
+                                </th>
+                                <th scope="col" className="px-3 py-2 text-start font-medium">
+                                    {t("col.updated")}
+                                </th>
+                                <th scope="col" className="px-3 py-2 text-start font-medium">
+                                    {t("col.skipped")}
+                                </th>
+                                <th scope="col" className="px-3 py-2 text-start font-medium">
+                                    {t("col.failed")}
+                                </th>
+                                <th scope="col" className="px-3 py-2 text-end font-medium">
+                                    {t("col.actions")}
+                                </th>
                             </tr>
                         </thead>
                         <tbody>

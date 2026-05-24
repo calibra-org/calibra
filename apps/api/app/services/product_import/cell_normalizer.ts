@@ -27,28 +27,9 @@ export function toEnglishDigits(value: string): string {
     return out;
 }
 
-const CURRENCY_SYMBOLS = [
-    "﷼",
-    "ریال",
-    "تومان",
-    "تومن",
-    "$",
-    "€",
-    "£",
-    "¥",
-    "USD",
-    "EUR",
-    "GBP",
-    "IRR",
-    "IRT",
-    "Toman",
-    "Rial",
-];
+const CURRENCY_SYMBOLS = ["﷼", "ریال", "تومان", "تومن", "$", "€", "£", "¥", "USD", "EUR", "GBP", "IRR", "IRT", "Toman", "Rial"];
 
-const CURRENCY_REGEX = new RegExp(
-    CURRENCY_SYMBOLS.map((sym) => sym.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"),
-    "gi",
-);
+const CURRENCY_REGEX = new RegExp(CURRENCY_SYMBOLS.map((sym) => sym.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "gi");
 
 /** Strip thousand separators (Persian `٬`, Arabic `،`, ASCII `,`, `'`, narrow + regular spaces). */
 export function stripThousandSeparators(value: string): string {
@@ -96,7 +77,7 @@ export function parseLooseBoolean(value: string | boolean | number | null | unde
     return null;
 }
 
-const DATE_SEPARATORS = /[\/\-.\\]/;
+const DATE_SEPARATORS = /[/\-.\\]/;
 
 /**
  * Forgiving date parser used by the importer. Accepts Persian + ASCII digits, ISO + slash + dot

@@ -6,17 +6,11 @@ import { DateTime } from "luxon";
 import ProductImport from "#models/product_import";
 import ProductImportChange from "#models/product_import_change";
 import ProductImportError from "#models/product_import_error";
-
 import { parseFile } from "#services/product_import/csv_parser";
 import { writeErrorReport } from "#services/product_import/error_report";
 import { publishImportEvent } from "#services/product_import/event_bus";
-import {
-    applyCreate,
-    applyUpdate,
-    type ChangeRecord,
-    type ProductRow,
-} from "#services/product_import/product_writer";
-import { projectRow, type ColumnMapping, type ProjectionError } from "#services/product_import/row_projector";
+import { applyCreate, applyUpdate, type ChangeRecord, type ProductRow } from "#services/product_import/product_writer";
+import { type ColumnMapping, type ProjectionError, projectRow } from "#services/product_import/row_projector";
 import { type ImportSnapshot, writeSnapshot } from "#services/product_import/storage";
 import { newCounters } from "#services/product_import/taxonomy_resolver";
 
@@ -264,14 +258,7 @@ async function runChunk(ctx: ChunkContext): Promise<ChunkResult> {
         } catch (err) {
             failed++;
             const message = err instanceof Error ? err.message : String(err);
-            await recordError(
-                ctx.importId,
-                rowNumber,
-                sku === "" ? null : sku,
-                "db_constraint_violation",
-                message,
-                null,
-            );
+            await recordError(ctx.importId, rowNumber, sku === "" ? null : sku, "db_constraint_violation", message, null);
         }
     }
 
@@ -389,21 +376,12 @@ async function writeSnapshotResolved(importId: number, snapshot: ImportSnapshot)
 }
 
 async function isCancellationRequested(importId: number): Promise<boolean> {
-    const row = await db
-        .from("product_imports")
-        .where("id", importId)
-        .select("cancellation_requested_at")
-        .first();
+    const row = await db.from("product_imports").where("id", importId).select("cancellation_requested_at").first();
     if (!row) return false;
     return (row as { cancellation_requested_at: Date | null }).cancellation_requested_at !== null;
 }
 
-async function recordErrors(
-    importId: number,
-    rowNumber: number,
-    sku: string | null,
-    errors: ProjectionError[],
-): Promise<void> {
+async function recordErrors(importId: number, rowNumber: number, sku: string | null, errors: ProjectionError[]): Promise<void> {
     const now = DateTime.utc();
     const records = errors.map((err) => ({
         importId,

@@ -7,10 +7,7 @@
  * step view as props — no global store; the wizard is self-contained per route.
  */
 
-import type {
-    PreviewResult,
-    ProductImportRow,
-} from "#/lib/imports/types";
+import type { PreviewResult, ProductImportRow } from "#/lib/imports/types";
 
 export type WizardStep = "upload" | "mapping" | "importing" | "done";
 

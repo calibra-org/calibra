@@ -162,11 +162,11 @@ function detectTypeMismatches(rows: PreviewRow[]): AnomalyFinding[] {
     for (const row of rows) {
         for (const err of row.errors) {
             if (
-                err.code === "invalid_price"
-                || err.code === "invalid_stock"
-                || err.code === "invalid_boolean"
-                || err.code === "invalid_date"
-                || err.code === "invalid_url"
+                err.code === "invalid_price" ||
+                err.code === "invalid_stock" ||
+                err.code === "invalid_boolean" ||
+                err.code === "invalid_date" ||
+                err.code === "invalid_url"
             ) {
                 if (!byColumn.has(err.columnName)) byColumn.set(err.columnName, []);
                 byColumn.get(err.columnName)!.push(row.rowNumber);

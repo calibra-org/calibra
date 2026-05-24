@@ -6,8 +6,6 @@
  * shapes. CSRF token is included on every mutation (multipart upload included).
  */
 
-import { apiGet, apiMutate } from "#/lib/queries/api-client";
-
 import type {
     PreviewResult,
     ProductImportChangeRow,
@@ -16,6 +14,7 @@ import type {
     ProductImportStreamEvent,
     ProductImportUploadResponse,
 } from "#/lib/imports/types";
+import { apiGet, apiMutate } from "#/lib/queries/api-client";
 
 function getCsrfToken(): string | undefined {
     if (typeof document === "undefined") return undefined;
@@ -208,7 +207,12 @@ export function streamImport(id: number, handlers: StreamHandlers): () => void {
         try {
             const parsed = JSON.parse(e.data) as ProductImportStreamEvent;
             handlers.onEvent(parsed);
-            if (parsed.type === "complete" || parsed.type === "failed" || parsed.type === "cancelled" || parsed.type === "rolled_back") {
+            if (
+                parsed.type === "complete" ||
+                parsed.type === "failed" ||
+                parsed.type === "cancelled" ||
+                parsed.type === "rolled_back"
+            ) {
                 source.close();
             }
         } catch {

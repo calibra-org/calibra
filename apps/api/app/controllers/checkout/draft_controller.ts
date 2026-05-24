@@ -42,7 +42,7 @@ export default class CheckoutDraftController {
             }
             if (payload.payment_gateway_id !== undefined) {
                 const gateway = await PaymentGateway.find(payload.payment_gateway_id, { client: trx });
-                if (!gateway || !gateway.enabled) {
+                if (!gateway?.enabled) {
                     throw new Exception("Payment method is unavailable", {
                         status: 422,
                         code: "E_PAYMENT_GATEWAY_INVALID",

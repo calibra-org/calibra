@@ -12,9 +12,7 @@ import vine from "@vinejs/vine";
  * deep validation against the catalogue and emits a per-row error if a header maps to an unknown
  * field.
  */
-const mappingValidator = vine
-    .record(vine.string().trim().maxLength(64).nullable())
-    .maxLength(500);
+const mappingValidator = vine.record(vine.string().trim().maxLength(64).nullable()).maxLength(500);
 
 /**
  * `POST /api/v1/admin/products/import/upload` — multipart body. The file field is validated by

@@ -30,91 +30,145 @@ export interface ImportField {
 }
 
 export const IMPORT_FIELDS: readonly ImportField[] = [
-    { key: "sku", group: "basic", type: "text", required: "update",
-        aliases: ["sku", "skucode", "stockkeepingunit", "کد", "شناسه", "کدمحصول", "کدکالا", "بارکد"] },
-    { key: "name", group: "basic", type: "text", required: "create",
-        aliases: ["name", "title", "productname", "نام", "عنوان", "نامحصول", "نامکالا"] },
-    { key: "type", group: "basic", type: "enum",
+    {
+        key: "sku",
+        group: "basic",
+        type: "text",
+        required: "update",
+        aliases: ["sku", "skucode", "stockkeepingunit", "کد", "شناسه", "کدمحصول", "کدکالا", "بارکد"],
+    },
+    {
+        key: "name",
+        group: "basic",
+        type: "text",
+        required: "create",
+        aliases: ["name", "title", "productname", "نام", "عنوان", "نامحصول", "نامکالا"],
+    },
+    {
+        key: "type",
+        group: "basic",
+        type: "enum",
         enumValues: ["simple", "variable", "grouped", "external"],
-        aliases: ["type", "producttype", "نوع", "نوعمحصول"] },
-    { key: "status", group: "basic", type: "enum",
+        aliases: ["type", "producttype", "نوع", "نوعمحصول"],
+    },
+    {
+        key: "status",
+        group: "basic",
+        type: "enum",
         enumValues: ["publish", "draft", "pending", "private"],
-        aliases: ["status", "وضعیت", "حالت"] },
-    { key: "short_description", group: "basic", type: "text",
-        aliases: ["shortdescription", "summary", "excerpt", "توضیحاتکوتاه", "خلاصه"] },
-    { key: "description", group: "basic", type: "text",
-        aliases: ["description", "longdescription", "body", "توضیحات", "توضیحاتکامل"] },
-    { key: "visibility", group: "basic", type: "enum",
+        aliases: ["status", "وضعیت", "حالت"],
+    },
+    {
+        key: "short_description",
+        group: "basic",
+        type: "text",
+        aliases: ["shortdescription", "summary", "excerpt", "توضیحاتکوتاه", "خلاصه"],
+    },
+    {
+        key: "description",
+        group: "basic",
+        type: "text",
+        aliases: ["description", "longdescription", "body", "توضیحات", "توضیحاتکامل"],
+    },
+    {
+        key: "visibility",
+        group: "basic",
+        type: "enum",
         enumValues: ["visible", "catalog", "search", "hidden"],
-        aliases: ["visibility", "catalogvisibility", "قابلیتمشاهده", "نمایش"] },
-    { key: "featured", group: "basic", type: "boolean",
-        aliases: ["featured", "isfeatured", "ویژه", "محصولویژه"] },
-    { key: "allow_reviews", group: "basic", type: "boolean",
-        aliases: ["allowreviews", "reviewsallowed", "دیدگاه", "اجازهدیدگاه", "نظرات"] },
-    { key: "purchase_note", group: "basic", type: "text",
-        aliases: ["purchasenote", "یادداشتخرید", "یاددداشت"] },
-    { key: "menu_order", group: "basic", type: "number",
-        aliases: ["menuorder", "order", "sortorder", "ترتیب"] },
+        aliases: ["visibility", "catalogvisibility", "قابلیتمشاهده", "نمایش"],
+    },
+    { key: "featured", group: "basic", type: "boolean", aliases: ["featured", "isfeatured", "ویژه", "محصولویژه"] },
+    {
+        key: "allow_reviews",
+        group: "basic",
+        type: "boolean",
+        aliases: ["allowreviews", "reviewsallowed", "دیدگاه", "اجازهدیدگاه", "نظرات"],
+    },
+    { key: "purchase_note", group: "basic", type: "text", aliases: ["purchasenote", "یادداشتخرید", "یاددداشت"] },
+    { key: "menu_order", group: "basic", type: "number", aliases: ["menuorder", "order", "sortorder", "ترتیب"] },
 
-    { key: "regular_price", group: "pricing", type: "number", required: "create",
-        aliases: ["regularprice", "price", "priceregular", "قیمت", "قیمتاصلی", "قیمتعادی"] },
-    { key: "sale_price", group: "pricing", type: "number",
-        aliases: ["saleprice", "discountprice", "قیمتویژه", "قیمتفروش", "قیمتتخفیف"] },
-    { key: "sale_price_start", group: "pricing", type: "date",
-        aliases: ["salepricestart", "salestart", "datesalefrom", "شروعتخفیف", "شروعفروش"] },
-    { key: "sale_price_end", group: "pricing", type: "date",
-        aliases: ["salepriceend", "saleend", "datesaleto", "پایانتخفیف", "پایانفروش"] },
-    { key: "tax_status", group: "pricing", type: "enum",
+    {
+        key: "regular_price",
+        group: "pricing",
+        type: "number",
+        required: "create",
+        aliases: ["regularprice", "price", "priceregular", "قیمت", "قیمتاصلی", "قیمتعادی"],
+    },
+    {
+        key: "sale_price",
+        group: "pricing",
+        type: "number",
+        aliases: ["saleprice", "discountprice", "قیمتویژه", "قیمتفروش", "قیمتتخفیف"],
+    },
+    {
+        key: "sale_price_start",
+        group: "pricing",
+        type: "date",
+        aliases: ["salepricestart", "salestart", "datesalefrom", "شروعتخفیف", "شروعفروش"],
+    },
+    {
+        key: "sale_price_end",
+        group: "pricing",
+        type: "date",
+        aliases: ["salepriceend", "saleend", "datesaleto", "پایانتخفیف", "پایانفروش"],
+    },
+    {
+        key: "tax_status",
+        group: "pricing",
+        type: "enum",
         enumValues: ["taxable", "shipping", "none"],
-        aliases: ["taxstatus", "وضعیتمالیات"] },
-    { key: "tax_class", group: "pricing", type: "text",
-        aliases: ["taxclass", "کلاسمالیاتی"] },
+        aliases: ["taxstatus", "وضعیتمالیات"],
+    },
+    { key: "tax_class", group: "pricing", type: "text", aliases: ["taxclass", "کلاسمالیاتی"] },
 
-    { key: "manage_stock", group: "stock", type: "boolean",
-        aliases: ["managestock", "stockmanagement", "مدیریتموجودی"] },
-    { key: "stock_quantity", group: "stock", type: "number",
-        aliases: ["stock", "stockquantity", "quantity", "qty", "موجودی", "تعداد", "مقدار"] },
-    { key: "stock_status", group: "stock", type: "enum",
+    { key: "manage_stock", group: "stock", type: "boolean", aliases: ["managestock", "stockmanagement", "مدیریتموجودی"] },
+    {
+        key: "stock_quantity",
+        group: "stock",
+        type: "number",
+        aliases: ["stock", "stockquantity", "quantity", "qty", "موجودی", "تعداد", "مقدار"],
+    },
+    {
+        key: "stock_status",
+        group: "stock",
+        type: "enum",
         enumValues: ["instock", "outofstock", "onbackorder"],
-        aliases: ["stockstatus", "وضعیتموجودی"] },
-    { key: "backorders_allowed", group: "stock", type: "boolean",
-        aliases: ["backorders", "backordersallowed", "پیشخرید"] },
-    { key: "sold_individually", group: "stock", type: "boolean",
-        aliases: ["soldindividually", "تکفروشی", "فروشتکی"] },
+        aliases: ["stockstatus", "وضعیتموجودی"],
+    },
+    { key: "backorders_allowed", group: "stock", type: "boolean", aliases: ["backorders", "backordersallowed", "پیشخرید"] },
+    { key: "sold_individually", group: "stock", type: "boolean", aliases: ["soldindividually", "تکفروشی", "فروشتکی"] },
 
     { key: "weight", group: "shipping", type: "number", aliases: ["weight", "وزن"] },
     { key: "length", group: "shipping", type: "number", aliases: ["length", "طول"] },
     { key: "width", group: "shipping", type: "number", aliases: ["width", "عرض"] },
     { key: "height", group: "shipping", type: "number", aliases: ["height", "ارتفاع"] },
-    { key: "shipping_class", group: "shipping", type: "text",
-        aliases: ["shippingclass", "کلاسحملونقل", "کلاسارسال"] },
+    { key: "shipping_class", group: "shipping", type: "text", aliases: ["shippingclass", "کلاسحملونقل", "کلاسارسال"] },
 
-    { key: "categories", group: "taxonomy", type: "list",
-        aliases: ["categories", "category", "cat", "دستهبندی", "دستهبندیها", "دسته"] },
-    { key: "tags", group: "taxonomy", type: "list",
-        aliases: ["tags", "tag", "برچسب", "برچسبها", "تگ"] },
-    { key: "brand", group: "taxonomy", type: "text",
-        aliases: ["brand", "manufacturer", "برند", "سازنده"] },
+    {
+        key: "categories",
+        group: "taxonomy",
+        type: "list",
+        aliases: ["categories", "category", "cat", "دستهبندی", "دستهبندیها", "دسته"],
+    },
+    { key: "tags", group: "taxonomy", type: "list", aliases: ["tags", "tag", "برچسب", "برچسبها", "تگ"] },
+    { key: "brand", group: "taxonomy", type: "text", aliases: ["brand", "manufacturer", "برند", "سازنده"] },
 
-    { key: "images", group: "media", type: "list",
-        aliases: ["images", "image", "imageurls", "photos", "تصاویر", "تصویر", "عکس", "عکسها"] },
+    {
+        key: "images",
+        group: "media",
+        type: "list",
+        aliases: ["images", "image", "imageurls", "photos", "تصاویر", "تصویر", "عکس", "عکسها"],
+    },
 
-    { key: "parent_sku", group: "linked", type: "text",
-        aliases: ["parentsku", "parent", "skuparent", "والد", "اسکیووالد"] },
-    { key: "upsells", group: "linked", type: "list",
-        aliases: ["upsells", "upsell", "محصولاتپیشنهادی"] },
-    { key: "cross_sells", group: "linked", type: "list",
-        aliases: ["crosssells", "crosssell", "محصولاتمرتبط"] },
-    { key: "external_url", group: "linked", type: "url",
-        aliases: ["externalurl", "url", "productlink", "آدرس", "لینک"] },
-    { key: "button_text", group: "linked", type: "text",
-        aliases: ["buttontext", "متندکمه"] },
+    { key: "parent_sku", group: "linked", type: "text", aliases: ["parentsku", "parent", "skuparent", "والد", "اسکیووالد"] },
+    { key: "upsells", group: "linked", type: "list", aliases: ["upsells", "upsell", "محصولاتپیشنهادی"] },
+    { key: "cross_sells", group: "linked", type: "list", aliases: ["crosssells", "crosssell", "محصولاتمرتبط"] },
+    { key: "external_url", group: "linked", type: "url", aliases: ["externalurl", "url", "productlink", "آدرس", "لینک"] },
+    { key: "button_text", group: "linked", type: "text", aliases: ["buttontext", "متندکمه"] },
 ] as const;
 
 /** O(1) field lookup by stable key. */
-export const IMPORT_FIELD_BY_KEY: ReadonlyMap<string, ImportField> = new Map(
-    IMPORT_FIELDS.map((f) => [f.key, f]),
-);
+export const IMPORT_FIELD_BY_KEY: ReadonlyMap<string, ImportField> = new Map(IMPORT_FIELDS.map((f) => [f.key, f]));
 
 /**
  * Normalize a CSV header for alias matching: strip BOM, lowercase, drop punctuation/whitespace.
@@ -126,7 +180,7 @@ export function normalizeHeader(header: string): string {
         .replace(/^﻿/, "")
         .trim()
         .toLowerCase()
-        .replace(/[\s_\-.()[\]{}«»"'`*\/\\]+/g, "");
+        .replace(/[\s_\-.()[\]{}«»"'`*/\\]+/g, "");
 }
 
 /** Find the import field a header maps to via alias lookup. Returns `null` when no alias matches. */

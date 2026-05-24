@@ -1,8 +1,8 @@
 import db from "@adonisjs/lucid/services/db";
 
-import { detectAnomalies, type AnomalyFinding, type PreviewRow } from "#services/product_import/anomaly_detector";
+import { type AnomalyFinding, detectAnomalies, type PreviewRow } from "#services/product_import/anomaly_detector";
 import { parseFile } from "#services/product_import/csv_parser";
-import { projectRow, type ColumnMapping, type ProjectionError } from "#services/product_import/row_projector";
+import { type ColumnMapping, type ProjectionError, projectRow } from "#services/product_import/row_projector";
 
 /**
  * `runPreview` — the dry-run pass that powers the Step 2.5 "شیامنش‌یپ" panel. Does NO database

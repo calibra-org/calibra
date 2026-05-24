@@ -36,12 +36,7 @@ export interface ImportEvent {
  * `terminal` events end the SSE stream — controller closes the response right after emitting.
  * Keep this set in sync with the runner's exit paths.
  */
-export const TERMINAL_EVENT_TYPES: ReadonlySet<ImportEventType> = new Set([
-    "complete",
-    "failed",
-    "cancelled",
-    "rolled_back",
-]);
+export const TERMINAL_EVENT_TYPES: ReadonlySet<ImportEventType> = new Set(["complete", "failed", "cancelled", "rolled_back"]);
 
 const buses = new Map<number, EventEmitter>();
 
@@ -75,10 +70,7 @@ export function publishImportEvent(event: ImportEvent): void {
  * Subscribe to events for one import. Returns an unsubscriber the caller must invoke on
  * disconnect / connection close — otherwise listeners pile up.
  */
-export function subscribeToImport(
-    importId: number,
-    listener: (event: ImportEvent) => void,
-): () => void {
+export function subscribeToImport(importId: number, listener: (event: ImportEvent) => void): () => void {
     const bus = getBus(importId);
     bus.on("event", listener);
     return () => {

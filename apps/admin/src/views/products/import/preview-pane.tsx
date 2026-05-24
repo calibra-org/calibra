@@ -1,10 +1,9 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, MinusCircle, Plus, RefreshCw } from "lucide-react";
+import { toPersianDigits } from "@calibra/shared/digits";
+import { AlertTriangle, MinusCircle, Plus, RefreshCw } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-
-import { toPersianDigits } from "@calibra/shared/digits";
 
 import { Badge } from "#/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
@@ -39,10 +38,30 @@ export function PreviewPane({ preview }: PreviewPaneProps): React.JSX.Element {
             </header>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-                <CounterCard tone="success" label={t("create")} value={fmt(preview.totals.create)} icon={<Plus className="size-4" aria-hidden />} />
-                <CounterCard tone="info" label={t("update")} value={fmt(preview.totals.update)} icon={<RefreshCw className="size-4" aria-hidden />} />
-                <CounterCard tone="muted" label={t("skip")} value={fmt(preview.totals.skip)} icon={<MinusCircle className="size-4" aria-hidden />} />
-                <CounterCard tone="danger" label={t("fail")} value={fmt(preview.totals.fail)} icon={<AlertTriangle className="size-4" aria-hidden />} />
+                <CounterCard
+                    tone="success"
+                    label={t("create")}
+                    value={fmt(preview.totals.create)}
+                    icon={<Plus className="size-4" aria-hidden />}
+                />
+                <CounterCard
+                    tone="info"
+                    label={t("update")}
+                    value={fmt(preview.totals.update)}
+                    icon={<RefreshCw className="size-4" aria-hidden />}
+                />
+                <CounterCard
+                    tone="muted"
+                    label={t("skip")}
+                    value={fmt(preview.totals.skip)}
+                    icon={<MinusCircle className="size-4" aria-hidden />}
+                />
+                <CounterCard
+                    tone="danger"
+                    label={t("fail")}
+                    value={fmt(preview.totals.fail)}
+                    icon={<AlertTriangle className="size-4" aria-hidden />}
+                />
                 <CounterCard
                     tone="warning"
                     label={t("warnings")}
@@ -85,7 +104,9 @@ export function PreviewPane({ preview }: PreviewPaneProps): React.JSX.Element {
                                 <li key={`${row.sku}-${row.rowNumber}`} className="rounded-md border p-3">
                                     <header className="flex items-baseline justify-between gap-2">
                                         <span className="font-mono text-sm">{row.sku}</span>
-                                        <span className="text-muted-foreground text-xs">{t("rowLabel", { n: fmt(row.rowNumber) })}</span>
+                                        <span className="text-muted-foreground text-xs">
+                                            {t("rowLabel", { n: fmt(row.rowNumber) })}
+                                        </span>
                                     </header>
                                     <ul className="mt-2 space-y-1 text-sm">
                                         {row.diffs.map((diff) => (
@@ -95,7 +116,10 @@ export function PreviewPane({ preview }: PreviewPaneProps): React.JSX.Element {
                                                 <span aria-hidden>→</span>
                                                 <span>{diff.newValue ?? "—"}</span>
                                                 {diff.percentChange !== null ? (
-                                                    <Badge variant={diff.percentChange > 0 ? "default" : "secondary"} className="font-normal text-[10px]">
+                                                    <Badge
+                                                        variant={diff.percentChange > 0 ? "default" : "secondary"}
+                                                        className="font-normal text-[10px]"
+                                                    >
                                                         {diff.percentChange > 0 ? "+" : ""}
                                                         {fmt(Math.round(diff.percentChange * 10) / 10)}%
                                                     </Badge>
@@ -120,17 +144,21 @@ export function PreviewPane({ preview }: PreviewPaneProps): React.JSX.Element {
                 <TabsContent value="fail">
                     <EmptyOrMessage shown={preview.failures.length === 0} message={t("noFail")}>
                         <ul className="space-y-2">
-                            {preview.failures.map((failure, idx) => (
+                            {preview.failures.map((failure) => (
                                 <li
-                                    key={`${failure.rowNumber}-${failure.columnName ?? "row"}-${idx}`}
+                                    key={`${failure.rowNumber}-${failure.columnName ?? "row"}-${failure.code}`}
                                     className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm"
                                 >
                                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                                         <span className="font-mono">{failure.sku ?? "—"}</span>
-                                        <span className="text-muted-foreground text-xs">{t("rowLabel", { n: fmt(failure.rowNumber) })}</span>
+                                        <span className="text-muted-foreground text-xs">
+                                            {t("rowLabel", { n: fmt(failure.rowNumber) })}
+                                        </span>
                                     </div>
                                     <p className="mt-1 text-destructive">
-                                        {failure.columnName !== null ? <span className="font-semibold">{failure.columnName}: </span> : null}
+                                        {failure.columnName !== null ? (
+                                            <span className="font-semibold">{failure.columnName}: </span>
+                                        ) : null}
                                         {failure.message}
                                         {failure.originalValue !== null ? (
                                             <span className="ms-1 text-muted-foreground">«{failure.originalValue}»</span>
@@ -145,9 +173,9 @@ export function PreviewPane({ preview }: PreviewPaneProps): React.JSX.Element {
                 <TabsContent value="warnings">
                     <EmptyOrMessage shown={preview.warnings.length === 0} message={t("noWarnings")}>
                         <ul className="space-y-2">
-                            {preview.warnings.map((finding, idx) => (
+                            {preview.warnings.map((finding) => (
                                 <li
-                                    key={`${finding.code}-${idx}`}
+                                    key={`${finding.code}-${finding.field ?? "row"}-${finding.rowNumbers.join("_")}`}
                                     className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm"
                                 >
                                     <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -213,9 +241,7 @@ function EmptyOrMessage({
     children: React.ReactNode;
 }): React.JSX.Element {
     if (shown) {
-        return (
-            <div className="rounded-md border border-dashed p-6 text-center text-muted-foreground text-sm">{message}</div>
-        );
+        return <div className="rounded-md border border-dashed p-6 text-center text-muted-foreground text-sm">{message}</div>;
     }
     return <div className="mt-3">{children}</div>;
 }

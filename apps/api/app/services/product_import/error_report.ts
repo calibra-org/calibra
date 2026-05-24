@@ -1,7 +1,6 @@
 import { writeFile } from "node:fs/promises";
 
 import type ProductImportError from "#models/product_import_error";
-
 import { errorReportPath } from "#services/product_import/storage";
 
 /**

@@ -76,10 +76,7 @@ const CURRENCY_SYMBOLS = [
     "Rial",
 ];
 
-const CURRENCY_REGEX = new RegExp(
-    CURRENCY_SYMBOLS.map((sym) => sym.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"),
-    "gi",
-);
+const CURRENCY_REGEX = new RegExp(CURRENCY_SYMBOLS.map((sym) => sym.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "gi");
 
 /**
  * Remove currency symbols and codes from a price-like string. Removes both leading and trailing

@@ -33,13 +33,7 @@ export default class extends BaseSchema {
                 .references("id")
                 .inTable("product_imports")
                 .onDelete("CASCADE");
-            table
-                .bigInteger("product_id")
-                .unsigned()
-                .nullable()
-                .references("id")
-                .inTable("products")
-                .onDelete("SET NULL");
+            table.bigInteger("product_id").unsigned().nullable().references("id").inTable("products").onDelete("SET NULL");
             table.string("sku", 120).nullable();
             table.specificType("op", "product_import_change_op_enum").notNullable();
             table.string("field", 64).notNullable();

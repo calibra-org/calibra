@@ -1,6 +1,5 @@
-import { mkdir, writeFile, unlink, readFile, stat } from "node:fs/promises";
+import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-
 import app from "@adonisjs/core/services/app";
 
 /**

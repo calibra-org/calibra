@@ -1,10 +1,9 @@
 "use client";
 
+import { IMPORT_FIELDS, type ImportField } from "@calibra/shared/import-fields";
 import { Check, ChevronsUpDown, Search, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
-
-import { IMPORT_FIELDS, type ImportField } from "@calibra/shared/import-fields";
 
 import { Badge } from "#/components/ui/badge";
 import { Input } from "#/components/ui/input";
@@ -97,7 +96,7 @@ export function DestinationPicker({ value, onChange, autoFocus, disabled }: Dest
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder={t("searchField")}
-                        className="h-9 border-0 pe-2 ps-7 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="h-9 border-0 ps-7 pe-2 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                 </div>
                 <ul className="max-h-64 overflow-y-auto p-1">
@@ -140,9 +139,7 @@ export function DestinationPicker({ value, onChange, autoFocus, disabled }: Dest
                                             {field.type}
                                         </Badge>
                                     </span>
-                                    {value === field.key ? (
-                                        <Check className="size-4 text-primary" aria-hidden />
-                                    ) : null}
+                                    {value === field.key ? <Check className="size-4 text-primary" aria-hidden /> : null}
                                 </button>
                             ))}
                         </li>

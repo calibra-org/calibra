@@ -2,7 +2,7 @@
 
 import { ChevronDown, Download, FileText, History, Upload as UploadIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type DragEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 import { Button } from "#/components/ui/button";
@@ -129,7 +129,6 @@ export function StepUpload({ onFileSelected, isUploading, uploadPercent, error }
                             isUploading && "pointer-events-none opacity-70",
                         ),
                     })}
-                    onDragOver={(e: DragEvent<HTMLDivElement>) => e.preventDefault()}
                 >
                     <input {...getInputProps()} aria-label={t("dropzoneAria")} />
                     <UploadIcon className="size-10 text-muted-foreground" aria-hidden />

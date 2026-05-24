@@ -14,7 +14,7 @@ import { StepImporting } from "./step-importing";
 import { StepMapping } from "./step-mapping";
 import { StepUpload } from "./step-upload";
 import { Stepper } from "./stepper";
-import { INITIAL_STATE, type MappingState, type WizardState, stepFromStatus } from "./wizard-state";
+import { INITIAL_STATE, type MappingState, stepFromStatus, type WizardState } from "./wizard-state";
 
 /**
  * Top-level wizard. Owns the state machine; transitions between steps; threads i18n + locale.
@@ -34,6 +34,28 @@ export function ImportWizard(): React.JSX.Element {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadPercent, setUploadPercent] = useState(0);
     const [uploadError, setUploadError] = useState<string | null>(null);
+
+    const jumpToStatusStep = useCallback((row: ProductImportRow) => {
+        const next = stepFromStatus(row);
+        if (next === "mapping") {
+            setState({
+                step: "mapping",
+                importRow: row,
+                headers: Object.keys(row.mapping ?? {}),
+                samples: {},
+                presetMatch: null,
+                mapping: row.mapping,
+                updateExisting: row.update_existing,
+                preview: null,
+            });
+        } else if (next === "importing") {
+            setState({ step: "importing", importRow: row });
+        } else if (next === "done") {
+            setState({ step: "done", importRow: row });
+        } else {
+            setState(INITIAL_STATE);
+        }
+    }, []);
 
     /**
      * Hydrate the URL `?id=` param on mount. Skips hydration when an in-memory state already has
@@ -58,7 +80,7 @@ export function ImportWizard(): React.JSX.Element {
         return () => {
             cancelled = true;
         };
-    }, [locale, state.step]);
+    }, [locale, state.step, jumpToStatusStep]);
 
     /** Track the farthest step the user has reached so they can re-enter mapping after preview. */
     useEffect(() => {
@@ -67,31 +89,6 @@ export function ImportWizard(): React.JSX.Element {
             setFarthest(state.step);
         }
     }, [farthest, state.step]);
-
-    const jumpToStatusStep = useCallback(
-        (row: ProductImportRow) => {
-            const next = stepFromStatus(row);
-            if (next === "mapping") {
-                setState({
-                    step: "mapping",
-                    importRow: row,
-                    headers: Object.keys(row.mapping ?? {}),
-                    samples: {},
-                    presetMatch: null,
-                    mapping: row.mapping,
-                    updateExisting: row.update_existing,
-                    preview: null,
-                });
-            } else if (next === "importing") {
-                setState({ step: "importing", importRow: row });
-            } else if (next === "done") {
-                setState({ step: "done", importRow: row });
-            } else {
-                setState(INITIAL_STATE);
-            }
-        },
-        [],
-    );
 
     const writeQueryId = useCallback((id: number | null) => {
         if (typeof window === "undefined") return;

@@ -51,12 +51,9 @@ export default class ProductImportTransformer extends BaseTransformer<ProductImp
                 row.cancellationRequestedAt !== null && row.cancellationRequestedAt !== undefined
                     ? row.cancellationRequestedAt.toISO()
                     : null,
-            rolled_back_at:
-                row.rolledBackAt !== null && row.rolledBackAt !== undefined ? row.rolledBackAt.toISO() : null,
+            rolled_back_at: row.rolledBackAt !== null && row.rolledBackAt !== undefined ? row.rolledBackAt.toISO() : null,
             rolled_back_by_user_id:
-                row.rolledBackByUserId !== null && row.rolledBackByUserId !== undefined
-                    ? Number(row.rolledBackByUserId)
-                    : null,
+                row.rolledBackByUserId !== null && row.rolledBackByUserId !== undefined ? Number(row.rolledBackByUserId) : null,
 
             exception: row.exception,
             is_rollback_eligible: this.isRollbackEligible(row),

@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 
@@ -47,9 +46,7 @@ export async function parseFile(filePath: string, options: ParseOptions = {}): P
 
 async function parseCsv(filePath: string, options: ParseOptions): Promise<ParsedFile> {
     const buffer = await readFile(filePath);
-    const encoding = options.encoding === "auto" || options.encoding === undefined
-        ? detectEncoding(buffer)
-        : options.encoding;
+    const encoding = options.encoding === "auto" || options.encoding === undefined ? detectEncoding(buffer) : options.encoding;
     const text = decodeBuffer(buffer, encoding);
 
     const result = Papa.parse<string[]>(text, {
@@ -108,7 +105,12 @@ async function parseXlsx(filePath: string, options: ParseOptions): Promise<Parse
     for (let i = 1; i < limit; i++) {
         const row = matrix[i] as string[] | undefined;
         if (!row || row.every((cell) => cell === undefined || cell === null || String(cell).trim() === "")) continue;
-        rows.push(buildRecord(headers, row.map((c) => (c === undefined || c === null ? "" : String(c)))));
+        rows.push(
+            buildRecord(
+                headers,
+                row.map((c) => (c === undefined || c === null ? "" : String(c))),
+            ),
+        );
     }
 
     return {
@@ -129,7 +131,9 @@ async function parseXlsx(filePath: string, options: ParseOptions): Promise<Parse
 function normalizeHeaderRow(raw: string[]): string[] {
     const seen = new Map<string, number>();
     return raw.map((h, idx) => {
-        const cleaned = String(h ?? "").replace(/^﻿/, "").trim();
+        const cleaned = String(h ?? "")
+            .replace(/^﻿/, "")
+            .trim();
         const base = cleaned === "" ? `column_${idx + 1}` : cleaned;
         const seenCount = seen.get(base) ?? 0;
         seen.set(base, seenCount + 1);

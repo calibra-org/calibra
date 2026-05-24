@@ -3,7 +3,6 @@ import { test } from "@japa/runner";
 import ProductImport from "#models/product_import";
 import ProductImportError from "#models/product_import_error";
 import User from "#models/user";
-
 import { createImportAdmin, truncateImportTables, writeTempCsv } from "#tests/helpers/product_imports";
 
 const BASE_CSV = `sku,name,regular_price,sale_price,stock_quantity,categories
@@ -33,10 +32,7 @@ test.group("/api/v1/admin/products/import — auth", (group) => {
 
     test("non-admin user cannot reach the template endpoint", async ({ client }) => {
         const customer = await createCustomer("nope@calibra.dev");
-        const response = await client
-            .get("/api/v1/admin/products/import/template")
-            .withGuard("api")
-            .loginAs(customer);
+        const response = await client.get("/api/v1/admin/products/import/template").withGuard("api").loginAs(customer);
         response.assertStatus(403);
     });
 
@@ -280,12 +276,13 @@ async function waitForCompletion(importId: number, timeoutMs: number = 10_000): 
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
         const row = await ProductImport.find(importId);
-        if (row !== null && (
-            row.status === "completed"
-            || row.status === "completed_with_errors"
-            || row.status === "failed"
-            || row.status === "cancelled"
-        )) {
+        if (
+            row !== null &&
+            (row.status === "completed" ||
+                row.status === "completed_with_errors" ||
+                row.status === "failed" ||
+                row.status === "cancelled")
+        ) {
             return;
         }
         await new Promise((resolve) => setTimeout(resolve, 100));

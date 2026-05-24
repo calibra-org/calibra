@@ -45,7 +45,7 @@ export function dateToJalali(date: Date): JalaliDate {
     return toJalaali(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
 }
 
-const DATE_SEPARATORS = /[\/\-.\\]/;
+const DATE_SEPARATORS = /[/\-.\\]/;
 
 /**
  * Parse a date string from any of the shapes the importer accepts and return a UTC `Date`.

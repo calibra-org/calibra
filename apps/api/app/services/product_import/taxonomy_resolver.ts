@@ -212,10 +212,7 @@ export async function resolveBrand(
  * Look up tax_class by code/slug. Returns `null` when not found — the runner emits
  * `unknown_tax_class` so the operator knows to create the class first or fix the spreadsheet.
  */
-export async function resolveTaxClass(
-    trx: TransactionClientContract,
-    rawSlug: string,
-): Promise<number | null> {
+export async function resolveTaxClass(trx: TransactionClientContract, rawSlug: string): Promise<number | null> {
     const slug = rawSlug.trim().toLowerCase();
     if (slug === "") return null;
     const row = await trx.from("tax_classes").whereRaw("LOWER(slug) = ?", [slug]).select("id").first();

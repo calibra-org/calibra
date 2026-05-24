@@ -60,10 +60,7 @@ export function Stepper({ current, farthest, onStepClick }: StepperProps): React
                         {idx < ORDER.length - 1 ? (
                             <span
                                 aria-hidden
-                                className={cn(
-                                    "h-px w-8 transition-colors",
-                                    idx < currentIdx ? "bg-primary/40" : "bg-border",
-                                )}
+                                className={cn("h-px w-8 transition-colors", idx < currentIdx ? "bg-primary/40" : "bg-border")}
                             />
                         ) : null}
                     </li>

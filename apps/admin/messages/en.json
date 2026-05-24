@@ -163,6 +163,8 @@
             "preview": "Preview",
             "rePreview": "Re-run preview",
             "start": "Start import",
+            "previewFirstHint": "Click \"Preview\" first to enable the \"Start import\" button",
+            "stickyBarAria": "Preview summary and actions",
             "previewFailed": "Preview failed.",
             "startFailed": "Could not start import.",
             "toolbar": {

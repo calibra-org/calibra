@@ -277,9 +277,7 @@ export const IMPORT_FIELDS: readonly ImportField[] = [
 ] as const;
 
 /** Lookup `key → field` for fast resolution by mapping JSON. */
-export const IMPORT_FIELD_BY_KEY: ReadonlyMap<string, ImportField> = new Map(
-    IMPORT_FIELDS.map((field) => [field.key, field]),
-);
+export const IMPORT_FIELD_BY_KEY: ReadonlyMap<string, ImportField> = new Map(IMPORT_FIELDS.map((field) => [field.key, field]));
 
 /**
  * Normalize a CSV header for alias matching: strip BOM, lowercase, drop non-letter/digit (keeps
@@ -290,7 +288,7 @@ export function normalizeHeader(header: string): string {
         .replace(/^﻿/, "")
         .trim()
         .toLowerCase()
-        .replace(/[\s_\-.()[\]{}«»"'`*\/\\]+/g, "");
+        .replace(/[\s_\-.()[\]{}«»"'`*/\\]+/g, "");
 }
 
 /**

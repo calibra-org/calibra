@@ -1,5 +1,6 @@
 "use client";
 
+import { toPersianDigits } from "@calibra/shared/digits";
 import {
     AlertTriangle,
     CheckCircle2,
@@ -15,20 +16,12 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { toPersianDigits } from "@calibra/shared/digits";
-
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Spinner } from "#/components/ui/spinner";
 import { Link } from "#/lib/i18n/navigation";
-import {
-    importErrorReportUrl,
-    listImportErrors,
-    retryFailedImport,
-    retryImportRow,
-    rollbackImport,
-} from "#/lib/imports/api";
+import { importErrorReportUrl, listImportErrors, retryFailedImport, retryImportRow, rollbackImport } from "#/lib/imports/api";
 import type { ProductImportErrorRow, ProductImportRow } from "#/lib/imports/types";
 import { cn } from "#/lib/utils";
 
@@ -98,7 +91,11 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
         async (errorRow: ProductImportErrorRow) => {
             const value = edits[errorRow.id] ?? errorRow.original_value ?? "";
             try {
-                const response = await retryImportRow(row.id, { error_id: errorRow.id, value: value === "" ? null : value }, locale);
+                const response = await retryImportRow(
+                    row.id,
+                    { error_id: errorRow.id, value: value === "" ? null : value },
+                    locale,
+                );
                 setErrors((current) => current.map((e) => (e.id === errorRow.id ? response.data : e)));
             } catch {
                 /** Surface inline error in a future iteration; for now silently fail. */
@@ -115,7 +112,7 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
                 {
                     edits: errors.map((e) => ({
                         error_id: e.id,
-                        value: (edits[e.id] ?? e.original_value ?? "") === "" ? null : edits[e.id] ?? e.original_value,
+                        value: (edits[e.id] ?? e.original_value ?? "") === "" ? null : (edits[e.id] ?? e.original_value),
                     })),
                 },
                 locale,
@@ -140,9 +137,7 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
                         <h2 className="font-semibold text-xl">{t(`headline.${row.status}`)}</h2>
                         <p className="mt-1 text-muted-foreground text-sm">{row.original_filename}</p>
                     </div>
-                    {wasRolledBack ? (
-                        <Badge variant="destructive">{t("status.rolled_back")}</Badge>
-                    ) : null}
+                    {wasRolledBack ? <Badge variant="destructive">{t("status.rolled_back")}</Badge> : null}
                 </header>
 
                 <dl className="mt-6 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
@@ -210,7 +205,9 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
                                             {t(`severity.${err.severity}`)}
                                         </Badge>
                                         <span className="font-mono text-sm">{err.sku ?? "—"}</span>
-                                        <span className="text-muted-foreground text-xs">{t("errors.rowLabel", { n: fmt(err.row_number) })}</span>
+                                        <span className="text-muted-foreground text-xs">
+                                            {t("errors.rowLabel", { n: fmt(err.row_number) })}
+                                        </span>
                                         {err.column_name !== null ? (
                                             <span className="text-muted-foreground text-xs">· {err.column_name}</span>
                                         ) : null}

@@ -174,7 +174,18 @@ export type ProductImportStreamEvent =
               size?: number;
           };
       }
-    | { type: "complete"; at: string; payload?: { status: ProductImportStatus; processed: number; created: number; updated: number; skipped: number; failed: number } }
+    | {
+          type: "complete";
+          at: string;
+          payload?: {
+              status: ProductImportStatus;
+              processed: number;
+              created: number;
+              updated: number;
+              skipped: number;
+              failed: number;
+          };
+      }
     | { type: "failed"; at: string; payload?: { message: string } }
     | { type: "cancelled"; at: string; payload?: undefined }
     | { type: "rolled_back"; at: string; payload?: { byUserId: number } };

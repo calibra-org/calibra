@@ -1,10 +1,9 @@
 "use client";
 
+import { toPersianDigits } from "@calibra/shared/digits";
 import { Bell, ChevronRight, Loader2, Minimize2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-import { toPersianDigits } from "@calibra/shared/digits";
 
 import { Button } from "#/components/ui/button";
 import { cancelImport, getImport, streamImport } from "#/lib/imports/api";
@@ -57,6 +56,50 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
     useEffect(() => {
         if (finishedRef.current) return;
         let cancelled = false;
+
+        const finalize = async () => {
+            if (finishedRef.current) return;
+            finishedRef.current = true;
+            try {
+                const { data } = await getImport(importRow.id, locale);
+                if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+                    new Notification(deriveNotificationTitle(data.status), {
+                        body: deriveNotificationBody(data),
+                    });
+                }
+                onFinished(data);
+            } catch {
+                onFinished(row);
+            }
+        };
+
+        const applyEvent = (event: ProductImportStreamEvent) => {
+            setLastEventAt(Date.now());
+            setSlow(false);
+            if (event.type === "progress" || event.type === "chunk_start" || event.type === "chunk_complete") {
+                const p = event.payload;
+                setRow((current) => ({
+                    ...current,
+                    status: p?.status ?? current.status,
+                    processed_rows: p?.processed ?? current.processed_rows,
+                    total_rows: p?.total ?? current.total_rows,
+                    created_count: p?.created ?? current.created_count,
+                    updated_count: p?.updated ?? current.updated_count,
+                    skipped_count: p?.skipped ?? current.skipped_count,
+                    failed_count: p?.failed ?? current.failed_count,
+                }));
+                return;
+            }
+            if (
+                event.type === "complete" ||
+                event.type === "failed" ||
+                event.type === "cancelled" ||
+                event.type === "rolled_back"
+            ) {
+                void finalize();
+            }
+        };
+
         const unsubscribe = streamImport(importRow.id, {
             onOpen: () => {
                 if (cancelled) return;
@@ -77,44 +120,6 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
             cancelled = true;
             unsubscribe();
         };
-
-        function applyEvent(event: ProductImportStreamEvent) {
-            setLastEventAt(Date.now());
-            setSlow(false);
-            if (event.type === "progress" || event.type === "chunk_start" || event.type === "chunk_complete") {
-                const p = event.payload;
-                setRow((current) => ({
-                    ...current,
-                    status: p?.status ?? current.status,
-                    processed_rows: p?.processed ?? current.processed_rows,
-                    total_rows: p?.total ?? current.total_rows,
-                    created_count: p?.created ?? current.created_count,
-                    updated_count: p?.updated ?? current.updated_count,
-                    skipped_count: p?.skipped ?? current.skipped_count,
-                    failed_count: p?.failed ?? current.failed_count,
-                }));
-                return;
-            }
-            if (event.type === "complete" || event.type === "failed" || event.type === "cancelled" || event.type === "rolled_back") {
-                void finalize();
-            }
-        }
-
-        async function finalize() {
-            if (finishedRef.current) return;
-            finishedRef.current = true;
-            try {
-                const { data } = await getImport(importRow.id, locale);
-                if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-                    new Notification(deriveNotificationTitle(data.status), {
-                        body: deriveNotificationBody(data),
-                    });
-                }
-                onFinished(data);
-            } catch {
-                onFinished(row);
-            }
-        }
     }, [importRow.id, locale, onFinished, row]);
 
     /** Polling fallback. */
@@ -127,11 +132,11 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
                     setLastEventAt(Date.now());
                     setSlow(false);
                     if (
-                        data.status === "completed"
-                        || data.status === "completed_with_errors"
-                        || data.status === "failed"
-                        || data.status === "cancelled"
-                        || data.status === "rolled_back"
+                        data.status === "completed" ||
+                        data.status === "completed_with_errors" ||
+                        data.status === "failed" ||
+                        data.status === "cancelled" ||
+                        data.status === "rolled_back"
                     ) {
                         if (!finishedRef.current) {
                             finishedRef.current = true;
@@ -166,9 +171,7 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
         }
     }, [importRow.id, locale]);
 
-    const percent = row.total_rows === 0
-        ? 0
-        : Math.min(100, Math.round((row.processed_rows / row.total_rows) * 100));
+    const percent = row.total_rows === 0 ? 0 : Math.min(100, Math.round((row.processed_rows / row.total_rows) * 100));
 
     return (
         <article className="rounded-lg border bg-card p-6 text-card-foreground shadow-xs">
@@ -178,13 +181,21 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
                     <p className="mt-1 text-muted-foreground text-sm">{t("subtitle")}</p>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                    {streamOpen ? <ConnectionPill state="sse" /> : pollingActive ? <ConnectionPill state="polling" /> : <ConnectionPill state="connecting" />}
+                    {streamOpen ? (
+                        <ConnectionPill state="sse" />
+                    ) : pollingActive ? (
+                        <ConnectionPill state="polling" />
+                    ) : (
+                        <ConnectionPill state="connecting" />
+                    )}
                 </div>
             </header>
 
             <section className="mt-6">
                 <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-muted-foreground text-sm">{t("processedOfTotal", { processed: fmt(row.processed_rows), total: fmt(row.total_rows) })}</span>
+                    <span className="text-muted-foreground text-sm">
+                        {t("processedOfTotal", { processed: fmt(row.processed_rows), total: fmt(row.total_rows) })}
+                    </span>
                     <span className="font-semibold text-2xl">{fmt(percent)}%</span>
                 </div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
@@ -239,7 +250,15 @@ function deriveNotificationBody(row: ProductImportRow): string {
     return `${row.created_count} ساخته شد · ${row.updated_count} به‌روزرسانی شد · ${row.failed_count} ناموفق`;
 }
 
-function Counter({ label, value, tone }: { label: string; value: string; tone: "success" | "info" | "muted" | "danger" }): React.JSX.Element {
+function Counter({
+    label,
+    value,
+    tone,
+}: {
+    label: string;
+    value: string;
+    tone: "success" | "info" | "muted" | "danger";
+}): React.JSX.Element {
     return (
         <div
             className={cn(
@@ -259,8 +278,7 @@ function Counter({ label, value, tone }: { label: string; value: string; tone: "
 function ConnectionPill({ state }: { state: "sse" | "polling" | "connecting" }): React.JSX.Element {
     const t = useTranslations("ProductsImport.importing.connection");
     const label = t(state);
-    const color =
-        state === "sse" ? "bg-emerald-500" : state === "polling" ? "bg-amber-500" : "bg-muted-foreground";
+    const color = state === "sse" ? "bg-emerald-500" : state === "polling" ? "bg-amber-500" : "bg-muted-foreground";
     return (
         <span className="flex items-center gap-1.5">
             <span className={cn("size-1.5 rounded-full", color)} aria-hidden />

@@ -6,12 +6,7 @@
  */
 
 import type { ProductImportErrorCode } from "#enums/product_import";
-import {
-    parseDateLoose,
-    parseLooseBoolean,
-    parseLooseNumber,
-    toEnglishDigits,
-} from "#services/product_import/cell_normalizer";
+import { parseDateLoose, parseLooseBoolean, parseLooseNumber, toEnglishDigits } from "#services/product_import/cell_normalizer";
 import { IMPORT_FIELD_BY_KEY, type ImportField } from "#services/product_import/import_field_catalog";
 
 /** Mapping shape: `{ csv_header: field_key | null }`. `null` = "don't import this column". */
@@ -112,9 +107,13 @@ export function projectRow(row: Record<string, string>, mapping: ColumnMapping):
         assignField(dto, field.key, result.value);
     }
 
-    if (dto.regular_price_major !== undefined && dto.regular_price_major !== null
-        && dto.sale_price_major !== undefined && dto.sale_price_major !== null
-        && dto.sale_price_major > dto.regular_price_major) {
+    if (
+        dto.regular_price_major !== undefined &&
+        dto.regular_price_major !== null &&
+        dto.sale_price_major !== undefined &&
+        dto.sale_price_major !== null &&
+        dto.sale_price_major > dto.regular_price_major
+    ) {
         errors.push({
             columnName: "sale_price",
             code: "sale_gt_regular",
@@ -243,9 +242,7 @@ function urlError(columnName: string, raw: string): CellResult {
 
 function enumError(fieldKey: string, columnName: string, raw: string): CellResult {
     const code: ProductImportErrorCode =
-        fieldKey === "type" ? "invalid_type"
-        : fieldKey === "status" ? "invalid_status"
-        : "invalid_boolean";
+        fieldKey === "type" ? "invalid_type" : fieldKey === "status" ? "invalid_status" : "invalid_boolean";
     return {
         value: undefined,
         error: { columnName, code, message: `invalid value for ${fieldKey}`, originalValue: raw },

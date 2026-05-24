@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-
 import db from "@adonisjs/lucid/services/db";
 
 import User from "#models/user";

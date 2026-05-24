@@ -1,15 +1,16 @@
 "use client";
 
-import { Eraser, Eye, Filter, Play, RefreshCw, Wand2 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
-
+import { toPersianDigits } from "@calibra/shared/digits";
 import { matchHeader } from "@calibra/shared/import-fields";
+import { AlertTriangle, Eraser, Eye, Filter, MinusCircle, Play, Plus, RefreshCw, Wand2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Label } from "#/components/ui/label";
 import { Spinner } from "#/components/ui/spinner";
+import { StickyActionBar } from "#/components/ui/sticky-action-bar";
 import { previewImport, startImport } from "#/lib/imports/api";
 import type { PreviewResult, ProductImportRow } from "#/lib/imports/types";
 
@@ -36,7 +37,9 @@ export interface StepMappingProps {
  */
 export function StepMapping({ state, onChange, onStart }: StepMappingProps): React.JSX.Element {
     const t = useTranslations("ProductsImport.mapping");
+    const tPreview = useTranslations("ProductsImport.preview");
     const locale = useLocale();
+    const fmt = useCallback((n: number) => (locale === "fa" ? toPersianDigits(n) : String(n)), [locale]);
 
     const [previewLoading, setPreviewLoading] = useState(false);
     const [startLoading, setStartLoading] = useState(false);
@@ -45,6 +48,22 @@ export function StepMapping({ state, onChange, onStart }: StepMappingProps): Rea
     const [presetName, setPresetName] = useState("");
 
     const inlineWarnings = useMemo(() => deriveInlineWarnings(state), [state]);
+
+    /**
+     * Auto-scroll the preview pane into view when it first lands — without this the operator has
+     * to scroll past the mapping table to discover that anything happened, which buries the most
+     * important feedback in the wizard. We only scroll on the `null → non-null` transition so
+     * subsequent re-previews don't yank the page when the operator is already reading results.
+     */
+    const previewRef = useRef<HTMLDivElement>(null);
+    const previouslyHadPreview = useRef(state.preview !== null);
+    useEffect(() => {
+        const hadBefore = previouslyHadPreview.current;
+        previouslyHadPreview.current = state.preview !== null;
+        if (!hadBefore && state.preview !== null && previewRef.current !== null) {
+            previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [state.preview]);
 
     const updateMapping = useCallback(
         (header: string, value: string | null) => {
@@ -152,9 +171,9 @@ export function StepMapping({ state, onChange, onStart }: StepMappingProps): Rea
 
                 {inlineWarnings.length > 0 ? (
                     <ul className="mt-4 space-y-2 text-sm">
-                        {inlineWarnings.map((warning, idx) => (
+                        {inlineWarnings.map((warning) => (
                             <li
-                                key={`${warning}-${idx}`}
+                                key={warning}
                                 className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-amber-900 dark:text-amber-100"
                             >
                                 {warning}
@@ -197,11 +216,7 @@ export function StepMapping({ state, onChange, onStart }: StepMappingProps): Rea
                 </div>
 
                 <div className="mt-4 flex items-start gap-3 rounded-md border bg-muted/30 p-4">
-                    <Checkbox
-                        id="save-preset"
-                        checked={savePreset}
-                        onCheckedChange={(value) => setSavePreset(value === true)}
-                    />
+                    <Checkbox id="save-preset" checked={savePreset} onCheckedChange={(value) => setSavePreset(value === true)} />
                     <div className="flex flex-col gap-2">
                         <Label htmlFor="save-preset" className="cursor-pointer font-medium text-sm">
                             {t("savePreset.label")}
@@ -224,19 +239,30 @@ export function StepMapping({ state, onChange, onStart }: StepMappingProps): Rea
                     </div>
                 ) : null}
 
-                <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
+                <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
+                    {state.preview === null ? (
+                        <p className="me-auto text-muted-foreground text-xs">{t("previewFirstHint")}</p>
+                    ) : null}
                     <Button variant="outline" onClick={() => runPreview()} disabled={previewLoading}>
                         {previewLoading ? <Spinner /> : <Eye className="size-4" aria-hidden />}
                         {t("preview")}
                     </Button>
-                    <Button onClick={handleStart} disabled={startLoading || state.preview === null}>
+                    <Button
+                        onClick={handleStart}
+                        disabled={startLoading || state.preview === null}
+                        title={state.preview === null ? t("previewFirstHint") : undefined}
+                    >
                         {startLoading ? <Spinner /> : <Play className="size-4" aria-hidden />}
                         {t("start")}
                     </Button>
                 </div>
             </section>
 
-            {state.preview !== null ? <PreviewPane preview={state.preview} /> : null}
+            {state.preview !== null ? (
+                <div ref={previewRef} className="scroll-mt-6">
+                    <PreviewPane preview={state.preview} />
+                </div>
+            ) : null}
 
             {state.preview !== null && state.preview.failures.length > 0 ? (
                 <div className="flex items-center justify-end">
@@ -246,6 +272,66 @@ export function StepMapping({ state, onChange, onStart }: StepMappingProps): Rea
                     </Button>
                 </div>
             ) : null}
+
+            <StickyActionBar open={state.preview !== null} ariaLabel={t("stickyBarAria")} className="gap-4 px-4 py-2">
+                {state.preview !== null ? (
+                    <div className="flex items-center gap-3 text-xs">
+                        <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+                            <Plus className="size-3.5" aria-hidden />
+                            <span>{fmt(state.preview.totals.create)}</span>
+                            <span className="text-muted-foreground">{tPreview("create")}</span>
+                        </span>
+                        <span className="text-border" aria-hidden>
+                            ·
+                        </span>
+                        <span className="flex items-center gap-1 font-medium text-sky-600 dark:text-sky-400">
+                            <RefreshCw className="size-3.5" aria-hidden />
+                            <span>{fmt(state.preview.totals.update)}</span>
+                            <span className="text-muted-foreground">{tPreview("update")}</span>
+                        </span>
+                        <span className="text-border" aria-hidden>
+                            ·
+                        </span>
+                        <span className="flex items-center gap-1 font-medium text-muted-foreground">
+                            <MinusCircle className="size-3.5" aria-hidden />
+                            <span>{fmt(state.preview.totals.skip)}</span>
+                            <span>{tPreview("skip")}</span>
+                        </span>
+                        {state.preview.totals.fail > 0 ? (
+                            <>
+                                <span className="text-border" aria-hidden>
+                                    ·
+                                </span>
+                                <span className="flex items-center gap-1 font-medium text-destructive">
+                                    <AlertTriangle className="size-3.5" aria-hidden />
+                                    <span>{fmt(state.preview.totals.fail)}</span>
+                                    <span>{tPreview("fail")}</span>
+                                </span>
+                            </>
+                        ) : null}
+                        {state.preview.totals.warnings > 0 ? (
+                            <>
+                                <span className="text-border" aria-hidden>
+                                    ·
+                                </span>
+                                <span className="flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
+                                    <AlertTriangle className="size-3.5" aria-hidden />
+                                    <span>{fmt(state.preview.totals.warnings)}</span>
+                                    <span>{tPreview("warnings")}</span>
+                                </span>
+                            </>
+                        ) : null}
+                    </div>
+                ) : null}
+                <Button size="sm" variant="ghost" onClick={() => runPreview()} disabled={previewLoading}>
+                    {previewLoading ? <Spinner /> : <RefreshCw className="size-4" aria-hidden />}
+                    {t("rePreview")}
+                </Button>
+                <Button size="sm" onClick={handleStart} disabled={startLoading || state.preview === null}>
+                    {startLoading ? <Spinner /> : <Play className="size-4" aria-hidden />}
+                    {t("start")}
+                </Button>
+            </StickyActionBar>
         </article>
     );
 }
@@ -255,7 +341,11 @@ function SamplesLine({ values }: { values: string[] }): React.JSX.Element {
     if (values.length === 0) {
         return <span className="text-muted-foreground text-xs">{t("samplesEmpty")}</span>;
     }
-    return <span className="text-muted-foreground text-xs">{t("samplesLabel")}: {values.join("، ")}</span>;
+    return (
+        <span className="text-muted-foreground text-xs">
+            {t("samplesLabel")}: {values.join("، ")}
+        </span>
+    );
 }
 
 function deriveInlineWarnings(state: MappingState): string[] {

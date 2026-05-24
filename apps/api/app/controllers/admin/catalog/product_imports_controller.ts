@@ -1,19 +1,23 @@
 import { rename } from "node:fs/promises";
-
-import logger from "@adonisjs/core/services/logger";
 import type { HttpContext } from "@adonisjs/core/http";
+import logger from "@adonisjs/core/services/logger";
 import { DateTime } from "luxon";
 
 import ProductImport from "#models/product_import";
 import ProductImportChange from "#models/product_import_change";
 import ProductImportError from "#models/product_import_error";
 import ProductImportMappingPreset from "#models/product_import_mapping_preset";
-
+import { parseFile } from "#services/product_import/csv_parser";
+import { publishImportEvent, subscribeToImport, TERMINAL_EVENT_TYPES } from "#services/product_import/event_bus";
+import { hashHeaderSet, suggestMapping } from "#services/product_import/import_field_catalog";
+import { runImport } from "#services/product_import/import_runner";
+import { runPreview } from "#services/product_import/preview_runner";
+import { ensureImportsRoot, importsRoot, readSnapshot, uploadedFilePath } from "#services/product_import/storage";
+import { TEMPLATE_HEADERS, TEMPLATE_SAMPLE_ROWS } from "#services/product_import/template_columns";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductImportChangeTransformer from "#transformers/product_import_change_transformer";
 import ProductImportErrorTransformer from "#transformers/product_import_error_transformer";
 import ProductImportTransformer from "#transformers/product_import_transformer";
-
 import {
     errorsQueryValidator,
     importHistoryQueryValidator,
@@ -23,13 +27,6 @@ import {
     startImportValidator,
     uploadImportValidator,
 } from "#validators/admin/product_import_validator";
-
-import { parseFile } from "#services/product_import/csv_parser";
-import { publishImportEvent, subscribeToImport, TERMINAL_EVENT_TYPES } from "#services/product_import/event_bus";
-import { hashHeaderSet, suggestMapping } from "#services/product_import/import_field_catalog";
-import { runImport } from "#services/product_import/import_runner";
-import { runPreview } from "#services/product_import/preview_runner";
-import { readSnapshot, ensureImportsRoot, importsRoot, uploadedFilePath } from "#services/product_import/storage";
 
 /**
  * `AdminProductImportsController` — every endpoint behind the CSV product importer wizard. The
@@ -46,98 +43,7 @@ export default class AdminProductImportsController {
      * intact; three sample rows so first-time operators see what fits where.
      */
     async template(ctx: HttpContext) {
-        const headers = [
-            "sku",
-            "name",
-            "type",
-            "status",
-            "regular_price",
-            "sale_price",
-            "stock_quantity",
-            "stock_status",
-            "categories",
-            "tags",
-            "brand",
-            "short_description",
-            "description",
-            "weight",
-            "length",
-            "width",
-            "height",
-            "images",
-            "parent_sku",
-            "external_url",
-        ];
-        const samples = [
-            [
-                "saf-001",
-                "کفش ساده مشکی",
-                "simple",
-                "publish",
-                "1500000",
-                "1290000",
-                "20",
-                "instock",
-                "کفش > روزانه",
-                "مشکی,راحت",
-                "Nike",
-                "کفش ساده روزمره",
-                "",
-                "500",
-                "300",
-                "200",
-                "150",
-                "https://example.com/saf-001.jpg",
-                "",
-                "",
-            ],
-            [
-                "var-001",
-                "تیشرت تابستانی",
-                "variable",
-                "publish",
-                "750000",
-                "",
-                "",
-                "instock",
-                "پوشاک > تیشرت",
-                "تابستانه",
-                "Adidas",
-                "تیشرت تابستانی نخی",
-                "تیشرت تابستانی نخی با کیفیت بالا",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-            ],
-            [
-                "var-001-red-m",
-                "",
-                "",
-                "publish",
-                "750000",
-                "",
-                "8",
-                "instock",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "var-001",
-                "",
-            ],
-        ];
-
-        const lines = [headers.join(","), ...samples.map((row) => row.map(escapeCsv).join(","))];
+        const lines = [TEMPLATE_HEADERS.join(","), ...TEMPLATE_SAMPLE_ROWS.map((row) => row.map(escapeCsv).join(","))];
         ctx.response.header("content-type", "text/csv; charset=utf-8");
         ctx.response.header("content-disposition", 'attachment; filename="product-import-template.csv"');
         return `﻿${lines.join("\n")}\n`;
@@ -188,7 +94,7 @@ export default class AdminProductImportsController {
         row.filePath = finalPath;
         await row.save();
 
-        let parsed;
+        let parsed: Awaited<ReturnType<typeof parseFile>>;
         try {
             parsed = await parseFile(finalPath, {
                 delimiter: "auto",
@@ -227,9 +133,10 @@ export default class AdminProductImportsController {
             ...transformed,
             headers: parsed.headers,
             samples: parsed.samples,
-            preset_match: preset === null
-                ? null
-                : { id: Number(preset.id), name: preset.name, last_used_at: preset.lastUsedAt?.toISO() ?? null },
+            preset_match:
+                preset === null
+                    ? null
+                    : { id: Number(preset.id), name: preset.name, last_used_at: preset.lastUsedAt?.toISO() ?? null },
         };
     }
 
@@ -278,9 +185,20 @@ export default class AdminProductImportsController {
         await row.save();
 
         if (payload.save_preset === true && payload.preset_name !== undefined) {
-            await this.savePreset(row.headerHash, payload.preset_name, payload.mapping, payload.update_existing ?? false, Number(ctx.auth.user!.id));
+            await this.savePreset(
+                row.headerHash,
+                payload.preset_name,
+                payload.mapping,
+                payload.update_existing ?? false,
+                Number(ctx.auth.user!.id),
+            );
         } else {
-            await this.touchAutoPreset(row.headerHash, payload.mapping, payload.update_existing ?? false, Number(ctx.auth.user!.id));
+            await this.touchAutoPreset(
+                row.headerHash,
+                payload.mapping,
+                payload.update_existing ?? false,
+                Number(ctx.auth.user!.id),
+            );
         }
 
         void runImport({ importId: Number(row.id), locale: ctx.i18n.locale }).catch((err) => {
@@ -534,10 +452,7 @@ export default class AdminProductImportsController {
         updateExisting: boolean,
         userId: number,
     ): Promise<void> {
-        const existing = await ProductImportMappingPreset.query()
-            .where("header_hash", headerHash)
-            .where("name", name)
-            .first();
+        const existing = await ProductImportMappingPreset.query().where("header_hash", headerHash).where("name", name).first();
         if (existing === null) {
             const row = new ProductImportMappingPreset();
             row.headerHash = headerHash;
@@ -563,10 +478,7 @@ export default class AdminProductImportsController {
         updateExisting: boolean,
         userId: number,
     ): Promise<void> {
-        const existing = await ProductImportMappingPreset.query()
-            .where("header_hash", headerHash)
-            .where("name", "auto")
-            .first();
+        const existing = await ProductImportMappingPreset.query().where("header_hash", headerHash).where("name", "auto").first();
         if (existing === null) {
             const row = new ProductImportMappingPreset();
             row.headerHash = headerHash;
