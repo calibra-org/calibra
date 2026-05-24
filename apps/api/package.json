@@ -7,6 +7,8 @@
         "#abilities/*": "./app/abilities/*.js",
         "#controllers/*": "./app/controllers/*.js",
         "#contracts/*": "./app/contracts/*.js",
+        "#events/*": "./app/events/*.js",
+        "#listeners/*": "./app/listeners/*.js",
         "#commands/*": "./commands/*.js",
         "#exceptions/*": "./app/exceptions/*.js",
         "#jobs/*": "./app/jobs/*.js",

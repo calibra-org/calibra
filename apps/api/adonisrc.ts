@@ -55,6 +55,7 @@ export default defineConfig({
         () => import("#start/kernel"),
         () => import("#start/transmit"),
         () => import("#start/limiter"),
+        () => import("#start/events"),
     ],
 
     tests: {
