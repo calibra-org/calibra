@@ -41,6 +41,29 @@
             "not_refundable": "Order is not refundable in its current status.",
             "fully_refunded": "Order has no remaining outstanding to refund.",
             "deletion_forbidden": "Refunds cannot be deleted — issue a credit note instead."
+        },
+        "imports": {
+            "missing_sku_on_update": "SKU is required to update a product.",
+            "invalid_price": "Price must be a positive number.",
+            "sale_gt_regular": "Sale price cannot be greater than regular price.",
+            "invalid_stock": "Stock must be a non-negative integer.",
+            "invalid_type": "Invalid product type (simple|variable|grouped|external).",
+            "invalid_status": "Invalid status (publish|draft|private|pending).",
+            "invalid_url": "Invalid URL: {value}.",
+            "invalid_date": "Invalid date format: {value}.",
+            "invalid_boolean": "Invalid boolean value (1/0/yes/no).",
+            "unknown_tax_class": "Tax class not recognized: {value}.",
+            "category_create_failed": "Could not create category «{path}».",
+            "db_constraint_violation": "Database error: {message}.",
+            "unhandled_exception": "Unknown error: {message}.",
+            "duplicate_sku": "Product with this SKU already exists (update disabled).",
+            "empty_row": "Row is empty.",
+            "all_columns_unmapped": "No importable columns are mapped.",
+            "not_found": "Import not found.",
+            "parse_failed": "File is unreadable — try a different encoding or delimiter.",
+            "rollback_already_done": "This import has already been rolled back.",
+            "rollback_window_expired": "The 24-hour rollback window for this import has expired.",
+            "snapshot_missing": "Pre-import snapshot is missing."
         }
     },
     "order": {

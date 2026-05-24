@@ -1,0 +1,3 @@
+﻿فیدر,SKU,نوتس,یلصا رادقم,دک,مایپ,تدش
+4,test-003,sale_price,not-a-num,invalid_price,invalid price,error
+4,test-003,regular_price,abc,invalid_price,invalid price,error

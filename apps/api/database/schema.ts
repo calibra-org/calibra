@@ -1262,6 +1262,156 @@ export class ProductImageSchema extends BaseModel {
   declare updatedAt: DateTime
 }
 
+export class ProductImportChangeSchema extends BaseModel {
+  static $columns = ['createdAt', 'field', 'id', 'importId', 'newValue', 'oldValue', 'op', 'productId', 'rowNumber', 'sku'] as const
+  $columns = ProductImportChangeSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare field: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare importId: bigint | number
+  @column()
+  declare newValue: string | null
+  @column()
+  declare oldValue: string | null
+  @column()
+  declare op: any
+  @column()
+  declare productId: bigint | number | null
+  @column()
+  declare rowNumber: number
+  @column()
+  declare sku: string | null
+}
+
+export class ProductImportErrorSchema extends BaseModel {
+  static $columns = ['code', 'columnName', 'createdAt', 'id', 'importId', 'message', 'originalValue', 'retriedAt', 'retriedOutcome', 'rowNumber', 'severity', 'sku', 'updatedAt'] as const
+  $columns = ProductImportErrorSchema.$columns
+  @column()
+  declare code: string
+  @column()
+  declare columnName: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare importId: bigint | number
+  @column()
+  declare message: string
+  @column()
+  declare originalValue: string | null
+  @column.dateTime()
+  declare retriedAt: DateTime | null
+  @column()
+  declare retriedOutcome: string | null
+  @column()
+  declare rowNumber: number
+  @column()
+  declare severity: any
+  @column()
+  declare sku: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class ProductImportMappingPresetSchema extends BaseModel {
+  static $columns = ['createdAt', 'createdByUserId', 'headerHash', 'id', 'lastUsedAt', 'mapping', 'name', 'updateExisting', 'updatedAt', 'useCount'] as const
+  $columns = ProductImportMappingPresetSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare createdByUserId: bigint | number | null
+  @column()
+  declare headerHash: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime()
+  declare lastUsedAt: DateTime | null
+  @column()
+  declare mapping: any
+  @column()
+  declare name: string
+  @column()
+  declare updateExisting: boolean
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare useCount: number
+}
+
+export class ProductImportSchema extends BaseModel {
+  static $columns = ['cancellationRequestedAt', 'createdAt', 'createdCount', 'detectedDelimiter', 'detectedEncoding', 'errorReportPath', 'exception', 'failedCount', 'filePath', 'fileSizeBytes', 'finishedAt', 'headerHash', 'id', 'mapping', 'newCategoriesCount', 'newTagsCount', 'originalFilename', 'presetId', 'processedRows', 'queuedAt', 'queuedImagesCount', 'rolledBackAt', 'rolledBackByUserId', 'skippedCount', 'snapshotPath', 'startedAt', 'status', 'totalRows', 'updateExisting', 'updatedAt', 'updatedCount', 'userId'] as const
+  $columns = ProductImportSchema.$columns
+  @column.dateTime()
+  declare cancellationRequestedAt: DateTime | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare createdCount: number
+  @column()
+  declare detectedDelimiter: string
+  @column()
+  declare detectedEncoding: string
+  @column()
+  declare errorReportPath: string | null
+  @column()
+  declare exception: string | null
+  @column()
+  declare failedCount: number
+  @column()
+  declare filePath: string
+  @column()
+  declare fileSizeBytes: bigint | number
+  @column.dateTime()
+  declare finishedAt: DateTime | null
+  @column()
+  declare headerHash: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare mapping: any
+  @column()
+  declare newCategoriesCount: number
+  @column()
+  declare newTagsCount: number
+  @column()
+  declare originalFilename: string
+  @column()
+  declare presetId: bigint | number | null
+  @column()
+  declare processedRows: number
+  @column.dateTime()
+  declare queuedAt: DateTime
+  @column()
+  declare queuedImagesCount: number
+  @column.dateTime()
+  declare rolledBackAt: DateTime | null
+  @column()
+  declare rolledBackByUserId: bigint | number | null
+  @column()
+  declare skippedCount: number
+  @column()
+  declare snapshotPath: string | null
+  @column.dateTime()
+  declare startedAt: DateTime | null
+  @column()
+  declare status: any
+  @column()
+  declare totalRows: number
+  @column()
+  declare updateExisting: boolean
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare updatedCount: number
+  @column()
+  declare userId: bigint | number
+}
+
 export class ProductReviewSchema extends BaseModel {
   static $columns = ['body', 'createdAt', 'customerId', 'id', 'productId', 'rating', 'reviewerEmail', 'reviewerName', 'status', 'updatedAt', 'verified'] as const
   $columns = ProductReviewSchema.$columns
