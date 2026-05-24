@@ -107,6 +107,170 @@
         "viewAll": "مشاهده همه",
         "comparedTo": "نسبت به دوره قبل"
     },
+    "ProductsExport": {
+        "title": "خروجی محصولات به CSV",
+        "subtitle": "محصولات فروشگاه را با فیلترهای دلخواه به فایل CSV خروجی بگیرید.",
+        "backToProducts": "بازگشت به محصولات",
+        "steps": {
+            "aria": "مراحل خروجی",
+            "filter": "انتخاب فیلتر و ستون‌ها",
+            "exporting": "گرفتن خروجی",
+            "done": "پایان"
+        },
+        "matchCount": {
+            "label": "محصول مطابق فیلتر فعلی:",
+            "variations": "متغیر"
+        },
+        "scope": {
+            "all": "همه محصولات",
+            "allHelp": "تمام محصولات فروشگاه (بدون فیلتر).",
+            "filter": "فیلتر سفارشی",
+            "filterHelp": "بر اساس فیلترهای انتخاب‌شده در پایین.",
+            "selected": "فقط موارد انتخاب‌شده",
+            "selectedHelp": "{n} محصول از صفحه قبل."
+        },
+        "step1": {
+            "title": "انتخاب فیلتر و ستون‌ها",
+            "subtitle": "تصمیم بگیرید چه محصولاتی و با کدام ستون‌ها خروجی گرفته شوند.",
+            "scopeTitle": "محدوده خروجی",
+            "preview": "پیش‌نمایش ۵ ردیف",
+            "generate": "گرفتن خروجی",
+            "disabledNoColumns": "حداقل یک ستون انتخاب کنید",
+            "disabledNoMatches": "هیچ محصولی مطابق فیلتر فعلی پیدا نشد",
+            "previewFailed": "پیش‌نمایش با خطا مواجه شد.",
+            "startFailed": "شروع خروجی با خطا مواجه شد.",
+            "previewTitle": "پیش‌نمایش ۵ ردیف اول"
+        },
+        "filters": {
+            "title": "فیلترها",
+            "status": "وضعیت",
+            "type": "نوع محصول",
+            "stockStatus": "وضعیت موجودی",
+            "onSale": "در حال تخفیف",
+            "featured": "ویژه",
+            "hasImages": "دارای تصویر",
+            "hasVariations": "دارای متغیر",
+            "lowStock": "موجودی پایین",
+            "includeVariations": "شامل متغیرها",
+            "priceRange": "بازه قیمت",
+            "min": "حداقل",
+            "max": "حداکثر",
+            "skuPattern": "الگوی SKU",
+            "skuPatternPlaceholder": "مثال: nut-*",
+            "search": "جستجو",
+            "searchPlaceholder": "نام محصول، توضیحات یا SKU",
+            "createdAfter": "ساخته‌شده پس از",
+            "createdBefore": "ساخته‌شده پیش از"
+        },
+        "statusLabels": {
+            "publish": "منتشرشده",
+            "draft": "پیش‌نویس",
+            "pending": "در انتظار",
+            "private": "خصوصی"
+        },
+        "typeLabels": {
+            "simple": "ساده",
+            "variable": "متغیر",
+            "grouped": "گروهی",
+            "external": "خارجی"
+        },
+        "stockLabels": {
+            "instock": "موجود",
+            "outofstock": "ناموجود",
+            "onbackorder": "پیش‌خرید"
+        },
+        "columns": {
+            "title": "ستون‌ها",
+            "subtitle": "ستون‌هایی که در فایل خروجی ظاهر می‌شوند. ترتیب را با کشیدن تغییر دهید.",
+            "addMore": "افزودن ستون‌های بیشتر",
+            "remove": "حذف ستون",
+            "preset": {
+                "default": "پیش‌فرض",
+                "all": "همه ستون‌ها",
+                "required": "فقط ستون‌های ضروری",
+                "pricing": "فقط ستون‌های قیمتی",
+                "none": "هیچ‌کدام"
+            }
+        },
+        "format": {
+            "title": "گزینه‌های پیشرفته",
+            "delimiter": "جداکننده",
+            "tab": "Tab",
+            "encoding": "رمزگذاری",
+            "digitStyle": "شکل ارقام",
+            "digitStyleAscii": "انگلیسی",
+            "digitStylePersian": "فارسی",
+            "dateFormat": "قالب تاریخ",
+            "jalali": "جلالی",
+            "moneyFormat": "قالب پول",
+            "moneyMinor": "ریال (واحد خرد)",
+            "moneyMajor": "تومان",
+            "compress": "فشرده‌سازی",
+            "compressAuto": "خودکار",
+            "compressAlways": "همیشه",
+            "compressNever": "هرگز",
+            "headerLanguage": "زبان ستون‌سرها",
+            "headerEn": "انگلیسی (سازگار با ورود مجدد)",
+            "headerFa": "فارسی"
+        },
+        "exporting": {
+            "title": "در حال گرفتن خروجی",
+            "subtitle": "فایل CSV در حال ساخت است.",
+            "processedOfTotal": "پردازش‌شده: {processed} از {total}",
+            "slowChunk": "در حال پردازش ردیف {row} — ممکن است چند ثانیه طول بکشد",
+            "cancel": "لغو",
+            "background": "ادامه در پس‌زمینه",
+            "connection": {
+                "sse": "اتصال زنده",
+                "polling": "در حال بررسی…",
+                "connecting": "در حال اتصال…"
+            }
+        },
+        "done": {
+            "headline": {
+                "completed": "خروجی با موفقیت آماده شد",
+                "completed_with_errors": "خروجی با هشدار آماده شد",
+                "failed": "گرفتن خروجی ناموفق بود",
+                "cancelled": "خروجی لغو شد",
+                "queued": "در صف",
+                "running": "در حال اجرا"
+            },
+            "file": "نام فایل",
+            "size": "حجم",
+            "rows": "ردیف‌های خروجی",
+            "columns": "ستون‌ها",
+            "duration": "زمان",
+            "scope": {
+                "all": "همه",
+                "filter": "فیلتر سفارشی",
+                "selected": "موارد انتخاب‌شده",
+                "preset": "از پیش‌تنظیمات"
+            },
+            "download": "دانلود فایل",
+            "copyLink": "کپی لینک دانلود",
+            "copied": "کپی شد",
+            "noLongerAvailable": "فایل دیگر در دسترس نیست — برای دریافت دوباره، خروجی جدید بگیرید.",
+            "rerun": "خروجی جدید با همین فیلتر",
+            "history": "تاریخچه خروجی‌ها",
+            "backToProducts": "بازگشت به محصولات"
+        },
+        "history": {
+            "title": "تاریخچه خروجی‌های محصولات",
+            "subtitle": "همه خروجی‌های گذشته. دانلود تا ۲۴ ساعت در دسترس است.",
+            "backToProducts": "بازگشت به محصولات",
+            "empty": "هنوز خروجی‌ای ثبت نشده است.",
+            "col": {
+                "file": "فایل",
+                "date": "تاریخ",
+                "status": "وضعیت",
+                "rows": "ردیف‌ها",
+                "size": "حجم",
+                "actions": "عمل",
+                "download": "دانلود",
+                "delete": "حذف"
+            }
+        }
+    },
     "ProductsImport": {
         "title": "وارد کردن محصولات از CSV",
         "subtitle": "اطلاعات محصولات فروشگاه را از فایل CSV یا XLSX وارد کنید یا اطلاعات موجود را به‌روزرسانی کنید.",

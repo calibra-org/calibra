@@ -107,6 +107,170 @@
         "viewAll": "View all",
         "comparedTo": "vs previous period"
     },
+    "ProductsExport": {
+        "title": "Export products to CSV",
+        "subtitle": "Export store products to a CSV file with custom filters.",
+        "backToProducts": "Back to products",
+        "steps": {
+            "aria": "Export steps",
+            "filter": "Filter & columns",
+            "exporting": "Exporting",
+            "done": "Done"
+        },
+        "matchCount": {
+            "label": "Products matching current filter:",
+            "variations": "variations"
+        },
+        "scope": {
+            "all": "All products",
+            "allHelp": "Every product in the store (no filters).",
+            "filter": "Custom filter",
+            "filterHelp": "Based on the filters selected below.",
+            "selected": "Selected only",
+            "selectedHelp": "{n} products from the previous page."
+        },
+        "step1": {
+            "title": "Filter and columns",
+            "subtitle": "Decide which products to export and which columns to include.",
+            "scopeTitle": "Export scope",
+            "preview": "Preview 5 rows",
+            "generate": "Generate",
+            "disabledNoColumns": "Pick at least one column",
+            "disabledNoMatches": "No products match the current filter",
+            "previewFailed": "Preview failed.",
+            "startFailed": "Could not start the export.",
+            "previewTitle": "Preview — first 5 rows"
+        },
+        "filters": {
+            "title": "Filters",
+            "status": "Status",
+            "type": "Product type",
+            "stockStatus": "Stock status",
+            "onSale": "On sale",
+            "featured": "Featured",
+            "hasImages": "Has images",
+            "hasVariations": "Has variations",
+            "lowStock": "Low stock",
+            "includeVariations": "Include variation rows",
+            "priceRange": "Price range",
+            "min": "Min",
+            "max": "Max",
+            "skuPattern": "SKU pattern",
+            "skuPatternPlaceholder": "e.g. nut-*",
+            "search": "Search",
+            "searchPlaceholder": "Name, description or SKU",
+            "createdAfter": "Created after",
+            "createdBefore": "Created before"
+        },
+        "statusLabels": {
+            "publish": "Published",
+            "draft": "Draft",
+            "pending": "Pending",
+            "private": "Private"
+        },
+        "typeLabels": {
+            "simple": "Simple",
+            "variable": "Variable",
+            "grouped": "Grouped",
+            "external": "External"
+        },
+        "stockLabels": {
+            "instock": "In stock",
+            "outofstock": "Out of stock",
+            "onbackorder": "On backorder"
+        },
+        "columns": {
+            "title": "Columns",
+            "subtitle": "Columns that appear in the output file. Drag to reorder.",
+            "addMore": "Add more columns",
+            "remove": "Remove column",
+            "preset": {
+                "default": "Default",
+                "all": "All columns",
+                "required": "Required only",
+                "pricing": "Pricing only",
+                "none": "None"
+            }
+        },
+        "format": {
+            "title": "Advanced options",
+            "delimiter": "Delimiter",
+            "tab": "Tab",
+            "encoding": "Encoding",
+            "digitStyle": "Digit style",
+            "digitStyleAscii": "ASCII",
+            "digitStylePersian": "Persian",
+            "dateFormat": "Date format",
+            "jalali": "Jalali",
+            "moneyFormat": "Money format",
+            "moneyMinor": "Rial (minor units)",
+            "moneyMajor": "Toman",
+            "compress": "Compression",
+            "compressAuto": "Auto",
+            "compressAlways": "Always",
+            "compressNever": "Never",
+            "headerLanguage": "Header language",
+            "headerEn": "English (round-trip safe)",
+            "headerFa": "Persian"
+        },
+        "exporting": {
+            "title": "Exporting",
+            "subtitle": "Your CSV is being generated.",
+            "processedOfTotal": "Processed: {processed} of {total}",
+            "slowChunk": "Processing row {row} — this may take a few seconds",
+            "cancel": "Cancel",
+            "background": "Continue in background",
+            "connection": {
+                "sse": "Live",
+                "polling": "Polling…",
+                "connecting": "Connecting…"
+            }
+        },
+        "done": {
+            "headline": {
+                "completed": "Export ready",
+                "completed_with_errors": "Export finished with warnings",
+                "failed": "Export failed",
+                "cancelled": "Export cancelled",
+                "queued": "Queued",
+                "running": "Running"
+            },
+            "file": "File name",
+            "size": "Size",
+            "rows": "Rows",
+            "columns": "Columns",
+            "duration": "Duration",
+            "scope": {
+                "all": "All",
+                "filter": "Custom filter",
+                "selected": "Selected",
+                "preset": "Preset"
+            },
+            "download": "Download",
+            "copyLink": "Copy download link",
+            "copied": "Copied",
+            "noLongerAvailable": "File is no longer available — generate a new export to download again.",
+            "rerun": "New export with same filter",
+            "history": "Export history",
+            "backToProducts": "Back to products"
+        },
+        "history": {
+            "title": "Product export history",
+            "subtitle": "Every past export. Downloads are available for 24 hours.",
+            "backToProducts": "Back to products",
+            "empty": "No exports yet.",
+            "col": {
+                "file": "File",
+                "date": "Date",
+                "status": "Status",
+                "rows": "Rows",
+                "size": "Size",
+                "actions": "Actions",
+                "download": "Download",
+                "delete": "Delete"
+            }
+        }
+    },
     "ProductsImport": {
         "title": "Import products from CSV",
         "subtitle": "Import store products from a CSV or XLSX file, or update existing records.",
