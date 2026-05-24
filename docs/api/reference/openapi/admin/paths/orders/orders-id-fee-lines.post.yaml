@@ -1,0 +1,32 @@
+operationId: adminOrderAddFee
+summary: Add a fee line to an order (admin)
+description: Appends a manual fee line (e.g. handling, gift wrap) and recomputes order totals.
+tags: [Admin / Orders]
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [title, amount_minor]
+                properties:
+                    title: { type: string, minLength: 1, maxLength: 255 }
+                    amount_minor: { type: integer, minimum: 0 }
+                    taxable: { type: boolean }
+                    tax_class_id: { type: [integer, "null"] }
+responses:
+    "201":
+        description: Updated order envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

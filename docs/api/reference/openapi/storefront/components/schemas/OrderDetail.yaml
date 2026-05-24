@@ -112,3 +112,33 @@ allOf:
                       changed_by_user_id: { type: [integer, "null"] }
                       reason: { type: [string, "null"] }
                       occurred_at: { type: [string, "null"], format: date-time }
+          coupon_lines:
+              type: array
+              items:
+                  type: object
+                  required: [id, code, discount]
+                  properties:
+                      id: { type: integer }
+                      code: { type: string }
+                      discount: { type: integer }
+          fee_lines:
+              type: array
+              items:
+                  type: object
+                  required: [id, name, total, total_tax]
+                  properties:
+                      id: { type: integer }
+                      name: { type: string }
+                      total: { type: integer }
+                      total_tax: { type: integer }
+                      taxable: { type: boolean }
+                      tax_class_id: { type: [integer, "null"] }
+          shipping_info:
+              anyOf:
+                  - type: "null"
+                  - type: object
+                    properties:
+                        tracking_number: { type: [string, "null"] }
+                        tracking_url: { type: [string, "null"] }
+                        carrier: { type: [string, "null"] }
+                        shipped_at: { type: [string, "null"], format: date-time }

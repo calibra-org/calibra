@@ -1,0 +1,28 @@
+title: OrderTotalsBreakdown
+description: >
+    Camel-cased money breakdown returned by the recalculate-totals preview endpoint. Each field
+    is an integer Rial-minor amount; the controller produces this shape directly from
+    `calculateTotals()` without re-serializing through the order transformer.
+type: object
+required:
+    - itemsTotal
+    - itemsTaxTotal
+    - shippingTotal
+    - shippingTaxTotal
+    - feesTotal
+    - feesTaxTotal
+    - discountTotal
+    - discountTaxTotal
+    - taxTotal
+    - grandTotal
+properties:
+    itemsTotal: { type: integer }
+    itemsTaxTotal: { type: integer }
+    shippingTotal: { type: integer }
+    shippingTaxTotal: { type: integer }
+    feesTotal: { type: integer }
+    feesTaxTotal: { type: integer }
+    discountTotal: { type: integer }
+    discountTaxTotal: { type: integer }
+    taxTotal: { type: integer }
+    grandTotal: { type: integer }

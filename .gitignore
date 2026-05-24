@@ -59,3 +59,4 @@ dist/
 
 # Local backend response captures (not committed)
 tmp/
+.spin/

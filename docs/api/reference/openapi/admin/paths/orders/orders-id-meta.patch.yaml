@@ -1,0 +1,32 @@
+operationId: adminOrderUpsertMeta
+summary: Upsert order meta (admin)
+description: >
+    Sets the value for the given `(order_id, key)` pair. Keys prefixed with `_` are conventionally
+    hidden from the default admin editor.
+tags: [Admin / Orders]
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [key]
+                properties:
+                    key: { type: string, minLength: 1, maxLength: 191 }
+                    value: { type: string, maxLength: 65535 }
+responses:
+    "200":
+        description: Updated order envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

@@ -1,0 +1,39 @@
+operationId: adminOrderRecalculateTotals
+summary: Recalculate order totals (admin)
+description: >
+    Re-sums line items, shipping lines, fees, and coupon discounts. When `preview=true`, returns
+    the proposed totals AND the current totals so the client can diff before committing.
+tags: [Admin / Orders]
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: false
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    preview: { type: boolean, default: false }
+responses:
+    "200":
+        description: When preview=true, returns the diff. Otherwise returns the updated order.
+        content:
+            application/json:
+                schema:
+                    oneOf:
+                        - type: object
+                          required: [data]
+                          properties:
+                              data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+                        - type: object
+                          required: [data]
+                          properties:
+                              data:
+                                  type: object
+                                  required: [preview, current]
+                                  properties:
+                                      preview: { $ref: "../../components/schemas/OrderTotalsBreakdown.yaml" }
+                                      current: { $ref: "../../components/schemas/OrderTotalsBreakdown.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

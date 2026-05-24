@@ -1,0 +1,25 @@
+operationId: adminOrderDeleteLineItem
+summary: Remove an order line item (admin)
+description: Removes a line item; rejects with 409 when a refund references the line.
+tags: [Admin / Orders]
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: lineId, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Updated order envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "409":
+        description: Line item has refunds and cannot be removed.
+        content:
+            application/json:
+                schema: { $ref: "../../../common/components/schemas/BasicMessage.yaml" }

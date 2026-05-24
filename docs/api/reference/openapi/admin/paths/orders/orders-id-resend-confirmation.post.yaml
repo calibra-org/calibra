@@ -1,0 +1,35 @@
+operationId: adminOrderResendConfirmation
+summary: Re-send the customer confirmation email (admin)
+description: >
+    Enqueues a fresh confirmation email for the order's billing address. Returns 202 to
+    advertise the async nature — actual delivery is the mailer's responsibility (currently a
+    structured log line stub until templates land).
+tags: [Admin / Orders]
+
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+
+responses:
+    "202":
+        description: Confirmation queued.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [order_id, queued]
+                            properties:
+                                order_id: { type: integer }
+                                queued: { type: boolean }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

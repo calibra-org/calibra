@@ -8,6 +8,7 @@ import OrderAddress from "#models/order_address";
 import OrderCouponLine from "#models/order_coupon_line";
 import OrderFeeLine from "#models/order_fee_line";
 import OrderLineItem from "#models/order_line_item";
+import OrderMeta from "#models/order_meta";
 import OrderShippingLine from "#models/order_shipping_line";
 import OrderStatusHistory from "#models/order_status_history";
 import OrderTaxLine from "#models/order_tax_line";
@@ -63,6 +64,9 @@ export default class Order extends OrderSchema {
 
     @hasMany(() => OrderStatusHistory, { foreignKey: "orderId" })
     declare statusHistory: HasMany<typeof OrderStatusHistory>;
+
+    @hasMany(() => OrderMeta, { foreignKey: "orderId" })
+    declare meta: HasMany<typeof OrderMeta>;
 
     @hasOne(() => OrderAddress, {
         foreignKey: "orderId",
