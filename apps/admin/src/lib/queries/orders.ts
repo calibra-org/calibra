@@ -37,6 +37,12 @@ export interface OrdersListParams {
     search?: string;
     sort?: string;
     createdVia?: string;
+    /** Multi-select source filter (mirrors the toolbar facet). Serialised as `?source=a,b,c`. */
+    sources?: string[];
+    /** Multi-select payment-method filter — values are payment_gateway.code snapshots. */
+    payments?: string[];
+    /** Multi-select billing-country filter (ISO-3166 alpha-2). */
+    countries?: string[];
     after?: string;
     before?: string;
     customerId?: number;
@@ -58,12 +64,16 @@ export function useOrdersList(params: OrdersListParams = {}) {
     const after = params.after;
     const before = params.before;
     const customerId = params.customerId;
+    /** Serialise multi-select facets as CSV; absent / empty arrays drop out of the URL entirely. */
+    const sources = csvOrUndefined(params.sources);
+    const payments = csvOrUndefined(params.payments);
+    const countries = csvOrUndefined(params.countries);
     return useQuery<OrderListEnvelope, Error, Paginated<AdminOrder>>({
         queryKey: [
             "admin",
             "orders",
             "list",
-            { locale, page, perPage, status, search, sort, createdVia, after, before, customerId },
+            { locale, page, perPage, status, search, sort, createdVia, sources, payments, countries, after, before, customerId },
         ],
         queryFn: () =>
             apiGet<OrderListEnvelope>("orders", {
@@ -75,6 +85,9 @@ export function useOrdersList(params: OrdersListParams = {}) {
                     search,
                     sort,
                     created_via: createdVia,
+                    source: sources,
+                    payment: payments,
+                    country: countries,
                     after,
                     before,
                     customer_id: customerId,
@@ -86,6 +99,11 @@ export function useOrdersList(params: OrdersListParams = {}) {
         }),
         placeholderData: (previous) => previous,
     });
+}
+
+function csvOrUndefined(values: string[] | undefined): string | undefined {
+    if (values === undefined || values.length === 0) return undefined;
+    return values.join(",");
 }
 
 /**

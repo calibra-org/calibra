@@ -18,19 +18,26 @@ function SheetClose(props: React.ComponentProps<typeof BaseDrawer.Close>) {
 
 type SheetSide = "top" | "right" | "bottom" | "left";
 
+/**
+ * Side-anchored translations and base layout. The `right`/`left` variants intentionally drop the
+ * rounded edge — a flush column reads as a full-bleed workspace rather than a floating card, which
+ * matters for the order quick preview where the inner toolbar already supplies its own chrome.
+ */
 const sideClasses: Record<SheetSide, string> = {
     top: "inset-x-0 top-0 max-h-[90dvh] rounded-b-lg border-b data-[starting-style]:-translate-y-full data-[ending-style]:-translate-y-full",
-    right: "inset-y-0 end-0 max-w-md rounded-s-lg border-s data-[starting-style]:translate-x-full data-[ending-style]:translate-x-full rtl:data-[starting-style]:-translate-x-full rtl:data-[ending-style]:-translate-x-full",
+    right: "inset-y-0 end-0 max-w-md border-s data-[starting-style]:translate-x-full data-[ending-style]:translate-x-full rtl:data-[starting-style]:-translate-x-full rtl:data-[ending-style]:-translate-x-full",
     bottom: "inset-x-0 bottom-0 max-h-[90dvh] rounded-t-lg border-t data-[starting-style]:translate-y-full data-[ending-style]:translate-y-full",
-    left: "inset-y-0 start-0 max-w-md rounded-e-lg border-e data-[starting-style]:-translate-x-full data-[ending-style]:-translate-x-full rtl:data-[starting-style]:translate-x-full rtl:data-[ending-style]:translate-x-full",
+    left: "inset-y-0 start-0 max-w-md border-e data-[starting-style]:-translate-x-full data-[ending-style]:-translate-x-full rtl:data-[starting-style]:translate-x-full rtl:data-[ending-style]:translate-x-full",
 };
 
 interface SheetContentProps extends React.ComponentProps<typeof BaseDrawer.Popup> {
     side?: SheetSide;
+    /** Hide the absolute top-right close button so the caller can render its own toolbar cluster. */
+    hideCloseButton?: boolean;
 }
 
 /** Edge-anchored sheet built on Base UI's Drawer. Defaults to a bottom sheet for mobile flows. */
-function SheetContent({ className, side = "bottom", children, ...props }: SheetContentProps) {
+function SheetContent({ className, side = "bottom", hideCloseButton = false, children, ...props }: SheetContentProps) {
     return (
         <BaseDrawer.Portal>
             <BaseDrawer.Backdrop
@@ -51,12 +58,14 @@ function SheetContent({ className, side = "bottom", children, ...props }: SheetC
                     {...props}
                 >
                     {children}
-                    <BaseDrawer.Close
-                        className="absolute end-4 top-4 rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        aria-label="Close"
-                    >
-                        <X className="size-4" aria-hidden="true" />
-                    </BaseDrawer.Close>
+                    {!hideCloseButton && (
+                        <BaseDrawer.Close
+                            className="absolute end-4 top-4 rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            aria-label="Close"
+                        >
+                            <X className="size-4" aria-hidden="true" />
+                        </BaseDrawer.Close>
+                    )}
                 </BaseDrawer.Popup>
             </BaseDrawer.Viewport>
         </BaseDrawer.Portal>

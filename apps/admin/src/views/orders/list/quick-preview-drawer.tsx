@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { ChevronLeft, ChevronRight, Copy, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, ExternalLink, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
@@ -9,14 +9,14 @@ import { OrderStatusBadge } from "#/components/OrderStatusBadge";
 import { Button } from "#/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "#/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent } from "#/components/ui/sheet";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { toast } from "#/components/ui/toast";
 import { formatDateTime, formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
 import { useOrder, useUpdateOrderStatus } from "#/lib/queries/orders";
-import type { AdminOrder, OrderStatus } from "#/lib/types";
+import type { AdminOrder, AdminOrderStatusHistoryEntry, OrderStatus } from "#/lib/types";
 
 import { legalNextStatuses } from "../shared/status-machine";
 
@@ -58,7 +58,7 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-full max-w-xl gap-0 p-0">
+            <SheetContent side="right" hideCloseButton className="w-full max-w-xl gap-0 overflow-hidden p-0 sm:max-w-xl">
                 {view === null ? (
                     <div className="flex flex-col gap-3 p-6">
                         <Skeleton className="h-6 w-40" />
@@ -66,21 +66,23 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                     </div>
                 ) : (
                     <>
-                        <SheetHeader className="border-border border-b p-6 pb-4">
+                        <header className="flex flex-col gap-3 border-border border-b bg-card px-6 pt-5 pb-4">
                             <div className="flex items-start justify-between gap-3">
-                                <div className="flex flex-col gap-1.5">
-                                    <SheetTitle className="flex items-center gap-2">
-                                        #{formatNumber(view.orderNumber, locale)}
+                                <div className="flex min-w-0 flex-col gap-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="font-semibold text-xl tabular-nums">
+                                            #{formatNumber(view.orderNumber, locale)}
+                                        </span>
                                         <OrderStatusBadge status={view.status} />
-                                    </SheetTitle>
-                                    <SheetDescription>
+                                    </div>
+                                    <p className="text-muted-foreground text-xs">
                                         {t("subtitle", {
                                             date: formatDateTime(view.createdAt, locale),
                                             total: formatMoney(view.grandTotal, locale),
                                         })}
-                                    </SheetDescription>
+                                    </p>
                                 </div>
-                                <div className="flex items-center gap-1">
+                                <div className="flex shrink-0 items-center gap-1">
                                     <Button
                                         size="icon"
                                         variant="ghost"
@@ -103,43 +105,55 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                         <ChevronLeft className="size-4 rtl:hidden" aria-hidden="true" />
                                         <ChevronRight className="hidden size-4 rtl:inline" aria-hidden="true" />
                                     </Button>
+                                    <SheetClose
+                                        render={(props) => (
+                                            <Button
+                                                {...props}
+                                                size="icon"
+                                                variant="ghost"
+                                                className="size-8"
+                                                aria-label={t("close")}
+                                            >
+                                                <X className="size-4" aria-hidden="true" />
+                                            </Button>
+                                        )}
+                                    />
                                 </div>
                             </div>
-                            <div className="mt-2 flex items-center justify-between">
-                                <Link
-                                    href={`/orders/${view.id}` as never}
-                                    className="inline-flex items-center gap-1 text-primary text-xs hover:underline"
-                                >
-                                    <ExternalLink className="size-3" aria-hidden="true" />
-                                    {t("openFull")}
-                                </Link>
-                                <SheetClose
-                                    render={(props) => (
-                                        <Button {...props} size="sm" variant="ghost">
-                                            {t("close")}
-                                        </Button>
-                                    )}
-                                />
-                            </div>
-                        </SheetHeader>
+                            <Link
+                                href={`/orders/${view.id}` as never}
+                                className="inline-flex w-fit items-center gap-1 text-primary text-xs hover:underline"
+                            >
+                                <ExternalLink className="size-3" aria-hidden="true" />
+                                {t("openFull")}
+                            </Link>
+                        </header>
 
-                        <Tabs defaultValue="items" className="flex-1 overflow-hidden">
-                            <TabsList className="border-border border-b px-6">
-                                <TabsTrigger value="items">{t("tabs.items")}</TabsTrigger>
-                                <TabsTrigger value="addresses">{t("tabs.addresses")}</TabsTrigger>
-                                <TabsTrigger value="payment">{t("tabs.payment")}</TabsTrigger>
-                                <TabsTrigger value="timeline">{t("tabs.timeline")}</TabsTrigger>
+                        <Tabs defaultValue="items" className="flex min-h-0 flex-1 flex-col">
+                            <TabsList className="h-10 shrink-0 gap-6 border-border border-b bg-transparent px-6">
+                                <TabsTrigger value="items" className="px-0">
+                                    {t("tabs.items")}
+                                </TabsTrigger>
+                                <TabsTrigger value="addresses" className="px-0">
+                                    {t("tabs.addresses")}
+                                </TabsTrigger>
+                                <TabsTrigger value="payment" className="px-0">
+                                    {t("tabs.payment")}
+                                </TabsTrigger>
+                                <TabsTrigger value="timeline" className="px-0">
+                                    {t("tabs.timeline")}
+                                </TabsTrigger>
                             </TabsList>
 
-                            <div className="flex-1 overflow-y-auto px-6 py-5 text-sm">
-                                <TabsContent value="items" className="flex flex-col gap-3">
+                            <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-6 py-5 text-sm">
+                                <TabsContent value="items" className="flex flex-col gap-2">
                                     {view.lineItems.length === 0 ? (
                                         <p className="text-muted-foreground">{t("noItems")}</p>
                                     ) : (
                                         view.lineItems.map((line) => (
                                             <div
                                                 key={line.id}
-                                                className="flex items-start justify-between gap-3 border-border/60 border-b pb-2 last:border-0"
+                                                className="flex items-start justify-between gap-3 rounded-md border border-border/60 bg-muted/20 px-3 py-2.5"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <p className="truncate font-medium">
@@ -149,7 +163,9 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                                         {line.sku || "—"} · ×{formatNumber(line.quantity, locale)}
                                                     </p>
                                                 </div>
-                                                <p className="font-medium tabular-nums">{formatMoney(line.total, locale)}</p>
+                                                <p className="shrink-0 font-medium tabular-nums">
+                                                    {formatMoney(line.total, locale)}
+                                                </p>
                                             </div>
                                         ))
                                     )}
@@ -196,32 +212,8 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                     )}
                                 </TabsContent>
 
-                                <TabsContent value="timeline" className="flex flex-col gap-3">
-                                    {view.history.length === 0 ? (
-                                        <p className="text-muted-foreground">{t("noTimeline")}</p>
-                                    ) : (
-                                        view.history
-                                            .slice()
-                                            .reverse()
-                                            .map((entry) => (
-                                                <div
-                                                    key={entry.id}
-                                                    className="flex items-start gap-3 border-primary/30 border-l-2 ps-3"
-                                                >
-                                                    <div className="flex flex-1 flex-col gap-1">
-                                                        <span className="inline-flex items-center gap-2 text-xs">
-                                                            <OrderStatusBadge status={entry.toStatus} />
-                                                            <span className="text-muted-foreground">
-                                                                {formatDateTime(entry.occurredAt, locale)}
-                                                            </span>
-                                                        </span>
-                                                        {entry.reason !== null && (
-                                                            <p className="text-muted-foreground text-xs">{entry.reason}</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))
-                                    )}
+                                <TabsContent value="timeline" className="flex flex-col">
+                                    <Timeline entries={view.history} locale={locale} emptyLabel={t("noTimeline")} />
                                 </TabsContent>
                             </div>
                         </Tabs>
@@ -247,7 +239,7 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
 
 function KeyRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 border-border/60 border-b py-2 last:border-0">
             <span className="text-muted-foreground text-xs">{label}</span>
             <span className="text-sm">{value}</span>
         </div>
@@ -257,15 +249,15 @@ function KeyRow({ label, value }: { label: string; value: React.ReactNode }) {
 function AddressBlock({ title, address }: { title: string; address: AdminOrder["billingAddress"] }) {
     if (!address.firstName && !address.lastName && !address.addressLine1) {
         return (
-            <section className="flex flex-col gap-1">
+            <section className="flex flex-col gap-1 rounded-md border border-border/60 bg-muted/20 p-3">
                 <h4 className="text-muted-foreground text-xs">{title}</h4>
                 <p className="text-muted-foreground text-sm">—</p>
             </section>
         );
     }
     return (
-        <section className="flex flex-col gap-1">
-            <h4 className="text-muted-foreground text-xs">{title}</h4>
+        <section className="flex flex-col gap-0.5 rounded-md border border-border/60 bg-muted/20 p-3">
+            <h4 className="text-muted-foreground text-xs uppercase tracking-wide">{title}</h4>
             <p className="text-sm">
                 {address.firstName} {address.lastName}
             </p>
@@ -279,6 +271,46 @@ function AddressBlock({ title, address }: { title: string; address: AdminOrder["
             </p>
             {address.phone && <p className="text-muted-foreground text-xs">{address.phone}</p>}
         </section>
+    );
+}
+
+interface TimelineProps {
+    entries: AdminOrderStatusHistoryEntry[];
+    locale: Locale;
+    emptyLabel: string;
+}
+
+/**
+ * Vertical status timeline. Each entry rendered as a dot anchored to a 1px connector running the
+ * full height of the list — the connector reads as a continuous spine across both modes and stays
+ * subtle enough that the status pills carry the visual hierarchy.
+ */
+function Timeline({ entries, locale, emptyLabel }: TimelineProps) {
+    if (entries.length === 0) {
+        return <p className="text-muted-foreground text-sm">{emptyLabel}</p>;
+    }
+    const ordered = entries.slice().reverse();
+    return (
+        <ol className="relative flex flex-col gap-4">
+            <span aria-hidden="true" className="absolute start-[7px] top-1 bottom-1 w-px bg-border" />
+            {ordered.map((entry) => (
+                <li key={entry.id} className="relative flex items-start gap-3 ps-1">
+                    <span
+                        aria-hidden="true"
+                        className="relative z-10 mt-1.5 size-3 shrink-0 rounded-full bg-primary ring-4 ring-card"
+                    />
+                    <div className="flex flex-1 flex-col gap-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <OrderStatusBadge status={entry.toStatus} />
+                            <span className="text-muted-foreground text-xs">{formatDateTime(entry.occurredAt, locale)}</span>
+                        </div>
+                        {entry.reason !== null && entry.reason.length > 0 && (
+                            <p className="text-muted-foreground text-xs">{entry.reason}</p>
+                        )}
+                    </div>
+                </li>
+            ))}
+        </ol>
     );
 }
 

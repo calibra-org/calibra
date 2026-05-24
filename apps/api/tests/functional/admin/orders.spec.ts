@@ -154,6 +154,45 @@ test.group("POST /api/v1/admin/orders/:id/resend-confirmation", (group) => {
     });
 });
 
+test.group("GET /api/v1/admin/orders (filters)", (group) => {
+    group.each.setup(async () => {
+        await resetPhase05();
+    });
+
+    test("payment + source CSV filters trim the result set", async ({ client, assert }) => {
+        const admin = await adminUser();
+        const product = await createTaxableProduct({ regularPrice: 500_000 });
+        /** All draft orders default to `payment_method_code_snapshot='cod'` via the helper. */
+        const orderA = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
+        const orderB = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
+
+        /** Manually flip B's payment snapshot so the filter has something to discriminate against. */
+        const Order = (await import("#models/order")).default;
+        const b = await Order.findOrFail(Number(orderB.id));
+        b.paymentMethodCodeSnapshot = "zarinpal";
+        await b.save();
+
+        const codOnly = await client.get("/api/v1/admin/orders?payment=cod").loginAs(admin);
+        codOnly.assertStatus(200);
+        codOnly.assertAgainstApiSpec();
+        const codIds = (codOnly.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(codIds, [Number(orderA.id)]);
+        assert.notInclude(codIds, Number(orderB.id));
+
+        const csv = await client.get("/api/v1/admin/orders?payment=cod,zarinpal").loginAs(admin);
+        csv.assertStatus(200);
+        csv.assertAgainstApiSpec();
+        const csvIds = (csv.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(csvIds, [Number(orderA.id), Number(orderB.id)]);
+
+        const sourceOnly = await client.get("/api/v1/admin/orders?source=checkout").loginAs(admin);
+        sourceOnly.assertStatus(200);
+        sourceOnly.assertAgainstApiSpec();
+        const sourceIds = (sourceOnly.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(sourceIds, [Number(orderA.id), Number(orderB.id)]);
+    });
+});
+
 test.group("GET /api/v1/admin/orders (extended list shape)", (group) => {
     group.each.setup(async () => {
         await resetPhase05();

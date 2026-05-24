@@ -92,7 +92,9 @@ export function OrdersList() {
                 : undefined,
         status,
         search: tableState.q.length > 0 ? tableState.q : undefined,
-        createdVia: tableState.facetValues.source?.[0],
+        sources: tableState.facetValues.source,
+        payments: tableState.facetValues.payment,
+        countries: tableState.facetValues.country,
     });
 
     const rows = data?.data ?? [];

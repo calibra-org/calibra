@@ -23,6 +23,30 @@ const lineShape = vine.object({
     quantity: vine.number().positive().max(10_000),
 });
 
+/**
+ * Accepts either a single string (`?key=a`), a CSV (`?key=a,b,c`), or an array (`?key[]=a&key[]=b`)
+ * — different HTTP clients serialise multi-select facets differently. The vine union normalises all
+ * three into `string[]` so the controller can call `whereIn` without a second pass.
+ */
+const csvList = vine
+    .union([
+        vine.union.if((value) => Array.isArray(value), vine.array(vine.string().trim().minLength(1).maxLength(80)).maxLength(50)),
+        vine.union.else(
+            vine
+                .string()
+                .trim()
+                .minLength(1)
+                .maxLength(400)
+                .transform((value) =>
+                    value
+                        .split(",")
+                        .map((entry) => entry.trim())
+                        .filter((entry) => entry.length > 0),
+                ),
+        ),
+    ])
+    .optional();
+
 export const adminOrderListValidator = vine.compile(
     vine.object({
         page: vine.number().positive().optional(),
@@ -30,6 +54,12 @@ export const adminOrderListValidator = vine.compile(
         status: vine.enum([...(ORDER_STATUS_VALUES as unknown as readonly string[]), "trashed"]).optional(),
         customer_id: vine.number().positive().optional(),
         created_via: vine.enum(["checkout", "admin", "api", "import"]).optional(),
+        /** Multi-value source filter (mirrors `created_via` but accepts `cod,bank_transfer` style CSV from the URL). */
+        source: csvList,
+        /** Multi-value filter against the snapshot of the chosen gateway's `code` column. */
+        payment: csvList,
+        /** Multi-value filter against the billing-address country (ISO-3166 alpha-2). */
+        country: csvList,
         search: vine.string().trim().minLength(1).maxLength(120).optional(),
         after: vine.string().trim().optional(),
         before: vine.string().trim().optional(),

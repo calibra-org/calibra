@@ -46,6 +46,17 @@ export default class AdminOrdersController {
         if (payload.status && payload.status !== "trashed") query.where("status", payload.status);
         if (payload.customer_id !== undefined) query.where("customer_id", payload.customer_id);
         if (payload.created_via) query.where("created_via", payload.created_via);
+        if (payload.source && payload.source.length > 0) query.whereIn("created_via", payload.source);
+        if (payload.payment && payload.payment.length > 0) query.whereIn("payment_method_code_snapshot", payload.payment);
+        if (payload.country && payload.country.length > 0) {
+            const upper = payload.country.map((code) => code.toUpperCase());
+            query.whereExists((sub) => {
+                sub.from("order_addresses")
+                    .whereRaw('"order_addresses"."order_id" = "orders"."id"')
+                    .where("kind", "billing")
+                    .whereIn(db.raw('UPPER("order_addresses"."country")') as unknown as string, upper);
+            });
+        }
         if (payload.search) {
             const needle = `%${payload.search.toLowerCase()}%`;
             const numeric = Number(payload.search);

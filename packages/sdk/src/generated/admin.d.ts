@@ -2770,6 +2770,12 @@ export interface operations {
                 include_drafts?: boolean;
                 /** @description Sort key. Hyphen prefix for descending. Allowed keys&#58; `id`, `order_number`, `created_at`, `grand_total`, `status`, `paid`, `completed`. */
                 sort?: string;
+                /** @description CSV of created_via values to include (`checkout,admin,api,import`). */
+                source?: string;
+                /** @description CSV of payment method codes to include (matched against `payment_method_code_snapshot`). */
+                payment?: string;
+                /** @description CSV of ISO-3166 alpha-2 country codes to filter the billing address by. */
+                country?: string;
             };
             header?: never;
             path?: never;
