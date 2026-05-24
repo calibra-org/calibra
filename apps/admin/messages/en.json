@@ -107,6 +107,501 @@
         "viewAll": "View all",
         "comparedTo": "vs previous period"
     },
+    "ProductsExport": {
+        "title": "Export products to CSV",
+        "subtitle": "Export store products to a CSV file with custom filters.",
+        "backToProducts": "Back to products",
+        "steps": {
+            "aria": "Export steps",
+            "filter": "Filter & columns",
+            "review": "Review",
+            "exporting": "Exporting",
+            "done": "Done"
+        },
+        "matchCount": {
+            "label": "Products matching current filter:",
+            "variations": "variations"
+        },
+        "scope": {
+            "all": "All products",
+            "allHelp": "Every product in the store (no filters).",
+            "filter": "Custom filter",
+            "filterHelp": "Based on the filters selected below.",
+            "selected": "Selected only",
+            "selectedHelp": "{n} products from the previous page."
+        },
+        "step1": {
+            "title": "Filter and columns",
+            "subtitle": "Decide which products to export and which columns to include.",
+            "scopeTitle": "Export scope",
+            "preview": "Preview 5 rows",
+            "continueToReview": "Continue to review",
+            "generate": "Generate",
+            "disabledNoColumns": "Pick at least one column",
+            "disabledNoMatches": "No products match the current filter",
+            "previewFailed": "Preview failed.",
+            "startFailed": "Could not start the export.",
+            "previewTitle": "Preview — first 5 rows"
+        },
+        "review": {
+            "title": "Review and confirm",
+            "subtitle": "Inspect a sample of the output and tweak format options before pulling the trigger.",
+            "totals": {
+                "products": "Matching products",
+                "variations": "Variations",
+                "columns": "Output columns",
+                "format": "Format"
+            },
+            "formatTitle": "Output format",
+            "formatHelp": "Changing any of these auto-refreshes the preview below.",
+            "digitStyle": "Digit style",
+            "digitStyleAscii": "ASCII",
+            "digitStylePersian": "Persian",
+            "dateFormat": "Date format",
+            "jalali": "Jalali",
+            "moneyFormat": "Money format",
+            "moneyMinor": "Rial (minor units)",
+            "moneyMajor": "Toman",
+            "headerLanguage": "Header language",
+            "headerEn": "English (round-trip safe)",
+            "headerFa": "Persian",
+            "previewTitle": "Sample — first 5 rows",
+            "previewSubtitle": "Showing the first {rows} rows of the final output",
+            "previewCapNote": "Only {rows} sample rows are shown here for performance — rendering thousands of rows in a preview table would freeze your browser. When you click Generate, all {total} matching rows are processed.",
+            "refresh": "Refresh preview",
+            "generate": "Confirm and generate",
+            "backToFilter": "Back to filter",
+            "previewFailed": "Could not refresh preview.",
+            "startFailed": "Could not start the export."
+        },
+        "filters": {
+            "title": "Filters",
+            "status": "Status",
+            "type": "Product type",
+            "stockStatus": "Stock status",
+            "onSale": "On sale",
+            "featured": "Featured",
+            "hasImages": "Has images",
+            "hasVariations": "Has variations",
+            "lowStock": "Low stock",
+            "includeVariations": "Include variation rows",
+            "priceRange": "Price range",
+            "min": "Min",
+            "max": "Max",
+            "skuPattern": "SKU pattern",
+            "skuPatternPlaceholder": "e.g. nut-*",
+            "search": "Search",
+            "searchPlaceholder": "Name, description or SKU",
+            "createdAfter": "Created after",
+            "createdBefore": "Created before"
+        },
+        "statusLabels": {
+            "publish": "Published",
+            "draft": "Draft",
+            "pending": "Pending",
+            "private": "Private"
+        },
+        "typeLabels": {
+            "simple": "Simple",
+            "variable": "Variable",
+            "grouped": "Grouped",
+            "external": "External"
+        },
+        "stockLabels": {
+            "instock": "In stock",
+            "outofstock": "Out of stock",
+            "onbackorder": "On backorder"
+        },
+        "columns": {
+            "title": "Columns",
+            "subtitle": "Columns that appear in the output file. Drag to reorder.",
+            "addMore": "Add more columns",
+            "remove": "Remove column",
+            "preset": {
+                "default": "Default",
+                "all": "All columns",
+                "required": "Required only",
+                "pricing": "Pricing only",
+                "none": "None"
+            }
+        },
+        "format": {
+            "title": "Advanced options",
+            "delimiter": "Delimiter",
+            "tab": "Tab",
+            "encoding": "Encoding",
+            "digitStyle": "Digit style",
+            "digitStyleAscii": "ASCII",
+            "digitStylePersian": "Persian",
+            "dateFormat": "Date format",
+            "jalali": "Jalali",
+            "moneyFormat": "Money format",
+            "moneyMinor": "Rial (minor units)",
+            "moneyMajor": "Toman",
+            "compress": "Compression",
+            "compressAuto": "Auto",
+            "compressAlways": "Always",
+            "compressNever": "Never",
+            "headerLanguage": "Header language",
+            "headerEn": "English (round-trip safe)",
+            "headerFa": "Persian"
+        },
+        "exporting": {
+            "title": "Exporting",
+            "subtitle": "Your CSV is being generated.",
+            "processedOfTotal": "Processed: {processed} of {total}",
+            "slowChunk": "Processing row {row} — this may take a few seconds",
+            "cancel": "Cancel",
+            "background": "Continue in background",
+            "connection": {
+                "sse": "Live",
+                "polling": "Polling…",
+                "connecting": "Connecting…"
+            }
+        },
+        "done": {
+            "headline": {
+                "completed": "Export ready",
+                "completed_with_errors": "Export finished with warnings",
+                "failed": "Export failed",
+                "cancelled": "Export cancelled",
+                "queued": "Queued",
+                "running": "Running"
+            },
+            "file": "File name",
+            "size": "Size",
+            "rows": "Rows",
+            "columns": "Columns",
+            "duration": "Duration",
+            "scopeLabel": "Scope",
+            "scope": {
+                "all": "All",
+                "filter": "Custom filter",
+                "selected": "Selected",
+                "preset": "Preset"
+            },
+            "download": "Download",
+            "copyLink": "Copy download link",
+            "copied": "Copied",
+            "noLongerAvailable": "File is no longer available — generate a new export to download again.",
+            "rerun": "New export with same filter",
+            "history": "Export history",
+            "backToProducts": "Back to products"
+        },
+        "history": {
+            "title": "Product export history",
+            "subtitle": "Every past export. Downloads are available for 24 hours.",
+            "backToProducts": "Back to products",
+            "empty": "No exports yet.",
+            "col": {
+                "file": "File",
+                "date": "Date",
+                "status": "Status",
+                "rows": "Rows",
+                "size": "Size",
+                "actions": "Actions",
+                "download": "Download",
+                "delete": "Delete"
+            }
+        }
+    },
+    "ProductsImport": {
+        "title": "Import products from CSV",
+        "subtitle": "Import store products from a CSV or XLSX file, or update existing records.",
+        "backToProducts": "Back to products",
+        "steps": {
+            "aria": "Import steps",
+            "upload": "Upload CSV",
+            "mapping": "Map columns",
+            "review": "Review",
+            "importing": "Importing",
+            "done": "Done"
+        },
+        "common": {
+            "auto": "Auto",
+            "tab": "Tab"
+        },
+        "step1": {
+            "title": "Import products from a CSV file",
+            "subtitle": "Import store products from a CSV or XLSX file, or update existing records.",
+            "downloadTemplate": "Download template",
+            "history": "Import history",
+            "dropOrClick": "Drop the file here or click to browse",
+            "dropHere": "Drop the file here",
+            "pasteHint": "You can also paste CSV with Ctrl+V",
+            "accepted": "Accepted formats: CSV, TXT, XLSX  •  max {mb} MB",
+            "dropzoneAria": "File dropzone for product import",
+            "uploading": "Uploading ({percent}%)",
+            "uploadFailed": "File upload failed.",
+            "updateExisting": {
+                "label": "Update existing products",
+                "help": "Products whose SKU matches a row in the file will be updated. Products not in the file are not deleted."
+            },
+            "advanced": {
+                "title": "Advanced options",
+                "delimiter": "Delimiter",
+                "encoding": "Encoding"
+            }
+        },
+        "step2": {
+            "title": "Map CSV columns to product fields",
+            "subtitle": "Connect each CSV column to its matching product field. Leave columns you don't want to import set to \"Don't import\".",
+            "comingSoon": "Coming soon"
+        },
+        "mapping": {
+            "title": "Map CSV columns to product fields",
+            "subtitle": "Connect each CSV column to its matching product field. Leave columns you don't want to import set to \"Don't import\".",
+            "presetApplied": "Applied previous mapping «{name}» — click to change",
+            "columnHeader": "Column",
+            "destinationHeader": "Map to field",
+            "samplesLabel": "Samples",
+            "samplesEmpty": "(all values empty)",
+            "dontImport": "Don't import",
+            "searchField": "Search field…",
+            "noResults": "No matches.",
+            "preview": "Preview",
+            "rePreview": "Re-run preview",
+            "start": "Start import",
+            "continueToReview": "Continue to review",
+            "previewFirstHint": "Click \"Preview\" first to enable the \"Start import\" button",
+            "stickyBarAria": "Preview summary and actions",
+            "previewFailed": "Preview failed.",
+            "startFailed": "Could not start import.",
+            "toolbar": {
+                "autoMap": "Auto-map all",
+                "clearAll": "Clear all mappings",
+                "dropUnrelated": "Drop unrelated columns"
+            },
+            "savePreset": {
+                "label": "Save as preset",
+                "placeholder": "Preset name"
+            }
+        },
+        "review": {
+            "title": "Review and confirm",
+            "subtitle": "Simulation result over the uploaded file — nothing has changed in the database yet.",
+            "controlsTitle": "Run scope",
+            "controlsHelp": "Decide what this run should change. You can narrow the scope before pulling the trigger.",
+            "controls": {
+                "updateExisting": {
+                    "label": "Update existing products",
+                    "help": "Products that share a SKU with file rows are updated."
+                },
+                "skipNew": {
+                    "label": "Skip new products",
+                    "help": "Rows that would create a new product are skipped."
+                },
+                "skipUpdates": {
+                    "label": "Skip updates",
+                    "help": "Rows that would update an existing product are skipped."
+                },
+                "skipWarningRows": {
+                    "label": "Skip rows with warnings",
+                    "help": "Any row flagged by anomaly detection won't be applied."
+                }
+            },
+            "effectiveTitle": "Effective outcome after scope",
+            "counters": {
+                "willCreate": "Will create",
+                "willUpdate": "Will update",
+                "willSkip": "Will skip",
+                "willFail": "Will fail"
+            },
+            "start": "Confirm and start import",
+            "autoRefreshing": "Refreshing preview…",
+            "backToMapping": "Back to mapping",
+            "previewFailed": "Could not refresh preview.",
+            "startFailed": "Could not start import."
+        },
+        "preview": {
+            "title": "Import preview",
+            "subtitle": "Simulation result over the uploaded file — nothing has changed in the database yet.",
+            "create": "Create",
+            "update": "Update",
+            "skip": "Skip",
+            "fail": "Failed",
+            "warnings": "Warnings",
+            "noCreate": "No new products will be created.",
+            "noUpdates": "No products will be updated.",
+            "noSkip": "No rows will be skipped.",
+            "noFail": "No failed rows.",
+            "noWarnings": "No warnings.",
+            "createSummary": "{count} new products will be created.",
+            "skipSummary": "{count} rows will be skipped.",
+            "skipMore": "{count} more rows will be skipped for the same reasons.",
+            "skipReason": {
+                "duplicate_sku": "Duplicate SKU",
+                "empty_row": "Empty row",
+                "all_columns_unmapped": "No columns mapped"
+            },
+            "skipReasonHelp": {
+                "duplicate_sku": "A product with this SKU already exists and \"Update existing products\" is off.",
+                "empty_row": "None of the mapped columns held a value for this row.",
+                "all_columns_unmapped": "No columns are mapped to product fields — nothing in this row will be applied."
+            },
+            "rowLabel": "Row {n}",
+            "rowsLabel": "{n} rows",
+            "anomaly": {
+                "price_jump": "Unusual price increase",
+                "price_drop": "Unusual price drop",
+                "duplicate_sku_in_file": "Duplicate SKU in file",
+                "outlier_price": "Outlier price",
+                "missing_required_on_create": "Required field missing on create row",
+                "type_mismatch": "Column type mismatch"
+            }
+        },
+        "groups": {
+            "basic": "Basic",
+            "pricing": "Pricing",
+            "stock": "Stock",
+            "shipping": "Shipping",
+            "taxonomy": "Categories & tags",
+            "media": "Media",
+            "linked": "Linked products",
+            "attributes": "Attributes",
+            "seo": "SEO"
+        },
+        "fields": {
+            "sku": { "label": "SKU" },
+            "name": { "label": "Name" },
+            "type": { "label": "Type" },
+            "status": { "label": "Status" },
+            "short_description": { "label": "Short description" },
+            "description": { "label": "Description" },
+            "visibility": { "label": "Visibility" },
+            "featured": { "label": "Featured" },
+            "allow_reviews": { "label": "Allow reviews" },
+            "purchase_note": { "label": "Purchase note" },
+            "menu_order": { "label": "Menu order" },
+            "regular_price": { "label": "Regular price" },
+            "sale_price": { "label": "Sale price" },
+            "sale_price_start": { "label": "Sale start" },
+            "sale_price_end": { "label": "Sale end" },
+            "tax_status": { "label": "Tax status" },
+            "tax_class": { "label": "Tax class" },
+            "manage_stock": { "label": "Manage stock" },
+            "stock_quantity": { "label": "Stock quantity" },
+            "stock_status": { "label": "Stock status" },
+            "backorders_allowed": { "label": "Backorders" },
+            "sold_individually": { "label": "Sold individually" },
+            "weight": { "label": "Weight" },
+            "length": { "label": "Length" },
+            "width": { "label": "Width" },
+            "height": { "label": "Height" },
+            "shipping_class": { "label": "Shipping class" },
+            "categories": { "label": "Categories" },
+            "tags": { "label": "Tags" },
+            "brand": { "label": "Brand" },
+            "images": { "label": "Images" },
+            "parent_sku": { "label": "Parent SKU" },
+            "upsells": { "label": "Upsells" },
+            "cross_sells": { "label": "Cross-sells" },
+            "external_url": { "label": "External URL" },
+            "button_text": { "label": "Button text" }
+        },
+        "step3": {
+            "title": "Importing",
+            "inProgress": "Job {id} — status: {status}",
+            "backToList": "Back to products"
+        },
+        "step4": {
+            "title": "Summary",
+            "status": "Status",
+            "created": "Created",
+            "updated": "Updated",
+            "failed": "Failed",
+            "viewProducts": "View products",
+            "importAnother": "Import another file"
+        },
+        "importing": {
+            "title": "Importing",
+            "subtitle": "Your CSV is being processed.",
+            "processedOfTotal": "Processed: {processed} of {total}",
+            "slowChunk": "Processing row {row} — this may take a few seconds",
+            "created": "Created",
+            "updated": "Updated",
+            "skipped": "Skipped",
+            "failed": "Failed",
+            "cancel": "Cancel",
+            "background": "Continue in background",
+            "notificationAsk": "Allow notifications when the import finishes?",
+            "notificationDenied": "Notifications are blocked — enable them in your browser settings.",
+            "connection": {
+                "sse": "Live",
+                "polling": "Polling…",
+                "connecting": "Connecting…"
+            }
+        },
+        "done": {
+            "headline": {
+                "completed": "Import completed successfully",
+                "completed_with_errors": "Import finished with warnings",
+                "failed": "Import failed",
+                "cancelled": "Import cancelled",
+                "rolled_back": "This import was rolled back",
+                "queued": "Queued",
+                "validating": "Validating",
+                "running": "Running"
+            },
+            "status": {
+                "rolled_back": "Rolled back"
+            },
+            "totals": {
+                "totalRows": "Total rows in file",
+                "created": "Created",
+                "updated": "Updated",
+                "skipped": "Skipped (warnings)",
+                "failed": "Failed (errors)",
+                "newCategories": "New categories created",
+                "newTags": "New tags created",
+                "queuedImages": "Images queued for upload",
+                "duration": "Duration"
+            },
+            "severity": {
+                "error": "Error",
+                "warning": "Warning"
+            },
+            "rollback": {
+                "banner": "You can roll this import back for the next 24 hours",
+                "cta": "Roll back this import",
+                "afterMessage": "Rolled back at {at} by admin",
+                "failed": "Rollback failed."
+            },
+            "errors": {
+                "title": "Errors and warnings",
+                "loading": "Loading errors…",
+                "download": "Download error report (CSV)",
+                "retryAll": "Retry with edited values",
+                "retryRow": "Retry",
+                "retried": "Retried",
+                "rowLabel": "Row {n}"
+            },
+            "actions": {
+                "viewProducts": "View products",
+                "importAnother": "Import another file",
+                "history": "Import history"
+            },
+            "rollbackFailed": "Rollback failed."
+        },
+        "history": {
+            "title": "Product import history",
+            "subtitle": "Every import you've run. Download error reports or roll back recent imports here.",
+            "backToProducts": "Back to products",
+            "empty": "No imports yet.",
+            "col": {
+                "file": "File",
+                "date": "Date",
+                "status": "Status",
+                "created": "Created",
+                "updated": "Updated",
+                "skipped": "Skipped",
+                "failed": "Failed",
+                "actions": "Actions",
+                "download": "Download error report",
+                "rollback": "Roll back"
+            }
+        }
+    },
     "Products": {
         "title": "Products",
         "subtitle": "Manage your product catalog.",

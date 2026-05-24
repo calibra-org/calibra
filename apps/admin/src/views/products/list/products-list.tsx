@@ -214,8 +214,12 @@ export function ProductsList() {
                             )}
                         />
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem disabled>{t("import")}</DropdownMenuItem>
-                            <DropdownMenuItem disabled>{t("export")}</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push("/products/import" as never)}>
+                                {t("import")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push("/products/export" as never)}>
+                                {t("export")}
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => refetch()}>{t("refresh")}</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

@@ -22,4 +22,43 @@ export default await Env.create(new URL("../", import.meta.url), {
 
     /** Comma-separated origins allowed via CORS. Empty falls back to `*` in dev. */
     ALLOWED_ORIGINS: Env.schema.string.optional(),
+
+    /**
+     * Mail / SMTP. The spin script writes `localhost:11025` (Mailpit) by default;
+     * production overrides to the real relay. `MAIL_NOTIFICATIONS_ENABLED` is the runner-side
+     * opt-out — CI runs with no catcher set it to `false` so terminal-event notifications
+     * don't fail the test.
+     */
+    MAIL_FROM_ADDRESS: Env.schema.string({ format: "email" }),
+    MAIL_FROM_NAME: Env.schema.string(),
+    MAIL_NOTIFICATIONS_ENABLED: Env.schema.boolean(),
+    SMTP_HOST: Env.schema.string({ format: "host" }),
+    SMTP_PORT: Env.schema.number(),
+    SMTP_USERNAME: Env.schema.string.optional(),
+    SMTP_PASSWORD: Env.schema.string.optional(),
+    MAILPIT_WEB_URL: Env.schema.string.optional(),
+
+    /**
+     * Job queue driver. `sync` for tests (runs the job inline), `database` for dev + prod (uses
+     * the existing Postgres connection — needs `node ace queue:work` running alongside the API).
+     */
+    QUEUE_DRIVER: Env.schema.enum(["sync", "database"] as const),
+
+    /**
+     * Redis — used by Transmit's redis transport (cross-process SSE) and any future cache /
+     * limiter / lock store. Dev spins point at the shared Redis container from
+     * `scripts/redis-compose.yml` on `localhost:16379`. Per-spin keyspace isolation lives in
+     * `config/redis.ts` via `keyPrefix: ${APP_NAME}:`.
+     */
+    REDIS_HOST: Env.schema.string({ format: "host" }),
+    REDIS_PORT: Env.schema.number(),
+    REDIS_PASSWORD: Env.schema.string.optional(),
+
+    /**
+     * Transmit transport driver. `redis` bridges SSE broadcasts across the api ↔ queue worker
+     * processes (required when QUEUE_DRIVER=database). `none` keeps it single-process — used
+     * by tests + ace commands (`check:api-docs`, `migration:run`) that boot the app without
+     * needing live SSE and shouldn't crash if Redis is unreachable.
+     */
+    TRANSMIT_TRANSPORT: Env.schema.enum(["redis", "none"] as const),
 });

@@ -1,5 +1,7 @@
 .env
 .env.local
+.env.test.local
+.env.development.local
 build/
 node_modules/
 tmp/
@@ -7,3 +9,5 @@ coverage/
 .cache/
 .adonisjs/
 storage/uploads/
+storage/imports/
+storage/exports/

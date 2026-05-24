@@ -80,8 +80,16 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
     }
 
     const responseHeaders = new Headers();
-    const contentType = upstream.headers.get("content-type");
-    if (contentType !== null) responseHeaders.set("content-type", contentType);
+    /**
+     * Pass through the small set of response headers downstream needs to render binary blobs
+     * correctly (file downloads). `content-disposition` carries the suggested filename; without
+     * it the browser falls back to the URL path. `content-length` is preserved so the browser's
+     * progress bar works on the export download.
+     */
+    for (const key of ["content-type", "content-disposition", "content-length"]) {
+        const value = upstream.headers.get(key);
+        if (value !== null) responseHeaders.set(key, value);
+    }
     return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
 }
 

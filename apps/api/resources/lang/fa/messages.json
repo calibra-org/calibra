@@ -41,6 +41,29 @@
             "not_refundable": "این سفارش در وضعیت فعلی قابل بازپرداخت نیست.",
             "fully_refunded": "این سفارش هیچ مبلغ باقی‌مانده‌ای برای بازپرداخت ندارد.",
             "deletion_forbidden": "بازپرداخت‌ها قابل حذف نیستند — به‌جای آن یک صورت‌حساب اعتباری صادر کنید."
+        },
+        "imports": {
+            "missing_sku_on_update": "برای به‌روزرسانی، SKU الزامی است.",
+            "invalid_price": "قیمت باید عدد مثبت باشد.",
+            "sale_gt_regular": "قیمت ویژه نمی‌تواند از قیمت اصلی بیشتر باشد.",
+            "invalid_stock": "موجودی باید عدد صحیح و بزرگ‌تر یا مساوی صفر باشد.",
+            "invalid_type": "نوع محصول نامعتبر است (simple|variable|grouped|external).",
+            "invalid_status": "وضعیت نامعتبر است (publish|draft|private|pending).",
+            "invalid_url": "آدرس نامعتبر است: {value}.",
+            "invalid_date": "قالب تاریخ نامعتبر است: {value}.",
+            "invalid_boolean": "مقدار بولی نامعتبر است (1/0/yes/no/بله/خیر).",
+            "unknown_tax_class": "کلاس مالیاتی شناسایی نشد: {value}.",
+            "category_create_failed": "ساخت دسته‌بندی «{path}» با خطا مواجه شد.",
+            "db_constraint_violation": "خطای پایگاه داده: {message}.",
+            "unhandled_exception": "خطای نامشخص: {message}.",
+            "duplicate_sku": "از قبل محصولی با همین SKU وجود دارد (به‌روزرسانی غیرفعال است).",
+            "empty_row": "ردیف خالی است.",
+            "all_columns_unmapped": "هیچ ستون قابل وارد کردنی تطبیق داده نشده است.",
+            "not_found": "تایلمع ندرک دراو هتفای نشد.",
+            "parse_failed": "فایل قابل خواندن نیست — رمزگذاری یا جداکننده دیگری را امتحان کنید.",
+            "rollback_already_done": "این عملیات قبلاً بازگشت داده شده است.",
+            "rollback_window_expired": "مهلت ۲۴ ساعته برای بازگشت این عملیات به پایان رسیده است.",
+            "snapshot_missing": "تصویر پیش از وارد کردن یافت نشد."
         }
     },
     "order": {

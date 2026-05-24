@@ -13,6 +13,18 @@
         "./i18n": {
             "types": "./src/i18n.ts",
             "import": "./src/i18n.ts"
+        },
+        "./digits": {
+            "types": "./src/digits.ts",
+            "import": "./src/digits.ts"
+        },
+        "./jalali": {
+            "types": "./src/jalali.ts",
+            "import": "./src/jalali.ts"
+        },
+        "./import-fields": {
+            "types": "./src/import-fields.ts",
+            "import": "./src/import-fields.ts"
         }
     },
     "scripts": {
@@ -20,6 +32,7 @@
     },
     "dependencies": {
         "clsx": "catalog:",
+        "jalaali-js": "catalog:",
         "tailwind-merge": "catalog:"
     },
     "devDependencies": {

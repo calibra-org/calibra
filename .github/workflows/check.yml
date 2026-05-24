@@ -21,6 +21,7 @@ env:
 jobs:
     format-lint:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -35,6 +36,7 @@ jobs:
 
     typecheck:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -49,6 +51,7 @@ jobs:
 
     test:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         services:
             postgres:
                 image: postgres:17-alpine
@@ -81,6 +84,7 @@ jobs:
 
     build:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -95,6 +99,7 @@ jobs:
 
     api-docs-sync:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -120,10 +125,22 @@ jobs:
                   DB_USER: calibra
                   DB_PASSWORD: calibra
                   DB_DATABASE: calibra
+                  # The next block satisfies env validation. check:api-docs only boots far
+                  # enough to enumerate routes; none of these services are actually contacted.
+                  MAIL_FROM_ADDRESS: ops@calibra.local
+                  MAIL_FROM_NAME: Calibra
+                  MAIL_NOTIFICATIONS_ENABLED: "false"
+                  SMTP_HOST: localhost
+                  SMTP_PORT: "11025"
+                  REDIS_HOST: localhost
+                  REDIS_PORT: "6379"
+                  TRANSMIT_TRANSPORT: none
+                  QUEUE_DRIVER: sync
               run: node ace check:api-docs
 
     sdk-codegen-sync:
         runs-on: ubuntu-latest
+        timeout-minutes: 4
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4

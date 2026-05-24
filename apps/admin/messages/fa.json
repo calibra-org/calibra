@@ -107,6 +107,501 @@
         "viewAll": "مشاهده همه",
         "comparedTo": "نسبت به دوره قبل"
     },
+    "ProductsExport": {
+        "title": "خروجی محصولات به CSV",
+        "subtitle": "محصولات فروشگاه را با فیلترهای دلخواه به فایل CSV خروجی بگیرید.",
+        "backToProducts": "بازگشت به محصولات",
+        "steps": {
+            "aria": "مراحل خروجی",
+            "filter": "انتخاب فیلتر و ستون‌ها",
+            "review": "بررسی و تأیید",
+            "exporting": "گرفتن خروجی",
+            "done": "پایان"
+        },
+        "matchCount": {
+            "label": "محصول مطابق فیلتر فعلی:",
+            "variations": "متغیر"
+        },
+        "scope": {
+            "all": "همه محصولات",
+            "allHelp": "تمام محصولات فروشگاه (بدون فیلتر).",
+            "filter": "فیلتر سفارشی",
+            "filterHelp": "بر اساس فیلترهای انتخاب‌شده در پایین.",
+            "selected": "فقط موارد انتخاب‌شده",
+            "selectedHelp": "{n} محصول از صفحه قبل."
+        },
+        "step1": {
+            "title": "انتخاب فیلتر و ستون‌ها",
+            "subtitle": "تصمیم بگیرید چه محصولاتی و با کدام ستون‌ها خروجی گرفته شوند.",
+            "scopeTitle": "محدوده خروجی",
+            "preview": "پیش‌نمایش ۵ ردیف",
+            "continueToReview": "ادامه به مرحله بررسی",
+            "generate": "گرفتن خروجی",
+            "disabledNoColumns": "حداقل یک ستون انتخاب کنید",
+            "disabledNoMatches": "هیچ محصولی مطابق فیلتر فعلی پیدا نشد",
+            "previewFailed": "پیش‌نمایش با خطا مواجه شد.",
+            "startFailed": "شروع خروجی با خطا مواجه شد.",
+            "previewTitle": "پیش‌نمایش ۵ ردیف اول"
+        },
+        "review": {
+            "title": "بررسی و تأیید خروجی",
+            "subtitle": "نمونه‌ای از خروجی نهایی را ببینید و در صورت نیاز قالب را تنظیم کنید.",
+            "totals": {
+                "products": "محصول مطابق",
+                "variations": "متغیر",
+                "columns": "ستون خروجی",
+                "format": "قالب"
+            },
+            "formatTitle": "قالب خروجی",
+            "formatHelp": "تغییر این گزینه‌ها، پیش‌نمایش پایین را به‌صورت خودکار به‌روزرسانی می‌کند.",
+            "digitStyle": "شکل ارقام",
+            "digitStyleAscii": "انگلیسی",
+            "digitStylePersian": "فارسی",
+            "dateFormat": "قالب تاریخ",
+            "jalali": "جلالی",
+            "moneyFormat": "قالب پول",
+            "moneyMinor": "ریال (واحد خرد)",
+            "moneyMajor": "تومان",
+            "headerLanguage": "زبان ستون‌سرها",
+            "headerEn": "انگلیسی (سازگار با ورود مجدد)",
+            "headerFa": "فارسی",
+            "previewTitle": "نمونه ۵ ردیف اول",
+            "previewSubtitle": "نمایش {rows} ردیف اول از خروجی نهایی",
+            "previewCapNote": "برای عملکرد بهتر و جلوگیری از بارگذاری‌های سنگین، فقط {rows} ردیف نمونه نمایش داده می‌شود. در زمان گرفتن خروجی واقعی، تمام {total} ردیف پردازش خواهد شد.",
+            "refresh": "بازخوانی پیش‌نمایش",
+            "generate": "تأیید و گرفتن خروجی",
+            "backToFilter": "بازگشت به فیلتر",
+            "previewFailed": "بازخوانی پیش‌نمایش با خطا مواجه شد.",
+            "startFailed": "شروع گرفتن خروجی با خطا مواجه شد."
+        },
+        "filters": {
+            "title": "فیلترها",
+            "status": "وضعیت",
+            "type": "نوع محصول",
+            "stockStatus": "وضعیت موجودی",
+            "onSale": "در حال تخفیف",
+            "featured": "ویژه",
+            "hasImages": "دارای تصویر",
+            "hasVariations": "دارای متغیر",
+            "lowStock": "موجودی پایین",
+            "includeVariations": "شامل متغیرها",
+            "priceRange": "بازه قیمت",
+            "min": "حداقل",
+            "max": "حداکثر",
+            "skuPattern": "الگوی SKU",
+            "skuPatternPlaceholder": "مثال: nut-*",
+            "search": "جستجو",
+            "searchPlaceholder": "نام محصول، توضیحات یا SKU",
+            "createdAfter": "ساخته‌شده پس از",
+            "createdBefore": "ساخته‌شده پیش از"
+        },
+        "statusLabels": {
+            "publish": "منتشرشده",
+            "draft": "پیش‌نویس",
+            "pending": "در انتظار",
+            "private": "خصوصی"
+        },
+        "typeLabels": {
+            "simple": "ساده",
+            "variable": "متغیر",
+            "grouped": "گروهی",
+            "external": "خارجی"
+        },
+        "stockLabels": {
+            "instock": "موجود",
+            "outofstock": "ناموجود",
+            "onbackorder": "پیش‌خرید"
+        },
+        "columns": {
+            "title": "ستون‌ها",
+            "subtitle": "ستون‌هایی که در فایل خروجی ظاهر می‌شوند. ترتیب را با کشیدن تغییر دهید.",
+            "addMore": "افزودن ستون‌های بیشتر",
+            "remove": "حذف ستون",
+            "preset": {
+                "default": "پیش‌فرض",
+                "all": "همه ستون‌ها",
+                "required": "فقط ستون‌های ضروری",
+                "pricing": "فقط ستون‌های قیمتی",
+                "none": "هیچ‌کدام"
+            }
+        },
+        "format": {
+            "title": "گزینه‌های پیشرفته",
+            "delimiter": "جداکننده",
+            "tab": "Tab",
+            "encoding": "رمزگذاری",
+            "digitStyle": "شکل ارقام",
+            "digitStyleAscii": "انگلیسی",
+            "digitStylePersian": "فارسی",
+            "dateFormat": "قالب تاریخ",
+            "jalali": "جلالی",
+            "moneyFormat": "قالب پول",
+            "moneyMinor": "ریال (واحد خرد)",
+            "moneyMajor": "تومان",
+            "compress": "فشرده‌سازی",
+            "compressAuto": "خودکار",
+            "compressAlways": "همیشه",
+            "compressNever": "هرگز",
+            "headerLanguage": "زبان ستون‌سرها",
+            "headerEn": "انگلیسی (سازگار با ورود مجدد)",
+            "headerFa": "فارسی"
+        },
+        "exporting": {
+            "title": "در حال گرفتن خروجی",
+            "subtitle": "فایل CSV در حال ساخت است.",
+            "processedOfTotal": "پردازش‌شده: {processed} از {total}",
+            "slowChunk": "در حال پردازش ردیف {row} — ممکن است چند ثانیه طول بکشد",
+            "cancel": "لغو",
+            "background": "ادامه در پس‌زمینه",
+            "connection": {
+                "sse": "اتصال زنده",
+                "polling": "در حال بررسی…",
+                "connecting": "در حال اتصال…"
+            }
+        },
+        "done": {
+            "headline": {
+                "completed": "خروجی با موفقیت آماده شد",
+                "completed_with_errors": "خروجی با هشدار آماده شد",
+                "failed": "گرفتن خروجی ناموفق بود",
+                "cancelled": "خروجی لغو شد",
+                "queued": "در صف",
+                "running": "در حال اجرا"
+            },
+            "file": "نام فایل",
+            "size": "حجم",
+            "rows": "ردیف‌های خروجی",
+            "columns": "ستون‌ها",
+            "duration": "زمان",
+            "scopeLabel": "محدوده",
+            "scope": {
+                "all": "همه",
+                "filter": "فیلتر سفارشی",
+                "selected": "موارد انتخاب‌شده",
+                "preset": "از پیش‌تنظیمات"
+            },
+            "download": "دانلود فایل",
+            "copyLink": "کپی لینک دانلود",
+            "copied": "کپی شد",
+            "noLongerAvailable": "فایل دیگر در دسترس نیست — برای دریافت دوباره، خروجی جدید بگیرید.",
+            "rerun": "خروجی جدید با همین فیلتر",
+            "history": "تاریخچه خروجی‌ها",
+            "backToProducts": "بازگشت به محصولات"
+        },
+        "history": {
+            "title": "تاریخچه خروجی‌های محصولات",
+            "subtitle": "همه خروجی‌های گذشته. دانلود تا ۲۴ ساعت در دسترس است.",
+            "backToProducts": "بازگشت به محصولات",
+            "empty": "هنوز خروجی‌ای ثبت نشده است.",
+            "col": {
+                "file": "فایل",
+                "date": "تاریخ",
+                "status": "وضعیت",
+                "rows": "ردیف‌ها",
+                "size": "حجم",
+                "actions": "عمل",
+                "download": "دانلود",
+                "delete": "حذف"
+            }
+        }
+    },
+    "ProductsImport": {
+        "title": "وارد کردن محصولات از CSV",
+        "subtitle": "اطلاعات محصولات فروشگاه را از فایل CSV یا XLSX وارد کنید یا اطلاعات موجود را به‌روزرسانی کنید.",
+        "backToProducts": "بازگشت به محصولات",
+        "steps": {
+            "aria": "مراحل وارد کردن",
+            "upload": "آپلود فایل CSV",
+            "mapping": "تطبیق ستون‌ها",
+            "review": "بررسی و تأیید",
+            "importing": "وارد کردن",
+            "done": "پایان"
+        },
+        "common": {
+            "auto": "خودکار",
+            "tab": "Tab"
+        },
+        "step1": {
+            "title": "وارد کردن محصولات از فایل CSV",
+            "subtitle": "اطلاعات محصولات فروشگاه را از فایل CSV یا XLSX وارد کنید یا اطلاعات موجود را به‌روزرسانی کنید.",
+            "downloadTemplate": "دانلود قالب نمونه",
+            "history": "تاریخچه عملیات",
+            "dropOrClick": "فایل را اینجا رها کنید یا کلیک کنید",
+            "dropHere": "فایل را اینجا رها کنید",
+            "pasteHint": "همچنین می‌توانید CSV را با Ctrl+V بچسبانید",
+            "accepted": "فرمت‌های پذیرفته‌شده: CSV, TXT, XLSX  •  حداکثر {mb} مگابایت",
+            "dropzoneAria": "محل اهرها کردن فایل برای دیافت تاضل",
+            "uploading": "در حال آپلود ({percent}٪)",
+            "uploadFailed": "آپلود فایل با خطا مواجه شد.",
+            "updateExisting": {
+                "label": "به‌روزرسانی محصولات موجود",
+                "help": "محصولاتی که SKU یکسانی با ردیف‌های فایل دارند به‌روزرسانی می‌شوند. محصولاتی که در فایل نیستند حذف نخواهند شد."
+            },
+            "advanced": {
+                "title": "گزینه‌های پیشرفته",
+                "delimiter": "جداکننده",
+                "encoding": "رمزگذاری"
+            }
+        },
+        "step2": {
+            "title": "تطبیق ستون‌های CSV با فیلدهای محصول",
+            "subtitle": "هر ستون CSV را به فیلد متناظر در محصول وصل کنید. ستون‌هایی که نمی‌خواهید وارد شوند را روی «وارد نکن» بگذارید.",
+            "comingSoon": "به‌زودی"
+        },
+        "mapping": {
+            "title": "تطبیق ستون‌های CSV با فیلدهای محصول",
+            "subtitle": "هر ستون CSV را به فیلد متناظر در محصول وصل کنید. ستون‌هایی که نمی‌خواهید وارد شوند را روی «وارد نکن» بگذارید.",
+            "presetApplied": "از تطبیق قبلی «{name}» استفاده شد — برای تغییر کلیک کنید",
+            "columnHeader": "نام ستون",
+            "destinationHeader": "تطبیق با فیلد",
+            "samplesLabel": "نمونه‌ها",
+            "samplesEmpty": "(همه مقادیر خالی)",
+            "dontImport": "وارد نکن",
+            "searchField": "جستجوی فیلد…",
+            "noResults": "موردی یافت نشد.",
+            "preview": "پیش‌نمایش",
+            "rePreview": "پیش‌نمایش مجدد",
+            "start": "شروع وارد کردن",
+            "continueToReview": "ادامه به مرحله بررسی",
+            "previewFirstHint": "برای فعال شدن دکمه «شروع وارد کردن»، ابتدا روی «پیش‌نمایش» کلیک کنید",
+            "stickyBarAria": "خلاصه پیش‌نمایش و اقدامات",
+            "previewFailed": "پیش‌نمایش با خطا مواجه شد.",
+            "startFailed": "شروع وارد کردن با خطا مواجه شد.",
+            "toolbar": {
+                "autoMap": "تطبیق خودکار همه",
+                "clearAll": "پاک کردن همه تطبیق‌ها",
+                "dropUnrelated": "حذف ستون‌های نامرتبط"
+            },
+            "savePreset": {
+                "label": "ذخیره به‌عنوان الگو",
+                "placeholder": "نام الگو"
+            }
+        },
+        "review": {
+            "title": "بررسی و تأیید نتیجه",
+            "subtitle": "نتیجه شبیه‌سازی روی فایل آپلودشده — هنوز چیزی در پایگاه داده تغییر نکرده است.",
+            "controlsTitle": "محدوده عملیات",
+            "controlsHelp": "تصمیم بگیرید این عملیات چه چیزهایی را تغییر دهد. می‌توانید قبل از شروع، محدوده را محدودتر کنید.",
+            "controls": {
+                "updateExisting": {
+                    "label": "به‌روزرسانی محصولات موجود",
+                    "help": "محصولاتی که SKU مشترکی با ردیف‌های فایل دارند به‌روزرسانی می‌شوند."
+                },
+                "skipNew": {
+                    "label": "محصولات جدید را وارد نکن",
+                    "help": "ردیف‌هایی که قرار است محصول جدید بسازند نادیده گرفته می‌شوند."
+                },
+                "skipUpdates": {
+                    "label": "محصولات موجود را به‌روزرسانی نکن",
+                    "help": "ردیف‌هایی که قرار است محصولات موجود را به‌روز کنند نادیده گرفته می‌شوند."
+                },
+                "skipWarningRows": {
+                    "label": "ردیف‌های دارای هشدار را رد کن",
+                    "help": "هر ردیفی که پرچم هشدار خورده، در عملیات نهایی اعمال نمی‌شود."
+                }
+            },
+            "effectiveTitle": "نتیجه نهایی پس از اعمال محدوده",
+            "counters": {
+                "willCreate": "ساخته می‌شود",
+                "willUpdate": "به‌روزرسانی می‌شود",
+                "willSkip": "رد می‌شود",
+                "willFail": "ناموفق"
+            },
+            "start": "تأیید و شروع وارد کردن",
+            "autoRefreshing": "در حال بازخوانی پیش‌نمایش…",
+            "backToMapping": "بازگشت به تطبیق ستون‌ها",
+            "previewFailed": "بازخوانی پیش‌نمایش با خطا مواجه شد.",
+            "startFailed": "شروع وارد کردن با خطا مواجه شد."
+        },
+        "preview": {
+            "title": "پیش‌نمایش وارد کردن",
+            "subtitle": "نتیجه شبیه‌سازی روی فایل آپلودشده — هنوز چیزی در پایگاه داده تغییر نکرده است.",
+            "create": "ساخته می‌شود",
+            "update": "به‌روزرسانی می‌شود",
+            "skip": "رد می‌شود",
+            "fail": "ناموفق",
+            "warnings": "هشدارها",
+            "noCreate": "هیچ محصول جدیدی ساخته نمی‌شود.",
+            "noUpdates": "هیچ محصولی به‌روزرسانی نمی‌شود.",
+            "noSkip": "هیچ ردیفی رد نمی‌شود.",
+            "noFail": "هیچ ردیفی ناموفق نیست.",
+            "noWarnings": "هشداری وجود ندارد.",
+            "createSummary": "{count} محصول جدید ساخته می‌شود.",
+            "skipSummary": "{count} ردیف رد می‌شود.",
+            "skipMore": "{count} ردیف دیگر نیز با همین دلایل رد می‌شوند.",
+            "skipReason": {
+                "duplicate_sku": "SKU تکراری",
+                "empty_row": "ردیف خالی",
+                "all_columns_unmapped": "هیچ ستونی تطبیق داده نشده"
+            },
+            "skipReasonHelp": {
+                "duplicate_sku": "محصولی با این SKU وجود دارد و گزینه «به‌روزرسانی محصولات موجود» خاموش است.",
+                "empty_row": "هیچ ستون تطبیق‌داده‌شده‌ای در این ردیف مقدار نداشت.",
+                "all_columns_unmapped": "هیچ ستونی به فیلد محصول تطبیق داده نشده — مقادیر این ردیف اعمال نمی‌شوند."
+            },
+            "rowLabel": "ردیف {n}",
+            "rowsLabel": "{n} ردیف",
+            "anomaly": {
+                "price_jump": "افزایش غیرمعمول قیمت",
+                "price_drop": "کاهش غیرمعمول قیمت",
+                "duplicate_sku_in_file": "SKU تکراری در فایل",
+                "outlier_price": "قیمت پرت",
+                "missing_required_on_create": "فیلد الزامی در ردیف ساخت خالی است",
+                "type_mismatch": "نوع داده ستون نامتجانس"
+            }
+        },
+        "groups": {
+            "basic": "اصلی",
+            "pricing": "قیمت‌گذاری",
+            "stock": "موجودی",
+            "shipping": "ارسال",
+            "taxonomy": "دسته‌بندی و برچسب",
+            "media": "رسانه",
+            "linked": "محصولات مرتبط",
+            "attributes": "ویژگی‌ها",
+            "seo": "سئو"
+        },
+        "fields": {
+            "sku": { "label": "SKU" },
+            "name": { "label": "نام محصول" },
+            "type": { "label": "نوع محصول" },
+            "status": { "label": "وضعیت" },
+            "short_description": { "label": "توضیحات کوتاه" },
+            "description": { "label": "توضیحات کامل" },
+            "visibility": { "label": "قابلیت مشاهده" },
+            "featured": { "label": "محصول ویژه" },
+            "allow_reviews": { "label": "اجازه دیدگاه" },
+            "purchase_note": { "label": "یادداشت خرید" },
+            "menu_order": { "label": "ترتیب نمایش" },
+            "regular_price": { "label": "قیمت اصلی" },
+            "sale_price": { "label": "قیمت ویژه" },
+            "sale_price_start": { "label": "شروع تخفیف" },
+            "sale_price_end": { "label": "پایان تخفیف" },
+            "tax_status": { "label": "وضعیت مالیات" },
+            "tax_class": { "label": "کلاس مالیاتی" },
+            "manage_stock": { "label": "مدیریت موجودی" },
+            "stock_quantity": { "label": "تعداد موجودی" },
+            "stock_status": { "label": "وضعیت موجودی" },
+            "backorders_allowed": { "label": "پیش‌خرید" },
+            "sold_individually": { "label": "فروش تکی" },
+            "weight": { "label": "وزن" },
+            "length": { "label": "طول" },
+            "width": { "label": "عرض" },
+            "height": { "label": "ارتفاع" },
+            "shipping_class": { "label": "کلاس ارسال" },
+            "categories": { "label": "دسته‌بندی" },
+            "tags": { "label": "برچسب" },
+            "brand": { "label": "برند" },
+            "images": { "label": "تصاویر" },
+            "parent_sku": { "label": "SKU والد" },
+            "upsells": { "label": "محصولات پیشنهادی" },
+            "cross_sells": { "label": "محصولات مرتبط" },
+            "external_url": { "label": "آدرس خارجی" },
+            "button_text": { "label": "متن دکمه" }
+        },
+        "step3": {
+            "title": "در حال وارد کردن",
+            "inProgress": "عملیات {id} — وضعیت: {status}",
+            "backToList": "بازگشت به محصولات"
+        },
+        "step4": {
+            "title": "خلاصه عملیات",
+            "status": "وضعیت",
+            "created": "ساخته شد",
+            "updated": "به‌روزرسانی شد",
+            "failed": "ناموفق",
+            "viewProducts": "مشاهده محصولات",
+            "importAnother": "وارد کردن فایل دیگر"
+        },
+        "importing": {
+            "title": "در حال وارد کردن",
+            "subtitle": "فایل CSV در حال پردازش است.",
+            "processedOfTotal": "پردازش‌شده: {processed} از {total}",
+            "slowChunk": "در حال پردازش ردیف {row} — ممکن است چند ثانیه طول بکشد",
+            "created": "ساخته شد",
+            "updated": "به‌روزرسانی شد",
+            "skipped": "رد شد",
+            "failed": "ناموفق",
+            "cancel": "لغو عملیات",
+            "background": "ادامه در پس‌زمینه",
+            "notificationAsk": "آیا اجازه می‌دهید پس از پایان وارد کردن، نوتیفیکیشن نمایش داده شود؟",
+            "notificationDenied": "نوتیفیکیشن غیرفعال است — برای فعال‌سازی به تنظیمات مرورگر مراجعه کنید.",
+            "connection": {
+                "sse": "اتصال زنده",
+                "polling": "در حال بررسی…",
+                "connecting": "در حال اتصال…"
+            }
+        },
+        "done": {
+            "headline": {
+                "completed": "وارد کردن با موفقیت انجام شد",
+                "completed_with_errors": "وارد کردن با هشدار به پایان رسید",
+                "failed": "وارد کردن ناموفق بود",
+                "cancelled": "وارد کردن لغو شد",
+                "rolled_back": "این عملیات بازگشت داده شد",
+                "queued": "در صف",
+                "validating": "در حال اعتبارسنجی",
+                "running": "در حال اجرا"
+            },
+            "status": {
+                "rolled_back": "بازگشت داده‌شده"
+            },
+            "totals": {
+                "totalRows": "کل ردیف‌های فایل",
+                "created": "ساخته شد",
+                "updated": "به‌روزرسانی شد",
+                "skipped": "رد شد (هشدار)",
+                "failed": "ناموفق (خطا)",
+                "newCategories": "دسته‌بندی‌های جدید ساخته‌شده",
+                "newTags": "برچسب‌های جدید ساخته‌شده",
+                "queuedImages": "تصاویر در صف آپلود",
+                "duration": "مدت زمان"
+            },
+            "severity": {
+                "error": "خطا",
+                "warning": "هشدار"
+            },
+            "rollback": {
+                "banner": "می‌توانید تا ۲۴ ساعت این عملیات را بازگشت دهید",
+                "cta": "بازگشت این عملیات",
+                "afterMessage": "این عملیات در {at} توسط مدیر بازگشت داده شد",
+                "failed": "بازگشت با خطا مواجه شد."
+            },
+            "errors": {
+                "title": "جزئیات خطاها و هشدارها",
+                "loading": "در حال بارگذاری خطاها…",
+                "download": "دانلود گزارش خطا (CSV)",
+                "retryAll": "تلاش دوباره با مقادیر اصلاح‌شده",
+                "retryRow": "تلاش دوباره",
+                "retried": "تلاش شد",
+                "rowLabel": "ردیف {n}"
+            },
+            "actions": {
+                "viewProducts": "مشاهده محصولات",
+                "importAnother": "وارد کردن فایل دیگر",
+                "history": "تاریخچه عملیات وارد کردن"
+            },
+            "rollbackFailed": "بازگشت با خطا مواجه شد."
+        },
+        "history": {
+            "title": "تاریخچه وارد کردن محصولات",
+            "subtitle": "همه عملیات‌های وارد کردن گذشته. می‌توانید گزارش خطا را دانلود یا عملیات‌های اخیر را بازگشت دهید.",
+            "backToProducts": "بازگشت به محصولات",
+            "empty": "هنوز عملیات وارد کردنی ثبت نشده است.",
+            "col": {
+                "file": "فایل",
+                "date": "تاریخ",
+                "status": "وضعیت",
+                "created": "ساخته‌شده",
+                "updated": "به‌روز شده",
+                "skipped": "رد شد",
+                "failed": "ناموفق",
+                "actions": "عمل",
+                "download": "دانلود گزارش خطا",
+                "rollback": "بازگشت"
+            }
+        }
+    },
     "Products": {
         "title": "محصولات",
         "subtitle": "مدیریت کاتالوگ محصولات.",

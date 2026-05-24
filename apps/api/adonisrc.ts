@@ -13,7 +13,11 @@ export default defineConfig({
     /**
      * Ace commands. The `./commands/` directory auto-scans — list only third-party packages here.
      */
-    commands: [() => import("@adonisjs/core/commands"), () => import("@adonisjs/lucid/commands")],
+    commands: [
+        () => import("@adonisjs/core/commands"),
+        () => import("@adonisjs/lucid/commands"),
+        () => import("@adonisjs/queue/commands"),
+    ],
 
     /**
      * Service providers registered in boot order. Lucid must come before Auth (auth queries users
@@ -30,10 +34,16 @@ export default defineConfig({
         () => import("@adonisjs/cors/cors_provider"),
         () => import("@adonisjs/i18n/i18n_provider"),
         () => import("@adonisjs/lucid/database_provider"),
+        () => import("@adonisjs/redis/redis_provider"),
         () => import("@adonisjs/auth/auth_provider"),
+        () => import("@adonisjs/drive/drive_provider"),
+        () => import("@adonisjs/cache/cache_provider"),
+        () => import("@adonisjs/mail/mail_provider"),
+        () => import("@adonisjs/queue/queue_provider"),
+        () => import("@adonisjs/transmit/transmit_provider"),
     ],
 
-    preloads: [() => import("#start/routes"), () => import("#start/kernel")],
+    preloads: [() => import("#start/routes"), () => import("#start/kernel"), () => import("#start/transmit")],
 
     tests: {
         suites: [
