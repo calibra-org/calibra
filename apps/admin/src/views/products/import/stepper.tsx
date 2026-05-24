@@ -13,7 +13,7 @@ export interface StepperProps {
     onStepClick?: (step: WizardStep) => void;
 }
 
-const ORDER: WizardStep[] = ["upload", "mapping", "importing", "done"];
+const ORDER: WizardStep[] = ["upload", "mapping", "review", "importing", "done"];
 
 /**
  * Top-of-page step indicator. RTL-aware (visually reads right-to-left when `dir="rtl"`).

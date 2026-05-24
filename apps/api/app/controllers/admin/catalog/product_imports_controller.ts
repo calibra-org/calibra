@@ -201,7 +201,13 @@ export default class AdminProductImportsController {
             );
         }
 
-        void runImport({ importId: Number(row.id), locale: ctx.i18n.locale }).catch((err) => {
+        void runImport({
+            importId: Number(row.id),
+            locale: ctx.i18n.locale,
+            skipNew: payload.skip_new === true,
+            skipUpdates: payload.skip_updates === true,
+            skipWarningRows: payload.skip_warning_rows === true,
+        }).catch((err) => {
             logger.error({ err, importId: row.id }, "runImport: top-level rejection");
         });
 

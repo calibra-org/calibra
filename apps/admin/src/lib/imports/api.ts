@@ -105,6 +105,9 @@ export function startImport(
         update_existing: boolean;
         save_preset?: boolean;
         preset_name?: string;
+        skip_new?: boolean;
+        skip_updates?: boolean;
+        skip_warning_rows?: boolean;
     },
     locale: string,
 ): Promise<{ data: ProductImportRow }> {

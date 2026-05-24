@@ -12,9 +12,20 @@ import type { ProductImportRow } from "#/lib/imports/types";
 import { StepDone } from "./step-done";
 import { StepImporting } from "./step-importing";
 import { StepMapping } from "./step-mapping";
+import { StepReview } from "./step-review";
 import { StepUpload } from "./step-upload";
 import { Stepper } from "./stepper";
-import { INITIAL_STATE, type MappingState, stepFromStatus, type WizardState } from "./wizard-state";
+import {
+    defaultReviewControls,
+    INITIAL_STATE,
+    type MappingState,
+    type ReviewControls,
+    type ReviewState,
+    stepFromStatus,
+    type WizardState,
+} from "./wizard-state";
+
+const STEP_ORDER: WizardState["step"][] = ["upload", "mapping", "review", "importing", "done"];
 
 /**
  * Top-level wizard. Owns the state machine; transitions between steps; threads i18n + locale.
@@ -46,7 +57,6 @@ export function ImportWizard(): React.JSX.Element {
                 presetMatch: null,
                 mapping: row.mapping,
                 updateExisting: row.update_existing,
-                preview: null,
             });
         } else if (next === "importing") {
             setState({ step: "importing", importRow: row });
@@ -82,10 +92,9 @@ export function ImportWizard(): React.JSX.Element {
         };
     }, [locale, state.step, jumpToStatusStep]);
 
-    /** Track the farthest step the user has reached so they can re-enter mapping after preview. */
+    /** Track the farthest step the user has reached so they can re-enter mapping/review after preview. */
     useEffect(() => {
-        const order: WizardState["step"][] = ["upload", "mapping", "importing", "done"];
-        if (order.indexOf(state.step) > order.indexOf(farthest)) {
+        if (STEP_ORDER.indexOf(state.step) > STEP_ORDER.indexOf(farthest)) {
             setFarthest(state.step);
         }
     }, [farthest, state.step]);
@@ -124,7 +133,6 @@ export function ImportWizard(): React.JSX.Element {
                     presetMatch: response.preset_match,
                     mapping: response.data.mapping,
                     updateExisting: options.updateExisting,
-                    preview: null,
                 });
             } catch (err) {
                 setIsUploading(false);
@@ -138,16 +146,31 @@ export function ImportWizard(): React.JSX.Element {
         router.push("/products" as never);
     }, [router]);
 
+    /**
+     * Step-indicator click → back-navigation. Forward is only allowed when there's enough state
+     * to render the target step; we just no-op those clicks rather than trying to fabricate state.
+     */
     const handleStepClick = useCallback(
         (target: WizardState["step"]) => {
-            if (target === "upload" && state.step !== "upload") {
+            if (target === state.step) return;
+            if (target === "upload") {
                 setState(INITIAL_STATE);
+                setFarthest("upload");
                 writeQueryId(null);
                 return;
             }
-            if (target === "mapping") {
-                if (state.step === "importing" || state.step === "done") return;
-                if (state.step === "mapping") return;
+            if (target === "mapping" && (state.step === "review" || state.step === "mapping")) {
+                if (state.step === "review") {
+                    setState({
+                        step: "mapping",
+                        importRow: state.importRow,
+                        headers: state.headers,
+                        samples: state.samples,
+                        presetMatch: state.presetMatch,
+                        mapping: state.mapping,
+                        updateExisting: state.controls.updateExisting,
+                    });
+                }
             }
         },
         [state, writeQueryId],
@@ -159,6 +182,39 @@ export function ImportWizard(): React.JSX.Element {
             <StepMapping
                 state={state}
                 onChange={(next: Partial<MappingState>) => setState({ ...state, ...next })}
+                onReview={({ preview, controls }: { preview: ReviewState["preview"]; controls: ReviewControls }) => {
+                    setState({
+                        step: "review",
+                        importRow: state.importRow,
+                        headers: state.headers,
+                        samples: state.samples,
+                        presetMatch: state.presetMatch,
+                        mapping: state.mapping,
+                        preview,
+                        controls: { ...defaultReviewControls(state.updateExisting), ...controls },
+                    });
+                }}
+            />
+        );
+    }, [state]);
+
+    const reviewNode = useMemo(() => {
+        if (state.step !== "review") return null;
+        return (
+            <StepReview
+                state={state}
+                onChange={(next: Partial<ReviewState>) => setState({ ...state, ...next })}
+                onBackToMapping={() => {
+                    setState({
+                        step: "mapping",
+                        importRow: state.importRow,
+                        headers: state.headers,
+                        samples: state.samples,
+                        presetMatch: state.presetMatch,
+                        mapping: state.mapping,
+                        updateExisting: state.controls.updateExisting,
+                    });
+                }}
                 onStart={(row) => {
                     writeQueryId(row.id);
                     setState({ step: "importing", importRow: row });
@@ -216,6 +272,7 @@ export function ImportWizard(): React.JSX.Element {
                 />
             ) : null}
             {mappingNode}
+            {reviewNode}
             {importingNode}
             {doneNode}
         </section>

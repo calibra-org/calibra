@@ -51,6 +51,13 @@ export const startImportValidator = vine.compile(
         update_existing: vine.boolean().optional(),
         save_preset: vine.boolean().optional(),
         preset_name: vine.string().trim().minLength(1).maxLength(200).optional(),
+        /**
+         * Review-step scope filters. Default `false` — when set, the runner reroutes the matching
+         * rows to `skipped_count` instead of running them.
+         */
+        skip_new: vine.boolean().optional(),
+        skip_updates: vine.boolean().optional(),
+        skip_warning_rows: vine.boolean().optional(),
     }),
 );
 

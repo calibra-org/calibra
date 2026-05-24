@@ -30,6 +30,14 @@ const CHUNK_SIZE = 50;
 export interface RunOptions {
     importId: number;
     locale: string;
+    /**
+     * Review-step filters. When set, the runner skips matching rows instead of running them.
+     * Forwarded from the controller (which validates them on the start endpoint). In-memory
+     * only — not persisted on the import row.
+     */
+    skipNew?: boolean;
+    skipUpdates?: boolean;
+    skipWarningRows?: boolean;
 }
 
 export async function runImport(opts: RunOptions): Promise<void> {
@@ -73,6 +81,7 @@ export async function runImport(opts: RunOptions): Promise<void> {
 
         const counters = newCounters();
         let queuedImageCount = 0;
+        const warningRowSet = await buildWarningRowSet(parsed.rows, mapping);
 
         for (let offset = 0; offset < parsed.rows.length; offset += CHUNK_SIZE) {
             if (await isCancellationRequested(opts.importId)) {
@@ -101,6 +110,9 @@ export async function runImport(opts: RunOptions): Promise<void> {
                 updateExisting: importRow.updateExisting,
                 locale: opts.locale,
                 counters,
+                skipNew: opts.skipNew === true,
+                skipUpdates: opts.skipUpdates === true,
+                warningRowSet: opts.skipWarningRows === true ? warningRowSet : EMPTY_SET,
             });
             queuedImageCount += chunkResult.queuedImageCount;
 
@@ -171,6 +183,11 @@ interface ChunkContext {
     updateExisting: boolean;
     locale: string;
     counters: ReturnType<typeof newCounters>;
+    /** Filters from the review step. The chunk loop checks these per row before committing. */
+    skipNew: boolean;
+    skipUpdates: boolean;
+    /** Set of 1-indexed row numbers flagged by the anomaly detector. `skipWarningRows` consumes this. */
+    warningRowSet: ReadonlySet<number>;
 }
 
 interface ChunkResult {
@@ -209,6 +226,40 @@ async function runChunk(ctx: ChunkContext): Promise<ChunkResult> {
 
         const sku = typeof projection.dto.sku === "string" ? projection.dto.sku.trim() : "";
         const existing = sku === "" ? undefined : existingMap.get(sku);
+
+        if (ctx.warningRowSet.has(rowNumber)) {
+            await recordWarning(
+                ctx.importId,
+                rowNumber,
+                sku === "" ? null : sku,
+                "duplicate_sku",
+                "skipped — row flagged by anomaly detector and operator chose to skip warning rows",
+            );
+            skipped++;
+            continue;
+        }
+        if (ctx.skipNew && existing === undefined) {
+            await recordWarning(
+                ctx.importId,
+                rowNumber,
+                sku === "" ? null : sku,
+                "duplicate_sku",
+                "skipped — operator chose to skip new products",
+            );
+            skipped++;
+            continue;
+        }
+        if (ctx.skipUpdates && existing !== undefined) {
+            await recordWarning(
+                ctx.importId,
+                rowNumber,
+                sku === "" ? null : sku,
+                "duplicate_sku",
+                "skipped — operator chose to skip updates",
+            );
+            skipped++;
+            continue;
+        }
 
         try {
             await db.transaction(async (trx) => {
@@ -263,6 +314,32 @@ async function runChunk(ctx: ChunkContext): Promise<ChunkResult> {
     }
 
     return { created, updated, skipped, failed, queuedImageCount };
+}
+
+const EMPTY_SET: ReadonlySet<number> = new Set();
+
+/**
+ * Build the set of 1-indexed row numbers the anomaly detector flagged on this run's data. Used
+ * when the operator toggled `skip_warning_rows` on the review step — those rows are diverted
+ * straight to `skipped_count` with a warning, never reaching the create/update path.
+ */
+async function buildWarningRowSet(rows: Array<Record<string, string>>, mapping: ColumnMapping): Promise<ReadonlySet<number>> {
+    const { detectAnomalies } = await import("#services/product_import/anomaly_detector");
+    const previewRows = rows.map((raw, idx) => {
+        const projection = projectRow(raw, mapping);
+        return {
+            rowNumber: idx + 2,
+            dto: projection.dto,
+            errors: projection.errors,
+            existingRegularPriceMajor: null as number | null,
+        };
+    });
+    const findings = detectAnomalies(previewRows);
+    const set = new Set<number>();
+    for (const finding of findings) {
+        for (const r of finding.rowNumbers) set.add(r);
+    }
+    return set;
 }
 
 async function fetchExistingProductsForChunk(

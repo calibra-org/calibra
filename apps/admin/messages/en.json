@@ -115,6 +115,7 @@
             "aria": "Import steps",
             "upload": "Upload CSV",
             "mapping": "Map columns",
+            "review": "Review",
             "importing": "Importing",
             "done": "Done"
         },
@@ -163,6 +164,7 @@
             "preview": "Preview",
             "rePreview": "Re-run preview",
             "start": "Start import",
+            "continueToReview": "Continue to review",
             "previewFirstHint": "Click \"Preview\" first to enable the \"Start import\" button",
             "stickyBarAria": "Preview summary and actions",
             "previewFailed": "Preview failed.",
@@ -176,6 +178,42 @@
                 "label": "Save as preset",
                 "placeholder": "Preset name"
             }
+        },
+        "review": {
+            "title": "Review and confirm",
+            "subtitle": "Simulation result over the uploaded file — nothing has changed in the database yet.",
+            "controlsTitle": "Run scope",
+            "controlsHelp": "Decide what this run should change. You can narrow the scope before pulling the trigger.",
+            "controls": {
+                "updateExisting": {
+                    "label": "Update existing products",
+                    "help": "Products that share a SKU with file rows are updated."
+                },
+                "skipNew": {
+                    "label": "Skip new products",
+                    "help": "Rows that would create a new product are skipped."
+                },
+                "skipUpdates": {
+                    "label": "Skip updates",
+                    "help": "Rows that would update an existing product are skipped."
+                },
+                "skipWarningRows": {
+                    "label": "Skip rows with warnings",
+                    "help": "Any row flagged by anomaly detection won't be applied."
+                }
+            },
+            "effectiveTitle": "Effective outcome after scope",
+            "counters": {
+                "willCreate": "Will create",
+                "willUpdate": "Will update",
+                "willSkip": "Will skip",
+                "willFail": "Will fail"
+            },
+            "start": "Confirm and start import",
+            "rePreview": "Refresh preview",
+            "backToMapping": "Back to mapping",
+            "previewFailed": "Could not refresh preview.",
+            "startFailed": "Could not start import."
         },
         "preview": {
             "title": "Import preview",
