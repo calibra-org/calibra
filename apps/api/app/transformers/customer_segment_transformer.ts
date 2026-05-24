@@ -5,8 +5,8 @@ import type CustomerSegment from "#models/customer_segment";
 export default class CustomerSegmentTransformer extends BaseTransformer<CustomerSegment> {
     toObject() {
         return {
-            id: this.resource.id,
-            user_id: this.resource.userId,
+            id: String(this.resource.id),
+            user_id: String(this.resource.userId),
             name: this.resource.name,
             filters: this.resource.filters ?? {},
             is_pinned: this.resource.isPinned,

@@ -1,0 +1,29 @@
+operationId: adminCustomersAttachTag
+summary: Attach a tag to a customer (creates the tag if missing) (admin)
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [tag]
+                properties:
+                    tag: { type: string, minLength: 1, maxLength: 40 }
+responses:
+    "200":
+        description: Tag attached.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomerTag.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

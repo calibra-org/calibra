@@ -1,0 +1,29 @@
+operationId: adminCustomerNotesStore
+summary: Add an internal note to a customer (admin)
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: customer_id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [body]
+                properties:
+                    body: { type: string, minLength: 1, maxLength: 2000 }
+responses:
+    "201":
+        description: Note created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomerNote.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

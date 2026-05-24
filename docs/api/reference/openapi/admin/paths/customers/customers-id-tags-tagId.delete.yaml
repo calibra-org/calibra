@@ -1,0 +1,13 @@
+operationId: adminCustomersDetachTag
+summary: Detach a tag from a customer (admin)
+description: The tag row stays — only the pivot is removed. Use `DELETE /customer-tags/:id` to delete the tag everywhere.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: tagId, in: path, required: true, schema: { type: integer } }
+responses:
+    "204": { description: Tag detached. }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

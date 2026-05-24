@@ -255,6 +255,46 @@ paths:
             $ref: "./admin/paths/customers/customers-id-downloads.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/customers/{customer_id}/notes:
+        get:
+            $ref: "./admin/paths/customers/customers-notes.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/customers/customers-notes.post.yaml"
+    /api/v1/admin/customers/{customer_id}/notes/{id}:
+        patch:
+            $ref: "./admin/paths/customers/customers-notes-id.patch.yaml"
+        delete:
+            $ref: "./admin/paths/customers/customers-notes-id.delete.yaml"
+    /api/v1/admin/customers/{id}/tags:
+        post:
+            $ref: "./admin/paths/customers/customers-id-tags.post.yaml"
+    /api/v1/admin/customers/{id}/tags/{tagId}:
+        delete:
+            $ref: "./admin/paths/customers/customers-id-tags-tagId.delete.yaml"
+    /api/v1/admin/customer-tags:
+        get:
+            $ref: "./admin/paths/customers/customer-tags.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/customers/customer-tags.post.yaml"
+    /api/v1/admin/customer-tags/{id}:
+        delete:
+            $ref: "./admin/paths/customers/customer-tags-id.delete.yaml"
+    /api/v1/admin/customer-segments:
+        get:
+            $ref: "./admin/paths/customers/customer-segments.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/customers/customer-segments.post.yaml"
+    /api/v1/admin/customer-segments/{id}:
+        patch:
+            $ref: "./admin/paths/customers/customer-segments-id.patch.yaml"
+        delete:
+            $ref: "./admin/paths/customers/customer-segments-id.delete.yaml"
 
     /api/v1/admin/payment-gateways:
         get:

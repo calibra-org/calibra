@@ -1,0 +1,10 @@
+title: AdminCustomerTag
+description: >
+    Free-text customer tag. Names are lowercase + dot/dash/underscore (matches the regex enforced
+    on the controller side); the UI shows them as stored.
+type: object
+properties:
+    id: { type: string }
+    name: { type: string }
+    created_at: { type: [string, "null"], format: date-time }
+required: [id, name]
