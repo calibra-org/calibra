@@ -30,10 +30,24 @@ export interface SdkAdminOrderListRow {
     order_number?: number;
     status?: string;
     customer_id?: number | null;
+    customer_name?: string | null;
     billing_email?: string | null;
     grand_total?: number;
+    items_total?: number;
+    shipping_total?: number;
+    tax_total?: number;
+    discount_total?: number;
     currency?: string;
+    currency_display?: string;
     created_at?: string;
+    updated_at?: string | null;
+    created_via?: string | null;
+    date_paid_at?: string | null;
+    date_completed_at?: string | null;
+    payment_method_title?: string | null;
+    item_count?: number;
+    coupon_codes?: string[];
+    risk_flags?: string[];
 }
 
 const ORDER_STATUS_MAP: Record<string, OrderStatus> = {
@@ -89,25 +103,31 @@ export function toAdminOrderAddress(a: SdkOrderAddress | null | undefined): Admi
 }
 
 export function toAdminOrderListRow(o: SdkAdminOrderListRow): AdminOrder {
+    const customerName = (o.customer_name && o.customer_name.trim().length > 0 ? o.customer_name : o.billing_email) ?? "";
     return {
         id: o.id ?? 0,
         orderNumber: Number(o.order_number ?? o.id ?? 0),
         orderKey: "",
         status: normaliseStatus(o.status),
         customerId: o.customer_id !== null && o.customer_id !== undefined ? Number(o.customer_id) : null,
-        customerName: o.billing_email ?? "",
+        customerName,
         billingEmail: o.billing_email ?? "",
         currency: "IRR",
-        currencyDisplay: "IRR",
+        currencyDisplay: (o.currency_display as AdminOrder["currencyDisplay"]) ?? "IRT",
         grandTotal: Number(o.grand_total ?? 0) as MoneyMinor,
-        itemsTotal: 0 as MoneyMinor,
-        shippingTotal: 0 as MoneyMinor,
-        discountTotal: 0 as MoneyMinor,
-        taxTotal: 0 as MoneyMinor,
-        paymentMethodTitle: dup(""),
+        itemsTotal: Number(o.items_total ?? 0) as MoneyMinor,
+        shippingTotal: Number(o.shipping_total ?? 0) as MoneyMinor,
+        discountTotal: Number(o.discount_total ?? 0) as MoneyMinor,
+        taxTotal: Number(o.tax_total ?? 0) as MoneyMinor,
+        paymentMethodTitle: dup(o.payment_method_title ?? ""),
         createdAt: o.created_at ?? new Date().toISOString(),
-        paidAt: null,
-        completedAt: null,
+        updatedAt: o.updated_at ?? null,
+        paidAt: o.date_paid_at ?? null,
+        completedAt: o.date_completed_at ?? null,
+        createdVia: (o.created_via ?? "checkout") as AdminOrder["createdVia"],
+        itemCount: Number(o.item_count ?? 0),
+        couponCodes: o.coupon_codes ?? [],
+        riskFlags: (o.risk_flags ?? []) as AdminOrder["riskFlags"],
         billingAddress: toAdminOrderAddress(undefined),
         shippingAddress: toAdminOrderAddress(undefined),
         lineItems: [],
@@ -116,6 +136,7 @@ export function toAdminOrderListRow(o: SdkAdminOrderListRow): AdminOrder {
         taxLines: [],
         history: [],
         notes: [],
+        shippingInfo: null,
     };
 }
 
@@ -164,6 +185,18 @@ export function toAdminOrderDetail(o: SdkAdminOrderDetail): AdminOrder {
         reason: h.reason ?? null,
     }));
     const payment = o.payment ?? { gateway_id: null, method_code: null, method_title: null, transaction_id: null };
+    const couponSource = (o as { coupon_lines?: { id: number; code: string; discount: number }[] }).coupon_lines ?? [];
+    const shippingSource = (o as { shipping_info?: {
+        tracking_number: string | null;
+        tracking_url: string | null;
+        carrier: string | null;
+        shipped_at: string | null;
+    } | null }).shipping_info;
+    const couponLines: AdminOrderCouponLine[] = couponSource.map((row) => ({
+        id: row.id,
+        code: row.code,
+        discount: Number(row.discount) as MoneyMinor,
+    }));
     return {
         id: o.id,
         orderNumber: Number(o.order_number ?? o.id),
@@ -182,15 +215,28 @@ export function toAdminOrderDetail(o: SdkAdminOrderDetail): AdminOrder {
         taxTotal: Number(totals.tax_total) as MoneyMinor,
         paymentMethodTitle: dup(payment.method_title ?? ""),
         createdAt: o.created_at ?? new Date().toISOString(),
-        paidAt: null,
-        completedAt: null,
+        updatedAt: o.updated_at ?? null,
+        paidAt: (o as { date_paid_at?: string | null }).date_paid_at ?? null,
+        completedAt: (o as { date_completed_at?: string | null }).date_completed_at ?? null,
+        createdVia: ((o as { created_via?: string }).created_via ?? "checkout") as AdminOrder["createdVia"],
+        itemCount: lineItems.reduce((sum, line) => sum + line.quantity, 0),
+        couponCodes: couponLines.map((line) => line.code).filter((code) => code.length > 0),
+        riskFlags: ((o as { risk_flags?: string[] }).risk_flags ?? []) as AdminOrder["riskFlags"],
         billingAddress: toAdminOrderAddress(o.billing_address),
         shippingAddress: toAdminOrderAddress(o.shipping_address ?? o.billing_address),
         lineItems,
         shippingLines,
-        couponLines: [] as AdminOrderCouponLine[],
+        couponLines,
         taxLines,
         history,
         notes: [] as AdminOrderNote[],
+        shippingInfo: shippingSource
+            ? {
+                  trackingNumber: shippingSource.tracking_number ?? null,
+                  trackingUrl: shippingSource.tracking_url ?? null,
+                  carrier: shippingSource.carrier ?? null,
+                  shippedAt: shippingSource.shipped_at ?? null,
+              }
+            : null,
     };
 }

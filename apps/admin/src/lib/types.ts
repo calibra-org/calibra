@@ -175,6 +175,17 @@ export interface AdminOrderTaxLine {
     total: MoneyMinor;
 }
 
+export type OrderRiskFlag = "high_value" | "shipping_mismatch" | "failed_payment" | (string & {});
+
+export type OrderCreatedVia = "checkout" | "admin" | "api" | "import" | (string & {});
+
+export interface AdminOrderShippingInfo {
+    trackingNumber: string | null;
+    trackingUrl: string | null;
+    carrier: string | null;
+    shippedAt: string | null;
+}
+
 export interface AdminOrder {
     id: number;
     orderNumber: number;
@@ -192,8 +203,13 @@ export interface AdminOrder {
     taxTotal: MoneyMinor;
     paymentMethodTitle: LocalizedString;
     createdAt: string;
+    updatedAt: string | null;
     paidAt: string | null;
     completedAt: string | null;
+    createdVia: OrderCreatedVia;
+    itemCount: number;
+    couponCodes: string[];
+    riskFlags: OrderRiskFlag[];
     billingAddress: AdminOrderAddress;
     shippingAddress: AdminOrderAddress;
     lineItems: AdminOrderLineItem[];
@@ -202,6 +218,7 @@ export interface AdminOrder {
     taxLines: AdminOrderTaxLine[];
     history: AdminOrderStatusHistoryEntry[];
     notes: AdminOrderNote[];
+    shippingInfo: AdminOrderShippingInfo | null;
 }
 
 export interface AdminRefund {
