@@ -17,11 +17,7 @@ import env from "#start/env";
  * route file. The secret is read from `env` so production rotations don't redeploy.
  */
 export default class WebhookSignatureMiddleware {
-    async handle(
-        ctx: HttpContext,
-        next: NextFn,
-        options: { signatureHeader: string; secretEnvKey: string },
-    ) {
+    async handle(ctx: HttpContext, next: NextFn, options: { signatureHeader: string; secretEnvKey: string }) {
         const signature = ctx.request.header(options.signatureHeader);
         const secret = env.get(options.secretEnvKey as never) as string | undefined;
         if (signature === undefined || secret === undefined) {
@@ -31,7 +27,9 @@ export default class WebhookSignatureMiddleware {
             );
             return ctx.response.status(401).json({ errors: [{ message: "missing signature", code: "E_UNSIGNED" }] });
         }
-        const expected = createHmac("sha256", secret).update(ctx.request.raw() ?? "").digest("hex");
+        const expected = createHmac("sha256", secret)
+            .update(ctx.request.raw() ?? "")
+            .digest("hex");
         if (expected.length !== signature.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
             ctx.logger.warn({ signatureHeader: options.signatureHeader }, "webhook_signature_mismatch");
             return ctx.response.status(401).json({ errors: [{ message: "bad signature", code: "E_BAD_SIGNATURE" }] });
