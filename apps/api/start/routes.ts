@@ -26,5 +26,6 @@ await import("./routes/admin_payments.js");
 await import("./routes/admin_reports.js");
 await import("./routes/admin_media.js");
 await import("./routes/admin_product_imports.js");
+await import("./routes/admin_product_exports.js");
 await import("./routes/uploads.js");
 await import("./routes/payment.js");

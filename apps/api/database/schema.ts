@@ -1230,6 +1230,80 @@ export class ProductDownloadSchema extends BaseModel {
   declare updatedAt: DateTime
 }
 
+export class ProductExportFilterPresetSchema extends BaseModel {
+  static $columns = ['columns', 'createdAt', 'filters', 'formatOptions', 'id', 'isDefault', 'lastUsedAt', 'name', 'updatedAt', 'userId'] as const
+  $columns = ProductExportFilterPresetSchema.$columns
+  @column()
+  declare columns: any
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare filters: any
+  @column()
+  declare formatOptions: any
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare isDefault: boolean
+  @column.dateTime()
+  declare lastUsedAt: DateTime | null
+  @column()
+  declare name: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: bigint | number
+}
+
+export class ProductExportSchema extends BaseModel {
+  static $columns = ['cancellationRequestedAt', 'columns', 'compressed', 'createdAt', 'downloadExpiresAt', 'downloadTokenHash', 'exception', 'filePath', 'fileSizeBytes', 'filters', 'finishedAt', 'formatOptions', 'id', 'originalFilename', 'presetId', 'processedRows', 'scope', 'startedAt', 'status', 'totalRows', 'updatedAt', 'userId'] as const
+  $columns = ProductExportSchema.$columns
+  @column.dateTime()
+  declare cancellationRequestedAt: DateTime | null
+  @column()
+  declare columns: any
+  @column()
+  declare compressed: boolean
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare downloadExpiresAt: DateTime | null
+  @column()
+  declare downloadTokenHash: string | null
+  @column()
+  declare exception: string | null
+  @column()
+  declare filePath: string | null
+  @column()
+  declare fileSizeBytes: bigint | number
+  @column()
+  declare filters: any
+  @column.dateTime()
+  declare finishedAt: DateTime | null
+  @column()
+  declare formatOptions: any
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare originalFilename: string
+  @column()
+  declare presetId: bigint | number | null
+  @column()
+  declare processedRows: number
+  @column()
+  declare scope: any
+  @column.dateTime()
+  declare startedAt: DateTime | null
+  @column()
+  declare status: any
+  @column()
+  declare totalRows: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: bigint | number
+}
+
 export class ProductGroupMemberSchema extends BaseModel {
   static $columns = ['createdAt', 'groupProductId', 'memberProductId', 'position', 'updatedAt'] as const
   $columns = ProductGroupMemberSchema.$columns

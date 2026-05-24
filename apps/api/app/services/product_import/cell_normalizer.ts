@@ -13,9 +13,11 @@ const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
 const ARABIC_INDIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 
 const PERSIAN_TO_ASCII = new Map<string, string>();
+const ASCII_TO_PERSIAN = new Map<string, string>();
 for (let i = 0; i < 10; i++) {
     PERSIAN_TO_ASCII.set(PERSIAN_DIGITS[i]!, String(i));
     PERSIAN_TO_ASCII.set(ARABIC_INDIC_DIGITS[i]!, String(i));
+    ASCII_TO_PERSIAN.set(String(i), PERSIAN_DIGITS[i]!);
 }
 
 /** Replace Persian (۰–۹) and Arabic-Indic (٠–٩) digits with ASCII; non-digits pass through. */
@@ -23,6 +25,19 @@ export function toEnglishDigits(value: string): string {
     let out = "";
     for (const ch of value) {
         out += PERSIAN_TO_ASCII.get(ch) ?? ch;
+    }
+    return out;
+}
+
+/**
+ * Reverse direction — ASCII digits → Persian. Used by the export field resolver when
+ * `digit_style: "persian"` is selected so the output file shows native Persian numerals.
+ */
+export function toPersianDigits(value: string | number): string {
+    const source = typeof value === "number" ? String(value) : value;
+    let out = "";
+    for (const ch of source) {
+        out += ASCII_TO_PERSIAN.get(ch) ?? ch;
     }
     return out;
 }

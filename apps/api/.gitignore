@@ -10,3 +10,4 @@ coverage/
 .adonisjs/
 storage/uploads/
 storage/imports/
+storage/exports/
