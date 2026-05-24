@@ -44,9 +44,15 @@ export default defineConfig({
         () => import("@adonisjs/queue/queue_provider"),
         () => import("@adonisjs/transmit/transmit_provider"),
         () => import("@adonisjs/bouncer/bouncer_provider"),
+        () => import("@adonisjs/limiter/limiter_provider"),
     ],
 
-    preloads: [() => import("#start/routes"), () => import("#start/kernel"), () => import("#start/transmit")],
+    preloads: [
+        () => import("#start/routes"),
+        () => import("#start/kernel"),
+        () => import("#start/transmit"),
+        () => import("#start/limiter"),
+    ],
 
     tests: {
         suites: [

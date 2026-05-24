@@ -61,4 +61,11 @@ export default await Env.create(new URL("../", import.meta.url), {
      * needing live SSE and shouldn't crash if Redis is unreachable.
      */
     TRANSMIT_TRANSPORT: Env.schema.enum(["redis", "none"] as const),
+
+    /**
+     * Rate limiter store. `redis` shares counters across the api ↔ queue worker processes;
+     * `memory` is used by tests and any boot path that should not touch Redis. The composite
+     * limiters in `start/limiter.ts` key off the active store via `limiter.use("...")`.
+     */
+    LIMITER_STORE: Env.schema.enum(["redis", "memory"] as const),
 });
