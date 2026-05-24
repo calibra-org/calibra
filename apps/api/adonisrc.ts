@@ -46,6 +46,7 @@ export default defineConfig({
         () => import("@adonisjs/bouncer/bouncer_provider"),
         () => import("@adonisjs/limiter/limiter_provider"),
         () => import("@adonisjs/shield/shield_provider"),
+        () => import("@adonisjs/lock/lock_provider"),
     ],
 
     preloads: [

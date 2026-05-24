@@ -1,4 +1,5 @@
 import type { HttpContext } from "@adonisjs/core/http";
+import lock from "@adonisjs/lock/services/main";
 import { DateTime } from "luxon";
 
 import { cancelImport, rollbackImport, viewImport } from "#abilities/main";
@@ -309,32 +310,43 @@ export default class AdminProductImportsController {
             return ctx.response.status(404).json({ errors: [{ message: "snapshot missing", code: "E_NOT_FOUND" }] });
         }
 
-        const db = await import("@adonisjs/lucid/services/db");
-        await db.default.transaction(async (trx) => {
-            for (const [sku, fields] of Object.entries(snapshot)) {
-                const updates: Record<string, unknown> = {};
-                for (const [field, value] of Object.entries(fields)) {
-                    updates[field] = value;
+        /**
+         * A 5-minute lock is plenty for the snapshot replay loop (slowest observed run is
+         * ~12s on 10k SKUs) and short enough that a crashed handler doesn't strand the lock
+         * past the operator's coffee break. Concurrent rollback attempts on the same import
+         * id wait on this lock; only one ever runs the transaction.
+         */
+        const [acquired, result] = await lock.createLock(`import:rollback:${row.id}`, "5 minutes").runImmediately(async () => {
+            const db = await import("@adonisjs/lucid/services/db");
+            await db.default.transaction(async (trx) => {
+                for (const [sku, fields] of Object.entries(snapshot)) {
+                    const updates: Record<string, unknown> = {};
+                    for (const [field, value] of Object.entries(fields)) {
+                        updates[field] = value;
+                    }
+                    if (Object.keys(updates).length === 0) continue;
+                    await trx.from("products").where("sku", sku).whereNull("deleted_at").update(updates);
                 }
-                if (Object.keys(updates).length === 0) continue;
-                await trx.from("products").where("sku", sku).whereNull("deleted_at").update(updates);
-            }
+            });
+
+            const actorId = Number(ctx.auth.user!.id);
+            row.rolledBackAt = DateTime.utc();
+            row.rolledBackByUserId = actorId;
+            row.status = "rolled_back";
+            await row.save();
+
+            publishImportEvent({
+                type: "rolled_back",
+                importId: Number(row.id),
+                at: new Date().toISOString(),
+                payload: { byUserId: actorId },
+            });
+            return row;
         });
-
-        const actorId = Number(ctx.auth.user!.id);
-        row.rolledBackAt = DateTime.utc();
-        row.rolledBackByUserId = actorId;
-        row.status = "rolled_back";
-        await row.save();
-
-        publishImportEvent({
-            type: "rolled_back",
-            importId: Number(row.id),
-            at: new Date().toISOString(),
-            payload: { byUserId: actorId },
-        });
-
-        return resource(ProductImportTransformer.transform(row));
+        if (!acquired) {
+            return ctx.response.status(409).json({ errors: [{ message: "rollback already in flight", code: "E_LOCKED" }] });
+        }
+        return resource(ProductImportTransformer.transform(result));
     }
 
     /** `GET /api/v1/admin/products/import/history` — paginated history list. */
