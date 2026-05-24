@@ -1,0 +1,62 @@
+
+> @calibra/api@0.0.0 dev /home/inf1nite-lo0p/keshavarz20-com/keshavarz20/.claude/worktrees/orders-admin/apps/api
+> node ace serve --hmr
+
+(node:98946) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+c[ info ] starting server in hmr mode...
+[ info ] loading hooks...
+[ info ] generating indexes...
+[ info ] codegen: created 3 file(s)
+[ info ] starting HTTP server...
+(node:98997) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:98997) Warning: tracePromise was called with the function 'boot', which returned a non-thenable.
+╭──────────────────────────────────────────────────╮
+│                                                  │
+│    Server address: http://127.0.0.1:13767        │
+│    Mode: hmr                                     │
+│    Ready in: 554 ms                              │
+│    Press h to show help                          │
+│                                                  │
+╰──────────────────────────────────────────────────╯
+[10:28:04.267] INFO (calibra-api-orders-admin/98997): started HTTP server on 0.0.0.0:13767
+[ info ] watching file system for changes...
+cupdate start/routes/admin_orders.ts
+(node:6782) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:6782) Warning: tracePromise was called with the function 'boot', which returned a non-thenable.
+╭──────────────────────────────────────────────────╮
+│                                                  │
+│    Server address: http://127.0.0.1:13767        │
+│    Mode: hmr                                     │
+│    Ready in: 477 ms                              │
+│    Press h to show help                          │
+│                                                  │
+╰──────────────────────────────────────────────────╯
+[10:39:59.621] INFO (calibra-api-orders-admin/6782): started HTTP server on 0.0.0.0:13767
+cupdate start/routes/admin_orders.ts
+(node:26118) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:26118) Warning: tracePromise was called with the function 'boot', which returned a non-thenable.
+╭──────────────────────────────────────────────────╮
+│                                                  │
+│    Server address: http://127.0.0.1:13767        │
+│    Mode: hmr                                     │
+│    Ready in: 495 ms                              │
+│    Press h to show help                          │
+│                                                  │
+╰──────────────────────────────────────────────────╯
+[11:14:36.397] INFO (calibra-api-orders-admin/26118): started HTTP server on 0.0.0.0:13767
+[11:23:46.855] INFO (calibra-api-orders-admin/26118): order.shipping.email_queued (stub)
+    order_id: 4
+    to: "bulk-drcxufrr-49@bulk.calibra.dev"
+    tracking_number: "AB123"
+[11:23:46.891] INFO (calibra-api-orders-admin/26118): order.confirmation.email_queued (stub)
+    order_id: 4
+    to: "bulk-drcxufrr-49@bulk.calibra.dev"
+    kind: "order_confirmation"
+[11:30:22.225] INFO (calibra-api-orders-admin/26118): order.shipping.email_queued (stub)
+    order_id: 5
+    to: "bulk-bqnunk3d-27@bulk.calibra.dev"
+    tracking_number: null

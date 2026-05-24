@@ -413,10 +413,27 @@ interface OrderCardProps {
     onOpenPreview: (order: AdminOrder) => void;
 }
 
-/** Mobile card renderer. The desktop columns collapse to a stack with status pill + total + total + relative date. */
+/**
+ * Mobile card renderer. The desktop columns collapse to a stack with status pill + total + total
+ * + relative date. The wrapper is a `<div role="button">` rather than a `<button>` because the
+ * RiskFlagsRow inside renders its own `<button>` chips for hover-card triggers — nesting buttons
+ * would emit a hydration error.
+ */
 function OrderCard({ order, locale, onOpenPreview }: OrderCardProps) {
     return (
-        <button type="button" onClick={() => onOpenPreview(order)} className="flex w-full flex-col items-start gap-2 text-start">
+        // biome-ignore lint/a11y/useSemanticElements: a real <button> would nest the RiskFlagChip buttons inside, breaking hydration
+        <div
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpenPreview(order)}
+            onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onOpenPreview(order);
+                }
+            }}
+            className="flex w-full cursor-pointer flex-col items-start gap-2 text-start outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
             <div className="flex w-full items-center justify-between">
                 <span className="font-medium text-sm">#{formatNumber(order.orderNumber, locale)}</span>
                 <span className="font-medium text-sm tabular-nums">{formatMoney(order.grandTotal, locale)}</span>
@@ -429,7 +446,7 @@ function OrderCard({ order, locale, onOpenPreview }: OrderCardProps) {
                 <span>{formatRelativeTime(order.createdAt, locale)}</span>
                 <RiskFlagsRow flags={order.riskFlags} />
             </div>
-        </button>
+        </div>
     );
 }
 

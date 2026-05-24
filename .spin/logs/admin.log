@@ -1,0 +1,131 @@
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:13768
+- Network:       http://10.255.255.254:13768
+- Environments: .env.local
+✓ Ready in 246ms
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /home/inf1nite-lo0p/keshavarz20-com/keshavarz20/pnpm-workspace.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /home/inf1nite-lo0p/keshavarz20-com/keshavarz20/.claude/worktrees/orders-admin/pnpm-workspace.yaml
+
+
+(node:20623) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+○ Compiling /[locale]/orders ...
+ GET /orders 307 in 4.8s (next.js: 4.5s, proxy.ts: 4ms, generate-params: 266ms, application-code: 300ms)
+ GET /login 200 in 847ms (next.js: 728ms, proxy.ts: 3ms, generate-params: 241ms, application-code: 116ms)
+ GET /orders 307 in 91ms (next.js: 27ms, proxy.ts: 3ms, generate-params: 20ms, application-code: 61ms)
+ GET /login 200 in 100ms (next.js: 39ms, proxy.ts: 8ms, generate-params: 22ms, application-code: 53ms)
+ POST /api/auth/login 404 in 445ms (next.js: 409ms, application-code: 36ms)
+ GET / 307 in 731ms (next.js: 643ms, proxy.ts: 9ms, generate-params: 259ms, application-code: 79ms)
+ GET /dashboard 307 in 1793ms (next.js: 1562ms, proxy.ts: 5ms, generate-params: 277ms, application-code: 226ms)
+ GET /login 200 in 93ms (next.js: 28ms, proxy.ts: 3ms, generate-params: 25ms, application-code: 61ms)
+ GET /favicon.ico 404 in 90ms (next.js: 37ms, generate-params: 33ms, application-code: 53ms)
+ GET /dashboard 200 in 130ms (next.js: 34ms, proxy.ts: 4ms, generate-params: 30ms, application-code: 92ms)
+ POST /login 303 in 256ms (next.js: 33ms, proxy.ts: 4ms, generate-params: 30ms, application-code: 218ms)
+  └─ ƒ loginAction({"error":null,"ok":false}, {}) in 54ms apps/admin/src/lib/auth-actions.ts
+ GET /api/admin/reports/top-products?days=30&limit=5 200 in 981ms (next.js: 895ms, application-code: 85ms)
+ GET /api/admin/customers?perPage=10 200 in 989ms (next.js: 895ms, application-code: 94ms)
+ GET /api/admin/products?perPage=1&status=published 200 in 994ms (next.js: 898ms, application-code: 96ms)
+ GET /api/admin/orders?perPage=100 200 in 1010ms (next.js: 899ms, application-code: 111ms)
+ GET /orders 200 in 67ms (next.js: 41ms, proxy.ts: 3ms, generate-params: 37ms, application-code: 24ms)
+ GET /api/admin/orders/counts 200 in 113ms (next.js: 50ms, application-code: 63ms)
+ GET /api/admin/orders?page=1&perPage=25 200 in 118ms (next.js: 55ms, application-code: 63ms)
+[browser] In HTML, <button> cannot be a descendant of <button>.
+This will cause a hydration error.
+
+  ...
+    <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+      <RedirectBoundary>
+        <RedirectErrorBoundary router={{...}}>
+          <InnerLayoutRouter url="/orders" tree={[...]} params={{locale:"fa"}} cacheNode={{rsc:<Fragment>, ...}} ...>
+            <SegmentViewNode type="page" pagePath="apps/admin...">
+              <SegmentTrieNode>
+              <OrdersPage>
+                <OrdersList>
+                  <section className="flex flex-...">
+                    <header>
+                    <StatusTabs>
+                    <DataTable data={[...]} columns={[...]} getRowId={function getRowId} meta={{page:1,perPage:25, ...}} ...>
+                      <div className="flex flex-...">
+                        <div>
+                        <div className="overflow-h..." onKeyDown={function onTableKeyDown} role="grid">
+                          <div>
+                          <div className="flex flex-...">
+                            <div className="px-4 py-3">
+                              <OrderCard order={{id:10, ...}} locale="fa" ...>
+>                               <button
+>                                 type="button"
+>                                 onClick={function onClick}
+>                                 className="flex w-full flex-col items-start gap-2 text-start"
+>                               >
+                                  <div>
+                                  <div>
+                                  ...
+                                    <HoverCardTrigger render={function render}>
+                                      <PreviewCardTrigger render={function render}>
+>                                       <button
+>                                         onPointerDown={function}
+>                                         onPointerEnter={function}
+>                                         onMouseMove={function}
+>                                         onMouseLeave={function}
+>                                         onFocus={function}
+>                                         onBlur={function}
+>                                         id="base-ui-_r_98_"
+>                                         ref={function}
+>                                         type="button"
+>                                         className="inline-flex size-5 items-center justify-center rounded-full ring-..."
+>                                         aria-label="مبلغ بالا"
+>                                       >
+                                    ...
+                            ...
+                          ...
+                    ...
+            ...
+          ...
+ 
+[browser] <button> cannot contain a nested <button>.
+See this log for the ancestor stack trace. 
+ GET /api/admin/orders/7 200 in 115ms (next.js: 39ms, application-code: 76ms)
+[browser] Base UI: <Drawer.Popup> expected to be rendered within <Drawer.Viewport>. Omitting the viewport disables drawer swipe handling and touch scroll locking. Wrap <Drawer.Popup> in <Drawer.Viewport>.
+    at SheetContent (http://localhost:13768/_next/static/chunks/_claude_worktrees_orders-admin_apps_admin_src_03i69hs._.js:6862:465)
+    at QuickPreviewDrawer (http://localhost:13768/_next/static/chunks/_claude_worktrees_orders-admin_apps_admin_src_03i69hs._.js:7293:471)
+    at OrdersList (http://localhost:13768/_next/static/chunks/_claude_worktrees_orders-admin_apps_admin_src_03i69hs._.js:8786:465)
+    at OrdersPage (about://React/Server/file:///home/inf1nite-lo0p/keshavarz20-com/keshavarz20/.claude/worktrees/orders-admin/apps/admin/.next/dev/server/chunks/ssr/%5Broot-of-the-server%5D__0cmpci8._.js?93:93:513) 
+ GET /api/admin/orders/counts 200 in 55ms (next.js: 33ms, application-code: 23ms)
+ GET /api/admin/orders/counts 200 in 69ms (next.js: 37ms, application-code: 32ms)
+ GET /api/admin/orders/counts 200 in 58ms (next.js: 34ms, application-code: 24ms)
+✓ Compiled in 46ms
+⚠ Fast Refresh had to perform a full reload when ./.claude/worktrees/orders-admin/apps/admin/src/views/orders/list/orders-list.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+✓ Compiled in 40ms
+ GET /orders 200 in 284ms (next.js: 35ms, proxy.ts: 5ms, generate-params: 29ms, application-code: 244ms)
+ GET /api/admin/orders/counts 200 in 52ms (next.js: 27ms, application-code: 25ms)
+ GET /api/admin/orders?page=1&perPage=25 200 in 56ms (next.js: 30ms, application-code: 26ms)
+ GET /api/admin/orders/counts 200 in 87ms (next.js: 45ms, application-code: 43ms)
+ GET /api/admin/orders/counts 200 in 50ms (next.js: 29ms, application-code: 22ms)
+ GET /api/admin/orders/10 200 in 60ms (next.js: 28ms, application-code: 32ms)
+ GET /api/admin/orders/counts 200 in 56ms (next.js: 22ms, application-code: 34ms)
+⚠ Fast Refresh had to perform a full reload when ./.claude/worktrees/orders-admin/apps/admin/src/views/orders/list/orders-list.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+✓ Compiled in 41ms
+ GET /orders 200 in 185ms (next.js: 40ms, proxy.ts: 8ms, generate-params: 31ms, application-code: 137ms)
+ GET /api/admin/orders/counts 200 in 66ms (next.js: 30ms, application-code: 36ms)
+ GET /api/admin/orders?page=1&perPage=25 200 in 72ms (next.js: 34ms, application-code: 38ms)
+ GET /api/admin/orders/counts 200 in 43ms (next.js: 25ms, application-code: 18ms)
+ GET /api/admin/orders/counts 200 in 56ms (next.js: 28ms, application-code: 28ms)
+ GET /api/admin/orders?page=1&perPage=25&status=pending 200 in 57ms (next.js: 33ms, application-code: 24ms)
+ GET /api/admin/orders?page=1&perPage=25&status=processing 200 in 56ms (next.js: 32ms, application-code: 23ms)
+ GET /api/admin/orders?page=1&perPage=25&status=on_hold 200 in 58ms (next.js: 28ms, application-code: 30ms)
+ GET /api/admin/orders?page=1&perPage=25&status=completed 200 in 56ms (next.js: 35ms, application-code: 21ms)
+ GET /orders 307 in 82ms (next.js: 28ms, proxy.ts: 2ms, generate-params: 25ms, application-code: 52ms)
+ GET /login 200 in 81ms (next.js: 26ms, proxy.ts: 2ms, generate-params: 22ms, application-code: 53ms)
+ GET /api/admin/orders?page=1&perPage=25&status=cancelled 200 in 64ms (next.js: 42ms, application-code: 22ms)
+ GET /api/admin/orders/counts 200 in 45ms (next.js: 25ms, application-code: 21ms)
+ GET /api/admin/orders?page=1&perPage=25&status=refunded 200 in 49ms (next.js: 29ms, application-code: 20ms)
+ GET /api/admin/orders?page=1&perPage=25&status=failed 200 in 51ms (next.js: 30ms, application-code: 21ms)
+ GET /api/admin/orders?page=1&perPage=25&status=draft 200 in 55ms (next.js: 36ms, application-code: 19ms)
+ GET /api/admin/orders?page=1&perPage=25&status=trashed 200 in 47ms (next.js: 30ms, application-code: 17ms)
+ POST /api/admin/orders/5/mark-shipped 200 in 65ms (next.js: 26ms, application-code: 38ms)
+ GET /api/admin/orders?page=1&perPage=25 200 in 29ms (next.js: 1945µs, application-code: 27ms)
+ GET /api/admin/orders/counts 200 in 33ms (next.js: 7ms, application-code: 26ms)

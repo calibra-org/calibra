@@ -39,24 +39,26 @@ function SheetContent({ className, side = "bottom", children, ...props }: SheetC
                     "transition-opacity duration-200 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
                 )}
             />
-            <BaseDrawer.Popup
-                data-slot="sheet-content"
-                className={cn(
-                    "fixed z-50 flex w-full flex-col gap-4 border border-border bg-card p-6 shadow-lg outline-none",
-                    "transition-transform duration-250 ease-out",
-                    sideClasses[side],
-                    className,
-                )}
-                {...props}
-            >
-                {children}
-                <BaseDrawer.Close
-                    className="absolute end-4 top-4 rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    aria-label="Close"
+            <BaseDrawer.Viewport className="fixed inset-0 z-50">
+                <BaseDrawer.Popup
+                    data-slot="sheet-content"
+                    className={cn(
+                        "fixed z-50 flex w-full flex-col gap-4 border border-border bg-card p-6 shadow-lg outline-none",
+                        "transition-transform duration-250 ease-out",
+                        sideClasses[side],
+                        className,
+                    )}
+                    {...props}
                 >
-                    <X className="size-4" aria-hidden="true" />
-                </BaseDrawer.Close>
-            </BaseDrawer.Popup>
+                    {children}
+                    <BaseDrawer.Close
+                        className="absolute end-4 top-4 rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        aria-label="Close"
+                    >
+                        <X className="size-4" aria-hidden="true" />
+                    </BaseDrawer.Close>
+                </BaseDrawer.Popup>
+            </BaseDrawer.Viewport>
         </BaseDrawer.Portal>
     );
 }
