@@ -1,3 +1,4 @@
+import { indexPolicies } from "@adonisjs/bouncer";
 import { indexEntities } from "@adonisjs/core";
 import { defineConfig } from "@adonisjs/core/app";
 
@@ -7,7 +8,7 @@ export default defineConfig({
      * `.adonisjs/server/` that power `#generated/*` imports for controllers, events, and policies.
      */
     hooks: {
-        init: [indexEntities()],
+        init: [indexEntities(), indexPolicies()],
     },
 
     /**
@@ -17,6 +18,7 @@ export default defineConfig({
         () => import("@adonisjs/core/commands"),
         () => import("@adonisjs/lucid/commands"),
         () => import("@adonisjs/queue/commands"),
+        () => import("@adonisjs/bouncer/commands"),
     ],
 
     /**
@@ -41,6 +43,7 @@ export default defineConfig({
         () => import("@adonisjs/mail/mail_provider"),
         () => import("@adonisjs/queue/queue_provider"),
         () => import("@adonisjs/transmit/transmit_provider"),
+        () => import("@adonisjs/bouncer/bouncer_provider"),
     ],
 
     preloads: [() => import("#start/routes"), () => import("#start/kernel"), () => import("#start/transmit")],

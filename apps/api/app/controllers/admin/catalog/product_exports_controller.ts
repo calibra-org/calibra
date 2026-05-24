@@ -5,6 +5,7 @@ import drive from "@adonisjs/drive/services/main";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
+import { cancelExport, downloadExport, viewExport } from "#abilities/main";
 import RunExportJob from "#jobs/run_export_job";
 import ProductExport from "#models/product_export";
 import ProductExportFilterPreset from "#models/product_export_filter_preset";
@@ -114,10 +115,8 @@ export default class AdminProductExportsController {
      * a bug.
      */
     async show(ctx: HttpContext) {
-        const row = await ProductExport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "export not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductExport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(viewExport, row);
         let token: string | null = null;
         if (
             row.status === "completed" &&
@@ -141,10 +140,8 @@ export default class AdminProductExportsController {
 
     /** `POST /api/v1/admin/products/export/{id}/cancel` — flag for the runner to observe. */
     async cancel(ctx: HttpContext) {
-        const row = await ProductExport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "export not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductExport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(cancelExport, row);
         if (row.cancellationRequestedAt === null) {
             row.cancellationRequestedAt = DateTime.utc();
             await row.save();
@@ -159,10 +156,8 @@ export default class AdminProductExportsController {
      * read stream into the response.
      */
     async download(ctx: HttpContext) {
-        const row = await ProductExport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "export not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductExport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(downloadExport, row);
         const payload = await downloadExportValidator.validate(ctx.request.qs());
         const expiresAt = row.downloadExpiresAt;
         if (row.filePath === null || expiresAt === null || row.downloadTokenHash === null) {
@@ -211,10 +206,8 @@ export default class AdminProductExportsController {
 
     /** `DELETE /api/v1/admin/products/export/{id}` — soft remove from history (drops the file too). */
     async destroy(ctx: HttpContext) {
-        const row = await ProductExport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "export not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductExport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(cancelExport, row);
         await deleteExportArtifact(row.filePath);
         await row.delete();
         return ctx.response.status(204);

@@ -1,6 +1,7 @@
 import type { HttpContext } from "@adonisjs/core/http";
 import { DateTime } from "luxon";
 
+import { cancelImport, rollbackImport, viewImport } from "#abilities/main";
 import RunImportJob from "#jobs/run_import_job";
 import ProductImport from "#models/product_import";
 import ProductImportChange from "#models/product_import_change";
@@ -32,7 +33,9 @@ import {
  * controller maps HTTP shape ↔ service calls + handles the SSE streaming response.
  *
  * Routes are grouped under `/api/v1/admin/products/import/*` and gated by auth + admin middleware
- * in `start/routes/admin_product_imports.ts`.
+ * in `start/routes/admin_product_imports.ts`. Per-row ownership is enforced via the
+ * {@link viewImport} / {@link cancelImport} / {@link rollbackImport} Bouncer abilities so a peer
+ * admin probing another operator's import receives a 403 (not a confused 404).
  */
 export default class AdminProductImportsController {
     /**
@@ -147,10 +150,8 @@ export default class AdminProductImportsController {
      */
     async preview(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(previewImportValidator);
-        const row = await ProductImport.find(payload.import_id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductImport.findOrFail(payload.import_id);
+        await ctx.bouncer.authorize(viewImport, row);
 
         row.mapping = payload.mapping;
         row.updateExisting = payload.update_existing ?? false;
@@ -174,10 +175,8 @@ export default class AdminProductImportsController {
      */
     async start(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(startImportValidator);
-        const row = await ProductImport.find(payload.import_id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductImport.findOrFail(payload.import_id);
+        await ctx.bouncer.authorize(viewImport, row);
 
         row.mapping = payload.mapping;
         row.updateExisting = payload.update_existing ?? false;
@@ -185,21 +184,17 @@ export default class AdminProductImportsController {
         row.queuedAt = DateTime.utc();
         await row.save();
 
+        const actorId = Number(ctx.auth.user!.id);
         if (payload.save_preset === true && payload.preset_name !== undefined) {
             await this.savePreset(
                 row.headerHash,
                 payload.preset_name,
                 payload.mapping,
                 payload.update_existing ?? false,
-                Number(ctx.auth.user!.id),
+                actorId,
             );
         } else {
-            await this.touchAutoPreset(
-                row.headerHash,
-                payload.mapping,
-                payload.update_existing ?? false,
-                Number(ctx.auth.user!.id),
-            );
+            await this.touchAutoPreset(row.headerHash, payload.mapping, payload.update_existing ?? false, actorId);
         }
 
         /**
@@ -222,19 +217,15 @@ export default class AdminProductImportsController {
 
     /** `GET /api/v1/admin/products/import/{id}` — single import row (polling fallback). */
     async show(ctx: HttpContext) {
-        const row = await ProductImport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductImport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(viewImport, row);
         return resource(ProductImportTransformer.transform(row));
     }
 
     /** `POST /api/v1/admin/products/import/{id}/cancel` — set the cancellation flag. */
     async cancel(ctx: HttpContext) {
-        const row = await ProductImport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductImport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(cancelImport, row);
         if (row.cancellationRequestedAt === null) {
             row.cancellationRequestedAt = DateTime.utc();
             await row.save();
@@ -244,10 +235,8 @@ export default class AdminProductImportsController {
 
     /** `GET /api/v1/admin/products/import/{id}/errors` — list per-row failures + warnings. */
     async errors(ctx: HttpContext) {
-        const row = await ProductImport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductImport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(viewImport, row);
         const filters = await errorsQueryValidator.validate(ctx.request.qs());
         const query = ProductImportError.query().where("import_id", Number(row.id)).orderBy("row_number", "asc");
         if (filters.severity !== undefined) query.where("severity", filters.severity);
@@ -265,10 +254,8 @@ export default class AdminProductImportsController {
      * through the runner inline, and marks the error as resolved on success.
      */
     async retryRow(ctx: HttpContext) {
-        const row = await ProductImport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductImport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(viewImport, row);
         const payload = await ctx.request.validateUsing(retryRowValidator);
         const error = await ProductImportError.find(payload.error_id);
         if (error === null || Number(error.importId) !== Number(row.id)) {
@@ -283,10 +270,8 @@ export default class AdminProductImportsController {
 
     /** `POST /api/v1/admin/products/import/{id}/retry-failed` — bulk retry of all error rows. */
     async retryFailed(ctx: HttpContext) {
-        const row = await ProductImport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductImport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(viewImport, row);
         const payload = await ctx.request.validateUsing(retryFailedValidator);
         const now = DateTime.utc();
         for (const edit of payload.edits) {
@@ -306,10 +291,8 @@ export default class AdminProductImportsController {
      * `rolled_back` and Step 4 shows the red banner.
      */
     async rollback(ctx: HttpContext) {
-        const row = await ProductImport.find(ctx.params.id);
-        if (row === null || Number(row.userId) !== Number(ctx.auth.user!.id)) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductImport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(rollbackImport, row);
         if (row.rolledBackAt !== null) {
             return ctx.response.status(409).json({ errors: [{ message: "already rolled back", code: "E_CONFLICT" }] });
         }
@@ -338,8 +321,9 @@ export default class AdminProductImportsController {
             }
         });
 
+        const actorId = Number(ctx.auth.user!.id);
         row.rolledBackAt = DateTime.utc();
-        row.rolledBackByUserId = Number(ctx.auth.user!.id);
+        row.rolledBackByUserId = actorId;
         row.status = "rolled_back";
         await row.save();
 
@@ -347,7 +331,7 @@ export default class AdminProductImportsController {
             type: "rolled_back",
             importId: Number(row.id),
             at: new Date().toISOString(),
-            payload: { byUserId: Number(ctx.auth.user!.id) },
+            payload: { byUserId: actorId },
         });
 
         return resource(ProductImportTransformer.transform(row));
@@ -371,10 +355,8 @@ export default class AdminProductImportsController {
 
     /** `GET /api/v1/admin/products/import/{id}/changes` — per-product diff log (history detail). */
     async changes(ctx: HttpContext) {
-        const row = await ProductImport.find(ctx.params.id);
-        if (row === null) {
-            return ctx.response.status(404).json({ errors: [{ message: "import not found", code: "E_NOT_FOUND" }] });
-        }
+        const row = await ProductImport.findOrFail(ctx.params.id);
+        await ctx.bouncer.authorize(viewImport, row);
         const query = ProductImportChange.query().where("import_id", Number(row.id)).orderBy("row_number", "asc");
         if (ctx.request.input("sku") !== undefined) {
             query.where("sku", ctx.request.input("sku") as string);

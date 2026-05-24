@@ -62,7 +62,7 @@ test.group("GET /api/v1/account/orders/:id/notes (customer-side)", (group) => {
         assert.notProperty(rows[0], "author_user_id");
     });
 
-    test("cross-tenant order returns 404", async ({ client }) => {
+    test("cross-tenant order returns 403", async ({ client }) => {
         const { user } = await makeCustomer();
         const { customer: other } = await makeCustomer();
         const product = await createTaxableProduct({ regularPrice: 1_000_000 });
@@ -75,6 +75,6 @@ test.group("GET /api/v1/account/orders/:id/notes (customer-side)", (group) => {
         await advanceOrderTo(order, OrderStatus.Processing);
 
         const response = await client.get(`/api/v1/account/orders/${order.id}/notes`).loginAs(user);
-        response.assertStatus(404);
+        response.assertStatus(403);
     });
 });

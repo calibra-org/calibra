@@ -40,6 +40,17 @@ test.group("/api/v1/admin/products/import — auth", (group) => {
         const response = await client.post("/api/v1/admin/products/import/upload");
         response.assertStatus(401);
     });
+
+    test("a second admin cannot see another admin's import (Bouncer: 403)", async ({ client }) => {
+        const owner = await createImportAdmin("owner-admin@calibra.dev");
+        const intruder = await createImportAdmin("intruder-admin@calibra.dev");
+        const upload = await uploadFile(client, owner, BASE_CSV, "owned.csv");
+        upload.assertStatus(201);
+        const importId = upload.body().data.id;
+
+        const show = await client.get(`/api/v1/admin/products/import/${importId}`).withGuard("api").loginAs(intruder);
+        show.assertStatus(403);
+    });
 });
 
 test.group("/api/v1/admin/products/import — template", (group) => {

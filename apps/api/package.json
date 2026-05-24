@@ -4,6 +4,7 @@
     "private": true,
     "type": "module",
     "imports": {
+        "#abilities/*": "./app/abilities/*.js",
         "#controllers/*": "./app/controllers/*.js",
         "#contracts/*": "./app/contracts/*.js",
         "#commands/*": "./commands/*.js",
@@ -42,6 +43,7 @@
     },
     "dependencies": {
         "@adonisjs/auth": "^10.1.0",
+        "@adonisjs/bouncer": "^4.0.0",
         "@adonisjs/cache": "^2.1.0",
         "@adonisjs/core": "^7.3.2",
         "@adonisjs/cors": "^3.0.0",
