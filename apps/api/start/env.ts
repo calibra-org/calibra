@@ -53,4 +53,12 @@ export default await Env.create(new URL("../", import.meta.url), {
     REDIS_HOST: Env.schema.string({ format: "host" }),
     REDIS_PORT: Env.schema.number(),
     REDIS_PASSWORD: Env.schema.string.optional(),
+
+    /**
+     * Transmit transport driver. `redis` bridges SSE broadcasts across the api ↔ queue worker
+     * processes (required when QUEUE_DRIVER=database). `none` keeps it single-process — used
+     * by tests + ace commands (`check:api-docs`, `migration:run`) that boot the app without
+     * needing live SSE and shouldn't crash if Redis is unreachable.
+     */
+    TRANSMIT_TRANSPORT: Env.schema.enum(["redis", "none"] as const),
 });

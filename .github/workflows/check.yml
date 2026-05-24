@@ -134,6 +134,7 @@ jobs:
                   SMTP_PORT: "11025"
                   REDIS_HOST: localhost
                   REDIS_PORT: "6379"
+                  TRANSMIT_TRANSPORT: none
                   QUEUE_DRIVER: sync
               run: node ace check:api-docs
 

@@ -24,14 +24,27 @@ import env from "#start/env";
  * `pingInterval: "30s"` keeps long-lived SSE connections alive past intermediate-proxy idle
  * timeouts (Nginx defaults to 60s) without flooding the wire.
  */
+/**
+ * `TRANSMIT_TRANSPORT=none` (tests + ace commands like `check:api-docs`, `migration:run`)
+ * keeps Transmit single-process — Adonis still boots it, broadcasts stay in-memory. Without
+ * this opt-out, the transport's constructor synchronously calls `bus.subscribe(...)` which
+ * makes ioredis try to reach Redis at boot time. CI doesn't run Redis, so ioredis retries
+ * past its limit and crashes the process *after* the command already printed success.
+ */
+const useRedisTransport = env.get("TRANSMIT_TRANSPORT") === "redis";
+
 export default defineConfig({
     pingInterval: "30s",
-    transport: {
-        driver: redis({
-            host: env.get("REDIS_HOST"),
-            port: env.get("REDIS_PORT"),
-            password: env.get("REDIS_PASSWORD"),
-        }),
-        channel: `${env.get("APP_NAME")}::transmit::broadcast`,
-    },
+    transport: useRedisTransport
+        ? {
+              driver: redis({
+                  host: env.get("REDIS_HOST"),
+                  port: env.get("REDIS_PORT"),
+                  password: env.get("REDIS_PASSWORD"),
+                  /** Surface a real connectivity blip fast — don't hang 20 retries deep on a broadcast. */
+                  maxRetriesPerRequest: 1,
+              }),
+              channel: `${env.get("APP_NAME")}::transmit::broadcast`,
+          }
+        : null,
 });

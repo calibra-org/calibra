@@ -340,6 +340,8 @@ async function ensureEnvFiles(meta) {
              */
             `REDIS_HOST=localhost`,
             `REDIS_PORT=${REDIS_PORT}`,
+            /** Bridge SSE broadcasts across api ↔ queue worker (single-process if `none`). */
+            `TRANSMIT_TRANSPORT=redis`,
             /**
              * Background-job queue.
              *  - `database`: jobs persisted in Postgres; the spin's `queue:work` process polls.
