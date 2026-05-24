@@ -230,6 +230,26 @@ test.group("/api/v1/admin/customers", (group) => {
         }
     });
 
+    test("tab=big narrows the list to customers above the 90th percentile of paid spend", async ({ client, assert }) => {
+        /**
+         * Without any orders the whole base lands at the 0 spend percentile, so the bucket is
+         * empty. Proves the filter actually runs (not a no-op that returns everything). Full
+         * revenue-tier seeding lives in the bulk seeder; this is the lightweight invariant.
+         */
+        const admin = await createAdmin();
+        await createPlainCustomer("noorders@calibra.dev");
+
+        const response = await client
+            .get("/api/v1/admin/customers")
+            .qs({ tab: "big", perPage: 100 })
+            .withGuard("api")
+            .loginAs(admin);
+        response.assertStatus(200);
+        response.assertAgainstApiSpec();
+        const body = response.body() as { data: unknown[] };
+        assert.equal(body.data.length, 0, "no customers have orders → big-spenders bucket is empty");
+    });
+
     test("list endpoint accepts tab=trashed and returns soft-deleted rows only", async ({ client, assert }) => {
         const admin = await createAdmin();
         const { customer } = await createPlainCustomer("trash@calibra.dev");

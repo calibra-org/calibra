@@ -3,6 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { Globe, Plus, Tag } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useMemo, useState } from "react";
 
 import {
@@ -44,11 +45,18 @@ const COUNTRY_FACET_OPTIONS: { value: string; label: string }[] = [
 
 const SUSPENSION_FACET_OPTIONS = ["active", "suspended"] as const;
 
+const TAB_VALUES: CustomerTabKey[] = ["any", "account", "guest", "big", "new", "inactive", "no_address", "trashed"];
+
 export function CustomersListClient() {
     const locale = useLocale() as Locale;
     const t = useTranslations("Customers");
     const statusT = useTranslations("Customers.statusBadge");
-    const [tab, setTab] = useState<CustomerTabKey>("any");
+    /**
+     * Tab state goes through nuqs so it survives refreshes and is shareable as a deep link.
+     * `parseAsStringEnum` clamps the value to the allowed set — anyone hitting `?tab=garbage`
+     * falls back to `any` rather than sending bad input to the API.
+     */
+    const [tab, setTab] = useQueryState("tab", parseAsStringEnum<CustomerTabKey>(TAB_VALUES).withDefault("any"));
     const [newSheetOpen, setNewSheetOpen] = useState(false);
 
     const { data: counts } = useCustomerCounts();

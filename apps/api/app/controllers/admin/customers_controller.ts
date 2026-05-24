@@ -21,6 +21,7 @@ import {
 const DEFAULT_PER_PAGE = 20;
 
 const ORDER_COUNTED_STATUSES = ["pending", "on_hold", "processing", "completed", "refunded"];
+const PAID_ORDER_STATUSES = ["processing", "completed", "refunded"];
 
 export default class AdminCustomersController {
     /**
@@ -58,6 +59,38 @@ export default class AdminCustomersController {
                     .whereRaw("orders.customer_id = customers.id")
                     .whereIn("status", ORDER_COUNTED_STATUSES)
                     .where("orders.created_at", ">=", db.raw(`now() - interval '180 days'`)),
+            );
+        }
+        if (tab === "big") {
+            /**
+             * "Big spenders" = customers whose paid-status spend reaches the 90th percentile of the
+             * customer base. The threshold is computed inline (same query the `/counts` endpoint
+             * uses) so the list and the tab count never disagree.
+             *
+             * `select(db.raw("1"))` is load-bearing: Lucid's `whereExists` callback emits
+             * `SELECT *` by default, but combined with `GROUP BY o.customer_id` that violates
+             * Postgres's aggregation rules (`column "o.id" must appear in GROUP BY`). EXISTS is
+             * indifferent to the projection, so a literal constant is the safest fix.
+             */
+            query.whereExists((sub) =>
+                sub
+                    .select(db.raw("1"))
+                    .from("orders as o")
+                    .whereRaw("o.customer_id = customers.id")
+                    .whereIn("o.status", PAID_ORDER_STATUSES)
+                    .groupBy("o.customer_id")
+                    .havingRaw(
+                        `COALESCE(SUM(o.grand_total), 0) >= COALESCE((
+                            SELECT percentile_cont(0.9) WITHIN GROUP (ORDER BY spend)
+                            FROM (
+                                SELECT COALESCE(SUM(grand_total), 0) AS spend
+                                FROM orders
+                                WHERE status IN (${PAID_ORDER_STATUSES.map(() => "?").join(",")})
+                                GROUP BY customer_id
+                            ) per_customer
+                        ), 0)`,
+                        [...PAID_ORDER_STATUSES],
+                    ),
             );
         }
 
