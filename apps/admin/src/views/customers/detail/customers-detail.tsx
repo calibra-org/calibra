@@ -54,7 +54,7 @@ export function CustomersDetailClient({ initialCustomerId, locale }: CustomersDe
         {
             id: "timeline",
             title: detailT("timelineSection.title"),
-            body: <TimelineCard customerId={customer.id} locale={locale} t={(key) => detailT(key as never)} />,
+            body: <TimelineCard customerId={customer.id} locale={locale} />,
         },
         {
             id: "notes",

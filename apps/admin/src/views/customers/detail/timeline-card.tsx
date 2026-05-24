@@ -2,6 +2,7 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { Bell, FileText, Mail, ShoppingBag, UserCog } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Badge } from "#/components/ui/badge";
@@ -27,16 +28,14 @@ function iconForKind(kind: AdminCustomerTimelineEntry["kind"]) {
     }
 }
 
+type DetailT = ReturnType<typeof useTranslations>;
+
 /**
  * Renders a one-line, locale-aware summary for one timeline row's payload. Falls back to the raw
  * JSON only when the kind is unknown — every known kind has a tailored line that reads naturally
  * in both fa and en.
  */
-function describePayload(
-    entry: AdminCustomerTimelineEntry,
-    locale: Locale,
-    t: (key: string, values?: Record<string, string | number>) => string,
-): React.ReactNode {
+function describePayload(entry: AdminCustomerTimelineEntry, locale: Locale, t: DetailT): React.ReactNode {
     const p = entry.payload;
     if (entry.kind === "order") {
         const number = String(p.number ?? p.order_id ?? "");
@@ -58,7 +57,7 @@ function describePayload(
     if (entry.kind === "marketing") {
         const channel = String(p.channel ?? "");
         const opt = p.opt_in === true;
-        const onOff = opt ? t("detail.channelEnabled") : t("detail.channelDisabled");
+        const onOff = opt ? t("channelEnabled") : t("channelDisabled");
         return t("timelineSection.marketing.summary", { channel, onOff });
     }
     if (entry.kind === "impersonation") {
@@ -70,10 +69,16 @@ function describePayload(
 interface TimelineCardProps {
     customerId: number;
     locale: Locale;
-    t: (key: string, values?: Record<string, string | number>) => string;
 }
 
-export function TimelineCard({ customerId, locale, t }: TimelineCardProps) {
+/**
+ * Pulls its own `useTranslations` instead of accepting a `t` prop. The descriptions take ICU
+ * placeholders ({number}, {total}, {from}, …) and next-intl's narrowed `t` type doesn't survive
+ * being threaded through a `(key, values?) => string` prop — the values argument would be dropped
+ * silently at runtime.
+ */
+export function TimelineCard({ customerId, locale }: TimelineCardProps) {
+    const t = useTranslations("Customers.detail");
     const [filter, setFilter] = useState<AdminCustomerTimelineEntry["kind"] | null>(null);
     const types = filter === null ? [] : [filter];
     const { data: rows = [] } = useCustomerTimeline(customerId, types);
@@ -92,7 +97,7 @@ export function TimelineCard({ customerId, locale, t }: TimelineCardProps) {
                         size="sm"
                         onClick={() => setFilter(kind)}
                     >
-                        {t(`timelineSection.kind.${kind}`)}
+                        {t(`timelineSection.kind.${kind}` as never)}
                     </Button>
                 ))}
             </div>
@@ -109,7 +114,7 @@ export function TimelineCard({ customerId, locale, t }: TimelineCardProps) {
                             <div className="flex min-w-0 flex-1 flex-col gap-1">
                                 <div className="flex items-center justify-between gap-2">
                                     <Badge variant="outline" className="text-xs">
-                                        {t(`timelineSection.kind.${row.kind}`)}
+                                        {t(`timelineSection.kind.${row.kind}` as never)}
                                     </Badge>
                                     <span className="text-muted-foreground text-xs">
                                         {formatRelativeTime(row.occurredAt, locale)}
