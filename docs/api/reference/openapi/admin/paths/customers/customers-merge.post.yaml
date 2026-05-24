@@ -1,0 +1,47 @@
+operationId: adminCustomersMerge
+summary: Merge duplicate customers into a primary (admin)
+description: >
+    Transactional: orders, notes, downloads, addresses, tags, and marketing prefs are moved from
+    duplicates into the primary; duplicates are then soft-deleted. Each merged-away customer
+    writes a `customer_merge_history` audit row with a snapshot of its pre-merge identity.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [primary_id, duplicate_ids]
+                properties:
+                    primary_id: { type: integer }
+                    duplicate_ids:
+                        type: array
+                        items: { type: integer }
+                        minItems: 1
+                    strategy:
+                        type: object
+                        properties:
+                            addresses: { type: string, enum: [keep_primary, merge_all] }
+                            tags: { type: string, enum: [union, keep_primary] }
+                            marketing_prefs: { type: string, enum: [most_recent, keep_primary] }
+responses:
+    "200":
+        description: Primary customer after the merge.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            allOf:
+                                - $ref: "../../components/schemas/AdminCustomer.yaml"
+                                - type: object
+                                  properties:
+                                      merged_count: { type: integer }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

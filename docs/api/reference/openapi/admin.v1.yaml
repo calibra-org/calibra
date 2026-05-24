@@ -315,6 +315,23 @@ paths:
             $ref: "./admin/paths/customers/customers-id-status-history.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/customers/{id}/convert-to-account:
+        post:
+            $ref: "./admin/paths/customers/customers-id-convert.post.yaml"
+    /api/v1/admin/customers/{id}/send-password-reset:
+        post:
+            $ref: "./admin/paths/customers/customers-id-password-reset.post.yaml"
+    /api/v1/admin/customers/{id}/impersonate:
+        post:
+            $ref: "./admin/paths/customers/customers-id-impersonate.post.yaml"
+    /api/v1/admin/customers/{id}/timeline:
+        get:
+            $ref: "./admin/paths/customers/customers-id-timeline.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/customers/merge:
+        post:
+            $ref: "./admin/paths/customers/customers-merge.post.yaml"
 
     /api/v1/admin/payment-gateways:
         get:
