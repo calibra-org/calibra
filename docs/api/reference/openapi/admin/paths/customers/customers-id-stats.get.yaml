@@ -1,0 +1,22 @@
+operationId: adminCustomersStats
+summary: Customer lifetime stats (admin)
+description: >
+    Lifetime stats for a single customer — order count, spend, AOV, dates, plus a 12-month spend
+    series and a favourite product slot for the detail page.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Customer stats bundle.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomerStats.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

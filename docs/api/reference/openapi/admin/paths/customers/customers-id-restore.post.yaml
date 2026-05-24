@@ -1,0 +1,22 @@
+operationId: adminCustomersRestore
+summary: Restore a soft-deleted customer (admin)
+description: >
+    Clears `customers.deleted_at` and the linked `users.deleted_at` (when present). The user must
+    sign in fresh — auth tokens are not restored.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Customer restored.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomer.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

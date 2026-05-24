@@ -1,8 +1,11 @@
 operationId: adminCustomersIndex
 summary: List customers (admin)
 description: >
-    Paginated list of every customer. Free-text search runs over `users.email`, `customers.first_name`,
-    `customers.last_name`, and `customers.phone`. Filter by paying status, country, or registration date.
+    Paginated list of every customer. Free-text search runs over `users.email`,
+    `customers.first_name`, `customers.last_name`, `customers.phone`, address `city`/`postcode`,
+    and Iran `national_id`. Twenty-plus filter dimensions (tab, country list, city, tags, status,
+    acquisition channel, marketing opt-ins, date ranges, order count/spend/AOV ranges). Pass
+    `include_stats=1` to fold lifetime metrics into each row via a single GROUP BY query (no N+1).
 tags: [Admin / Customers]
 
 parameters:
@@ -10,10 +13,44 @@ parameters:
     - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: search, in: query, schema: { type: string } }
+    - { name: sort, in: query, schema: { type: string }, description: "One of `last_name`, `created_at`, `last_seen_at`; prefix with `-` for descending." }
+    - { name: include_stats, in: query, schema: { type: boolean } }
+    - {
+          name: tab,
+          in: query,
+          schema:
+              {
+                  type: string,
+                  enum: [any, account, guest, big, new, inactive, no_address, trashed],
+              },
+          description: Selects the tab bucket. Counterpart of the `/counts` endpoint.,
+      }
     - { name: is_paying_customer, in: query, schema: { type: boolean } }
     - { name: country, in: query, schema: { type: string }, description: ISO-3166-1 alpha-2 country code. }
-    - { name: created_from, in: query, schema: { type: string, format: date-time } }
-    - { name: created_to, in: query, schema: { type: string, format: date-time } }
+    - { name: countries, in: query, schema: { type: string }, description: "Comma-separated ISO-3166-1 alpha-2 list." }
+    - { name: cities, in: query, schema: { type: string }, description: "Comma-separated city names (case-insensitive)." }
+    - { name: regions, in: query, schema: { type: string } }
+    - { name: tags, in: query, schema: { type: string }, description: "Comma-separated tag names." }
+    - { name: statuses, in: query, schema: { type: string }, description: "Comma-separated subset of [active, suspended, deleted]." }
+    - { name: acquisition_channels, in: query, schema: { type: string } }
+    - { name: email_verified, in: query, schema: { type: boolean } }
+    - { name: opt_in_email, in: query, schema: { type: boolean } }
+    - { name: opt_in_sms, in: query, schema: { type: boolean } }
+    - { name: created_after, in: query, schema: { type: string, format: date-time } }
+    - { name: created_before, in: query, schema: { type: string, format: date-time } }
+    - { name: created_from, in: query, schema: { type: string, format: date-time }, deprecated: true, description: Use `created_after`. }
+    - { name: created_to, in: query, schema: { type: string, format: date-time }, deprecated: true, description: Use `created_before`. }
+    - { name: last_order_after, in: query, schema: { type: string, format: date-time } }
+    - { name: last_order_before, in: query, schema: { type: string, format: date-time } }
+    - { name: order_count_min, in: query, schema: { type: integer, minimum: 0 } }
+    - { name: order_count_max, in: query, schema: { type: integer, minimum: 0 } }
+    - { name: lifetime_spend_min, in: query, schema: { type: integer, minimum: 0 } }
+    - { name: lifetime_spend_max, in: query, schema: { type: integer, minimum: 0 } }
+    - { name: aov_min, in: query, schema: { type: integer, minimum: 0 } }
+    - { name: aov_max, in: query, schema: { type: integer, minimum: 0 } }
+    - { name: has_national_id, in: query, schema: { type: boolean } }
+    - { name: with_orders, in: query, schema: { type: boolean } }
+    - { name: no_orders, in: query, schema: { type: boolean } }
 
 responses:
     "200":
@@ -28,5 +65,6 @@ responses:
                             type: array
                             items: { $ref: "../../components/schemas/AdminCustomer.yaml" }
                         meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+                        sort: { type: string }
     "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
     "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

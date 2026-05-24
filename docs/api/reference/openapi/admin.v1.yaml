@@ -223,6 +223,11 @@ paths:
             $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
             $ref: "./admin/paths/customers/customers.post.yaml"
+    /api/v1/admin/customers/counts:
+        get:
+            $ref: "./admin/paths/customers/customers-counts.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/customers/batch:
         post:
             $ref: "./admin/paths/customers/customers-batch.post.yaml"
@@ -237,6 +242,14 @@ paths:
             $ref: "./admin/paths/customers/customers-id.patch.yaml"
         delete:
             $ref: "./admin/paths/customers/customers-id.delete.yaml"
+    /api/v1/admin/customers/{id}/restore:
+        post:
+            $ref: "./admin/paths/customers/customers-id-restore.post.yaml"
+    /api/v1/admin/customers/{id}/stats:
+        get:
+            $ref: "./admin/paths/customers/customers-id-stats.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/customers/{id}/downloads:
         get:
             $ref: "./admin/paths/customers/customers-id-downloads.get.yaml"

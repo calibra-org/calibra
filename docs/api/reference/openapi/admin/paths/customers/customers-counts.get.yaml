@@ -1,0 +1,21 @@
+operationId: adminCustomersCounts
+summary: Customer counts + summary aggregates (admin)
+description: >
+    Tab counts (account/guest/big_spenders/new_30d/inactive_180d/no_address/trashed) and a footer
+    summary block (avg_order_count, avg_lifetime_spend_minor, avg_aov_minor, pct_with_account)
+    for the customers list page. Cache the response for ~30s client-side.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+responses:
+    "200":
+        description: Customer counts + summary.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomerCounts.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

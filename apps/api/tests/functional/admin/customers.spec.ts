@@ -114,4 +114,141 @@ test.group("/api/v1/admin/customers", (group) => {
         const afterCount = Number((after.$extras as { total: string }).total);
         assert.equal(afterCount, beforeCount);
     });
+
+    test("counts endpoint returns tab buckets + summary aggregates", async ({ client, assert }) => {
+        const admin = await createAdmin();
+        await createPlainCustomer("a@calibra.dev");
+        await createPlainCustomer("b@calibra.dev");
+        await Customer.create({ firstName: "Guest", lastName: "One", countryDefault: "IR" });
+
+        const response = await client.get("/api/v1/admin/customers/counts").withGuard("api").loginAs(admin);
+        response.assertStatus(200);
+        response.assertAgainstApiSpec();
+
+        const body = response.body() as {
+            data: {
+                all: number;
+                account_holders: number;
+                guest: number;
+                trashed: number;
+                summary: { pct_with_account: number };
+            };
+        };
+        assert.equal(body.data.all, 4);
+        assert.equal(body.data.account_holders, 3);
+        assert.equal(body.data.guest, 1);
+        assert.equal(body.data.trashed, 0);
+        assert.isNumber(body.data.summary.pct_with_account);
+    });
+
+    test("stats endpoint returns lifetime metrics (zeros when no orders)", async ({ client, assert }) => {
+        const admin = await createAdmin();
+        const { customer } = await createPlainCustomer("stats@calibra.dev");
+
+        const response = await client
+            .get(`/api/v1/admin/customers/${customer.id}/stats`)
+            .withGuard("api")
+            .loginAs(admin);
+        response.assertStatus(200);
+        response.assertAgainstApiSpec();
+        const body = response.body() as {
+            data: {
+                lifetime_order_count: number;
+                lifetime_spend_minor: number;
+                monthly_spend_series: unknown[];
+                favorite_product_id: number | null;
+            };
+        };
+        assert.equal(body.data.lifetime_order_count, 0);
+        assert.equal(body.data.lifetime_spend_minor, 0);
+        assert.deepEqual(body.data.monthly_spend_series, []);
+        assert.equal(body.data.favorite_product_id, null);
+    });
+
+    test("list endpoint with include_stats=true returns lifetime fields populated", async ({ client, assert }) => {
+        const admin = await createAdmin();
+        await createPlainCustomer("s1@calibra.dev");
+        await createPlainCustomer("s2@calibra.dev");
+
+        const response = await client
+            .get("/api/v1/admin/customers")
+            .qs({ include_stats: true, perPage: 5 })
+            .withGuard("api")
+            .loginAs(admin);
+        response.assertStatus(200);
+        response.assertAgainstApiSpec();
+        const body = response.body() as {
+            data: Array<{ lifetime_order_count: number; lifetime_spend_minor: number; tags: string[] }>;
+        };
+        for (const row of body.data) {
+            assert.isNumber(row.lifetime_order_count);
+            assert.isNumber(row.lifetime_spend_minor);
+            assert.isArray(row.tags);
+        }
+    });
+
+    test("admin role users do NOT appear in tab=guest", async ({ client, assert }) => {
+        const admin = await createAdmin();
+        await Customer.create({ firstName: "Guest", lastName: "Walker", countryDefault: "IR" });
+
+        const response = await client
+            .get("/api/v1/admin/customers")
+            .qs({ tab: "guest", perPage: 100 })
+            .withGuard("api")
+            .loginAs(admin);
+        response.assertStatus(200);
+        response.assertAgainstApiSpec();
+        const body = response.body() as { data: Array<{ user: unknown | null }> };
+        for (const row of body.data) {
+            assert.isNull(row.user);
+        }
+    });
+
+    test("list endpoint accepts tab=trashed and returns soft-deleted rows only", async ({ client, assert }) => {
+        const admin = await createAdmin();
+        const { customer } = await createPlainCustomer("trash@calibra.dev");
+        const del = await client.delete(`/api/v1/admin/customers/${customer.id}`).withGuard("api").loginAs(admin);
+        del.assertStatus(204);
+
+        const visible = await client
+            .get("/api/v1/admin/customers")
+            .qs({ perPage: 100 })
+            .withGuard("api")
+            .loginAs(admin);
+        visible.assertStatus(200);
+        const visibleEmails = (visible.body() as { data: Array<{ user: { email: string } | null }> }).data.map(
+            (r) => r.user?.email,
+        );
+        assert.notInclude(visibleEmails, "trash@calibra.dev");
+
+        const trashed = await client
+            .get("/api/v1/admin/customers")
+            .qs({ tab: "trashed", perPage: 100 })
+            .withGuard("api")
+            .loginAs(admin);
+        trashed.assertStatus(200);
+        trashed.assertAgainstApiSpec();
+        const trashedEmails = (trashed.body() as { data: Array<{ user: { email: string } | null }> }).data.map(
+            (r) => r.user?.email,
+        );
+        assert.include(trashedEmails, "trash@calibra.dev");
+    });
+
+    test("restore endpoint clears deleted_at on customer + user", async ({ client, assert }) => {
+        const admin = await createAdmin();
+        const { user, customer } = await createPlainCustomer("restorable@calibra.dev");
+        await client.delete(`/api/v1/admin/customers/${customer.id}`).withGuard("api").loginAs(admin);
+
+        const restore = await client
+            .post(`/api/v1/admin/customers/${customer.id}/restore`)
+            .withGuard("api")
+            .loginAs(admin);
+        restore.assertStatus(200);
+        restore.assertAgainstApiSpec();
+
+        const fresh = await Customer.find(customer.id);
+        const freshUser = await User.find(user.id);
+        assert.isNull(fresh?.deletedAt);
+        assert.isNull(freshUser?.deletedAt);
+    });
 });
