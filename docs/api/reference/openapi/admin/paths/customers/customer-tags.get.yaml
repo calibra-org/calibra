@@ -1,0 +1,24 @@
+operationId: adminCustomerTagsIndex
+summary: List customer tags (admin)
+description: Paginated. The `q` query parameter does prefix search for the autocomplete combobox.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: q, in: query, schema: { type: string } }
+responses:
+    "200":
+        description: Tags list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminCustomerTag.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

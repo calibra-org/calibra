@@ -29,6 +29,22 @@ parameters:
     - name: include_drafts
       in: query
       schema: { type: boolean, default: true }
+    - name: sort
+      in: query
+      description: Sort key. Hyphen prefix for descending. Allowed keys&#58; `id`, `order_number`, `created_at`, `grand_total`, `status`, `paid`, `completed`.
+      schema: { type: string }
+    - name: source
+      in: query
+      description: CSV of created_via values to include (`checkout,admin,api,import`).
+      schema: { type: string }
+    - name: payment
+      in: query
+      description: CSV of payment method codes to include (matched against `payment_method_code_snapshot`).
+      schema: { type: string }
+    - name: country
+      in: query
+      description: CSV of ISO-3166 alpha-2 country codes to filter the billing address by.
+      schema: { type: string }
 
 responses:
     "200":
@@ -48,10 +64,28 @@ responses:
                                     order_number: { type: integer }
                                     status: { type: string }
                                     customer_id: { type: [integer, "null"] }
+                                    customer_name: { type: string }
                                     billing_email: { type: [string, "null"] }
                                     grand_total: { $ref: "../../../common/components/schemas/Money.yaml" }
+                                    items_total: { type: integer }
+                                    shipping_total: { type: integer }
+                                    tax_total: { type: integer }
+                                    discount_total: { type: integer }
                                     currency: { type: string }
+                                    currency_display: { type: string }
                                     created_at: { type: string, format: date-time }
+                                    updated_at: { type: [string, "null"], format: date-time }
+                                    created_via: { type: [string, "null"] }
+                                    date_paid_at: { type: [string, "null"], format: date-time }
+                                    date_completed_at: { type: [string, "null"], format: date-time }
+                                    payment_method_title: { type: [string, "null"] }
+                                    item_count: { type: integer }
+                                    coupon_codes:
+                                        type: array
+                                        items: { type: string }
+                                    risk_flags:
+                                        type: array
+                                        items: { type: string }
                         meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"

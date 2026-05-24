@@ -1,0 +1,43 @@
+operationId: adminCustomerTimeline
+summary: Unified activity timeline for a customer (admin)
+description: >
+    Merges orders + notes + status flips + marketing-consent flips + impersonations into a single
+    feed, sorted newest first. The `types` query parameter (comma-separated) filters to a subset;
+    `limit` caps the total row count (default 50, max 200).
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: types, in: query, schema: { type: string }, description: "Comma-separated subset of [order, note, status, marketing, impersonation]." }
+    - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200 } }
+responses:
+    "200":
+        description: Timeline rows.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: object
+                                required: [kind, occurred_at]
+                                properties:
+                                    kind: { type: string }
+                                    occurred_at: { type: [string, "null"], format: date-time }
+                                    payload:
+                                        type: object
+                                        additionalProperties: true
+                                    actor:
+                                        anyOf:
+                                            - type: "null"
+                                            - type: object
+                                              properties:
+                                                  id: { type: string }
+                                                  email: { type: string }
+                                              required: [id, email]
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

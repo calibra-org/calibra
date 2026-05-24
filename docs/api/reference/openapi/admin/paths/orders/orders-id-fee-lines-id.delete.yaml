@@ -1,0 +1,20 @@
+operationId: adminOrderDeleteFee
+summary: Remove a fee line (admin)
+description: Removes a fee line and recomputes order totals.
+tags: [Admin / Orders]
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: feeId, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Updated order envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

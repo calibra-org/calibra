@@ -1,9 +1,10 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
+import logger from "@adonisjs/core/services/logger";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
-import { isOrderStatus, OrderStatus } from "#enums/order_status";
+import { isOrderStatus, ORDER_STATUS_VALUES, OrderStatus } from "#enums/order_status";
 import Order from "#models/order";
 import OrderAddress from "#models/order_address";
 import OrderLineItem from "#models/order_line_item";
@@ -17,6 +18,7 @@ import {
     adminOrderBatchValidator,
     adminOrderCreateValidator,
     adminOrderListValidator,
+    adminOrderMarkShippedValidator,
     adminOrderStatusValidator,
     adminOrderUpdateValidator,
 } from "#validators/admin/order_validator";
@@ -34,12 +36,27 @@ export default class AdminOrdersController {
         const payload = await ctx.request.validateUsing(adminOrderListValidator);
         const page = payload.page ?? 1;
         const perPage = payload.perPage ?? DEFAULT_PER_PAGE;
+        const sort = parseSort(payload.sort);
+        const includeTrashed = payload.status === "trashed";
 
-        const query = Order.query().whereNull("orders.deleted_at");
+        const query = Order.query();
+        if (!includeTrashed) query.whereNull("orders.deleted_at");
+        else query.whereNotNull("orders.deleted_at");
 
-        if (payload.status) query.where("status", payload.status);
+        if (payload.status && payload.status !== "trashed") query.where("status", payload.status);
         if (payload.customer_id !== undefined) query.where("customer_id", payload.customer_id);
         if (payload.created_via) query.where("created_via", payload.created_via);
+        if (payload.source && payload.source.length > 0) query.whereIn("created_via", payload.source);
+        if (payload.payment && payload.payment.length > 0) query.whereIn("payment_method_code_snapshot", payload.payment);
+        if (payload.country && payload.country.length > 0) {
+            const upper = payload.country.map((code) => code.toUpperCase());
+            query.whereExists((sub) => {
+                sub.from("order_addresses")
+                    .whereRaw('"order_addresses"."order_id" = "orders"."id"')
+                    .where("kind", "billing")
+                    .whereIn(db.raw('UPPER("order_addresses"."country")') as unknown as string, upper);
+            });
+        }
         if (payload.search) {
             const needle = `%${payload.search.toLowerCase()}%`;
             const numeric = Number(payload.search);
@@ -53,7 +70,11 @@ export default class AdminOrdersController {
         if (payload.after) query.where("created_at", ">=", payload.after);
         if (payload.before) query.where("created_at", "<=", payload.before);
 
-        const paginator = await query.orderBy("id", "desc").paginate(page, perPage);
+        query.preload("lineItems").preload("couponLines");
+        query.orderBy(sort.column, sort.direction);
+        if (sort.column !== "id") query.orderBy("id", "desc");
+
+        const paginator = await query.paginate(page, perPage);
         const meta = paginator.getMeta();
 
         return {
@@ -65,6 +86,38 @@ export default class AdminOrdersController {
                 lastPage: meta.lastPage,
             },
         };
+    }
+
+    /**
+     * Grouped status counts used by the admin Orders tab strip. Single SQL pass — one row per status
+     * across the entire `orders` table (excluding soft-deleted rows, with `trashed` as the
+     * deleted-bucket aggregate). Returned as `{ all, draft, pending, on_hold, processing, completed,
+     * cancelled, refunded, failed, trashed }`.
+     */
+    async counts(ctx: HttpContext) {
+        const liveRows = (await db
+            .from("orders")
+            .whereNull("deleted_at")
+            .groupBy("status")
+            .select("status")
+            .count("* as count")) as {
+            status: string;
+            count: string | number;
+        }[];
+        const trashedRow = (await db.from("orders").whereNotNull("deleted_at").count("* as count").first()) as
+            | { count: string | number }
+            | undefined;
+
+        const counts: Record<string, number> = { all: 0, trashed: Number(trashedRow?.count ?? 0) };
+        for (const status of ORDER_STATUS_VALUES) counts[status] = 0;
+        for (const row of liveRows) {
+            const status = String(row.status);
+            counts[status] = Number(row.count);
+            counts.all += Number(row.count);
+        }
+
+        ctx.response.header("cache-control", "private, max-age=10");
+        return { data: counts };
     }
 
     async show(ctx: HttpContext) {
@@ -168,6 +221,71 @@ export default class AdminOrdersController {
         return ctx.response.noContent();
     }
 
+    /**
+     * Marks a processing order as shipped — stamps `date_completed_at`, persists tracking metadata
+     * on `attributes.shipping`, transitions the order to `completed`, and queues a customer email
+     * (currently a structured log line until the mailer ships). Re-runs are idempotent: a tracking
+     * update on an already-shipped order overwrites the metadata without re-triggering the
+     * transition or the email.
+     */
+    async markShipped(ctx: HttpContext) {
+        const order = await this.findOrFail(ctx.params.id);
+        const payload = await ctx.request.validateUsing(adminOrderMarkShippedValidator);
+        const alreadyShipped = order.status === OrderStatus.Completed;
+
+        const shippingAttr = {
+            tracking_number: payload.tracking_number ?? null,
+            tracking_url: payload.tracking_url ?? null,
+            carrier: payload.carrier ?? null,
+            shipped_at: alreadyShipped
+                ? (((order.attributes as Record<string, unknown>)?.shipping as Record<string, unknown> | undefined)?.shipped_at ??
+                  DateTime.utc().toISO())
+                : DateTime.utc().toISO(),
+        };
+        order.attributes = { ...((order.attributes as Record<string, unknown>) ?? {}), shipping: shippingAttr };
+        await order.save();
+
+        if (!alreadyShipped && order.status === OrderStatus.Processing) {
+            await orderStateMachine.transition(order, OrderStatus.Completed, {
+                actor: ctx.auth.user,
+                reason: payload.tracking_number ? `Shipped — ${payload.tracking_number}` : "Marked shipped",
+            });
+            if (payload.notify_customer !== false) {
+                logger.info(
+                    {
+                        order_id: Number(order.id),
+                        to: order.billingEmail,
+                        tracking_number: payload.tracking_number ?? null,
+                    },
+                    "order.shipping.email_queued (stub)",
+                );
+            }
+        }
+
+        await order.refresh();
+        await this.loadForResponse(order);
+        return { data: new OrderTransformer(order).forAdmin() };
+    }
+
+    /**
+     * Re-sends the order confirmation email. No mailer is bound yet, so we just log a structured
+     * stub the way `order_notes_controller.store` does — the contract is established so the
+     * dispatcher can swap in once templates land. Returns 202 to advertise the async semantics.
+     */
+    async resendConfirmation(ctx: HttpContext) {
+        const order = await this.findOrFail(ctx.params.id);
+        logger.info(
+            {
+                order_id: Number(order.id),
+                to: order.billingEmail,
+                kind: "order_confirmation",
+            },
+            "order.confirmation.email_queued (stub)",
+        );
+        ctx.response.status(202);
+        return { data: { order_id: Number(order.id), queued: true } };
+    }
+
     async transitionStatus(ctx: HttpContext) {
         const order = await this.findOrFail(ctx.params.id);
         const payload = await ctx.request.validateUsing(adminOrderStatusValidator);
@@ -220,6 +338,7 @@ export default class AdminOrdersController {
     }
 
     private async writeAddress(
+        // biome-ignore lint/suspicious/noExplicitAny: Lucid's TransactionClientContract has open generics that don't simplify here; the writer only uses .from()/.where()/.insert() so the loose type is safe.
         trx: any,
         order: Order,
         kind: "billing" | "shipping",
@@ -278,5 +397,35 @@ export default class AdminOrdersController {
         await order.load("shippingLines");
         await order.load("taxLines");
         await order.load("statusHistory");
+        await order.load("couponLines");
+        await order.load("feeLines");
+        await order.load("meta");
     }
 }
+
+/**
+ * Maps the wire `sort=` field (e.g. `date`, `-total`, `order`) to a `(column, direction)` pair
+ * the query builder understands. Hyphen prefix → descending. Unknown columns fall back to
+ * `(id, desc)` so a stale URL parameter never throws.
+ */
+function parseSort(raw: string | null | undefined): { column: string; direction: "asc" | "desc" } {
+    if (typeof raw !== "string" || raw.length === 0) return { column: "id", direction: "desc" };
+    const direction = raw.startsWith("-") ? "desc" : "asc";
+    const key = raw.replace(/^-/, "");
+    const column = SORT_COLUMN_MAP[key];
+    if (column === undefined) return { column: "id", direction: "desc" };
+    return { column, direction };
+}
+
+const SORT_COLUMN_MAP: Record<string, string> = {
+    id: "id",
+    order: "order_number",
+    order_number: "order_number",
+    date: "created_at",
+    created_at: "created_at",
+    total: "grand_total",
+    grand_total: "grand_total",
+    status: "status",
+    paid: "date_paid_at",
+    completed: "date_completed_at",
+};

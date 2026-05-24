@@ -1,0 +1,42 @@
+operationId: adminOrderAddLineItem
+summary: Append a line item to an order (admin)
+description: >
+    Snapshots the product (name, SKU, tax class, price) onto a new `order_line_items` row, then
+    re-runs the simple line-sum recalculation against the order's totals. Use
+    `price_override_minor` to capture a one-off negotiated price; otherwise the variation /
+    product `regular_price` is taken.
+tags: [Admin / Orders]
+
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [product_id, quantity]
+                properties:
+                    product_id: { type: integer }
+                    variation_id: { type: [integer, "null"] }
+                    quantity: { type: integer, minimum: 1, maximum: 10000 }
+                    price_override_minor: { type: [integer, "null"], minimum: 0 }
+
+responses:
+    "201":
+        description: Updated order envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

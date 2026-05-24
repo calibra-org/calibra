@@ -7,6 +7,27 @@
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
+export class AdminAuditLogSchema extends BaseModel {
+  static $columns = ['action', 'actorUserId', 'entityId', 'entityKind', 'id', 'ipAddress', 'occurredAt', 'payload'] as const
+  $columns = AdminAuditLogSchema.$columns
+  @column()
+  declare action: string
+  @column()
+  declare actorUserId: bigint | number | null
+  @column()
+  declare entityId: bigint | number | null
+  @column()
+  declare entityKind: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare ipAddress: string | null
+  @column.dateTime()
+  declare occurredAt: DateTime
+  @column()
+  declare payload: any
+}
+
 export class AuthAccessTokenSchema extends BaseModel {
   static $columns = ['abilities', 'createdAt', 'expiresAt', 'hash', 'id', 'lastUsedAt', 'name', 'tokenableId', 'type', 'updatedAt'] as const
   $columns = AuthAccessTokenSchema.$columns
@@ -307,6 +328,25 @@ export class CustomerDownloadSchema extends BaseModel {
   declare updatedAt: DateTime
 }
 
+export class CustomerImpersonationEventSchema extends BaseModel {
+  static $columns = ['customerId', 'endedAt', 'id', 'impersonatorUserId', 'ipAddress', 'startedAt', 'userAgent'] as const
+  $columns = CustomerImpersonationEventSchema.$columns
+  @column()
+  declare customerId: bigint | number
+  @column.dateTime()
+  declare endedAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare impersonatorUserId: bigint | number
+  @column()
+  declare ipAddress: string | null
+  @column.dateTime()
+  declare startedAt: DateTime
+  @column()
+  declare userAgent: string | null
+}
+
 export class CustomerIranProfileSchema extends BaseModel {
   static $columns = ['attributes', 'corporateNationalId', 'createdAt', 'customerId', 'economicCode', 'legalCompanyNameFa', 'nationalId', 'updatedAt', 'vatTaxpayerStatus'] as const
   $columns = CustomerIranProfileSchema.$columns
@@ -330,9 +370,155 @@ export class CustomerIranProfileSchema extends BaseModel {
   declare vatTaxpayerStatus: string | null
 }
 
+export class CustomerMarketingConsentHistorySchema extends BaseModel {
+  static $columns = ['actorUserId', 'channel', 'customerId', 'id', 'occurredAt', 'optedIn', 'source'] as const
+  $columns = CustomerMarketingConsentHistorySchema.$columns
+  @column()
+  declare actorUserId: bigint | number | null
+  @column()
+  declare channel: string
+  @column()
+  declare customerId: bigint | number
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime()
+  declare occurredAt: DateTime
+  @column()
+  declare optedIn: boolean
+  @column()
+  declare source: string | null
+}
+
+export class CustomerMarketingPrefSchema extends BaseModel {
+  static $columns = ['customerId', 'emailOptIn', 'emailOptInAt', 'emailOptInSource', 'phoneCallOptIn', 'phoneCallOptInAt', 'phoneCallOptInSource', 'smsOptIn', 'smsOptInAt', 'smsOptInSource', 'updatedAt'] as const
+  $columns = CustomerMarketingPrefSchema.$columns
+  @column({ isPrimary: true })
+  declare customerId: bigint | number
+  @column()
+  declare emailOptIn: boolean
+  @column.dateTime()
+  declare emailOptInAt: DateTime | null
+  @column()
+  declare emailOptInSource: string | null
+  @column()
+  declare phoneCallOptIn: boolean
+  @column.dateTime()
+  declare phoneCallOptInAt: DateTime | null
+  @column()
+  declare phoneCallOptInSource: string | null
+  @column()
+  declare smsOptIn: boolean
+  @column.dateTime()
+  declare smsOptInAt: DateTime | null
+  @column()
+  declare smsOptInSource: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CustomerMergeHistorySchema extends BaseModel {
+  static $columns = ['actorUserId', 'id', 'mergedCustomerId', 'occurredAt', 'primaryCustomerId', 'snapshot', 'strategy'] as const
+  $columns = CustomerMergeHistorySchema.$columns
+  @column()
+  declare actorUserId: bigint | number | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare mergedCustomerId: bigint | number
+  @column.dateTime()
+  declare occurredAt: DateTime
+  @column()
+  declare primaryCustomerId: bigint | number
+  @column()
+  declare snapshot: any
+  @column()
+  declare strategy: any
+}
+
+export class CustomerNoteSchema extends BaseModel {
+  static $columns = ['authorUserId', 'body', 'createdAt', 'customerId', 'id', 'updatedAt'] as const
+  $columns = CustomerNoteSchema.$columns
+  @column()
+  declare authorUserId: bigint | number | null
+  @column()
+  declare body: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare customerId: bigint | number
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class CustomerSegmentSchema extends BaseModel {
+  static $columns = ['createdAt', 'filters', 'id', 'isPinned', 'lastUsedAt', 'name', 'updatedAt', 'userId'] as const
+  $columns = CustomerSegmentSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare filters: any
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare isPinned: boolean
+  @column.dateTime()
+  declare lastUsedAt: DateTime | null
+  @column()
+  declare name: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: bigint | number
+}
+
+export class CustomerStatusHistorySchema extends BaseModel {
+  static $columns = ['actorUserId', 'customerId', 'fromStatus', 'id', 'occurredAt', 'reason', 'toStatus'] as const
+  $columns = CustomerStatusHistorySchema.$columns
+  @column()
+  declare actorUserId: bigint | number | null
+  @column()
+  declare customerId: bigint | number
+  @column()
+  declare fromStatus: string | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime()
+  declare occurredAt: DateTime
+  @column()
+  declare reason: string | null
+  @column()
+  declare toStatus: string
+}
+
+export class CustomerTagPivotSchema extends BaseModel {
+  static $columns = ['createdAt', 'customerId', 'tagId'] as const
+  $columns = CustomerTagPivotSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare customerId: bigint | number
+  @column()
+  declare tagId: bigint | number
+}
+
+export class CustomerTagSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'name'] as const
+  $columns = CustomerTagSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare name: string
+}
+
 export class CustomerSchema extends BaseModel {
-  static $columns = ['attributes', 'countryDefault', 'createdAt', 'deletedAt', 'firstName', 'id', 'isPayingCustomer', 'lastName', 'phone', 'updatedAt', 'userId'] as const
+  static $columns = ['acquisitionChannel', 'attributes', 'countryDefault', 'createdAt', 'deletedAt', 'firstName', 'id', 'isPayingCustomer', 'lastName', 'lastSeenAt', 'phone', 'status', 'updatedAt', 'userId'] as const
   $columns = CustomerSchema.$columns
+  @column()
+  declare acquisitionChannel: string | null
   @column()
   declare attributes: any
   @column()
@@ -349,8 +535,12 @@ export class CustomerSchema extends BaseModel {
   declare isPayingCustomer: boolean
   @column()
   declare lastName: string
+  @column.dateTime()
+  declare lastSeenAt: DateTime | null
   @column()
   declare phone: string | null
+  @column()
+  declare status: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -641,6 +831,23 @@ export class OrderLineItemSchema extends BaseModel {
   declare updatedAt: DateTime
   @column()
   declare variationId: bigint | number | null
+}
+
+export class OrderMetaSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'key', 'orderId', 'updatedAt', 'value'] as const
+  $columns = OrderMetaSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare key: string
+  @column()
+  declare orderId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare value: string
 }
 
 export class OrderNoteSchema extends BaseModel {

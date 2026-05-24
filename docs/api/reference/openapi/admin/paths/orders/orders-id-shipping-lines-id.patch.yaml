@@ -1,0 +1,32 @@
+operationId: adminOrderUpdateShippingLine
+summary: Update a shipping line (admin)
+description: Updates carrier code, title, or cost on a shipping line.
+tags: [Admin / Orders]
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: lineId, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    method_code: { type: string, minLength: 1, maxLength: 80 }
+                    title: { type: string, minLength: 1, maxLength: 255 }
+                    total_minor: { type: integer, minimum: 0 }
+                    tax_class_id: { type: [integer, "null"] }
+responses:
+    "200":
+        description: Updated order envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

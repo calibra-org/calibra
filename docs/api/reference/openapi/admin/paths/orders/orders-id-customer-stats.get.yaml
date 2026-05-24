@@ -1,0 +1,27 @@
+operationId: adminOrderCustomerStats
+summary: Customer lifetime stats for this order's customer (admin)
+description: >
+    Returns lifetime order count, lifetime revenue, and AOV for the order's customer. When the
+    order has no customer (guest checkout), every field is `0`. Cached 60s.
+tags: [Admin / Orders]
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Customer lifetime stats.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [lifetime_order_count, lifetime_revenue_minor, average_order_value_minor]
+                            properties:
+                                lifetime_order_count: { type: integer }
+                                lifetime_revenue_minor: { type: integer }
+                                average_order_value_minor: { type: integer }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

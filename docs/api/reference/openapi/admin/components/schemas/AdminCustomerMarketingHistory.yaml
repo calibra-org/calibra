@@ -1,0 +1,21 @@
+title: AdminCustomerMarketingHistory
+description: Single consent history row — one per channel flip.
+type: object
+properties:
+    id: { type: string }
+    customer_id: { type: string }
+    channel:
+        type: string
+        enum: [email, sms, phone]
+    opted_in: { type: boolean }
+    source: { type: [string, "null"] }
+    actor:
+        anyOf:
+            - type: "null"
+            - type: object
+              properties:
+                  id: { type: string }
+                  email: { type: string }
+              required: [id, email]
+    occurred_at: { type: [string, "null"], format: date-time }
+required: [id, customer_id, channel, opted_in]

@@ -1,0 +1,48 @@
+operationId: adminCustomerConvertToAccount
+summary: Convert a guest customer to a full account (admin)
+description: >
+    Links a guest customer (`user_id IS NULL`) to a freshly-created user. Either provide a
+    `password` directly, or `send_password_reset_email: true` to mint a reset token (storefront
+    flow). 409 when the customer already has a linked user, 422 when neither password nor
+    send_password_reset_email is given.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [email]
+                properties:
+                    email: { type: string, format: email }
+                    password: { type: string, minLength: 8, maxLength: 128 }
+                    send_password_reset_email: { type: boolean }
+responses:
+    "200":
+        description: Account created and linked.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            allOf:
+                                - $ref: "../../components/schemas/AdminCustomer.yaml"
+                                - type: object
+                                  properties:
+                                      reset_token:
+                                          type: [string, "null"]
+                                          description: Dev-only echo of the password-reset token, when `send_password_reset_email=true`.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "409":
+        description: Customer already linked to an account.
+        content:
+            application/json:
+                schema: { $ref: "../../../common/components/schemas/BasicMessage.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

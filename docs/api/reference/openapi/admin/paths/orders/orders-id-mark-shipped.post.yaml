@@ -1,0 +1,46 @@
+operationId: adminOrderMarkShipped
+summary: Mark an order as shipped (admin)
+description: >
+    Stamps tracking metadata on the order's `attributes.shipping` blob and transitions a
+    `processing` order to `completed`. Idempotent — a tracking update against an already-shipped
+    order overwrites metadata without re-triggering the transition or the email. Sends a
+    customer notification unless `notify_customer` is `false`.
+tags: [Admin / Orders]
+
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: false
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    tracking_number: { type: [string, "null"], maxLength: 120 }
+                    tracking_url: { type: [string, "null"], format: uri, maxLength: 500 }
+                    carrier: { type: [string, "null"], maxLength: 80 }
+                    notify_customer: { type: boolean, default: true }
+
+responses:
+    "200":
+        description: Updated order envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

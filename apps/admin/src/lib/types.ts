@@ -175,6 +175,28 @@ export interface AdminOrderTaxLine {
     total: MoneyMinor;
 }
 
+export interface AdminOrderFeeLine {
+    id: number;
+    name: string;
+    total: MoneyMinor;
+    totalTax: MoneyMinor;
+    taxable: boolean;
+    taxClassId: number | null;
+}
+
+export type AdminOrderSource = "web" | "admin" | "api" | "import" | "checkout-block" | "checkout" | null;
+
+export type OrderRiskFlag = "high_value" | "shipping_mismatch" | "failed_payment" | (string & {});
+
+export type OrderCreatedVia = "checkout" | "admin" | "api" | "import" | (string & {});
+
+export interface AdminOrderShippingInfo {
+    trackingNumber: string | null;
+    trackingUrl: string | null;
+    carrier: string | null;
+    shippedAt: string | null;
+}
+
 export interface AdminOrder {
     id: number;
     orderNumber: number;
@@ -190,18 +212,35 @@ export interface AdminOrder {
     shippingTotal: MoneyMinor;
     discountTotal: MoneyMinor;
     taxTotal: MoneyMinor;
+    feesTotal: MoneyMinor;
     paymentMethodTitle: LocalizedString;
     createdAt: string;
+    updatedAt: string | null;
     paidAt: string | null;
     completedAt: string | null;
+    createdVia: OrderCreatedVia;
+    source: AdminOrderSource;
+    ipAddress: string | null;
+    userAgent: string | null;
+    referrer: string | null;
+    isLocked: boolean;
+    unlockOverride: boolean;
+    meta: Record<string, string>;
+    metaVisible: Record<string, string>;
+    metaHidden: Record<string, string>;
+    itemCount: number;
+    couponCodes: string[];
+    riskFlags: OrderRiskFlag[];
     billingAddress: AdminOrderAddress;
     shippingAddress: AdminOrderAddress;
     lineItems: AdminOrderLineItem[];
     shippingLines: AdminOrderShippingLine[];
+    feeLines: AdminOrderFeeLine[];
     couponLines: AdminOrderCouponLine[];
     taxLines: AdminOrderTaxLine[];
     history: AdminOrderStatusHistoryEntry[];
     notes: AdminOrderNote[];
+    shippingInfo: AdminOrderShippingInfo | null;
 }
 
 export interface AdminRefund {
@@ -243,6 +282,21 @@ export interface AdminCustomerDownload {
     downloadsUsed: number;
 }
 
+export type AdminCustomerStatus = "active" | "suspended" | "deleted";
+
+export interface AdminCustomerMarketingPrefs {
+    emailOptIn: boolean;
+    emailOptInAt: string | null;
+    emailOptInSource: string | null;
+    smsOptIn: boolean;
+    smsOptInAt: string | null;
+    smsOptInSource: string | null;
+    phoneCallOptIn: boolean;
+    phoneCallOptInAt: string | null;
+    phoneCallOptInSource: string | null;
+    updatedAt: string | null;
+}
+
 export interface AdminCustomer {
     id: number;
     userId: number | null;
@@ -253,12 +307,105 @@ export interface AdminCustomer {
     nationalId: string | null;
     companyName: string | null;
     isPayingCustomer: boolean;
+    status: AdminCustomerStatus;
+    hasAccount: boolean;
+    /** Driven from the linked auth user (`User.emailVerifiedAt`); proxied here for the list page status pill. */
+    emailVerified: boolean;
+    acquisitionChannel: string | null;
+    lastSeenAt: string | null;
+    tags: string[];
+    /** Lifetime metrics from the stats aggregate query. Zero when no orders. */
     ordersCount: number;
     totalSpent: MoneyMinor;
+    averageOrderValue: MoneyMinor;
     lastOrderAt: string | null;
+    firstOrderAt: string | null;
+    daysSinceLastOrder: number | null;
+    addressesCount: number;
+    notesCount: number;
     createdAt: string;
     addresses: AdminCustomerAddress[];
     downloads: AdminCustomerDownload[];
+    marketingPrefs?: AdminCustomerMarketingPrefs;
+}
+
+export interface AdminCustomerCounts {
+    all: number;
+    accountHolders: number;
+    guest: number;
+    bigSpenders: number;
+    new30d: number;
+    inactive180d: number;
+    noAddress: number;
+    trashed: number;
+    summary: {
+        avgOrderCount: number;
+        avgLifetimeSpend: MoneyMinor;
+        avgAov: MoneyMinor;
+        pctWithAccount: number;
+    };
+}
+
+export interface AdminCustomerStatsDetail {
+    lifetimeOrderCount: number;
+    lifetimeSpend: MoneyMinor;
+    averageOrderValue: MoneyMinor;
+    lastOrderAt: string | null;
+    firstOrderAt: string | null;
+    daysSinceLastOrder: number | null;
+    monthlySpendSeries: { month: string; amount: MoneyMinor }[];
+    favoriteProductId: number | null;
+}
+
+export interface AdminCustomerNote {
+    id: number;
+    customerId: number;
+    body: string;
+    authorId: number | null;
+    authorEmail: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface AdminCustomerTagRow {
+    id: number;
+    name: string;
+    createdAt: string | null;
+}
+
+export interface AdminCustomerSegment {
+    id: number;
+    name: string;
+    filters: Record<string, unknown>;
+    isPinned: boolean;
+    createdAt: string | null;
+    updatedAt: string | null;
+    lastUsedAt: string | null;
+}
+
+export interface AdminCustomerStatusHistory {
+    id: number;
+    fromStatus: AdminCustomerStatus | null;
+    toStatus: AdminCustomerStatus;
+    reason: string | null;
+    actorEmail: string | null;
+    occurredAt: string;
+}
+
+export interface AdminCustomerMarketingHistory {
+    id: number;
+    channel: "email" | "sms" | "phone";
+    optedIn: boolean;
+    source: string | null;
+    actorEmail: string | null;
+    occurredAt: string;
+}
+
+export interface AdminCustomerTimelineEntry {
+    kind: "order" | "note" | "status" | "marketing" | "impersonation";
+    occurredAt: string;
+    payload: Record<string, unknown>;
+    actor: { id: string; email: string } | null;
 }
 
 export type CouponDiscountType = "percent" | "fixed_cart" | "fixed_product" | "free_shipping";

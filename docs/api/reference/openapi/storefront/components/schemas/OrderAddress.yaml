@@ -21,5 +21,8 @@ properties:
     country: { type: [string, "null"], description: "ISO-3166-1 alpha-2." }
     phone: { type: [string, "null"] }
     email: { type: [string, "null"], format: email }
+    national_id:
+        type: [string, "null"]
+        description: Iran national-ID surfaced from the row's `attributes` JSON when present.
 required:
     - kind

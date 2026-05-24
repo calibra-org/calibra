@@ -1,0 +1,36 @@
+operationId: adminOrdersCounts
+summary: Order counts by status (admin)
+description: >
+    Single grouped query returning the number of non-deleted orders per status, plus an `all`
+    aggregate and a `trashed` bucket sourced from soft-deleted rows. Powers the admin Orders
+    tab strip; the response is short-cached (10 s) so a heavy filter switch doesn't re-hit the
+    DB.
+tags: [Admin / Orders]
+
+responses:
+    "200":
+        description: Grouped status counts.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [all, trashed, draft, pending, on_hold, processing, completed, cancelled, refunded, failed]
+                            properties:
+                                all: { type: integer }
+                                draft: { type: integer }
+                                pending: { type: integer }
+                                on_hold: { type: integer }
+                                processing: { type: integer }
+                                completed: { type: integer }
+                                cancelled: { type: integer }
+                                refunded: { type: integer }
+                                failed: { type: integer }
+                                trashed: { type: integer }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"

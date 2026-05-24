@@ -1,0 +1,22 @@
+title: AdminCustomerNote
+description: >
+    Internal-only customer note. The `author` is the admin who wrote it (or `null` if the user
+    was later deleted). Notes are never surfaced to the storefront — they live entirely in the
+    admin workbench.
+type: object
+properties:
+    id: { type: string }
+    customer_id: { type: string }
+    body: { type: string }
+    author:
+        anyOf:
+            - type: "null"
+            - type: object
+              properties:
+                  id: { type: string }
+                  email: { type: string }
+              required: [id, email]
+    author_user_id: { type: [string, "null"] }
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
+required: [id, customer_id, body]

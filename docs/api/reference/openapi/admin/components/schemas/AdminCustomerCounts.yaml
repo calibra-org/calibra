@@ -1,0 +1,34 @@
+title: AdminCustomerCounts
+description: >
+    Tab counts + footer summary aggregates returned by `GET /api/v1/admin/customers/counts`. The
+    big_spenders count uses the 90th percentile of per-customer paid spend as its threshold.
+type: object
+properties:
+    all: { type: integer }
+    account_holders: { type: integer }
+    guest: { type: integer }
+    big_spenders: { type: integer }
+    new_30d: { type: integer }
+    inactive_180d: { type: integer }
+    no_address: { type: integer }
+    trashed: { type: integer }
+    summary:
+        type: object
+        properties:
+            avg_order_count: { type: number }
+            avg_lifetime_spend_minor: { type: integer }
+            avg_aov_minor: { type: integer }
+            pct_with_account:
+                type: number
+                description: Percentage (0–100) of customers that have an `auth.users` row attached.
+        required: [avg_order_count, avg_lifetime_spend_minor, avg_aov_minor, pct_with_account]
+required:
+    - all
+    - account_holders
+    - guest
+    - big_spenders
+    - new_30d
+    - inactive_180d
+    - no_address
+    - trashed
+    - summary

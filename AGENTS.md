@@ -72,6 +72,31 @@ A second PreToolUse hook, `enforce-pnpm.sh`, blocks `npm install` / `npm i` / `n
 - **API backend** (AdonisJS) reads the active locale from the `Accept-Language` request header (set by the SDK from `useLocale()`). Translation catalogs live in `apps/api/resources/lang/{en,fa}/messages.json`. Code, logs, and schema stay in English; only user-facing strings are translated.
 - **The SDK** (`@calibra/sdk`) forwards the locale automatically when the consuming app passes `locale: useLocale()` to `createApiClient`. Server-side wrappers (`apps/web/src/lib/api.ts`, `apps/admin/src/lib/api.ts`) do this already — use them instead of constructing the client manually.
 
+## Settle-then-persist mutations
+
+For inputs the operator manipulates conversationally — toggles, sliders, status dropdowns, anything where a click on the dot is a transient *thought*, not a *decision* — write through the **settle-then-persist** pattern instead of firing one request per interaction. Two layers cooperate:
+
+**Frontend** — `apps/admin/src/lib/queries/use-settle-mutation.ts`:
+
+```ts
+const { pending, isDebouncing, isSaving, setPending, flush } = useSettleMutation({
+    committedValue: prefs.emailOptIn,
+    mutate: (next) => update.mutateAsync({ channel: "email", opt_in: next }),
+});
+
+<Switch checked={pending} onCheckedChange={() => setPending(!pending)} />
+```
+
+The hook keeps an optimistic `pending` value that renders instantly. Each `setPending` resets a 1200ms quiet-timer; the network call only fires when the operator stops fiddling **and** the final value differs from `committedValue`. Toggling on→off→on inside the window writes zero requests, not three.
+
+**Backend** — same-value PATCH is a no-op (no history row, no audit row, returns 200 with the current resource). The reference implementation is `apps/api/app/controllers/admin/customer_marketing_controller.ts#update`: it loads the prefs row, compares against the incoming value, and returns early when they match before any side effect. Apply the same shape (`changed: boolean` from the transaction → conditional history + audit) anywhere a flip-back-to-original shouldn't pollute the timeline.
+
+**When to use it**: toggles, switches, segment radios, status dropdowns, sliders, anything that touches `*_history` / audit tables and would be polluted by exploratory clicks. The reference UI is [`apps/admin/src/views/customers/detail/marketing-prefs-card.tsx`](apps/admin/src/views/customers/detail/marketing-prefs-card.tsx).
+
+**When NOT to use it**: discrete commits (a "Save" button, a form submit, an explicit "Add note" / "Delete" action). Those should write immediately so the operator gets a clear acknowledgment. Mid-typing input fields don't need this either — `react-hook-form` + a save-on-blur pattern already debounces correctly without a stateful hook.
+
+**Why both layers**: the frontend collapses noise within one operator's session; the backend collapses noise across separate requests (a second admin operator flipping the same toggle, a refetch that lands a stale value, an automated reconciliation job). Skipping either layer leaks rows.
+
 ## Commit messages
 
 Follow Conventional Commits. Default every commit message to **subject-only**; a body must earn its place. See [`.agents/skills/generate-commit-message/SKILL.md`](.agents/skills/generate-commit-message/SKILL.md) for the full guide.

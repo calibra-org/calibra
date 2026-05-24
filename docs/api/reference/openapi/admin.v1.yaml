@@ -83,6 +83,11 @@ paths:
             $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
             $ref: "./admin/paths/orders/orders.post.yaml"
+    /api/v1/admin/orders/counts:
+        get:
+            $ref: "./admin/paths/orders/orders-counts.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/orders/batch:
         post:
             $ref: "./admin/paths/orders/orders-batch.post.yaml"
@@ -100,6 +105,60 @@ paths:
     /api/v1/admin/orders/{id}/status:
         post:
             $ref: "./admin/paths/orders/orders-id-status.post.yaml"
+    /api/v1/admin/orders/{id}/mark-shipped:
+        post:
+            $ref: "./admin/paths/orders/orders-id-mark-shipped.post.yaml"
+    /api/v1/admin/orders/{id}/resend-confirmation:
+        post:
+            $ref: "./admin/paths/orders/orders-id-resend-confirmation.post.yaml"
+    /api/v1/admin/orders/{id}/addresses/{kind}:
+        patch:
+            $ref: "./admin/paths/orders/orders-id-addresses-kind.patch.yaml"
+    /api/v1/admin/orders/{id}/line-items:
+        post:
+            $ref: "./admin/paths/orders/orders-id-line-items.post.yaml"
+    /api/v1/admin/orders/{id}/line-items/{lineId}:
+        patch:
+            $ref: "./admin/paths/orders/orders-id-line-items-id.patch.yaml"
+        delete:
+            $ref: "./admin/paths/orders/orders-id-line-items-id.delete.yaml"
+    /api/v1/admin/orders/{id}/fee-lines:
+        post:
+            $ref: "./admin/paths/orders/orders-id-fee-lines.post.yaml"
+    /api/v1/admin/orders/{id}/fee-lines/{feeId}:
+        delete:
+            $ref: "./admin/paths/orders/orders-id-fee-lines-id.delete.yaml"
+    /api/v1/admin/orders/{id}/shipping-lines:
+        post:
+            $ref: "./admin/paths/orders/orders-id-shipping-lines.post.yaml"
+    /api/v1/admin/orders/{id}/shipping-lines/{lineId}:
+        patch:
+            $ref: "./admin/paths/orders/orders-id-shipping-lines-id.patch.yaml"
+        delete:
+            $ref: "./admin/paths/orders/orders-id-shipping-lines-id.delete.yaml"
+    /api/v1/admin/orders/{id}/coupons:
+        post:
+            $ref: "./admin/paths/orders/orders-id-coupons.post.yaml"
+    /api/v1/admin/orders/{id}/coupons/{code}:
+        delete:
+            $ref: "./admin/paths/orders/orders-id-coupons-code.delete.yaml"
+    /api/v1/admin/orders/{id}/recalculate-totals:
+        post:
+            $ref: "./admin/paths/orders/orders-id-recalculate-totals.post.yaml"
+    /api/v1/admin/orders/{id}/header:
+        patch:
+            $ref: "./admin/paths/orders/orders-id-header.patch.yaml"
+    /api/v1/admin/orders/{id}/meta:
+        patch:
+            $ref: "./admin/paths/orders/orders-id-meta.patch.yaml"
+    /api/v1/admin/orders/{id}/meta/{key}:
+        delete:
+            $ref: "./admin/paths/orders/orders-id-meta-key.delete.yaml"
+    /api/v1/admin/orders/{id}/customer-stats:
+        get:
+            $ref: "./admin/paths/orders/orders-id-customer-stats.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/orders/{order_id}/history:
         get:
             $ref: "./admin/paths/orders/orders-id-history.get.yaml"
@@ -164,6 +223,11 @@ paths:
             $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
             $ref: "./admin/paths/customers/customers.post.yaml"
+    /api/v1/admin/customers/counts:
+        get:
+            $ref: "./admin/paths/customers/customers-counts.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/customers/batch:
         post:
             $ref: "./admin/paths/customers/customers-batch.post.yaml"
@@ -178,11 +242,96 @@ paths:
             $ref: "./admin/paths/customers/customers-id.patch.yaml"
         delete:
             $ref: "./admin/paths/customers/customers-id.delete.yaml"
+    /api/v1/admin/customers/{id}/restore:
+        post:
+            $ref: "./admin/paths/customers/customers-id-restore.post.yaml"
+    /api/v1/admin/customers/{id}/stats:
+        get:
+            $ref: "./admin/paths/customers/customers-id-stats.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/customers/{id}/downloads:
         get:
             $ref: "./admin/paths/customers/customers-id-downloads.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/customers/{customer_id}/notes:
+        get:
+            $ref: "./admin/paths/customers/customers-notes.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/customers/customers-notes.post.yaml"
+    /api/v1/admin/customers/{customer_id}/notes/{id}:
+        patch:
+            $ref: "./admin/paths/customers/customers-notes-id.patch.yaml"
+        delete:
+            $ref: "./admin/paths/customers/customers-notes-id.delete.yaml"
+    /api/v1/admin/customers/{id}/tags:
+        post:
+            $ref: "./admin/paths/customers/customers-id-tags.post.yaml"
+    /api/v1/admin/customers/{id}/tags/{tagId}:
+        delete:
+            $ref: "./admin/paths/customers/customers-id-tags-tagId.delete.yaml"
+    /api/v1/admin/customer-tags:
+        get:
+            $ref: "./admin/paths/customers/customer-tags.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/customers/customer-tags.post.yaml"
+    /api/v1/admin/customer-tags/{id}:
+        delete:
+            $ref: "./admin/paths/customers/customer-tags-id.delete.yaml"
+    /api/v1/admin/customer-segments:
+        get:
+            $ref: "./admin/paths/customers/customer-segments.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/customers/customer-segments.post.yaml"
+    /api/v1/admin/customer-segments/{id}:
+        patch:
+            $ref: "./admin/paths/customers/customer-segments-id.patch.yaml"
+        delete:
+            $ref: "./admin/paths/customers/customer-segments-id.delete.yaml"
+    /api/v1/admin/customers/{id}/marketing:
+        get:
+            $ref: "./admin/paths/customers/customers-id-marketing.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./admin/paths/customers/customers-id-marketing.patch.yaml"
+    /api/v1/admin/customers/{id}/marketing/history:
+        get:
+            $ref: "./admin/paths/customers/customers-id-marketing-history.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/customers/{id}/status:
+        patch:
+            $ref: "./admin/paths/customers/customers-id-status.patch.yaml"
+    /api/v1/admin/customers/{id}/status-history:
+        get:
+            $ref: "./admin/paths/customers/customers-id-status-history.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/customers/{id}/convert-to-account:
+        post:
+            $ref: "./admin/paths/customers/customers-id-convert.post.yaml"
+    /api/v1/admin/customers/{id}/send-password-reset:
+        post:
+            $ref: "./admin/paths/customers/customers-id-password-reset.post.yaml"
+    /api/v1/admin/customers/{id}/impersonate:
+        post:
+            $ref: "./admin/paths/customers/customers-id-impersonate.post.yaml"
+    /api/v1/admin/customers/{id}/timeline:
+        get:
+            $ref: "./admin/paths/customers/customers-id-timeline.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/customers/merge:
+        post:
+            $ref: "./admin/paths/customers/customers-merge.post.yaml"
 
     /api/v1/admin/payment-gateways:
         get:

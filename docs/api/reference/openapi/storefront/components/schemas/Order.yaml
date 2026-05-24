@@ -26,6 +26,17 @@ properties:
     date_completed_at: { type: [string, "null"], format: date-time }
     created_at: { type: [string, "null"], format: date-time }
     updated_at: { type: [string, "null"], format: date-time }
+    customer_id: { type: [integer, "null"] }
+    customer_name: { type: string }
+    billing_email: { type: [string, "null"] }
+    payment_method_title: { type: [string, "null"] }
+    item_count: { type: integer }
+    coupon_codes:
+        type: array
+        items: { type: string }
+    risk_flags:
+        type: array
+        items: { type: string }
 required:
     - id
     - order_number

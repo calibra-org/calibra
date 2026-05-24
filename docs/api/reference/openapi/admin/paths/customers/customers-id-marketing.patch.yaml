@@ -1,0 +1,32 @@
+operationId: adminCustomerMarketingPatch
+summary: Toggle a marketing-channel opt-in (admin)
+description: Writes both the prefs row and a history row in a single transaction. `source` defaults to `admin`.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [channel, opt_in]
+                properties:
+                    channel: { type: string, enum: [email, sms, phone] }
+                    opt_in: { type: boolean }
+                    source: { type: string, maxLength: 64 }
+responses:
+    "200":
+        description: Marketing preferences after the toggle.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomerMarketingPref.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

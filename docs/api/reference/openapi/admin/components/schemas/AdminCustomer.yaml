@@ -13,8 +13,36 @@ allOf:
               anyOf:
                   - type: "null"
                   - $ref: "./UserAdmin.yaml"
+          tags:
+              type: array
+              description: Free-text tag names attached via `customer_tag_pivot`. Empty array when no tags assigned.
+              items: { type: string }
+          addresses_count: { type: [integer, "null"] }
+          notes_count: { type: [integer, "null"] }
+          lifetime_order_count:
+              type: integer
+              description: Count of orders in counted statuses (pending/on_hold/processing/completed/refunded). Drafts and cancelled/failed do not contribute.
+          lifetime_spend_minor:
+              type: integer
+              description: Sum of `grand_total` (minor units) across paid statuses (processing/completed/refunded).
+          average_order_value_minor:
+              type: integer
+              description: Rounded `lifetime_spend_minor / lifetime_order_count`. Zero when no orders.
+          last_order_at: { type: [string, "null"], format: date-time }
+          first_order_at: { type: [string, "null"], format: date-time }
+          days_since_last_order: { type: [integer, "null"] }
           profile_extensions:
               type: object
               description: Country-scoped extension rows. Today only `iran` is recognised. Omitted on list responses.
               properties:
                   iran: { $ref: "../../../common/components/schemas/IranAddressExtension.yaml" }
+          stats:
+              type: object
+              description: Lifetime-stats sub-envelope returned only on the detail endpoint.
+              properties:
+                  lifetime_order_count: { type: integer }
+                  lifetime_spend_minor: { type: integer }
+                  average_order_value_minor: { type: integer }
+                  last_order_at: { type: [string, "null"], format: date-time }
+                  first_order_at: { type: [string, "null"], format: date-time }
+                  days_since_last_order: { type: [integer, "null"] }

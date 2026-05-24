@@ -1,8 +1,9 @@
 title: AdminOrderDetail
 description: >
     Admin order detail payload. Matches `OrderTransformer.forAdmin()` exactly —
-    `forDetail()` plus `ip_address`, `user_agent`, and a (currently always-null)
-    `cart_hash` audit field. Money is integer Rial minor units.
+    `forDetail()` plus `ip_address`, `user_agent`, a (currently always-null)
+    `cart_hash` audit field, the resolved `source` enum, the `is_locked` flag,
+    and the split `meta` bags. Money is integer Rial minor units.
 allOf:
     - $ref: "../../../storefront/components/schemas/OrderDetail.yaml"
     - type: object
@@ -13,3 +14,22 @@ allOf:
           cart_hash:
               type: [string, "null"]
               description: Always null — the column is reserved for a future cart-anti-tamper check.
+          source:
+              type: [string, "null"]
+              description: Resolved channel that placed the order (`web`, `admin`, `api`, `import`, `checkout-block`, `checkout`).
+          referrer: { type: [string, "null"] }
+          is_locked:
+              type: boolean
+              description: True when the order is in a terminal status past the auto-lock window AND no override is set.
+          unlock_override:
+              type: boolean
+              description: True when an admin explicitly unlocked a terminal order.
+          meta:
+              type: object
+              additionalProperties: { type: string }
+          meta_visible:
+              type: object
+              additionalProperties: { type: string }
+          meta_hidden:
+              type: object
+              additionalProperties: { type: string }

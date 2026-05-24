@@ -1,0 +1,58 @@
+operationId: adminOrderUpdateAddress
+summary: Update billing or shipping address (admin)
+description: >
+    Replaces the full address row for the given `kind`. Email is honored only when `kind=billing`;
+    `customer_note` only when `kind=shipping`. National-ID is stored on the row's `attributes` JSON
+    bag. When the billing email changes, the order's `billing_email` column is updated in the same
+    transaction so list views stay consistent.
+tags: [Admin / Orders]
+
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    - name: kind
+      in: path
+      required: true
+      schema:
+          type: string
+          enum: [billing, shipping]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [first_name, last_name, address_line_1, city, country]
+                properties:
+                    first_name: { type: string, maxLength: 80 }
+                    last_name: { type: string, maxLength: 80 }
+                    company: { type: [string, "null"], maxLength: 200 }
+                    address_line_1: { type: string, maxLength: 255 }
+                    address_line_2: { type: [string, "null"], maxLength: 255 }
+                    city: { type: string, maxLength: 120 }
+                    region_id: { type: [integer, "null"] }
+                    region_text: { type: [string, "null"], maxLength: 200 }
+                    postcode: { type: [string, "null"], maxLength: 20 }
+                    country: { type: string, minLength: 2, maxLength: 2 }
+                    phone: { type: [string, "null"], maxLength: 32 }
+                    email: { type: [string, "null"], format: email, maxLength: 254 }
+                    national_id: { type: [string, "null"], maxLength: 20 }
+                    customer_note: { type: [string, "null"], maxLength: 2000 }
+
+responses:
+    "200":
+        description: Updated order envelope.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminOrderDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

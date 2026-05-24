@@ -29,6 +29,13 @@ export interface Resource<T> {
     data: T;
 }
 
+/**
+ * Adonis transformer types (`Item` / `Collection` / `Paginator`) carry three open generics for the
+ * model, transformer, and attribute shapes; constraining them here would require a full
+ * `<TModel extends LucidRow, TTransformer extends BaseTransformer<TModel>, …>` plumbing on every
+ * call site for zero behavior change. We keep the loose form deliberately and silence the rule.
+ */
+// biome-ignore lint/suspicious/noExplicitAny: open generics — see comment above.
 type Resolvable = Item<any, any, any> | Collection<any, any, any> | Paginator<any, any, any>;
 
 async function resolveResource(resource: Resolvable): Promise<unknown> {
@@ -37,18 +44,21 @@ async function resolveResource(resource: Resolvable): Promise<unknown> {
 }
 
 /** Wrap a single-resource transformer output in `{ data }`. */
+// biome-ignore lint/suspicious/noExplicitAny: see `Resolvable`.
 export async function resource<T>(item: Item<any, any, any>): Promise<Resource<T>> {
     const data = (await resolveResource(item)) as T;
     return { data };
 }
 
 /** Wrap a collection of transformer outputs in `{ data: T[] }`. */
+// biome-ignore lint/suspicious/noExplicitAny: see `Resolvable`.
 export async function collection<T>(coll: Collection<any, any, any>): Promise<{ data: T[] }> {
     const data = (await resolveResource(coll)) as T[];
     return { data };
 }
 
 /** Wrap a paginated transformer output in `{ data, meta }` matching the SDK envelope. */
+// biome-ignore lint/suspicious/noExplicitAny: see `Resolvable`.
 export async function paginated<T>(coll: Collection<any, any, any>, paginator: PaginatorLike): Promise<Paginated<T>> {
     const data = (await resolveResource(coll)) as T[];
     return {

@@ -1,0 +1,12 @@
+operationId: adminCustomerTagsDestroy
+summary: Delete a customer tag (admin)
+description: Cascades the pivot rows — every customer that had the tag loses it.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+responses:
+    "204": { description: Tag deleted. }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
