@@ -52,9 +52,9 @@ const CURRENCY_REGEX = new RegExp(
 
 /** Strip thousand separators (Persian `٬`, Arabic `،`, ASCII `,`, `'`, narrow + regular spaces). */
 export function stripThousandSeparators(value: string): string {
-    return value
-        .replace(/(\d)[٬،,'   ](\d)/g, "$1$2")
-        .replace(/(\d)[٬،,'   ](\d)/g, "$1$2");
+    const DIGIT = "[\\d۰-۹٠-٩]";
+    const re = new RegExp(`(${DIGIT})[\\u066C\\u060C,'   ](${DIGIT})`, "g");
+    return value.replace(re, "$1$2").replace(re, "$1$2");
 }
 
 /** Strip recognized currency symbols and 3-letter codes from a price-like string. */

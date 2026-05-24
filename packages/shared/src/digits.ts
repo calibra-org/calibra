@@ -44,15 +44,17 @@ export function toPersianDigits(value: string | number): string {
 }
 
 /**
- * Strip thousand separators that appear *between* digits — Persian `٬`, Arabic `،`, ASCII `,`, the
- * apostrophe-style `'`, and narrow / regular spaces. A separator at the start/end or between
- * non-digit characters is preserved (e.g. `"hello, world"` is left alone).
+ * Strip thousand separators that appear *between* digits — Persian `٬`, Arabic `،`,
+ * ASCII `,`, the apostrophe-style `'`, and narrow / regular spaces. A separator at the start/end
+ * or between non-digit characters is preserved (e.g. `"hello, world"` is left alone).
+ *
+ * `\d` in JavaScript only matches ASCII digits, so Persian (۰–۹) and Arabic-Indic (٠–٩) digits
+ * are added to the digit-anchor character class explicitly.
  */
 export function stripThousandSeparators(value: string): string {
-    return value.replace(/(\d)[٬،,'   ](\d)/g, "$1$2").replace(
-        /(\d)[٬،,'   ](\d)/g,
-        "$1$2",
-    );
+    const DIGIT = "[\\d۰-۹٠-٩]";
+    const re = new RegExp(`(${DIGIT})[\\u066C\\u060C,'\\u202F\\u00A0 ](${DIGIT})`, "g");
+    return value.replace(re, "$1$2").replace(re, "$1$2");
 }
 
 const CURRENCY_SYMBOLS = [

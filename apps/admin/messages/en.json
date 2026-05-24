@@ -107,6 +107,252 @@
         "viewAll": "View all",
         "comparedTo": "vs previous period"
     },
+    "ProductsImport": {
+        "title": "Import products from CSV",
+        "subtitle": "Import store products from a CSV or XLSX file, or update existing records.",
+        "backToProducts": "Back to products",
+        "steps": {
+            "aria": "Import steps",
+            "upload": "Upload CSV",
+            "mapping": "Map columns",
+            "importing": "Importing",
+            "done": "Done"
+        },
+        "common": {
+            "auto": "Auto",
+            "tab": "Tab"
+        },
+        "step1": {
+            "title": "Import products from a CSV file",
+            "subtitle": "Import store products from a CSV or XLSX file, or update existing records.",
+            "downloadTemplate": "Download template",
+            "history": "Import history",
+            "dropOrClick": "Drop the file here or click to browse",
+            "dropHere": "Drop the file here",
+            "pasteHint": "You can also paste CSV with Ctrl+V",
+            "accepted": "Accepted formats: CSV, TXT, XLSX  •  max {mb} MB",
+            "dropzoneAria": "File dropzone for product import",
+            "uploading": "Uploading ({percent}%)",
+            "uploadFailed": "File upload failed.",
+            "updateExisting": {
+                "label": "Update existing products",
+                "help": "Products whose SKU matches a row in the file will be updated. Products not in the file are not deleted."
+            },
+            "advanced": {
+                "title": "Advanced options",
+                "delimiter": "Delimiter",
+                "encoding": "Encoding"
+            }
+        },
+        "step2": {
+            "title": "Map CSV columns to product fields",
+            "subtitle": "Connect each CSV column to its matching product field. Leave columns you don't want to import set to \"Don't import\".",
+            "comingSoon": "Coming soon"
+        },
+        "mapping": {
+            "title": "Map CSV columns to product fields",
+            "subtitle": "Connect each CSV column to its matching product field. Leave columns you don't want to import set to \"Don't import\".",
+            "presetApplied": "Applied previous mapping «{name}» — click to change",
+            "columnHeader": "Column",
+            "destinationHeader": "Map to field",
+            "samplesLabel": "Samples",
+            "samplesEmpty": "(all values empty)",
+            "dontImport": "Don't import",
+            "searchField": "Search field…",
+            "noResults": "No matches.",
+            "preview": "Preview",
+            "rePreview": "Re-run preview",
+            "start": "Start import",
+            "previewFailed": "Preview failed.",
+            "startFailed": "Could not start import.",
+            "toolbar": {
+                "autoMap": "Auto-map all",
+                "clearAll": "Clear all mappings",
+                "dropUnrelated": "Drop unrelated columns"
+            },
+            "savePreset": {
+                "label": "Save as preset",
+                "placeholder": "Preset name"
+            }
+        },
+        "preview": {
+            "title": "Import preview",
+            "subtitle": "Simulation result over the uploaded file — nothing has changed in the database yet.",
+            "create": "Create",
+            "update": "Update",
+            "skip": "Skip",
+            "fail": "Failed",
+            "warnings": "Warnings",
+            "noCreate": "No new products will be created.",
+            "noUpdates": "No products will be updated.",
+            "noSkip": "No rows will be skipped.",
+            "noFail": "No failed rows.",
+            "noWarnings": "No warnings.",
+            "createSummary": "{count} new products will be created.",
+            "skipSummary": "{count} rows will be skipped.",
+            "rowLabel": "Row {n}",
+            "rowsLabel": "{n} rows",
+            "anomaly": {
+                "price_jump": "Unusual price increase",
+                "price_drop": "Unusual price drop",
+                "duplicate_sku_in_file": "Duplicate SKU in file",
+                "outlier_price": "Outlier price",
+                "missing_required_on_create": "Required field missing on create row",
+                "type_mismatch": "Column type mismatch"
+            }
+        },
+        "groups": {
+            "basic": "Basic",
+            "pricing": "Pricing",
+            "stock": "Stock",
+            "shipping": "Shipping",
+            "taxonomy": "Categories & tags",
+            "media": "Media",
+            "linked": "Linked products",
+            "attributes": "Attributes",
+            "seo": "SEO"
+        },
+        "fields": {
+            "sku.label": "SKU",
+            "name.label": "Name",
+            "type.label": "Type",
+            "status.label": "Status",
+            "short_description.label": "Short description",
+            "description.label": "Description",
+            "visibility.label": "Visibility",
+            "featured.label": "Featured",
+            "allow_reviews.label": "Allow reviews",
+            "purchase_note.label": "Purchase note",
+            "menu_order.label": "Menu order",
+            "regular_price.label": "Regular price",
+            "sale_price.label": "Sale price",
+            "sale_price_start.label": "Sale start",
+            "sale_price_end.label": "Sale end",
+            "tax_status.label": "Tax status",
+            "tax_class.label": "Tax class",
+            "manage_stock.label": "Manage stock",
+            "stock_quantity.label": "Stock quantity",
+            "stock_status.label": "Stock status",
+            "backorders_allowed.label": "Backorders",
+            "sold_individually.label": "Sold individually",
+            "weight.label": "Weight",
+            "length.label": "Length",
+            "width.label": "Width",
+            "height.label": "Height",
+            "shipping_class.label": "Shipping class",
+            "categories.label": "Categories",
+            "tags.label": "Tags",
+            "brand.label": "Brand",
+            "images.label": "Images",
+            "parent_sku.label": "Parent SKU",
+            "upsells.label": "Upsells",
+            "cross_sells.label": "Cross-sells",
+            "external_url.label": "External URL",
+            "button_text.label": "Button text"
+        },
+        "step3": {
+            "title": "Importing",
+            "inProgress": "Job {id} — status: {status}",
+            "backToList": "Back to products"
+        },
+        "step4": {
+            "title": "Summary",
+            "status": "Status",
+            "created": "Created",
+            "updated": "Updated",
+            "failed": "Failed",
+            "viewProducts": "View products",
+            "importAnother": "Import another file"
+        },
+        "importing": {
+            "title": "Importing",
+            "subtitle": "Your CSV is being processed.",
+            "processedOfTotal": "Processed: {processed} of {total}",
+            "slowChunk": "Processing row {row} — this may take a few seconds",
+            "created": "Created",
+            "updated": "Updated",
+            "skipped": "Skipped",
+            "failed": "Failed",
+            "cancel": "Cancel",
+            "background": "Continue in background",
+            "notificationAsk": "Allow notifications when the import finishes?",
+            "notificationDenied": "Notifications are blocked — enable them in your browser settings.",
+            "connection": {
+                "sse": "Live",
+                "polling": "Polling…",
+                "connecting": "Connecting…"
+            }
+        },
+        "done": {
+            "headline": {
+                "completed": "Import completed successfully",
+                "completed_with_errors": "Import finished with warnings",
+                "failed": "Import failed",
+                "cancelled": "Import cancelled",
+                "rolled_back": "This import was rolled back",
+                "queued": "Queued",
+                "validating": "Validating",
+                "running": "Running"
+            },
+            "status": {
+                "rolled_back": "Rolled back"
+            },
+            "totals": {
+                "totalRows": "Total rows in file",
+                "created": "Created",
+                "updated": "Updated",
+                "skipped": "Skipped (warnings)",
+                "failed": "Failed (errors)",
+                "newCategories": "New categories created",
+                "newTags": "New tags created",
+                "queuedImages": "Images queued for upload",
+                "duration": "Duration"
+            },
+            "severity": {
+                "error": "Error",
+                "warning": "Warning"
+            },
+            "rollback": {
+                "banner": "You can roll this import back for the next 24 hours",
+                "cta": "Roll back this import",
+                "afterMessage": "Rolled back at {at} by admin",
+                "failed": "Rollback failed."
+            },
+            "errors": {
+                "title": "Errors and warnings",
+                "loading": "Loading errors…",
+                "download": "Download error report (CSV)",
+                "retryAll": "Retry with edited values",
+                "retryRow": "Retry",
+                "retried": "Retried",
+                "rowLabel": "Row {n}"
+            },
+            "actions": {
+                "viewProducts": "View products",
+                "importAnother": "Import another file",
+                "history": "Import history"
+            },
+            "rollbackFailed": "Rollback failed."
+        },
+        "history": {
+            "title": "Product import history",
+            "subtitle": "Every import you've run. Download error reports or roll back recent imports here.",
+            "backToProducts": "Back to products",
+            "empty": "No imports yet.",
+            "col": {
+                "file": "File",
+                "date": "Date",
+                "status": "Status",
+                "created": "Created",
+                "updated": "Updated",
+                "skipped": "Skipped",
+                "failed": "Failed",
+                "actions": "Actions",
+                "download": "Download error report",
+                "rollback": "Roll back"
+            }
+        }
+    },
     "Products": {
         "title": "Products",
         "subtitle": "Manage your product catalog.",
