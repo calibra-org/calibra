@@ -4,14 +4,20 @@ import {
     closestCenter,
     DndContext,
     type DragEndEvent,
+    DragOverlay,
+    type DragStartEvent,
+    defaultDropAnimationSideEffects,
     KeyboardSensor,
     PointerSensor,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { restrictToFirstScrollableAncestor, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { ChevronDown, GripVertical } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { cn } from "#/lib/utils";
 
 import { SectionCard } from "./section-card";
 
@@ -147,8 +153,22 @@ export function DraggableSectionGrid({ storageKey, sections, labels, onOrderChan
         [state.order, sectionById],
     );
 
+    /**
+     * `activeId` drives the `DragOverlay`: while a drag is in flight, the dragged section is
+     * rendered there at the source's pre-drag size and the original position becomes a faded
+     * placeholder. This avoids the visual blowup that happens when the in-place sortable item
+     * fights variable-height flex siblings.
+     */
+    const [activeId, setActiveId] = useState<string | null>(null);
+    const activeSection = activeId === null ? undefined : sectionById.get(activeId);
+
+    const onDragStart = useCallback((event: DragStartEvent) => {
+        setActiveId(String(event.active.id));
+    }, []);
+
     const onDragEnd = useCallback(
         (event: DragEndEvent) => {
+            setActiveId(null);
             const { active, over } = event;
             if (over === null || active.id === over.id) return;
             const oldIndex = state.order.indexOf(String(active.id));
@@ -162,6 +182,8 @@ export function DraggableSectionGrid({ storageKey, sections, labels, onOrderChan
         },
         [state.order, persistOrder, sectionById],
     );
+
+    const onDragCancel = useCallback(() => setActiveId(null), []);
 
     const toggleCollapse = useCallback(
         (id: string, open: boolean) => {
@@ -181,13 +203,16 @@ export function DraggableSectionGrid({ storageKey, sections, labels, onOrderChan
                 id={storageKey}
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
+                onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
+                onDragCancel={onDragCancel}
             >
                 <SortableContext items={state.order} strategy={verticalListSortingStrategy}>
                     {orderedSections.map((section) => {
                         const isCollapsedFlag = state.collapsed[section.id] === true;
                         const isOpen = !(section.isCollapsible === false ? false : isCollapsedFlag);
+                        const isActive = activeId === section.id;
                         return (
                             <SectionCard
                                 key={section.id}
@@ -202,15 +227,49 @@ export function DraggableSectionGrid({ storageKey, sections, labels, onOrderChan
                                 collapseLabel={labels.collapse}
                                 expandLabel={labels.expand}
                                 grabLabel={labels.grabHandle}
+                                isSourcePlaceholder={isActive}
                             >
                                 {section.body}
                             </SectionCard>
                         );
                     })}
                 </SortableContext>
+                <DragOverlay
+                    dropAnimation={{
+                        sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: "0.4" } } }),
+                    }}
+                >
+                    {activeSection ? <SectionDragPreview title={activeSection.title} /> : null}
+                </DragOverlay>
             </DndContext>
             <span className="sr-only" role="status" aria-live="polite">
                 {announcement.current}
+            </span>
+        </div>
+    );
+}
+
+/**
+ * The visual rendered inside the {@link DragOverlay} while a section is being moved. We
+ * intentionally show only the section's header row (grip + title + chevron) — never the body —
+ * so the overlay's height stays bounded regardless of how much content the dragged section
+ * normally carries. Without this, a tall section would balloon under the cursor and visually
+ * overflow the entire page.
+ */
+function SectionDragPreview({ title }: { title: ReactNode }) {
+    return (
+        <div
+            className={cn(
+                "flex h-10 items-center gap-2 rounded-lg border border-primary/60 bg-card px-2.5 text-card-foreground shadow-lg",
+                "ring-2 ring-primary/30",
+            )}
+        >
+            <span className="grid size-7 shrink-0 cursor-grabbing place-items-center rounded-md text-foreground">
+                <GripVertical className="size-4" aria-hidden="true" />
+            </span>
+            <h3 className="truncate font-semibold text-foreground text-sm">{title}</h3>
+            <span className="ms-auto inline-flex size-7 items-center justify-center text-muted-foreground">
+                <ChevronDown className="size-4" aria-hidden="true" />
             </span>
         </div>
     );

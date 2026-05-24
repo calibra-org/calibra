@@ -20,6 +20,8 @@ interface SectionCardProps {
     collapseLabel: string;
     expandLabel: string;
     grabLabel: string;
+    /** When true, this card is the drag source — render a muted placeholder while the `DragOverlay` shows the real preview. */
+    isSourcePlaceholder?: boolean;
     children: ReactNode;
 }
 
@@ -45,6 +47,7 @@ export function SectionCard({
     collapseLabel,
     expandLabel,
     grabLabel,
+    isSourcePlaceholder = false,
     children,
 }: SectionCardProps) {
     const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
@@ -52,6 +55,13 @@ export function SectionCard({
         disabled: !isDraggable,
     });
     const bodyId = useId();
+    /**
+     * When THIS card is the drag source, fade the whole card and suppress its body. The real
+     * preview is rendered inside the {@link DragOverlay}; this faded version stays in the layout
+     * so the sortable has a stable slot to swap against. We keep the header mounted so dnd-kit's
+     * `setActivatorNodeRef` doesn't lose its DOM binding mid-drag.
+     */
+    const renderAsPlaceholder = isSourcePlaceholder || isDragging;
 
     return (
         <div
@@ -65,10 +75,15 @@ export function SectionCard({
             className={cn(
                 "rounded-lg border border-border bg-card text-card-foreground shadow-xs",
                 "transition-shadow",
-                isDragging && "z-10 border-primary/60 shadow-lg ring-2 ring-primary/30",
+                renderAsPlaceholder && "border-border border-dashed bg-muted/30 opacity-50 shadow-none",
             )}
         >
-            <header className={cn("flex h-10 items-center gap-2 px-2.5", isOpen && "border-border/60 border-b")}>
+            <header
+                className={cn(
+                    "flex h-10 items-center gap-2 px-2.5",
+                    isOpen && !renderAsPlaceholder && "border-border/60 border-b",
+                )}
+            >
                 {isDraggable && (
                     <button
                         type="button"
@@ -109,7 +124,7 @@ export function SectionCard({
                     </Button>
                 )}
             </header>
-            {isOpen && (
+            {isOpen && !renderAsPlaceholder && (
                 <div id={bodyId} className="px-4 py-3">
                     {children}
                 </div>
