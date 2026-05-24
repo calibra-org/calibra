@@ -1224,13 +1224,22 @@ export interface components {
         CustomerBase: {
             /** @description BIGINT id serialised as a string (Lucid default for safety above 2^53). */
             id: string;
-            user_id: string;
+            /** @description Linked auth user; `null` for guest customers. */
+            user_id: string | null;
             first_name?: string | null;
             last_name?: string | null;
             phone?: string | null;
             /** @description ISO-3166-1 alpha-2 (uppercase). */
             country_default: string;
             is_paying_customer: boolean;
+            /**
+             * @description Lifecycle status. `deleted` is the soft-delete tombstone (also reflected in `deleted_at`).
+             * @enum {string}
+             */
+            status: "active" | "suspended" | "deleted";
+            acquisition_channel?: string | null;
+            /** Format: date-time */
+            last_seen_at?: string | null;
             attributes?: {
                 [key: string]: unknown;
             };

@@ -129,7 +129,7 @@ export function diff(codeRoutes: CodeRoute[], specRoutes: SpecOperation[]): Issu
         issues.push({
             severity: "stale-in-spec",
             specKey: key,
-            message: "endpoint documented but no longer registered" + (op.operationId ? ` (operationId: ${op.operationId})` : ""),
+            message: `endpoint documented but no longer registered${op.operationId ? ` (operationId: ${op.operationId})` : ""}`,
         });
     }
 
@@ -266,7 +266,7 @@ export default class CheckApiDocs extends BaseCommand {
         const entries: KnownDriftEntry[] = issues
             .map((i) => ({ severity: i.severity, codeKey: i.codeKey, specKey: i.specKey }))
             .sort((a, b) => driftKey(a).localeCompare(driftKey(b)));
-        await writeFile(path, JSON.stringify(entries, null, 2) + "\n");
+        await writeFile(path, `${JSON.stringify(entries, null, 2)}\n`);
     }
 
     private knownDriftPath(): string {

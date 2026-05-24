@@ -164,6 +164,7 @@ export class OrderFinalizer {
         source: CustomerAddress,
         kind: "billing" | "shipping",
         opts: {
+            // biome-ignore lint/suspicious/noExplicitAny: Lucid trx type ergonomics — same workaround as admin/orders_controller.ts#writeAddress.
             trx?: typeof db.transaction extends never ? never : any;
             iranExtension?: Partial<OrderAddressIranExtension> | null;
         } = {},

@@ -866,7 +866,7 @@ export interface paths {
         };
         /**
          * List customers (admin)
-         * @description Paginated list of every customer. Free-text search runs over `users.email`, `customers.first_name`, `customers.last_name`, and `customers.phone`. Filter by paying status, country, or registration date.
+         * @description Paginated list of every customer. Free-text search runs over `users.email`, `customers.first_name`, `customers.last_name`, `customers.phone`, address `city`/`postcode`, and Iran `national_id`. Twenty-plus filter dimensions (tab, country list, city, tags, status, acquisition channel, marketing opt-ins, date ranges, order count/spend/AOV ranges). Pass `include_stats=1` to fold lifetime metrics into each row via a single GROUP BY query (no N+1).
          */
         get: operations["adminCustomersIndex"];
         put?: never;
@@ -875,6 +875,44 @@ export interface paths {
          * @description Creates the `users` + `customers` rows in a single transaction. The password is hashed server-side. Email uniqueness is enforced case-insensitively. Optionally seeds the IR fiscal-identifier extension when `iran_profile` is included.
          */
         post: operations["adminCustomerCreate"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Customer counts + summary aggregates (admin)
+         * @description Tab counts (account/guest/big_spenders/new_30d/inactive_180d/no_address/trashed) and a footer summary block (avg_order_count, avg_lifetime_spend_minor, avg_aov_minor, pct_with_account) for the customers list page. Cache the response for ~30s client-side.
+         */
+        get: operations["adminCustomersCounts"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
@@ -969,6 +1007,64 @@ export interface paths {
         patch: operations["adminCustomerPatch"];
         trace?: never;
     };
+    "/api/v1/admin/customers/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore a soft-deleted customer (admin)
+         * @description Clears `customers.deleted_at` and the linked `users.deleted_at` (when present). The user must sign in fresh — auth tokens are not restored.
+         */
+        post: operations["adminCustomersRestore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Customer lifetime stats (admin)
+         * @description Lifetime stats for a single customer — order count, spend, AOV, dates, plus a 12-month spend series and a favourite product slot for the detail page.
+         */
+        get: operations["adminCustomersStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/customers/{id}/downloads": {
         parameters: {
             query?: never;
@@ -1004,6 +1100,469 @@ export interface paths {
                 };
             };
         };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{customer_id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List notes on a customer (admin)
+         * @description Internal notes, newest first. The `author` is the admin who wrote each note.
+         */
+        get: operations["adminCustomerNotesIndex"];
+        put?: never;
+        /** Add an internal note to a customer (admin) */
+        post: operations["adminCustomerNotesStore"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{customer_id}/notes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an internal note (admin) */
+        delete: operations["adminCustomerNotesDestroy"];
+        options?: never;
+        head?: never;
+        /** Edit an internal note (admin) */
+        patch: operations["adminCustomerNotesUpdate"];
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Attach a tag to a customer (creates the tag if missing) (admin) */
+        post: operations["adminCustomersAttachTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Detach a tag from a customer (admin)
+         * @description The tag row stays — only the pivot is removed. Use `DELETE /customer-tags/:id` to delete the tag everywhere.
+         */
+        delete: operations["adminCustomersDetachTag"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customer-tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List customer tags (admin)
+         * @description Paginated. The `q` query parameter does prefix search for the autocomplete combobox.
+         */
+        get: operations["adminCustomerTagsIndex"];
+        put?: never;
+        /**
+         * Create a customer tag (admin)
+         * @description Returns the existing row if a tag with the same normalised name already exists.
+         */
+        post: operations["adminCustomerTagsStore"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customer-tags/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a customer tag (admin)
+         * @description Cascades the pivot rows — every customer that had the tag loses it.
+         */
+        delete: operations["adminCustomerTagsDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customer-segments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List customer segments (admin, owner-scoped)
+         * @description Only segments owned by the calling admin are returned. Pinned segments come first.
+         */
+        get: operations["adminCustomerSegmentsIndex"];
+        put?: never;
+        /** Save a customer segment (admin) */
+        post: operations["adminCustomerSegmentsStore"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customer-segments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a customer segment (admin) */
+        delete: operations["adminCustomerSegmentsDestroy"];
+        options?: never;
+        head?: never;
+        /** Update a customer segment (admin) */
+        patch: operations["adminCustomerSegmentsUpdate"];
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/marketing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Customer marketing preferences (admin)
+         * @description Returns the current per-channel opt-in state. Defaults are emitted when no row exists yet.
+         */
+        get: operations["adminCustomerMarketingShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Toggle a marketing-channel opt-in (admin)
+         * @description Writes both the prefs row and a history row in a single transaction. `source` defaults to `admin`.
+         */
+        patch: operations["adminCustomerMarketingPatch"];
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/marketing/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Customer marketing-consent history (admin) */
+        get: operations["adminCustomerMarketingHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change a customer's status (admin)
+         * @description Suspending an account with active orders responds 409 unless `?force=1` is appended. Every flip writes a history row and an `admin_audit_log` entry. No-op flips (same status) return 200 with a stub envelope.
+         */
+        patch: operations["adminCustomerStatusPatch"];
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/status-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Customer status-change history (admin) */
+        get: operations["adminCustomerStatusHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/convert-to-account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Convert a guest customer to a full account (admin)
+         * @description Links a guest customer (`user_id IS NULL`) to a freshly-created user. Either provide a `password` directly, or `send_password_reset_email: true` to mint a reset token (storefront flow). 409 when the customer already has a linked user, 422 when neither password nor send_password_reset_email is given.
+         */
+        post: operations["adminCustomerConvertToAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/send-password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Trigger a password-reset email for a customer (admin)
+         * @description 400 for guest customers. Echoes the plaintext token in dev so the smoke flow works without a mail provider.
+         */
+        post: operations["adminCustomerSendPasswordReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/impersonate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mint an impersonation token for a customer (admin)
+         * @description Short-lived (15 minute) access token bound to the customer's linked user, carrying an `impersonate` ability. Writes a `customer_impersonation_events` audit row. The storefront-side banner + impersonator-stamping middleware is wired in a follow-up PR.
+         */
+        post: operations["adminCustomerImpersonate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Unified activity timeline for a customer (admin)
+         * @description Merges orders + notes + status flips + marketing-consent flips + impersonations into a single feed, sorted newest first. The `types` query parameter (comma-separated) filters to a subset; `limit` caps the total row count (default 50, max 200).
+         */
+        get: operations["adminCustomerTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Merge duplicate customers into a primary (admin)
+         * @description Transactional: orders, notes, downloads, addresses, tags, and marketing prefs are moved from duplicates into the primary; duplicates are then soft-deleted. Each merged-away customer writes a `customer_merge_history` audit row with a snapshot of its pre-merge identity.
+         */
+        post: operations["adminCustomersMerge"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -2610,13 +3169,22 @@ export interface components {
         CustomerBase: {
             /** @description BIGINT id serialised as a string (Lucid default for safety above 2^53). */
             id: string;
-            user_id: string;
+            /** @description Linked auth user; `null` for guest customers. */
+            user_id: string | null;
             first_name?: string | null;
             last_name?: string | null;
             phone?: string | null;
             /** @description ISO-3166-1 alpha-2 (uppercase). */
             country_default: string;
             is_paying_customer: boolean;
+            /**
+             * @description Lifecycle status. `deleted` is the soft-delete tombstone (also reflected in `deleted_at`).
+             * @enum {string}
+             */
+            status: "active" | "suspended" | "deleted";
+            acquisition_channel?: string | null;
+            /** Format: date-time */
+            last_seen_at?: string | null;
             attributes?: {
                 [key: string]: unknown;
             };
@@ -2650,10 +3218,180 @@ export interface components {
          */
         AdminCustomer: components["schemas"]["CustomerBase"] & {
             user?: null | components["schemas"]["UserAdmin"];
+            /** @description Free-text tag names attached via `customer_tag_pivot`. Empty array when no tags assigned. */
+            tags?: string[];
+            addresses_count?: number | null;
+            notes_count?: number | null;
+            /** @description Count of orders in counted statuses (pending/on_hold/processing/completed/refunded). Drafts and cancelled/failed do not contribute. */
+            lifetime_order_count?: number;
+            /** @description Sum of `grand_total` (minor units) across paid statuses (processing/completed/refunded). */
+            lifetime_spend_minor?: number;
+            /** @description Rounded `lifetime_spend_minor / lifetime_order_count`. Zero when no orders. */
+            average_order_value_minor?: number;
+            /** Format: date-time */
+            last_order_at?: string | null;
+            /** Format: date-time */
+            first_order_at?: string | null;
+            days_since_last_order?: number | null;
             /** @description Country-scoped extension rows. Today only `iran` is recognised. Omitted on list responses. */
             profile_extensions?: {
                 iran?: components["schemas"]["IranAddressExtension"];
             };
+            /** @description Lifetime-stats sub-envelope returned only on the detail endpoint. */
+            stats?: {
+                lifetime_order_count?: number;
+                lifetime_spend_minor?: number;
+                average_order_value_minor?: number;
+                /** Format: date-time */
+                last_order_at?: string | null;
+                /** Format: date-time */
+                first_order_at?: string | null;
+                days_since_last_order?: number | null;
+            };
+        };
+        /**
+         * AdminCustomerCounts
+         * @description Tab counts + footer summary aggregates returned by `GET /api/v1/admin/customers/counts`. The big_spenders count uses the 90th percentile of per-customer paid spend as its threshold.
+         */
+        AdminCustomerCounts: {
+            all: number;
+            account_holders: number;
+            guest: number;
+            big_spenders: number;
+            new_30d: number;
+            inactive_180d: number;
+            no_address: number;
+            trashed: number;
+            summary: {
+                avg_order_count: number;
+                avg_lifetime_spend_minor: number;
+                avg_aov_minor: number;
+                /** @description Percentage (0–100) of customers that have an `auth.users` row attached. */
+                pct_with_account: number;
+            };
+        };
+        /**
+         * AdminCustomerStats
+         * @description Lifetime stats bundle returned by `GET /api/v1/admin/customers/{id}/stats`. Combines the row from the `aggregateForCustomerIds` GROUP BY query with a 12-month spend series and the favourite product. All money fields are integer minor units.
+         */
+        AdminCustomerStats: {
+            lifetime_order_count: number;
+            lifetime_spend_minor: number;
+            average_order_value_minor: number;
+            /** Format: date-time */
+            last_order_at: string | null;
+            /** Format: date-time */
+            first_order_at: string | null;
+            days_since_last_order: number | null;
+            monthly_spend_series: {
+                /** @description Year-month in `YYYY-MM` form. */
+                month: string;
+                amount_minor: number;
+            }[];
+            favorite_product_id: number | null;
+        };
+        /**
+         * AdminCustomerNote
+         * @description Internal-only customer note. The `author` is the admin who wrote it (or `null` if the user was later deleted). Notes are never surfaced to the storefront — they live entirely in the admin workbench.
+         */
+        AdminCustomerNote: {
+            id: string;
+            customer_id: string;
+            body: string;
+            author?: null | {
+                id: string;
+                email: string;
+            };
+            author_user_id?: string | null;
+            /** Format: date-time */
+            created_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
+        };
+        /**
+         * AdminCustomerTag
+         * @description Free-text customer tag. Names are lowercase + dot/dash/underscore (matches the regex enforced on the controller side); the UI shows them as stored.
+         */
+        AdminCustomerTag: {
+            id: string;
+            name: string;
+            /** Format: date-time */
+            created_at?: string | null;
+        };
+        /**
+         * AdminCustomerSegment
+         * @description Saved customer-list filter, owner-scoped (each admin's segments are invisible to other admins). The `filters` object is the verbatim query-string state from the customers list page; `is_pinned: true` surfaces the segment as a top-level tab.
+         */
+        AdminCustomerSegment: {
+            id: string;
+            user_id: string;
+            name: string;
+            filters: {
+                [key: string]: unknown;
+            };
+            is_pinned: boolean;
+            /** Format: date-time */
+            created_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
+            /** Format: date-time */
+            last_used_at?: string | null;
+        };
+        /**
+         * AdminCustomerMarketingPref
+         * @description Per-channel marketing-consent preferences for a customer with last-changed timestamps + source.
+         */
+        AdminCustomerMarketingPref: {
+            customer_id: string;
+            email_opt_in: boolean;
+            /** Format: date-time */
+            email_opt_in_at?: string | null;
+            email_opt_in_source?: string | null;
+            sms_opt_in: boolean;
+            /** Format: date-time */
+            sms_opt_in_at?: string | null;
+            sms_opt_in_source?: string | null;
+            phone_call_opt_in: boolean;
+            /** Format: date-time */
+            phone_call_opt_in_at?: string | null;
+            phone_call_opt_in_source?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
+        };
+        /**
+         * AdminCustomerMarketingHistory
+         * @description Single consent history row — one per channel flip.
+         */
+        AdminCustomerMarketingHistory: {
+            id: string;
+            customer_id: string;
+            /** @enum {string} */
+            channel: "email" | "sms" | "phone";
+            opted_in: boolean;
+            source?: string | null;
+            actor?: null | {
+                id: string;
+                email: string;
+            };
+            /** Format: date-time */
+            occurred_at?: string | null;
+        };
+        /**
+         * AdminCustomerStatusHistory
+         * @description Status-transition history row recorded every time `customers.status` flips.
+         */
+        AdminCustomerStatusHistory: {
+            id: string;
+            customer_id: string;
+            from_status?: string | null;
+            to_status: string;
+            reason?: string | null;
+            actor?: null | {
+                id: string;
+                email: string;
+            };
+            /** Format: date-time */
+            occurred_at?: string | null;
         };
         /**
          * AdminPaymentGateway
@@ -4677,11 +5415,50 @@ export interface operations {
                 /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
                 perPage?: components["parameters"]["PerPageQuery"];
                 search?: string;
+                /** @description One of `last_name`, `created_at`, `last_seen_at`; prefix with `-` for descending. */
+                sort?: string;
+                include_stats?: boolean;
+                /** @description Selects the tab bucket. Counterpart of the `/counts` endpoint. */
+                tab?: "any" | "account" | "guest" | "big" | "new" | "inactive" | "no_address" | "trashed";
                 is_paying_customer?: boolean;
                 /** @description ISO-3166-1 alpha-2 country code. */
                 country?: string;
+                /** @description Comma-separated ISO-3166-1 alpha-2 list. */
+                countries?: string;
+                /** @description Comma-separated city names (case-insensitive). */
+                cities?: string;
+                regions?: string;
+                /** @description Comma-separated tag names. */
+                tags?: string;
+                /** @description Comma-separated subset of [active, suspended, deleted]. */
+                statuses?: string;
+                acquisition_channels?: string;
+                email_verified?: boolean;
+                opt_in_email?: boolean;
+                opt_in_sms?: boolean;
+                created_after?: string;
+                created_before?: string;
+                /**
+                 * @deprecated
+                 * @description Use `created_after`.
+                 */
                 created_from?: string;
+                /**
+                 * @deprecated
+                 * @description Use `created_before`.
+                 */
                 created_to?: string;
+                last_order_after?: string;
+                last_order_before?: string;
+                order_count_min?: number;
+                order_count_max?: number;
+                lifetime_spend_min?: number;
+                lifetime_spend_max?: number;
+                aov_min?: number;
+                aov_max?: number;
+                has_national_id?: boolean;
+                with_orders?: boolean;
+                no_orders?: boolean;
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -4701,6 +5478,7 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["AdminCustomer"][];
                         meta: components["schemas"]["PaginationMeta"];
+                        sort?: string;
                     };
                 };
             };
@@ -4750,6 +5528,33 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomersCounts: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer counts + summary. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerCounts"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     adminCustomersBatch: {
@@ -4900,6 +5705,66 @@ export interface operations {
             422: components["responses"]["ValidationError"];
         };
     };
+    adminCustomersRestore: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer restored. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomer"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomersStats: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer stats bundle. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerStats"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     adminCustomerDownloads: {
         parameters: {
             query?: {
@@ -4943,6 +5808,861 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerNotesIndex: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                customer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Notes list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerNote"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerNotesStore: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                customer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Note created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerNote"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomerNotesDestroy: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                customer_id: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Note deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerNotesUpdate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                customer_id: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Note updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerNote"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomersAttachTag: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tag: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Tag attached. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerTag"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomersDetachTag: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+                tagId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tag detached. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerTagsIndex: {
+        parameters: {
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1 when omitted. */
+                page?: components["parameters"]["PageQuery"];
+                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
+                perPage?: components["parameters"]["PerPageQuery"];
+                q?: string;
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tags list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerTag"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminCustomerTagsStore: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Tag already existed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerTag"];
+                    };
+                };
+            };
+            /** @description Tag created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerTag"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomerTagsDestroy: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tag deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerSegmentsIndex: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Segments list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerSegment"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminCustomerSegmentsStore: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    filters: {
+                        [key: string]: unknown;
+                    };
+                    is_pinned?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Segment created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerSegment"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomerSegmentsDestroy: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Segment deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerSegmentsUpdate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    filters: {
+                        [key: string]: unknown;
+                    };
+                    is_pinned?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Segment updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerSegment"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomerMarketingShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Marketing preferences. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerMarketingPref"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerMarketingPatch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    channel: "email" | "sms" | "phone";
+                    opt_in: boolean;
+                    source?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Marketing preferences after the toggle. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerMarketingPref"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomerMarketingHistory: {
+        parameters: {
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1 when omitted. */
+                page?: components["parameters"]["PageQuery"];
+                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
+                perPage?: components["parameters"]["PerPageQuery"];
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Consent history, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerMarketingHistory"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerStatusPatch: {
+        parameters: {
+            query?: {
+                force?: string;
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status: "active" | "suspended";
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Status updated (or no-op when already at target). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerStatusHistory"] | {
+                            from_status?: string | null;
+                            to_status?: string;
+                            reason?: string | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Customer has active orders. Append `?force=1` to override. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasicMessage"];
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomerStatusHistory: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Status history, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerStatusHistory"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerConvertToAccount: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                    password?: string;
+                    send_password_reset_email?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Account created and linked. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomer"] & {
+                            /** @description Dev-only echo of the password-reset token, when `send_password_reset_email=true`. */
+                            reset_token?: string | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Customer already linked to an account. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasicMessage"];
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCustomerSendPasswordReset: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reset token issued. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ok: boolean;
+                            reset_token?: string | null;
+                        };
+                    };
+                };
+            };
+            /** @description Customer is a guest — convert to account first. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasicMessage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerImpersonate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Token + metadata. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            token: string;
+                            token_query_param?: string;
+                            /** Format: date-time */
+                            expires_at: string | null;
+                            impersonator_id: string;
+                            customer_id: string;
+                            event_id: string;
+                        };
+                    };
+                };
+            };
+            /** @description Cannot impersonate a guest customer. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasicMessage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomerTimeline: {
+        parameters: {
+            query?: {
+                /** @description Comma-separated subset of [order, note, status, marketing, impersonation]. */
+                types?: string;
+                limit?: number;
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Timeline rows. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            kind: string;
+                            /** Format: date-time */
+                            occurred_at: string | null;
+                            payload?: {
+                                [key: string]: unknown;
+                            };
+                            actor?: null | {
+                                id: string;
+                                email: string;
+                            };
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminCustomersMerge: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    primary_id: number;
+                    duplicate_ids: number[];
+                    strategy?: {
+                        /** @enum {string} */
+                        addresses?: "keep_primary" | "merge_all";
+                        /** @enum {string} */
+                        tags?: "union" | "keep_primary";
+                        /** @enum {string} */
+                        marketing_prefs?: "most_recent" | "keep_primary";
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Primary customer after the merge. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomer"] & {
+                            merged_count?: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
         };
     };
     adminPaymentGatewaysIndex: {

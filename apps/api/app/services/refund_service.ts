@@ -284,7 +284,7 @@ export class RefundService {
 
         for (const entry of sources) {
             const sourceLine = entry.line;
-            if (!sourceLine || !sourceLine.productId) continue;
+            if (!sourceLine?.productId) continue;
             await this.inventory.increment(
                 {
                     productId: sourceLine.productId,

@@ -1,0 +1,37 @@
+operationId: adminCustomerImpersonate
+summary: Mint an impersonation token for a customer (admin)
+description: >
+    Short-lived (15 minute) access token bound to the customer's linked user, carrying an
+    `impersonate` ability. Writes a `customer_impersonation_events` audit row. The storefront-side
+    banner + impersonator-stamping middleware is wired in a follow-up PR.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Token + metadata.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [token, expires_at, impersonator_id, customer_id, event_id]
+                            properties:
+                                token: { type: string }
+                                token_query_param: { type: string }
+                                expires_at: { type: [string, "null"], format: date-time }
+                                impersonator_id: { type: string }
+                                customer_id: { type: string }
+                                event_id: { type: string }
+    "400":
+        description: Cannot impersonate a guest customer.
+        content:
+            application/json:
+                schema: { $ref: "../../../common/components/schemas/BasicMessage.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

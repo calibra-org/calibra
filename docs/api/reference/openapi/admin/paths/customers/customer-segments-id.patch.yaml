@@ -1,0 +1,31 @@
+operationId: adminCustomerSegmentsUpdate
+summary: Update a customer segment (admin)
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [name, filters]
+                properties:
+                    name: { type: string, minLength: 1, maxLength: 80 }
+                    filters: { type: object, additionalProperties: true }
+                    is_pinned: { type: boolean }
+responses:
+    "200":
+        description: Segment updated.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomerSegment.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

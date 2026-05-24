@@ -1,0 +1,29 @@
+operationId: adminCustomerSegmentsStore
+summary: Save a customer segment (admin)
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [name, filters]
+                properties:
+                    name: { type: string, minLength: 1, maxLength: 80 }
+                    filters: { type: object, additionalProperties: true }
+                    is_pinned: { type: boolean }
+responses:
+    "201":
+        description: Segment created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomerSegment.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

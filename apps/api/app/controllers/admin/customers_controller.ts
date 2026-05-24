@@ -6,6 +6,7 @@ import { DateTime } from "luxon";
 import Customer from "#models/customer";
 import CustomerDownload from "#models/customer_download";
 import User from "#models/user";
+import { aggregateForCustomerIds, fetchCounts, forSingleCustomer } from "#services/customer_stats_service";
 import phoneService from "#services/phone_service";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
 import CustomerTransformer from "#transformers/customer_transformer";
@@ -19,29 +20,115 @@ import {
 
 const DEFAULT_PER_PAGE = 20;
 
+const ORDER_COUNTED_STATUSES = ["pending", "on_hold", "processing", "completed", "refunded"];
+const PAID_ORDER_STATUSES = ["processing", "completed", "refunded"];
+
 export default class AdminCustomersController {
     /**
-     * GET /api/v1/admin/customers — list with search (matches first/last name + email),
-     * `role` (joins users), `is_paying_customer`, and `country`. Soft-deleted rows are excluded.
+     * GET /api/v1/admin/customers — list with broad search (name/email/phone/national_id/city/
+     * postcode), faceted filters (status, country, tags, channel, marketing opt-ins, range
+     * filters), and per-row stats batched via a single GROUP BY query when `include_stats=1`.
+     * Soft-deleted rows are excluded unless `tab=trashed`.
      */
     async index(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(adminCustomerListValidator);
         const page = payload.page ?? 1;
         const perPage = payload.perPage ?? DEFAULT_PER_PAGE;
+        const tab = payload.tab ?? "any";
 
-        const query = Customer.query().whereNull("customers.deleted_at").preload("user");
+        const query = Customer.query().preload("user");
+
+        if (tab === "trashed") {
+            query.whereNotNull("customers.deleted_at");
+        } else {
+            query.whereNull("customers.deleted_at");
+        }
+
+        if (tab === "account") query.whereNotNull("customers.user_id");
+        if (tab === "guest") query.whereNull("customers.user_id");
+        if (tab === "new") query.where("customers.created_at", ">=", db.raw(`now() - interval '30 days'`));
+        if (tab === "no_address") {
+            query.whereNotExists((sub) =>
+                sub.from("customer_addresses").whereRaw("customer_addresses.customer_id = customers.id"),
+            );
+        }
+        if (tab === "inactive") {
+            query.whereNotExists((sub) =>
+                sub
+                    .from("orders")
+                    .whereRaw("orders.customer_id = customers.id")
+                    .whereIn("status", ORDER_COUNTED_STATUSES)
+                    .where("orders.created_at", ">=", db.raw(`now() - interval '180 days'`)),
+            );
+        }
+        if (tab === "big") {
+            /**
+             * "Big spenders" = customers whose paid-status spend reaches the 90th percentile of the
+             * customer base. The threshold is computed inline (same query the `/counts` endpoint
+             * uses) so the list and the tab count never disagree.
+             *
+             * `select(db.raw("1"))` is load-bearing: Lucid's `whereExists` callback emits
+             * `SELECT *` by default, but combined with `GROUP BY o.customer_id` that violates
+             * Postgres's aggregation rules (`column "o.id" must appear in GROUP BY`). EXISTS is
+             * indifferent to the projection, so a literal constant is the safest fix.
+             */
+            query.whereExists((sub) =>
+                sub
+                    .select(db.raw("1"))
+                    .from("orders as o")
+                    .whereRaw("o.customer_id = customers.id")
+                    .whereIn("o.status", PAID_ORDER_STATUSES)
+                    .groupBy("o.customer_id")
+                    .havingRaw(
+                        `COALESCE(SUM(o.grand_total), 0) >= COALESCE((
+                            SELECT percentile_cont(0.9) WITHIN GROUP (ORDER BY spend)
+                            FROM (
+                                SELECT COALESCE(SUM(grand_total), 0) AS spend
+                                FROM orders
+                                WHERE status IN (${PAID_ORDER_STATUSES.map(() => "?").join(",")})
+                                GROUP BY customer_id
+                            ) per_customer
+                        ), 0)`,
+                        [...PAID_ORDER_STATUSES],
+                    ),
+            );
+        }
 
         if (payload.search) {
             const needle = `%${payload.search.toLowerCase()}%`;
             query.where((q) => {
                 q.whereRaw("LOWER(first_name) LIKE ?", [needle])
                     .orWhereRaw("LOWER(last_name) LIKE ?", [needle])
-                    .orWhereHas("user", (uq) => uq.whereRaw("LOWER(email::text) LIKE ?", [needle]));
+                    .orWhereRaw("LOWER(COALESCE(phone, '')) LIKE ?", [needle])
+                    .orWhereHas("user", (uq) => uq.whereRaw("LOWER(email::text) LIKE ?", [needle]))
+                    .orWhereExists((sub) =>
+                        sub
+                            .from("customer_addresses")
+                            .whereRaw("customer_addresses.customer_id = customers.id")
+                            .whereRaw("LOWER(city) LIKE ?", [needle])
+                            .orWhereRaw("LOWER(COALESCE(postcode, '')) LIKE ?", [needle]),
+                    )
+                    .orWhereExists((sub) =>
+                        sub
+                            .from("customer_iran_profiles")
+                            .whereRaw("customer_iran_profiles.customer_id = customers.id")
+                            .whereRaw("national_id LIKE ?", [needle]),
+                    );
             });
         }
+
+        /**
+         * SECURITY: by default the customers list hides any row whose linked user is an admin
+         * operator — the Customer ≠ User rule forbids them from surfacing here. Admins manage
+         * other admins on the team page. Passing `role=admin` opts back in (the role filter is
+         * needed for operator-management views) but `role=customer` and the no-role default both
+         * exclude admins.
+         */
         if (payload.role) {
             const roleFilter = payload.role;
             query.whereHas("user", (uq) => uq.where("role", roleFilter));
+        } else {
+            query.where((q) => q.whereNull("customers.user_id").orWhereHas("user", (uq) => uq.where("role", "customer")));
         }
         if (payload.is_paying_customer !== undefined) {
             query.where("is_paying_customer", payload.is_paying_customer);
@@ -49,30 +136,172 @@ export default class AdminCustomersController {
         if (payload.country) {
             query.where("country_default", payload.country.toUpperCase());
         }
+        if (payload.countries && payload.countries.length > 0) {
+            query.whereIn(
+                "country_default",
+                payload.countries.map((c) => c.toUpperCase()),
+            );
+        }
+        if (payload.statuses && payload.statuses.length > 0) {
+            query.whereIn("status", payload.statuses);
+        }
+        if (payload.acquisition_channels && payload.acquisition_channels.length > 0) {
+            query.whereIn("acquisition_channel", payload.acquisition_channels);
+        }
+        if (payload.tags && payload.tags.length > 0) {
+            query.whereExists((sub) =>
+                sub
+                    .from("customer_tag_pivot as ctp")
+                    .innerJoin("customer_tags as ct", "ct.id", "ctp.tag_id")
+                    .whereRaw("ctp.customer_id = customers.id")
+                    .whereIn("ct.name", payload.tags ?? []),
+            );
+        }
+        if (payload.cities && payload.cities.length > 0) {
+            query.whereExists((sub) =>
+                sub
+                    .from("customer_addresses")
+                    .whereRaw("customer_addresses.customer_id = customers.id")
+                    .whereIn(
+                        db.raw("LOWER(city)"),
+                        payload.cities!.map((c) => c.toLowerCase()),
+                    ),
+            );
+        }
+        if (payload.opt_in_email !== undefined) {
+            const flag = payload.opt_in_email;
+            query.whereExists((sub) =>
+                sub
+                    .from("customer_marketing_prefs")
+                    .whereRaw("customer_marketing_prefs.customer_id = customers.id")
+                    .where("email_opt_in", flag),
+            );
+        }
+        if (payload.opt_in_sms !== undefined) {
+            const flag = payload.opt_in_sms;
+            query.whereExists((sub) =>
+                sub
+                    .from("customer_marketing_prefs")
+                    .whereRaw("customer_marketing_prefs.customer_id = customers.id")
+                    .where("sms_opt_in", flag),
+            );
+        }
+        if (payload.has_national_id === true) {
+            query.whereExists((sub) =>
+                sub
+                    .from("customer_iran_profiles")
+                    .whereRaw("customer_iran_profiles.customer_id = customers.id")
+                    .whereNotNull("national_id"),
+            );
+        }
+        if (payload.created_after) {
+            query.where("customers.created_at", ">=", payload.created_after);
+        }
+        if (payload.created_before) {
+            query.where("customers.created_at", "<=", payload.created_before);
+        }
+        const wantOrderFilter =
+            payload.with_orders === true ||
+            payload.order_count_min !== undefined ||
+            payload.order_count_max !== undefined ||
+            payload.lifetime_spend_min !== undefined ||
+            payload.lifetime_spend_max !== undefined ||
+            payload.aov_min !== undefined ||
+            payload.aov_max !== undefined ||
+            Boolean(payload.last_order_after) ||
+            Boolean(payload.last_order_before);
+        if (wantOrderFilter) {
+            query.whereExists((sub) => {
+                sub.from("orders").whereRaw("orders.customer_id = customers.id").whereIn("status", ORDER_COUNTED_STATUSES);
+                if (payload.last_order_after) sub.where("orders.created_at", ">=", payload.last_order_after);
+                if (payload.last_order_before) sub.where("orders.created_at", "<=", payload.last_order_before);
+            });
+        }
+        if (payload.no_orders === true) {
+            query.whereNotExists((sub) =>
+                sub.from("orders").whereRaw("orders.customer_id = customers.id").whereIn("status", ORDER_COUNTED_STATUSES),
+            );
+        }
 
-        const paginator = await query.orderBy("customers.id", "desc").paginate(page, perPage);
+        const orderBy = this.applySort(query, payload.sort ?? null);
+        const paginator = await query.paginate(page, perPage);
         const meta = paginator.getMeta();
+        const rows = paginator.all();
+
+        const statsMap =
+            payload.include_stats === true && rows.length > 0
+                ? await aggregateForCustomerIds(rows.map((r) => Number(r.id)))
+                : null;
 
         return {
-            data: paginator.all().map((c) => ({
-                ...new CustomerTransformer(c).toObject(),
-                user: c.user ? new UserTransformer(c.user).forAdmin() : null,
-            })),
+            data: rows.map((c) => {
+                const transformer = new CustomerTransformer(c);
+                const stats = statsMap?.get(Number(c.id));
+                return {
+                    ...transformer.forAdmin(stats),
+                    user: c.user ? new UserTransformer(c.user).forAdmin() : null,
+                };
+            }),
             meta: {
                 page: meta.currentPage,
                 perPage: meta.perPage,
                 total: meta.total,
                 lastPage: meta.lastPage,
             },
+            sort: orderBy,
+        };
+    }
+
+    /** GET /api/v1/admin/customers/counts — tab buckets + footer summary aggregates. */
+    async counts(_ctx: HttpContext) {
+        const counts = await fetchCounts();
+        return { data: counts };
+    }
+
+    /** GET /api/v1/admin/customers/:id/stats — lifetime stats + monthly spend series for the detail page. */
+    async stats(ctx: HttpContext) {
+        const customer = await this.findOrFail(ctx.params.id);
+        const stats = await forSingleCustomer(Number(customer.id));
+        return {
+            data: {
+                lifetime_order_count: stats.lifetimeOrderCount,
+                lifetime_spend_minor: stats.lifetimeSpendMinor,
+                average_order_value_minor: stats.averageOrderValueMinor,
+                last_order_at: stats.lastOrderAt,
+                first_order_at: stats.firstOrderAt,
+                days_since_last_order: stats.daysSinceLastOrder,
+                monthly_spend_series: stats.monthlySpendSeries,
+                favorite_product_id: stats.favoriteProductId,
+            },
         };
     }
 
     async show(ctx: HttpContext) {
         const customer = await this.findOrFail(ctx.params.id);
+        await customer.load("tags");
+        await customer.load("marketingPref");
+        const stats = await forSingleCustomer(Number(customer.id));
+        const transformer = new CustomerTransformer(customer);
+        /**
+         * `forAdmin(stats)` spreads `lifetime_order_count` / `lifetime_spend_minor` / etc. at the
+         * top level — same shape the list endpoint emits — so the admin adapter's `toAdminCustomer`
+         * picks them up without a separate detail-only code path. The legacy `stats: { … }`
+         * sub-envelope is kept too for any consumer that addresses it nested.
+         */
         return {
             data: {
-                ...new CustomerTransformer(customer).withProfileExtensions(),
+                ...transformer.forAdmin(stats),
+                ...transformer.withProfileExtensions(),
                 user: customer.user ? new UserTransformer(customer.user).forAdmin() : null,
+                tags: customer.tags?.map((t) => t.name) ?? [],
+                stats: {
+                    lifetime_order_count: stats.lifetimeOrderCount,
+                    lifetime_spend_minor: stats.lifetimeSpendMinor,
+                    average_order_value_minor: stats.averageOrderValueMinor,
+                    last_order_at: stats.lastOrderAt,
+                    first_order_at: stats.firstOrderAt,
+                    days_since_last_order: stats.daysSinceLastOrder,
+                },
             },
         };
     }
@@ -123,6 +352,8 @@ export default class AdminCustomersController {
                     phone: normalizedPhone,
                     countryDefault: country,
                     isPayingCustomer: false,
+                    status: "active",
+                    acquisitionChannel: payload.acquisition_channel ?? "admin",
                 },
                 { client: trx },
             );
@@ -204,8 +435,8 @@ export default class AdminCustomersController {
     }
 
     /**
-     * POST /api/v1/admin/customers/batch — atomic create/update/delete grouped under one trx so
-     * any failure rolls every change back.
+     * POST /api/v1/admin/customers/batch — atomic create/update/delete/tag-add/tag-remove/
+     * status-change grouped under one trx so any failure rolls every change back.
      */
     async batch(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(adminCustomerBatchValidator);
@@ -253,6 +484,8 @@ export default class AdminCustomersController {
                         phone: normalizedPhone,
                         countryDefault: country,
                         isPayingCustomer: false,
+                        status: "active",
+                        acquisitionChannel: item.acquisition_channel ?? "admin",
                     },
                     { client: trx },
                 );
@@ -304,6 +537,60 @@ export default class AdminCustomersController {
                 deleted: result.deletedIds,
             },
         };
+    }
+
+    /**
+     * Restore a soft-deleted customer. Mirrors the cascade: the linked user (if any) also clears
+     * its `deleted_at`. Auth tokens are NOT restored — the user must sign in fresh.
+     */
+    async restore(ctx: HttpContext) {
+        const numericId = Number(ctx.params.id);
+        if (!Number.isFinite(numericId)) {
+            throw new Exception("Customer not found", { status: 404, code: "E_NOT_FOUND" });
+        }
+        const customer = await Customer.query()
+            .where("id", numericId)
+            .whereNotNull("customers.deleted_at")
+            .preload("user")
+            .first();
+        if (!customer) {
+            throw new Exception("Customer not found", { status: 404, code: "E_NOT_FOUND" });
+        }
+        await db.transaction(async (trx) => {
+            customer.useTransaction(trx);
+            customer.deletedAt = null;
+            await customer.save();
+            if (customer.user) {
+                customer.user.useTransaction(trx);
+                customer.user.deletedAt = null;
+                await customer.user.save();
+            }
+        });
+        return {
+            data: {
+                ...new CustomerTransformer(customer).toObject(),
+                user: customer.user ? new UserTransformer(customer.user).forAdmin() : null,
+            },
+        };
+    }
+
+    private applySort(query: ReturnType<typeof Customer.query>, sort: string | null): string {
+        const direction: "asc" | "desc" = sort?.startsWith("-") ? "desc" : "asc";
+        const column = (sort ?? "").replace(/^-/, "");
+        switch (column) {
+            case "last_name":
+                query.orderBy("last_name", direction).orderBy("first_name", direction);
+                return `${direction === "desc" ? "-" : ""}last_name`;
+            case "created_at":
+                query.orderBy("customers.created_at", direction);
+                return `${direction === "desc" ? "-" : ""}created_at`;
+            case "last_seen_at":
+                query.orderBy("customers.last_seen_at", direction);
+                return `${direction === "desc" ? "-" : ""}last_seen_at`;
+            default:
+                query.orderBy("customers.id", "desc");
+                return "-id";
+        }
     }
 
     private async findOrFail(id: unknown): Promise<Customer> {

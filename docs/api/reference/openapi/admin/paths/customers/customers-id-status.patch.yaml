@@ -1,0 +1,47 @@
+operationId: adminCustomerStatusPatch
+summary: Change a customer's status (admin)
+description: >
+    Suspending an account with active orders responds 409 unless `?force=1` is appended. Every
+    flip writes a history row and an `admin_audit_log` entry. No-op flips (same status) return 200
+    with a stub envelope.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: force, in: query, schema: { type: string } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [status]
+                properties:
+                    status: { type: string, enum: [active, suspended] }
+                    reason: { type: string, maxLength: 500 }
+responses:
+    "200":
+        description: Status updated (or no-op when already at target).
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            anyOf:
+                                - $ref: "../../components/schemas/AdminCustomerStatusHistory.yaml"
+                                - type: object
+                                  properties:
+                                      from_status: { type: [string, "null"] }
+                                      to_status: { type: string }
+                                      reason: { type: [string, "null"] }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "409":
+        description: Customer has active orders. Append `?force=1` to override.
+        content:
+            application/json:
+                schema: { $ref: "../../../common/components/schemas/BasicMessage.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

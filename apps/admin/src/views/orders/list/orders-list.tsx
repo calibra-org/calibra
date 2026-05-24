@@ -3,6 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -81,6 +82,15 @@ export function OrdersList() {
 
     const { data: counts } = useOrderCounts();
 
+    /**
+     * Read `?customer_id=` from the current URL so a `View this customer's orders` link from the
+     * customers detail page lands here pre-filtered. `useSearchParams` re-renders on URL change,
+     * so updating the link or stripping the param updates the list without a remount.
+     */
+    const searchParams = useSearchParams();
+    const customerIdParam = searchParams?.get("customer_id");
+    const customerIdFilter = customerIdParam !== null && customerIdParam.length > 0 ? Number(customerIdParam) : undefined;
+
     const { data, isPending, isError, refetch } = useOrdersList({
         page: tableState.page,
         perPage: tableState.perPage,
@@ -95,6 +105,7 @@ export function OrdersList() {
         sources: tableState.facetValues.source,
         payments: tableState.facetValues.payment,
         countries: tableState.facetValues.country,
+        customerId: customerIdFilter !== undefined && Number.isFinite(customerIdFilter) ? customerIdFilter : undefined,
     });
 
     const rows = data?.data ?? [];

@@ -1,0 +1,20 @@
+operationId: adminCustomerSegmentsIndex
+summary: List customer segments (admin, owner-scoped)
+description: Only segments owned by the calling admin are returned. Pinned segments come first.
+tags: [Admin / Customers]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+responses:
+    "200":
+        description: Segments list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/AdminCustomerSegment.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

@@ -1,0 +1,18 @@
+title: AdminCustomerSegment
+description: >
+    Saved customer-list filter, owner-scoped (each admin's segments are invisible to other
+    admins). The `filters` object is the verbatim query-string state from the customers list page;
+    `is_pinned: true` surfaces the segment as a top-level tab.
+type: object
+properties:
+    id: { type: string }
+    user_id: { type: string }
+    name: { type: string }
+    filters:
+        type: object
+        additionalProperties: true
+    is_pinned: { type: boolean }
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
+    last_used_at: { type: [string, "null"], format: date-time }
+required: [id, user_id, name, filters, is_pinned]

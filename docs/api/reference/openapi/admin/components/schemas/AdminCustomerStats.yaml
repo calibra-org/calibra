@@ -1,0 +1,33 @@
+title: AdminCustomerStats
+description: >
+    Lifetime stats bundle returned by `GET /api/v1/admin/customers/{id}/stats`. Combines the row
+    from the `aggregateForCustomerIds` GROUP BY query with a 12-month spend series and the
+    favourite product. All money fields are integer minor units.
+type: object
+properties:
+    lifetime_order_count: { type: integer }
+    lifetime_spend_minor: { type: integer }
+    average_order_value_minor: { type: integer }
+    last_order_at: { type: [string, "null"], format: date-time }
+    first_order_at: { type: [string, "null"], format: date-time }
+    days_since_last_order: { type: [integer, "null"] }
+    monthly_spend_series:
+        type: array
+        items:
+            type: object
+            properties:
+                month:
+                    type: string
+                    description: Year-month in `YYYY-MM` form.
+                amount_minor: { type: integer }
+            required: [month, amount_minor]
+    favorite_product_id: { type: [integer, "null"] }
+required:
+    - lifetime_order_count
+    - lifetime_spend_minor
+    - average_order_value_minor
+    - last_order_at
+    - first_order_at
+    - days_since_last_order
+    - monthly_spend_series
+    - favorite_product_id

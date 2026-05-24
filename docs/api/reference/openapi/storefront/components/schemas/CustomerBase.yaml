@@ -9,7 +9,7 @@ properties:
     id:
         type: string
         description: BIGINT id serialised as a string (Lucid default for safety above 2^53).
-    user_id: { type: string }
+    user_id: { type: [string, "null"], description: "Linked auth user; `null` for guest customers." }
     first_name: { type: [string, "null"] }
     last_name: { type: [string, "null"] }
     phone: { type: [string, "null"] }
@@ -17,6 +17,12 @@ properties:
         type: string
         description: ISO-3166-1 alpha-2 (uppercase).
     is_paying_customer: { type: boolean }
+    status:
+        type: string
+        enum: [active, suspended, deleted]
+        description: Lifecycle status. `deleted` is the soft-delete tombstone (also reflected in `deleted_at`).
+    acquisition_channel: { type: [string, "null"] }
+    last_seen_at: { type: [string, "null"], format: date-time }
     attributes:
         type: object
         additionalProperties: true
@@ -27,3 +33,4 @@ required:
     - user_id
     - country_default
     - is_paying_customer
+    - status

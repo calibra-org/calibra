@@ -1,0 +1,19 @@
+title: AdminCustomerStatusHistory
+description: Status-transition history row recorded every time `customers.status` flips.
+type: object
+properties:
+    id: { type: string }
+    customer_id: { type: string }
+    from_status: { type: [string, "null"] }
+    to_status: { type: string }
+    reason: { type: [string, "null"] }
+    actor:
+        anyOf:
+            - type: "null"
+            - type: object
+              properties:
+                  id: { type: string }
+                  email: { type: string }
+              required: [id, email]
+    occurred_at: { type: [string, "null"], format: date-time }
+required: [id, customer_id, to_status]

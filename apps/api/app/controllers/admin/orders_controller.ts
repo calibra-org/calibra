@@ -338,6 +338,7 @@ export default class AdminOrdersController {
     }
 
     private async writeAddress(
+        // biome-ignore lint/suspicious/noExplicitAny: Lucid's TransactionClientContract has open generics that don't simplify here; the writer only uses .from()/.where()/.insert() so the loose type is safe.
         trx: any,
         order: Order,
         kind: "billing" | "shipping",
