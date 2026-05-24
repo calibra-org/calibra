@@ -1983,6 +1983,8 @@
             },
             "marketing": "ترجیحات بازاریابی",
             "marketingHint": "تغییر این ترجیحات، تاریخ رضایت جدیدی ثبت می‌کند.",
+            "marketingPendingSave": "در انتظار ذخیره…",
+            "marketingSaving": "در حال ذخیره…",
             "channelEmail": "اشتراک ایمیلی",
             "channelSms": "اشتراک پیامکی",
             "channelPhone": "تماس بازاریابی",

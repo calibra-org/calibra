@@ -1983,6 +1983,8 @@
             },
             "marketing": "Marketing preferences",
             "marketingHint": "Toggling these records a new consent timestamp.",
+            "marketingPendingSave": "Pending save…",
+            "marketingSaving": "Saving…",
             "channelEmail": "Email subscription",
             "channelSms": "SMS subscription",
             "channelPhone": "Marketing calls",

@@ -34,14 +34,22 @@ export default class AdminCustomerMarketingController {
         return { data };
     }
 
-    /** PATCH /:id/marketing — single channel toggle with history. */
+    /**
+     * PATCH /:id/marketing — single channel toggle with history.
+     *
+     * **Settle-then-persist (backend half).** Returns 200 with the current row and writes NO
+     * history / audit when the incoming `opt_in` already matches what the prefs row holds — so a
+     * client that debounces a toggle and lands back on the original value produces zero rows,
+     * not two. Pair with the {@link useSettleMutation} hook on the frontend; together they keep
+     * the consent timeline a record of intent, not flicker. See AGENTS.md → Settle-then-persist.
+     */
     async update(ctx: HttpContext) {
         const customer = await this.findCustomerOrFail(ctx.params.id);
         const payload = await ctx.request.validateUsing(adminCustomerMarketingPatchValidator);
         const fields = CHANNEL_TO_FIELDS[payload.channel];
         const now = DateTime.utc();
 
-        const updated = await db.transaction(async (trx) => {
+        const { row, changed } = await db.transaction(async (trx) => {
             let prefs = await CustomerMarketingPref.findBy("customer_id", Number(customer.id), { client: trx });
             if (!prefs) {
                 prefs = await CustomerMarketingPref.create(
@@ -53,6 +61,10 @@ export default class AdminCustomerMarketingController {
                     },
                     { client: trx },
                 );
+            }
+            const previousValue = prefs[fields.optIn];
+            if (previousValue === payload.opt_in) {
+                return { row: prefs, changed: false };
             }
             prefs.useTransaction(trx);
             prefs[fields.optIn] = payload.opt_in;
@@ -75,18 +87,20 @@ export default class AdminCustomerMarketingController {
             }
             await history.save();
 
-            return prefs;
+            return { row: prefs, changed: true };
         });
 
-        await recordAudit({
-            ctx,
-            action: "customer.marketing.patch",
-            entityKind: "customer",
-            entityId: Number(customer.id),
-            payload: { channel: payload.channel, opt_in: payload.opt_in, source: payload.source ?? "admin" },
-        });
+        if (changed) {
+            await recordAudit({
+                ctx,
+                action: "customer.marketing.patch",
+                entityKind: "customer",
+                entityId: Number(customer.id),
+                payload: { channel: payload.channel, opt_in: payload.opt_in, source: payload.source ?? "admin" },
+            });
+        }
 
-        return { data: new CustomerMarketingPrefTransformer(updated).toObject() };
+        return { data: new CustomerMarketingPrefTransformer(row).toObject() };
     }
 
     async history(ctx: HttpContext) {

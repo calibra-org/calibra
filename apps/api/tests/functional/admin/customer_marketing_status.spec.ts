@@ -78,6 +78,40 @@ test.group("/api/v1/admin/customers/:id/marketing + status", (group) => {
         assert.equal(audit.length, 1);
     });
 
+    test("settle-then-persist: same-value marketing PATCH is a no-op (no history, no audit)", async ({ client, assert }) => {
+        /**
+         * Backend half of the settle-then-persist pattern: an admin client that debounces a
+         * toggle and lands back on the original value should NOT produce a history row or an
+         * audit row. The reference frontend (`useSettleMutation`) collapses the redundant request
+         * before it leaves the browser, but a second operator or an automated reconciler might
+         * still send one — the backend has to be idempotent on its own.
+         */
+        const admin = await createAdmin();
+        const customer = await createCustomer();
+
+        const flipOn = await client
+            .patch(`/api/v1/admin/customers/${customer.id}/marketing`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({ channel: "email", opt_in: true });
+        flipOn.assertStatus(200);
+
+        const sameValue = await client
+            .patch(`/api/v1/admin/customers/${customer.id}/marketing`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({ channel: "email", opt_in: true });
+        sameValue.assertStatus(200);
+
+        const history = await CustomerMarketingConsentHistory.query()
+            .where("customer_id", Number(customer.id))
+            .where("channel", "email");
+        assert.equal(history.length, 1, "second same-value PATCH must not write a history row");
+
+        const audit = await AdminAuditLog.query().where("entity_kind", "customer").where("action", "customer.marketing.patch");
+        assert.equal(audit.length, 1, "second same-value PATCH must not write an audit row");
+    });
+
     test("status PATCH writes status_history + audit row", async ({ client, assert }) => {
         const admin = await createAdmin();
         const customer = await createCustomer();
