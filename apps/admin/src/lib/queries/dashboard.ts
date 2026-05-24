@@ -7,6 +7,7 @@ import { useLocale } from "next-intl";
 
 import { type SdkAdminOrderListRow, toAdminOrderListRow } from "#/lib/adapters/orders";
 import { apiGet } from "#/lib/queries/api-client";
+import { toAdminCustomer } from "#/lib/adapters/customers";
 import type { AdminCustomer, AdminOrder, MoneyMinor, OrderStatus } from "#/lib/types";
 
 /**
@@ -28,27 +29,6 @@ interface SdkPaginated<T> {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function toAdminCustomer(c: SdkAdminCustomer): AdminCustomer {
-    const iran = c.profile_extensions?.iran;
-    return {
-        id: Number(c.id),
-        userId: c.user?.id !== undefined ? Number(c.user.id) : null,
-        firstName: c.first_name ?? "",
-        lastName: c.last_name ?? "",
-        email: c.user?.email ?? "",
-        phone: c.phone ?? "",
-        nationalId: iran?.national_id ?? null,
-        companyName: iran?.legal_company_name_fa ?? null,
-        isPayingCustomer: Boolean(c.is_paying_customer),
-        ordersCount: 0,
-        totalSpent: 0 as MoneyMinor,
-        lastOrderAt: null,
-        createdAt: c.created_at ?? new Date().toISOString(),
-        addresses: [],
-        downloads: [],
-    };
-}
 
 /* --- Underlying queries shared across widgets ------------------------------ */
 
