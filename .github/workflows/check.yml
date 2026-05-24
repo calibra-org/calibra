@@ -120,6 +120,16 @@ jobs:
                   DB_USER: calibra
                   DB_PASSWORD: calibra
                   DB_DATABASE: calibra
+                  # The next block satisfies env validation. check:api-docs only boots far
+                  # enough to enumerate routes; none of these services are actually contacted.
+                  MAIL_FROM_ADDRESS: ops@calibra.local
+                  MAIL_FROM_NAME: Calibra
+                  MAIL_NOTIFICATIONS_ENABLED: "false"
+                  SMTP_HOST: localhost
+                  SMTP_PORT: "11025"
+                  REDIS_HOST: localhost
+                  REDIS_PORT: "6379"
+                  QUEUE_DRIVER: sync
               run: node ace check:api-docs
 
     sdk-codegen-sync:
