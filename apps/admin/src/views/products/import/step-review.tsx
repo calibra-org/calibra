@@ -1,7 +1,7 @@
 "use client";
 
 import { toPersianDigits } from "@calibra/shared/digits";
-import { ArrowLeft, Play, RefreshCw, Sliders } from "lucide-react";
+import { ArrowLeft, Loader2, Play, Sliders } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 
@@ -51,32 +51,46 @@ export function StepReview({ state, onChange, onBackToMapping, onStart }: StepRe
      */
     const effective = applyControls(state.preview, state.controls);
 
-    const handleControlChange = useCallback(
-        (next: Partial<ReviewControls>) => {
-            onChange({ controls: { ...state.controls, ...next } });
+    /**
+     * Re-run the server preview against the supplied `updateExisting` flag. This is the only
+     * toggle that needs a round-trip — the other three controls (`skipNew`, `skipUpdates`,
+     * `skipWarningRows`) are pure client-side filters that just reroute already-classified rows
+     * into the skip bucket via `applyControls()`. So we wire the auto-refresh to fire ONLY when
+     * `updateExisting` changes, not on every checkbox.
+     */
+    const refreshPreviewForUpdateExisting = useCallback(
+        async (nextUpdateExisting: boolean) => {
+            setError(null);
+            setPreviewLoading(true);
+            try {
+                const response = await previewImport(
+                    {
+                        import_id: state.importRow.id,
+                        mapping: state.mapping,
+                        update_existing: nextUpdateExisting,
+                    },
+                    locale,
+                );
+                onChange({ preview: response.data });
+            } catch (err) {
+                setError(err instanceof Error ? err.message : t("previewFailed"));
+            } finally {
+                setPreviewLoading(false);
+            }
         },
-        [onChange, state.controls],
+        [locale, onChange, state.importRow.id, state.mapping, t],
     );
 
-    const refreshPreview = useCallback(async () => {
-        setError(null);
-        setPreviewLoading(true);
-        try {
-            const response = await previewImport(
-                {
-                    import_id: state.importRow.id,
-                    mapping: state.mapping,
-                    update_existing: state.controls.updateExisting,
-                },
-                locale,
-            );
-            onChange({ preview: response.data });
-        } catch (err) {
-            setError(err instanceof Error ? err.message : t("previewFailed"));
-        } finally {
-            setPreviewLoading(false);
-        }
-    }, [locale, onChange, state.controls.updateExisting, state.importRow.id, state.mapping, t]);
+    const handleControlChange = useCallback(
+        (next: Partial<ReviewControls>) => {
+            const merged: ReviewControls = { ...state.controls, ...next };
+            onChange({ controls: merged });
+            if (next.updateExisting !== undefined && next.updateExisting !== state.controls.updateExisting) {
+                void refreshPreviewForUpdateExisting(merged.updateExisting);
+            }
+        },
+        [onChange, refreshPreviewForUpdateExisting, state.controls],
+    );
 
     const handleStart = useCallback(async () => {
         setError(null);
@@ -180,15 +194,31 @@ export function StepReview({ state, onChange, onBackToMapping, onStart }: StepRe
                             <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden />
                             {t("backToMapping")}
                         </Button>
-                        <Button variant="outline" onClick={refreshPreview} disabled={previewLoading}>
-                            {previewLoading ? <Spinner /> : <RefreshCw className="size-4" aria-hidden />}
-                            {t("rePreview")}
-                        </Button>
-                        <Button onClick={handleStart} disabled={startLoading} size="lg">
+                        <Button onClick={handleStart} disabled={startLoading || previewLoading} size="lg">
                             {startLoading ? <Spinner /> : <Play className="size-4" aria-hidden />}
                             {t("start")}
                         </Button>
                     </div>
+                </div>
+            </div>
+
+            {/**
+             * Fixed bottom-center pill for the auto-refresh in-flight state. Lives outside the
+             * grid + uses `pointer-events-none` so it never blocks clicks on the controls below
+             * it, and slides in/out without reflowing the page (no layout shift).
+             */}
+            <div aria-hidden={!previewLoading} className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center">
+                <div
+                    data-state={previewLoading ? "open" : "closed"}
+                    className={cn(
+                        "flex items-center gap-2 rounded-full border border-border bg-popover/95 px-4 py-2 text-muted-foreground text-xs shadow-xl backdrop-blur-sm",
+                        "transition-[opacity,transform] duration-200 ease-out",
+                        "data-[state=open]:translate-y-0 data-[state=open]:opacity-100",
+                        "data-[state=closed]:translate-y-2 data-[state=closed]:opacity-0",
+                    )}
+                >
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                    <span>{t("autoRefreshing")}</span>
                 </div>
             </div>
         </article>

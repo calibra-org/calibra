@@ -210,7 +210,7 @@
                 "willFail": "Will fail"
             },
             "start": "Confirm and start import",
-            "rePreview": "Refresh preview",
+            "autoRefreshing": "Refreshing preview…",
             "backToMapping": "Back to mapping",
             "previewFailed": "Could not refresh preview.",
             "startFailed": "Could not start import."
