@@ -249,11 +249,16 @@ export default class AdminProductExportsController {
             : row.formatOptions !== null && (row.formatOptions as Record<string, unknown>).format === "json"
               ? "application/json; charset=utf-8"
               : "text/csv; charset=utf-8";
+        const downloadName = row.compressed ? `${row.originalFilename}.gz` : row.originalFilename;
         ctx.response.header("content-type", contentType);
         ctx.response.header("content-length", String(row.fileSizeBytes));
-        const downloadName = row.compressed ? `${row.originalFilename}.gz` : row.originalFilename;
         ctx.response.header("content-disposition", `attachment; filename="${downloadName}"`);
-        return createReadStream(row.filePath);
+        /**
+         * AdonisJS does NOT auto-pipe a returned ReadStream — returning the stream object would
+         * just serialize it to JSON. `response.stream()` is the explicit pipe-to-response API;
+         * it terminates the request lifecycle itself, so the handler returns nothing after.
+         */
+        ctx.response.stream(createReadStream(row.filePath));
     }
 
     /** `GET /api/v1/admin/products/export/history` — paginated history (user-scoped). */
