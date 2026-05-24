@@ -295,6 +295,26 @@ paths:
             $ref: "./admin/paths/customers/customer-segments-id.patch.yaml"
         delete:
             $ref: "./admin/paths/customers/customer-segments-id.delete.yaml"
+    /api/v1/admin/customers/{id}/marketing:
+        get:
+            $ref: "./admin/paths/customers/customers-id-marketing.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./admin/paths/customers/customers-id-marketing.patch.yaml"
+    /api/v1/admin/customers/{id}/marketing/history:
+        get:
+            $ref: "./admin/paths/customers/customers-id-marketing-history.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/customers/{id}/status:
+        patch:
+            $ref: "./admin/paths/customers/customers-id-status.patch.yaml"
+    /api/v1/admin/customers/{id}/status-history:
+        get:
+            $ref: "./admin/paths/customers/customers-id-status-history.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
 
     /api/v1/admin/payment-gateways:
         get:

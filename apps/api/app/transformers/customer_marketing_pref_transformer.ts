@@ -5,7 +5,7 @@ import type CustomerMarketingPref from "#models/customer_marketing_pref";
 export default class CustomerMarketingPrefTransformer extends BaseTransformer<CustomerMarketingPref> {
     toObject() {
         return {
-            customer_id: this.resource.customerId,
+            customer_id: String(this.resource.customerId),
             email_opt_in: this.resource.emailOptIn,
             email_opt_in_at: this.resource.emailOptInAt?.toISO() ?? null,
             email_opt_in_source: this.resource.emailOptInSource,
@@ -25,7 +25,7 @@ export default class CustomerMarketingPrefTransformer extends BaseTransformer<Cu
      */
     static defaults(customerId: bigint | number) {
         return {
-            customer_id: customerId,
+            customer_id: String(customerId),
             email_opt_in: false,
             email_opt_in_at: null,
             email_opt_in_source: null,

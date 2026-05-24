@@ -1,0 +1,20 @@
+title: AdminCustomerMarketingPref
+description: Per-channel marketing-consent preferences for a customer with last-changed timestamps + source.
+type: object
+properties:
+    customer_id: { type: string }
+    email_opt_in: { type: boolean }
+    email_opt_in_at: { type: [string, "null"], format: date-time }
+    email_opt_in_source: { type: [string, "null"] }
+    sms_opt_in: { type: boolean }
+    sms_opt_in_at: { type: [string, "null"], format: date-time }
+    sms_opt_in_source: { type: [string, "null"] }
+    phone_call_opt_in: { type: boolean }
+    phone_call_opt_in_at: { type: [string, "null"], format: date-time }
+    phone_call_opt_in_source: { type: [string, "null"] }
+    updated_at: { type: [string, "null"], format: date-time }
+required:
+    - customer_id
+    - email_opt_in
+    - sms_opt_in
+    - phone_call_opt_in
