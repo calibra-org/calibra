@@ -12,7 +12,7 @@ import { type ExportableProduct, resolveRow } from "#services/product_export/exp
 import { buildExportQuery, type ExportFilters } from "#services/product_export/export_query_builder";
 import { mintSignedUrl, verifySignedUrl } from "#services/product_export/export_signed_url";
 import { deleteExportArtifact } from "#services/product_export/export_storage";
-import { paginated, resource } from "#transformers/api_envelope";
+import { collection, paginated, resource } from "#transformers/api_envelope";
 import ProductExportFilterPresetTransformer from "#transformers/product_export_filter_preset_transformer";
 import ProductExportTransformer from "#transformers/product_export_transformer";
 import {
@@ -231,7 +231,14 @@ export default class AdminProductExportsController {
             .where("user_id", Number(ctx.auth.user!.id))
             .orderByRaw("last_used_at DESC NULLS LAST")
             .orderBy("created_at", "desc");
-        return { data: rows.map((r) => ProductExportFilterPresetTransformer.transform(r)) };
+        /**
+         * Use the `collection()` envelope helper — `Transformer.transform(rows)` returns an
+         * unresolved `Collection` wrapper, and serialising it directly produces broken JSON
+         * (every field becomes `undefined` on the client). The envelope awaits the wrapper.
+         */
+        return collection<ReturnType<typeof ProductExportFilterPresetTransformer.prototype.toObject>>(
+            ProductExportFilterPresetTransformer.transform(rows),
+        );
     }
 
     async createPreset(ctx: HttpContext) {
