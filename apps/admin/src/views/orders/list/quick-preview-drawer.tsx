@@ -58,7 +58,7 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" hideCloseButton className="w-full max-w-xl gap-0 overflow-hidden p-0 sm:max-w-xl">
+            <SheetContent side="end" withCloseButton={false} className="w-full max-w-xl overflow-hidden p-0 sm:max-w-xl">
                 {view === null ? (
                     <div className="flex flex-col gap-3 p-6">
                         <Skeleton className="h-6 w-40" />
@@ -83,6 +83,12 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                     </p>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-1">
+                                    {/**
+                                     * "Previous" points against reading direction — left in LTR,
+                                     * right in RTL — so the Farsi shopper reads the arrow as
+                                     * "back to the row that was further along the page", not the
+                                     * inverse. "Next" mirrors it.
+                                     */}
                                     <Button
                                         size="icon"
                                         variant="ghost"
@@ -91,8 +97,8 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                         onClick={() => onNavigate("prev")}
                                         aria-label={t("previous")}
                                     >
-                                        <ChevronRight className="size-4 rtl:hidden" aria-hidden="true" />
-                                        <ChevronLeft className="hidden size-4 rtl:inline" aria-hidden="true" />
+                                        <ChevronLeft className="size-4 rtl:hidden" aria-hidden="true" />
+                                        <ChevronRight className="hidden size-4 rtl:inline" aria-hidden="true" />
                                     </Button>
                                     <Button
                                         size="icon"
@@ -102,8 +108,8 @@ export function QuickPreviewDrawer({ order, open, onOpenChange, locale, onNaviga
                                         onClick={() => onNavigate("next")}
                                         aria-label={t("next")}
                                     >
-                                        <ChevronLeft className="size-4 rtl:hidden" aria-hidden="true" />
-                                        <ChevronRight className="hidden size-4 rtl:inline" aria-hidden="true" />
+                                        <ChevronRight className="size-4 rtl:hidden" aria-hidden="true" />
+                                        <ChevronLeft className="hidden size-4 rtl:inline" aria-hidden="true" />
                                     </Button>
                                     <SheetClose
                                         render={(props) => (
