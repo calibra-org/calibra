@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import { cn } from "#/lib/utils";
 
@@ -23,6 +23,9 @@ interface StickyActionBarProps {
     z?: string;
 }
 
+const SCROLL_CONTAINER_SELECTOR = "main";
+const EXTRA_PADDING_REM = 5;
+
 /**
  * Low-level floating action surface. Pins itself to the bottom-center of the viewport, slides
  * up + fades in when `open` flips to true, and stays out of the page's normal flow so the
@@ -35,6 +38,11 @@ interface StickyActionBarProps {
  *   - Inner pill picks up `pointer-events-auto` only when the bar is visible, so a closed bar
  *     can't intercept a stray click during its fade-out.
  *
+ * The bar also injects bottom padding onto the page's scroll container (the `<main>` element
+ * mounted by the authenticated layout) while open, so the last row of the page's content stays
+ * reachable above the floating pill. The padding is applied as an inline style with a smooth
+ * `transition`, so growing or shrinking the gap animates in sync with the bar's own slide.
+ *
  * Designed to host whatever the caller passes — for the standard "X selected / Cancel / Delete"
  * pattern use {@link "./bulk-selection-bar".BulkSelectionBar} which wraps this with the shared
  * count badge + button cluster.
@@ -46,35 +54,55 @@ export function StickyActionBar({
     className,
     z = "z-40",
 }: StickyActionBarProps) {
+    useEffect(() => {
+        if (typeof document === "undefined") return;
+        const main = document.querySelector(SCROLL_CONTAINER_SELECTOR);
+        if (!(main instanceof HTMLElement)) return;
+
+        /**
+         * Stamp a transition so the padding tweens smoothly on both grow and shrink. Setting it
+         * every run is cheap — assigning the same string is a no-op as far as the browser is
+         * concerned. Stamping it inline avoids leaking the rule into globals.css.
+         */
+        main.style.transition = "padding-bottom 200ms ease-out";
+        main.style.paddingBottom = open ? `${EXTRA_PADDING_REM}rem` : "";
+    }, [open]);
+
+    useEffect(() => {
+        /**
+         * Restore the scroll container's padding on unmount so a stale "5rem" doesn't outlive
+         * the page that mounted the bar. The effect above's dependency-array runs are idempotent
+         * — this one only fires when the bar leaves the tree entirely.
+         */
+        return () => {
+            if (typeof document === "undefined") return;
+            const main = document.querySelector(SCROLL_CONTAINER_SELECTOR);
+            if (!(main instanceof HTMLElement)) return;
+            main.style.paddingBottom = "";
+            main.style.transition = "";
+        };
+    }, []);
+
     return (
-        <>
-            <div aria-hidden={!open} className={cn("pointer-events-none fixed inset-x-0 bottom-0 flex justify-center pb-6", z)}>
-                <section
-                    aria-label={ariaLabel}
-                    data-state={open ? "open" : "closed"}
+        <div aria-hidden={!open} className={cn("pointer-events-none fixed inset-x-0 bottom-0 flex justify-center pb-6", z)}>
+            <section
+                aria-label={ariaLabel}
+                data-state={open ? "open" : "closed"}
+                className={cn(
+                    "transition-[opacity,transform] duration-200 ease-out",
+                    "data-[state=open]:pointer-events-auto data-[state=open]:translate-y-0 data-[state=open]:opacity-100",
+                    "data-[state=closed]:pointer-events-none data-[state=closed]:translate-y-4 data-[state=closed]:opacity-0",
+                )}
+            >
+                <div
                     className={cn(
-                        "transition-[opacity,transform] duration-200 ease-out",
-                        "data-[state=open]:pointer-events-auto data-[state=open]:translate-y-0 data-[state=open]:opacity-100",
-                        "data-[state=closed]:pointer-events-none data-[state=closed]:translate-y-4 data-[state=closed]:opacity-0",
+                        "flex items-center gap-3 rounded-full border border-border bg-popover/95 px-3 py-1.5 text-sm shadow-xl backdrop-blur-sm",
+                        className,
                     )}
                 >
-                    <div
-                        className={cn(
-                            "flex items-center gap-3 rounded-full border border-border bg-popover/95 px-3 py-1.5 text-sm shadow-xl backdrop-blur-sm",
-                            className,
-                        )}
-                    >
-                        {children}
-                    </div>
-                </section>
-            </div>
-            {/**
-             * In-flow spacer that reserves vertical space at the end of the section when the bar
-             * is open, so the last row of content stays reachable above the floating bar. Place
-             * the bar at the END of your section's scrollable content for the padding to land
-             * where the user expects.
-             */}
-            <div aria-hidden="true" className={cn("shrink-0 transition-[height] duration-200 ease-out", open ? "h-20" : "h-0")} />
-        </>
+                    {children}
+                </div>
+            </section>
+        </div>
     );
 }
