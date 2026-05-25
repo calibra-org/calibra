@@ -8,9 +8,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
+import { DateField } from "#/components/ui/date-picker";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Spinner } from "#/components/ui/spinner";
+import type { Locale } from "@calibra/shared/i18n";
 import { getExportCount, getExportPreview } from "#/lib/exports/api";
 import { type ColumnPresetId, columnsForPreset, DEFAULT_EXPORT_COLUMNS } from "#/lib/exports/default-columns";
 import type {
@@ -301,6 +303,7 @@ function FilterPanel({ state, updateFilter, toggleArrayFilter }: FilterPanelProp
     const tStatus = useTranslations("ProductsExport.statusLabels");
     const tType = useTranslations("ProductsExport.typeLabels");
     const tStock = useTranslations("ProductsExport.stockLabels");
+    const locale = useLocale() as Locale;
 
     return (
         <section className="rounded-lg border bg-card p-5 text-card-foreground shadow-xs">
@@ -409,17 +412,19 @@ function FilterPanel({ state, updateFilter, toggleArrayFilter }: FilterPanelProp
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <FilterRow label={t("createdAfter")}>
-                        <Input
-                            type="date"
-                            value={state.filters.created_after ?? ""}
-                            onChange={(e) => updateFilter({ created_after: e.target.value === "" ? undefined : e.target.value })}
+                        <DateField
+                            locale={locale as "fa" | "en"}
+                            value={state.filters.created_after ?? null}
+                            onChange={(next) => updateFilter({ created_after: next ?? undefined })}
+                            placeholder={t("createdAfter")}
                         />
                     </FilterRow>
                     <FilterRow label={t("createdBefore")}>
-                        <Input
-                            type="date"
-                            value={state.filters.created_before ?? ""}
-                            onChange={(e) => updateFilter({ created_before: e.target.value === "" ? undefined : e.target.value })}
+                        <DateField
+                            locale={locale as "fa" | "en"}
+                            value={state.filters.created_before ?? null}
+                            onChange={(next) => updateFilter({ created_before: next ?? undefined })}
+                            placeholder={t("createdBefore")}
                         />
                     </FilterRow>
                 </div>

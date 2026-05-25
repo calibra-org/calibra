@@ -1797,7 +1797,8 @@
                 "payment": "روش پرداخت",
                 "source": "منبع",
                 "country": "کشور",
-                "needsAttention": "نیاز به اقدام"
+                "needsAttention": "نیاز به اقدام",
+                "created": "تاریخ ثبت"
             },
             "payment": {
                 "cod": "پرداخت در محل",

@@ -1797,7 +1797,8 @@
                 "payment": "Payment method",
                 "source": "Source",
                 "country": "Country",
-                "needsAttention": "Needs attention"
+                "needsAttention": "Needs attention",
+                "created": "Created"
             },
             "payment": {
                 "cod": "Cash on delivery",

@@ -9,11 +9,13 @@ import { useMemo, useState } from "react";
 import {
     ActiveFilterChips,
     DataTable,
+    type DateFacetDef,
     DataTableToolbar,
     DataTableViewOptions,
     type FacetedFilterDef,
 } from "#/components/data-table";
 import { useDataTable } from "#/components/data-table/use-data-table";
+import { toLegacyDateRange } from "#/components/ui/date-picker";
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
 import { formatNumber } from "#/lib/format";
@@ -81,9 +83,28 @@ export function CustomersListClient() {
         [t, statusT],
     );
 
+    const dateFacets = useMemo<DateFacetDef[]>(
+        () => [
+            {
+                paramKey: "created",
+                label: t("table.createdAt"),
+                calendar: "auto",
+                legacyParamKeys: { after: "created_after", before: "created_before" },
+            },
+            {
+                paramKey: "lastOrder",
+                label: t("table.lastOrder"),
+                calendar: "auto",
+                legacyParamKeys: { after: "last_order_after", before: "last_order_before" },
+            },
+        ],
+        [t],
+    );
+
     const tableState = useDataTable({
         id: TABLE_ID,
         facets,
+        dateFacets,
         defaultPerPage: 20,
         defaultColumnVisibility: {
             nationalId: false,
@@ -92,6 +113,11 @@ export function CustomersListClient() {
             createdAt: false,
         },
     });
+
+    const createdValue = tableState.dateFacetValues.created;
+    const lastOrderValue = tableState.dateFacetValues.lastOrder;
+    const createdLegacy = useMemo(() => (createdValue === null ? {} : toLegacyDateRange(createdValue)), [createdValue]);
+    const lastOrderLegacy = useMemo(() => (lastOrderValue === null ? {} : toLegacyDateRange(lastOrderValue)), [lastOrderValue]);
 
     const {
         data: result,
@@ -110,6 +136,10 @@ export function CustomersListClient() {
         includeStats: true,
         countries: tableState.facetValues.country,
         statuses: (tableState.facetValues.status ?? []) as ("active" | "suspended")[],
+        createdAfter: createdLegacy.after,
+        createdBefore: createdLegacy.before,
+        lastOrderAfter: lastOrderLegacy.after,
+        lastOrderBefore: lastOrderLegacy.before,
     });
 
     const deleteMutation = useDeleteCustomer();
@@ -278,6 +308,10 @@ export function CustomersListClient() {
                             toggles={[]}
                             toggleValues={tableState.toggleValues}
                             onToggleChange={tableState.setToggleValue}
+                            dateFacets={dateFacets}
+                            dateFacetValues={tableState.dateFacetValues}
+                            onDateFacetChange={tableState.setDateFilterValue}
+                            locale={locale}
                             hasActiveFilters={hasActiveFilters}
                             onClearAll={clearAllFilters}
                             onRefresh={() => refetch()}

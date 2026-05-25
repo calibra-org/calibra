@@ -11,11 +11,13 @@ import {
     ActiveFilterChips,
     type ColumnDef,
     DataTable,
+    type DateFacetDef,
     DataTableToolbar,
     DataTableViewOptions,
     type FacetedFilterDef,
 } from "#/components/data-table";
 import { useDataTable } from "#/components/data-table/use-data-table";
+import { toLegacyDateRange } from "#/components/ui/date-picker";
 import { OrderStatusBadge } from "#/components/OrderStatusBadge";
 import { Button } from "#/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
@@ -55,13 +57,29 @@ export function OrdersList() {
         [facets],
     );
 
+    const dateFacets = useMemo<DateFacetDef[]>(
+        () => [
+            {
+                paramKey: "created",
+                label: t("filters.created"),
+                calendar: "auto",
+                legacyParamKeys: { after: "after", before: "before" },
+            },
+        ],
+        [t],
+    );
+
     const tableState = useDataTable({
         id: TABLE_ID,
         facets: facetsWithStatus,
         toggles,
+        dateFacets,
         defaultPerPage: 25,
         defaultColumnVisibility: { shipTo: false, items: false, coupon: false, source: false },
     });
+
+    const createdValue = tableState.dateFacetValues.created;
+    const createdLegacy = useMemo(() => (createdValue === null ? {} : toLegacyDateRange(createdValue)), [createdValue]);
 
     const status: StatusTabKey = useMemo(() => {
         const value = tableState.facetValues.status?.[0];
@@ -105,6 +123,8 @@ export function OrdersList() {
         sources: tableState.facetValues.source,
         payments: tableState.facetValues.payment,
         countries: tableState.facetValues.country,
+        after: createdLegacy.after,
+        before: createdLegacy.before,
         customerId: customerIdFilter !== undefined && Number.isFinite(customerIdFilter) ? customerIdFilter : undefined,
     });
 
@@ -334,6 +354,10 @@ export function OrdersList() {
                             toggles={toggles}
                             toggleValues={tableState.toggleValues}
                             onToggleChange={tableState.setToggleValue}
+                            dateFacets={dateFacets}
+                            dateFacetValues={tableState.dateFacetValues}
+                            onDateFacetChange={tableState.setDateFilterValue}
+                            locale={locale}
                             hasActiveFilters={tableState.hasActiveFilters}
                             onClearAll={tableState.clearAllFilters}
                             onRefresh={() => {
