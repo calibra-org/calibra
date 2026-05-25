@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { Plus, Tag } from "lucide-react";
+import { Download, Plus, Tag } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
@@ -214,12 +214,27 @@ export function CouponsListClient() {
                 title={t("title")}
                 subtitle={t("subtitle")}
                 actions={
-                    <Button asChild>
-                        <Link href="/coupons/new">
-                            <Plus className="me-2 size-4" aria-hidden="true" />
-                            {t("newCoupon")}
-                        </Link>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button asChild variant="outline">
+                            <a
+                                href={buildExportUrl({
+                                    tab,
+                                    search: tableState.q,
+                                    discountType: tableState.facetValues.discount_type,
+                                })}
+                                download
+                            >
+                                <Download className="me-2 size-4" aria-hidden="true" />
+                                {t("exportCsv")}
+                            </a>
+                        </Button>
+                        <Button asChild>
+                            <Link href="/coupons/new">
+                                <Plus className="me-2 size-4" aria-hidden="true" />
+                                {t("newCoupon")}
+                            </Link>
+                        </Button>
+                    </div>
                 }
             />
 
@@ -363,4 +378,18 @@ export function CouponsListClient() {
 
 function relativeDays(iso: string): number {
     return Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
+}
+
+/**
+ * Build a same-origin export URL with the current filter state forwarded as query params. The
+ * admin proxy already attaches the bearer token so a plain `<a download>` works — no SDK call
+ * needed for the CSV stream.
+ */
+function buildExportUrl(args: { tab?: string; search?: string; discountType?: string[] }): string {
+    const params = new URLSearchParams();
+    if (args.tab && args.tab !== "any") params.set("tab", args.tab);
+    if (args.search && args.search.length > 0) params.set("search", args.search);
+    if (args.discountType && args.discountType.length > 0) params.set("discount_type", args.discountType.join(","));
+    const qs = params.toString();
+    return qs.length > 0 ? `/api/admin/coupons/export?${qs}` : "/api/admin/coupons/export";
 }

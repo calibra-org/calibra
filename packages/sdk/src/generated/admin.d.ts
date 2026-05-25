@@ -825,6 +825,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/coupons/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export coupons as CSV (admin)
+         * @description Sync CSV export. Mirrors the list endpoint's filter set (`tab`, `status`, `search`, `discount_type`, `brand`) so the caller can "export current view." Returns `text/csv; charset=utf-8` with a filename hint via `content-disposition`. The number of rows emitted is repeated in the `X-Coupon-Export-Count` response header so the client can show a confirmation toast without re-parsing the body.
+         */
+        get: operations["adminCouponsExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/coupons/batch": {
         parameters: {
             query?: never;
@@ -5496,6 +5534,39 @@ export interface operations {
                             reason?: string;
                         };
                     };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminCouponsExport: {
+        parameters: {
+            query?: {
+                tab?: "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
+                status?: "active" | "disabled";
+                search?: string;
+                discount_type?: ("fixed_cart" | "fixed_product" | "percent" | "free_shipping")[];
+                brand?: number[];
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV body. Header row first, then one row per matching coupon. */
+            200: {
+                headers: {
+                    /** @description Total rows emitted (excluding the header row). */
+                    "X-Coupon-Export-Count"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
                 };
             };
             401: components["responses"]["Unauthorized"];

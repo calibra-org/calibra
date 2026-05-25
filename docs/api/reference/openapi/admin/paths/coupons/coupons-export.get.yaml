@@ -1,0 +1,40 @@
+operationId: adminCouponsExport
+summary: Export coupons as CSV (admin)
+description: >
+    Sync CSV export. Mirrors the list endpoint's filter set (`tab`, `status`, `search`,
+    `discount_type`, `brand`) so the caller can "export current view." Returns
+    `text/csv; charset=utf-8` with a filename hint via `content-disposition`. The number of rows
+    emitted is repeated in the `X-Coupon-Export-Count` response header so the client can show a
+    confirmation toast without re-parsing the body.
+tags: [Admin / Coupons]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: tab, in: query, schema: { type: string, enum: [any, active, disabled, expired, scheduled, used, trashed] } }
+    - { name: status, in: query, schema: { type: string, enum: [active, disabled] } }
+    - { name: search, in: query, schema: { type: string } }
+    - {
+          name: discount_type,
+          in: query,
+          schema: { type: array, items: { type: string, enum: [fixed_cart, fixed_product, percent, free_shipping] } },
+          style: form,
+          explode: false,
+      }
+    - {
+          name: brand,
+          in: query,
+          schema: { type: array, items: { type: integer } },
+          style: form,
+          explode: false,
+      }
+responses:
+    "200":
+        description: CSV body. Header row first, then one row per matching coupon.
+        headers:
+            X-Coupon-Export-Count:
+                schema: { type: integer }
+                description: Total rows emitted (excluding the header row).
+        content:
+            text/csv:
+                schema: { type: string }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

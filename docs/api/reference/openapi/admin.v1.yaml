@@ -211,6 +211,11 @@ paths:
             $ref: "./admin/paths/coupons/coupons-code-check.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/coupons/export:
+        get:
+            $ref: "./admin/paths/coupons/coupons-export.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/coupons/batch:
         post:
             $ref: "./admin/paths/coupons/coupons-batch.post.yaml"

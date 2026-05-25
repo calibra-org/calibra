@@ -11,6 +11,7 @@ import CouponEmailRestriction from "#models/coupon_email_restriction";
 import CouponProductConstraint from "#models/coupon_product_constraint";
 import CouponRedemption from "#models/coupon_redemption";
 import CouponTranslation from "#models/coupon_translation";
+import { exportCouponsToCsv } from "#services/coupon_csv_exporter";
 import { runCouponTest } from "#services/coupon_test_runner";
 import { paginated, resource } from "#transformers/api_envelope";
 import CouponRedemptionTransformer from "#transformers/coupon_redemption_transformer";
@@ -260,6 +261,28 @@ export default class AdminCouponsController {
         if (!coupon) throw notFound();
         const result = await runCouponTest(coupon, payload, ctx.i18n);
         return { data: result };
+    }
+
+    /**
+     * GET /api/v1/admin/coupons/export — sync CSV download. Honors the same tab + status +
+     * search + discount_type filters as the list endpoint so an operator can "export current
+     * view." Streams as `text/csv` with a filename hint; clients are expected to redirect to
+     * this URL (e.g. via window.location.href).
+     */
+    async exportCsv(ctx: HttpContext) {
+        const filters = {
+            tab: ctx.request.input("tab"),
+            status: ctx.request.input("status"),
+            search: String(ctx.request.input("search", "")).trim() || undefined,
+            discountTypes: parseList(ctx.request.input("discount_type")),
+            brandIds: parseList(ctx.request.input("brand")).map((s) => Number(s)).filter(Number.isFinite),
+        };
+        const { csv, count } = await exportCouponsToCsv(filters);
+        const filename = `coupons-${DateTime.utc().toFormat("yyyyLLdd-HHmm")}.csv`;
+        ctx.response.header("content-type", "text/csv; charset=utf-8");
+        ctx.response.header("content-disposition", `attachment; filename="${filename}"`);
+        ctx.response.header("x-coupon-export-count", String(count));
+        return csv;
     }
 
     async show(ctx: HttpContext) {

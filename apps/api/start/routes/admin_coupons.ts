@@ -9,6 +9,7 @@ router
         router.get("/", [AdminCouponsController, "index"]).as("admin.coupons.index");
         router.get("/counts", [AdminCouponsController, "counts"]).as("admin.coupons.counts");
         router.get("/code-check", [AdminCouponsController, "codeCheck"]).as("admin.coupons.codeCheck");
+        router.get("/export", [AdminCouponsController, "exportCsv"]).as("admin.coupons.export");
         router.post("/", [AdminCouponsController, "store"]).as("admin.coupons.store");
         router.post("/batch", [AdminCouponsController, "batch"]).as("admin.coupons.batch");
         router.get("/:id", [AdminCouponsController, "show"]).as("admin.coupons.show");

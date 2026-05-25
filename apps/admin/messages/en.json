@@ -2260,6 +2260,7 @@
         "subtitle": "Create, manage, and monitor the store's discount codes.",
         "newCoupon": "Add coupon",
         "addCoupon": "Add coupon",
+        "exportCsv": "Export CSV",
         "search": "Search by code or description…",
         "refresh": "Refresh view",
         "empty": "No coupons yet.",
