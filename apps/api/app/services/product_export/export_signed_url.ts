@@ -37,8 +37,15 @@ export interface SignedUrl {
 }
 
 export function mintSignedUrl(payload: SignedUrlPayload): SignedUrl {
-    const ttlSec = Math.max(1, Math.floor((payload.expiresAt - Date.now()) / 1000));
-    const token = encryption.getMessageVerifier().sign({ userId: payload.userId, exportId: payload.exportId }, ttlSec, PURPOSE);
+    /**
+     * `messageVerifier.sign` passes the numeric `expiresIn` through `@poppinss/utils`'
+     * `string.milliseconds.parse`, which interprets a bare number as **milliseconds**, NOT
+     * seconds. Passing `Math.floor((expiresAt - now) / 1000)` would shrink a 24-hour window
+     * to ~86 seconds (24h in seconds-as-ms). We pass the raw millisecond gap and let the
+     * verifier embed `Date.now() + ttlMs` as its `expiryDate`.
+     */
+    const ttlMs = Math.max(1000, payload.expiresAt - Date.now());
+    const token = encryption.getMessageVerifier().sign({ userId: payload.userId, exportId: payload.exportId }, ttlMs, PURPOSE);
     const hash = createHash("sha256").update(token).digest("hex");
     return { token, hash, expiresAt: payload.expiresAt };
 }
