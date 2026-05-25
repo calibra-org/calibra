@@ -105,7 +105,18 @@
         "topProductsSubtitle": "Best sellers this month",
         "recentOrders": "Recent orders",
         "viewAll": "View all",
-        "comparedTo": "vs previous period"
+        "comparedTo": "vs previous period",
+        "customerInsights": {
+            "title": "Customer summary",
+            "subtitle": "Customer base health and the last 30 days",
+            "viewAll": "View all customers",
+            "total": "Total customers",
+            "avgOrderCount": "Avg orders",
+            "avgLifetimeSpend": "Avg lifetime spend",
+            "avgOrderValue": "Avg order value",
+            "pctWithAccount": "With account",
+            "delta30d": "vs 30 days ago"
+        }
     },
     "ProductsExport": {
         "title": "Export products to CSV",
@@ -2387,14 +2398,6 @@
             "successBody": "Open the profile or add another customer.",
             "openProfile": "Open profile",
             "addAnother": "Add another"
-        },
-        "footer": {
-            "loading": "Loading customer stats…",
-            "customers": "Customers",
-            "avgOrderCount": "Avg orders",
-            "avgLifetimeSpend": "Avg lifetime spend",
-            "avgAov": "Avg AOV",
-            "pctWithAccount": "With account"
         },
         "pagination": {
             "rowsPerPage": "Rows per page",

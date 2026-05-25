@@ -105,7 +105,18 @@
         "topProductsSubtitle": "پرفروش‌ترین محصولات این ماه",
         "recentOrders": "سفارش‌های اخیر",
         "viewAll": "مشاهده همه",
-        "comparedTo": "نسبت به دوره قبل"
+        "comparedTo": "نسبت به دوره قبل",
+        "customerInsights": {
+            "title": "خلاصه مشتری‌ها",
+            "subtitle": "وضعیت پایگاه مشتری و روند ۳۰ روز اخیر",
+            "viewAll": "مشاهده همه مشتری‌ها",
+            "total": "کل مشتری‌ها",
+            "avgOrderCount": "میانگین تعداد سفارش",
+            "avgLifetimeSpend": "میانگین مجموع خرید",
+            "avgOrderValue": "میانگین مبلغ سفارش",
+            "pctWithAccount": "دارای حساب کاربری",
+            "delta30d": "از ۳۰ روز پیش"
+        }
     },
     "ProductsExport": {
         "title": "خروجی محصولات به CSV",
@@ -2387,14 +2398,6 @@
             "successBody": "پروفایل را باز کنید یا مشتری دیگری بسازید.",
             "openProfile": "گشودن پروفایل",
             "addAnother": "افزودن مشتری دیگر"
-        },
-        "footer": {
-            "loading": "در حال بارگذاری خلاصه…",
-            "customers": "مشتری",
-            "avgOrderCount": "میانگین تعداد سفارش",
-            "avgLifetimeSpend": "میانگین مجموع خرید",
-            "avgAov": "میانگین مبلغ سفارش",
-            "pctWithAccount": "دارای حساب کاربری"
         },
         "pagination": {
             "rowsPerPage": "ردیف در هر صفحه",

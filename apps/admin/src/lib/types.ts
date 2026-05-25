@@ -329,6 +329,23 @@ export interface AdminCustomer {
     marketingPrefs?: AdminCustomerMarketingPrefs;
 }
 
+export interface AdminCustomerInsights {
+    total: number;
+    totalDelta30d: number;
+    avgOrderCount: number;
+    avgOrderCountDelta30d: number;
+    avgLifetimeSpend: MoneyMinor;
+    avgLifetimeSpendDelta30dPct: number;
+    avgOrderValue: MoneyMinor;
+    avgOrderValueDelta30dPct: number;
+    pctWithAccount: number;
+    sparklines: {
+        total: number[];
+        spend: number[];
+    };
+    generatedAt: string;
+}
+
 export interface AdminCustomerCounts {
     all: number;
     accountHolders: number;
