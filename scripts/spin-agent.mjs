@@ -587,6 +587,21 @@ const PROMETHEUS_LINKS = [
     { path: "/graph?g0.expr=" + encodeURIComponent("calibra_queue_jobs_active") + "&g0.tab=0&g0.range_input=15m", title: "Queue depth", desc: "Pending + active + delayed jobs per queue, refreshed every 10s.", icon: "📥", badge: "graph", accent: "rgba(251, 191, 36, 0.18)" },
 ];
 
+/**
+ * Pre-built Grafana Explore deep-links into Loki for the api's structured Pino log stream.
+ * Each card materialises the Explore "left=" param at click time (so the URL stays short here
+ * and lookups stay snappy). Pino log levels: 30=info, 40=warn, 50=error, 60=fatal — we filter
+ * by numeric level rather than name because Pino's ndjson uses integers.
+ */
+const LOKI_QUERIES = [
+    { expr: '{service="calibra-api"}', range: "now-1h", title: "All api logs", desc: "Every Pino line from the api over the last hour. The default tail.", icon: "📜", badge: "logs", accent: "rgba(110, 168, 254, 0.18)" },
+    { expr: '{service="calibra-api"} | json | level=~"50|60"', range: "now-1h", title: "Errors + fatal", desc: "Pino level >= 50 (error / fatal). Drill-down from a red error-ratio stat.", icon: "🚨", badge: "logs", accent: "rgba(239, 68, 68, 0.18)" },
+    { expr: '{service="calibra-api"} | json | level=~"40|50|60"', range: "now-1h", title: "Warnings + errors", desc: "Pino level >= 40. Catches business-rule rejections + 4xx-side warns.", icon: "⚠️", badge: "logs", accent: "rgba(251, 191, 36, 0.18)" },
+    { expr: '{service="calibra-api"}', range: "now-5m", live: true, title: "Live tail", desc: "Last 5 minutes, live-streaming. Mirror of the homepage panel but full-screen.", icon: "📡", badge: "live", accent: "rgba(52, 211, 153, 0.18)" },
+    { expr: '{service="calibra-api"} |~ "(?i)payment"', range: "now-3h", title: "Payment-related lines", desc: "Free-text grep over /payment/*, gateway adapters, refund flows.", icon: "💳", badge: "logs", accent: "rgba(196, 181, 253, 0.18)" },
+    { expr: '{service="calibra-api"} |~ "(?i)runImport|runExport"', range: "now-3h", title: "Import / export job lines", desc: "Filter on runImport/runExport messages — the importer/exporter trail.", icon: "↕️", badge: "logs", accent: "rgba(244, 114, 182, 0.18)" },
+];
+
 const KIND_GLYPH = { app: "◆", obs: "◉", search: "⌕", data: "▤" };
 const KIND_LABEL = { app: "app", obs: "observability", search: "search", data: "data + dev" };
 
@@ -879,6 +894,34 @@ function PrometheusPanel() {
     \`;
 }
 
+/**
+ * Builds the Grafana Explore "left=" URL param for a Loki query. Grafana 10.4+ also accepts a
+ * newer "panes" schema-v1 param; this old "left" form still works in 11.x and is simpler to
+ * compose.
+ */
+function buildLokiExploreHref(grafanaBase, query) {
+    const left = {
+        datasource: "loki",
+        queries: [{ refId: "A", datasource: { type: "loki", uid: "loki" }, expr: query.expr, queryType: "range", editorMode: "code" }],
+        range: { from: query.range, to: "now" },
+    };
+    return grafanaBase + "/explore?orgId=1&left=" + encodeURIComponent(JSON.stringify(left)) + (query.live ? "&liveStreaming" : "");
+}
+
+function LokiPanel() {
+    const port = useCaddyPort();
+    const grafanaBase = "https://grafana." + SLUG + ".spin.localhost:" + port;
+    const items = useMemo(
+        () => LOKI_QUERIES.map((q) => ({ ...q, href: buildLokiExploreHref(grafanaBase, q).slice(grafanaBase.length) })),
+        [grafanaBase],
+    );
+    return html\`
+        <\${Panel} glyph="∥" title="api logs (loki via grafana)">
+            <\${CardGrid} baseUrl=\${grafanaBase} items=\${items} hrefKey="href" />
+        <//>
+    \`;
+}
+
 function MeilisearchPanel({ secrets }) {
     const masterKey = secrets?.meiliMasterKey ?? null;
     const port = secrets?.meiliPort ?? null;
@@ -1132,6 +1175,7 @@ function App() {
         <\${ServicesGrid} services=\${data?.services} onRestart=\${restart} />
         <\${GrafanaPanel} />
         <\${PrometheusPanel} />
+        <\${LokiPanel} />
         <\${MeilisearchPanel} secrets=\${data?.secrets} />
         <\${ActionsPanel} ask=\${ask} showToast=\${showToast} appendLog=\${(line) => logRef.current?.(line)} />
         <\${LogsPanel} logRef=\${logRef} />
