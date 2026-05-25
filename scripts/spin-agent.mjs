@@ -226,7 +226,23 @@ async function probeService(svc) {
 async function statusJson() {
     const services = buildServiceCatalog();
     const results = await Promise.all(services.map(async (svc) => ({ ...svc, probe: await probeService(svc) })));
-    return { slug: SLUG, composeProject: COMPOSE_PROJECT, services: results };
+    const meta = readMeta();
+    const ports = /** @type {Record<string, number>} */ (meta.ports ?? {});
+    return {
+        slug: SLUG,
+        composeProject: COMPOSE_PROJECT,
+        services: results,
+        /**
+         * Per-spin secrets the dashboard surfaces in the "search" panel for convenience —
+         * copy button + curl hint, no shell digging required. Only the master key is exposed
+         * (GlitchTip SECRET_KEY stays out of the agent because the operator has no use for
+         * it outside of GlitchTip's own internals).
+         */
+        secrets: {
+            meiliMasterKey: typeof meta.meiliMasterKey === "string" ? meta.meiliMasterKey : null,
+            meiliPort: typeof ports.meilisearch === "number" ? ports.meilisearch : null,
+        },
+    };
 }
 
 /**
@@ -443,8 +459,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .actions button.primary { background: var(--accent); color: #0b0d10; border-color: var(--accent); }
 .actions button.danger { background: #2a1518; border-color: #5c2026; color: #fca5a5; }
 #log { background: #06080a; border: 1px solid var(--border); border-radius: 6px; padding: 12px; height: 320px; overflow: auto; font: 11px/1.5 ui-monospace, SFMono-Regular, monospace; color: #a8b3c1; white-space: pre-wrap; }
-.log-controls { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
-.log-controls button.active { border-color: var(--accent); color: var(--accent); }
+.log-controls { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+.log-controls .sources { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.log-controls .sources button.active { border-color: var(--accent); color: var(--accent); }
+.log-controls .log-clear { background: transparent; border: none; color: var(--muted); padding: 4px 6px; font-size: 11px; opacity: 0.7; cursor: pointer; }
+.log-controls .log-clear:hover { color: var(--text); opacity: 1; border: none; }
+.log-controls .log-clear::before { content: '⌫ '; }
 .toast { position: fixed; bottom: 20px; right: 20px; background: var(--panel-2); border: 1px solid var(--border); padding: 10px 14px; border-radius: 6px; font-size: 12px; max-width: 360px; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; }
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast.error { border-color: var(--bad); }
@@ -468,6 +488,20 @@ details.setup summary .lock { color: var(--warn); font-weight: 600; }
 .setup-tabs button.active { border-color: var(--accent); color: var(--accent); }
 .setup-pane { display: none; }
 .setup-pane.active { display: block; }
+.secret-row { display: grid; grid-template-columns: 120px 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.secret-row:last-child { border-bottom: none; }
+.secret-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.secret-value { background: #06080a; border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; font: 11px/1.4 ui-monospace, SFMono-Regular, monospace; color: var(--accent); overflow-x: auto; word-break: break-all; }
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-backdrop.show { display: flex; }
+.modal { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; max-width: 460px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+.modal h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--text); }
+.modal p { margin: 0 0 18px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.modal-actions button { padding: 6px 14px; }
+.modal-actions button.confirm { background: var(--accent); color: #0b0d10; border-color: var(--accent); }
+.modal-actions button.danger { background: #2a1518; border-color: #5c2026; color: #fca5a5; }
+button.danger { background: #2a1518; border-color: #5c2026; color: #fca5a5; }
 </style>
 </head>
 <body>
@@ -546,30 +580,57 @@ Import-Certificate -FilePath "$env:USERPROFILE\\Downloads\\caddy-root.crt" -Cert
     </div>
 
     <section class="panel" style="margin-top: 16px;">
+        <h2>meilisearch credentials</h2>
+        <div class="secret-row">
+            <span class="secret-label">master key</span>
+            <code class="secret-value" id="meili-key">—</code>
+            <button data-copy-secret="meili-key">copy</button>
+        </div>
+        <div class="secret-row">
+            <span class="secret-label">curl</span>
+            <code class="secret-value" id="meili-curl">—</code>
+            <button data-copy-secret="meili-curl">copy</button>
+        </div>
+    </section>
+
+    <section class="panel" style="margin-top: 16px;">
         <h2>actions</h2>
         <div class="actions">
-            <button class="primary" data-action="reseed">reseed db</button>
-            <button data-action="migrate">migrate</button>
-            <button data-action="rollback">rollback + re-migrate</button>
-            <button id="open-stop-help">stop spin (see CLI)</button>
+            <button class="primary" data-action="reseed" data-confirm="This drops every seeded row and reinserts a fresh demo dataset. Anything you've added since the last seed will be lost. Continue?">reseed db</button>
+            <button data-action="migrate" data-confirm="Run all pending migrations against the spin's database. Continue?">migrate</button>
+            <button class="danger" data-action="rollback" data-confirm="Rolls every migration back, then re-runs the full migration history. All data not covered by seeders is lost. Continue?">rollback + re-migrate</button>
+            <button class="danger" id="open-stop-help">stop spin (see CLI)</button>
         </div>
     </section>
 
     <section class="panel" style="margin-top: 16px;">
         <h2>logs</h2>
         <div class="log-controls">
-            <button data-log="api.ndjson" class="active">api.ndjson</button>
-            <button data-log="api">api.log</button>
-            <button data-log="admin">admin</button>
-            <button data-log="web">web</button>
-            <button data-log="queue">queue</button>
-            <button data-log="agent">agent</button>
-            <button id="log-clear">clear</button>
+            <div class="sources">
+                <button data-log="api.ndjson" class="active">api.ndjson</button>
+                <button data-log="api">api.log</button>
+                <button data-log="admin">admin</button>
+                <button data-log="web">web</button>
+                <button data-log="queue">queue</button>
+                <button data-log="agent">agent</button>
+            </div>
+            <button id="log-clear" class="log-clear" title="clear log view">clear</button>
         </div>
         <pre id="log"></pre>
     </section>
 </div>
 <div class="toast" id="toast"></div>
+
+<div class="modal-backdrop" id="confirm-modal">
+    <div class="modal">
+        <h3 id="confirm-title">Confirm action</h3>
+        <p id="confirm-body">…</p>
+        <div class="modal-actions">
+            <button id="confirm-cancel">cancel</button>
+            <button class="confirm" id="confirm-ok">continue</button>
+        </div>
+    </div>
+</div>
 
 <script>
 const groups = { app: document.getElementById('group-app'), obs: document.getElementById('group-obs'), search: document.getElementById('group-search'), data: document.getElementById('group-data') };
@@ -584,10 +645,52 @@ function showToast(message, isError = false) {
     setTimeout(() => toast.className = 'toast', 3500);
 }
 
+function renderSecrets(secrets) {
+    const keyEl = document.getElementById('meili-key');
+    const curlEl = document.getElementById('meili-curl');
+    if (!secrets || !secrets.meiliMasterKey) {
+        keyEl.textContent = '(not provisioned for this spin)';
+        curlEl.textContent = '';
+        return;
+    }
+    keyEl.textContent = secrets.meiliMasterKey;
+    const host = secrets.meiliPort ? \`http://localhost:\${secrets.meiliPort}\` : '';
+    curlEl.textContent = host ? \`curl -H "Authorization: Bearer \${secrets.meiliMasterKey}" \${host}/keys\` : '';
+}
+
+function confirmDialog(title, body) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        document.getElementById('confirm-title').textContent = title;
+        document.getElementById('confirm-body').textContent = body;
+        const ok = document.getElementById('confirm-ok');
+        const cancel = document.getElementById('confirm-cancel');
+        const close = (result) => {
+            modal.classList.remove('show');
+            ok.removeEventListener('click', onOk);
+            cancel.removeEventListener('click', onCancel);
+            modal.removeEventListener('click', onBackdrop);
+            document.removeEventListener('keydown', onKey);
+            resolve(result);
+        };
+        const onOk = () => close(true);
+        const onCancel = () => close(false);
+        const onBackdrop = (e) => { if (e.target === modal) close(false); };
+        const onKey = (e) => { if (e.key === 'Escape') close(false); if (e.key === 'Enter') close(true); };
+        ok.addEventListener('click', onOk);
+        cancel.addEventListener('click', onCancel);
+        modal.addEventListener('click', onBackdrop);
+        document.addEventListener('keydown', onKey);
+        modal.classList.add('show');
+        ok.focus();
+    });
+}
+
 async function refreshStatus() {
     try {
         const res = await fetch('/api/status');
         const data = await res.json();
+        renderSecrets(data.secrets);
         for (const key of Object.keys(groups)) {
             const heading = groups[key].querySelector('h2');
             groups[key].innerHTML = '';
@@ -630,6 +733,11 @@ document.body.addEventListener('click', async (e) => {
 
     const restartName = target.getAttribute('data-restart');
     if (restartName) {
+        const proceed = await confirmDialog(
+            \`Restart \${restartName}?\`,
+            \`Stops and starts the \${restartName} container. In-flight requests against it will fail; expect ~5–30 s of downtime.\`,
+        );
+        if (!proceed) return;
         target.disabled = true;
         const original = target.textContent;
         target.textContent = 'restarting…';
@@ -642,10 +750,30 @@ document.body.addEventListener('click', async (e) => {
 
     const action = target.getAttribute('data-action');
     if (action) {
+        const message = target.getAttribute('data-confirm');
+        if (message) {
+            const proceed = await confirmDialog(\`Run \${action}?\`, message);
+            if (!proceed) return;
+        }
         target.disabled = true;
         await streamAction('/api/actions/' + action, {}, action);
         target.disabled = false;
         refreshStatus();
+        return;
+    }
+
+    const copySecret = target.getAttribute('data-copy-secret');
+    if (copySecret) {
+        const el = document.getElementById(copySecret);
+        const text = el ? el.textContent : '';
+        try {
+            await navigator.clipboard.writeText(text);
+            const original = target.textContent;
+            target.textContent = 'copied ✓';
+            setTimeout(() => { target.textContent = original; }, 1500);
+        } catch {
+            showToast('clipboard write failed — copy manually', true);
+        }
         return;
     }
 
