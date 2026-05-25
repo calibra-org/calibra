@@ -271,43 +271,32 @@ async function doctor(args) {
     log(
         `  adminer      http://localhost:${adminer} ${(await isPortListening(adminer)) ? green("up") : red("down")}${tag} (queue_jobs)`,
     );
-    /**
-     * Prod-parity infra. Legacy spins (pre-observability layout) print `n/a` on every line —
-     * the meta has no caddy/meili/observability ports, those services were never brought up.
-     * Stop+remove+respin migrates such a spin to the new layout.
-     */
-    if (isLegacyObservability(meta)) {
-        log(`  observability n/a (legacy spin — re-spin to migrate)`);
-        log(`  meilisearch  n/a (legacy spin — re-spin to migrate)`);
-        log(`  caddy        n/a (legacy spin — re-spin to migrate)`);
-    } else {
-        const caddyHttps = requirePort(meta, "caddyHttps");
-        const meili = requirePort(meta, "meilisearch");
-        const caddyOk = await isPortListening(caddyHttps);
-        log(`  caddy        https://*.${slug}.spin.localhost (port ${caddyHttps}) ${caddyOk ? green("up") : red("down")}`);
-        log(`  meilisearch  http://localhost:${meili} ${(await isPortListening(meili)) ? green("up") : red("down")}`);
-        log(
-            `  glitchtip    https://errors.${slug}.spin.localhost ${(await probeViaCaddy(meta, "errors", "/api/0/", [200, 401, 403])) ? green("up") : red("down")}${meta.glitchtipDsn ? "" : yellow(" (no DSN — run `pnpm spin pr` blurb)")}`,
-        );
-        log(
-            `  grafana      https://grafana.${slug}.spin.localhost ${(await probeViaCaddy(meta, "grafana", "/api/health")) ? green("up") : red("down")}`,
-        );
-        log(
-            `  prometheus   https://prom.${slug}.spin.localhost ${(await probeViaCaddy(meta, "prom", "/-/ready")) ? green("up") : red("down")}`,
-        );
-        log(
-            `  loki         https://loki.${slug}.spin.localhost ${(await probeViaCaddy(meta, "loki", "/ready")) ? green("up") : red("down")}`,
-        );
-        log(
-            `  tempo        https://tempo.${slug}.spin.localhost (OTLP on :${requirePort(meta, "tempo")}) ${(await probeViaCaddy(meta, "tempo", "/ready")) ? green("up") : red("down")}`,
-        );
-        log(
-            `  alertmanager https://alerts.${slug}.spin.localhost ${(await probeViaCaddy(meta, "alerts", "/-/ready")) ? green("up") : red("down")}`,
-        );
-        log(
-            `  uptime kuma  https://uptime.${slug}.spin.localhost ${(await probeViaCaddy(meta, "uptime", "/", [200, 302])) ? green("up") : red("down")}`,
-        );
-    }
+    const caddyHttps = requirePort(meta, "caddyHttps");
+    const meili = requirePort(meta, "meilisearch");
+    const caddyOk = await isPortListening(caddyHttps);
+    log(`  caddy        https://*.${slug}.spin.localhost (port ${caddyHttps}) ${caddyOk ? green("up") : red("down")}`);
+    log(`  meilisearch  http://localhost:${meili} ${(await isPortListening(meili)) ? green("up") : red("down")}`);
+    log(
+        `  glitchtip    https://errors.${slug}.spin.localhost ${(await probeViaCaddy(meta, "errors", "/api/0/", [200, 401, 403])) ? green("up") : red("down")}${meta.glitchtipDsn ? "" : yellow(" (no DSN — run `pnpm spin pr` blurb)")}`,
+    );
+    log(
+        `  grafana      https://grafana.${slug}.spin.localhost ${(await probeViaCaddy(meta, "grafana", "/api/health")) ? green("up") : red("down")}`,
+    );
+    log(
+        `  prometheus   https://prom.${slug}.spin.localhost ${(await probeViaCaddy(meta, "prom", "/-/ready")) ? green("up") : red("down")}`,
+    );
+    log(
+        `  loki         https://loki.${slug}.spin.localhost ${(await probeViaCaddy(meta, "loki", "/ready")) ? green("up") : red("down")}`,
+    );
+    log(
+        `  tempo        https://tempo.${slug}.spin.localhost (OTLP on :${requirePort(meta, "tempo")}) ${(await probeViaCaddy(meta, "tempo", "/ready")) ? green("up") : red("down")}`,
+    );
+    log(
+        `  alertmanager https://alerts.${slug}.spin.localhost ${(await probeViaCaddy(meta, "alerts", "/-/ready")) ? green("up") : red("down")}`,
+    );
+    log(
+        `  uptime kuma  https://uptime.${slug}.spin.localhost ${(await probeViaCaddy(meta, "uptime", "/", [200, 302])) ? green("up") : red("down")}`,
+    );
     log(`  compose      project=${meta.composeProject}`);
     /**
      * Show queue-worker status alongside infra — it's a tracked process (see `startServers`)
@@ -331,8 +320,7 @@ async function doctor(args) {
  * @returns {Promise<boolean>}
  */
 async function probeViaCaddy(meta, subdomain, path, acceptStatus = [200]) {
-    const caddyHttps = effectivePort(meta, "caddyHttps");
-    if (caddyHttps === null) return false;
+    const caddyHttps = requirePort(meta, "caddyHttps");
     const probe = spawnSync(
         "curl",
         [
@@ -473,8 +461,8 @@ async function ensureEnvFiles(meta) {
     }
     if (metaChanged) await writeMeta(meta);
 
-    const tempoPort = effectivePort(meta, "tempo");
-    const meiliPort = effectivePort(meta, "meilisearch");
+    const tempoPort = requirePort(meta, "tempo");
+    const meiliPort = requirePort(meta, "meilisearch");
 
     await writeFile(
         apiEnvPath,
@@ -535,22 +523,16 @@ async function ensureEnvFiles(meta) {
              * reaches it on the host (HMR runs the api outside docker). Key is the master key
              * generated above; production overrides to a scoped key minted at deploy time.
              */
-            ...(typeof meiliPort === "number"
-                ? [`MEILISEARCH_HOST=http://localhost:${meiliPort}`, `MEILISEARCH_API_KEY=${meta.meiliMasterKey}`]
-                : []),
+            `MEILISEARCH_HOST=http://localhost:${meiliPort}`,
+            `MEILISEARCH_API_KEY=${meta.meiliMasterKey}`,
             /**
              * Observability. `DEV_OBSERVABILITY=true` flips the logger transport to also write
              * ndjson into `.spin/logs/api.ndjson` so Promtail can ship it to Loki. The OTLP
-             * endpoint points at Tempo's host-published 4318; an empty value (legacy spin)
-             * leaves `@adonisjs/otel` disabled.
+             * endpoint points at Tempo's host-published 4318.
              */
-            ...(typeof tempoPort === "number"
-                ? [
-                      `DEV_OBSERVABILITY=true`,
-                      `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:${tempoPort}`,
-                      `SPIN_API_LOG_PATH=${join(meta.worktreePath, ".spin/logs/api.ndjson")}`,
-                  ]
-                : [`DEV_OBSERVABILITY=false`]),
+            `DEV_OBSERVABILITY=true`,
+            `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:${tempoPort}`,
+            `SPIN_API_LOG_PATH=${join(meta.worktreePath, ".spin/logs/api.ndjson")}`,
             /**
              * GlitchTip DSN. Auto-provisioned on first start (best-effort); when the
              * provisioner falls back to manual setup, the line is omitted and Sentry init
@@ -611,15 +593,9 @@ function requirePort(meta, role) {
  * (committed) and don't need per-spin templating — they're mounted directly by the compose
  * files. Grafana dashboards live there too.
  *
- * Skips entirely on legacy spins (no caddyHttps port) — those don't bring up observability.
- *
  * @param {SpinMeta} meta
  */
 async function ensureObservabilityConfig(meta) {
-    if (isLegacyObservability(meta)) {
-        step("config", "skip (legacy spin, no observability)");
-        return;
-    }
     step("config", "write observability + caddy");
     const configDir = join(meta.worktreePath, ".spin/config");
     await mkdir(configDir, { recursive: true });
@@ -660,7 +636,7 @@ function renderCaddyfile(meta) {
     const apiPort = meta.ports.api;
     const adminPort = meta.ports.admin;
     const webPort = meta.ports.web;
-    const agentPort = effectivePort(meta, "spinAgent");
+    const agentPort = requirePort(meta, "spinAgent");
     return `# Generated by scripts/spin.mjs for spin "${slug}". Re-run \`pnpm spin\` to regenerate.
 {
     auto_https disable_redirects
@@ -669,7 +645,7 @@ function renderCaddyfile(meta) {
 
 ${slug}.spin.localhost {
     tls internal
-    ${typeof agentPort === "number" ? `reverse_proxy host.docker.internal:${agentPort}` : `respond "spin agent disabled for legacy spin" 503`}
+    reverse_proxy host.docker.internal:${agentPort}
 }
 
 api.${slug}.spin.localhost {
@@ -891,15 +867,13 @@ async function ensureContainers(meta) {
     const files = composeFiles(meta);
     /**
      * Skip the start only when EVERY required layer is already responding. DB + pgAdmin
-     * signal the foundational layer; for prod-parity spins we also require Caddy's HTTPS
-     * port — it's the bellwether for the observability + meili + glitchtip stack because
-     * it can't be up without the network being right. Without this check the shortcut
-     * would silently bypass `compose up` on a partially-bootstrapped spin (e.g. one that
-     * had its meta upgraded to the new layout without the new compose stack coming up
-     * yet) and the new layer would never start.
+     * signal the foundational layer; Caddy's HTTPS port is the bellwether for the
+     * observability + meili + glitchtip stack — it can't be up without the network being
+     * right. Without this check the shortcut would silently bypass `compose up` on a
+     * partially-bootstrapped spin and the new layer would never start.
      */
     const foundationUp = (await isPortListening(meta.ports.db)) && (await isPortListening(meta.ports.pgadmin));
-    const observabilityUp = isLegacyObservability(meta) ? true : await isPortListening(requirePort(meta, "caddyHttps"));
+    const observabilityUp = await isPortListening(requirePort(meta, "caddyHttps"));
     if (foundationUp && observabilityUp) {
         step("containers", "running");
         return;
@@ -929,8 +903,6 @@ async function ensureContainers(meta) {
 
     step("containers", "wait for redis");
     await waitForPort(requirePort(meta, "redis"), 30_000, "redis");
-
-    if (isLegacyObservability(meta)) return;
 
     /**
      * Observability + caddy + meili. Each gets its own readiness probe — TCP-listen is the
@@ -1080,30 +1052,27 @@ function composeEnv(meta) {
 }
 
 /**
- * Resolve the list of `-f compose-file` flags for the spin. Always includes the api's own
- * docker-compose.yml; layers the observability + caddy + meili files on top when the spin
- * has prod-parity ports (i.e. not legacy). compose merges deep — services declared in one
- * file extend services in another by name, networks union, etc.
+ * Resolve the list of `-f compose-file` flags for the spin. Stacks the api compose first,
+ * then the observability + caddy + meili files on top. compose merges deep — services
+ * declared in one file extend services in another by name, networks union, etc.
  *
  * @param {SpinMeta} meta
  * @returns {string[]}
  */
 function composeFiles(meta) {
-    const flags = ["-f", join(meta.worktreePath, "apps/api/docker-compose.yml")];
-    if (!isLegacyObservability(meta)) {
-        const obsDir = join(meta.worktreePath, "docker/observability");
-        flags.push(
-            "-f",
-            join(obsDir, "docker-compose.caddy.yml"),
-            "-f",
-            join(obsDir, "docker-compose.meili.yml"),
-            "-f",
-            join(obsDir, "docker-compose.observability.yml"),
-            "-f",
-            join(obsDir, "docker-compose.glitchtip.yml"),
-        );
-    }
-    return flags;
+    const obsDir = join(meta.worktreePath, "docker/observability");
+    return [
+        "-f",
+        join(meta.worktreePath, "apps/api/docker-compose.yml"),
+        "-f",
+        join(obsDir, "docker-compose.caddy.yml"),
+        "-f",
+        join(obsDir, "docker-compose.meili.yml"),
+        "-f",
+        join(obsDir, "docker-compose.observability.yml"),
+        "-f",
+        join(obsDir, "docker-compose.glitchtip.yml"),
+    ];
 }
 
 /**
@@ -1183,13 +1152,31 @@ async function startServers(meta, opts) {
         env: { ...process.env },
     });
 
+    /**
+     * Literal hostnames Next.js's `allowedDevOrigins` should accept for this spin. Next's
+     * glob matching only fires for a single dot-less segment per `*`, so the two-label
+     * subdomains we use (`admin.<slug>.spin.localhost`) wouldn't always match a single
+     * wildcard pattern. Passing the literal hostnames in alongside the wildcard patterns
+     * (see each `next.config.ts`) guarantees acceptance regardless of how Next interprets
+     * the glob.
+     */
+    const nextDevAllowedOrigins = [
+        `admin.${meta.slug}.spin.localhost`,
+        `web.${meta.slug}.spin.localhost`,
+        `api.${meta.slug}.spin.localhost`,
+    ].join(",");
+
     await startServer({
         name: "admin",
         meta,
         cmd: "pnpm",
         args: ["exec", "next", "dev", "-p", String(meta.ports.admin)],
         cwd: join(meta.worktreePath, "apps/admin"),
-        env: { ...process.env, PORT: String(meta.ports.admin) },
+        env: {
+            ...process.env,
+            PORT: String(meta.ports.admin),
+            NEXT_DEV_ALLOWED_ORIGINS: nextDevAllowedOrigins,
+        },
     });
 
     if (opts.withWeb) {
@@ -1199,33 +1186,33 @@ async function startServers(meta, opts) {
             cmd: "pnpm",
             args: ["exec", "next", "dev", "-p", String(meta.ports.web)],
             cwd: join(meta.worktreePath, "apps/web"),
-            env: { ...process.env, PORT: String(meta.ports.web) },
+            env: {
+                ...process.env,
+                PORT: String(meta.ports.web),
+                NEXT_DEV_ALLOWED_ORIGINS: nextDevAllowedOrigins,
+            },
         });
     }
 
     /**
      * Spin homepage + control plane. Tiny Node http server, no deps. Caddy fronts it at the
      * bare `<slug>.spin.localhost` host so the first URL the operator visits after `pnpm spin`
-     * is the live dashboard, not a port-list in their terminal. Started only on prod-parity
-     * spins (legacy ones lack the `spinAgent` port).
+     * is the live dashboard, not a port-list in their terminal.
      */
-    const agentPort = effectivePort(meta, "spinAgent");
-    if (typeof agentPort === "number") {
-        await startServer({
-            name: "agent",
-            meta,
-            cmd: "node",
-            args: ["scripts/spin-agent.mjs"],
-            cwd: meta.worktreePath,
-            env: {
-                ...process.env,
-                SPIN_AGENT_PORT: String(agentPort),
-                SPIN_SLUG: meta.slug,
-                SPIN_META_PATH: metaPath(meta.slug),
-                COMPOSE_PROJECT_NAME: meta.composeProject,
-            },
-        });
-    }
+    await startServer({
+        name: "agent",
+        meta,
+        cmd: "node",
+        args: ["scripts/spin-agent.mjs"],
+        cwd: meta.worktreePath,
+        env: {
+            ...process.env,
+            SPIN_AGENT_PORT: String(requirePort(meta, "spinAgent")),
+            SPIN_SLUG: meta.slug,
+            SPIN_META_PATH: metaPath(meta.slug),
+            COMPOSE_PROJECT_NAME: meta.composeProject,
+        },
+    });
 }
 
 /**
@@ -1367,69 +1354,49 @@ function printHandoffCard(meta, opts) {
     log("");
     log(bold(green("ready")));
     const slug = meta.slug;
-    const obs = !isLegacyObservability(meta);
-    if (obs) {
-        const caddyHttps = requirePort(meta, "caddyHttps");
-        log(`  ${bold("dashboard")}`);
-        log(`    home    ${cyan(`https://${slug}.spin.localhost:${caddyHttps}`)} ${dim("(live URLs + health + actions)")}`);
-        log(`  ${bold("app")}`);
-        log(`    admin   ${cyan(`https://admin.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(host :${meta.ports.admin})`)}`);
-        log(`    api     ${cyan(`https://api.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(host :${meta.ports.api})`)}`);
-        if (opts.withWeb) {
-            log(`    web     ${cyan(`https://web.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(host :${meta.ports.web})`)}`);
-        }
-        log(`  ${bold("observability")}`);
-        const dsnNote = meta.glitchtipDsn ? "DSN wired" : "DSN pending — see GlitchTip setup below";
-        log(`    grafana ${cyan(`https://grafana.${slug}.spin.localhost:${caddyHttps}`)} ${dim("(anonymous editor)")}`);
-        log(`    errors  ${cyan(`https://errors.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(${dsnNote})`)}`);
-        log(`    uptime  ${cyan(`https://uptime.${slug}.spin.localhost:${caddyHttps}`)}`);
-        log(`    prom    ${cyan(`https://prom.${slug}.spin.localhost:${caddyHttps}`)}`);
-        log(`    alerts  ${cyan(`https://alerts.${slug}.spin.localhost:${caddyHttps}`)}`);
-        log(`  ${bold("search")}`);
-        log(`    meili   ${cyan(`https://search.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(key in ${meta.slug}.json)`)}`);
-        log(`  ${bold("data + dev")}`);
-        log(
-            `    mail    ${cyan(`https://mail.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(smtp localhost:${requirePort(meta, "mailpitSmtp")})`)}`,
-        );
-        log(
-            `    redis   ${cyan(`https://redis.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(redis-cli on :${requirePort(meta, "redis")})`)}`,
-        );
-        log(`    db      ${cyan(`https://db.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(psql on :${meta.ports.db})`)}`);
-        log(`    pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
-    } else {
-        log(`  admin   ${cyan(`http://localhost:${meta.ports.admin}`)}`);
-        log(`  api     ${cyan(`http://localhost:${meta.ports.api}`)}`);
-        if (opts.withWeb) log(`  web     ${cyan(`http://localhost:${meta.ports.web}`)}`);
-        log(`  pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
-        const mailpitWebPort = requirePort(meta, "mailpitWeb");
-        const mailpitSmtpPort = requirePort(meta, "mailpitSmtp");
-        const redisPort = requirePort(meta, "redis");
-        const redisInsightPort = requirePort(meta, "redisinsight");
-        const adminerPort = requirePort(meta, "adminer");
-        log(`  mailpit ${cyan(`http://localhost:${mailpitWebPort}`)} (smtp :${mailpitSmtpPort})`);
-        log(`  redis   ${cyan(`http://localhost:${redisInsightPort}`)} (insight UI; redis on :${redisPort})`);
-        log(
-            `  queue   ${cyan(`http://localhost:${adminerPort}/?pgsql=&server=host.docker.internal&port=${meta.ports.db}&username=calibra&db=calibra&select=queue_jobs`)}`,
-        );
+    const caddyHttps = requirePort(meta, "caddyHttps");
+    log(`  ${bold("dashboard")}`);
+    log(`    home    ${cyan(`https://${slug}.spin.localhost:${caddyHttps}`)} ${dim("(live URLs + health + actions)")}`);
+    log(`  ${bold("app")}`);
+    log(`    admin   ${cyan(`https://admin.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(host :${meta.ports.admin})`)}`);
+    log(`    api     ${cyan(`https://api.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(host :${meta.ports.api})`)}`);
+    if (opts.withWeb) {
+        log(`    web     ${cyan(`https://web.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(host :${meta.ports.web})`)}`);
     }
+    log(`  ${bold("observability")}`);
+    const dsnNote = meta.glitchtipDsn ? "DSN wired" : "DSN pending — see GlitchTip setup below";
+    log(`    grafana ${cyan(`https://grafana.${slug}.spin.localhost:${caddyHttps}`)} ${dim("(anonymous editor)")}`);
+    log(`    errors  ${cyan(`https://errors.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(${dsnNote})`)}`);
+    log(`    uptime  ${cyan(`https://uptime.${slug}.spin.localhost:${caddyHttps}`)}`);
+    log(`    prom    ${cyan(`https://prom.${slug}.spin.localhost:${caddyHttps}`)}`);
+    log(`    alerts  ${cyan(`https://alerts.${slug}.spin.localhost:${caddyHttps}`)}`);
+    log(`  ${bold("search")}`);
+    log(`    meili   ${cyan(`https://search.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(key in ${meta.slug}.json)`)}`);
+    log(`  ${bold("data + dev")}`);
+    log(
+        `    mail    ${cyan(`https://mail.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(smtp localhost:${requirePort(meta, "mailpitSmtp")})`)}`,
+    );
+    log(
+        `    redis   ${cyan(`https://redis.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(redis-cli on :${requirePort(meta, "redis")})`)}`,
+    );
+    log(`    db      ${cyan(`https://db.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(psql on :${meta.ports.db})`)}`);
+    log(`    pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
     log(`  pr      ${meta.prUrl ?? `(skipped — run pnpm spin pr ${meta.slug})`}`);
     log(`  login   ${cyan("admin@bulk.calibra.dev")} / ${cyan("Passw0rd1!")}`);
     log(`  stop    ${cyan(`pnpm spin stop ${meta.slug}`)}`);
-    if (obs && !meta.glitchtipDsn) {
+    if (!meta.glitchtipDsn) {
         log("");
         log(dim("GlitchTip setup (one-time): open errors.<slug>.spin.localhost, register"));
         log(dim("`spin@calibra.dev`, create org `spin` + project `api`, copy the DSN into"));
         log(dim(`\`apps/api/.env\` as \`GLITCHTIP_DSN=…\`, then restart the api. We'll auto-`));
         log(dim("provision once the GlitchTip register API stabilises."));
     }
-    if (obs) {
-        log("");
-        log(
-            dim(
-                `caddy: \`*.${slug}.spin.localhost\` resolves to 127.0.0.1; certs use Caddy's local CA. Run \`caddy trust\` once on this host if you haven't.`,
-            ),
-        );
-    }
+    log("");
+    log(
+        dim(
+            `caddy: \`*.${slug}.spin.localhost\` resolves to 127.0.0.1; certs use Caddy's local CA. Run \`caddy trust\` once on this host if you haven't.`,
+        ),
+    );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1498,17 +1465,6 @@ async function downContainers(meta, opts) {
  */
 function isLegacyDevUi(meta) {
     return typeof meta.ports.redis !== "number";
-}
-
-/**
- * `true` when the spin pre-dates the prod-parity (observability + caddy + meili) layout — its
- * meta has no `caddyHttps` port so the new observability compose files are skipped on bring-up.
- * The existing dev-ui + api + db still come up. Operator can stop+remove+respin to migrate.
- *
- * @param {SpinMeta} meta
- */
-function isLegacyObservability(meta) {
-    return typeof meta.ports.caddyHttps !== "number";
 }
 
 /**
