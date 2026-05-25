@@ -61,7 +61,6 @@
         "@adonisjs/shield": "^9.0.0",
         "@adonisjs/transmit": "^3.0.1",
         "@faker-js/faker": "^10.4.0",
-        "@sentry/node": "^10.53.1",
         "@vinejs/vine": "^4.4.0",
         "jalaali-js": "^1.2.8",
         "luxon": "^3.5.0",
