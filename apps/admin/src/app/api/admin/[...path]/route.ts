@@ -73,7 +73,14 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
 
     const upstream = await fetch(upstreamUrl, init);
 
-    if (upstream.status === 401 || upstream.status === 403) {
+    /**
+     * Only wipe the session on 401 (the session bearer is no longer accepted by the api). 403
+     * means "authenticated, can't have THIS resource" — could be a per-row bouncer denial,
+     * a stale signed download token, or a non-admin role hitting an admin route. Clearing the
+     * session on a 403 cascades: one bad token tears down the whole admin login, which is
+     * exactly what happens on a stale export download URL.
+     */
+    if (upstream.status === 401) {
         const store = await cookies();
         store.delete(SESSION_COOKIE);
         store.delete(CSRF_COOKIE);
