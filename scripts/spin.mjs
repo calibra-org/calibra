@@ -269,9 +269,7 @@ async function doctor(args) {
         const caddyHttps = requirePort(meta, "caddyHttps");
         const meili = requirePort(meta, "meilisearch");
         const caddyOk = await isPortListening(caddyHttps);
-        log(
-            `  caddy        https://*.${slug}.spin.localhost (port ${caddyHttps}) ${caddyOk ? green("up") : red("down")}`,
-        );
+        log(`  caddy        https://*.${slug}.spin.localhost (port ${caddyHttps}) ${caddyOk ? green("up") : red("down")}`);
         log(`  meilisearch  http://localhost:${meili} ${(await isPortListening(meili)) ? green("up") : red("down")}`);
         log(
             `  glitchtip    https://errors.${slug}.spin.localhost ${(await probeViaCaddy(meta, "errors", "/api/0/", [200, 401, 403])) ? green("up") : red("down")}${meta.glitchtipDsn ? "" : yellow(" (no DSN — run `pnpm spin pr` blurb)")}`,
@@ -504,10 +502,7 @@ async function ensureEnvFiles(meta) {
              * generated above; production overrides to a scoped key minted at deploy time.
              */
             ...(typeof meiliPort === "number"
-                ? [
-                      `MEILISEARCH_HOST=http://localhost:${meiliPort}`,
-                      `MEILISEARCH_API_KEY=${meta.meiliMasterKey}`,
-                  ]
+                ? [`MEILISEARCH_HOST=http://localhost:${meiliPort}`, `MEILISEARCH_API_KEY=${meta.meiliMasterKey}`]
                 : []),
             /**
              * Observability. `DEV_OBSERVABILITY=true` flips the logger transport to also write
@@ -607,14 +602,8 @@ async function ensureObservabilityConfig(meta) {
     await writeFile(join(configDir, "Caddyfile"), renderCaddyfile(meta));
     await writeFile(join(configDir, "prometheus.yml"), renderPrometheusConfig(meta));
     await writeFile(join(configDir, "promtail.yml"), renderPromtailConfig(meta));
-    await writeFile(
-        join(configDir, "grafana/provisioning/datasources/datasources.yml"),
-        renderGrafanaDatasources(),
-    );
-    await writeFile(
-        join(configDir, "grafana/provisioning/dashboards/dashboards.yml"),
-        renderGrafanaDashboardsProvider(),
-    );
+    await writeFile(join(configDir, "grafana/provisioning/datasources/datasources.yml"), renderGrafanaDatasources());
+    await writeFile(join(configDir, "grafana/provisioning/dashboards/dashboards.yml"), renderGrafanaDashboardsProvider());
 }
 
 /**
@@ -1297,9 +1286,7 @@ function printHandoffCard(meta, opts) {
         log(`    prom    ${cyan(`https://prom.${slug}.spin.localhost`)}`);
         log(`    alerts  ${cyan(`https://alerts.${slug}.spin.localhost`)}`);
         log(`  ${bold("search")}`);
-        log(
-            `    meili   ${cyan(`https://search.${slug}.spin.localhost`)} ${dim(`(key in ${meta.slug}.json)`)}`,
-        );
+        log(`    meili   ${cyan(`https://search.${slug}.spin.localhost`)} ${dim(`(key in ${meta.slug}.json)`)}`);
         log(`  ${bold("data + dev")}`);
         log(
             `    mail    ${cyan(`https://mail.${slug}.spin.localhost`)} ${dim(`(smtp localhost:${requirePort(meta, "mailpitSmtp")})`)}`,

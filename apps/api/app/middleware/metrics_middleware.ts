@@ -58,11 +58,7 @@ function escapeLabel(value: string): string {
 }
 
 function labels(method: string, route: string, status: string, extra?: { le: string }): string {
-    const parts = [
-        `method="${escapeLabel(method)}"`,
-        `route="${escapeLabel(route)}"`,
-        `status="${escapeLabel(status)}"`,
-    ];
+    const parts = [`method="${escapeLabel(method)}"`, `route="${escapeLabel(route)}"`, `status="${escapeLabel(status)}"`];
     if (extra) parts.push(`le="${extra.le}"`);
     return `{${parts.join(",")}}`;
 }
@@ -87,13 +83,9 @@ export function renderPrometheusText(): string {
         const [method, route, status] = key.split("|");
         for (let i = 0; i < BUCKETS_SECONDS.length; i++) {
             const le = String(BUCKETS_SECONDS[i]);
-            lines.push(
-                `http_request_duration_seconds_bucket${labels(method, route, status, { le })} ${histo.buckets[i]}`,
-            );
+            lines.push(`http_request_duration_seconds_bucket${labels(method, route, status, { le })} ${histo.buckets[i]}`);
         }
-        lines.push(
-            `http_request_duration_seconds_bucket${labels(method, route, status, { le: "+Inf" })} ${histo.count}`,
-        );
+        lines.push(`http_request_duration_seconds_bucket${labels(method, route, status, { le: "+Inf" })} ${histo.count}`);
         lines.push(`http_request_duration_seconds_count${labels(method, route, status)} ${histo.count}`);
         lines.push(`http_request_duration_seconds_sum${labels(method, route, status)} ${histo.sum.toFixed(6)}`);
     }
@@ -131,8 +123,7 @@ export default class MetricsMiddleware {
              */
             const routeMaybe =
                 (ctx.route as { pattern?: string } | undefined)?.pattern ??
-                (ctx.request as unknown as { matchedRoute?: () => { pattern?: string } | null }).matchedRoute?.()
-                    ?.pattern ??
+                (ctx.request as unknown as { matchedRoute?: () => { pattern?: string } | null }).matchedRoute?.()?.pattern ??
                 "unmatched";
             const status = ctx.response.getStatus();
             record(method, routeMaybe, status, durationSec);

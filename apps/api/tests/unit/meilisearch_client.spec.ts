@@ -1,8 +1,7 @@
 import { test } from "@japa/runner";
 
-import env from "#start/env";
-
 import { getMeilisearch, resetMeilisearchClient } from "#services/meilisearch";
+import env from "#start/env";
 
 test.group("Meilisearch client", (group) => {
     let savedHost: string | undefined;
