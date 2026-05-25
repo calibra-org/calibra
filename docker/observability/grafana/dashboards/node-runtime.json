@@ -1,0 +1,137 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "graphTooltip": 0,
+    "id": null,
+    "title": "Calibra api — Node runtime",
+    "uid": "calibra-node-runtime",
+    "version": 1,
+    "schemaVersion": 39,
+    "timezone": "",
+    "tags": ["calibra", "runtime", "node"],
+    "time": { "from": "now-1h", "to": "now" },
+    "refresh": "30s",
+    "panels": [
+        {
+            "id": 1,
+            "type": "timeseries",
+            "title": "Event loop lag",
+            "description": "Average libuv polling interval per scrape window. > 200ms for 5m fires EventLoopLagHigh — usually a CPU-bound handler blocking the loop.",
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "yellow", "value": 0.05 },
+                            { "color": "red", "value": 0.2 }
+                        ]
+                    },
+                    "custom": { "thresholdsStyle": { "mode": "line" } }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "hidden" } },
+            "targets": [
+                {
+                    "expr": "nodejs_eventloop_lag_seconds",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "timeseries",
+            "title": "Heap: used vs total",
+            "description": "V8 heap usage overlay. used/total > 90% sustained fires HeapNearLimit — symptom of GC pressure or a memory leak.",
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "bytes",
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "fillOpacity": 20 }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                { "expr": "nodejs_heap_size_total_bytes", "legendFormat": "heap total", "refId": "A" },
+                { "expr": "nodejs_heap_size_used_bytes", "legendFormat": "heap used", "refId": "B" }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "timeseries",
+            "title": "Resident set size (RSS)",
+            "description": "Total process memory including native bindings, Buffers, V8 internals. The number the kernel sees.",
+            "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "bytes", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "hidden" } },
+            "targets": [{ "expr": "nodejs_rss_bytes", "legendFormat": "rss", "refId": "A" }]
+        },
+        {
+            "id": 4,
+            "type": "timeseries",
+            "title": "External memory (C++ bound to JS)",
+            "description": "Memory in C++ objects held by JS (Buffers, native modules). Diverging from RSS — V8 heap means a Buffer leak.",
+            "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "bytes", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "hidden" } },
+            "targets": [{ "expr": "nodejs_external_memory_bytes", "legendFormat": "external", "refId": "A" }]
+        },
+        {
+            "id": 5,
+            "type": "timeseries",
+            "title": "Active libuv handles",
+            "description": "Count of active timers, sockets, watchers held by the process. Useful for spotting connection-pool leaks (count climbs indefinitely).",
+            "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "hidden" } },
+            "targets": [{ "expr": "nodejs_active_handles", "legendFormat": "handles", "refId": "A" }]
+        },
+        {
+            "id": 6,
+            "type": "timeseries",
+            "title": "Process CPU rate",
+            "description": "CPU seconds consumed per real-time second (user + system). Sustained > 1 means the process is using more than one core; > 2 means it's saturating two.",
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "percentunit", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "hidden" } },
+            "targets": [{ "expr": "rate(process_cpu_seconds_total[1m])", "legendFormat": "cpu", "refId": "A" }]
+        },
+        {
+            "id": 7,
+            "type": "stat",
+            "title": "Process uptime",
+            "description": "Seconds since the api process started. A drop to zero indicates a restart (HMR reload in dev, deploy in prod).",
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "s", "color": { "mode": "thresholds" } },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "", "values": false }, "graphMode": "none" },
+            "targets": [{ "expr": "process_uptime_seconds", "refId": "A" }]
+        }
+    ]
+}

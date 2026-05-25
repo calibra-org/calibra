@@ -57,6 +57,7 @@ export default defineConfig({
         () => import("#start/transmit"),
         () => import("#start/limiter"),
         () => import("#start/events"),
+        () => import("#start/metrics"),
     ],
 
     tests: {

@@ -2,6 +2,7 @@ import logger from "@adonisjs/core/services/logger";
 import { DateTime } from "luxon";
 
 import ProductExport from "#models/product_export";
+import { recordExportRows } from "#services/metrics/domain_metrics";
 import { publishExportEvent } from "#services/product_export/export_event_bus";
 import type { ExportableProduct } from "#services/product_export/export_field_resolver";
 import { buildExportQuery, type ExportFilters } from "#services/product_export/export_query_builder";
@@ -127,19 +128,23 @@ export async function runExport(opts: RunExportOptions): Promise<void> {
                 payload: { offset: processed, size: products.length },
             });
 
+            let chunkRows = 0;
             for (const product of products) {
                 const loose = product as unknown as Record<string, unknown>;
                 writer.stream.write(emitter.appendRow(toExportable(loose, opts.locale)));
                 processed++;
+                chunkRows++;
                 if (includeVariations && Array.isArray(loose.variations)) {
                     for (const variation of loose.variations as Array<Record<string, unknown>>) {
                         writer.stream.write(emitter.appendRow(toExportableVariation(loose, variation)));
+                        chunkRows++;
                     }
                 }
             }
 
             row.processedRows = processed;
             await row.save();
+            recordExportRows("processed", chunkRows);
 
             publishExportEvent({
                 type: "chunk_complete",

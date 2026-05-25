@@ -6,6 +6,7 @@ import { DateTime } from "luxon";
 import ProductImport from "#models/product_import";
 import ProductImportChange from "#models/product_import_change";
 import ProductImportError from "#models/product_import_error";
+import { recordImportRows } from "#services/metrics/domain_metrics";
 import { parseFile } from "#services/product_import/csv_parser";
 import { writeErrorReport } from "#services/product_import/error_report";
 import { publishImportEvent } from "#services/product_import/event_bus";
@@ -123,6 +124,8 @@ export async function runImport(opts: RunOptions): Promise<void> {
             importRow.updatedCount += chunkResult.updated;
             importRow.skippedCount += chunkResult.skipped;
             importRow.failedCount += chunkResult.failed;
+            recordImportRows("processed", chunk.length);
+            recordImportRows("error", chunkResult.failed);
             importRow.newCategoriesCount = counters.categoriesCreated;
             importRow.newTagsCount = counters.tagsCreated;
             importRow.queuedImagesCount = queuedImageCount;

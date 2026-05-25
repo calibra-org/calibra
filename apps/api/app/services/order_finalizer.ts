@@ -16,6 +16,7 @@ import OrderCouponLine from "#models/order_coupon_line";
 import OrderLineItem from "#models/order_line_item";
 import type User from "#models/user";
 import { checkEligibility, countRedemptions, loadSnapshotForUpdate } from "#services/discounter_service";
+import { recordOrderFinalized } from "#services/metrics/domain_metrics";
 import { OrderFactory } from "#services/order_factory";
 import { orderStateMachine } from "#services/order_state_machine";
 
@@ -136,6 +137,8 @@ export class OrderFinalizer {
 
         await draft.refresh();
         await draft.load("paymentGateway");
+
+        recordOrderFinalized(draft.currency ?? "IRR");
 
         return {
             order: draft,

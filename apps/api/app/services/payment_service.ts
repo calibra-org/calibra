@@ -9,6 +9,7 @@ import { PaymentAttemptStatus } from "#enums/payment_attempt_status";
 import { GatewayNotConfiguredException } from "#exceptions/payment_exceptions";
 import Order from "#models/order";
 import PaymentAttempt from "#models/payment_attempt";
+import { recordPaymentAttempt, recordPaymentPhase } from "#services/metrics/domain_metrics";
 import { orderStateMachine } from "#services/order_state_machine";
 import { paymentAdapterRegistry } from "#services/payment_adapter_registry";
 import SettingsService from "#services/settings_service";
@@ -57,6 +58,7 @@ export class PaymentService {
      * existing attempt instead of creating a duplicate.
      */
     async init(order: Order, gatewayId: number | bigint, idempotencyKey: string | null): Promise<PaymentInitResult> {
+        const initStartedAt = process.hrtime.bigint();
         if (idempotencyKey) {
             const existing = await PaymentAttempt.query()
                 .where("order_id", Number(order.id))
@@ -87,6 +89,7 @@ export class PaymentService {
             await row.save();
             return row;
         });
+        recordPaymentAttempt(gateway.code, PaymentAttemptStatus.Initiated);
 
         let initResult: Awaited<ReturnType<typeof adapter.init>>;
         try {
@@ -103,6 +106,8 @@ export class PaymentService {
             attempt.gatewayPayload = { error: String((error as Error).message ?? error) };
             await attempt.save();
             await this.linkLatest(order, attempt);
+            recordPaymentAttempt(gateway.code, PaymentAttemptStatus.Failed);
+            recordPaymentPhase(gateway.code, "init", Number(process.hrtime.bigint() - initStartedAt) / 1e9);
             throw error;
         }
 
@@ -139,6 +144,9 @@ export class PaymentService {
 
         await this.linkLatest(order, attempt);
 
+        recordPaymentAttempt(gateway.code, attempt.status);
+        recordPaymentPhase(gateway.code, "init", Number(process.hrtime.bigint() - initStartedAt) / 1e9);
+
         return { attempt, redirect_url: initResult.redirect_url };
     }
 
@@ -148,6 +156,7 @@ export class PaymentService {
      * storefront should redirect the user to.
      */
     async verifyCallback(gatewayCode: string, request: HttpContext["request"]): Promise<PaymentCallbackResult> {
+        const callbackStartedAt = process.hrtime.bigint();
         const successUrl = await this.settings.get<string>("general", "checkout_return_url_success", DEFAULT_RETURN_SUCCESS);
         const failedUrl = await this.settings.get<string>("general", "checkout_return_url_failed", DEFAULT_RETURN_FAILED);
 
@@ -262,6 +271,10 @@ export class PaymentService {
         if (result.attempt) {
             await this.linkLatest(result.order, result.attempt);
         }
+        if (result.attempt) {
+            recordPaymentAttempt(gatewayCode, result.attempt.status);
+        }
+        recordPaymentPhase(gatewayCode, "callback", Number(process.hrtime.bigint() - callbackStartedAt) / 1e9);
         if (result.attempt?.status === PaymentAttemptStatus.Verified) {
             await emitter.emit("payment:verified", {
                 orderId: Number(result.order.id),
@@ -278,6 +291,7 @@ export class PaymentService {
      * so partial-refund flows can fall through to manual reconciliation gracefully.
      */
     async refund(order: Order, amountMinor: number, reason?: string): Promise<PaymentRefundResult> {
+        const refundStartedAt = process.hrtime.bigint();
         const attempt = await PaymentAttempt.query()
             .where("order_id", Number(order.id))
             .where("status", PaymentAttemptStatus.Verified)
@@ -300,6 +314,10 @@ export class PaymentService {
             reason,
             settings: (gateway.settings as Record<string, unknown>) ?? {},
         });
+        if (result.ok) {
+            recordPaymentAttempt(gateway.code, PaymentAttemptStatus.Refunded);
+        }
+        recordPaymentPhase(gateway.code, "refund", Number(process.hrtime.bigint() - refundStartedAt) / 1e9);
         return result;
     }
 

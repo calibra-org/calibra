@@ -1,0 +1,136 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "graphTooltip": 0,
+    "id": null,
+    "title": "Calibra api — by route",
+    "uid": "calibra-api-by-route",
+    "version": 1,
+    "schemaVersion": 39,
+    "timezone": "",
+    "tags": ["calibra", "api", "routes"],
+    "time": { "from": "now-1h", "to": "now" },
+    "refresh": "30s",
+    "panels": [
+        {
+            "id": 1,
+            "type": "table",
+            "title": "Top 10 routes by traffic (req/s, 5m)",
+            "description": "Routes ranked by request rate. Helps focus tuning effort on the endpoints that actually move the needle.",
+            "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "reqps" },
+                "overrides": []
+            },
+            "options": { "showHeader": true, "sortBy": [{ "displayName": "Value", "desc": true }] },
+            "targets": [
+                {
+                    "expr": "topk(10, sum by (route) (rate(http_requests_total{service=\"calibra-api\"}[5m])))",
+                    "instant": true,
+                    "format": "table",
+                    "legendFormat": "{{route}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "table",
+            "title": "Top 10 slowest routes (p95, 5m)",
+            "description": "Per-route p95 latency. Any row crossing 1s for 10m fires the ApiLatencyP95High alert.",
+            "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "yellow", "value": 0.5 },
+                            { "color": "red", "value": 1 }
+                        ]
+                    },
+                    "custom": { "cellOptions": { "type": "color-background" } }
+                },
+                "overrides": []
+            },
+            "options": { "showHeader": true, "sortBy": [{ "displayName": "Value", "desc": true }] },
+            "targets": [
+                {
+                    "expr": "topk(10, calibra:api_latency_p95:5m)",
+                    "instant": true,
+                    "format": "table",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "table",
+            "title": "Top 10 erroring routes (5xx/s, 5m)",
+            "description": "Routes ranked by 5xx error rate. A non-empty list deserves immediate triage.",
+            "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "reqps" },
+                "overrides": []
+            },
+            "options": { "showHeader": true, "sortBy": [{ "displayName": "Value", "desc": true }] },
+            "targets": [
+                {
+                    "expr": "topk(10, sum by (route) (rate(http_requests_total{service=\"calibra-api\",status=~\"5..\"}[5m])))",
+                    "instant": true,
+                    "format": "table",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "type": "timeseries",
+            "title": "Status code rate (stacked)",
+            "description": "Stacked area of all HTTP statuses per second. Watch for 4xx spikes (auth/validation churn) and 5xx spikes (real outages).",
+            "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "reqps",
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "drawStyle": "line", "fillOpacity": 30, "stacking": { "mode": "normal" } }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "sum by (status) (rate(http_requests_total{service=\"calibra-api\"}[1m])) or vector(0)",
+                    "legendFormat": "{{status}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "type": "logs",
+            "title": "Recent api errors (Loki)",
+            "description": "Last 100 error+ log lines from the api Pino stream. The natural drill-down after a row goes red above.",
+            "gridPos": { "h": 10, "w": 24, "x": 0, "y": 18 },
+            "datasource": { "type": "loki", "uid": "loki" },
+            "options": {
+                "showTime": true,
+                "showLabels": false,
+                "wrapLogMessage": true,
+                "dedupStrategy": "none",
+                "sortOrder": "Descending"
+            },
+            "targets": [
+                {
+                    "expr": "{service=\"calibra-api\"} | json | level=~\"error|fatal\" | line_format \"{{.msg}}\"",
+                    "refId": "A"
+                }
+            ]
+        }
+    ]
+}

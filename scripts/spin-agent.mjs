@@ -413,6 +413,15 @@ server.listen(PORT, "0.0.0.0", () => {
 });
 
 function renderDashboardHtml() {
+    /**
+     * Server-side JSON marshalling for values the React app reads from the page. Kept tight —
+     * the rest of the data (services, secrets, log streams) flows through the JSON endpoints +
+     * SSE, not through the initial HTML.
+     */
+    const boot = {
+        slug: SLUG,
+        composeProject: COMPOSE_PROJECT,
+    };
     return /* html */ `<!doctype html>
 <html lang="en">
 <head>
@@ -422,465 +431,760 @@ function renderDashboardHtml() {
 <style>
 * { box-sizing: border-box; }
 :root {
-    --bg: #0b0d10;
-    --panel: #14181d;
+    --bg: #0a0c10;
+    --bg-accent: radial-gradient(1200px circle at 0% -10%, rgba(110, 168, 254, 0.08), transparent 50%), radial-gradient(900px circle at 100% 0%, rgba(52, 211, 153, 0.05), transparent 50%);
+    --panel: #11151b;
     --panel-2: #1a1f26;
-    --border: #232a33;
-    --text: #e4e7eb;
+    --panel-hover: #1c222a;
+    --border: #20262f;
+    --border-soft: #1a1f26;
+    --text: #e7ecf2;
     --muted: #8b95a3;
+    --muted-2: #6b7280;
     --accent: #6ea8fe;
+    --accent-2: #93c5fd;
+    --accent-glow: rgba(110, 168, 254, 0.18);
     --ok: #34d399;
     --warn: #fbbf24;
     --bad: #ef4444;
     --unknown: #6b7280;
 }
-body { margin: 0; padding: 24px; font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+body { margin: 0; padding: 32px 24px 48px; font: 14px/1.55 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; background: var(--bg); background-image: var(--bg-accent); background-attachment: fixed; color: var(--text); -webkit-font-smoothing: antialiased; }
 .wrap { max-width: 1200px; margin: 0 auto; }
-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; }
-header h1 { font-size: 18px; margin: 0; font-weight: 600; }
-header .slug { color: var(--muted); font-family: ui-monospace, SFMono-Regular, monospace; }
+header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border-soft); }
+header .logo { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--accent) 0%, #5b8ef0 100%); box-shadow: 0 0 0 1px var(--accent-glow), 0 4px 16px var(--accent-glow); display: grid; place-items: center; font-weight: 700; color: #0a0c10; font-size: 14px; }
+header h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+header .slug { color: var(--accent); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 13px; padding: 3px 10px; background: var(--accent-glow); border-radius: 999px; border: 1px solid rgba(110, 168, 254, 0.25); }
+header .spacer { flex: 1; }
+header .refresh { font-size: 11px; color: var(--muted-2); font-family: ui-monospace, SFMono-Regular, monospace; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-.panel h2 { margin: 0 0 12px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-.row { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; transition: border-color .15s; }
+.panel + .panel { margin-top: 16px; }
+.panel h2 { margin: 0 0 14px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 8px; }
+.panel h2 .glyph { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 5px; background: var(--panel-2); border: 1px solid var(--border); font-size: 11px; color: var(--accent); }
+.row { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 10px 8px; margin: 0 -8px; border-bottom: 1px solid var(--border-soft); border-radius: 6px; transition: background-color .12s; }
 .row:last-child { border-bottom: none; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--unknown); flex-shrink: 0; }
-.dot.ok { background: var(--ok); }
-.dot.bad { background: var(--bad); }
-.dot.warn { background: var(--warn); }
-.name { font-weight: 500; }
-.url a { color: var(--accent); text-decoration: none; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12px; }
-.url a:hover { text-decoration: underline; }
-.port { color: var(--muted); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; }
-button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
-button:hover { border-color: var(--accent); }
+.row:hover { background: var(--panel-hover); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--unknown); flex-shrink: 0; box-shadow: 0 0 0 0 transparent; transition: background-color .2s, box-shadow .2s; }
+.dot.ok { background: var(--ok); box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15); }
+.dot.bad { background: var(--bad); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+.dot.warn { background: var(--warn); box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15); }
+.row .info { display: flex; flex-direction: column; min-width: 0; }
+.row .name { font-weight: 500; font-size: 13px; }
+.row .url a { color: var(--accent); text-decoration: none; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11.5px; opacity: 0.85; transition: opacity .15s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; max-width: 100%; }
+.row .url a:hover { opacity: 1; text-decoration: underline; }
+.row .port { color: var(--muted-2); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; }
+button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 5px; padding: 5px 11px; font: inherit; font-size: 12px; cursor: pointer; transition: border-color .12s, background-color .12s, color .12s; }
+button:hover { border-color: var(--accent); color: var(--accent); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
-.actions { display: flex; gap: 8px; margin-top: 8px; }
-.actions button.primary { background: var(--accent); color: #0b0d10; border-color: var(--accent); }
-.actions button.danger { background: #2a1518; border-color: #5c2026; color: #fca5a5; }
-#log { background: #06080a; border: 1px solid var(--border); border-radius: 6px; padding: 12px; height: 320px; overflow: auto; font: 11px/1.5 ui-monospace, SFMono-Regular, monospace; color: #a8b3c1; white-space: pre-wrap; }
+.empty { padding: 8px 0; color: var(--muted-2); font-size: 12px; }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 4px; }
+.card { display: block; padding: 12px 14px; background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%); border: 1px solid var(--border); border-radius: 9px; text-decoration: none; color: var(--text); transition: border-color .12s, transform .12s, box-shadow .12s; position: relative; overflow: hidden; }
+.card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, var(--card-accent, var(--accent-glow)), transparent 60%); opacity: 0; transition: opacity .2s; pointer-events: none; }
+.card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent-glow); }
+.card:hover::before { opacity: 1; }
+.card .icon { font-size: 18px; margin-bottom: 6px; display: block; position: relative; }
+.card .title { font-weight: 600; font-size: 13px; margin: 0 0 4px; position: relative; letter-spacing: -0.01em; }
+.card .desc { font-size: 11.5px; color: var(--muted); line-height: 1.5; position: relative; }
+.card .meta { display: flex; align-items: center; gap: 6px; margin-top: 8px; position: relative; }
+.card .badge { font-size: 10px; color: var(--accent); background: var(--accent-glow); border-radius: 3px; padding: 1px 6px; font-family: ui-monospace, SFMono-Regular, monospace; }
+.card .arrow { color: var(--muted-2); font-size: 11px; margin-left: auto; transition: transform .15s, color .15s; }
+.card:hover .arrow { color: var(--accent); transform: translateX(3px); }
+.actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions-row button.primary { background: linear-gradient(180deg, var(--accent) 0%, #5b8ef0 100%); color: #0a0c10; border-color: var(--accent); font-weight: 600; }
+.actions-row button.primary:hover { box-shadow: 0 0 0 3px var(--accent-glow); color: #0a0c10; }
+.actions-row button.danger { background: #2a1518; border-color: #5c2026; color: #fca5a5; }
+.actions-row button.danger:hover { border-color: #ef4444; color: #fecaca; }
+.log { background: #06080a; border: 1px solid var(--border); border-radius: 6px; padding: 12px; height: 320px; overflow: auto; font: 11px/1.5 ui-monospace, SFMono-Regular, monospace; color: #a8b3c1; white-space: pre-wrap; }
 .log-controls { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
 .log-controls .sources { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
 .log-controls .sources button.active { border-color: var(--accent); color: var(--accent); }
 .log-controls .log-clear { background: transparent; border: none; color: var(--muted); padding: 4px 6px; font-size: 11px; opacity: 0.7; cursor: pointer; }
 .log-controls .log-clear:hover { color: var(--text); opacity: 1; border: none; }
 .log-controls .log-clear::before { content: '⌫ '; }
-.toast { position: fixed; bottom: 20px; right: 20px; background: var(--panel-2); border: 1px solid var(--border); padding: 10px 14px; border-radius: 6px; font-size: 12px; max-width: 360px; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--panel-2); border: 1px solid var(--border); padding: 10px 14px; border-radius: 6px; font-size: 12px; max-width: 360px; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; pointer-events: none; }
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast.error { border-color: var(--bad); }
-details.setup { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 0; margin-bottom: 16px; }
-details.setup[open] summary { border-bottom: 1px solid var(--border); }
-details.setup summary { padding: 12px 16px; cursor: pointer; font-size: 13px; color: var(--text); list-style: none; display: flex; align-items: center; gap: 10px; }
-details.setup summary::-webkit-details-marker { display: none; }
-details.setup summary::before { content: '▸'; color: var(--muted); transition: transform .15s; }
-details.setup[open] summary::before { transform: rotate(90deg); }
-details.setup summary .lock { color: var(--warn); font-weight: 600; }
-.setup-body { padding: 16px 16px 12px 16px; font-size: 13px; line-height: 1.6; }
+.setup { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.setup-summary { padding: 12px 16px; cursor: pointer; font-size: 13px; color: var(--text); display: flex; align-items: center; gap: 10px; user-select: none; }
+.setup-summary::before { content: '▸'; color: var(--muted); transition: transform .15s; }
+.setup.open .setup-summary::before { transform: rotate(90deg); }
+.setup.open .setup-summary { border-bottom: 1px solid var(--border); }
+.setup .lock { color: var(--warn); font-weight: 600; }
+.setup-body { padding: 16px 16px 12px; font-size: 13px; line-height: 1.6; }
 .setup-body h3 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 8px; }
 .setup-body h3:first-child { margin-top: 0; }
 .setup-body pre { background: #06080a; border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; overflow-x: auto; margin: 6px 0 12px; font-size: 12px; line-height: 1.5; color: #c7d0db; position: relative; }
 .setup-body code { background: var(--panel-2); padding: 2px 6px; border-radius: 3px; font-size: 12px; }
-.setup-body .copy { position: absolute; top: 6px; right: 6px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 3px; padding: 2px 6px; font-size: 10px; cursor: pointer; color: var(--muted); }
-.setup-body .copy:hover { color: var(--text); border-color: var(--accent); }
+.setup-body .copy-btn { position: absolute; top: 6px; right: 6px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 3px; padding: 2px 6px; font-size: 10px; cursor: pointer; color: var(--muted); }
+.setup-body .copy-btn:hover { color: var(--text); border-color: var(--accent); }
 .setup-body a { color: var(--accent); }
 .setup-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
 .setup-tabs button { background: var(--panel-2); }
 .setup-tabs button.active { border-color: var(--accent); color: var(--accent); }
-.setup-pane { display: none; }
-.setup-pane.active { display: block; }
 .secret-row { display: grid; grid-template-columns: 120px 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .secret-row:last-child { border-bottom: none; }
 .secret-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
-.secret-value { background: #06080a; border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; font: 11px/1.4 ui-monospace, SFMono-Regular, monospace; color: var(--accent); overflow-x: auto; word-break: break-all; }
-.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
-.modal-backdrop.show { display: flex; }
+.secret-value { background: #06080a; border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; font: 11px/1.4 ui-monospace, SFMono-Regular, monospace; color: var(--accent); overflow-x: auto; word-break: break-all; min-width: 0; }
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; max-width: 460px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
 .modal h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--text); }
 .modal p { margin: 0 0 18px; font-size: 13px; line-height: 1.6; color: var(--muted); }
 .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .modal-actions button { padding: 6px 14px; }
 .modal-actions button.confirm { background: var(--accent); color: #0b0d10; border-color: var(--accent); }
-.modal-actions button.danger { background: #2a1518; border-color: #5c2026; color: #fca5a5; }
-button.danger { background: #2a1518; border-color: #5c2026; color: #fca5a5; }
+.boot-fallback { color: var(--muted); padding: 60px 20px; text-align: center; font-size: 13px; }
+.boot-fallback code { background: var(--panel-2); padding: 2px 6px; border-radius: 3px; color: var(--text); }
 </style>
 </head>
 <body>
-<div class="wrap">
-    <header>
-        <h1>spin</h1>
-        <span class="slug">${SLUG}</span>
-        <span class="port" id="last-refresh"></span>
-    </header>
-
-    <details class="setup" id="trust-setup">
-        <summary><span class="lock">🔒 first-time HTTPS setup —</span> trust Caddy's local CA so this page (and every <code>*.spin.localhost</code> URL) loads without a browser warning</summary>
-        <div class="setup-body">
-            <p>Caddy issues TLS certs from its own local CA. You need to install the root cert into your OS trust store <strong>once</strong> — after that every spin's certs are trusted automatically (they all chain to the same root). Pick your platform below.</p>
-
-            <div class="setup-tabs">
-                <button class="active" data-pane="wsl2">WSL2 + Windows browser</button>
-                <button data-pane="linux">Linux native</button>
-                <button data-pane="macos">macOS</button>
-                <button data-pane="windows">Windows native</button>
-            </div>
-
-            <div class="setup-pane active" data-pane="wsl2">
-                <p>This is the dev path where Caddy runs inside WSL2 but your browser is on Windows. Download the cert from this very page, then install it into Windows' trusted root store.</p>
-                <h3>1. Download the cert</h3>
-                <pre><button class="copy">copy</button>docker cp ${COMPOSE_PROJECT}-caddy-1:/data/caddy/pki/authorities/local/root.crt $(wslpath "$(cmd.exe /c 'echo %USERPROFILE%\\Downloads\\caddy-root.crt' 2>/dev/null)" | tr -d '\\r')</pre>
-                <h3>2. Install it (PowerShell as Administrator)</h3>
-                <pre><button class="copy">copy</button>Import-Certificate -FilePath "$env:USERPROFILE\\Downloads\\caddy-root.crt" -CertStoreLocation Cert:\\LocalMachine\\Root</pre>
-                <p>You'll see a confirmation dialog with the subject <code>Caddy Local Authority - 20XX ECC Root</code> — click <strong>Yes</strong>.</p>
-                <h3>3. Restart Chrome completely</h3>
-                <p>Close every Chrome window. Open Task Manager (<kbd>Ctrl+Shift+Esc</kbd>) and end any leftover <code>chrome.exe</code> processes (Chrome runs a background host process by default). Then reopen Chrome and visit a spin URL — green lock 🔒.</p>
-                <h3>4. Still seeing "Not secure"?</h3>
-                <p>Chrome caches per-host bypass overrides. Clear them via <a href="chrome://net-internals/#hsts" target="_blank">chrome://net-internals/#hsts</a> → Delete domain security policies → enter <code>${SLUG}.spin.localhost</code> → Delete. Or open Incognito (<kbd>Ctrl+Shift+N</kbd>) as a clean test.</p>
-            </div>
-
-            <div class="setup-pane" data-pane="linux">
-                <h3>Run on the host (sudo required)</h3>
-                <pre><button class="copy">copy</button>sudo caddy trust</pre>
-                <p>This pulls Caddy's local CA root and installs it into the system trust store (<code>/etc/ssl/certs</code>) plus the per-browser stores (Firefox / Chromium NSS db).</p>
-                <p>If Caddy isn't installed on your host yet:</p>
-                <pre><button class="copy">copy</button>sudo apt install -y caddy   # Debian / Ubuntu
-sudo pacman -S caddy        # Arch
-brew install caddy          # Linuxbrew</pre>
-                <p>Restart your browser, visit any <code>*.spin.localhost</code> URL — green lock.</p>
-            </div>
-
-            <div class="setup-pane" data-pane="macos">
-                <h3>Install Caddy + trust the root</h3>
-                <pre><button class="copy">copy</button>brew install caddy
-sudo caddy trust</pre>
-                <p>This adds the cert to the System keychain. macOS Safari / Chrome / Firefox all pick it up automatically.</p>
-                <h3>If Caddy is running in Docker only</h3>
-                <p>Extract the root cert from the container and install via Keychain Access:</p>
-                <pre><button class="copy">copy</button>docker cp ${COMPOSE_PROJECT}-caddy-1:/data/caddy/pki/authorities/local/root.crt ~/Downloads/caddy-root.crt
-open ~/Downloads/caddy-root.crt</pre>
-                <p>Keychain Access opens → drag the cert into the <strong>System</strong> keychain → double-click it → expand <strong>Trust</strong> → set <strong>When using this certificate</strong> to <strong>Always Trust</strong>.</p>
-            </div>
-
-            <div class="setup-pane" data-pane="windows">
-                <h3>Install Caddy + trust the root (PowerShell as Administrator)</h3>
-                <pre><button class="copy">copy</button>winget install caddy
-caddy trust</pre>
-                <p>Or, if Caddy is only inside Docker:</p>
-                <pre><button class="copy">copy</button>docker cp ${COMPOSE_PROJECT}-caddy-1:/data/caddy/pki/authorities/local/root.crt $env:USERPROFILE\\Downloads\\caddy-root.crt
-Import-Certificate -FilePath "$env:USERPROFILE\\Downloads\\caddy-root.crt" -CertStoreLocation Cert:\\LocalMachine\\Root</pre>
-                <p>Restart Chrome / Edge after install — green lock on every <code>*.spin.localhost</code> URL.</p>
-            </div>
-        </div>
-    </details>
-
-    <div class="grid">
-        <section class="panel" id="group-app"><h2>app</h2></section>
-        <section class="panel" id="group-obs"><h2>observability</h2></section>
-        <section class="panel" id="group-search"><h2>search</h2></section>
-        <section class="panel" id="group-data"><h2>data + dev</h2></section>
-    </div>
-
-    <section class="panel" style="margin-top: 16px;">
-        <h2>meilisearch credentials</h2>
-        <div class="secret-row">
-            <span class="secret-label">master key</span>
-            <code class="secret-value" id="meili-key">—</code>
-            <button data-copy-secret="meili-key">copy</button>
-        </div>
-        <div class="secret-row">
-            <span class="secret-label">curl</span>
-            <code class="secret-value" id="meili-curl">—</code>
-            <button data-copy-secret="meili-curl">copy</button>
-        </div>
-    </section>
-
-    <section class="panel" style="margin-top: 16px;">
-        <h2>actions</h2>
-        <div class="actions">
-            <button class="primary" data-action="reseed" data-confirm="This drops every seeded row and reinserts a fresh demo dataset. Anything you've added since the last seed will be lost. Continue?">reseed db</button>
-            <button data-action="migrate" data-confirm="Run all pending migrations against the spin's database. Continue?">migrate</button>
-            <button class="danger" data-action="rollback" data-confirm="Rolls every migration back, then re-runs the full migration history. All data not covered by seeders is lost. Continue?">rollback + re-migrate</button>
-            <button class="danger" id="open-stop-help">stop spin (see CLI)</button>
-        </div>
-    </section>
-
-    <section class="panel" style="margin-top: 16px;">
-        <h2>logs</h2>
-        <div class="log-controls">
-            <div class="sources">
-                <button data-log="api.ndjson" class="active">api.ndjson</button>
-                <button data-log="api">api.log</button>
-                <button data-log="admin">admin</button>
-                <button data-log="web">web</button>
-                <button data-log="queue">queue</button>
-                <button data-log="agent">agent</button>
-            </div>
-            <button id="log-clear" class="log-clear" title="clear log view">clear</button>
-        </div>
-        <pre id="log"></pre>
-    </section>
-</div>
-<div class="toast" id="toast"></div>
-
-<div class="modal-backdrop" id="confirm-modal">
-    <div class="modal">
-        <h3 id="confirm-title">Confirm action</h3>
-        <p id="confirm-body">…</p>
-        <div class="modal-actions">
-            <button id="confirm-cancel">cancel</button>
-            <button class="confirm" id="confirm-ok">continue</button>
-        </div>
+<div id="root" class="wrap">
+    <div class="boot-fallback">
+        loading dashboard… if this never goes away, your browser couldn't reach <code>esm.sh</code> — check the network tab.
     </div>
 </div>
+<script type="application/json" id="boot">${JSON.stringify(boot)}</script>
+<script type="module">
+/**
+ * React + htm bootstrap. Loaded as ESM from esm.sh — no build step, no bundler. esm.sh is a
+ * cached CDN; the modules pin to specific versions so a CDN update can't silently change
+ * behaviour. If the CDN is unreachable the boot fallback above stays on screen.
+ *
+ * htm (https://github.com/developit/htm) is a tagged-template alternative to JSX. \`html\`<x />\`\`
+ * compiles to React.createElement at runtime via the same parser Preact uses. Trade-off: every
+ * page render parses the templates once; for a dashboard with ~20 components this is invisible.
+ */
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "https://esm.sh/react@19.1.0";
+import { createRoot } from "https://esm.sh/react-dom@19.1.0/client";
+import htm from "https://esm.sh/htm@3.1.1";
 
-<script>
-const groups = { app: document.getElementById('group-app'), obs: document.getElementById('group-obs'), search: document.getElementById('group-search'), data: document.getElementById('group-data') };
-const lastRefresh = document.getElementById('last-refresh');
-const logEl = document.getElementById('log');
-const toast = document.getElementById('toast');
-let currentLogES = null;
+const html = htm.bind(React.createElement);
+const { slug: SLUG, composeProject: COMPOSE_PROJECT } = JSON.parse(document.getElementById("boot").textContent);
 
-function showToast(message, isError = false) {
-    toast.textContent = message;
-    toast.className = 'toast show' + (isError ? ' error' : '');
-    setTimeout(() => toast.className = 'toast', 3500);
+/* ---------------------------------------------------------------------------------------- */
+/*  Static catalogs — the source of truth for the dashboard + prometheus quick-link cards.   */
+/*  Adding a Grafana dashboard? Drop the JSON under docker/observability/grafana/dashboards   */
+/*  and add an entry below so it shows up here.                                                */
+/* ---------------------------------------------------------------------------------------- */
+
+const DASHBOARDS = [
+    { uid: "calibra-api-overview", title: "API overview", desc: "Request rate, p95 latency, error ratio, recent error logs.", icon: "📊", accent: "rgba(110, 168, 254, 0.18)" },
+    { uid: "calibra-api-by-route", title: "API by route", desc: "Top routes by traffic, latency, errors. Status code mix.", icon: "🧭", accent: "rgba(167, 139, 250, 0.18)" },
+    { uid: "calibra-checkout-payments", title: "Checkout & payments", desc: "Per-gateway attempt rate + success ratio. Callback latency.", icon: "💳", accent: "rgba(52, 211, 153, 0.18)" },
+    { uid: "calibra-orders-inventory", title: "Orders & inventory", desc: "Transitions, finalizations, movements, oversell attempts.", icon: "📦", accent: "rgba(251, 191, 36, 0.18)" },
+    { uid: "calibra-cache-queue", title: "Cache & queue", desc: "Hit ratio per tag. Queue depth + throughput + failure ratio.", icon: "⚙️", accent: "rgba(244, 114, 182, 0.18)" },
+    { uid: "calibra-auth-ratelimits", title: "Auth & rate limits", desc: "Login outcomes, throttles per limiter, brute-force signal.", icon: "🔐", accent: "rgba(239, 68, 68, 0.18)" },
+    { uid: "calibra-node-runtime", title: "Node runtime", desc: "Event-loop lag, heap, RSS, CPU, active handles, uptime.", icon: "⏱️", accent: "rgba(56, 189, 248, 0.18)" },
+    { uid: "calibra-imports-exports", title: "Imports & exports", desc: "Row throughput, error rows, job durations, recent failures.", icon: "↕️", accent: "rgba(196, 181, 253, 0.18)" },
+];
+
+const PROMETHEUS_LINKS = [
+    { path: "/alerts", title: "Alerts", desc: "What is firing right now + pending. Drill-down from a red Grafana stat.", icon: "🚨", badge: "alerts", accent: "rgba(239, 68, 68, 0.18)" },
+    { path: "/rules", title: "Rules", desc: "All recording + alert rules loaded from the per-spin rules dir.", icon: "📐", badge: "rules", accent: "rgba(167, 139, 250, 0.18)" },
+    { path: "/targets", title: "Targets", desc: "Scrape health — is the api /metrics endpoint reachable?", icon: "🎯", badge: "targets", accent: "rgba(52, 211, 153, 0.18)" },
+    { path: "/graph?g0.expr=" + encodeURIComponent("calibra:api_error_ratio:5m") + "&g0.tab=0&g0.range_input=15m", title: "API error ratio", desc: "Live graph of 5xx / total over 5m. Ad-hoc PromQL playground.", icon: "📈", badge: "graph", accent: "rgba(110, 168, 254, 0.18)" },
+    { path: "/graph?g0.expr=" + encodeURIComponent("calibra:api_latency_p95:5m") + "&g0.tab=0&g0.range_input=15m", title: "API p95 latency", desc: "Per-route p95 latency, recorded every 30s.", icon: "⏱️", badge: "graph", accent: "rgba(56, 189, 248, 0.18)" },
+    { path: "/graph?g0.expr=" + encodeURIComponent("calibra_queue_jobs_active") + "&g0.tab=0&g0.range_input=15m", title: "Queue depth", desc: "Pending + active + delayed jobs per queue, refreshed every 10s.", icon: "📥", badge: "graph", accent: "rgba(251, 191, 36, 0.18)" },
+];
+
+/**
+ * Pre-built Grafana Explore deep-links into Loki for the api's structured Pino log stream.
+ * Each card materialises the Explore "left=" param at click time (so the URL stays short here
+ * and lookups stay snappy). Pino log levels: 30=info, 40=warn, 50=error, 60=fatal — we filter
+ * by numeric level rather than name because Pino's ndjson uses integers.
+ */
+const LOKI_QUERIES = [
+    { expr: '{service="calibra-api"}', range: "now-1h", title: "All api logs", desc: "Every Pino line from the api over the last hour. The default tail.", icon: "📜", badge: "logs", accent: "rgba(110, 168, 254, 0.18)" },
+    { expr: '{service="calibra-api"} | json | level=~"50|60"', range: "now-1h", title: "Errors + fatal", desc: "Pino level >= 50 (error / fatal). Drill-down from a red error-ratio stat.", icon: "🚨", badge: "logs", accent: "rgba(239, 68, 68, 0.18)" },
+    { expr: '{service="calibra-api"} | json | level=~"40|50|60"', range: "now-1h", title: "Warnings + errors", desc: "Pino level >= 40. Catches business-rule rejections + 4xx-side warns.", icon: "⚠️", badge: "logs", accent: "rgba(251, 191, 36, 0.18)" },
+    { expr: '{service="calibra-api"}', range: "now-5m", live: true, title: "Live tail", desc: "Last 5 minutes, live-streaming. Mirror of the homepage panel but full-screen.", icon: "📡", badge: "live", accent: "rgba(52, 211, 153, 0.18)" },
+    { expr: '{service="calibra-api"} |~ "(?i)payment"', range: "now-3h", title: "Payment-related lines", desc: "Free-text grep over /payment/*, gateway adapters, refund flows.", icon: "💳", badge: "logs", accent: "rgba(196, 181, 253, 0.18)" },
+    { expr: '{service="calibra-api"} |~ "(?i)runImport|runExport"', range: "now-3h", title: "Import / export job lines", desc: "Filter on runImport/runExport messages — the importer/exporter trail.", icon: "↕️", badge: "logs", accent: "rgba(244, 114, 182, 0.18)" },
+];
+
+const KIND_GLYPH = { app: "◆", obs: "◉", search: "⌕", data: "▤" };
+const KIND_LABEL = { app: "app", obs: "observability", search: "search", data: "data + dev" };
+
+const LOG_STREAMS = ["api.ndjson", "api", "admin", "web", "queue", "agent"];
+
+const ACTIONS = [
+    { id: "reseed", label: "reseed db", variant: "primary", confirm: "This drops every seeded row and reinserts a fresh demo dataset. Anything you've added since the last seed will be lost. Continue?" },
+    { id: "migrate", label: "migrate", variant: "default", confirm: "Run all pending migrations against the spin's database. Continue?" },
+    { id: "rollback", label: "rollback + re-migrate", variant: "danger", confirm: "Rolls every migration back, then re-runs the full migration history. All data not covered by seeders is lost. Continue?" },
+];
+
+/* ---------------------------------------------------------------------------------------- */
+/*  Hooks                                                                                     */
+/* ---------------------------------------------------------------------------------------- */
+
+/** The Caddy HTTPS port is the port the dashboard itself is served on. */
+function useCaddyPort() {
+    return typeof window === "undefined" ? "443" : (window.location.port || "443");
 }
 
-function renderSecrets(secrets) {
-    const keyEl = document.getElementById('meili-key');
-    const curlEl = document.getElementById('meili-curl');
-    if (!secrets || !secrets.meiliMasterKey) {
-        keyEl.textContent = '(not provisioned for this spin)';
-        curlEl.textContent = '';
-        return;
-    }
-    keyEl.textContent = secrets.meiliMasterKey;
-    const host = secrets.meiliPort ? \`http://localhost:\${secrets.meiliPort}\` : '';
-    curlEl.textContent = host ? \`curl -H "Authorization: Bearer \${secrets.meiliMasterKey}" \${host}/keys\` : '';
+/** Poll an endpoint that returns JSON. Re-fetches every \`intervalMs\` and on demand. */
+function usePolledJson(url, intervalMs) {
+    const [data, setData] = useState(null);
+    const [lastRefresh, setLastRefresh] = useState(null);
+    const [error, setError] = useState(null);
+    const refresh = useCallback(async () => {
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const body = await res.json();
+            setData(body);
+            setLastRefresh(new Date());
+            setError(null);
+        } catch (err) {
+            setError(err.message ?? String(err));
+        }
+    }, [url]);
+    useEffect(() => {
+        refresh();
+        const id = setInterval(refresh, intervalMs);
+        return () => clearInterval(id);
+    }, [refresh, intervalMs]);
+    return { data, lastRefresh, error, refresh };
 }
 
-function confirmDialog(title, body) {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('confirm-modal');
-        document.getElementById('confirm-title').textContent = title;
-        document.getElementById('confirm-body').textContent = body;
-        const ok = document.getElementById('confirm-ok');
-        const cancel = document.getElementById('confirm-cancel');
-        const close = (result) => {
-            modal.classList.remove('show');
-            ok.removeEventListener('click', onOk);
-            cancel.removeEventListener('click', onCancel);
-            modal.removeEventListener('click', onBackdrop);
-            document.removeEventListener('keydown', onKey);
-            resolve(result);
+/** Open an SSE stream and append every received line to a bounded ring buffer. */
+function useLogStream(streamName) {
+    const [lines, setLines] = useState([]);
+    const [streaming, setStreaming] = useState(false);
+    const sourceRef = useRef(null);
+    const clear = useCallback(() => setLines([]), []);
+    useEffect(() => {
+        setLines([]);
+        if (!streamName) return undefined;
+        const es = new EventSource("/api/log/" + streamName);
+        sourceRef.current = es;
+        setStreaming(true);
+        es.onmessage = (e) => {
+            try {
+                const line = JSON.parse(e.data);
+                setLines((prev) => {
+                    /** Cap at 1000 lines so a chatty log doesn't pin the DOM. */
+                    const next = prev.length > 1000 ? prev.slice(-900) : prev;
+                    return [...next, line];
+                });
+            } catch {
+                /* skip unparseable */
+            }
         };
-        const onOk = () => close(true);
-        const onCancel = () => close(false);
-        const onBackdrop = (e) => { if (e.target === modal) close(false); };
-        const onKey = (e) => { if (e.key === 'Escape') close(false); if (e.key === 'Enter') close(true); };
-        ok.addEventListener('click', onOk);
-        cancel.addEventListener('click', onCancel);
-        modal.addEventListener('click', onBackdrop);
-        document.addEventListener('keydown', onKey);
-        modal.classList.add('show');
-        ok.focus();
-    });
+        es.onerror = () => {
+            setStreaming(false);
+            setLines((prev) => [...prev, "— stream ended —"]);
+        };
+        return () => {
+            es.close();
+            setStreaming(false);
+        };
+    }, [streamName]);
+    return { lines, streaming, clear };
 }
 
-async function refreshStatus() {
+/** Toast + confirm-modal context built without a real React context — single-tenant globals. */
+function useToaster() {
+    const [toast, setToast] = useState({ message: "", error: false, key: 0 });
+    const show = useCallback((message, error = false) => {
+        setToast({ message, error, key: Date.now() });
+    }, []);
+    useEffect(() => {
+        if (!toast.message) return undefined;
+        const id = setTimeout(() => setToast((t) => ({ ...t, message: "" })), 3500);
+        return () => clearTimeout(id);
+    }, [toast.key, toast.message]);
+    return { toast, show };
+}
+
+function useConfirm() {
+    const [request, setRequest] = useState(null);
+    const ask = useCallback((title, body) => new Promise((resolve) => setRequest({ title, body, resolve })), []);
+    const close = useCallback((result) => {
+        if (!request) return;
+        request.resolve(result);
+        setRequest(null);
+    }, [request]);
+    return { request, ask, close };
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/*  Helpers                                                                                   */
+/* ---------------------------------------------------------------------------------------- */
+
+async function copyToClipboard(text) {
     try {
-        const res = await fetch('/api/status');
-        const data = await res.json();
-        renderSecrets(data.secrets);
-        for (const key of Object.keys(groups)) {
-            const heading = groups[key].querySelector('h2');
-            groups[key].innerHTML = '';
-            groups[key].appendChild(heading);
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Run a POST endpoint that streams SSE events. Resolves when the server emits \`event: end\`.
+ * Each parsed data line is forwarded to \`onLine\`. Errors fall through to a toast.
+ */
+async function streamAction(url, body, onLine) {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!res.body) throw new Error("no response body");
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let exitCode = null;
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const blocks = buffer.split("\\n\\n");
+        buffer = blocks.pop() ?? "";
+        for (const block of blocks) {
+            let event = "message";
+            let data = "";
+            for (const line of block.split("\\n")) {
+                if (line.startsWith("event: ")) event = line.slice(7);
+                else if (line.startsWith("data: ")) data += line.slice(6);
+            }
+            if (event === "end") {
+                try {
+                    exitCode = JSON.parse(data).code ?? null;
+                } catch {
+                    exitCode = null;
+                }
+                continue;
+            }
+            try {
+                const parsed = JSON.parse(data);
+                const text = typeof parsed === "string" ? parsed : JSON.stringify(parsed);
+                onLine(text);
+            } catch {
+                /* skip */
+            }
         }
-        for (const svc of data.services) {
-            const target = groups[svc.kind === 'infra' ? 'data' : svc.kind];
-            if (!target) continue;
-            const dotClass = svc.probe.healthy === true ? 'ok' : svc.probe.healthy === false ? 'bad' : '';
-            const url = svc.caddyHost ? \`https://\${svc.caddyHost}:\${readMetaCaddyPort()}/\` : (svc.directPort ? \`http://localhost:\${svc.directPort}\` : '');
-            const restartBtn = svc.container ? \`<button data-restart="\${svc.container}">restart</button>\` : '<span></span>';
-            target.insertAdjacentHTML('beforeend', \`
-                <div class="row">
-                    <span class="dot \${dotClass}" title="\${svc.probe.statusCode ?? svc.probe.error ?? 'unknown'}"></span>
-                    <div>
-                        <div class="name">\${svc.name}</div>
-                        <div class="url">\${url ? \`<a href="\${url}" target="_blank">\${url}</a>\` : ''}</div>
+    }
+    return exitCode;
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/*  Components                                                                                */
+/* ---------------------------------------------------------------------------------------- */
+
+function Header({ lastRefresh, error }) {
+    const ago = lastRefresh ? lastRefresh.toLocaleTimeString() : "—";
+    return html\`
+        <header>
+            <div class="logo">s</div>
+            <h1>spin</h1>
+            <span class="slug">\${SLUG}</span>
+            <span class="spacer"></span>
+            <span class="refresh">\${error ? "refresh failed: " + error : "refreshed " + ago}</span>
+        </header>
+    \`;
+}
+
+function CopyButton({ text, label = "copy" }) {
+    const [copied, setCopied] = useState(false);
+    return html\`
+        <button onClick=\${async () => {
+            const ok = await copyToClipboard(text);
+            if (ok) { setCopied(true); setTimeout(() => setCopied(false), 1500); }
+        }}>\${copied ? "copied ✓" : label}</button>
+    \`;
+}
+
+function Panel({ glyph, title, children, style }) {
+    return html\`
+        <section class="panel" style=\${style}>
+            <h2><span class="glyph">\${glyph}</span>\${title}</h2>
+            \${children}
+        </section>
+    \`;
+}
+
+function ServicesGrid({ services, onRestart }) {
+    const grouped = useMemo(() => {
+        const g = { app: [], obs: [], search: [], data: [] };
+        for (const svc of services ?? []) {
+            const bucket = svc.kind === "infra" ? "data" : svc.kind;
+            if (g[bucket]) g[bucket].push(svc);
+        }
+        return g;
+    }, [services]);
+    const port = useCaddyPort();
+    return html\`
+        <div class="grid">
+            \${Object.keys(KIND_LABEL).map((kind) => html\`
+                <\${Panel} key=\${kind} glyph=\${KIND_GLYPH[kind]} title=\${KIND_LABEL[kind]}>
+                    \${grouped[kind].length === 0
+                        ? html\`<div class="empty">—</div>\`
+                        : grouped[kind].map((svc) => html\`<\${ServiceRow} key=\${svc.name} svc=\${svc} port=\${port} onRestart=\${onRestart} />\`)}
+                <//>
+            \`)}
+        </div>
+    \`;
+}
+
+function ServiceRow({ svc, port, onRestart }) {
+    const dotClass = svc.probe?.healthy === true ? "ok" : svc.probe?.healthy === false ? "bad" : "";
+    const url = svc.caddyHost
+        ? "https://" + svc.caddyHost + ":" + port + "/"
+        : (svc.directPort ? "http://localhost:" + svc.directPort : "");
+    const tip = svc.probe?.statusCode ?? svc.probe?.error ?? "unknown";
+    const [busy, setBusy] = useState(false);
+    return html\`
+        <div class="row">
+            <span class=\${"dot " + dotClass} title=\${tip}></span>
+            <div class="info">
+                <div class="name">\${svc.name}</div>
+                \${url && html\`<div class="url"><a href=\${url} target="_blank" rel="noopener">\${url}</a></div>\`}
+            </div>
+            <span class="port">\${svc.directPort ? ":" + svc.directPort : ""}</span>
+            \${svc.container
+                ? html\`<button disabled=\${busy} onClick=\${async () => {
+                    setBusy(true);
+                    await onRestart(svc.container);
+                    setBusy(false);
+                }}>\${busy ? "restarting…" : "restart"}</button>\`
+                : html\`<span></span>\`}
+        </div>
+    \`;
+}
+
+function CardGrid({ baseUrl, items, hrefKey }) {
+    return html\`
+        <div class="cards-grid">
+            \${items.map((item) => html\`
+                <a key=\${item.title}
+                   class="card"
+                   style=\${{ "--card-accent": item.accent }}
+                   href=\${baseUrl + item[hrefKey]}
+                   target="_blank"
+                   rel="noopener">
+                    <span class="icon">\${item.icon}</span>
+                    <div class="title">\${item.title}</div>
+                    <div class="desc">\${item.desc}</div>
+                    <div class="meta">
+                        <span class="badge">\${item.badge ?? (item.uid ? item.uid.replace(/^calibra-/, "") : "")}</span>
+                        <span class="arrow">→</span>
                     </div>
-                    <span class="port">\${svc.directPort ? ':' + svc.directPort : ''}</span>
-                    \${restartBtn}
-                </div>
-            \`);
-        }
-        lastRefresh.textContent = 'refreshed ' + new Date().toLocaleTimeString();
-    } catch (err) {
-        lastRefresh.textContent = 'refresh failed: ' + err.message;
-    }
+                </a>
+            \`)}
+        </div>
+    \`;
 }
 
-function readMetaCaddyPort() {
-    /* The dashboard is itself fronted by Caddy, so window.location.port is the spin's
-       Caddy HTTPS port — we read it back instead of hardcoding (which would mean every
-       caddyHttps change required a redeploy). */
-    return window.location.port || '443';
+function GrafanaPanel() {
+    const port = useCaddyPort();
+    const base = "https://grafana." + SLUG + ".spin.localhost:" + port;
+    const items = useMemo(() => DASHBOARDS.map((d) => ({ ...d, href: "/d/" + d.uid + "/" })), []);
+    return html\`
+        <\${Panel} glyph="▥" title="grafana dashboards">
+            <\${CardGrid} baseUrl=\${base} items=\${items} hrefKey="href" />
+        <//>
+    \`;
 }
 
-document.body.addEventListener('click', async (e) => {
-    const target = e.target;
-    if (!(target instanceof HTMLElement)) return;
+function PrometheusPanel() {
+    const port = useCaddyPort();
+    const base = "https://prom." + SLUG + ".spin.localhost:" + port;
+    return html\`
+        <\${Panel} glyph="◎" title="prometheus quick-links">
+            <\${CardGrid} baseUrl=\${base} items=\${PROMETHEUS_LINKS} hrefKey="path" />
+        <//>
+    \`;
+}
 
-    const restartName = target.getAttribute('data-restart');
-    if (restartName) {
-        const proceed = await confirmDialog(
-            \`Restart \${restartName}?\`,
-            \`Stops and starts the \${restartName} container. In-flight requests against it will fail; expect ~5–30 s of downtime.\`,
-        );
-        if (!proceed) return;
-        target.disabled = true;
-        const original = target.textContent;
-        target.textContent = 'restarting…';
-        await streamAction('/api/actions/restart', { service: restartName }, \`restart \${restartName}\`);
-        target.textContent = original;
-        target.disabled = false;
-        refreshStatus();
-        return;
-    }
+/**
+ * Builds the Grafana Explore "left=" URL param for a Loki query. Grafana 10.4+ also accepts a
+ * newer "panes" schema-v1 param; this old "left" form still works in 11.x and is simpler to
+ * compose.
+ */
+function buildLokiExploreHref(grafanaBase, query) {
+    const left = {
+        datasource: "loki",
+        queries: [{ refId: "A", datasource: { type: "loki", uid: "loki" }, expr: query.expr, queryType: "range", editorMode: "code" }],
+        range: { from: query.range, to: "now" },
+    };
+    return grafanaBase + "/explore?orgId=1&left=" + encodeURIComponent(JSON.stringify(left)) + (query.live ? "&liveStreaming" : "");
+}
 
-    const action = target.getAttribute('data-action');
-    if (action) {
-        const message = target.getAttribute('data-confirm');
-        if (message) {
-            const proceed = await confirmDialog(\`Run \${action}?\`, message);
+function LokiPanel() {
+    const port = useCaddyPort();
+    const grafanaBase = "https://grafana." + SLUG + ".spin.localhost:" + port;
+    const items = useMemo(
+        () => LOKI_QUERIES.map((q) => ({ ...q, href: buildLokiExploreHref(grafanaBase, q).slice(grafanaBase.length) })),
+        [grafanaBase],
+    );
+    return html\`
+        <\${Panel} glyph="∥" title="api logs (loki via grafana)">
+            <\${CardGrid} baseUrl=\${grafanaBase} items=\${items} hrefKey="href" />
+        <//>
+    \`;
+}
+
+function MeilisearchPanel({ secrets }) {
+    const masterKey = secrets?.meiliMasterKey ?? null;
+    const port = secrets?.meiliPort ?? null;
+    const curlCmd = masterKey && port ? \`curl -H "Authorization: Bearer \${masterKey}" http://localhost:\${port}/keys\` : "";
+    return html\`
+        <\${Panel} glyph="⌗" title="meilisearch credentials">
+            <div class="secret-row">
+                <span class="secret-label">master key</span>
+                <code class="secret-value">\${masterKey ?? "(not provisioned for this spin)"}</code>
+                \${masterKey && html\`<\${CopyButton} text=\${masterKey} />\`}
+            </div>
+            <div class="secret-row">
+                <span class="secret-label">curl</span>
+                <code class="secret-value">\${curlCmd || "—"}</code>
+                \${curlCmd && html\`<\${CopyButton} text=\${curlCmd} />\`}
+            </div>
+        <//>
+    \`;
+}
+
+function ActionsPanel({ ask, showToast, appendLog }) {
+    const [busyId, setBusyId] = useState(null);
+    const run = async (action) => {
+        if (action.confirm) {
+            const proceed = await ask("Run " + action.id + "?", action.confirm);
             if (!proceed) return;
         }
-        target.disabled = true;
-        await streamAction('/api/actions/' + action, {}, action);
-        target.disabled = false;
-        refreshStatus();
-        return;
-    }
-
-    const copySecret = target.getAttribute('data-copy-secret');
-    if (copySecret) {
-        const el = document.getElementById(copySecret);
-        const text = el ? el.textContent : '';
+        setBusyId(action.id);
+        appendLog("— " + action.id + " —");
         try {
-            await navigator.clipboard.writeText(text);
-            const original = target.textContent;
-            target.textContent = 'copied ✓';
-            setTimeout(() => { target.textContent = original; }, 1500);
-        } catch {
-            showToast('clipboard write failed — copy manually', true);
+            const code = await streamAction("/api/actions/" + action.id, {}, appendLog);
+            showToast(action.id + (code === 0 ? " ✓" : " failed (" + code + ")"), code !== 0);
+        } catch (err) {
+            showToast(action.id + " failed: " + (err.message ?? err), true);
+        } finally {
+            setBusyId(null);
         }
-        return;
-    }
-
-    const logName = target.getAttribute('data-log');
-    if (logName) {
-        document.querySelectorAll('[data-log]').forEach(el => el.classList.remove('active'));
-        target.classList.add('active');
-        startLogStream(logName);
-        return;
-    }
-
-    if (target.id === 'log-clear') {
-        logEl.textContent = '';
-        return;
-    }
-
-    if (target.id === 'open-stop-help') {
-        showToast('Run "pnpm spin stop ${SLUG}" in your shell. Add --purge --remove to wipe volumes.');
-    }
-});
-
-function streamAction(url, body, label) {
-    return new Promise((resolve) => {
-        logEl.textContent += '\\n— ' + label + ' —\\n';
-        logEl.scrollTop = logEl.scrollHeight;
-        fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-            .then(async (res) => {
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                while (true) {
-                    const { value, done } = await reader.read();
-                    if (done) break;
-                    buffer += decoder.decode(value, { stream: true });
-                    /** Parse SSE events line-by-line. */
-                    const events = buffer.split('\\n\\n');
-                    buffer = events.pop() ?? '';
-                    for (const block of events) {
-                        const lines = block.split('\\n');
-                        let event = 'message';
-                        let data = '';
-                        for (const line of lines) {
-                            if (line.startsWith('event: ')) event = line.slice(7);
-                            else if (line.startsWith('data: ')) data += line.slice(6);
-                        }
-                        if (event === 'end') {
-                            const { code } = JSON.parse(data);
-                            showToast(label + (code === 0 ? ' ✓' : ' failed (' + code + ')'), code !== 0);
-                            resolve();
-                            return;
-                        }
-                        try {
-                            const parsed = JSON.parse(data);
-                            const text = typeof parsed === 'string' ? parsed : JSON.stringify(parsed);
-                            logEl.textContent += text + '\\n';
-                            logEl.scrollTop = logEl.scrollHeight;
-                        } catch { /* skip unparseable */ }
-                    }
-                }
-                resolve();
-            })
-            .catch((err) => { showToast(label + ' failed: ' + err.message, true); resolve(); });
-    });
-}
-
-function startLogStream(name) {
-    if (currentLogES) currentLogES.close();
-    logEl.textContent = '';
-    const es = new EventSource('/api/log/' + name);
-    currentLogES = es;
-    es.onmessage = (e) => {
-        try {
-            const line = JSON.parse(e.data);
-            logEl.textContent += line + '\\n';
-            logEl.scrollTop = logEl.scrollHeight;
-        } catch { /* skip */ }
     };
-    es.onerror = () => { logEl.textContent += '\\n— stream ended —\\n'; };
+    return html\`
+        <\${Panel} glyph="⚡" title="actions">
+            <div class="actions-row">
+                \${ACTIONS.map((a) => html\`
+                    <button key=\${a.id}
+                            class=\${a.variant === "primary" ? "primary" : a.variant === "danger" ? "danger" : ""}
+                            disabled=\${busyId !== null}
+                            onClick=\${() => run(a)}>\${a.label}</button>
+                \`)}
+                <button class="danger"
+                        onClick=\${() => showToast("Run \\"pnpm spin stop " + SLUG + "\\" in your shell. Add --purge --remove to wipe volumes.")}>
+                    stop spin (see CLI)
+                </button>
+            </div>
+        <//>
+    \`;
 }
 
-document.querySelectorAll('.setup-tabs button').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const pane = btn.getAttribute('data-pane');
-        document.querySelectorAll('.setup-tabs button').forEach(b => b.classList.toggle('active', b === btn));
-        document.querySelectorAll('.setup-pane').forEach(p => p.classList.toggle('active', p.getAttribute('data-pane') === pane));
-    });
-});
+function LogsPanel({ logRef }) {
+    const [stream, setStream] = useState("api.ndjson");
+    const { lines, clear } = useLogStream(stream);
+    const preRef = useRef(null);
+    const stickyRef = useRef(true);
 
-document.querySelectorAll('.copy').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const pre = btn.parentElement;
-        const text = pre.textContent.replace(/^copy\\s*/, '').trim();
-        try {
-            await navigator.clipboard.writeText(text);
-            const original = btn.textContent;
-            btn.textContent = 'copied ✓';
-            setTimeout(() => { btn.textContent = original; }, 1500);
-        } catch {
-            showToast('clipboard write failed — copy manually', true);
+    /** Track whether the user has scrolled away from the bottom — pause auto-scroll if so. */
+    useEffect(() => {
+        const el = preRef.current;
+        if (!el) return undefined;
+        const onScroll = () => {
+            stickyRef.current = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+        };
+        el.addEventListener("scroll", onScroll);
+        return () => el.removeEventListener("scroll", onScroll);
+    }, []);
+
+    useEffect(() => {
+        if (stickyRef.current && preRef.current) {
+            preRef.current.scrollTop = preRef.current.scrollHeight;
         }
-    });
-});
+    }, [lines]);
 
-refreshStatus();
-setInterval(refreshStatus, 5000);
-startLogStream('api.ndjson');
+    /** Expose an imperative \`append\` to the parent so action streams can interleave their output. */
+    useEffect(() => {
+        if (logRef) logRef.current = (line) => { /* no-op; action output goes through toaster + here when streaming */ };
+        return undefined;
+    }, [logRef]);
+
+    return html\`
+        <\${Panel} glyph="≡" title="logs">
+            <div class="log-controls">
+                <div class="sources">
+                    \${LOG_STREAMS.map((s) => html\`
+                        <button key=\${s}
+                                class=\${stream === s ? "active" : ""}
+                                onClick=\${() => setStream(s)}>\${s}</button>
+                    \`)}
+                </div>
+                <button class="log-clear" title="clear log view" onClick=\${clear}>clear</button>
+            </div>
+            <pre class="log" ref=\${preRef}>\${lines.join("\\n")}</pre>
+        <//>
+    \`;
+}
+
+function Toast({ toast }) {
+    return html\`
+        <div class=\${"toast " + (toast.message ? "show " : "") + (toast.error ? "error" : "")}>\${toast.message}</div>
+    \`;
+}
+
+function ConfirmModal({ request, onClose }) {
+    useEffect(() => {
+        if (!request) return undefined;
+        const onKey = (e) => {
+            if (e.key === "Escape") onClose(false);
+            if (e.key === "Enter") onClose(true);
+        };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [request, onClose]);
+    if (!request) return null;
+    return html\`
+        <div class="modal-backdrop" onClick=\${(e) => { if (e.target.classList.contains("modal-backdrop")) onClose(false); }}>
+            <div class="modal">
+                <h3>\${request.title}</h3>
+                <p>\${request.body}</p>
+                <div class="modal-actions">
+                    <button onClick=\${() => onClose(false)}>cancel</button>
+                    <button class="confirm" onClick=\${() => onClose(true)}>continue</button>
+                </div>
+            </div>
+        </div>
+    \`;
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/*  Trust-setup section — collapsible HTTPS setup wizard with per-platform tabs.              */
+/* ---------------------------------------------------------------------------------------- */
+
+const PANES = [
+    {
+        id: "wsl2",
+        label: "WSL2 + Windows browser",
+        intro: "This is the dev path where Caddy runs inside WSL2 but your browser is on Windows. Download the cert from this very page, then install it into Windows' trusted root store.",
+        steps: [
+            { h: "1. Download the cert", cmd: \`docker cp \${COMPOSE_PROJECT}-caddy-1:/data/caddy/pki/authorities/local/root.crt $(wslpath "$(cmd.exe /c 'echo %USERPROFILE%\\\\Downloads\\\\caddy-root.crt' 2>/dev/null)" | tr -d '\\\\r')\` },
+            { h: "2. Install it (PowerShell as Administrator)", cmd: 'Import-Certificate -FilePath "$env:USERPROFILE\\\\Downloads\\\\caddy-root.crt" -CertStoreLocation Cert:\\\\LocalMachine\\\\Root', after: html\`<p>You will see a confirmation dialog with the subject <code>Caddy Local Authority - 20XX ECC Root</code> — click <strong>Yes</strong>.</p>\` },
+            { h: "3. Restart Chrome completely", after: html\`<p>Close every Chrome window. Open Task Manager (<kbd>Ctrl+Shift+Esc</kbd>) and end any leftover <code>chrome.exe</code> processes (Chrome runs a background host process by default). Then reopen Chrome and visit a spin URL — green lock 🔒.</p>\` },
+            { h: 'Still seeing "Not secure"?', after: html\`<p>Chrome caches per-host bypass overrides. Clear them via <a href="chrome://net-internals/#hsts" target="_blank">chrome://net-internals/#hsts</a> → Delete domain security policies → enter <code>\${SLUG}.spin.localhost</code> → Delete. Or open Incognito (<kbd>Ctrl+Shift+N</kbd>) as a clean test.</p>\` },
+        ],
+    },
+    {
+        id: "linux",
+        label: "Linux native",
+        intro: null,
+        steps: [
+            { h: "Run on the host (sudo required)", cmd: "sudo caddy trust", after: html\`<p>This pulls Caddy's local CA root and installs it into the system trust store (<code>/etc/ssl/certs</code>) plus the per-browser stores (Firefox / Chromium NSS db).</p>\` },
+            { h: "If Caddy isn't installed on your host yet:", cmd: "sudo apt install -y caddy   # Debian / Ubuntu\\nsudo pacman -S caddy        # Arch\\nbrew install caddy          # Linuxbrew", after: html\`<p>Restart your browser, visit any <code>*.spin.localhost</code> URL — green lock.</p>\` },
+        ],
+    },
+    {
+        id: "macos",
+        label: "macOS",
+        intro: null,
+        steps: [
+            { h: "Install Caddy + trust the root", cmd: "brew install caddy\\nsudo caddy trust", after: html\`<p>This adds the cert to the System keychain. macOS Safari / Chrome / Firefox all pick it up automatically.</p>\` },
+            { h: "If Caddy is running in Docker only", cmd: \`docker cp \${COMPOSE_PROJECT}-caddy-1:/data/caddy/pki/authorities/local/root.crt ~/Downloads/caddy-root.crt\\nopen ~/Downloads/caddy-root.crt\`, after: html\`<p>Keychain Access opens → drag the cert into the <strong>System</strong> keychain → double-click it → expand <strong>Trust</strong> → set <strong>When using this certificate</strong> to <strong>Always Trust</strong>.</p>\` },
+        ],
+    },
+    {
+        id: "windows",
+        label: "Windows native",
+        intro: null,
+        steps: [
+            { h: "Install Caddy + trust the root (PowerShell as Administrator)", cmd: "winget install caddy\\ncaddy trust" },
+            { h: "Or, if Caddy is only inside Docker:", cmd: \`docker cp \${COMPOSE_PROJECT}-caddy-1:/data/caddy/pki/authorities/local/root.crt $env:USERPROFILE\\\\Downloads\\\\caddy-root.crt\\nImport-Certificate -FilePath "$env:USERPROFILE\\\\Downloads\\\\caddy-root.crt" -CertStoreLocation Cert:\\\\LocalMachine\\\\Root\`, after: html\`<p>Restart Chrome / Edge after install — green lock on every <code>*.spin.localhost</code> URL.</p>\` },
+        ],
+    },
+];
+
+function CopyPre({ cmd }) {
+    const [copied, setCopied] = useState(false);
+    return html\`
+        <pre>
+            <button class="copy-btn" onClick=\${async () => {
+                const ok = await copyToClipboard(cmd);
+                if (ok) { setCopied(true); setTimeout(() => setCopied(false), 1500); }
+            }}>\${copied ? "copied ✓" : "copy"}</button>\${cmd}
+        </pre>
+    \`;
+}
+
+function TrustSetup() {
+    const [open, setOpen] = useState(false);
+    const [activePane, setActivePane] = useState("wsl2");
+    const pane = PANES.find((p) => p.id === activePane) ?? PANES[0];
+    return html\`
+        <div class=\${"setup" + (open ? " open" : "")}>
+            <div class="setup-summary" onClick=\${() => setOpen((o) => !o)}>
+                <span class="lock">🔒 first-time HTTPS setup —</span>
+                <span>trust Caddy's local CA so this page (and every <code>*.spin.localhost</code> URL) loads without a browser warning</span>
+            </div>
+            \${open && html\`
+                <div class="setup-body">
+                    <p>Caddy issues TLS certs from its own local CA. You need to install the root cert into your OS trust store <strong>once</strong> — after that every spin's certs are trusted automatically (they all chain to the same root). Pick your platform below.</p>
+                    <div class="setup-tabs">
+                        \${PANES.map((p) => html\`
+                            <button key=\${p.id}
+                                    class=\${activePane === p.id ? "active" : ""}
+                                    onClick=\${() => setActivePane(p.id)}>\${p.label}</button>
+                        \`)}
+                    </div>
+                    \${pane.intro && html\`<p>\${pane.intro}</p>\`}
+                    \${pane.steps.map((step, i) => html\`
+                        <div key=\${i}>
+                            <h3>\${step.h}</h3>
+                            \${step.cmd && html\`<\${CopyPre} cmd=\${step.cmd} />\`}
+                            \${step.after}
+                        </div>
+                    \`)}
+                </div>
+            \`}
+        </div>
+    \`;
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/*  App                                                                                       */
+/* ---------------------------------------------------------------------------------------- */
+
+function App() {
+    const { data, lastRefresh, error, refresh } = usePolledJson("/api/status", 5000);
+    const { toast, show: showToast } = useToaster();
+    const { request, ask, close } = useConfirm();
+    const logRef = useRef(null);
+
+    const restart = async (container) => {
+        const proceed = await ask("Restart " + container + "?", "Stops and starts the " + container + " container. In-flight requests against it will fail; expect ~5–30 s of downtime.");
+        if (!proceed) return;
+        showToast("restarting " + container + "…");
+        try {
+            const code = await streamAction("/api/actions/restart", { service: container }, () => {});
+            showToast(container + (code === 0 ? " restarted ✓" : " restart failed (" + code + ")"), code !== 0);
+            refresh();
+        } catch (err) {
+            showToast("restart " + container + " failed: " + (err.message ?? err), true);
+        }
+    };
+
+    return html\`
+        <\${Header} lastRefresh=\${lastRefresh} error=\${error} />
+        <\${TrustSetup} />
+        <\${ServicesGrid} services=\${data?.services} onRestart=\${restart} />
+        <\${GrafanaPanel} />
+        <\${PrometheusPanel} />
+        <\${LokiPanel} />
+        <\${MeilisearchPanel} secrets=\${data?.secrets} />
+        <\${ActionsPanel} ask=\${ask} showToast=\${showToast} appendLog=\${(line) => logRef.current?.(line)} />
+        <\${LogsPanel} logRef=\${logRef} />
+        <\${Toast} toast=\${toast} />
+        <\${ConfirmModal} request=\${request} onClose=\${close} />
+    \`;
+}
+
+createRoot(document.getElementById("root")).render(html\`<\${App} />\`);
 </script>
 </body>
 </html>`;

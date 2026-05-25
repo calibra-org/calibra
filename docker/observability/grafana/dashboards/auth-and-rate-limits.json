@@ -1,0 +1,161 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "graphTooltip": 0,
+    "id": null,
+    "title": "Calibra — auth & rate limits",
+    "uid": "calibra-auth-ratelimits",
+    "version": 1,
+    "schemaVersion": 39,
+    "timezone": "",
+    "tags": ["calibra", "auth", "security"],
+    "time": { "from": "now-3h", "to": "now" },
+    "refresh": "30s",
+    "panels": [
+        {
+            "id": 1,
+            "type": "timeseries",
+            "title": "Login outcomes per second",
+            "description": "Stacked area of every auth-event outcome. A red 'login_fail' spike without matching 'login_success' is the brute-force signal — the AuthBruteForce alert fires when this exceeds 5/s for 2 minutes.",
+            "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "stacking": { "mode": "normal" }, "fillOpacity": 30 }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "sum by (outcome) (rate(calibra_auth_events_total[1m])) or vector(0)",
+                    "legendFormat": "{{outcome}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "timeseries",
+            "title": "Rate-limit throttles / min per limiter",
+            "description": "Every 429 a named limiter throws ticks here. Persistent throttling on auth/login_email = enumeration sweep; on admin_writes = bulk script.",
+            "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "sum by (limiter) (rate(calibra_rate_limit_throttled_total[1m])) * 60 or vector(0)",
+                    "legendFormat": "{{limiter}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "stat",
+            "title": "Failed logins (last 1h)",
+            "description": "Sum of login_fail outcomes. A baseline of single digits is normal user error; double-digits sustained means an active attacker.",
+            "gridPos": { "h": 5, "w": 6, "x": 0, "y": 9 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "yellow", "value": 50 },
+                            { "color": "red", "value": 500 }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "", "values": false } },
+            "targets": [
+                {
+                    "expr": "sum(increase(calibra_auth_events_total{outcome=\"login_fail\"}[1h])) or vector(0)",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "type": "stat",
+            "title": "Invalid tokens (last 1h)",
+            "description": "401s from the auth middleware: missing / expired / forged bearer tokens. Steady non-zero baseline is normal (mobile apps reconnecting). Sudden surges are interesting.",
+            "gridPos": { "h": 5, "w": 6, "x": 6, "y": 9 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 200 }]
+                    }
+                },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "", "values": false } },
+            "targets": [
+                {
+                    "expr": "sum(increase(calibra_auth_events_total{outcome=\"token_invalid\"}[1h])) or vector(0)",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "type": "barchart",
+            "title": "login_email throttles per minute (last 30m)",
+            "description": "Per-minute count of email-scoped throttles. One tall bar = single bad actor; a flat plateau across many bars = botnet sweep.",
+            "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "hidden" } },
+            "targets": [
+                {
+                    "expr": "sum(increase(calibra_rate_limit_throttled_total{limiter=\"login_email\"}[1m]))",
+                    "legendFormat": "login_email",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "type": "timeseries",
+            "title": "Logout rate (sanity check)",
+            "description": "Active sessions ending naturally. Should be < login_success rate (otherwise users are signing in only to leave immediately — a UX or auth-loop issue).",
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "rate(calibra_auth_events_total{outcome=\"logout\"}[5m]) or vector(0)",
+                    "legendFormat": "logout",
+                    "refId": "A"
+                },
+                {
+                    "expr": "rate(calibra_auth_events_total{outcome=\"login_success\"}[5m]) or vector(0)",
+                    "legendFormat": "login_success",
+                    "refId": "B"
+                }
+            ]
+        }
+    ]
+}

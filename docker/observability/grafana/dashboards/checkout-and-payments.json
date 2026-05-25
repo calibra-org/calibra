@@ -1,0 +1,200 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "graphTooltip": 0,
+    "id": null,
+    "title": "Calibra — checkout & payments",
+    "uid": "calibra-checkout-payments",
+    "version": 1,
+    "schemaVersion": 39,
+    "timezone": "",
+    "tags": ["calibra", "business", "payments"],
+    "time": { "from": "now-6h", "to": "now" },
+    "refresh": "30s",
+    "panels": [
+        {
+            "id": 1,
+            "type": "stat",
+            "title": "Orders finalized (last 24h)",
+            "description": "Draft → pending transitions through OrderFinalizer in the last 24h. The conversion volume number.",
+            "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "short", "color": { "mode": "thresholds" } },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "", "values": false } },
+            "targets": [
+                {
+                    "expr": "sum(increase(calibra_orders_finalized_total[24h])) or vector(0)",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "stat",
+            "title": "Rejected transitions (last 1h)",
+            "description": "Illegal-transition exceptions thrown by the state machine. > 0 usually means a controller passed an invalid (from, to) pair — investigate the logs.",
+            "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }]
+                    }
+                },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "", "values": false } },
+            "targets": [
+                {
+                    "expr": "sum(increase(calibra_order_transitions_total{outcome=\"rejected\"}[1h])) or vector(0)",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "timeseries",
+            "title": "Order transitions / min (applied)",
+            "description": "Stacked per (from, to) pair. Helps visualize the lifecycle health — e.g. draft→pending vs draft→cancelled.",
+            "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "stacking": { "mode": "normal" }, "fillOpacity": 25 }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "sum by (from, to) (rate(calibra_order_transitions_total{outcome=\"applied\"}[1m])) * 60",
+                    "legendFormat": "{{from}} → {{to}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "type": "timeseries",
+            "title": "Payment attempts / s per gateway",
+            "description": "Stacked area of payment_attempts_total per gateway. A gateway that suddenly stops appearing means the storefront stopped offering it.",
+            "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "reqps",
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "stacking": { "mode": "normal" }, "fillOpacity": 30 }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "sum by (gateway) (rate(calibra_payment_attempts_total[5m])) or vector(0)",
+                    "legendFormat": "{{gateway}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "type": "timeseries",
+            "title": "Payment success ratio per gateway (5m)",
+            "description": "verified / total attempts per gateway, rolling 5m. Dropping below 50% for 10m on any active gateway fires PaymentGatewayDown.",
+            "gridPos": { "h": 9, "w": 12, "x": 0, "y": 14 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percentunit",
+                    "min": 0,
+                    "max": 1,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "red", "value": null },
+                            { "color": "yellow", "value": 0.5 },
+                            { "color": "green", "value": 0.8 }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "calibra:payment_success_ratio:5m",
+                    "legendFormat": "{{gateway}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "type": "timeseries",
+            "title": "p95 callback latency per gateway",
+            "description": "How long a PSP's verify-callback takes end-to-end. Spikes here often correlate with PSP-side outages.",
+            "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "s", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum by (le, gateway) (rate(calibra_payment_attempt_duration_seconds_bucket{phase=\"callback\"}[5m])))",
+                    "legendFormat": "{{gateway}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 7,
+            "type": "table",
+            "title": "Refund attempts (last 1h)",
+            "description": "Counter delta over the last hour, broken down by gateway. A spike here without a matching customer-service ticket is suspicious.",
+            "gridPos": { "h": 9, "w": 12, "x": 0, "y": 23 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "short" },
+                "overrides": []
+            },
+            "options": { "showHeader": true, "sortBy": [{ "displayName": "Value", "desc": true }] },
+            "targets": [
+                {
+                    "expr": "sum by (gateway) (increase(calibra_payment_attempts_total{status=\"refunded\"}[1h])) > 0",
+                    "instant": true,
+                    "format": "table",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 8,
+            "type": "stat",
+            "title": "Verified payments (last 24h)",
+            "description": "Successful PSP verifications over 24h, summed across gateways. The 'revenue acknowledged' counter.",
+            "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "short" },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "", "values": false } },
+            "targets": [
+                {
+                    "expr": "sum(increase(calibra_payment_attempts_total{status=\"verified\"}[24h])) or vector(0)",
+                    "refId": "A"
+                }
+            ]
+        }
+    ]
+}

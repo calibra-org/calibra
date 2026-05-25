@@ -1,0 +1,175 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "graphTooltip": 0,
+    "id": null,
+    "title": "Calibra — CSV imports & exports",
+    "uid": "calibra-imports-exports",
+    "version": 1,
+    "schemaVersion": 39,
+    "timezone": "",
+    "tags": ["calibra", "jobs", "imports", "exports"],
+    "time": { "from": "now-3h", "to": "now" },
+    "refresh": "30s",
+    "panels": [
+        {
+            "id": 1,
+            "type": "stat",
+            "title": "Active import / export jobs",
+            "description": "Live row count of pending + active + delayed jobs per queue. Polled lazily on /metrics scrape (10s cache).",
+            "gridPos": { "h": 5, "w": 12, "x": 0, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "yellow", "value": 100 },
+                            { "color": "red", "value": 1000 }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "/.*/", "values": false } },
+            "targets": [
+                {
+                    "expr": "calibra_queue_jobs_active",
+                    "legendFormat": "{{queue}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "timeseries",
+            "title": "Rows / s processed (imports vs exports)",
+            "description": "Row-throughput per direction. Imports < exports is normal (imports do more per-row work than streaming an export).",
+            "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "rate(calibra_imports_rows_total{outcome=\"processed\"}[1m]) or vector(0)",
+                    "legendFormat": "imports",
+                    "refId": "A"
+                },
+                {
+                    "expr": "rate(calibra_exports_rows_total{outcome=\"processed\"}[1m]) or vector(0)",
+                    "legendFormat": "exports",
+                    "refId": "B"
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "timeseries",
+            "title": "Import error rows / s",
+            "description": "Validation or write failures per CSV row, smoothed over 5m. A spike here without a corresponding spike in processed rows means catastrophic file corruption.",
+            "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "hidden" } },
+            "targets": [
+                {
+                    "expr": "rate(calibra_imports_rows_total{outcome=\"error\"}[5m]) or vector(0)",
+                    "legendFormat": "error rows",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "type": "stat",
+            "title": "Imports completed (24h)",
+            "description": "How many import jobs finished — any outcome — in the last 24h. Use alongside the failure-ratio panel.",
+            "gridPos": { "h": 5, "w": 6, "x": 0, "y": 14 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "short" },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "", "values": false } },
+            "targets": [
+                {
+                    "expr": "sum(increase(calibra_queue_jobs_total{queue=\"imports\"}[24h])) or vector(0)",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "type": "stat",
+            "title": "Exports completed (24h)",
+            "description": "How many export jobs finished — any outcome — in the last 24h.",
+            "gridPos": { "h": 5, "w": 6, "x": 6, "y": 14 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "short" },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "", "values": false } },
+            "targets": [
+                {
+                    "expr": "sum(increase(calibra_queue_jobs_total{queue=\"exports\"}[24h])) or vector(0)",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "type": "timeseries",
+            "title": "Job duration p50 / p95 (per queue)",
+            "description": "Mean and tail wall-clock duration. p95 climbing means individual jobs are slowing down (large CSV files, slow DB, slow PSP for refunds).",
+            "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "s", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.50, sum by (le, queue) (rate(calibra_queue_job_duration_seconds_bucket[5m])))",
+                    "legendFormat": "{{queue}} p50",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, sum by (le, queue) (rate(calibra_queue_job_duration_seconds_bucket[5m])))",
+                    "legendFormat": "{{queue}} p95",
+                    "refId": "B"
+                }
+            ]
+        },
+        {
+            "id": 7,
+            "type": "logs",
+            "title": "Recent import/export errors",
+            "description": "Loki tail of runImport / runExport error lines (`level >= 50`). The natural drill-down from a spike in the error-rows panel.",
+            "gridPos": { "h": 10, "w": 24, "x": 0, "y": 23 },
+            "datasource": { "type": "loki", "uid": "loki" },
+            "options": {
+                "showTime": true,
+                "wrapLogMessage": true,
+                "dedupStrategy": "none",
+                "sortOrder": "Descending"
+            },
+            "targets": [
+                {
+                    "expr": "{service=\"calibra-api\"} | json | level=~\"error|fatal\" | msg=~\"(?i)runImport|runExport\" | line_format \"{{.msg}}\"",
+                    "refId": "A"
+                }
+            ]
+        }
+    ]
+}

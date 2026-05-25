@@ -2,6 +2,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 import { DateTime } from "luxon";
 
 import User from "#models/user";
+import { recordAuthEvent } from "#services/metrics/domain_metrics";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
 import { loginValidator } from "#validators/auth/login_validator";
@@ -16,9 +17,16 @@ export default class LoginController {
     async handle(ctx: HttpContext) {
         const { email, password } = await ctx.request.validateUsing(loginValidator);
 
-        const user = await User.verifyCredentials(email, password);
+        let user: User;
+        try {
+            user = await User.verifyCredentials(email, password);
+        } catch (err) {
+            recordAuthEvent("login_fail");
+            throw err;
+        }
 
         if (user.deletedAt) {
+            recordAuthEvent("login_locked");
             return ctx.response.status(401).send({
                 errors: [
                     {
@@ -33,6 +41,7 @@ export default class LoginController {
         await user.load("customer");
 
         const token = await User.accessTokens.create(user);
+        recordAuthEvent("login_success");
 
         return {
             user: new UserTransformer(user).toObject(),

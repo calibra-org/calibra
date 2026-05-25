@@ -10,6 +10,7 @@ import OrderLineItem from "#models/order_line_item";
 import OrderStatusHistory from "#models/order_status_history";
 import type User from "#models/user";
 import InventoryService, { type InventoryTarget } from "#services/inventory_service";
+import { recordOrderTransition } from "#services/metrics/domain_metrics";
 
 export interface TransitionOptions {
     /** Authenticated actor responsible for the transition; recorded on the audit row. */
@@ -42,6 +43,7 @@ export class OrderStateMachine {
         const fromStatus = order.status;
         const transition = findTransition(fromStatus, to);
         if (!transition) {
+            recordOrderTransition(fromStatus, to, "rejected");
             throw new Exception(`Illegal order status transition: ${fromStatus} → ${to}`, {
                 status: 422,
                 code: "E_ILLEGAL_ORDER_TRANSITION",
@@ -74,6 +76,8 @@ export class OrderStateMachine {
         } else {
             await db.transaction(run);
         }
+
+        recordOrderTransition(fromStatus, to, "applied");
 
         /**
          * Events fire after commit so listeners observe persisted state. No listener is bound
