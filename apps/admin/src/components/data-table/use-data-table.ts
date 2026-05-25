@@ -3,7 +3,21 @@
 import { parseAsArrayOf, parseAsBoolean, parseAsInteger, parseAsString, useQueryState, useQueryStates } from "nuqs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { DataTableDensity, FacetedFilterDef, PaginationMeta, SortState, ToggleFilterDef } from "./types";
+import {
+    type DateFilterValue,
+    parseDateFilter,
+    serializeDateFilter,
+    toLegacyDateRange,
+} from "#/components/ui/date-picker";
+
+import type {
+    DataTableDensity,
+    DateFacetDef,
+    FacetedFilterDef,
+    PaginationMeta,
+    SortState,
+    ToggleFilterDef,
+} from "./types";
 
 /**
  * Default per-page selectable steps shown in the pagination footer. Callers may override via
@@ -34,6 +48,8 @@ export interface UseDataTableOptions {
     facets?: FacetedFilterDef[];
     /** Boolean toggles whose value is mirrored to a single URL key. */
     toggles?: ToggleFilterDef[];
+    /** Date-picker filters; each renders as a chip in the toolbar. URL-syncs the picked value. */
+    dateFacets?: DateFacetDef[];
     /** Items per page allowed in the selector. Defaults to {@link DEFAULT_PER_PAGE_OPTIONS}. */
     perPageOptions?: readonly number[];
     /** Initial per-page when the URL doesn't yet specify one. Defaults to `20`. */
@@ -108,11 +124,27 @@ export function useDataTable(options: UseDataTableOptions) {
         return entries;
     }, [options.toggles]);
 
+    const dateFacetParsers = useMemo(() => {
+        const entries: Record<string, ReturnType<typeof parseAsString.withDefault>> = {};
+        for (const facet of options.dateFacets ?? []) {
+            entries[facet.paramKey] = parseAsString.withDefault("");
+            if (facet.legacyParamKeys?.after !== undefined) {
+                entries[facet.legacyParamKeys.after] = parseAsString.withDefault("");
+            }
+            if (facet.legacyParamKeys?.before !== undefined) {
+                entries[facet.legacyParamKeys.before] = parseAsString.withDefault("");
+            }
+        }
+        return entries;
+    }, [options.dateFacets]);
+
     const [facetValuesRaw, setFacetValuesRaw] = useQueryStates(facetParsers);
     const [toggleValuesRaw, setToggleValuesRaw] = useQueryStates(toggleParsers);
+    const [dateFacetValuesRaw, setDateFacetValuesRaw] = useQueryStates(dateFacetParsers);
 
     const facetValues = facetValuesRaw as Record<string, string[]>;
     const toggleValues = toggleValuesRaw as Record<string, boolean>;
+    const dateFacetRawStrings = dateFacetValuesRaw as Record<string, string>;
 
     const setFacetValues = useCallback(
         (key: string, values: string[]) => {
@@ -130,6 +162,43 @@ export function useDataTable(options: UseDataTableOptions) {
         [setToggleValuesRaw, setPage],
     );
 
+    const dateFacetValues = useMemo<Record<string, DateFilterValue | null>>(() => {
+        const out: Record<string, DateFilterValue | null> = {};
+        for (const facet of options.dateFacets ?? []) {
+            const raw = dateFacetRawStrings[facet.paramKey] ?? "";
+            const calendar = facet.calendar === "auto" || facet.calendar === undefined ? "gregorian" : facet.calendar;
+            out[facet.paramKey] = parseDateFilter(raw === "" ? null : raw, calendar);
+        }
+        return out;
+    }, [options.dateFacets, dateFacetRawStrings]);
+
+    const setDateFilterValue = useCallback(
+        (key: string, value: DateFilterValue | null) => {
+            const facet = options.dateFacets?.find((f) => f.paramKey === key);
+            const updates: Record<string, string | null> = {};
+            if (value === null) {
+                updates[key] = null;
+                if (facet?.legacyParamKeys?.after !== undefined) updates[facet.legacyParamKeys.after] = null;
+                if (facet?.legacyParamKeys?.before !== undefined) updates[facet.legacyParamKeys.before] = null;
+            } else {
+                const { main } = serializeDateFilter(value);
+                updates[key] = main;
+                if (facet?.legacyParamKeys !== undefined) {
+                    const legacy = toLegacyDateRange(value);
+                    if (facet.legacyParamKeys.after !== undefined) {
+                        updates[facet.legacyParamKeys.after] = legacy.after ?? null;
+                    }
+                    if (facet.legacyParamKeys.before !== undefined) {
+                        updates[facet.legacyParamKeys.before] = legacy.before ?? null;
+                    }
+                }
+            }
+            void setDateFacetValuesRaw(updates);
+            void setPage(1);
+        },
+        [options.dateFacets, setDateFacetValuesRaw, setPage],
+    );
+
     const clearAllFilters = useCallback(() => {
         for (const facet of options.facets ?? []) {
             void setFacetValuesRaw({ [facet.paramKey]: null });
@@ -137,13 +206,20 @@ export function useDataTable(options: UseDataTableOptions) {
         for (const toggle of options.toggles ?? []) {
             void setToggleValuesRaw({ [toggle.paramKey]: null });
         }
+        for (const facet of options.dateFacets ?? []) {
+            const updates: Record<string, null> = { [facet.paramKey]: null };
+            if (facet.legacyParamKeys?.after !== undefined) updates[facet.legacyParamKeys.after] = null;
+            if (facet.legacyParamKeys?.before !== undefined) updates[facet.legacyParamKeys.before] = null;
+            void setDateFacetValuesRaw(updates);
+        }
         void setQ("");
         void setPage(1);
-    }, [options.facets, options.toggles, setFacetValuesRaw, setToggleValuesRaw, setQ, setPage]);
+    }, [options.dateFacets, options.facets, options.toggles, setDateFacetValuesRaw, setFacetValuesRaw, setToggleValuesRaw, setQ, setPage]);
 
     const hasActiveFilters =
         Object.values(facetValues).some((v) => Array.isArray(v) && v.length > 0) ||
         Object.values(toggleValues).some((v) => v === true) ||
+        Object.values(dateFacetValues).some((v) => v !== null) ||
         q.length > 0;
 
     const [density, setDensity] = useLocalStorageState<DataTableDensity>(`admin.dataTable.${options.id}.density`, "comfortable");
@@ -185,6 +261,8 @@ export function useDataTable(options: UseDataTableOptions) {
         setFacetValues,
         toggleValues,
         setToggleValue,
+        dateFacetValues,
+        setDateFilterValue,
         clearAllFilters,
         hasActiveFilters,
         density,

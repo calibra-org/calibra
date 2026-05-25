@@ -14,5 +14,6 @@ export {
     DEFAULT_OPERATOR_BY_GRANULARITY,
 } from "./types";
 export type { Calendar, DateFilterValue, Granularity, LegacyDateRange, Operator, PeriodString } from "./types";
+export { parseDateFilter, serializeDateFilter, toLegacyDateRange } from "./url";
 export { useDateFilter } from "./use-date-filter";
 export type { UseDateFilterOptions, UseDateFilterReturn } from "./use-date-filter";

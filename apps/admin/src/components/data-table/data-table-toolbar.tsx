@@ -5,11 +5,12 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
+import { type DateFilterValue, DateFilterChip } from "#/components/ui/date-picker";
 import { Input } from "#/components/ui/input";
 import { cn } from "#/lib/utils";
 
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
-import type { FacetedFilterDef, ToggleFilterDef } from "./types";
+import type { DateFacetDef, FacetedFilterDef, ToggleFilterDef } from "./types";
 
 interface DataTableToolbarProps {
     searchPlaceholder: string;
@@ -21,6 +22,12 @@ interface DataTableToolbarProps {
     toggles?: ToggleFilterDef[];
     toggleValues: Record<string, boolean>;
     onToggleChange: (key: string, value: boolean) => void;
+    /** Date-picker filter chips. Renders one {@link DateFilterChip} per entry. */
+    dateFacets?: DateFacetDef[];
+    dateFacetValues?: Record<string, DateFilterValue | null>;
+    onDateFacetChange?: (key: string, value: DateFilterValue | null) => void;
+    /** Locale forwarded to the date chips (operator labels + calendar selection). */
+    locale?: "fa" | "en";
     hasActiveFilters: boolean;
     onClearAll: () => void;
     onRefresh?: () => void;
@@ -54,6 +61,10 @@ export function DataTableToolbar({
     toggles = [],
     toggleValues,
     onToggleChange,
+    dateFacets = [],
+    dateFacetValues = {},
+    onDateFacetChange,
+    locale = "fa",
     hasActiveFilters,
     onClearAll,
     onRefresh,
@@ -98,6 +109,19 @@ export function DataTableToolbar({
                     onChange={(next) => onFacetValuesChange(facet.paramKey, next)}
                     clearLabel={labels.clearFilter}
                     selectedLabelFormat={labels.selectedCount}
+                />
+            ))}
+
+            {dateFacets.map((facet) => (
+                <DateFilterChip
+                    key={facet.paramKey}
+                    fieldLabel={facet.label}
+                    value={dateFacetValues[facet.paramKey] ?? null}
+                    onChange={(next) => onDateFacetChange?.(facet.paramKey, next)}
+                    locale={locale}
+                    calendar={facet.calendar === "auto" ? undefined : facet.calendar}
+                    allowedOperators={facet.allowedOperators}
+                    allowedGranularities={facet.allowedGranularities}
                 />
             ))}
 

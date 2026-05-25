@@ -1,6 +1,8 @@
 import type { ColumnDef, Row, Table } from "@tanstack/react-table";
 import type { ReactNode } from "react";
 
+import type { Calendar, Granularity, Operator } from "#/components/ui/date-picker";
+
 /**
  * Comfort levels for row + cell padding, persisted per table id in `localStorage` under
  * `admin.dataTable.<id>.density`. Defaults to `comfortable`.
@@ -52,6 +54,28 @@ export interface ToggleFilterDef {
     paramKey: string;
     label: string;
     icon?: ReactNode;
+}
+
+/**
+ * Configuration for a date filter facet — the date-picker counterpart to {@link FacetedFilterDef}.
+ * Renders as a {@link DateFilterChip} in the toolbar; URL-syncs the picked value under
+ * `paramKey`, and (when {@link legacyParamKeys} is set) also writes legacy `<after>` / `<before>`
+ * keys so backends that haven't migrated to the unified shape still receive what they expect.
+ */
+export interface DateFacetDef {
+    paramKey: string;
+    label: string;
+    allowedOperators?: Operator[];
+    allowedGranularities?: Granularity[];
+    defaultGranularity?: Granularity;
+    /** Override the auto-derived calendar (default: pick from active locale). */
+    calendar?: Calendar | "auto";
+    /**
+     * Legacy URL keys for back-compat. When set, the table writes the resolved `after` / `before`
+     * Gregorian ISO date strings into these keys alongside the unified `paramKey`. Server-repos
+     * that haven't migrated keep working untouched.
+     */
+    legacyParamKeys?: { after?: string; before?: string };
 }
 
 /** Card renderer used when the table collapses to a stacked mobile list. */
