@@ -52,6 +52,24 @@ When in doubt, ask: **"if this is 30 seconds stale, does a user see a wrong pric
 
 **Local docs cache**: `~/adonis-v7-docs/content/guides/digging_deeper/cache.md` (framework integration) and `~/Julien-R44/bentocache/docs/content/docs/` (engine details — grace, stampede, multi-tier, tags, namespaces, adaptive caching). Read these before reaching for memory.
 
+## Local observability & search (per-spin)
+
+Every `pnpm spin <slug>` brings up a full prod-parity infra alongside the app:
+
+- **Caddy** terminates TLS for every service with an internal CA. All UIs reachable at `https://<service>.<slug>.spin.localhost`. Run `caddy trust` once on your machine to trust the local root. Bare ports still work as escape hatches; the hostname route is the prod-parity path.
+- **GlitchTip** (Sentry-protocol) — errors thrown via `@sentry/node` show up at `errors.<slug>.spin.localhost`. The DSN is written to `apps/api/.env` as `GLITCHTIP_DSN` once the operator registers + creates an org/project on first run (auto-provisioning is on the roadmap; the handoff card prints the one-time setup blurb). Anything you'd report in prod, report locally too — that's how we catch silent error-handler regressions.
+- **Prometheus + Grafana + Loki + Tempo + Alertmanager** — the api exposes `/metrics` (Prometheus text format), tees ndjson logs to `<worktree>/.spin/logs/api.ndjson` (Promtail → Loki), and emits OTLP traces to Tempo (the OTLP/HTTP receiver is published on the `tempo` port; the HTTP API is fronted by Caddy for Grafana datasource access). The starter Grafana dashboard "Calibra api — request overview" loads on first visit. Adding a new dashboard? Commit it to `docker/observability/grafana/dashboards/` — clickops dashboards aren't reproducible.
+- **Uptime Kuma** runs an external probe against `/health/ready`. Configure additional probes via the UI; the config is per-spin (lives in the spin's docker volume).
+- **Meilisearch** runs on `search.<slug>.spin.localhost`. The api auto-discovers it via `MEILISEARCH_HOST` + `MEILISEARCH_API_KEY` (`config/env.ts`); the singleton client lives in `app/services/meilisearch.ts`. Reindex flows go through the search-index service (lands in a follow-up PR).
+
+**Production parity is the contract.** Production will use the same images (Caddy, Grafana, Prometheus, Loki, Tempo, GlitchTip, Meilisearch) reached via real hostnames behind Cloudflare/Arvan. If a feature behaves differently in your spin than it does on staging, that's a dev-env bug — file it, don't paper over it.
+
+**Stack down**: `pnpm spin stop <slug>` stops everything. `--purge` drops the data volumes (Grafana dashboards you didn't commit, Meilisearch index, Loki history, GlitchTip events). Commit anything you want to keep.
+
+**Direct-port escape hatches** (in addition to the Caddy routes): `localhost:<api>`, `localhost:<redis>`, `localhost:<mailpit-web>`, `localhost:<adminer>`, `localhost:<redisinsight>`, `localhost:<meilisearch>`. Useful for `curl`, `redis-cli`, `psql`, and HMR. Other UIs are intentionally Caddy-only — go through the hostname.
+
+**Sentry/Pino layering** — Pino remains the structured-logging primary; Sentry/GlitchTip captures exceptions and tracks regressions. Don't log AND `Sentry.captureException` for the same event from controllers; the global exception handler already does both. Use `Sentry.captureMessage()` only for non-throw notable events (e.g. a fallback path firing).
+
 ## Layout
 
 ```

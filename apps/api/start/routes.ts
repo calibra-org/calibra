@@ -8,6 +8,7 @@
 
 import router from "@adonisjs/core/services/router";
 
+import { renderPrometheusText } from "#middleware/metrics_middleware";
 import { healthChecks } from "#start/health";
 
 /**
@@ -27,6 +28,17 @@ router.get("/health/ready", async ({ response }) => {
     const report = await healthChecks.run();
     response.status(report.isHealthy ? 200 : 503);
     return report;
+});
+
+/**
+ * Prometheus scrape endpoint. The spin's Prometheus targets `host.docker.internal:<api>/metrics`
+ * every 15s; production swaps in the platform's scraper. Unversioned + unauthenticated by
+ * design — only the internal network reaches it, and the scrape interval is too low to be
+ * a viable exfiltration channel anyway.
+ */
+router.get("/metrics", async ({ response }) => {
+    response.header("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
+    return renderPrometheusText();
 });
 
 await import("./routes/catalog.js");

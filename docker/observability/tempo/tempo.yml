@@ -1,0 +1,33 @@
+# Tempo config — accepts OTLP/HTTP traces from the api on the host, stores them locally,
+# exposes the HTTP API to Grafana via the compose network. 7-day retention so a long-lived
+# spin doesn't fill its disk silently.
+
+server:
+    http_listen_port: 3200
+    grpc_listen_port: 9095
+
+distributor:
+    receivers:
+        otlp:
+            protocols:
+                http:
+                    endpoint: 0.0.0.0:4318
+                grpc:
+                    endpoint: 0.0.0.0:4317
+
+ingester:
+    trace_idle_period: 10s
+    max_block_bytes: 1_000_000
+    max_block_duration: 5m
+
+compactor:
+    compaction:
+        block_retention: 168h
+
+storage:
+    trace:
+        backend: local
+        local:
+            path: /var/tempo/blocks
+        wal:
+            path: /var/tempo/wal

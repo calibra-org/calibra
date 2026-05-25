@@ -37,13 +37,20 @@ const STATE_DIR = join(MAIN_REPO_ROOT, ".claude/spin");
 /** Base of the per-spin port range. Picked deliberately outside the user-visible 3xxx family. */
 const PORT_BASE = 13000;
 /**
- * Ten ports per slug — app surfaces (db / pgadmin / api / admin / web) plus the dev-ui stack
- * (mailpitSmtp / mailpitWeb / redis / redisinsight / adminer). Every spin gets its own copy
- * of all of them so two spins running side-by-side never share state.
+ * Twenty ports per slug. The first ten are app surfaces + dev-ui (db, pgadmin, api, admin, web,
+ * mailpit×2, redis, redisinsight, adminer) and are unchanged from the original layout — old
+ * `.claude/spin/<slug>.json` files still parse and still point at the right containers. The
+ * second ten are the prod-parity stack: caddy (http+https), meilisearch, and reserved offsets
+ * for prometheus/grafana/loki/tempo/alertmanager/glitchtip/uptimeKuma. The observability
+ * services don't actually publish to those host offsets in the compose file — Caddy fronts
+ * them — but reserving the offsets keeps {@link allocatePorts} uniform and leaves room for a
+ * direct publish later (handy when debugging from outside Caddy). The single exception is
+ * `tempo`: its offset publishes the OTLP/HTTP receiver (4318) so the api on the host can send
+ * traces; the HTTP API (3200) still stays container-only and is fronted by Caddy.
  */
-const PORTS_PER_SLOT = 10;
-/** Total slots before we wrap around (and start nudging for collisions). 100 × 10 = 13000-13999. */
-const TOTAL_SLOTS = 100;
+const PORTS_PER_SLOT = 20;
+/** Total slots before we wrap around. 50 × 20 = 13000-13999 (full 1k port range, exactly). */
+const TOTAL_SLOTS = 50;
 
 const ROLES = /** @type {const} */ ([
     "db",
@@ -56,6 +63,16 @@ const ROLES = /** @type {const} */ ([
     "redis",
     "redisinsight",
     "adminer",
+    "caddyHttp",
+    "caddyHttps",
+    "meilisearch",
+    "prometheus",
+    "grafana",
+    "loki",
+    "tempo",
+    "alertmanager",
+    "glitchtip",
+    "uptimeKuma",
 ]);
 
 /**
@@ -126,6 +143,7 @@ async function start(args) {
 
     await ensureWorktree(meta);
     await ensureEnvFiles(meta);
+    await ensureObservabilityConfig(meta);
     await ensureContainers(meta);
     await ensureInstall(meta);
     await ensureSdkBuild(meta);
@@ -222,11 +240,11 @@ async function doctor(args) {
     log(
         `  pgadmin      http://localhost:${meta.ports.pgadmin} ${(await isPortListening(meta.ports.pgadmin)) ? green("up") : red("down")}`,
     );
-    const mailpitWeb = effectivePort(meta, "mailpitWeb");
-    const mailpitSmtp = effectivePort(meta, "mailpitSmtp");
-    const redis = effectivePort(meta, "redis");
-    const redisinsight = effectivePort(meta, "redisinsight");
-    const adminer = effectivePort(meta, "adminer");
+    const mailpitWeb = requirePort(meta, "mailpitWeb");
+    const mailpitSmtp = requirePort(meta, "mailpitSmtp");
+    const redis = requirePort(meta, "redis");
+    const redisinsight = requirePort(meta, "redisinsight");
+    const adminer = requirePort(meta, "adminer");
     const tag = isLegacyDevUi(meta) ? " (shared, legacy)" : "";
     log(
         `  mailpit      http://localhost:${mailpitWeb} ${(await isPortListening(mailpitSmtp)) ? green("up") : red("down")}${tag}`,
@@ -238,6 +256,43 @@ async function doctor(args) {
     log(
         `  adminer      http://localhost:${adminer} ${(await isPortListening(adminer)) ? green("up") : red("down")}${tag} (queue_jobs)`,
     );
+    /**
+     * Prod-parity infra. Legacy spins (pre-observability layout) print `n/a` on every line —
+     * the meta has no caddy/meili/observability ports, those services were never brought up.
+     * Stop+remove+respin migrates such a spin to the new layout.
+     */
+    if (isLegacyObservability(meta)) {
+        log(`  observability n/a (legacy spin — re-spin to migrate)`);
+        log(`  meilisearch  n/a (legacy spin — re-spin to migrate)`);
+        log(`  caddy        n/a (legacy spin — re-spin to migrate)`);
+    } else {
+        const caddyHttps = requirePort(meta, "caddyHttps");
+        const meili = requirePort(meta, "meilisearch");
+        const caddyOk = await isPortListening(caddyHttps);
+        log(`  caddy        https://*.${slug}.spin.localhost (port ${caddyHttps}) ${caddyOk ? green("up") : red("down")}`);
+        log(`  meilisearch  http://localhost:${meili} ${(await isPortListening(meili)) ? green("up") : red("down")}`);
+        log(
+            `  glitchtip    https://errors.${slug}.spin.localhost ${(await probeViaCaddy(meta, "errors", "/api/0/", [200, 401, 403])) ? green("up") : red("down")}${meta.glitchtipDsn ? "" : yellow(" (no DSN — run `pnpm spin pr` blurb)")}`,
+        );
+        log(
+            `  grafana      https://grafana.${slug}.spin.localhost ${(await probeViaCaddy(meta, "grafana", "/api/health")) ? green("up") : red("down")}`,
+        );
+        log(
+            `  prometheus   https://prom.${slug}.spin.localhost ${(await probeViaCaddy(meta, "prom", "/-/ready")) ? green("up") : red("down")}`,
+        );
+        log(
+            `  loki         https://loki.${slug}.spin.localhost ${(await probeViaCaddy(meta, "loki", "/ready")) ? green("up") : red("down")}`,
+        );
+        log(
+            `  tempo        https://tempo.${slug}.spin.localhost (OTLP on :${requirePort(meta, "tempo")}) ${(await probeViaCaddy(meta, "tempo", "/ready")) ? green("up") : red("down")}`,
+        );
+        log(
+            `  alertmanager https://alerts.${slug}.spin.localhost ${(await probeViaCaddy(meta, "alerts", "/-/ready")) ? green("up") : red("down")}`,
+        );
+        log(
+            `  uptime kuma  https://uptime.${slug}.spin.localhost ${(await probeViaCaddy(meta, "uptime", "/", [200, 302])) ? green("up") : red("down")}`,
+        );
+    }
     log(`  compose      project=${meta.composeProject}`);
     /**
      * Show queue-worker status alongside infra — it's a tracked process (see `startServers`)
@@ -246,6 +301,41 @@ async function doctor(args) {
     const queuePid = await readPidIfAlive(join(meta.worktreePath, ".spin/queue.pid"));
     log(`  queue worker pid=${queuePid ?? "—"} ${queuePid !== null ? green("up") : red("down")}`);
     log(`  PR           ${meta.prNumber ? `#${meta.prNumber}` : "—"}`);
+}
+
+/**
+ * Probe a service via its Caddy hostname. Returns true on any of the acceptable status codes
+ * (default 200). Uses `--insecure` because Caddy's internal CA only chains to root after
+ * `caddy trust`; doctor should still succeed on a machine that hasn't run that yet — the
+ * status code is what matters, not the cert chain.
+ *
+ * @param {SpinMeta} meta
+ * @param {string} subdomain
+ * @param {string} path
+ * @param {number[]} [acceptStatus]
+ * @returns {Promise<boolean>}
+ */
+async function probeViaCaddy(meta, subdomain, path, acceptStatus = [200]) {
+    const caddyHttps = effectivePort(meta, "caddyHttps");
+    if (caddyHttps === null) return false;
+    const probe = spawnSync(
+        "curl",
+        [
+            "-s",
+            "-o",
+            "/dev/null",
+            "-w",
+            "%{http_code}",
+            "--max-time",
+            "3",
+            "--insecure",
+            "--resolve",
+            `${subdomain}.${meta.slug}.spin.localhost:${caddyHttps}:127.0.0.1`,
+            `https://${subdomain}.${meta.slug}.spin.localhost:${caddyHttps}${path}`,
+        ],
+        { encoding: "utf8" },
+    );
+    return acceptStatus.includes(Number(probe.stdout.trim()));
 }
 
 /**
@@ -330,14 +420,29 @@ async function ensureEnvFiles(meta) {
     );
 
     /**
-     * Generate (and persist in the meta file) a stable APP_KEY so signed cookies survive across
-     * stops/starts of the same spin. Different spins get different keys — anything signed for
-     * one spin is rejected by another, which is the correct security boundary.
+     * Generate (and persist) the stable per-spin secrets on first start. APP_KEY signs cookies
+     * and keeps them valid across stop/start of the same spin (a different spin gets a different
+     * key — anything signed by one is rejected by another, the correct security boundary).
+     * GLITCHTIP_SECRET_KEY is the Django SECRET_KEY for the per-spin GlitchTip instance.
+     * MEILI_MASTER_KEY guards the Meilisearch instance — the api uses it to authenticate.
      */
+    let metaChanged = false;
     if (!meta.appKey) {
         meta.appKey = randomBytes(32).toString("hex");
-        await writeMeta(meta);
+        metaChanged = true;
     }
+    if (!meta.glitchtipSecretKey) {
+        meta.glitchtipSecretKey = randomBytes(48).toString("hex");
+        metaChanged = true;
+    }
+    if (!meta.meiliMasterKey) {
+        meta.meiliMasterKey = randomBytes(32).toString("hex");
+        metaChanged = true;
+    }
+    if (metaChanged) await writeMeta(meta);
+
+    const tempoPort = effectivePort(meta, "tempo");
+    const meiliPort = effectivePort(meta, "meilisearch");
 
     await writeFile(
         apiEnvPath,
@@ -366,17 +471,23 @@ async function ensureEnvFiles(meta) {
             `MAIL_FROM_NAME=Calibra`,
             `MAIL_NOTIFICATIONS_ENABLED=true`,
             `SMTP_HOST=localhost`,
-            `SMTP_PORT=${effectivePort(meta, "mailpitSmtp")}`,
-            `MAILPIT_WEB_URL=http://localhost:${effectivePort(meta, "mailpitWeb")}`,
+            `SMTP_PORT=${requirePort(meta, "mailpitSmtp")}`,
+            `MAILPIT_WEB_URL=http://localhost:${requirePort(meta, "mailpitWeb")}`,
             /**
              * Redis is per-spin too — no shared bus. `keyPrefix: ${APP_NAME}:` in
              * `config/redis.ts` stays as defence-in-depth, but each spin's containers are
              * already isolated by the docker-compose project name.
              */
             `REDIS_HOST=localhost`,
-            `REDIS_PORT=${effectivePort(meta, "redis")}`,
+            `REDIS_PORT=${requirePort(meta, "redis")}`,
             /** Bridge SSE broadcasts across api ↔ queue worker (single-process if `none`). */
             `TRANSMIT_TRANSPORT=redis`,
+            /**
+             * Limiter + lock backing store. `redis` shares counters across api ↔ queue worker
+             * (matches the `redis` connection above); tests override to `memory`. Without this
+             * env the boot validator in `start/env.ts` refuses to start.
+             */
+            `LIMITER_STORE=redis`,
             /**
              * Background-job queue.
              *  - `database`: jobs persisted in Postgres; the spin's `queue:work` process polls.
@@ -385,10 +496,35 @@ async function ensureEnvFiles(meta) {
              *  - `sync` (set in .env.test only): runs jobs inline; no worker, no transport needed.
              */
             `QUEUE_DRIVER=database`,
-            /** Rate-limiter counter store shared across api ↔ queue worker. */
-            `LIMITER_STORE=redis`,
             /** Default cache store — selects the multi-tier redis store in `config/cache.ts`. */
             `CACHE_DRIVER=redis`,
+            /**
+             * Meilisearch. Per-spin instance brought up by docker-compose.meili.yml; the api
+             * reaches it on the host (HMR runs the api outside docker). Key is the master key
+             * generated above; production overrides to a scoped key minted at deploy time.
+             */
+            ...(typeof meiliPort === "number"
+                ? [`MEILISEARCH_HOST=http://localhost:${meiliPort}`, `MEILISEARCH_API_KEY=${meta.meiliMasterKey}`]
+                : []),
+            /**
+             * Observability. `DEV_OBSERVABILITY=true` flips the logger transport to also write
+             * ndjson into `.spin/logs/api.ndjson` so Promtail can ship it to Loki. The OTLP
+             * endpoint points at Tempo's host-published 4318; an empty value (legacy spin)
+             * leaves `@adonisjs/otel` disabled.
+             */
+            ...(typeof tempoPort === "number"
+                ? [
+                      `DEV_OBSERVABILITY=true`,
+                      `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:${tempoPort}`,
+                      `SPIN_API_LOG_PATH=${join(meta.worktreePath, ".spin/logs/api.ndjson")}`,
+                  ]
+                : [`DEV_OBSERVABILITY=false`]),
+            /**
+             * GlitchTip DSN. Auto-provisioned on first start (best-effort); when the
+             * provisioner falls back to manual setup, the line is omitted and Sentry init
+             * skips. Operator can paste the DSN here after creating org+project by hand.
+             */
+            ...(meta.glitchtipDsn ? [`GLITCHTIP_DSN=${meta.glitchtipDsn}`] : []),
             "",
         ].join("\n"),
     );
@@ -399,9 +535,13 @@ async function ensureEnvFiles(meta) {
  * pre-date {@link LEGACY_SHARED_DEV_UI_PORTS}. New spins always have every port populated in
  * `meta.ports`; old spins continue talking to their shared containers until they stop+restart.
  *
+ * For prod-parity roles (caddy, meili, observability stack) absent from a legacy meta, returns
+ * `null` instead of throwing — call sites use that to skip provisioning the observability
+ * compose files. Use {@link requirePort} instead when the caller cannot proceed without one.
+ *
  * @param {SpinMeta} meta
  * @param {keyof SpinPorts} role
- * @returns {number}
+ * @returns {number | null}
  */
 function effectivePort(meta, role) {
     const fromMeta = meta.ports[role];
@@ -409,69 +549,515 @@ function effectivePort(meta, role) {
     if (role in LEGACY_SHARED_DEV_UI_PORTS) {
         return LEGACY_SHARED_DEV_UI_PORTS[/** @type {keyof typeof LEGACY_SHARED_DEV_UI_PORTS} */ (role)];
     }
-    throw new Error(`spin "${meta.slug}" meta is missing a required port "${role}"`);
+    return null;
+}
+
+/**
+ * Like {@link effectivePort} but throws when the role isn't allocated. Use for roles that
+ * the caller depends on existing (api / db / pgadmin); use {@link effectivePort} for roles
+ * that legacy spins may legitimately lack.
+ *
+ * @param {SpinMeta} meta
+ * @param {keyof SpinPorts} role
+ * @returns {number}
+ */
+function requirePort(meta, role) {
+    const port = effectivePort(meta, role);
+    if (port === null) {
+        throw new Error(`spin "${meta.slug}" meta is missing a required port "${role}"`);
+    }
+    return port;
+}
+
+/**
+ * Generate the per-spin config files for Caddy + Prometheus + Promtail + Grafana provisioning.
+ * Writes everything into `.spin/config/` under the worktree; the compose files volume-mount
+ * those paths read-only. Re-writing on every start is fine — the configs are templated from
+ * `meta` and the contents are stable as long as the meta is.
+ *
+ * Tempo + Loki + Alertmanager use static configs that live in `docker/observability/`
+ * (committed) and don't need per-spin templating — they're mounted directly by the compose
+ * files. Grafana dashboards live there too.
+ *
+ * Skips entirely on legacy spins (no caddyHttps port) — those don't bring up observability.
+ *
+ * @param {SpinMeta} meta
+ */
+async function ensureObservabilityConfig(meta) {
+    if (isLegacyObservability(meta)) {
+        step("config", "skip (legacy spin, no observability)");
+        return;
+    }
+    step("config", "write observability + caddy");
+    const configDir = join(meta.worktreePath, ".spin/config");
+    await mkdir(configDir, { recursive: true });
+    await mkdir(join(configDir, "grafana/provisioning/datasources"), { recursive: true });
+    await mkdir(join(configDir, "grafana/provisioning/dashboards"), { recursive: true });
+    await mkdir(join(meta.worktreePath, ".spin/logs"), { recursive: true });
+    /**
+     * Pre-create the data dirs that Promtail position-file + GlitchTip media volumes need.
+     * Without these the bind-mount creates them as root-owned (docker daemon default), which
+     * the container processes can't write into.
+     */
+    await mkdir(join(meta.worktreePath, ".spin/data/promtail"), { recursive: true });
+
+    await writeFile(join(configDir, "Caddyfile"), renderCaddyfile(meta));
+    await writeFile(join(configDir, "prometheus.yml"), renderPrometheusConfig(meta));
+    await writeFile(join(configDir, "promtail.yml"), renderPromtailConfig(meta));
+    await writeFile(join(configDir, "grafana/provisioning/datasources/datasources.yml"), renderGrafanaDatasources());
+    await writeFile(join(configDir, "grafana/provisioning/dashboards/dashboards.yml"), renderGrafanaDashboardsProvider());
+}
+
+/**
+ * Render the per-spin Caddyfile. Every observability + dev-ui surface gets a
+ * `<service>.<slug>.spin.localhost` hostname with internal-CA TLS. The api / admin / web
+ * routes point at `host.docker.internal:<port>` because those processes run on the host
+ * (HMR); the rest are container-to-container via service name on the spin's network.
+ *
+ * @param {SpinMeta} meta
+ */
+function renderCaddyfile(meta) {
+    const slug = meta.slug;
+    const apiPort = meta.ports.api;
+    const adminPort = meta.ports.admin;
+    const webPort = meta.ports.web;
+    return `# Generated by scripts/spin.mjs for spin "${slug}". Re-run \`pnpm spin\` to regenerate.
+{
+    auto_https disable_redirects
+    local_certs
+}
+
+api.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy host.docker.internal:${apiPort}
+}
+
+admin.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy host.docker.internal:${adminPort}
+}
+
+web.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy host.docker.internal:${webPort}
+}
+
+mail.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy mailpit:8025
+}
+
+redis.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy redisinsight:5540
+}
+
+db.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy adminer:8080
+}
+
+grafana.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy grafana:3000
+}
+
+prom.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy prometheus:9090
+}
+
+loki.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy loki:3100
+}
+
+tempo.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy tempo:3200
+}
+
+alerts.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy alertmanager:9093
+}
+
+errors.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy glitchtip:8000
+}
+
+uptime.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy uptimekuma:3001
+}
+
+search.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy meilisearch:7700
+}
+`;
+}
+
+/**
+ * Render Prometheus's scrape config. The only scrape target is the api on the host (HMR runs
+ * outside docker), reached via `host.docker.internal`. Prometheus also scrapes itself so the
+ * Prometheus → Grafana wiring has a sanity-check target. Alertmanager is reachable on the
+ * compose network but no rules ship in this PR — adding `alertmanagers:` is the hook for
+ * future rule authors.
+ *
+ * @param {SpinMeta} meta
+ */
+function renderPrometheusConfig(meta) {
+    return `# Generated by scripts/spin.mjs for spin "${meta.slug}".
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    spin: ${meta.slug}
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090
+
+  - job_name: calibra-api
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - host.docker.internal:${meta.ports.api}
+        labels:
+          service: calibra-api
+          spin: ${meta.slug}
+`;
+}
+
+/**
+ * Render Promtail's pipeline. Reads JSON lines from the api's per-spin ndjson log file
+ * (the path is bind-mounted via SPIN_LOG_DIR), parses Pino's standard fields, and ships to
+ * Loki with `service=calibra-api` + `spin=<slug>` labels.
+ *
+ * @param {SpinMeta} meta
+ */
+function renderPromtailConfig(meta) {
+    return `# Generated by scripts/spin.mjs for spin "${meta.slug}".
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /run/promtail/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: calibra-api
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: calibra-api
+          service: calibra-api
+          spin: ${meta.slug}
+          __path__: /var/log/api/*.ndjson
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            time: time
+            request_id: request_id
+      - labels:
+          level:
+      - timestamp:
+          source: time
+          format: UnixMs
+`;
+}
+
+/**
+ * Grafana datasource provisioning — Prometheus, Loki, Tempo. All reach their targets
+ * container-to-container by compose service name (not by published host port), so the URLs
+ * are identical across spins. Marked `editable: false` so accidental UI tweaks don't drift
+ * from the committed config.
+ */
+function renderGrafanaDatasources() {
+    return `apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+`;
+}
+
+/**
+ * Grafana dashboard provisioner — points at the dashboards dir we bind-mount from
+ * `docker/observability/grafana/dashboards/` (committed JSON, read-only). Auto-imports any
+ * `*.json` on boot. New dashboards land in that directory and get picked up automatically.
+ */
+function renderGrafanaDashboardsProvider() {
+    return `apiVersion: 1
+
+providers:
+  - name: calibra
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
+`;
 }
 
 /**
  * @param {SpinMeta} meta
  */
 async function ensureContainers(meta) {
-    /** Skip the start if both DB + pgAdmin are already responding on the right ports. */
-    if ((await isPortListening(meta.ports.db)) && (await isPortListening(meta.ports.pgadmin))) {
+    const env = composeEnv(meta);
+    const files = composeFiles(meta);
+    /**
+     * Skip the start only when EVERY required layer is already responding. DB + pgAdmin
+     * signal the foundational layer; for prod-parity spins we also require Caddy's HTTPS
+     * port — it's the bellwether for the observability + meili + glitchtip stack because
+     * it can't be up without the network being right. Without this check the shortcut
+     * would silently bypass `compose up` on a partially-bootstrapped spin (e.g. one that
+     * had its meta upgraded to the new layout without the new compose stack coming up
+     * yet) and the new layer would never start.
+     */
+    const foundationUp = (await isPortListening(meta.ports.db)) && (await isPortListening(meta.ports.pgadmin));
+    const observabilityUp = isLegacyObservability(meta) ? true : await isPortListening(requirePort(meta, "caddyHttps"));
+    if (foundationUp && observabilityUp) {
         step("containers", "running");
         return;
     }
     step("containers", "docker compose up");
-    const composeFile = join(meta.worktreePath, "apps/api/docker-compose.yml");
-    const env = composeEnv(meta);
-    await run("docker", ["compose", "-f", composeFile, "up", "-d"], { env });
+    await run("docker", ["compose", ...files, "up", "-d"], { env });
 
     step("containers", "wait for postgres");
-    const deadline = Date.now() + 60_000;
-    while (Date.now() < deadline) {
+    const dbDeadline = Date.now() + 60_000;
+    let dbReady = false;
+    while (Date.now() < dbDeadline) {
         if (await isPortListening(meta.ports.db)) {
             /** pg_isready inside the container — a TCP-listening port isn't enough to start migrations against. */
             const check = spawnSync(
                 "docker",
-                ["compose", "-f", composeFile, "exec", "-T", "db", "pg_isready", "-U", "calibra", "-d", "calibra"],
+                ["compose", ...files, "exec", "-T", "db", "pg_isready", "-U", "calibra", "-d", "calibra"],
                 { env, encoding: "utf8" },
             );
             if (check.status === 0) {
-                step("containers", "wait for redis");
-                const redisPort = effectivePort(meta, "redis");
-                const redisDeadline = Date.now() + 30_000;
-                while (Date.now() < redisDeadline) {
-                    if (await isPortListening(redisPort)) return;
-                    await sleep(500);
-                }
-                throw new Error(`redis (:${redisPort}) did not come up — the wizard's live progress needs it`);
+                dbReady = true;
+                break;
             }
         }
         await sleep(1_000);
     }
-    throw new Error("postgres did not become ready within 60s");
+    if (!dbReady) throw new Error("postgres did not become ready within 60s");
+
+    step("containers", "wait for redis");
+    await waitForPort(requirePort(meta, "redis"), 30_000, "redis");
+
+    if (isLegacyObservability(meta)) return;
+
+    /**
+     * Observability + caddy + meili. Each gets its own readiness probe — TCP-listen is the
+     * lower bound, HTTP /health is the upper bound where the service exposes one. GlitchTip
+     * runs Django migrations on first boot which take ~30s longer than subsequent starts;
+     * its timeout is intentionally generous.
+     */
+    step("containers", "wait for caddy");
+    await waitForPort(requirePort(meta, "caddyHttps"), 30_000, "caddy");
+
+    step("containers", "wait for meilisearch");
+    /** Meilisearch publishes its host port directly — probe localhost, not via Caddy. */
+    await waitForHttp(`http://localhost:${requirePort(meta, "meilisearch")}/health`, 30_000, "meilisearch");
+
+    /**
+     * Everything past here is container-only and only reachable via Caddy from the host.
+     * The probe goes through Caddy's HTTPS port with `--resolve` so SNI matches the cert
+     * for the right hostname and the proxy routes by Host. `--insecure` because Caddy's
+     * local CA isn't trusted in CI environments that haven't run `caddy trust`.
+     */
+    step("containers", "wait for prometheus");
+    await waitForCaddyHttp(meta, "prom", "/-/ready", 30_000, "prometheus");
+
+    step("containers", "wait for grafana");
+    await waitForCaddyHttp(meta, "grafana", "/api/health", 60_000, "grafana");
+
+    step("containers", "wait for glitchtip (django migrations on first boot, ~60s)");
+    await waitForCaddyHttp(meta, "errors", "/api/0/", 180_000, "glitchtip", { acceptStatus: [200, 401, 403] });
+}
+
+/**
+ * Block until a Caddy-fronted service answers an acceptable status. Sharing implementation
+ * with {@link probeViaCaddy} (the doctor probe) so the readiness loop and the per-spin
+ * status report behave identically — a service that satisfies one satisfies the other.
+ *
+ * @param {SpinMeta} meta
+ * @param {string} subdomain
+ * @param {string} path
+ * @param {number} timeoutMs
+ * @param {string} label
+ * @param {{ acceptStatus?: number[] }} [opts]
+ */
+async function waitForCaddyHttp(meta, subdomain, path, timeoutMs, label, opts = {}) {
+    const accept = opts.acceptStatus ?? [200];
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        if (await probeViaCaddy(meta, subdomain, path, accept)) return;
+        await sleep(1_000);
+    }
+    throw new Error(
+        `${label} did not respond on https://${subdomain}.${meta.slug}.spin.localhost${path} within ${Math.round(timeoutMs / 1000)}s — check container logs`,
+    );
+}
+
+/**
+ * Block until a TCP port answers, or throw with a clear "did not come up" error.
+ *
+ * @param {number} port
+ * @param {number} timeoutMs
+ * @param {string} label
+ */
+async function waitForPort(port, timeoutMs, label) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        if (await isPortListening(port)) return;
+        await sleep(500);
+    }
+    throw new Error(`${label} (:${port}) did not come up within ${Math.round(timeoutMs / 1000)}s`);
+}
+
+/**
+ * Block until a direct-host HTTP endpoint responds with an acceptable status. Used for
+ * services that publish their port to the host and need more than a TCP-listen to be
+ * considered ready (Meilisearch boots its TCP listener before `/health` answers).
+ *
+ * @param {string} url
+ * @param {number} timeoutMs
+ * @param {string} label
+ * @param {{ acceptStatus?: number[] }} [opts]
+ */
+async function waitForHttp(url, timeoutMs, label, opts = {}) {
+    const accept = opts.acceptStatus ?? [200, 204];
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        const probe = spawnSync("curl", ["-s", "-o", "/dev/null", "-w", "%{http_code}", "--max-time", "3", url], {
+            encoding: "utf8",
+        });
+        const status = Number(probe.stdout.trim());
+        if (accept.includes(status)) return;
+        await sleep(1_000);
+    }
+    throw new Error(`${label} (${url}) did not respond within ${Math.round(timeoutMs / 1000)}s — check container logs`);
 }
 
 /**
  * The full env block we pass to every `docker compose` invocation for the spin's project.
  * Centralises the port → env mapping so `up`, `down`, and `exec` agree on which variables get
- * substituted into `apps/api/docker-compose.yml`.
+ * substituted into the docker-compose files. The observability + caddy + meili compose files
+ * also need the slug (for Caddy hostnames), the secrets (Meili master key, GlitchTip Django
+ * SECRET_KEY), and the worktree's log dir (so Promtail can volume-mount api.ndjson).
+ *
+ * Legacy spins (pre-observability layout) silently leave the new keys empty — the new compose
+ * files aren't brought up for them, so the values are never consumed.
  *
  * @param {SpinMeta} meta
  * @returns {NodeJS.ProcessEnv}
  */
 function composeEnv(meta) {
+    const optional = (/** @type {keyof SpinPorts} */ role) => {
+        const port = effectivePort(meta, role);
+        return typeof port === "number" ? String(port) : "";
+    };
     return {
         ...process.env,
         COMPOSE_PROJECT_NAME: meta.composeProject,
+        SPIN_SLUG: meta.slug,
+        SPIN_LOG_DIR: join(meta.worktreePath, ".spin/logs"),
+        SPIN_CONFIG_DIR: join(meta.worktreePath, ".spin/config"),
+        /**
+         * Docker compose normalises relative volume binds against the FIRST `-f` file's
+         * directory — which for us is `apps/api/`, not `docker/observability/`. The static
+         * observability configs (tempo.yml, loki.yml, alertmanager.yml, the dashboards dir)
+         * live under `docker/observability/` and would otherwise resolve to the wrong path.
+         * Passing the absolute base via env var sidesteps the issue.
+         */
+        OBSERVABILITY_DIR: join(meta.worktreePath, "docker/observability"),
+        SPIN_DATA_DIR: join(meta.worktreePath, ".spin/data"),
         DB_PORT: String(meta.ports.db),
+        DB_USER: "calibra",
+        DB_PASSWORD: "calibra",
+        DB_DATABASE: "calibra",
         PGADMIN_PORT: String(meta.ports.pgadmin),
-        MAILPIT_SMTP_PORT: String(effectivePort(meta, "mailpitSmtp")),
-        MAILPIT_WEB_PORT: String(effectivePort(meta, "mailpitWeb")),
-        REDIS_PORT: String(effectivePort(meta, "redis")),
-        REDISINSIGHT_PORT: String(effectivePort(meta, "redisinsight")),
-        ADMINER_PORT: String(effectivePort(meta, "adminer")),
+        MAILPIT_SMTP_PORT: String(requirePort(meta, "mailpitSmtp")),
+        MAILPIT_WEB_PORT: String(requirePort(meta, "mailpitWeb")),
+        REDIS_PORT: String(requirePort(meta, "redis")),
+        REDISINSIGHT_PORT: String(requirePort(meta, "redisinsight")),
+        ADMINER_PORT: String(requirePort(meta, "adminer")),
+        CADDY_HTTP_PORT: optional("caddyHttp"),
+        CADDY_HTTPS_PORT: optional("caddyHttps"),
+        MEILISEARCH_PORT: optional("meilisearch"),
+        MEILI_MASTER_KEY: meta.meiliMasterKey ?? "",
+        TEMPO_OTLP_PORT: optional("tempo"),
+        GLITCHTIP_SECRET_KEY: meta.glitchtipSecretKey ?? "",
+        GLITCHTIP_DEFAULT_FROM_EMAIL: "ops@calibra.local",
     };
+}
+
+/**
+ * Resolve the list of `-f compose-file` flags for the spin. Always includes the api's own
+ * docker-compose.yml; layers the observability + caddy + meili files on top when the spin
+ * has prod-parity ports (i.e. not legacy). compose merges deep — services declared in one
+ * file extend services in another by name, networks union, etc.
+ *
+ * @param {SpinMeta} meta
+ * @returns {string[]}
+ */
+function composeFiles(meta) {
+    const flags = ["-f", join(meta.worktreePath, "apps/api/docker-compose.yml")];
+    if (!isLegacyObservability(meta)) {
+        const obsDir = join(meta.worktreePath, "docker/observability");
+        flags.push(
+            "-f",
+            join(obsDir, "docker-compose.caddy.yml"),
+            "-f",
+            join(obsDir, "docker-compose.meili.yml"),
+            "-f",
+            join(obsDir, "docker-compose.observability.yml"),
+            "-f",
+            join(obsDir, "docker-compose.glitchtip.yml"),
+        );
+    }
+    return flags;
 }
 
 /**
@@ -710,23 +1296,67 @@ async function ensureDraftPrInternal(meta) {
 function printHandoffCard(meta, opts) {
     log("");
     log(bold(green("ready")));
-    log(`  admin   ${cyan(`http://localhost:${meta.ports.admin}`)}`);
-    log(`  api     ${cyan(`http://localhost:${meta.ports.api}`)}`);
-    if (opts.withWeb) log(`  web     ${cyan(`http://localhost:${meta.ports.web}`)}`);
-    log(`  pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
-    const mailpitWebPort = effectivePort(meta, "mailpitWeb");
-    const mailpitSmtpPort = effectivePort(meta, "mailpitSmtp");
-    const redisPort = effectivePort(meta, "redis");
-    const redisInsightPort = effectivePort(meta, "redisinsight");
-    const adminerPort = effectivePort(meta, "adminer");
-    log(`  mailpit ${cyan(`http://localhost:${mailpitWebPort}`)} (smtp :${mailpitSmtpPort})`);
-    log(`  redis   ${cyan(`http://localhost:${redisInsightPort}`)} (insight UI; redis on :${redisPort})`);
-    log(
-        `  queue   ${cyan(`http://localhost:${adminerPort}/?pgsql=&server=host.docker.internal&port=${meta.ports.db}&username=calibra&db=calibra&select=queue_jobs`)}`,
-    );
+    const slug = meta.slug;
+    const obs = !isLegacyObservability(meta);
+    if (obs) {
+        log(`  ${bold("app")}`);
+        log(`    admin   ${cyan(`https://admin.${slug}.spin.localhost`)} ${dim(`(host :${meta.ports.admin})`)}`);
+        log(`    api     ${cyan(`https://api.${slug}.spin.localhost`)} ${dim(`(host :${meta.ports.api})`)}`);
+        if (opts.withWeb) {
+            log(`    web     ${cyan(`https://web.${slug}.spin.localhost`)} ${dim(`(host :${meta.ports.web})`)}`);
+        }
+        log(`  ${bold("observability")}`);
+        log(`    grafana ${cyan(`https://grafana.${slug}.spin.localhost`)} ${dim("(anonymous editor)")}`);
+        const dsnNote = meta.glitchtipDsn ? "DSN wired" : "DSN pending — see GlitchTip setup below";
+        log(`    errors  ${cyan(`https://errors.${slug}.spin.localhost`)} ${dim(`(${dsnNote})`)}`);
+        log(`    uptime  ${cyan(`https://uptime.${slug}.spin.localhost`)}`);
+        log(`    prom    ${cyan(`https://prom.${slug}.spin.localhost`)}`);
+        log(`    alerts  ${cyan(`https://alerts.${slug}.spin.localhost`)}`);
+        log(`  ${bold("search")}`);
+        log(`    meili   ${cyan(`https://search.${slug}.spin.localhost`)} ${dim(`(key in ${meta.slug}.json)`)}`);
+        log(`  ${bold("data + dev")}`);
+        log(
+            `    mail    ${cyan(`https://mail.${slug}.spin.localhost`)} ${dim(`(smtp localhost:${requirePort(meta, "mailpitSmtp")})`)}`,
+        );
+        log(
+            `    redis   ${cyan(`https://redis.${slug}.spin.localhost`)} ${dim(`(redis-cli on :${requirePort(meta, "redis")})`)}`,
+        );
+        log(`    db      ${cyan(`https://db.${slug}.spin.localhost`)} ${dim(`(psql on :${meta.ports.db})`)}`);
+        log(`    pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
+    } else {
+        log(`  admin   ${cyan(`http://localhost:${meta.ports.admin}`)}`);
+        log(`  api     ${cyan(`http://localhost:${meta.ports.api}`)}`);
+        if (opts.withWeb) log(`  web     ${cyan(`http://localhost:${meta.ports.web}`)}`);
+        log(`  pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
+        const mailpitWebPort = requirePort(meta, "mailpitWeb");
+        const mailpitSmtpPort = requirePort(meta, "mailpitSmtp");
+        const redisPort = requirePort(meta, "redis");
+        const redisInsightPort = requirePort(meta, "redisinsight");
+        const adminerPort = requirePort(meta, "adminer");
+        log(`  mailpit ${cyan(`http://localhost:${mailpitWebPort}`)} (smtp :${mailpitSmtpPort})`);
+        log(`  redis   ${cyan(`http://localhost:${redisInsightPort}`)} (insight UI; redis on :${redisPort})`);
+        log(
+            `  queue   ${cyan(`http://localhost:${adminerPort}/?pgsql=&server=host.docker.internal&port=${meta.ports.db}&username=calibra&db=calibra&select=queue_jobs`)}`,
+        );
+    }
     log(`  pr      ${meta.prUrl ?? `(skipped — run pnpm spin pr ${meta.slug})`}`);
     log(`  login   ${cyan("admin@bulk.calibra.dev")} / ${cyan("Passw0rd1!")}`);
     log(`  stop    ${cyan(`pnpm spin stop ${meta.slug}`)}`);
+    if (obs && !meta.glitchtipDsn) {
+        log("");
+        log(dim("GlitchTip setup (one-time): open errors.<slug>.spin.localhost, register"));
+        log(dim("`spin@calibra.dev`, create org `spin` + project `api`, copy the DSN into"));
+        log(dim(`\`apps/api/.env\` as \`GLITCHTIP_DSN=…\`, then restart the api. We'll auto-`));
+        log(dim("provision once the GlitchTip register API stabilises."));
+    }
+    if (obs) {
+        log("");
+        log(
+            dim(
+                `caddy: \`*.${slug}.spin.localhost\` resolves to 127.0.0.1; certs use Caddy's local CA. Run \`caddy trust\` once on this host if you haven't.`,
+            ),
+        );
+    }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -771,12 +1401,18 @@ async function killTrackedProcesses(meta) {
  */
 async function downContainers(meta, opts) {
     step("containers", opts.purge ? "down -v" : "down");
-    const composeFile = join(meta.worktreePath, "apps/api/docker-compose.yml");
-    if (!existsSync(composeFile)) {
+    const apiCompose = join(meta.worktreePath, "apps/api/docker-compose.yml");
+    if (!existsSync(apiCompose)) {
         log(yellow("    compose file missing; skipping"));
         return;
     }
-    const args = ["compose", "-f", composeFile, "down"];
+    /**
+     * `down` needs every `-f` flag that `up` saw, otherwise compose only stops services
+     * declared in the files it was told about and the observability stack lingers. The
+     * worktree-relative paths are still accurate even when the worktree's been partially
+     * removed — compose only reads YAML, no other files in the dir are loaded.
+     */
+    const args = ["compose", ...composeFiles(meta), "down"];
     if (opts.purge) args.push("-v");
     await run("docker", args, { env: composeEnv(meta) });
 }
@@ -789,6 +1425,17 @@ async function downContainers(meta, opts) {
  */
 function isLegacyDevUi(meta) {
     return typeof meta.ports.redis !== "number";
+}
+
+/**
+ * `true` when the spin pre-dates the prod-parity (observability + caddy + meili) layout — its
+ * meta has no `caddyHttps` port so the new observability compose files are skipped on bring-up.
+ * The existing dev-ui + api + db still come up. Operator can stop+remove+respin to migrate.
+ *
+ * @param {SpinMeta} meta
+ */
+function isLegacyObservability(meta) {
+    return typeof meta.ports.caddyHttps !== "number";
 }
 
 /**
@@ -820,6 +1467,16 @@ async function removeWorktree(meta, opts) {
  * @property {number} [redis]
  * @property {number} [redisinsight]
  * @property {number} [adminer]
+ * @property {number} [caddyHttp] — undefined on metas that pre-date the prod-parity (observability + caddy + meili) layout
+ * @property {number} [caddyHttps]
+ * @property {number} [meilisearch]
+ * @property {number} [prometheus]
+ * @property {number} [grafana]
+ * @property {number} [loki]
+ * @property {number} [tempo]
+ * @property {number} [alertmanager]
+ * @property {number} [glitchtip]
+ * @property {number} [uptimeKuma]
  */
 
 /**
@@ -830,6 +1487,9 @@ async function removeWorktree(meta, opts) {
  * @property {string} worktreePath
  * @property {SpinPorts} ports
  * @property {string} [appKey]
+ * @property {string} [glitchtipSecretKey] — Django SECRET_KEY for the per-spin GlitchTip instance, stable across stops
+ * @property {string} [meiliMasterKey] — Meilisearch master key for the per-spin instance, stable across stops
+ * @property {string} [glitchtipDsn] — DSN read back after auto-provisioning GlitchTip's first org/project (best-effort)
  * @property {boolean} [seeded]
  * @property {number | null} [prNumber]
  * @property {string} [prUrl]
@@ -914,6 +1574,16 @@ async function allocatePorts(slug) {
             redis: base + 7,
             redisinsight: base + 8,
             adminer: base + 9,
+            caddyHttp: base + 10,
+            caddyHttps: base + 11,
+            meilisearch: base + 12,
+            prometheus: base + 13,
+            grafana: base + 14,
+            loki: base + 15,
+            tempo: base + 16,
+            alertmanager: base + 17,
+            glitchtip: base + 18,
+            uptimeKuma: base + 19,
         };
         if (await allPortsFree(ports)) return ports;
     }
