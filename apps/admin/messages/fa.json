@@ -2252,21 +2252,53 @@
         }
     },
     "Coupons": {
-        "title": "کوپن‌ها",
-        "subtitle": "تخفیف‌های قابل اعمال در فروشگاه.",
-        "addCoupon": "افزودن کوپن",
-        "filterStatus": "وضعیت",
+        "title": "کدهای تخفیف",
+        "subtitle": "ساخت، مدیریت و رصد عملکرد کدهای تخفیف فروشگاه.",
+        "newCoupon": "افزودن کد تخفیف",
+        "addCoupon": "افزودن کد تخفیف",
+        "search": "جست‌وجو در کد یا توضیحات…",
+        "refresh": "بازخوانی نما",
+        "empty": "هنوز کد تخفیفی ثبت نشده است.",
+        "emptyFiltered": "موردی با فیلترهای کنونی پیدا نشد.",
+        "emptyFilteredHint": "فیلترها را تغییر دهید یا پاک کنید.",
+        "errorTitle": "بارگذاری ناموفق بود",
+        "errorRetry": "تلاش مجدد",
+        "selectAll": "انتخاب همه",
+        "selectRow": "انتخاب ردیف",
+        "neverExpires": "بدون انقضا",
+        "expiredBadge": "منقضی‌شده",
+        "daysToExpiry": "{n} روز تا انقضا",
+        "tabs": {
+            "any": "همه",
+            "active": "فعال",
+            "scheduled": "زمان‌بندی‌شده",
+            "used": "استفاده‌شده",
+            "disabled": "غیرفعال",
+            "expired": "منقضی‌شده",
+            "trashed": "حذف‌شده"
+        },
         "table": {
             "code": "کد",
             "type": "نوع",
             "value": "مقدار",
+            "description": "توضیحات",
+            "constraints": "محدودیت‌ها",
             "usage": "استفاده",
-            "expiresAt": "انقضا",
+            "startsAt": "تاریخ شروع",
+            "expiresAt": "تاریخ انقضا",
+            "minimumAmount": "حداقل مبلغ",
+            "freeShipping": "ارسال رایگان",
+            "individualUse": "استفاده انفرادی",
             "status": "وضعیت",
-            "actions": "عملیات"
+            "actions": "عملیات",
+            "productChip": "{n} محصول",
+            "categoryChip": "{n} دسته",
+            "brandChip": "{n} برند",
+            "emailChip": "{n} ایمیل",
+            "recent7d": "{n} استفاده در ۷ روز اخیر"
         },
         "discountType": {
-            "percent": "درصد",
+            "percent": "درصدی",
             "fixed_cart": "مبلغ ثابت سبد",
             "fixed_product": "مبلغ ثابت محصول",
             "free_shipping": "ارسال رایگان"
@@ -2275,7 +2307,123 @@
             "active": "فعال",
             "disabled": "غیرفعال"
         },
-        "neverExpires": "بدون انقضا",
+        "statusBadge": {
+            "active": "فعال",
+            "disabled": "غیرفعال",
+            "scheduled": "زمان‌بندی‌شده",
+            "expired": "منقضی‌شده",
+            "trashed": "حذف‌شده"
+        },
+        "filters": {
+            "discountType": "نوع تخفیف",
+            "freeShipping": "ارسال رایگان",
+            "individualUse": "استفاده انفرادی",
+            "excludeSaleItems": "شامل اقلام تخفیف ویژه",
+            "expiringSoon": "نزدیک به انقضا",
+            "hasProductConstraints": "محدودیت محصول",
+            "hasCategoryConstraints": "محدودیت دسته‌بندی",
+            "hasEmailRestrictions": "محدودیت ایمیل"
+        },
+        "toolbar": {
+            "clearAll": "پاک‌سازی همه",
+            "clearFilter": "حذف",
+            "viewOptions": "تنظیمات نما",
+            "columns": "ستون‌ها",
+            "density": "تراکم",
+            "densityComfortable": "گسترده",
+            "densityCozy": "متوسط",
+            "densityCompact": "فشرده"
+        },
+        "rowActions": {
+            "edit": "ویرایش",
+            "duplicate": "تکثیر",
+            "copyCode": "کپی کد",
+            "quickTest": "تست سریع",
+            "viewHistory": "مشاهده تاریخچه استفاده",
+            "activate": "فعال",
+            "disable": "غیرفعال",
+            "extendExpiry": "تمدید انقضا",
+            "delete": "حذف",
+            "restore": "بازیابی",
+            "deleteConfirm": "این کد تخفیف به سطل زباله منتقل می‌شود. ادامه می‌دهید؟"
+        },
+        "bulk": {
+            "selectedCount": "{count} مورد انتخاب شده"
+        },
+        "sort": {
+            "asc": "صعودی",
+            "desc": "نزولی",
+            "hide": "پنهان‌سازی ستون"
+        },
+        "pagination": {
+            "rowsPerPage": "ردیف در هر صفحه",
+            "showing": "نمایش {from}–{to} از {total}",
+            "selectedOf": "{selected} از {total} انتخاب شده",
+            "first": "ابتدا",
+            "previous": "قبلی",
+            "next": "بعدی",
+            "last": "آخر",
+            "pageOf": "صفحه {page} از {lastPage}"
+        },
+        "editor": {
+            "backToList": "بازگشت به فهرست",
+            "titleNew": "افزودن کد تخفیف جدید",
+            "titleEdit": "ویرایش کد تخفیف «{code}»",
+            "toggleStatus": "تغییر وضعیت",
+            "statusActive": "فعال",
+            "statusDisabled": "غیرفعال",
+            "trashedBanner": "این کد تخفیف حذف شده است و قابل ویرایش نیست.",
+            "codeAvailable": "این کد در دسترس است",
+            "codeTaken": "این کد قبلاً استفاده شده است",
+            "codeTakenWithSuggestion": "این کد قبلاً استفاده شده است — پیشنهاد: {suggestion}",
+            "sections": {
+                "general": "اطلاعات کلی",
+                "discount": "نوع و مقدار تخفیف",
+                "time": "محدودیت زمانی",
+                "cart": "محدودیت‌های سبد",
+                "emails": "محدودیت ایمیل",
+                "usageLimits": "محدودیت تعداد استفاده",
+                "liveStats": "آمار استفاده",
+                "redemptions": "تاریخچه استفاده"
+            },
+            "fields": {
+                "code": "کد",
+                "generate": "تولید کد",
+                "copy": "کپی کد",
+                "descriptionFa": "توضیحات (فارسی)",
+                "descriptionEn": "توضیحات (انگلیسی)",
+                "amountPercent": "مقدار تخفیف (٪)",
+                "amountMinor": "مبلغ تخفیف (تومان)",
+                "startsAt": "تاریخ شروع",
+                "expiresAt": "تاریخ انقضا",
+                "minimumAmount": "حداقل مبلغ سبد",
+                "maximumAmount": "حداکثر مبلغ سبد",
+                "individualUse": "استفاده انفرادی",
+                "individualUseHint": "اگر فعال باشد، نمی‌توان همزمان با سایر کدهای تخفیف از این کد استفاده کرد.",
+                "excludeSaleItems": "بدون اقلام در حال تخفیف",
+                "excludeSaleItemsHint": "اگر فعال باشد، اقلامی که در حال شرکت در تخفیف ویژه هستند از این کد بهره نمی‌برند.",
+                "freeShipping": "ارسال رایگان",
+                "freeShippingHint": "اگر فعال باشد، علاوه بر تخفیف مبلغ، هزینه ارسال نیز رایگان می‌شود.",
+                "limitUsageToXItems": "محدود کردن تخفیف به N آیتم اول",
+                "allItems": "همه آیتم‌ها",
+                "usageLimitGlobal": "محدودیت کل استفاده",
+                "usageLimitPerUser": "محدودیت برای هر کاربر",
+                "unlimited": "نامحدود",
+                "emailsHint": "این کد فقط برای ایمیل‌های زیر کار می‌کند. خالی گذاشتن یعنی بدون محدودیت.",
+                "emailsAdd": "افزودن ایمیل"
+            },
+            "stats": {
+                "usageCount": "تعداد استفاده‌های ثبت‌شده",
+                "recent7d": "۷ روز اخیر"
+            },
+            "redemptionsEmpty": "هنوز استفاده‌ای از این کد ثبت نشده است.",
+            "dirtyBar": {
+                "save": "ذخیره تغییرات",
+                "create": "ایجاد و ذخیره",
+                "cancel": "انصراف",
+                "dirty": "{count} تغییر ذخیره‌نشده"
+            }
+        },
         "detail": {
             "title": "کوپن «{code}»",
             "subtitle": "تنظیمات تخفیف و محدودیت‌های استفاده.",

@@ -2253,17 +2253,49 @@
     },
     "Coupons": {
         "title": "Coupons",
-        "subtitle": "Discounts you can offer in the store.",
+        "subtitle": "Create, manage, and monitor the store's discount codes.",
+        "newCoupon": "Add coupon",
         "addCoupon": "Add coupon",
-        "filterStatus": "Status",
+        "search": "Search by code or description…",
+        "refresh": "Refresh view",
+        "empty": "No coupons yet.",
+        "emptyFiltered": "No results match the current filters.",
+        "emptyFilteredHint": "Adjust or clear filters.",
+        "errorTitle": "Failed to load",
+        "errorRetry": "Retry",
+        "selectAll": "Select all",
+        "selectRow": "Select row",
+        "neverExpires": "Never expires",
+        "expiredBadge": "Expired",
+        "daysToExpiry": "{n} days to expiry",
+        "tabs": {
+            "any": "All",
+            "active": "Active",
+            "scheduled": "Scheduled",
+            "used": "Used",
+            "disabled": "Disabled",
+            "expired": "Expired",
+            "trashed": "Trashed"
+        },
         "table": {
             "code": "Code",
             "type": "Type",
             "value": "Value",
+            "description": "Description",
+            "constraints": "Constraints",
             "usage": "Usage",
+            "startsAt": "Starts",
             "expiresAt": "Expires",
+            "minimumAmount": "Minimum",
+            "freeShipping": "Free shipping",
+            "individualUse": "Individual use",
             "status": "Status",
-            "actions": "Actions"
+            "actions": "Actions",
+            "productChip": "{n} product",
+            "categoryChip": "{n} category",
+            "brandChip": "{n} brand",
+            "emailChip": "{n} email",
+            "recent7d": "{n} uses in last 7 days"
         },
         "discountType": {
             "percent": "Percentage",
@@ -2275,7 +2307,123 @@
             "active": "Active",
             "disabled": "Disabled"
         },
-        "neverExpires": "Never expires",
+        "statusBadge": {
+            "active": "Active",
+            "disabled": "Disabled",
+            "scheduled": "Scheduled",
+            "expired": "Expired",
+            "trashed": "Trashed"
+        },
+        "filters": {
+            "discountType": "Discount type",
+            "freeShipping": "Free shipping",
+            "individualUse": "Individual use",
+            "excludeSaleItems": "Includes sale items",
+            "expiringSoon": "Expiring soon",
+            "hasProductConstraints": "Product constraint",
+            "hasCategoryConstraints": "Category constraint",
+            "hasEmailRestrictions": "Email restriction"
+        },
+        "toolbar": {
+            "clearAll": "Clear all",
+            "clearFilter": "Remove",
+            "viewOptions": "View options",
+            "columns": "Columns",
+            "density": "Density",
+            "densityComfortable": "Comfortable",
+            "densityCozy": "Cozy",
+            "densityCompact": "Compact"
+        },
+        "rowActions": {
+            "edit": "Edit",
+            "duplicate": "Duplicate",
+            "copyCode": "Copy code",
+            "quickTest": "Quick test",
+            "viewHistory": "View usage history",
+            "activate": "Activate",
+            "disable": "Disable",
+            "extendExpiry": "Extend expiry",
+            "delete": "Move to trash",
+            "restore": "Restore",
+            "deleteConfirm": "This coupon will be moved to trash. Continue?"
+        },
+        "bulk": {
+            "selectedCount": "{count} selected"
+        },
+        "sort": {
+            "asc": "Ascending",
+            "desc": "Descending",
+            "hide": "Hide column"
+        },
+        "pagination": {
+            "rowsPerPage": "Rows per page",
+            "showing": "Showing {from}–{to} of {total}",
+            "selectedOf": "{selected} of {total} selected",
+            "first": "First",
+            "previous": "Previous",
+            "next": "Next",
+            "last": "Last",
+            "pageOf": "Page {page} of {lastPage}"
+        },
+        "editor": {
+            "backToList": "Back to list",
+            "titleNew": "Add new coupon",
+            "titleEdit": "Edit coupon \"{code}\"",
+            "toggleStatus": "Toggle status",
+            "statusActive": "Active",
+            "statusDisabled": "Disabled",
+            "trashedBanner": "This coupon is in the trash and cannot be edited.",
+            "codeAvailable": "Code is available",
+            "codeTaken": "This code is already in use",
+            "codeTakenWithSuggestion": "This code is already in use — try: {suggestion}",
+            "sections": {
+                "general": "General",
+                "discount": "Discount type and value",
+                "time": "Time window",
+                "cart": "Cart limits",
+                "emails": "Email allow-list",
+                "usageLimits": "Usage limits",
+                "liveStats": "Usage stats",
+                "redemptions": "Redemption history"
+            },
+            "fields": {
+                "code": "Code",
+                "generate": "Generate code",
+                "copy": "Copy code",
+                "descriptionFa": "Description (Persian)",
+                "descriptionEn": "Description (English)",
+                "amountPercent": "Discount amount (%)",
+                "amountMinor": "Discount amount (Toman)",
+                "startsAt": "Starts at",
+                "expiresAt": "Expires at",
+                "minimumAmount": "Minimum cart amount",
+                "maximumAmount": "Maximum cart amount",
+                "individualUse": "Individual use",
+                "individualUseHint": "When on, this code can't be combined with other coupons.",
+                "excludeSaleItems": "No sale items",
+                "excludeSaleItemsHint": "When on, items already on sale don't benefit from this coupon.",
+                "freeShipping": "Free shipping",
+                "freeShippingHint": "Adds free shipping on top of any monetary discount.",
+                "limitUsageToXItems": "Limit discount to first N items",
+                "allItems": "All items",
+                "usageLimitGlobal": "Total usage limit",
+                "usageLimitPerUser": "Per-user limit",
+                "unlimited": "Unlimited",
+                "emailsHint": "This code only works for the emails below. Empty means no restriction.",
+                "emailsAdd": "Add email"
+            },
+            "stats": {
+                "usageCount": "Total recorded uses",
+                "recent7d": "Last 7 days"
+            },
+            "redemptionsEmpty": "No redemptions recorded yet.",
+            "dirtyBar": {
+                "save": "Save changes",
+                "create": "Create and save",
+                "cancel": "Cancel",
+                "dirty": "{count} unsaved changes"
+            }
+        },
         "detail": {
             "title": "Coupon \"{code}\"",
             "subtitle": "Discount configuration and usage limits.",
