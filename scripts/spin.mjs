@@ -36,12 +36,41 @@ const STATE_DIR = join(MAIN_REPO_ROOT, ".claude/spin");
 
 /** Base of the per-spin port range. Picked deliberately outside the user-visible 3xxx family. */
 const PORT_BASE = 13000;
-/** Five ports per slug: db, pgadmin, api, admin, web (web reserved even when --with-web is off). */
-const PORTS_PER_SLOT = 5;
-/** Total slots before we wrap around (and start nudging for collisions). */
-const TOTAL_SLOTS = 200;
+/**
+ * Ten ports per slug — app surfaces (db / pgadmin / api / admin / web) plus the dev-ui stack
+ * (mailpitSmtp / mailpitWeb / redis / redisinsight / adminer). Every spin gets its own copy
+ * of all of them so two spins running side-by-side never share state.
+ */
+const PORTS_PER_SLOT = 10;
+/** Total slots before we wrap around (and start nudging for collisions). 100 × 10 = 13000-13999. */
+const TOTAL_SLOTS = 100;
 
-const ROLES = /** @type {const} */ (["db", "pgadmin", "api", "admin", "web"]);
+const ROLES = /** @type {const} */ ([
+    "db",
+    "pgadmin",
+    "api",
+    "admin",
+    "web",
+    "mailpitSmtp",
+    "mailpitWeb",
+    "redis",
+    "redisinsight",
+    "adminer",
+]);
+
+/**
+ * Pre-`pnpm spin` shared dev-ui ports. Old spins that pre-date the per-spin layout don't have
+ * dev-ui ports in their meta file; {@link effectivePort} falls back to these so they keep
+ * pointing at the legacy `calibra-dev-ui` containers (still running on every machine that ran
+ * the older bootstrap). New spins ignore these and use their own per-spin ports.
+ */
+const LEGACY_SHARED_DEV_UI_PORTS = /** @type {const} */ ({
+    mailpitSmtp: 11025,
+    mailpitWeb: 18025,
+    redis: 16379,
+    redisinsight: 15540,
+    adminer: 18080,
+});
 
 const SUBCOMMANDS = {
     start,
@@ -98,7 +127,6 @@ async function start(args) {
     await ensureWorktree(meta);
     await ensureEnvFiles(meta);
     await ensureContainers(meta);
-    await ensureDevUis(meta);
     await ensureInstall(meta);
     await ensureSdkBuild(meta);
     await ensureMigrationsAndSeed(meta);
@@ -194,15 +222,21 @@ async function doctor(args) {
     log(
         `  pgadmin      http://localhost:${meta.ports.pgadmin} ${(await isPortListening(meta.ports.pgadmin)) ? green("up") : red("down")}`,
     );
+    const mailpitWeb = effectivePort(meta, "mailpitWeb");
+    const mailpitSmtp = effectivePort(meta, "mailpitSmtp");
+    const redis = effectivePort(meta, "redis");
+    const redisinsight = effectivePort(meta, "redisinsight");
+    const adminer = effectivePort(meta, "adminer");
+    const tag = isLegacyDevUi(meta) ? " (shared, legacy)" : "";
     log(
-        `  mailpit      http://localhost:${MAILPIT_WEB_PORT} ${(await isPortListening(MAILPIT_SMTP_PORT)) ? green("up") : red("down")} (shared)`,
+        `  mailpit      http://localhost:${mailpitWeb} ${(await isPortListening(mailpitSmtp)) ? green("up") : red("down")}${tag}`,
     );
-    log(`  redis        localhost:${REDIS_PORT} ${(await isPortListening(REDIS_PORT)) ? green("up") : red("down")} (shared)`);
+    log(`  redis        localhost:${redis} ${(await isPortListening(redis)) ? green("up") : red("down")}${tag}`);
     log(
-        `  redisinsight http://localhost:${REDIS_INSIGHT_PORT} ${(await isPortListening(REDIS_INSIGHT_PORT)) ? green("up") : red("down")} (shared)`,
+        `  redisinsight http://localhost:${redisinsight} ${(await isPortListening(redisinsight)) ? green("up") : red("down")}${tag}`,
     );
     log(
-        `  adminer      http://localhost:${ADMINER_PORT} ${(await isPortListening(ADMINER_PORT)) ? green("up") : red("down")} (shared, queue_jobs)`,
+        `  adminer      http://localhost:${adminer} ${(await isPortListening(adminer)) ? green("up") : red("down")}${tag} (queue_jobs)`,
     );
     log(`  compose      project=${meta.composeProject}`);
     /**
@@ -323,23 +357,24 @@ async function ensureEnvFiles(meta) {
             `DB_DATABASE=calibra`,
             `ALLOWED_ORIGINS=http://localhost:${meta.ports.admin},http://localhost:${meta.ports.web}`,
             /**
-             * Mailpit (shared across all spins on this machine). The container is brought up by
-             * `ensureMailpit()` on `spin start`. `MAIL_NOTIFICATIONS_ENABLED=true` opts the
-             * importer/exporter runners into sending operator emails on terminal events.
+             * Mailpit (per-spin). The container is brought up by `ensureContainers()` on
+             * `spin start` against the spin's own docker-compose project.
+             * `MAIL_NOTIFICATIONS_ENABLED=true` opts the importer/exporter runners into sending
+             * operator emails on terminal events.
              */
             `MAIL_FROM_ADDRESS=ops@calibra.local`,
             `MAIL_FROM_NAME=Calibra`,
             `MAIL_NOTIFICATIONS_ENABLED=true`,
             `SMTP_HOST=localhost`,
-            `SMTP_PORT=${MAILPIT_SMTP_PORT}`,
-            `MAILPIT_WEB_URL=http://localhost:${MAILPIT_WEB_PORT}`,
+            `SMTP_PORT=${effectivePort(meta, "mailpitSmtp")}`,
+            `MAILPIT_WEB_URL=http://localhost:${effectivePort(meta, "mailpitWeb")}`,
             /**
-             * Redis points at the shared dev-ui container (`scripts/dev-ui-compose.yml`).
-             * Per-spin keyspace isolation lives in `config/redis.ts` via `keyPrefix: ${APP_NAME}:`,
-             * so two spins on the same Redis don't collide on cache/lock/queue/transmit pub-sub.
+             * Redis is per-spin too — no shared bus. `keyPrefix: ${APP_NAME}:` in
+             * `config/redis.ts` stays as defence-in-depth, but each spin's containers are
+             * already isolated by the docker-compose project name.
              */
             `REDIS_HOST=localhost`,
-            `REDIS_PORT=${REDIS_PORT}`,
+            `REDIS_PORT=${effectivePort(meta, "redis")}`,
             /** Bridge SSE broadcasts across api ↔ queue worker (single-process if `none`). */
             `TRANSMIT_TRANSPORT=redis`,
             /**
@@ -356,54 +391,21 @@ async function ensureEnvFiles(meta) {
 }
 
 /**
- * Fixed ports for the shared dev-ui containers (Mailpit, Redis, RedisInsight, Adminer).
- * Picked above the per-spin 13xxx range so they never collide with allocated slots, and small
- * enough to be memorable.
- */
-const MAILPIT_SMTP_PORT = 11025;
-const MAILPIT_WEB_PORT = 18025;
-const REDIS_PORT = 16379;
-const REDIS_INSIGHT_PORT = 15540;
-const ADMINER_PORT = 18080;
-const DEV_UI_COMPOSE_PROJECT = "calibra-dev-ui";
-
-/**
- * Bring up the shared dev-ui containers (Mailpit + Redis + RedisInsight + Adminer) if any of
- * them isn't already listening. One container set per dev machine, used by every spin.
- * Idempotent — `docker compose up -d` is a no-op when services are healthy. Stop is
- * intentionally NOT exposed via `spin stop` because killing it would also nuke other concurrent
- * spins' Mailpit inboxes / Redis state; operators tear it down by hand if they need to.
+ * Resolve a per-spin port, falling back to the legacy shared dev-ui constants for spins that
+ * pre-date {@link LEGACY_SHARED_DEV_UI_PORTS}. New spins always have every port populated in
+ * `meta.ports`; old spins continue talking to their shared containers until they stop+restart.
  *
  * @param {SpinMeta} meta
+ * @param {keyof SpinPorts} role
+ * @returns {number}
  */
-async function ensureDevUis(meta) {
-    /**
-     * Only `redis` is load-bearing for the wizard (Transmit's redis transport bridges the
-     * worker ↔ api SSE broadcasts). The rest are quality-of-life UIs — bring them up
-     * best-effort, log warnings if any service fails to pull, but never fail the whole
-     * `spin start` over an Adminer image that needs a corporate proxy to download.
-     */
-    const composeFile = join(meta.worktreePath, "scripts/dev-ui-compose.yml");
-    const env = { ...process.env, COMPOSE_PROJECT_NAME: DEV_UI_COMPOSE_PROJECT };
-
-    if (await isPortListening(REDIS_PORT)) {
-        step(
-            "dev-ui",
-            `running (mailpit :${MAILPIT_WEB_PORT}, redis :${REDIS_PORT}, insight :${REDIS_INSIGHT_PORT}, adminer :${ADMINER_PORT})`,
-        );
-        return;
+function effectivePort(meta, role) {
+    const fromMeta = meta.ports[role];
+    if (typeof fromMeta === "number") return fromMeta;
+    if (role in LEGACY_SHARED_DEV_UI_PORTS) {
+        return LEGACY_SHARED_DEV_UI_PORTS[/** @type {keyof typeof LEGACY_SHARED_DEV_UI_PORTS} */ (role)];
     }
-    step("dev-ui", "docker compose up");
-    const result = spawnSync("docker", ["compose", "-f", composeFile, "up", "-d"], {
-        env,
-        stdio: "inherit",
-    });
-    if (result.status !== 0) {
-        log(`  ${yellow("⚠")} dev-ui partial start — see docker output above. Critical (redis) status below.`);
-    }
-    if (!(await isPortListening(REDIS_PORT))) {
-        throw new Error("redis (:16379) did not come up — the wizard's live progress needs it");
-    }
+    throw new Error(`spin "${meta.slug}" meta is missing a required port "${role}"`);
 }
 
 /**
@@ -417,12 +419,7 @@ async function ensureContainers(meta) {
     }
     step("containers", "docker compose up");
     const composeFile = join(meta.worktreePath, "apps/api/docker-compose.yml");
-    const env = {
-        ...process.env,
-        COMPOSE_PROJECT_NAME: meta.composeProject,
-        DB_PORT: String(meta.ports.db),
-        PGADMIN_PORT: String(meta.ports.pgadmin),
-    };
+    const env = composeEnv(meta);
     await run("docker", ["compose", "-f", composeFile, "up", "-d"], { env });
 
     step("containers", "wait for postgres");
@@ -435,11 +432,42 @@ async function ensureContainers(meta) {
                 ["compose", "-f", composeFile, "exec", "-T", "db", "pg_isready", "-U", "calibra", "-d", "calibra"],
                 { env, encoding: "utf8" },
             );
-            if (check.status === 0) return;
+            if (check.status === 0) {
+                step("containers", "wait for redis");
+                const redisPort = effectivePort(meta, "redis");
+                const redisDeadline = Date.now() + 30_000;
+                while (Date.now() < redisDeadline) {
+                    if (await isPortListening(redisPort)) return;
+                    await sleep(500);
+                }
+                throw new Error(`redis (:${redisPort}) did not come up — the wizard's live progress needs it`);
+            }
         }
         await sleep(1_000);
     }
     throw new Error("postgres did not become ready within 60s");
+}
+
+/**
+ * The full env block we pass to every `docker compose` invocation for the spin's project.
+ * Centralises the port → env mapping so `up`, `down`, and `exec` agree on which variables get
+ * substituted into `apps/api/docker-compose.yml`.
+ *
+ * @param {SpinMeta} meta
+ * @returns {NodeJS.ProcessEnv}
+ */
+function composeEnv(meta) {
+    return {
+        ...process.env,
+        COMPOSE_PROJECT_NAME: meta.composeProject,
+        DB_PORT: String(meta.ports.db),
+        PGADMIN_PORT: String(meta.ports.pgadmin),
+        MAILPIT_SMTP_PORT: String(effectivePort(meta, "mailpitSmtp")),
+        MAILPIT_WEB_PORT: String(effectivePort(meta, "mailpitWeb")),
+        REDIS_PORT: String(effectivePort(meta, "redis")),
+        REDISINSIGHT_PORT: String(effectivePort(meta, "redisinsight")),
+        ADMINER_PORT: String(effectivePort(meta, "adminer")),
+    };
 }
 
 /**
@@ -682,10 +710,15 @@ function printHandoffCard(meta, opts) {
     log(`  api     ${cyan(`http://localhost:${meta.ports.api}`)}`);
     if (opts.withWeb) log(`  web     ${cyan(`http://localhost:${meta.ports.web}`)}`);
     log(`  pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
-    log(`  mailpit ${cyan(`http://localhost:${MAILPIT_WEB_PORT}`)} (smtp :${MAILPIT_SMTP_PORT})`);
-    log(`  redis   ${cyan(`http://localhost:${REDIS_INSIGHT_PORT}`)} (insight UI; redis on :${REDIS_PORT})`);
+    const mailpitWebPort = effectivePort(meta, "mailpitWeb");
+    const mailpitSmtpPort = effectivePort(meta, "mailpitSmtp");
+    const redisPort = effectivePort(meta, "redis");
+    const redisInsightPort = effectivePort(meta, "redisinsight");
+    const adminerPort = effectivePort(meta, "adminer");
+    log(`  mailpit ${cyan(`http://localhost:${mailpitWebPort}`)} (smtp :${mailpitSmtpPort})`);
+    log(`  redis   ${cyan(`http://localhost:${redisInsightPort}`)} (insight UI; redis on :${redisPort})`);
     log(
-        `  queue   ${cyan(`http://localhost:${ADMINER_PORT}/?pgsql=&server=host.docker.internal&port=${meta.ports.db}&username=calibra&db=calibra&select=queue_jobs`)}`,
+        `  queue   ${cyan(`http://localhost:${adminerPort}/?pgsql=&server=host.docker.internal&port=${meta.ports.db}&username=calibra&db=calibra&select=queue_jobs`)}`,
     );
     log(`  pr      ${meta.prUrl ?? `(skipped — run pnpm spin pr ${meta.slug})`}`);
     log(`  login   ${cyan("admin@bulk.calibra.dev")} / ${cyan("Passw0rd1!")}`);
@@ -741,13 +774,17 @@ async function downContainers(meta, opts) {
     }
     const args = ["compose", "-f", composeFile, "down"];
     if (opts.purge) args.push("-v");
-    const env = {
-        ...process.env,
-        COMPOSE_PROJECT_NAME: meta.composeProject,
-        DB_PORT: String(meta.ports.db),
-        PGADMIN_PORT: String(meta.ports.pgadmin),
-    };
-    await run("docker", args, { env });
+    await run("docker", args, { env: composeEnv(meta) });
+}
+
+/**
+ * `true` when the spin pre-dates the per-spin dev-ui layout — its meta has no `redis` port
+ * (and friends) and {@link effectivePort} falls back to the legacy shared container.
+ *
+ * @param {SpinMeta} meta
+ */
+function isLegacyDevUi(meta) {
+    return typeof meta.ports.redis !== "number";
 }
 
 /**
@@ -774,6 +811,11 @@ async function removeWorktree(meta, opts) {
  * @property {number} api
  * @property {number} admin
  * @property {number} web
+ * @property {number} [mailpitSmtp] — undefined on metas that pre-date the per-spin dev-ui layout
+ * @property {number} [mailpitWeb]
+ * @property {number} [redis]
+ * @property {number} [redisinsight]
+ * @property {number} [adminer]
  */
 
 /**
@@ -856,12 +898,18 @@ async function allocatePorts(slug) {
         const slotKey = nudge === 0 ? slug : `${slug}#${nudge}`;
         const slot = hashToSlot(slotKey);
         const base = PORT_BASE + slot * PORTS_PER_SLOT;
+        /** Keep the offsets in lockstep with {@link ROLES}; one entry per role. */
         const ports = {
             db: base,
             pgadmin: base + 1,
             api: base + 2,
             admin: base + 3,
             web: base + 4,
+            mailpitSmtp: base + 5,
+            mailpitWeb: base + 6,
+            redis: base + 7,
+            redisinsight: base + 8,
+            adminer: base + 9,
         };
         if (await allPortsFree(ports)) return ports;
     }
@@ -882,7 +930,8 @@ function hashToSlot(key) {
  */
 async function allPortsFree(ports) {
     for (const role of ROLES) {
-        if (await isPortListening(ports[role])) return false;
+        const port = ports[role];
+        if (typeof port === "number" && (await isPortListening(port))) return false;
     }
     return true;
 }
