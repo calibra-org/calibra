@@ -1,11 +1,7 @@
-import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { PageHeader } from "#/components/PageHeader";
-import { Button } from "#/components/ui/button";
-
-import { CouponsListClient } from "./CouponsListClient";
+import { CouponsListClient } from "#/views/coupons/list/coupons-list";
 
 interface PageProps {
     params: Promise<{ locale: string }>;
@@ -17,24 +13,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: t("title") };
 }
 
+/**
+ * Server shell — sets the static locale for next-intl and forwards into the client list view.
+ * The page header lives inside the client so the action button can navigate via
+ * `#/lib/i18n/navigation`'s locale-aware `Link`.
+ */
 export default async function CouponsPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const t = await getTranslations("Coupons");
-
-    return (
-        <section className="flex flex-col gap-6">
-            <PageHeader
-                title={t("title")}
-                subtitle={t("subtitle")}
-                actions={
-                    <Button>
-                        <Plus className="size-4" aria-hidden="true" />
-                        {t("addCoupon")}
-                    </Button>
-                }
-            />
-            <CouponsListClient />
-        </section>
-    );
+    return <CouponsListClient />;
 }

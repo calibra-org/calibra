@@ -434,6 +434,7 @@ export interface AdminCoupon {
     amountMinor: MoneyMinor | null;
     amountPercent: number | null;
     description: LocalizedString;
+    startsAt: string | null;
     expiresAt: string | null;
     individualUse: boolean;
     excludeSaleItems: boolean;
@@ -441,10 +442,34 @@ export interface AdminCoupon {
     maximumAmount: MoneyMinor | null;
     usageLimitGlobal: number | null;
     usageLimitPerUser: number | null;
+    limitUsageToXItems: number | null;
     freeShipping: boolean;
     status: "active" | "disabled";
     usageCount: number;
+    recentRedemptions7d: number;
+    productConstraints: { include: number[]; exclude: number[] };
+    categoryConstraints: { include: number[]; exclude: number[] };
+    brandConstraints: { include: number[]; exclude: number[] };
+    emailRestrictions: string[];
+    productConstraintsCount: number;
+    categoryConstraintsCount: number;
+    brandConstraintsCount: number;
+    emailRestrictionsCount: number;
+    deletedAt: string | null;
 }
+
+export interface AdminCouponCounts {
+    all: number;
+    active: number;
+    disabled: number;
+    expired: number;
+    scheduled: number;
+    used: number;
+    trashed: number;
+    expiringSoon: number;
+}
+
+export type CouponTabKey = "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
 
 export interface AdminTaxClass {
     id: number;
