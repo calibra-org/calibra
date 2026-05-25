@@ -1,0 +1,58 @@
+title: AdminCustomerInsights
+description: >
+    Dashboard "Customer summary" snapshot returned by `GET /api/v1/admin/insights/customers`.
+    Combines current-period KPIs with a 30-day-prior comparison snapshot, plus a 30-day daily
+    sparkline for total customers and revenue captured. Money fields are Rial minor units.
+type: object
+properties:
+    total: { type: integer, description: Live count of non-deleted customers. }
+    total_delta_30d:
+        type: integer
+        description: Difference between today's count and the count 30 days ago. May be negative.
+    avg_order_count:
+        type: number
+        description: Mean lifetime order count across non-deleted customers.
+    avg_order_count_delta_30d:
+        type: number
+        description: Mean lifetime order count 30 days ago, subtracted from today's value.
+    avg_lifetime_spend_minor: { type: integer, description: Mean lifetime spend per customer, minor units. }
+    avg_lifetime_spend_delta_30d_pct:
+        type: number
+        description: Percentage delta vs the same metric 30 days ago. Positive = growth.
+    avg_order_value_minor: { type: integer, description: Mean order value across paid orders, minor units. }
+    avg_order_value_delta_30d_pct: { type: number, description: Percentage delta vs the same metric 30 days ago. }
+    pct_with_account:
+        type: number
+        description: Percentage (0–100) of customers with an `auth.users` row attached.
+    sparklines:
+        type: object
+        properties:
+            total:
+                type: array
+                items: { type: integer }
+                minItems: 30
+                maxItems: 30
+                description: Daily count of new customers created over the last 30 days, oldest → newest.
+            spend_minor:
+                type: array
+                items: { type: integer }
+                minItems: 30
+                maxItems: 30
+                description: Daily revenue captured (paid statuses), minor units, oldest → newest.
+        required: [total, spend_minor]
+    generated_at:
+        type: string
+        format: date-time
+        description: ISO timestamp when the cache entry was computed.
+required:
+    - total
+    - total_delta_30d
+    - avg_order_count
+    - avg_order_count_delta_30d
+    - avg_lifetime_spend_minor
+    - avg_lifetime_spend_delta_30d_pct
+    - avg_order_value_minor
+    - avg_order_value_delta_30d_pct
+    - pct_with_account
+    - sparklines
+    - generated_at

@@ -124,6 +124,7 @@ export const CacheKeys = {
         topProducts: (days: number, limit: number, locale: string): string =>
             `admin:reports:top-products:${days}:${limit}:${locale}`,
         customerCounts: (): string => "admin:customers:counts",
+        customerInsights: (): string => "admin:insights:customers",
         customerStats: (customerId: number | string | bigint): string => `admin:customers:stats:${String(customerId)}`,
         customerAggregate: (customerId: number | string | bigint): string => `admin:customers:aggregate:${String(customerId)}`,
     },
