@@ -15,11 +15,11 @@ properties:
     avg_order_count_delta_30d:
         type: number
         description: Mean lifetime order count 30 days ago, subtracted from today's value.
-    avg_lifetime_spend_minor: { type: integer, description: Mean lifetime spend per customer, minor units. }
+    avg_lifetime_spend_minor: { type: integer, description: "Mean lifetime spend per customer, minor units." }
     avg_lifetime_spend_delta_30d_pct:
         type: number
         description: Percentage delta vs the same metric 30 days ago. Positive = growth.
-    avg_order_value_minor: { type: integer, description: Mean order value across paid orders, minor units. }
+    avg_order_value_minor: { type: integer, description: "Mean order value across paid orders, minor units." }
     avg_order_value_delta_30d_pct: { type: number, description: Percentage delta vs the same metric 30 days ago. }
     pct_with_account:
         type: number

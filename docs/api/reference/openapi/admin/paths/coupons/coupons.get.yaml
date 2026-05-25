@@ -15,7 +15,7 @@ parameters:
           schema: { type: array, items: { type: string, enum: [fixed_cart, fixed_product, percent, free_shipping] } },
           style: form,
           explode: false,
-          description: Comma-separated list (`?discount_type=fixed_cart,percent`).
+          description: "Comma-separated list (`?discount_type=fixed_cart,percent`)."
       }
     - { name: free_shipping, in: query, schema: { type: boolean } }
     - { name: individual_use, in: query, schema: { type: boolean } }
