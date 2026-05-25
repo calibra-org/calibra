@@ -1,0 +1,195 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "graphTooltip": 0,
+    "id": null,
+    "title": "Calibra — cache & queue",
+    "uid": "calibra-cache-queue",
+    "version": 1,
+    "schemaVersion": 39,
+    "timezone": "",
+    "tags": ["calibra", "cache", "queue"],
+    "time": { "from": "now-1h", "to": "now" },
+    "refresh": "30s",
+    "panels": [
+        {
+            "id": 1,
+            "type": "timeseries",
+            "title": "Cache hit ratio per tag (5m)",
+            "description": "Hits / (hits + misses) per CacheTags constant. < 50% means a tag is mostly missing — the read path is doing real DB work. < 80% on hot tags (products, taxonomy) is worth investigating.",
+            "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percentunit",
+                    "min": 0,
+                    "max": 1,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "red", "value": null },
+                            { "color": "yellow", "value": 0.5 },
+                            { "color": "green", "value": 0.8 }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "calibra:cache_hit_ratio:5m",
+                    "legendFormat": "{{tag}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "timeseries",
+            "title": "Cache operations / s per tag (stacked)",
+            "description": "Hits + misses + invalidations summed per tag. Use to see whether a low hit-ratio is 'few requests' (noise) or 'many misses' (real problem).",
+            "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "color": { "mode": "palette-classic" },
+                    "custom": { "stacking": { "mode": "normal" }, "fillOpacity": 30 }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "sum by (tag) (rate(calibra_cache_operations_total[5m])) or vector(0)",
+                    "legendFormat": "{{tag}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "timeseries",
+            "title": "Cache invalidations / s per tag",
+            "description": "Bursts here are write events fanning out. Pair with the hit-ratio panel — a tag invalidation right before a hit-ratio dip is the normal cause.",
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "sum by (tag) (rate(calibra_cache_operations_total{outcome=\"invalidate\"}[5m])) or vector(0)",
+                    "legendFormat": "{{tag}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "type": "stat",
+            "title": "Queue pending depth (imports + exports)",
+            "description": "Pending + active + delayed rows in queue_jobs. Sustained > 1000 fires QueueBacklogGrowing.",
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "yellow", "value": 100 },
+                            { "color": "red", "value": 1000 }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "options": { "reduceOptions": { "calcs": ["last"], "fields": "/.*/", "values": false } },
+            "targets": [
+                {
+                    "expr": "calibra_queue_jobs_active",
+                    "legendFormat": "{{queue}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "type": "timeseries",
+            "title": "Queue jobs / s completed",
+            "description": "Throughput per queue. A sudden drop with rising pending depth means the worker is wedged or out-of-memory.",
+            "gridPos": { "h": 8, "w": 8, "x": 0, "y": 17 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "sum by (queue) (rate(calibra_queue_jobs_total{outcome=\"completed\"}[5m])) or vector(0)",
+                    "legendFormat": "{{queue}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "type": "timeseries",
+            "title": "Queue p95 duration",
+            "description": "p95 wall-clock time per queue. Imports + exports are typically 10s — 10min. A spike here without backlog growth means individual jobs are slow.",
+            "gridPos": { "h": 8, "w": 8, "x": 8, "y": 17 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "s", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum by (le, queue) (rate(calibra_queue_job_duration_seconds_bucket[5m])))",
+                    "legendFormat": "{{queue}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 7,
+            "type": "timeseries",
+            "title": "Queue failure ratio (5m)",
+            "description": "failed / (failed + completed) per queue. > 25% for 10m fires QueueFailureRatioHigh.",
+            "gridPos": { "h": 8, "w": 8, "x": 16, "y": 17 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percentunit",
+                    "min": 0,
+                    "max": 1,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "yellow", "value": 0.1 },
+                            { "color": "red", "value": 0.25 }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "targets": [
+                {
+                    "expr": "calibra:queue_failure_ratio:5m",
+                    "legendFormat": "{{queue}}",
+                    "refId": "A"
+                }
+            ]
+        }
+    ]
+}

@@ -5,10 +5,10 @@
     "id": null,
     "title": "Calibra api — request overview",
     "uid": "calibra-api-overview",
-    "version": 1,
+    "version": 2,
     "schemaVersion": 39,
     "timezone": "",
-    "tags": ["calibra", "api"],
+    "tags": ["calibra", "api", "overview"],
     "time": { "from": "now-15m", "to": "now" },
     "refresh": "10s",
     "panels": [
@@ -16,6 +16,7 @@
             "id": 1,
             "type": "timeseries",
             "title": "Request rate (per second)",
+            "description": "Sum of all HTTP requests grouped by status family. A flat green bar with no other colors means everything is healthy.",
             "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
             "datasource": { "type": "prometheus", "uid": "prometheus" },
             "fieldConfig": {
@@ -25,7 +26,7 @@
             "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
             "targets": [
                 {
-                    "expr": "sum by (status) (rate(http_requests_total{service=\"calibra-api\"}[1m]))",
+                    "expr": "sum by (status) (rate(http_requests_total{service=\"calibra-api\"}[1m])) or vector(0)",
                     "legendFormat": "{{status}}",
                     "refId": "A"
                 }
@@ -34,7 +35,8 @@
         {
             "id": 2,
             "type": "timeseries",
-            "title": "Latency (p50 / p95 / p99)",
+            "title": "Latency (p50 / p95 / p99) — all routes",
+            "description": "Latency quantiles over a 5-minute rolling window across every route. p95 above 1s for 10m fires the ApiLatencyP95High alert.",
             "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
             "datasource": { "type": "prometheus", "uid": "prometheus" },
             "fieldConfig": {
@@ -62,27 +64,58 @@
         },
         {
             "id": 3,
-            "type": "timeseries",
-            "title": "Error rate (5xx per second)",
-            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+            "type": "stat",
+            "title": "Error ratio (5xx / total, 5m)",
+            "description": "Fraction of HTTP responses that are 5xx, rolled over 5 minutes. Sustained > 5% for 5m fires ApiHighErrorRate.",
+            "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
             "datasource": { "type": "prometheus", "uid": "prometheus" },
             "fieldConfig": {
-                "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } },
+                "defaults": {
+                    "unit": "percentunit",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "yellow", "value": 0.01 },
+                            { "color": "red", "value": 0.05 }
+                        ]
+                    }
+                },
                 "overrides": []
             },
-            "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+            "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
             "targets": [
                 {
-                    "expr": "sum(rate(http_requests_total{service=\"calibra-api\", status=~\"5..\"}[1m]))",
-                    "legendFormat": "5xx",
+                    "expr": "calibra:api_error_ratio:5m",
                     "refId": "A"
                 }
             ]
         },
         {
             "id": 4,
+            "type": "timeseries",
+            "title": "5xx rate",
+            "description": "Absolute 5xx-per-second rate. Use alongside the ratio stat to distinguish '5% of 2 req' from '5% of 200 req'.",
+            "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } },
+                "overrides": []
+            },
+            "options": { "legend": { "displayMode": "hidden" } },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_requests_total{service=\"calibra-api\", status=~\"5..\"}[1m])) or vector(0)",
+                    "legendFormat": "5xx",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 5,
             "type": "logs",
             "title": "Recent error logs",
+            "description": "Last 100 error+ level lines from the api's Pino stream (via Loki). Use to triage a red error-ratio stat.",
             "gridPos": { "h": 10, "w": 12, "x": 12, "y": 8 },
             "datasource": { "type": "loki", "uid": "loki" },
             "options": {
@@ -96,19 +129,73 @@
             },
             "targets": [
                 {
-                    "expr": "{service=\"calibra-api\"} | json | level=~\"error|fatal\"",
+                    "expr": "{service=\"calibra-api\"} | json | level=~\"error|fatal\" | line_format \"{{.msg}}\"",
                     "refId": "A"
                 }
             ]
         },
         {
-            "id": 5,
-            "type": "stat",
-            "title": "Active spin",
-            "gridPos": { "h": 4, "w": 6, "x": 0, "y": 18 },
+            "id": 6,
+            "type": "heatmap",
+            "title": "Latency heatmap (all routes)",
+            "description": "Bucketed observation density. Bright cells in the slow buckets reveal long-tail latency the p99 panel may smooth over.",
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
             "datasource": { "type": "prometheus", "uid": "prometheus" },
             "fieldConfig": {
-                "defaults": { "color": { "mode": "palette-classic" } },
+                "defaults": { "unit": "s" },
+                "overrides": []
+            },
+            "options": {
+                "calculate": false,
+                "yAxis": { "axisPlacement": "left", "unit": "s" },
+                "color": { "mode": "scheme", "scheme": "Spectral", "exponent": 0.5, "reverse": true }
+            },
+            "targets": [
+                {
+                    "expr": "sum by (le) (rate(http_request_duration_seconds_bucket{service=\"calibra-api\"}[1m]))",
+                    "format": "heatmap",
+                    "legendFormat": "{{le}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 7,
+            "type": "table",
+            "title": "Top 5 slowest routes (p95, 5m)",
+            "description": "Per-route p95 latency, sorted descending. Use this to spot a single endpoint dragging the global p95 panel.",
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": { "unit": "s" },
+                "overrides": []
+            },
+            "options": { "showHeader": true, "sortBy": [{ "displayName": "Value", "desc": true }] },
+            "targets": [
+                {
+                    "expr": "topk(5, calibra:api_latency_p95:5m)",
+                    "instant": true,
+                    "format": "table",
+                    "legendFormat": "{{route}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "id": 8,
+            "type": "stat",
+            "title": "Active api",
+            "description": "Is the api scrape target up? Should always read 1.",
+            "gridPos": { "h": 4, "w": 6, "x": 12, "y": 18 },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }]
+                    }
+                },
                 "overrides": []
             },
             "options": { "reduceOptions": { "calcs": ["last"], "fields": "", "values": false }, "textMode": "value" },
