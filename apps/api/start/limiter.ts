@@ -1,5 +1,7 @@
 import limiter from "@adonisjs/limiter/services/main";
 
+import { recordRateLimitThrottled } from "#services/metrics/domain_metrics";
+
 /**
  * Named limiters applied to routes via `.use(throttle)`. Each one returns an `HttpLimiter`
  * the router can mount; the store comes from `LIMITER_STORE` (redis in dev/prod, memory in
@@ -10,11 +12,19 @@ import limiter from "@adonisjs/limiter/services/main";
  * dimension matters (login should rate-limit per-IP **and** per-email so a botnet sweeping
  * one email gets blocked), compose with `.allowRequests().every().limit().key()` and route
  * the request through both with a single composite call.
+ *
+ * Every limiter also calls `.limitExceeded()` so the `calibra_rate_limit_throttled_total`
+ * counter ticks before the framework throws — the alerts panel needs the rate to spot
+ * brute-force sweeps and runaway scripts.
  */
 
 /** 5/min per IP. Tight because brute-force enumeration is the canonical attack on these. */
 export const authLimiter = limiter.define("auth", (ctx) => {
-    return limiter.allowRequests(5).every("1 minute").usingKey(`ip:${ctx.request.ip()}`);
+    return limiter
+        .allowRequests(5)
+        .every("1 minute")
+        .usingKey(`ip:${ctx.request.ip()}`)
+        .limitExceeded(() => recordRateLimitThrottled("auth"));
 });
 
 /**
@@ -24,13 +34,21 @@ export const authLimiter = limiter.define("auth", (ctx) => {
  */
 export const loginEmailLimiter = limiter.define("login_email", (ctx) => {
     const email = String(ctx.request.input("email", "")).toLowerCase();
-    return limiter.allowRequests(5).every("1 minute").usingKey(`email:${email}`);
+    return limiter
+        .allowRequests(5)
+        .every("1 minute")
+        .usingKey(`email:${email}`)
+        .limitExceeded(() => recordRateLimitThrottled("login_email"));
 });
 
 /** 30/min per customer for payment submission + verification. */
 export const paymentLimiter = limiter.define("payments", (ctx) => {
     const userId = ctx.auth.user?.id ?? "anon";
-    return limiter.allowRequests(30).every("1 minute").usingKey(`user:${userId}`);
+    return limiter
+        .allowRequests(30)
+        .every("1 minute")
+        .usingKey(`user:${userId}`)
+        .limitExceeded(() => recordRateLimitThrottled("payments"));
 });
 
 /**
@@ -39,11 +57,19 @@ export const paymentLimiter = limiter.define("payments", (ctx) => {
  * it amplifies into the queue.
  */
 export const webhookLimiter = limiter.define("webhooks", (ctx) => {
-    return limiter.allowRequests(60).every("1 minute").usingKey(`ip:${ctx.request.ip()}`);
+    return limiter
+        .allowRequests(60)
+        .every("1 minute")
+        .usingKey(`ip:${ctx.request.ip()}`)
+        .limitExceeded(() => recordRateLimitThrottled("webhooks"));
 });
 
 /** 120/min per admin user on admin mutation routes. Lets one operator do bulk updates without rugpulling them, but a runaway script gets capped. */
 export const adminWriteLimiter = limiter.define("admin_writes", (ctx) => {
     const userId = ctx.auth.user?.id ?? ctx.request.ip();
-    return limiter.allowRequests(120).every("1 minute").usingKey(`admin:${userId}`);
+    return limiter
+        .allowRequests(120)
+        .every("1 minute")
+        .usingKey(`admin:${userId}`)
+        .limitExceeded(() => recordRateLimitThrottled("admin_writes"));
 });

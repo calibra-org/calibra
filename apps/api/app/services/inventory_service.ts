@@ -3,6 +3,7 @@ import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 import InventoryItem from "#models/inventory_item";
 import InventoryMovement from "#models/inventory_movement";
+import { recordInventoryMovement, recordInventoryOversellAttempt } from "#services/metrics/domain_metrics";
 
 /** Source-system that triggered an inventory movement; recorded on the ledger row. */
 export type InventoryRefKind = "order" | "refund" | "manual";
@@ -119,6 +120,7 @@ export default class InventoryService {
 
             const nextStock = item.stockQuantity + delta;
             if (nextStock < 0 && item.backorders === "no" && delta < 0) {
+                recordInventoryOversellAttempt();
                 throw new InsufficientStockError(target, item.stockQuantity, Math.abs(delta));
             }
 
@@ -142,6 +144,7 @@ export default class InventoryService {
             movement.refKind = ref.kind;
             movement.refId = ref.id ?? null;
             await movement.save();
+            recordInventoryMovement(kind);
         };
 
         if (externalTrx) {

@@ -1,6 +1,7 @@
 import type { HttpContext } from "@adonisjs/core/http";
 
 import User from "#models/user";
+import { recordAuthEvent } from "#services/metrics/domain_metrics";
 
 export default class LogoutController {
     /**
@@ -14,6 +15,7 @@ export default class LogoutController {
         if (token) {
             await User.accessTokens.delete(user, token.identifier);
         }
+        recordAuthEvent("logout");
         return { message: "logged out" };
     }
 }
