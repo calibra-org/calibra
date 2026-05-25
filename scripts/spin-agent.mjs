@@ -422,42 +422,157 @@ function renderDashboardHtml() {
 <style>
 * { box-sizing: border-box; }
 :root {
-    --bg: #0b0d10;
-    --panel: #14181d;
+    --bg: #0a0c10;
+    --bg-accent: radial-gradient(1200px circle at 0% -10%, rgba(110, 168, 254, 0.08), transparent 50%), radial-gradient(900px circle at 100% 0%, rgba(52, 211, 153, 0.05), transparent 50%);
+    --panel: #11151b;
     --panel-2: #1a1f26;
-    --border: #232a33;
-    --text: #e4e7eb;
+    --panel-hover: #1c222a;
+    --border: #20262f;
+    --border-soft: #1a1f26;
+    --text: #e7ecf2;
     --muted: #8b95a3;
+    --muted-2: #6b7280;
     --accent: #6ea8fe;
+    --accent-2: #93c5fd;
+    --accent-glow: rgba(110, 168, 254, 0.18);
     --ok: #34d399;
     --warn: #fbbf24;
     --bad: #ef4444;
     --unknown: #6b7280;
 }
-body { margin: 0; padding: 24px; font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+body {
+    margin: 0;
+    padding: 32px 24px 48px;
+    font: 14px/1.55 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    background-image: var(--bg-accent);
+    background-attachment: fixed;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
 .wrap { max-width: 1200px; margin: 0 auto; }
-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; }
-header h1 { font-size: 18px; margin: 0; font-weight: 600; }
-header .slug { color: var(--muted); font-family: ui-monospace, SFMono-Regular, monospace; }
+header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-soft);
+}
+header .logo {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent) 0%, #5b8ef0 100%);
+    box-shadow: 0 0 0 1px var(--accent-glow), 0 4px 16px var(--accent-glow);
+    display: grid; place-items: center;
+    font-weight: 700;
+    color: #0a0c10;
+    font-size: 14px;
+}
+header h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+header .slug {
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 13px;
+    padding: 3px 10px;
+    background: var(--accent-glow);
+    border-radius: 999px;
+    border: 1px solid rgba(110, 168, 254, 0.25);
+}
+header .spacer { flex: 1; }
+header #last-refresh { font-size: 11px; color: var(--muted-2); font-family: ui-monospace, SFMono-Regular, monospace; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-.panel h2 { margin: 0 0 12px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-.row { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    transition: border-color .15s;
+}
+.panel:hover { border-color: var(--border); }
+.panel h2 {
+    margin: 0 0 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.panel h2 .glyph {
+    display: inline-grid;
+    place-items: center;
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--accent);
+}
+.row { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 10px 8px; margin: 0 -8px; border-bottom: 1px solid var(--border-soft); border-radius: 6px; transition: background-color .12s; }
 .row:last-child { border-bottom: none; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--unknown); flex-shrink: 0; }
-.dot.ok { background: var(--ok); }
-.dot.bad { background: var(--bad); }
-.dot.warn { background: var(--warn); }
-.name { font-weight: 500; }
-.url a { color: var(--accent); text-decoration: none; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12px; }
-.url a:hover { text-decoration: underline; }
-.port { color: var(--muted); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; }
-button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
-button:hover { border-color: var(--accent); }
+.row:hover { background: var(--panel-hover); }
+.dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--unknown);
+    flex-shrink: 0;
+    box-shadow: 0 0 0 0 transparent;
+    transition: background-color .2s, box-shadow .2s;
+}
+.dot.ok { background: var(--ok); box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15); }
+.dot.bad { background: var(--bad); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+.dot.warn { background: var(--warn); box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15); }
+.name { font-weight: 500; font-size: 13px; }
+.url a { color: var(--accent); text-decoration: none; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11.5px; opacity: 0.85; transition: opacity .15s; }
+.url a:hover { opacity: 1; text-decoration: underline; }
+.port { color: var(--muted-2); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; }
+button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 5px; padding: 5px 11px; font: inherit; font-size: 12px; cursor: pointer; transition: border-color .12s, background-color .12s, color .12s; }
+button:hover { border-color: var(--accent); color: var(--accent); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
-.actions { display: flex; gap: 8px; margin-top: 8px; }
-.actions button.primary { background: var(--accent); color: #0b0d10; border-color: var(--accent); }
+.dashboards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+}
+.dashboard-card {
+    display: block;
+    padding: 12px 14px;
+    background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color .12s, transform .12s, box-shadow .12s;
+    position: relative;
+    overflow: hidden;
+}
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--card-accent, var(--accent-glow)), transparent 60%);
+    opacity: 0;
+    transition: opacity .2s;
+    pointer-events: none;
+}
+.dashboard-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent-glow); }
+.dashboard-card:hover::before { opacity: 1; }
+.dashboard-card .dash-icon { font-size: 18px; margin-bottom: 6px; display: block; position: relative; }
+.dashboard-card .dash-title { font-weight: 600; font-size: 13px; margin: 0 0 4px; position: relative; letter-spacing: -0.01em; }
+.dashboard-card .dash-desc { font-size: 11.5px; color: var(--muted); line-height: 1.5; position: relative; }
+.dashboard-card .dash-meta { display: flex; align-items: center; gap: 6px; margin-top: 8px; position: relative; }
+.dashboard-card .dash-meta .badge { font-size: 10px; color: var(--accent); background: var(--accent-glow); border-radius: 3px; padding: 1px 6px; font-family: ui-monospace, SFMono-Regular, monospace; }
+.dashboard-card .dash-meta .arrow { color: var(--muted-2); font-size: 11px; margin-left: auto; transition: transform .15s, color .15s; }
+.dashboard-card:hover .dash-meta .arrow { color: var(--accent); transform: translateX(3px); }
+.actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.actions button.primary { background: linear-gradient(180deg, var(--accent) 0%, #5b8ef0 100%); color: #0a0c10; border-color: var(--accent); font-weight: 600; }
+.actions button.primary:hover { box-shadow: 0 0 0 3px var(--accent-glow); color: #0a0c10; }
 .actions button.danger { background: #2a1518; border-color: #5c2026; color: #fca5a5; }
+.actions button.danger:hover { border-color: #ef4444; color: #fecaca; }
 #log { background: #06080a; border: 1px solid var(--border); border-radius: 6px; padding: 12px; height: 320px; overflow: auto; font: 11px/1.5 ui-monospace, SFMono-Regular, monospace; color: #a8b3c1; white-space: pre-wrap; }
 .log-controls { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
 .log-controls .sources { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
@@ -507,9 +622,11 @@ button.danger { background: #2a1518; border-color: #5c2026; color: #fca5a5; }
 <body>
 <div class="wrap">
     <header>
+        <div class="logo">s</div>
         <h1>spin</h1>
         <span class="slug">${SLUG}</span>
-        <span class="port" id="last-refresh"></span>
+        <span class="spacer"></span>
+        <span id="last-refresh"></span>
     </header>
 
     <details class="setup" id="trust-setup">
@@ -573,14 +690,19 @@ Import-Certificate -FilePath "$env:USERPROFILE\\Downloads\\caddy-root.crt" -Cert
     </details>
 
     <div class="grid">
-        <section class="panel" id="group-app"><h2>app</h2></section>
-        <section class="panel" id="group-obs"><h2>observability</h2></section>
-        <section class="panel" id="group-search"><h2>search</h2></section>
-        <section class="panel" id="group-data"><h2>data + dev</h2></section>
+        <section class="panel" id="group-app"><h2><span class="glyph">◆</span>app</h2></section>
+        <section class="panel" id="group-obs"><h2><span class="glyph">◉</span>observability</h2></section>
+        <section class="panel" id="group-search"><h2><span class="glyph">⌕</span>search</h2></section>
+        <section class="panel" id="group-data"><h2><span class="glyph">▤</span>data + dev</h2></section>
     </div>
 
     <section class="panel" style="margin-top: 16px;">
-        <h2>meilisearch credentials</h2>
+        <h2><span class="glyph">▥</span>grafana dashboards</h2>
+        <div class="dashboards-grid" id="dashboards-grid"></div>
+    </section>
+
+    <section class="panel" style="margin-top: 16px;">
+        <h2><span class="glyph">⌗</span>meilisearch credentials</h2>
         <div class="secret-row">
             <span class="secret-label">master key</span>
             <code class="secret-value" id="meili-key">—</code>
@@ -594,7 +716,7 @@ Import-Certificate -FilePath "$env:USERPROFILE\\Downloads\\caddy-root.crt" -Cert
     </section>
 
     <section class="panel" style="margin-top: 16px;">
-        <h2>actions</h2>
+        <h2><span class="glyph">⚡</span>actions</h2>
         <div class="actions">
             <button class="primary" data-action="reseed" data-confirm="This drops every seeded row and reinserts a fresh demo dataset. Anything you've added since the last seed will be lost. Continue?">reseed db</button>
             <button data-action="migrate" data-confirm="Run all pending migrations against the spin's database. Continue?">migrate</button>
@@ -604,7 +726,7 @@ Import-Certificate -FilePath "$env:USERPROFILE\\Downloads\\caddy-root.crt" -Cert
     </section>
 
     <section class="panel" style="margin-top: 16px;">
-        <h2>logs</h2>
+        <h2><span class="glyph">≡</span>logs</h2>
         <div class="log-controls">
             <div class="sources">
                 <button data-log="api.ndjson" class="active">api.ndjson</button>
@@ -633,11 +755,44 @@ Import-Certificate -FilePath "$env:USERPROFILE\\Downloads\\caddy-root.crt" -Cert
 </div>
 
 <script>
+const SLUG = ${JSON.stringify(SLUG)};
 const groups = { app: document.getElementById('group-app'), obs: document.getElementById('group-obs'), search: document.getElementById('group-search'), data: document.getElementById('group-data') };
 const lastRefresh = document.getElementById('last-refresh');
 const logEl = document.getElementById('log');
 const toast = document.getElementById('toast');
 let currentLogES = null;
+
+/**
+ * Catalog of the Grafana dashboards committed under docker/observability/grafana/dashboards/.
+ * UIDs are deterministic — Grafana serves them from /d/<uid> regardless of which slug a spin
+ * carries, so this list works on every machine without per-spin templating. Adding a dashboard?
+ * Drop it in the dashboards dir + add an entry here so it shows up on the homepage.
+ */
+const DASHBOARDS = [
+    { uid: 'calibra-api-overview', title: 'API overview', desc: 'Request rate, p95 latency, error ratio, recent error logs.', icon: '📊', accent: 'rgba(110, 168, 254, 0.18)' },
+    { uid: 'calibra-api-by-route', title: 'API by route', desc: 'Top routes by traffic, latency, errors. Status code mix.', icon: '🧭', accent: 'rgba(167, 139, 250, 0.18)' },
+    { uid: 'calibra-checkout-payments', title: 'Checkout & payments', desc: 'Per-gateway attempt rate + success ratio. Callback latency.', icon: '💳', accent: 'rgba(52, 211, 153, 0.18)' },
+    { uid: 'calibra-orders-inventory', title: 'Orders & inventory', desc: 'Transitions, finalizations, movements, oversell attempts.', icon: '📦', accent: 'rgba(251, 191, 36, 0.18)' },
+    { uid: 'calibra-cache-queue', title: 'Cache & queue', desc: 'Hit ratio per tag. Queue depth + throughput + failure ratio.', icon: '⚙️', accent: 'rgba(244, 114, 182, 0.18)' },
+    { uid: 'calibra-auth-ratelimits', title: 'Auth & rate limits', desc: 'Login outcomes, throttles per limiter, brute-force signal.', icon: '🔐', accent: 'rgba(239, 68, 68, 0.18)' },
+    { uid: 'calibra-node-runtime', title: 'Node runtime', desc: 'Event-loop lag, heap, RSS, CPU, active handles, uptime.', icon: '⏱️', accent: 'rgba(56, 189, 248, 0.18)' },
+    { uid: 'calibra-imports-exports', title: 'Imports & exports', desc: 'Row throughput, error rows, job durations, recent failures.', icon: '↕️', accent: 'rgba(196, 181, 253, 0.18)' },
+];
+
+function renderDashboardCards() {
+    const grid = document.getElementById('dashboards-grid');
+    if (!grid) return;
+    const port = readMetaCaddyPort();
+    const base = 'https://grafana.' + SLUG + '.spin.localhost:' + port;
+    grid.innerHTML = DASHBOARDS.map(d =>
+        '<a class="dashboard-card" style="--card-accent: ' + d.accent + '" href="' + base + '/d/' + d.uid + '/" target="_blank" rel="noopener">' +
+        '<span class="dash-icon">' + d.icon + '</span>' +
+        '<div class="dash-title">' + d.title + '</div>' +
+        '<div class="dash-desc">' + d.desc + '</div>' +
+        '<div class="dash-meta"><span class="badge">' + d.uid.replace(/^calibra-/, '') + '</span><span class="arrow">→</span></div>' +
+        '</a>'
+    ).join('');
+}
 
 function showToast(message, isError = false) {
     toast.textContent = message;
@@ -878,6 +1033,7 @@ document.querySelectorAll('.copy').forEach(btn => {
     });
 });
 
+renderDashboardCards();
 refreshStatus();
 setInterval(refreshStatus, 5000);
 startLogStream('api.ndjson');
