@@ -56,6 +56,14 @@ const couponFields = {
             }),
         )
         .optional(),
+    brand_constraints: vine
+        .array(
+            vine.object({
+                brand_id: vine.number().positive(),
+                mode: vine.enum(CONSTRAINT_MODES),
+            }),
+        )
+        .optional(),
     email_restrictions: vine.array(vine.string().trim().minLength(3).maxLength(320)).optional(),
 };
 

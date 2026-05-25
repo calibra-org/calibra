@@ -201,6 +201,16 @@ paths:
             $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
             $ref: "./admin/paths/coupons/coupons.post.yaml"
+    /api/v1/admin/coupons/counts:
+        get:
+            $ref: "./admin/paths/coupons/coupons-counts.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/coupons/code-check:
+        get:
+            $ref: "./admin/paths/coupons/coupons-code-check.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/coupons/batch:
         post:
             $ref: "./admin/paths/coupons/coupons-batch.post.yaml"
@@ -220,6 +230,9 @@ paths:
             $ref: "./admin/paths/coupons/coupons-id-redemptions.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/coupons/{id}/test:
+        post:
+            $ref: "./admin/paths/coupons/coupons-id-test.post.yaml"
 
     /api/v1/admin/insights/customers:
         get:

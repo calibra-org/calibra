@@ -1,0 +1,31 @@
+operationId: adminCouponsCounts
+summary: Coupon status counts (admin)
+description: >
+    Status tab buckets for the list page (`all`, `active`, `disabled`, `expired`, `scheduled`,
+    `used`, `trashed`, `expiring_soon`). Cache the response for ~30s client-side.
+tags: [Admin / Coupons]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+responses:
+    "200":
+        description: Coupon counts.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [all, active, disabled, expired, scheduled, used, trashed, expiring_soon]
+                            properties:
+                                all: { type: integer }
+                                active: { type: integer }
+                                disabled: { type: integer }
+                                expired: { type: integer }
+                                scheduled: { type: integer }
+                                used: { type: integer }
+                                trashed: { type: integer }
+                                expiring_soon: { type: integer }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

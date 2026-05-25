@@ -128,6 +128,23 @@ export class CartSchema extends BaseModel {
   declare userAgent: string | null
 }
 
+export class CouponBrandConstraintSchema extends BaseModel {
+  static $columns = ['brandId', 'couponId', 'createdAt', 'id', 'mode', 'updatedAt'] as const
+  $columns = CouponBrandConstraintSchema.$columns
+  @column()
+  declare brandId: bigint | number
+  @column()
+  declare couponId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare mode: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
 export class CouponCategoryConstraintSchema extends BaseModel {
   static $columns = ['categoryId', 'couponId', 'createdAt', 'id', 'mode', 'updatedAt'] as const
   $columns = CouponCategoryConstraintSchema.$columns

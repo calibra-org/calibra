@@ -5,14 +5,17 @@ import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
 
 import Coupon from "#models/coupon";
+import CouponBrandConstraint from "#models/coupon_brand_constraint";
 import CouponCategoryConstraint from "#models/coupon_category_constraint";
 import CouponEmailRestriction from "#models/coupon_email_restriction";
 import CouponProductConstraint from "#models/coupon_product_constraint";
 import CouponRedemption from "#models/coupon_redemption";
 import CouponTranslation from "#models/coupon_translation";
+import { runCouponTest } from "#services/coupon_test_runner";
 import { paginated, resource } from "#transformers/api_envelope";
 import CouponRedemptionTransformer from "#transformers/coupon_redemption_transformer";
-import CouponTransformer from "#transformers/coupon_transformer";
+import CouponTransformer, { type CouponListStats } from "#transformers/coupon_transformer";
+import { adminCouponTestValidator } from "#validators/coupons/coupon_test_validator";
 import { batchCouponValidator, createCouponValidator, updateCouponValidator } from "#validators/coupons/coupon_validator";
 
 const PAGE_SIZE_DEFAULT = 25;
@@ -36,13 +39,227 @@ export default class AdminCouponsController {
         );
         const status = ctx.request.input("status");
         const search = String(ctx.request.input("search", "")).trim();
+        const sortRaw = String(ctx.request.input("sort", "")).trim();
+        /** Tab keyword → the predicate the spec describes. Soft-deleted rows are normally excluded;
+         * `trashed` opts back into them, `any` shows everything. */
+        const tab = String(ctx.request.input("tab", "")).trim();
 
-        const query = Coupon.query().whereNull("deleted_at").orderBy("created_at", "desc");
+        const query = Coupon.query();
+
+        if (tab === "trashed") {
+            query.whereNotNull("deleted_at");
+        } else if (tab === "any") {
+            // both
+        } else {
+            query.whereNull("deleted_at");
+        }
+
+        const nowIso = DateTime.utc().toISO() ?? new Date().toISOString();
+        if (tab === "active") {
+            query
+                .where("status", "active")
+                .where((q) => q.whereNull("starts_at").orWhere("starts_at", "<=", nowIso))
+                .where((q) => q.whereNull("expires_at").orWhere("expires_at", ">=", nowIso));
+        } else if (tab === "disabled") {
+            query.where("status", "disabled");
+        } else if (tab === "expired") {
+            query.whereNotNull("expires_at").where("expires_at", "<", nowIso);
+        } else if (tab === "scheduled") {
+            query.whereNotNull("starts_at").where("starts_at", ">", nowIso);
+        }
+
         if (status) query.where("status", String(status));
-        if (search) query.whereILike("code", `%${search}%`);
+        if (search) {
+            const needle = `%${search}%`;
+            query.where((q) => {
+                q.whereILike("code", needle).orWhereExists((sub) => {
+                    sub.from("coupon_translations")
+                        .whereColumn("coupon_translations.coupon_id", "coupons.id")
+                        .whereILike("coupon_translations.description", needle);
+                });
+            });
+        }
+
+        const discountTypes = parseList(ctx.request.input("discount_type"));
+        if (discountTypes.length > 0) query.whereIn("discount_type", discountTypes);
+
+        applyBoolFilter(query, "free_shipping", ctx.request.input("free_shipping"));
+        applyBoolFilter(query, "individual_use", ctx.request.input("individual_use"));
+        applyBoolFilter(query, "exclude_sale_items", ctx.request.input("exclude_sale_items"));
+
+        const minAmountMin = numeric(ctx.request.input("min_amount_min"));
+        if (minAmountMin !== null) query.where("minimum_amount", ">=", minAmountMin);
+        const minAmountMax = numeric(ctx.request.input("min_amount_max"));
+        if (minAmountMax !== null) query.where("minimum_amount", "<=", minAmountMax);
+        const maxAmountMin = numeric(ctx.request.input("max_amount_min"));
+        if (maxAmountMin !== null) query.where("maximum_amount", ">=", maxAmountMin);
+        const maxAmountMax = numeric(ctx.request.input("max_amount_max"));
+        if (maxAmountMax !== null) query.where("maximum_amount", "<=", maxAmountMax);
+
+        const startsAfter = ctx.request.input("starts_after");
+        if (startsAfter) query.where("starts_at", ">=", String(startsAfter));
+        const startsBefore = ctx.request.input("starts_before");
+        if (startsBefore) query.where("starts_at", "<=", String(startsBefore));
+        const expiresAfter = ctx.request.input("expires_after");
+        if (expiresAfter) query.where("expires_at", ">=", String(expiresAfter));
+        const expiresBefore = ctx.request.input("expires_before");
+        if (expiresBefore) query.where("expires_at", "<=", String(expiresBefore));
+
+        if (truthy(ctx.request.input("expiring_soon"))) {
+            const horizon = DateTime.utc().plus({ days: 7 }).toISO() ?? new Date().toISOString();
+            query.whereNotNull("expires_at").where("expires_at", "<=", horizon).where("expires_at", ">=", nowIso);
+        }
+
+        if (truthy(ctx.request.input("has_product_constraints"))) {
+            query.whereExists((sub) =>
+                sub.from("coupon_product_constraints").whereColumn("coupon_product_constraints.coupon_id", "coupons.id"),
+            );
+        }
+        if (truthy(ctx.request.input("has_category_constraints"))) {
+            query.whereExists((sub) =>
+                sub.from("coupon_category_constraints").whereColumn("coupon_category_constraints.coupon_id", "coupons.id"),
+            );
+        }
+        if (truthy(ctx.request.input("has_email_restrictions"))) {
+            query.whereExists((sub) =>
+                sub.from("coupon_email_restrictions").whereColumn("coupon_email_restrictions.coupon_id", "coupons.id"),
+            );
+        }
+        const brandIds = parseList(ctx.request.input("brand")).map((s) => Number(s)).filter(Number.isFinite);
+        if (brandIds.length > 0) {
+            query.whereExists((sub) =>
+                sub
+                    .from("coupon_brand_constraints")
+                    .whereColumn("coupon_brand_constraints.coupon_id", "coupons.id")
+                    .whereIn("coupon_brand_constraints.brand_id", brandIds),
+            );
+        }
+
+        const redemptionsMin = numeric(ctx.request.input("redemptions_min"));
+        const redemptionsMax = numeric(ctx.request.input("redemptions_max"));
+        if (redemptionsMin !== null || redemptionsMax !== null) {
+            query.whereIn("coupons.id", (sub) => {
+                sub.from("coupon_redemptions")
+                    .select("coupon_id")
+                    .groupBy("coupon_id")
+                    .havingRaw(
+                        `count(*) ${redemptionsMin !== null && redemptionsMax !== null ? "BETWEEN ? AND ?" : redemptionsMin !== null ? ">= ?" : "<= ?"}`,
+                        redemptionsMin !== null && redemptionsMax !== null
+                            ? [redemptionsMin, redemptionsMax]
+                            : [redemptionsMin ?? redemptionsMax!],
+                    );
+            });
+        }
+
+        if (sortRaw.length > 0) {
+            const direction = sortRaw.startsWith("-") ? "desc" : "asc";
+            const column = sortRaw.replace(/^-/, "");
+            if (SORTABLE_COLUMNS.has(column)) query.orderBy(column, direction);
+        } else {
+            query.orderBy("created_at", "desc");
+        }
 
         const paginator = await query.paginate(page, perPage);
-        return paginated(CouponTransformer.transform(paginator.all()).useVariant("forList"), paginator);
+        const stats = await fetchCouponListStats(paginator.all().map((c) => Number(c.id)));
+        CouponTransformer.setStats(stats);
+        try {
+            return paginated(CouponTransformer.transform(paginator.all()).useVariant("forList"), paginator);
+        } finally {
+            CouponTransformer.setStats(new Map());
+        }
+    }
+
+    /** GET /api/v1/admin/coupons/counts — status tab buckets driven by the spec's predicate set. */
+    async counts(_ctx: HttpContext) {
+        const nowIso = DateTime.utc().toISO() ?? new Date().toISOString();
+        const horizonIso = DateTime.utc().plus({ days: 7 }).toISO() ?? nowIso;
+
+        const result = await db.rawQuery<{
+            rows: {
+                all: string;
+                active: string;
+                disabled: string;
+                expired: string;
+                scheduled: string;
+                used: string;
+                trashed: string;
+                expiring_soon: string;
+            }[];
+        }>(
+            `SELECT
+                COUNT(*) FILTER (WHERE deleted_at IS NULL) AS all,
+                COUNT(*) FILTER (WHERE deleted_at IS NULL
+                                   AND status = 'active'
+                                   AND (starts_at IS NULL OR starts_at <= ?)
+                                   AND (expires_at IS NULL OR expires_at >= ?)) AS active,
+                COUNT(*) FILTER (WHERE deleted_at IS NULL AND status = 'disabled') AS disabled,
+                COUNT(*) FILTER (WHERE deleted_at IS NULL AND expires_at IS NOT NULL AND expires_at < ?) AS expired,
+                COUNT(*) FILTER (WHERE deleted_at IS NULL AND starts_at IS NOT NULL AND starts_at > ?) AS scheduled,
+                COUNT(*) FILTER (WHERE deleted_at IS NULL
+                                   AND EXISTS (
+                                       SELECT 1 FROM coupon_redemptions cr WHERE cr.coupon_id = coupons.id
+                                   )) AS used,
+                COUNT(*) FILTER (WHERE deleted_at IS NOT NULL) AS trashed,
+                COUNT(*) FILTER (WHERE deleted_at IS NULL
+                                   AND expires_at IS NOT NULL
+                                   AND expires_at BETWEEN ? AND ?) AS expiring_soon
+             FROM coupons`,
+            [nowIso, nowIso, nowIso, nowIso, nowIso, horizonIso],
+        );
+
+        const row = result.rows[0];
+        return {
+            data: {
+                all: Number(row?.all ?? 0),
+                active: Number(row?.active ?? 0),
+                disabled: Number(row?.disabled ?? 0),
+                expired: Number(row?.expired ?? 0),
+                scheduled: Number(row?.scheduled ?? 0),
+                used: Number(row?.used ?? 0),
+                trashed: Number(row?.trashed ?? 0),
+                expiring_soon: Number(row?.expiring_soon ?? 0),
+            },
+        };
+    }
+
+    /**
+     * GET /api/v1/admin/coupons/code-check?code= — uniqueness probe for the editor. Returns
+     * `available: true` when no other coupon (live or trashed) uses the code, and a suggested
+     * alternative when it's taken (`<code>-2`, `<code>-3`, …).
+     */
+    async codeCheck(ctx: HttpContext) {
+        const code = String(ctx.request.input("code", "")).trim().toUpperCase();
+        if (code.length < 2 || code.length > 64) {
+            return { data: { available: false, suggestion: null, reason: "invalid_length" } };
+        }
+        const existing = await Coupon.query().where("code", code).first();
+        if (!existing) return { data: { available: true, suggestion: null } };
+
+        let suggestion = "";
+        for (let n = 2; n < 50; n += 1) {
+            const candidate = `${code}-${n}`;
+            const taken = await Coupon.query().where("code", candidate).first();
+            if (!taken) {
+                suggestion = candidate;
+                break;
+            }
+        }
+        return { data: { available: false, suggestion: suggestion || null } };
+    }
+
+    /**
+     * POST /api/v1/admin/coupons/:id/test — runs the cart-side eligibility logic against a
+     * synthetic cart without writing to the database. Useful from the editor's "Quick test" panel
+     * before flipping a coupon live. The reason / calculation shape mirrors what the storefront
+     * cart-apply endpoint would return.
+     */
+    async test(ctx: HttpContext) {
+        const couponId = Number(ctx.params.id);
+        const payload = await ctx.request.validateUsing(adminCouponTestValidator);
+        const coupon = await this.loadWithRelations(couponId);
+        if (!coupon) throw notFound();
+        const result = await runCouponTest(coupon, payload, ctx.i18n);
+        return { data: result };
     }
 
     async show(ctx: HttpContext) {
@@ -248,6 +465,19 @@ export default class AdminCouponsController {
                 );
             }
         }
+        if (payload.brand_constraints !== undefined) {
+            await CouponBrandConstraint.query({ client: trx }).where("coupon_id", Number(couponId)).delete();
+            for (const c of payload.brand_constraints ?? []) {
+                await CouponBrandConstraint.create(
+                    {
+                        couponId,
+                        brandId: c.brand_id,
+                        mode: c.mode,
+                    },
+                    { client: trx },
+                );
+            }
+        }
         if (payload.email_restrictions !== undefined) {
             await CouponEmailRestriction.query({ client: trx }).where("coupon_id", Number(couponId)).delete();
             for (const pattern of payload.email_restrictions ?? []) {
@@ -262,9 +492,96 @@ export default class AdminCouponsController {
             .preload("translations")
             .preload("productConstraints")
             .preload("categoryConstraints")
+            .preload("brandConstraints")
             .preload("emailRestrictions")
             .first();
     }
+}
+
+const SORTABLE_COLUMNS = new Set(["code", "discount_type", "amount_minor", "amount_percent", "starts_at", "expires_at", "created_at"]);
+
+function parseList(input: unknown): string[] {
+    if (Array.isArray(input)) return input.map(String).filter((s) => s.length > 0);
+    if (typeof input === "string" && input.length > 0) {
+        return input.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+    }
+    return [];
+}
+
+function truthy(input: unknown): boolean {
+    return input === true || input === "true" || input === "1" || input === 1;
+}
+
+function falsy(input: unknown): boolean {
+    return input === false || input === "false" || input === "0" || input === 0;
+}
+
+function applyBoolFilter(
+    query: ReturnType<typeof Coupon.query>,
+    column: string,
+    input: unknown,
+): void {
+    if (truthy(input)) query.where(column, true);
+    else if (falsy(input)) query.where(column, false);
+}
+
+function numeric(input: unknown): number | null {
+    if (input === null || input === undefined || input === "") return null;
+    const n = Number(input);
+    return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * One aggregate query per page: counts of constraints / redemptions / recent redemptions plus
+ * the fa/en descriptions for every coupon id. The cost is a single query no matter the page
+ * size, so list rendering stays O(1) round-trips.
+ */
+async function fetchCouponListStats(ids: number[]): Promise<Map<number, CouponListStats>> {
+    const out = new Map<number, CouponListStats>();
+    if (ids.length === 0) return out;
+
+    const result = await db.rawQuery<{
+        rows: {
+            coupon_id: string | number;
+            products_count: string | number;
+            categories_count: string | number;
+            brands_count: string | number;
+            emails_count: string | number;
+            redemptions_count: string | number;
+            recent_redemptions_7d: string | number;
+            description_fa: string | null;
+            description_en: string | null;
+        }[];
+    }>(
+        `SELECT
+            c.id AS coupon_id,
+            (SELECT COUNT(*) FROM coupon_product_constraints WHERE coupon_id = c.id) AS products_count,
+            (SELECT COUNT(*) FROM coupon_category_constraints WHERE coupon_id = c.id) AS categories_count,
+            (SELECT COUNT(*) FROM coupon_brand_constraints WHERE coupon_id = c.id) AS brands_count,
+            (SELECT COUNT(*) FROM coupon_email_restrictions WHERE coupon_id = c.id) AS emails_count,
+            (SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id = c.id) AS redemptions_count,
+            (SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id = c.id
+                                                       AND redeemed_at >= now() - interval '7 days') AS recent_redemptions_7d,
+            (SELECT description FROM coupon_translations WHERE coupon_id = c.id AND locale = 'fa' LIMIT 1) AS description_fa,
+            (SELECT description FROM coupon_translations WHERE coupon_id = c.id AND locale = 'en' LIMIT 1) AS description_en
+         FROM coupons c
+         WHERE c.id = ANY (?::bigint[])`,
+        [ids],
+    );
+
+    for (const row of result.rows) {
+        out.set(Number(row.coupon_id), {
+            productConstraintsCount: Number(row.products_count ?? 0),
+            categoryConstraintsCount: Number(row.categories_count ?? 0),
+            brandConstraintsCount: Number(row.brands_count ?? 0),
+            emailRestrictionsCount: Number(row.emails_count ?? 0),
+            redemptionsCount: Number(row.redemptions_count ?? 0),
+            recentRedemptions7d: Number(row.recent_redemptions_7d ?? 0),
+            descriptionFa: row.description_fa,
+            descriptionEn: row.description_en,
+        });
+    }
+    return out;
 }
 
 function notFound(): Exception {

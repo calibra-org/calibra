@@ -2,28 +2,60 @@ import { BaseTransformer } from "@adonisjs/core/transformers";
 
 import type Coupon from "#models/coupon";
 
+/** Per-row aggregate sidecar attached via `setStats` before serialization. */
+export interface CouponListStats {
+    productConstraintsCount: number;
+    categoryConstraintsCount: number;
+    brandConstraintsCount: number;
+    emailRestrictionsCount: number;
+    redemptionsCount: number;
+    recentRedemptions7d: number;
+    descriptionFa: string | null;
+    descriptionEn: string | null;
+}
+
 /**
  * Owns the response shape for the `/admin/coupons` resource. Storefront-facing applied-coupon
  * lines are rendered inline by {@link CartTransformer} (the cart view already aggregates per-coupon
  * discount totals from {@link DiscounterResult}) — this transformer is admin-only.
  */
 export default class CouponTransformer extends BaseTransformer<Coupon> {
+    private static statsByCoupon = new Map<number, CouponListStats>();
+
+    /** Inject a per-row aggregate sidecar so `forList` can surface count + description fields. */
+    static setStats(statsByCoupon: Map<number, CouponListStats>) {
+        CouponTransformer.statsByCoupon = statsByCoupon;
+    }
+
     toObject() {
         return this.summary();
     }
 
     /**
-     * Compact row for admin index / lookup screens — no constraint sets, no translations. Keeps
-     * the payload small enough to ship paginated lists without preloading every relationship.
+     * Compact row for admin index / lookup screens. Sidecar stats (constraint + redemption counts
+     * + recent redemptions in the last 7 days) come from the list-controller aggregate query;
+     * missing entries default to zero so the shape stays stable even when stats weren't loaded.
      */
     forList() {
-        return this.summary();
+        const sidecar = CouponTransformer.statsByCoupon.get(Number(this.resource.id));
+        return {
+            ...this.summary(),
+            product_constraints_count: sidecar?.productConstraintsCount ?? 0,
+            category_constraints_count: sidecar?.categoryConstraintsCount ?? 0,
+            brand_constraints_count: sidecar?.brandConstraintsCount ?? 0,
+            email_restrictions_count: sidecar?.emailRestrictionsCount ?? 0,
+            redemptions_count: sidecar?.redemptionsCount ?? 0,
+            recent_redemptions_7d: sidecar?.recentRedemptions7d ?? 0,
+            description_fa: sidecar?.descriptionFa ?? null,
+            description_en: sidecar?.descriptionEn ?? null,
+        };
     }
 
     /**
      * Full admin view including every constraint and translation. Caller must preload
-     * `translations`, `productConstraints`, `categoryConstraints`, and `emailRestrictions` before
-     * passing the model in; missing relationships render as empty arrays.
+     * `translations`, `productConstraints`, `categoryConstraints`, `brandConstraints`, and
+     * `emailRestrictions` before passing the model in; missing relationships render as empty
+     * arrays.
      */
     forAdmin() {
         const coupon = this.resource;
@@ -39,6 +71,10 @@ export default class CouponTransformer extends BaseTransformer<Coupon> {
             })),
             category_constraints: (coupon.categoryConstraints ?? []).map((row) => ({
                 category_id: Number(row.categoryId),
+                mode: row.mode,
+            })),
+            brand_constraints: (coupon.brandConstraints ?? []).map((row) => ({
+                brand_id: Number(row.brandId),
                 mode: row.mode,
             })),
             email_restrictions: (coupon.emailRestrictions ?? []).map((row) => row.emailPattern),
