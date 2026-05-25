@@ -290,7 +290,7 @@ async function doctor(args) {
             `  alertmanager https://alerts.${slug}.spin.localhost ${(await probeViaCaddy(meta, "alerts", "/-/ready")) ? green("up") : red("down")}`,
         );
         log(
-            `  uptime kuma  https://uptime.${slug}.spin.localhost ${(await probeViaCaddy(meta, "uptime", "/")) ? green("up") : red("down")}`,
+            `  uptime kuma  https://uptime.${slug}.spin.localhost ${(await probeViaCaddy(meta, "uptime", "/", [200, 302])) ? green("up") : red("down")}`,
         );
     }
     log(`  compose      project=${meta.composeProject}`);
@@ -843,13 +843,17 @@ async function ensureContainers(meta) {
     const env = composeEnv(meta);
     const files = composeFiles(meta);
     /**
-     * Skip the start when the foundational services are already responding. We probe DB +
-     * pgAdmin as before — checking every container would be too brittle (Promtail and
-     * Alertmanager are quiet, don't always listen on a host port). If those two are up the
-     * spin's bones are healthy; the readiness loop below picks up partial restarts of the
-     * observability layer.
+     * Skip the start only when EVERY required layer is already responding. DB + pgAdmin
+     * signal the foundational layer; for prod-parity spins we also require Caddy's HTTPS
+     * port — it's the bellwether for the observability + meili + glitchtip stack because
+     * it can't be up without the network being right. Without this check the shortcut
+     * would silently bypass `compose up` on a partially-bootstrapped spin (e.g. one that
+     * had its meta upgraded to the new layout without the new compose stack coming up
+     * yet) and the new layer would never start.
      */
-    if ((await isPortListening(meta.ports.db)) && (await isPortListening(meta.ports.pgadmin))) {
+    const foundationUp = (await isPortListening(meta.ports.db)) && (await isPortListening(meta.ports.pgadmin));
+    const observabilityUp = isLegacyObservability(meta) ? true : await isPortListening(requirePort(meta, "caddyHttps"));
+    if (foundationUp && observabilityUp) {
         step("containers", "running");
         return;
     }
@@ -891,23 +895,47 @@ async function ensureContainers(meta) {
     await waitForPort(requirePort(meta, "caddyHttps"), 30_000, "caddy");
 
     step("containers", "wait for meilisearch");
+    /** Meilisearch publishes its host port directly — probe localhost, not via Caddy. */
     await waitForHttp(`http://localhost:${requirePort(meta, "meilisearch")}/health`, 30_000, "meilisearch");
 
+    /**
+     * Everything past here is container-only and only reachable via Caddy from the host.
+     * The probe goes through Caddy's HTTPS port with `--resolve` so SNI matches the cert
+     * for the right hostname and the proxy routes by Host. `--insecure` because Caddy's
+     * local CA isn't trusted in CI environments that haven't run `caddy trust`.
+     */
     step("containers", "wait for prometheus");
-    await waitForHttp(`http://localhost:${requirePort(meta, "caddyHttps")}/-/ready`, 30_000, "prometheus", {
-        host: `prom.${meta.slug}.spin.localhost`,
-    });
+    await waitForCaddyHttp(meta, "prom", "/-/ready", 30_000, "prometheus");
 
     step("containers", "wait for grafana");
-    await waitForHttp(`http://localhost:${requirePort(meta, "caddyHttps")}/api/health`, 30_000, "grafana", {
-        host: `grafana.${meta.slug}.spin.localhost`,
-    });
+    await waitForCaddyHttp(meta, "grafana", "/api/health", 60_000, "grafana");
 
     step("containers", "wait for glitchtip (django migrations on first boot, ~60s)");
-    await waitForHttp(`http://localhost:${requirePort(meta, "caddyHttps")}/api/0/`, 120_000, "glitchtip", {
-        host: `errors.${meta.slug}.spin.localhost`,
-        acceptStatus: [200, 401, 403],
-    });
+    await waitForCaddyHttp(meta, "errors", "/api/0/", 180_000, "glitchtip", { acceptStatus: [200, 401, 403] });
+}
+
+/**
+ * Block until a Caddy-fronted service answers an acceptable status. Sharing implementation
+ * with {@link probeViaCaddy} (the doctor probe) so the readiness loop and the per-spin
+ * status report behave identically — a service that satisfies one satisfies the other.
+ *
+ * @param {SpinMeta} meta
+ * @param {string} subdomain
+ * @param {string} path
+ * @param {number} timeoutMs
+ * @param {string} label
+ * @param {{ acceptStatus?: number[] }} [opts]
+ */
+async function waitForCaddyHttp(meta, subdomain, path, timeoutMs, label, opts = {}) {
+    const accept = opts.acceptStatus ?? [200];
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        if (await probeViaCaddy(meta, subdomain, path, accept)) return;
+        await sleep(1_000);
+    }
+    throw new Error(
+        `${label} did not respond on https://${subdomain}.${meta.slug}.spin.localhost${path} within ${Math.round(timeoutMs / 1000)}s — check container logs`,
+    );
 }
 
 /**
@@ -927,25 +955,22 @@ async function waitForPort(port, timeoutMs, label) {
 }
 
 /**
- * Block until an HTTP endpoint responds with an acceptable status. Used for services that
- * need more than a TCP-listen to be considered ready (Grafana boots its UI server before
- * its data layer; GlitchTip runs Django migrations before answering). When `host` is set
- * the request goes through Caddy on the host header — we use the published Caddy port and
- * `--insecure` for the internal-CA TLS.
+ * Block until a direct-host HTTP endpoint responds with an acceptable status. Used for
+ * services that publish their port to the host and need more than a TCP-listen to be
+ * considered ready (Meilisearch boots its TCP listener before `/health` answers).
  *
  * @param {string} url
  * @param {number} timeoutMs
  * @param {string} label
- * @param {{ host?: string, acceptStatus?: number[] }} [opts]
+ * @param {{ acceptStatus?: number[] }} [opts]
  */
 async function waitForHttp(url, timeoutMs, label, opts = {}) {
     const accept = opts.acceptStatus ?? [200, 204];
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
-        const args = ["-s", "-o", "/dev/null", "-w", "%{http_code}", "--max-time", "3", "--insecure"];
-        if (opts.host) args.push("-H", `Host: ${opts.host}`, "-k");
-        args.push(url);
-        const probe = spawnSync("curl", args, { encoding: "utf8" });
+        const probe = spawnSync("curl", ["-s", "-o", "/dev/null", "-w", "%{http_code}", "--max-time", "3", url], {
+            encoding: "utf8",
+        });
         const status = Number(probe.stdout.trim());
         if (accept.includes(status)) return;
         await sleep(1_000);
