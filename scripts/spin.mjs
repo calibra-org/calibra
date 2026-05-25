@@ -19,6 +19,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import net from "node:net";
+import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -33,6 +34,17 @@ const WORKTREES_DIR = join(MAIN_REPO_ROOT, ".claude/worktrees");
  * port allocation.
  */
 const STATE_DIR = join(MAIN_REPO_ROOT, ".claude/spin");
+
+/**
+ * Shared Caddy local-CA directory, host-bound across every spin on this machine. Caddy
+ * generates its root + intermediate here on first boot; subsequent spins reuse them, so
+ * trusting the root in the OS store once (`caddy trust` or the Windows import flow) is
+ * permanent — `pnpm spin stop --purge` no longer rotates the CA, and a new slug doesn't
+ * mean a new browser warning. Bound into the Caddy container by docker-compose.caddy.yml
+ * at the `pki/authorities/local` sub-path; leaf certs (per-hostname) still live in the
+ * per-spin `caddy_data` compose volume.
+ */
+const SHARED_CADDY_CA_DIR = join(homedir(), ".calibra/caddy-ca");
 
 /** Base of the per-spin port range. Picked deliberately outside the user-visible 3xxx family. */
 const PORT_BASE = 13000;
@@ -621,6 +633,13 @@ async function ensureObservabilityConfig(meta) {
      */
     await mkdir(join(meta.worktreePath, ".spin/data/promtail"), { recursive: true });
 
+    /**
+     * Shared Caddy CA dir. First spin on the host bootstraps the CA into here; every
+     * subsequent spin reuses it, which is the whole point — trust once, trust forever.
+     * `recursive: true` makes the call a no-op when the dir already exists.
+     */
+    await mkdir(SHARED_CADDY_CA_DIR, { recursive: true });
+
     await writeFile(join(configDir, "Caddyfile"), renderCaddyfile(meta));
     await writeFile(join(configDir, "prometheus.yml"), renderPrometheusConfig(meta));
     await writeFile(join(configDir, "promtail.yml"), renderPromtailConfig(meta));
@@ -1039,6 +1058,7 @@ function composeEnv(meta) {
          */
         OBSERVABILITY_DIR: join(meta.worktreePath, "docker/observability"),
         SPIN_DATA_DIR: join(meta.worktreePath, ".spin/data"),
+        CALIBRA_CADDY_CA_DIR: SHARED_CADDY_CA_DIR,
         DB_PORT: String(meta.ports.db),
         DB_USER: "calibra",
         DB_PASSWORD: "calibra",
