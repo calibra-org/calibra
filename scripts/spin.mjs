@@ -743,6 +743,12 @@ alerting:
         - targets:
             - alertmanager:9093
 
+# Recording + alert rule files are committed under docker/observability/prometheus/rules/ and
+# mounted into the prometheus container by the observability compose file. New rule files land
+# in that dir and pick up automatically (the wildcard scans on every reload).
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
 scrape_configs:
   - job_name: prometheus
     static_configs:

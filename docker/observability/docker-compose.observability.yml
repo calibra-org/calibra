@@ -22,6 +22,10 @@ services:
             - "--web.enable-lifecycle"
         volumes:
             - ${SPIN_CONFIG_DIR}/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            # Committed recording + alert rules — re-mounted read-only into every spin so a
+            # `caddy trust`-style "set up once, works everywhere" applies to alerting too. The
+            # generated prometheus.yml's `rule_files` glob picks up *.yml in here automatically.
+            - ${OBSERVABILITY_DIR}/prometheus/rules:/etc/prometheus/rules:ro
             - prometheus_data:/prometheus
         extra_hosts:
             - "host.docker.internal:host-gateway"

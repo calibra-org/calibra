@@ -1,0 +1,103 @@
+# Alert rules. Fire conservatively in dev (long `for:` windows, sensible thresholds) so the
+# Mailpit inbox doesn't fill up with flaps. Production tunes these per environment by overriding
+# the file — the names are stable.
+#
+# Severity labels:
+#   - page   — operator should look at this now (paging would be appropriate in prod)
+#   - warn   — interesting but not necessarily urgent; track during business hours
+
+groups:
+  - name: calibra_api
+    rules:
+      - alert: ApiHighErrorRate
+        expr: calibra:api_error_ratio:5m > 0.05
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: ">5% of api requests are 5xx for 5m"
+          description: "Current ratio: {{ $value | humanizePercentage }}"
+
+      - alert: ApiLatencyP95High
+        expr: calibra:api_latency_p95:5m > 1
+        for: 10m
+        labels:
+          severity: warn
+        annotations:
+          summary: "p95 latency above 1s on {{ $labels.route }}"
+          description: "p95 = {{ $value | humanizeDuration }}"
+
+  - name: calibra_business
+    rules:
+      - alert: PaymentGatewayDown
+        expr: |
+          calibra:payment_success_ratio:5m < 0.5
+          and on(gateway)
+          sum by (gateway) (rate(calibra_payment_attempts_total[5m])) > 0
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: "Payment gateway {{ $labels.gateway }} success ratio < 50%"
+          description: "Verified ratio (5m): {{ $value | humanizePercentage }}"
+
+      - alert: QueueBacklogGrowing
+        expr: max_over_time(calibra:queue_pending:gauge[10m]) > 1000
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "Queue {{ $labels.queue }} pending > 1000 jobs for 5m"
+          description: "Backlog: {{ $value }}"
+
+      - alert: QueueFailureRatioHigh
+        expr: calibra:queue_failure_ratio:5m > 0.25
+        for: 10m
+        labels:
+          severity: warn
+        annotations:
+          summary: "Queue {{ $labels.queue }} > 25% failures over 5m"
+
+      - alert: InventoryOversellAttempt
+        expr: increase(calibra_inventory_oversell_attempts_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: warn
+        annotations:
+          summary: "Oversell attempt — check inventory_service logs"
+          description: "Increase: {{ $value }}"
+
+      - alert: AuthBruteForce
+        expr: rate(calibra_auth_events_total{outcome="login_fail"}[1m]) > 5
+        for: 2m
+        labels:
+          severity: warn
+        annotations:
+          summary: "Login failure rate > 5/sec for 2m — possible brute force"
+
+      - alert: RateLimitThrottlingSpike
+        expr: rate(calibra_rate_limit_throttled_total[1m]) > 10
+        for: 5m
+        labels:
+          severity: warn
+        annotations:
+          summary: "Limiter {{ $labels.limiter }} throttling > 10/s"
+
+  - name: calibra_runtime
+    rules:
+      - alert: EventLoopLagHigh
+        expr: nodejs_eventloop_lag_seconds > 0.2
+        for: 5m
+        labels:
+          severity: warn
+        annotations:
+          summary: "Event loop lag > 200ms — api is CPU-bound or blocked"
+          description: "Lag: {{ $value | humanizeDuration }}"
+
+      - alert: HeapNearLimit
+        expr: calibra:heap_used_ratio:gauge > 0.9
+        for: 10m
+        labels:
+          severity: warn
+        annotations:
+          summary: "Heap > 90% of total — GC pressure or leak"

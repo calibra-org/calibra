@@ -1,0 +1,70 @@
+# Recording rules — pre-computed expressions every dashboard references. Reduces dashboard render
+# time (one cheap select-from-series instead of an aggregation) and keeps the PromQL DRY.
+#
+# Naming follows the `<system>:<metric>:<aggregation>` convention.
+# Every recording rule must collapse a high-cardinality slice into a stable metric the dashboards
+# can pivot on. Adding a new dashboard panel? Land the expression here first if it'll be reused.
+#
+# Evaluation interval is set to 30s; scrape interval is 15s (see spin.mjs renderPrometheusConfig)
+# so each recording sees roughly two scrapes per evaluation.
+
+groups:
+  - name: calibra_api_http
+    interval: 30s
+    rules:
+      - record: calibra:api_request_rate:1m
+        expr: sum by (status) (rate(http_requests_total[1m]))
+
+      - record: calibra:api_latency_p50:5m
+        expr: histogram_quantile(0.50, sum by (le, route) (rate(http_request_duration_seconds_bucket[5m])))
+
+      - record: calibra:api_latency_p95:5m
+        expr: histogram_quantile(0.95, sum by (le, route) (rate(http_request_duration_seconds_bucket[5m])))
+
+      - record: calibra:api_latency_p99:5m
+        expr: histogram_quantile(0.99, sum by (le, route) (rate(http_request_duration_seconds_bucket[5m])))
+
+      - record: calibra:api_error_ratio:5m
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(http_requests_total[5m])), 1)
+
+  - name: calibra_business
+    interval: 30s
+    rules:
+      - record: calibra:payment_success_ratio:5m
+        expr: |
+          sum by (gateway) (rate(calibra_payment_attempts_total{status="verified"}[5m]))
+          /
+          clamp_min(sum by (gateway) (rate(calibra_payment_attempts_total[5m])), 1)
+
+      - record: calibra:payment_attempt_rate:5m
+        expr: sum by (gateway, status) (rate(calibra_payment_attempts_total[5m]))
+
+      - record: calibra:cache_hit_ratio:5m
+        expr: |
+          sum by (tag) (rate(calibra_cache_operations_total{outcome="hit"}[5m]))
+          /
+          clamp_min(sum by (tag) (rate(calibra_cache_operations_total{outcome=~"hit|miss"}[5m])), 1)
+
+      - record: calibra:queue_pending:gauge
+        expr: calibra_queue_jobs_active
+
+      - record: calibra:queue_failure_ratio:5m
+        expr: |
+          sum by (queue) (rate(calibra_queue_jobs_total{outcome="failed"}[5m]))
+          /
+          clamp_min(sum by (queue) (rate(calibra_queue_jobs_total[5m])), 1)
+
+      - record: calibra:order_transition_rate:5m
+        expr: sum by (from, to, outcome) (rate(calibra_order_transitions_total[5m]))
+
+  - name: calibra_runtime
+    interval: 30s
+    rules:
+      - record: calibra:eventloop_lag_seconds:gauge
+        expr: nodejs_eventloop_lag_seconds
+
+      - record: calibra:heap_used_ratio:gauge
+        expr: nodejs_heap_size_used_bytes / clamp_min(nodejs_heap_size_total_bytes, 1)
