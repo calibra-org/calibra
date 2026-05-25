@@ -115,7 +115,11 @@
             "avgLifetimeSpend": "میانگین مجموع خرید",
             "avgOrderValue": "میانگین مبلغ سفارش",
             "pctWithAccount": "دارای حساب کاربری",
-            "delta30d": "از ۳۰ روز پیش"
+            "delta30d": "از ۳۰ روز پیش",
+            "sparklines": {
+                "total": "نمودار ۳۰ روزه تعداد مشتری‌های جدید",
+                "spend": "نمودار ۳۰ روزه درآمد دریافتی"
+            }
         }
     },
     "ProductsExport": {
@@ -2348,7 +2352,22 @@
             "deleteConfirm": "این کد تخفیف به سطل زباله منتقل می‌شود. ادامه می‌دهید؟"
         },
         "bulk": {
-            "selectedCount": "{count} مورد انتخاب شده"
+            "selectedCount": "{count} مورد انتخاب شده",
+            "clear": "پاک‌سازی انتخاب",
+            "activate": "فعال‌سازی",
+            "disable": "غیرفعال‌سازی",
+            "setExpiry": "تنظیم انقضا",
+            "setExpiryHint": "تاریخ انقضای {count} کد تخفیف انتخاب‌شده به این تاریخ تنظیم می‌شود.",
+            "expiryDate": "تاریخ انقضا",
+            "apply": "اعمال",
+            "cancel": "انصراف",
+            "delete": "انتقال به سطل زباله",
+            "duplicateHint": "تکثیر دسته‌جمعی به‌زودی فعال می‌شود",
+            "restore": "بازیابی",
+            "finalDelete": "حذف نهایی",
+            "confirmFinalDeleteTitle": "حذف نهایی کدهای تخفیف",
+            "confirmFinalDeleteBody": "این {count} کد به‌صورت نهایی حذف خواهد شد. برای تأیید عبارت «{keyword}» را تایپ کنید.",
+            "confirmDeleteKeyword": "حذف"
         },
         "sort": {
             "asc": "صعودی",
@@ -2370,21 +2389,53 @@
             "titleNew": "افزودن کد تخفیف جدید",
             "titleEdit": "ویرایش کد تخفیف «{code}»",
             "toggleStatus": "تغییر وضعیت",
+            "moreActions": "اقدامات بیشتر",
             "statusActive": "فعال",
             "statusDisabled": "غیرفعال",
             "trashedBanner": "این کد تخفیف حذف شده است و قابل ویرایش نیست.",
             "codeAvailable": "این کد در دسترس است",
             "codeTaken": "این کد قبلاً استفاده شده است",
             "codeTakenWithSuggestion": "این کد قبلاً استفاده شده است — پیشنهاد: {suggestion}",
+            "actions": {
+                "quickTest": "تست سریع",
+                "duplicate": "تکثیر کد",
+                "extendExpiry": "تمدید انقضا",
+                "delete": "انتقال به سطل زباله"
+            },
+            "dnd": {
+                "grabHandle": "جابه‌جایی بخش",
+                "collapse": "بستن بخش",
+                "expand": "گشودن بخش"
+            },
             "sections": {
                 "general": "اطلاعات کلی",
                 "discount": "نوع و مقدار تخفیف",
                 "time": "محدودیت زمانی",
                 "cart": "محدودیت‌های سبد",
+                "products": "محصولات شامل و مستثنی",
+                "categories": "دسته‌بندی‌های شامل و مستثنی",
+                "brands": "برندهای شامل و مستثنی",
                 "emails": "محدودیت ایمیل",
                 "usageLimits": "محدودیت تعداد استفاده",
                 "liveStats": "آمار استفاده",
                 "redemptions": "تاریخچه استفاده"
+            },
+            "pickers": {
+                "includeTab": "شامل",
+                "excludeTab": "مستثنی",
+                "productHint": "محصولات این کد تخفیف را محدود کنید.",
+                "categoryHint": "دسته‌بندی‌های هدف یا مستثنی‌شده را انتخاب کنید.",
+                "brandHint": "برندهای هدف یا مستثنی‌شده را انتخاب کنید.",
+                "addProduct": "افزودن محصول",
+                "addCategory": "افزودن دسته‌بندی",
+                "addBrand": "افزودن برند",
+                "searchProducts": "جست‌وجو در محصولات…",
+                "searchCategories": "جست‌وجو در دسته‌ها…",
+                "searchBrands": "جست‌وجو در برندها…",
+                "noResults": "موردی پیدا نشد",
+                "loading": "در حال بارگذاری…",
+                "clearAll": "پاک‌سازی همه",
+                "remove": "حذف"
             },
             "fields": {
                 "code": "کد",
@@ -2394,8 +2445,13 @@
                 "descriptionEn": "توضیحات (انگلیسی)",
                 "amountPercent": "مقدار تخفیف (٪)",
                 "amountMinor": "مبلغ تخفیف (تومان)",
+                "freeShippingOnly": "این کد فقط حمل و نقل را رایگان می‌کند. برای آن مقداری وارد نکنید.",
                 "startsAt": "تاریخ شروع",
                 "expiresAt": "تاریخ انقضا",
+                "preset24h": "۲۴ ساعت",
+                "preset7d": "۷ روز",
+                "preset30d": "۳۰ روز",
+                "presetEndOfMonth": "تا پایان ماه",
                 "minimumAmount": "حداقل مبلغ سبد",
                 "maximumAmount": "حداکثر مبلغ سبد",
                 "individualUse": "استفاده انفرادی",
@@ -2410,11 +2466,14 @@
                 "usageLimitPerUser": "محدودیت برای هر کاربر",
                 "unlimited": "نامحدود",
                 "emailsHint": "این کد فقط برای ایمیل‌های زیر کار می‌کند. خالی گذاشتن یعنی بدون محدودیت.",
-                "emailsAdd": "افزودن ایمیل"
+                "emailsAdd": "افزودن ایمیل",
+                "emailsRemove": "حذف ایمیل"
             },
             "stats": {
                 "usageCount": "تعداد استفاده‌های ثبت‌شده",
-                "recent7d": "۷ روز اخیر"
+                "recent7d": "۷ روز اخیر",
+                "limit": "سقف کل",
+                "perUser": "سقف هر کاربر"
             },
             "redemptionsEmpty": "هنوز استفاده‌ای از این کد ثبت نشده است.",
             "dirtyBar": {
@@ -2422,6 +2481,46 @@
                 "create": "ایجاد و ذخیره",
                 "cancel": "انصراف",
                 "dirty": "{count} تغییر ذخیره‌نشده"
+            }
+        },
+        "duplicateDialog": {
+            "title": "تکثیر کد تخفیف",
+            "description": "یک نسخه از «{code}» با کد جدید ساخته می‌شود. وضعیت پیش‌فرض غیرفعال خواهد بود تا قبل از فعال‌سازی بتوانید مرور کنید.",
+            "fields": {
+                "code": "کد جدید"
+            },
+            "codeTaken": "این کد قبلاً استفاده شده است",
+            "codeTakenWithSuggestion": "این کد قبلاً استفاده شده است — پیشنهاد: {suggestion}",
+            "cancel": "انصراف",
+            "duplicate": "ساخت نسخه"
+        },
+        "expirySheet": {
+            "title": "تنظیم تاریخ انقضا",
+            "description": "تاریخ انقضای این کد را تغییر دهید یا روی بدون انقضا قرار دهید.",
+            "neverExpires": "بدون انقضا",
+            "neverExpiresHint": "اگر فعال باشد، این کد هیچ‌گاه منقضی نمی‌شود.",
+            "date": "تاریخ انقضا",
+            "cancel": "انصراف",
+            "apply": "اعمال"
+        },
+        "quickTest": {
+            "title": "تست سریع کد تخفیف",
+            "description": "این کد را روی یک سبد نمونه تست کنید — هیچ تغییری در دیتا ذخیره نمی‌شود.",
+            "products": "محصولات سبد",
+            "addProduct": "افزودن محصول",
+            "removeItem": "حذف آیتم",
+            "email": "ایمیل خریدار",
+            "country": "کشور",
+            "runTest": "اجرای تست",
+            "close": "بستن",
+            "eligibleBadge": "این کد قابل استفاده است",
+            "ineligibleBadge": "این کد قابل استفاده نیست",
+            "unknownReason": "دلیل نامشخص",
+            "calc": {
+                "subtotal": "جمع کالاها",
+                "discount": "تخفیف",
+                "shipping": "هزینه ارسال",
+                "total": "مبلغ نهایی"
             }
         },
         "detail": {

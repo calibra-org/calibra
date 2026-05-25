@@ -28,6 +28,7 @@ import {
 } from "#/lib/queries/coupons";
 import type { AdminCoupon, CouponTabKey } from "#/lib/types";
 
+import { CouponBulkActions } from "./bulk-actions";
 import { buildCouponColumns } from "./columns";
 
 const TABLE_ID = "admin.coupons.list";
@@ -258,6 +259,9 @@ export function CouponsListClient() {
                 onRowOpen={(row) => {
                     window.location.href = `/coupons/${row.id}`;
                 }}
+                bulkActions={({ selectedIds, clearSelection }) => (
+                    <CouponBulkActions selectedIds={selectedIds} onClear={clearSelection} tab={tab} t={(key, values) => t(key, values)} />
+                )}
                 renderCard={(row) => (
                     <Link href={`/coupons/${row.original.id}` as never} className="flex flex-col gap-1">
                         <div className="flex items-center justify-between">

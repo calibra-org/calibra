@@ -4,6 +4,7 @@ import type { Locale } from "@calibra/shared/i18n";
 import { ArrowUpRight, TrendingDown, TrendingUp, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { Sparkline } from "#/components/Sparkline";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { Progress } from "#/components/ui/progress";
@@ -67,6 +68,10 @@ function InsightsBody({
     locale: Locale;
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
+    /** Sparkline tones follow the delta sign, except spend which uses positive when growing. */
+    const totalTone = data.totalDelta30d >= 0 ? "positive" : "negative";
+    const spendTone = data.avgLifetimeSpendDelta30dPct >= 0 ? "positive" : "negative";
+
     return (
         <>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -77,6 +82,9 @@ function InsightsBody({
                     deltaUnit="absolute"
                     locale={locale}
                     comparison={t("delta30d")}
+                    sparkline={data.sparklines.total}
+                    sparklineTone={totalTone}
+                    sparklineLabel={t("sparklines.total")}
                 />
                 <Kpi
                     label={t("avgOrderCount")}
@@ -93,6 +101,9 @@ function InsightsBody({
                     deltaUnit="percent"
                     locale={locale}
                     comparison={t("delta30d")}
+                    sparkline={data.sparklines.spend}
+                    sparklineTone={spendTone}
+                    sparklineLabel={t("sparklines.spend")}
                 />
                 <Kpi
                     label={t("avgOrderValue")}
@@ -124,9 +135,13 @@ interface KpiProps {
     deltaUnit: "absolute" | "percent";
     comparison: string;
     locale: Locale;
+    /** Optional 30-day daily series — rendered as an inline SVG sparkline behind the value. */
+    sparkline?: number[];
+    sparklineTone?: "positive" | "negative" | "neutral";
+    sparklineLabel?: string;
 }
 
-function Kpi({ label, value, delta, deltaUnit, comparison, locale }: KpiProps) {
+function Kpi({ label, value, delta, deltaUnit, comparison, locale, sparkline, sparklineTone = "neutral", sparklineLabel }: KpiProps) {
     const isUp = delta >= 0;
     const TrendIcon = isUp ? TrendingUp : TrendingDown;
     const absDelta = Math.abs(delta);
@@ -135,7 +150,7 @@ function Kpi({ label, value, delta, deltaUnit, comparison, locale }: KpiProps) {
             ? `${formatNumber(Math.round(absDelta * 10) / 10, locale)}%`
             : formatNumber(Math.round(absDelta), locale);
     return (
-        <div className="flex flex-col gap-1 rounded-md border border-border bg-muted/30 px-3 py-3">
+        <div className="relative flex flex-col gap-1 overflow-hidden rounded-md border border-border bg-muted/30 px-3 py-3">
             <span className="text-muted-foreground text-xs">{label}</span>
             <span className="font-semibold text-lg tabular-nums">{value}</span>
             <span
@@ -149,6 +164,11 @@ function Kpi({ label, value, delta, deltaUnit, comparison, locale }: KpiProps) {
                 <span className="tabular-nums">{formatted}</span>
                 <span className="text-muted-foreground">{comparison}</span>
             </span>
+            {sparkline !== undefined && sparkline.length > 0 && (
+                <div className="pointer-events-none absolute inset-x-2 bottom-1 opacity-70">
+                    <Sparkline values={sparkline} width={120} height={24} tone={sparklineTone} ariaLabel={sparklineLabel} />
+                </div>
+            )}
         </div>
     );
 }
