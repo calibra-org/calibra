@@ -14,6 +14,12 @@ server.use([
     () => import("#middleware/container_bindings_middleware"),
     () => import("#middleware/force_json_response_middleware"),
     () => import("#middleware/detect_user_locale_middleware"),
+    /**
+     * Metrics middleware sits at the server level (before the router) so it observes
+     * every request, including unmatched 404s and authentication 401s. The `/metrics`
+     * scrape endpoint reads from the same in-memory store the middleware writes to.
+     */
+    () => import("#middleware/metrics_middleware"),
     () => import("@adonisjs/cors/cors_middleware"),
 ]);
 
