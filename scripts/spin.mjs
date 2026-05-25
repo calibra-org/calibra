@@ -110,8 +110,16 @@ const SUBCOMMANDS = {
     list,
     doctor,
     pr: ensurePr,
+    local,
+    url,
+    logs,
+    metrics,
+    alerts,
     help: printHelp,
 };
+
+/** Reserved slug for the in-place spin (`pnpm spin local`). One per machine. */
+const LOCAL_SLUG = "local";
 
 main().catch((err) => {
     console.error(`\n${red("✖")} ${err instanceof Error ? err.message : String(err)}`);
@@ -202,11 +210,34 @@ async function stop(args) {
  *
  * @param {string[]} _args
  */
-async function list(_args) {
-    if (!existsSync(STATE_DIR)) {
+async function list(args) {
+    const flags = parseFlags(args);
+    const rows = await collectListRows();
+    if (flags.json) {
+        process.stdout.write(`${JSON.stringify(rows, null, 2)}\n`);
+        return;
+    }
+    if (rows.length === 0) {
         log("(no spins)");
         return;
     }
+    const width = Math.max(...rows.map((r) => r.slug.length));
+    for (const row of rows) {
+        const statusColored =
+            row.status === "running" ? green(row.status) : row.status === "partial" ? yellow(row.status) : row.status;
+        const prLabel = row.pr ? `#${row.pr}` : "—";
+        log(`  ${row.slug.padEnd(width)}  ${statusColored}  admin=${row.admin}  api=${row.api}  pr=${prLabel}`);
+    }
+}
+
+/**
+ * Collect machine-readable rows for every persisted spin. Used by both the human-facing
+ * `list` rendering and the `--json` output that agents pipe into `jq`.
+ *
+ * @returns {Promise<Array<{slug: string, status: "running" | "partial" | "stopped", api: number, admin: number, pr: number | null, branch: string, composeProject: string}>>}
+ */
+async function collectListRows() {
+    if (!existsSync(STATE_DIR)) return [];
     const { readdir } = await import("node:fs/promises");
     const entries = await readdir(STATE_DIR);
     const rows = [];
@@ -215,22 +246,18 @@ async function list(_args) {
         const meta = JSON.parse(await readFile(join(STATE_DIR, entry), "utf8"));
         const apiUp = await isPortListening(meta.ports.api);
         const adminUp = await isPortListening(meta.ports.admin);
+        const status = apiUp && adminUp ? "running" : apiUp || adminUp ? "partial" : "stopped";
         rows.push({
             slug: meta.slug,
-            status: apiUp && adminUp ? green("running") : apiUp || adminUp ? yellow("partial") : "stopped",
+            status,
             api: meta.ports.api,
             admin: meta.ports.admin,
-            pr: meta.prNumber ? `#${meta.prNumber}` : "—",
+            pr: meta.prNumber ?? null,
+            branch: meta.branch ?? "(unknown)",
+            composeProject: meta.composeProject ?? `calibra-spin-${meta.slug}`,
         });
     }
-    if (rows.length === 0) {
-        log("(no spins)");
-        return;
-    }
-    const width = Math.max(...rows.map((r) => r.slug.length));
-    for (const row of rows) {
-        log(`  ${row.slug.padEnd(width)}  ${row.status}  admin=${row.admin}  api=${row.api}  pr=${row.pr}`);
-    }
+    return rows.sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
 /**
@@ -241,70 +268,273 @@ async function list(_args) {
  */
 async function doctor(args) {
     const slug = requireSlug(args[0]);
+    const flags = parseFlags(args.slice(1));
     const meta = await readMetaOrFail(slug);
-    log(cyan(`doctor ${slug}`));
-    log(`  worktree     ${meta.worktreePath} ${existsSync(meta.worktreePath) ? green("✓") : red("✗ missing")}`);
-    log(`  branch       ${meta.branch}`);
-    log(
-        `  api          http://localhost:${meta.ports.api} ${(await isPortListening(meta.ports.api)) ? green("up") : red("down")}`,
-    );
-    log(
-        `  admin        http://localhost:${meta.ports.admin} ${(await isPortListening(meta.ports.admin)) ? green("up") : red("down")}`,
-    );
-    log(`  db           localhost:${meta.ports.db} ${(await isPortListening(meta.ports.db)) ? green("up") : red("down")}`);
-    log(
-        `  pgadmin      http://localhost:${meta.ports.pgadmin} ${(await isPortListening(meta.ports.pgadmin)) ? green("up") : red("down")}`,
-    );
-    const mailpitWeb = requirePort(meta, "mailpitWeb");
+    const report = await collectDoctorReport(meta);
+    if (flags.json) {
+        process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+        return;
+    }
+    renderDoctorReport(report);
+}
+
+/**
+ * Probe every service the spin provisioned and return a flat JSON-friendly report. The text
+ * renderer above formats this for humans; agents read the JSON form via `--json`. Each entry
+ * has a stable `id` agents can grep for + a `status` of `"up" | "down" | "unknown"`.
+ *
+ * @param {SpinMeta} meta
+ */
+async function collectDoctorReport(meta) {
+    const slug = meta.slug;
+    const caddyHttps = requirePort(meta, "caddyHttps");
+    const dashboardUrl = `https://${slug}.spin.localhost:${caddyHttps}/`;
     const mailpitSmtp = requirePort(meta, "mailpitSmtp");
+    const mailpitWeb = requirePort(meta, "mailpitWeb");
     const redis = requirePort(meta, "redis");
     const redisinsight = requirePort(meta, "redisinsight");
     const adminer = requirePort(meta, "adminer");
-    const tag = isLegacyDevUi(meta) ? " (shared, legacy)" : "";
-    log(
-        `  mailpit      http://localhost:${mailpitWeb} ${(await isPortListening(mailpitSmtp)) ? green("up") : red("down")}${tag}`,
-    );
-    log(`  redis        localhost:${redis} ${(await isPortListening(redis)) ? green("up") : red("down")}${tag}`);
-    log(
-        `  redisinsight http://localhost:${redisinsight} ${(await isPortListening(redisinsight)) ? green("up") : red("down")}${tag}`,
-    );
-    log(
-        `  adminer      http://localhost:${adminer} ${(await isPortListening(adminer)) ? green("up") : red("down")}${tag} (queue_jobs)`,
-    );
-    const caddyHttps = requirePort(meta, "caddyHttps");
     const meili = requirePort(meta, "meilisearch");
-    const caddyOk = await isPortListening(caddyHttps);
-    log(`  caddy        https://*.${slug}.spin.localhost (port ${caddyHttps}) ${caddyOk ? green("up") : red("down")}`);
-    log(`  meilisearch  http://localhost:${meili} ${(await isPortListening(meili)) ? green("up") : red("down")}`);
-    log(
-        `  glitchtip    https://errors.${slug}.spin.localhost ${(await probeViaCaddy(meta, "errors", "/api/0/", [200, 401, 403])) ? green("up") : red("down")}${meta.glitchtipDsn ? "" : yellow(" (no DSN — run `pnpm spin pr` blurb)")}`,
-    );
-    log(
-        `  grafana      https://grafana.${slug}.spin.localhost ${(await probeViaCaddy(meta, "grafana", "/api/health")) ? green("up") : red("down")}`,
-    );
-    log(
-        `  prometheus   https://prom.${slug}.spin.localhost ${(await probeViaCaddy(meta, "prom", "/-/ready")) ? green("up") : red("down")}`,
-    );
-    log(
-        `  loki         https://loki.${slug}.spin.localhost ${(await probeViaCaddy(meta, "loki", "/ready")) ? green("up") : red("down")}`,
-    );
-    log(
-        `  tempo        https://tempo.${slug}.spin.localhost (OTLP on :${requirePort(meta, "tempo")}) ${(await probeViaCaddy(meta, "tempo", "/ready")) ? green("up") : red("down")}`,
-    );
-    log(
-        `  alertmanager https://alerts.${slug}.spin.localhost ${(await probeViaCaddy(meta, "alerts", "/-/ready")) ? green("up") : red("down")}`,
-    );
-    log(
-        `  uptime kuma  https://uptime.${slug}.spin.localhost ${(await probeViaCaddy(meta, "uptime", "/", [200, 302])) ? green("up") : red("down")}`,
-    );
-    log(`  compose      project=${meta.composeProject}`);
-    /**
-     * Show queue-worker status alongside infra — it's a tracked process (see `startServers`)
-     * and the importer/exporter wizards depend on it picking up dispatched jobs.
-     */
+    const tempo = requirePort(meta, "tempo");
     const queuePid = await readPidIfAlive(join(meta.worktreePath, ".spin/queue.pid"));
-    log(`  queue worker pid=${queuePid ?? "—"} ${queuePid !== null ? green("up") : red("down")}`);
-    log(`  PR           ${meta.prNumber ? `#${meta.prNumber}` : "—"}`);
+
+    const services = [];
+    /** Direct-host probes — TCP / HTTP on a bound port. */
+    services.push({
+        id: "api",
+        url: `http://localhost:${meta.ports.api}/health`,
+        status: (await isPortListening(meta.ports.api)) ? "up" : "down",
+    });
+    services.push({
+        id: "admin",
+        url: `http://localhost:${meta.ports.admin}/`,
+        status: (await isPortListening(meta.ports.admin)) ? "up" : "down",
+    });
+    services.push({
+        id: "web",
+        url: `http://localhost:${meta.ports.web}/`,
+        status: (await isPortListening(meta.ports.web)) ? "up" : "down",
+    });
+    services.push({
+        id: "db",
+        url: `postgres://localhost:${meta.ports.db}`,
+        status: (await isPortListening(meta.ports.db)) ? "up" : "down",
+    });
+    services.push({
+        id: "pgadmin",
+        url: `http://localhost:${meta.ports.pgadmin}/`,
+        status: (await isPortListening(meta.ports.pgadmin)) ? "up" : "down",
+    });
+    services.push({
+        id: "mailpit-smtp",
+        url: `smtp://localhost:${mailpitSmtp}`,
+        status: (await isPortListening(mailpitSmtp)) ? "up" : "down",
+    });
+    services.push({
+        id: "mailpit-web",
+        url: `http://localhost:${mailpitWeb}/`,
+        status: (await isPortListening(mailpitWeb)) ? "up" : "down",
+    });
+    services.push({ id: "redis", url: `redis://localhost:${redis}`, status: (await isPortListening(redis)) ? "up" : "down" });
+    services.push({
+        id: "redisinsight",
+        url: `http://localhost:${redisinsight}/`,
+        status: (await isPortListening(redisinsight)) ? "up" : "down",
+    });
+    services.push({
+        id: "adminer",
+        url: `http://localhost:${adminer}/`,
+        status: (await isPortListening(adminer)) ? "up" : "down",
+    });
+    services.push({ id: "caddy", url: dashboardUrl, status: (await isPortListening(caddyHttps)) ? "up" : "down" });
+    services.push({
+        id: "meilisearch",
+        url: `http://localhost:${meili}/health`,
+        status: (await isPortListening(meili)) ? "up" : "down",
+    });
+
+    /** Caddy-fronted observability surfaces — probed through the hostname. */
+    services.push({
+        id: "glitchtip",
+        url: `https://errors.${slug}.spin.localhost:${caddyHttps}/api/0/`,
+        status: (await probeViaCaddy(meta, "errors", "/api/0/", [200, 401, 403])) ? "up" : "down",
+    });
+    services.push({
+        id: "grafana",
+        url: `https://grafana.${slug}.spin.localhost:${caddyHttps}/`,
+        status: (await probeViaCaddy(meta, "grafana", "/api/health")) ? "up" : "down",
+    });
+    services.push({
+        id: "prometheus",
+        url: `https://prom.${slug}.spin.localhost:${caddyHttps}/`,
+        status: (await probeViaCaddy(meta, "prom", "/-/ready")) ? "up" : "down",
+    });
+    services.push({
+        id: "loki",
+        url: `https://loki.${slug}.spin.localhost:${caddyHttps}/`,
+        status: (await probeViaCaddy(meta, "loki", "/ready")) ? "up" : "down",
+    });
+    services.push({
+        id: "tempo",
+        url: `https://tempo.${slug}.spin.localhost:${caddyHttps}/`,
+        status: (await probeViaCaddy(meta, "tempo", "/ready")) ? "up" : "down",
+        note: `OTLP receiver on :${tempo}`,
+    });
+    services.push({
+        id: "alertmanager",
+        url: `https://alerts.${slug}.spin.localhost:${caddyHttps}/`,
+        status: (await probeViaCaddy(meta, "alerts", "/-/ready")) ? "up" : "down",
+    });
+    services.push({
+        id: "uptime-kuma",
+        url: `https://uptime.${slug}.spin.localhost:${caddyHttps}/`,
+        status: (await probeViaCaddy(meta, "uptime", "/", [200, 302])) ? "up" : "down",
+    });
+
+    return {
+        slug,
+        branch: meta.branch,
+        composeProject: meta.composeProject,
+        worktreePath: meta.worktreePath,
+        worktreeExists: existsSync(meta.worktreePath),
+        dashboardUrl,
+        pr: meta.prNumber ?? null,
+        prUrl: meta.prUrl ?? null,
+        ports: meta.ports,
+        services,
+        queueWorker: { pid: queuePid, status: queuePid !== null ? "up" : "down" },
+        legacyDevUi: isLegacyDevUi(meta),
+        glitchtipDsn: meta.glitchtipDsn ?? null,
+    };
+}
+
+/** Pretty-print {@link collectDoctorReport} output for terminal consumption. */
+function renderDoctorReport(report) {
+    const slug = report.slug;
+    log(cyan(`doctor ${slug}`));
+    log(`  worktree     ${report.worktreePath} ${report.worktreeExists ? green("✓") : red("✗ missing")}`);
+    log(`  branch       ${report.branch}`);
+    log(`  dashboard    ${report.dashboardUrl}`);
+    for (const svc of report.services) {
+        const colored = svc.status === "up" ? green("up") : red("down");
+        const note = svc.note ? ` ${svc.note}` : "";
+        log(`  ${svc.id.padEnd(13)}${svc.url} ${colored}${note}`);
+    }
+    log(`  compose      project=${report.composeProject}`);
+    log(`  queue worker pid=${report.queueWorker.pid ?? "—"} ${report.queueWorker.status === "up" ? green("up") : red("down")}`);
+    log(`  PR           ${report.pr ? `#${report.pr}` : "—"}`);
+    if (report.legacyDevUi) log(`  ${yellow("(legacy shared dev-ui ports — pre-spin layout)")}`);
+    if (!report.glitchtipDsn) log(`  ${yellow("glitchtip DSN missing — see one-time setup blurb in spin.md")}`);
+}
+
+/**
+ * `pnpm spin url <slug> <service>` — print a URL to stdout, no formatting, no headers, ready to
+ * pipe into curl / xdg-open / wget. Useful from `just` recipes and agents that need exactly the
+ * URL without grepping a pretty table. Without `<service>`, prints the dashboard URL.
+ *
+ * Recognised service names match {@link collectDoctorReport} `id`s (api, admin, web, db,
+ * pgadmin, mailpit-web, mailpit-smtp, redis, redisinsight, adminer, caddy, meilisearch,
+ * glitchtip, grafana, prometheus, loki, tempo, alertmanager, uptime-kuma) plus the aliases
+ * `dashboard`, `home`, `mail` (= mailpit-web), `mail-smtp` (= mailpit-smtp), `prom`,
+ * `meili`, `errors` (= glitchtip), `uptime` (= uptime-kuma).
+ *
+ * @param {string[]} args
+ */
+async function url(args) {
+    const slug = requireSlug(args[0]);
+    const requested = (args[1] ?? "dashboard").toLowerCase();
+    const meta = await readMetaOrFail(slug);
+    const report = await collectDoctorReport(meta);
+    if (requested === "dashboard" || requested === "home") {
+        process.stdout.write(`${report.dashboardUrl}\n`);
+        return;
+    }
+    const aliases = {
+        mail: "mailpit-web",
+        "mail-smtp": "mailpit-smtp",
+        smtp: "mailpit-smtp",
+        prom: "prometheus",
+        meili: "meilisearch",
+        errors: "glitchtip",
+        uptime: "uptime-kuma",
+    };
+    const wanted = aliases[requested] ?? requested;
+    const svc = report.services.find((s) => s.id === wanted);
+    if (!svc) {
+        const ids = report.services.map((s) => s.id).join(", ");
+        throw new Error(`unknown service "${requested}". Recognised: dashboard, ${ids}`);
+    }
+    process.stdout.write(`${svc.url}\n`);
+}
+
+/**
+ * `pnpm spin logs <slug> [--service <name>]` — print the absolute path to the log file an
+ * agent should `tail -f`. Defaults to the api ndjson stream (most useful for investigation —
+ * it's structured + level-tagged). Service names: `api.ndjson` (default), `api`, `admin`,
+ * `web`, `queue`, `agent`. Prints the path only; the agent picks how to consume it (`tail`,
+ * `less`, `jq`, …) so spin doesn't have to model every workflow.
+ *
+ * @param {string[]} args
+ */
+async function logs(args) {
+    const slug = requireSlug(args[0]);
+    const rest = args.slice(1);
+    const idx = rest.indexOf("--service");
+    const requested = (idx >= 0 ? rest[idx + 1] : rest[0]) ?? "api.ndjson";
+    const allowed = new Set(["api.ndjson", "api", "admin", "web", "queue", "agent"]);
+    if (!allowed.has(requested)) {
+        throw new Error(`unknown log stream "${requested}". Recognised: ${[...allowed].join(", ")}`);
+    }
+    const meta = await readMetaOrFail(slug);
+    const path =
+        requested === "api.ndjson"
+            ? join(meta.worktreePath, ".spin/logs/api.ndjson")
+            : join(meta.worktreePath, `.spin/logs/${requested}.log`);
+    process.stdout.write(`${path}\n`);
+}
+
+/**
+ * `pnpm spin metrics <slug>` — print the api's `/metrics` body straight to stdout so an agent
+ * can pipe it into `grep` / `awk` / `prometheus_client_python` without composing the URL by
+ * hand. Returns exit 0 on a successful scrape, exit 2 on connection failure (api down).
+ *
+ * @param {string[]} args
+ */
+async function metrics(args) {
+    const slug = requireSlug(args[0]);
+    const meta = await readMetaOrFail(slug);
+    const target = `http://localhost:${meta.ports.api}/metrics`;
+    const res = spawnSync("curl", ["-fsS", "--max-time", "5", target], { encoding: "utf8" });
+    if (res.status !== 0) {
+        process.stderr.write(`spin metrics: failed to scrape ${target} (${res.stderr.trim() || "no response"})\n`);
+        process.exit(2);
+    }
+    process.stdout.write(res.stdout);
+}
+
+/**
+ * `pnpm spin alerts <slug>` — query Prometheus `/api/v1/alerts` via the spin's Caddy
+ * hostname and dump the JSON. Same agent ergonomics as `metrics`: pipe straight into `jq`
+ * to inspect what's firing without remembering the per-spin hostname.
+ *
+ * @param {string[]} args
+ */
+async function alerts(args) {
+    const slug = requireSlug(args[0]);
+    const meta = await readMetaOrFail(slug);
+    const caddyHttps = requirePort(meta, "caddyHttps");
+    const target = `https://prom.${slug}.spin.localhost:${caddyHttps}/api/v1/alerts`;
+    const res = spawnSync(
+        "curl",
+        ["-fsS", "--insecure", "--resolve", `prom.${slug}.spin.localhost:${caddyHttps}:127.0.0.1`, "--max-time", "5", target],
+        { encoding: "utf8" },
+    );
+    if (res.status !== 0) {
+        process.stderr.write(`spin alerts: failed to query ${target} (${res.stderr.trim() || "no response"})\n`);
+        process.exit(2);
+    }
+    process.stdout.write(res.stdout);
+    if (!res.stdout.endsWith("\n")) process.stdout.write("\n");
 }
 
 /**
@@ -353,30 +583,152 @@ async function ensurePr(args) {
     log(green(`  ✓ PR #${meta.prNumber}`));
 }
 
+/**
+ * `pnpm spin local [<sub>]` — bring up the full prod-parity stack against the **current
+ * checkout**, without creating a worktree, branch, or PR. Designed for two use-cases:
+ *
+ *   1. Operators who want the full stack (observability + caddy + meilisearch + glitchtip
+ *      + db + redis + mailpit + adminer) without the worktree/PR ceremony.
+ *   2. **Agents** investigating a bug or shipping a hotfix on a branch they're already on —
+ *      no slug to invent, no PR side-effect, no port-block surprises.
+ *
+ * The slug is hard-coded to {@link LOCAL_SLUG} so one machine can have at most one in-place
+ * spin running. State, ports, and the agent's dashboard work the same as a worktree-based
+ * spin (`https://local.spin.localhost:<caddyHttps>`), and `pnpm spin local stop --purge` is
+ * the matching teardown.
+ *
+ * **Guardrail:** if `apps/api/.env` already exists and was NOT generated by spin (no header
+ * line), we refuse to start so we don't clobber operator customizations. Move/delete it
+ * first, or accept that spin will own the file.
+ *
+ * @param {string[]} args
+ */
+async function local(args) {
+    const sub = args[0] ?? "start";
+    if (sub === "start" || sub === "up" || sub === "bootstrap") {
+        await localStart(args.slice(1));
+    } else if (sub === "stop" || sub === "down") {
+        await stop([LOCAL_SLUG, ...args.slice(1)]);
+    } else if (sub === "status" || sub === "doctor") {
+        await doctor([LOCAL_SLUG, ...args.slice(1)]);
+    } else {
+        /** Default: no subcommand means "start". `pnpm spin local --with-web` is valid. */
+        await localStart(args);
+    }
+}
+
+/**
+ * @param {string[]} flagArgs
+ */
+async function localStart(flagArgs) {
+    const flags = parseFlags(flagArgs);
+    const meta = await loadOrInitLocalMeta();
+    const apiEnvPath = join(meta.worktreePath, "apps/api/.env");
+    if (existsSync(apiEnvPath)) {
+        const head = (await readFile(apiEnvPath, "utf8")).split("\n", 1)[0];
+        if (!head.includes("Generated by scripts/spin.mjs")) {
+            throw new Error(
+                [
+                    `apps/api/.env exists and was not generated by spin (no header line).`,
+                    `Move it aside (\`mv apps/api/.env apps/api/.env.before-spin\`) or delete it, then re-run.`,
+                    `spin owns the .env when it provisions a stack — overwriting your custom values silently would be a footgun.`,
+                ].join("\n  "),
+            );
+        }
+    }
+
+    log(cyan("spin local"));
+    log(`  mode     in-place (no worktree, no branch, no PR)`);
+    log(`  cwd      ${meta.worktreePath}`);
+    log(`  branch   ${meta.branch}`);
+    log(`  ports    api=${meta.ports.api} admin=${meta.ports.admin} db=${meta.ports.db}`);
+    log("");
+
+    /** Skip ensureWorktree (we're already in the repo) and ensureDraftPr (no PR by design). */
+    await ensureEnvFiles(meta);
+    await ensureObservabilityConfig(meta);
+    await ensureContainers(meta);
+    await ensureInstall(meta);
+    await ensureSdkBuild(meta);
+    await ensureMigrationsAndSeed(meta);
+    await startServers(meta, { withWeb: flags.withWeb });
+    await waitForServersReady(meta, { withWeb: flags.withWeb });
+
+    printHandoffCard(meta, { withWeb: flags.withWeb });
+}
+
+/**
+ * Initialise the meta for the `local` spin, attaching the current checkout. Re-runs of
+ * `spin local` load the persisted meta so ports stay stable across restarts.
+ *
+ * @returns {Promise<SpinMeta>}
+ */
+async function loadOrInitLocalMeta() {
+    const path = metaPath(LOCAL_SLUG);
+    const currentBranch =
+        spawnSync("git", ["branch", "--show-current"], {
+            cwd: MAIN_REPO_ROOT,
+            encoding: "utf8",
+        }).stdout.trim() || "(detached)";
+
+    if (existsSync(path)) {
+        const meta = JSON.parse(await readFile(path, "utf8"));
+        /** Refresh the branch label each run so the handoff card reflects what's checked out. */
+        meta.branch = currentBranch;
+        meta.worktreePath = MAIN_REPO_ROOT;
+        await writeMeta(meta);
+        return meta;
+    }
+    const ports = await allocatePorts(LOCAL_SLUG);
+    /** @type {SpinMeta} */
+    const meta = {
+        slug: LOCAL_SLUG,
+        branch: currentBranch,
+        composeProject: `calibra-spin-${LOCAL_SLUG}`,
+        worktreePath: MAIN_REPO_ROOT,
+        ports,
+        prNumber: null,
+        createdAt: new Date().toISOString(),
+    };
+    await writeMeta(meta);
+    return meta;
+}
+
 function printHelp() {
     process.stdout.write(`
-${bold("pnpm spin")} — isolated worktree dev environments
+${bold("pnpm spin")} — isolated dev environments + investigation toolkit
 
-Usage:
-  pnpm spin ${cyan("<slug>")}              start (or resume) a spin
+${bold("Provision")}
+  pnpm spin ${cyan("<slug>")}                start (or resume) a worktree-based spin
   pnpm spin start ${cyan("<slug>")} [flags]
-  pnpm spin stop  ${cyan("<slug>")} [--purge] [--remove] [--force]
-  pnpm spin list
-  pnpm spin doctor ${cyan("<slug>")}
-  pnpm spin pr ${cyan("<slug>")}
+  pnpm spin local [start|stop|status]  in-place spin against the current checkout
+                                       (no worktree, no branch, no PR)
+  pnpm spin pr ${cyan("<slug>")}             open the draft PR for a --no-pr spin
 
-Flags (start):
+${bold("Inspect")}
+  pnpm spin list [--json]              every spin's status + ports
+  pnpm spin doctor ${cyan("<slug>")} [--json] per-service health for one spin
+  pnpm spin url ${cyan("<slug>")} [service]   print one URL to stdout (default: dashboard)
+  pnpm spin logs ${cyan("<slug>")} [stream]   print the absolute log path (default: api.ndjson)
+  pnpm spin metrics ${cyan("<slug>")}         curl the api's /metrics → stdout
+  pnpm spin alerts ${cyan("<slug>")}          query Prometheus /api/v1/alerts → stdout
+
+${bold("Teardown")}
+  pnpm spin stop ${cyan("<slug>")} [--purge] [--remove] [--force]
+
+${bold("Flags (start)")}
   --with-web    also start the storefront on the allocated web port
   --no-pr       skip opening the draft PR (call \`pnpm spin pr\` later)
 
-Flags (stop):
+${bold("Flags (stop)")}
   --purge       also delete the docker volumes (wipes the seeded DB)
   --remove      delete the worktree directory and branch after stopping
   --force       allow --remove even with uncommitted changes / unpushed commits
 
-Slug rules: lowercase letters, digits, dashes; 2–40 chars.
+${bold("Slug rules")}
+  lowercase letters, digits, dashes; 2–40 chars. \`local\` is reserved for in-place spins.
 
-Issue: https://github.com/calibra-org/calibra/issues/21
+Docs: scripts/spin.md · Issue: https://github.com/calibra-org/calibra/issues/21
 `);
 }
 
@@ -1670,6 +2022,7 @@ function parseFlags(args) {
         purge: args.includes("--purge"),
         remove: args.includes("--remove"),
         force: args.includes("--force"),
+        json: args.includes("--json"),
     };
 }
 
