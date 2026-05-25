@@ -1,6 +1,7 @@
 import type { HttpContext } from "@adonisjs/core/http";
 
 import ProductCategory from "#models/product_category";
+import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductCategoryTransformer from "#transformers/product_category_transformer";
@@ -42,6 +43,7 @@ export default class AdminCategoriesController {
         });
         await row.load("translations");
         await row.load("image");
+        await CacheInvalidation.taxonomyChanged();
         ctx.response.status(201);
         return resource(ProductCategoryTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -70,6 +72,7 @@ export default class AdminCategoriesController {
         });
         await row.load("translations");
         await row.load("image");
+        await CacheInvalidation.taxonomyChanged();
         return resource(ProductCategoryTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
 
@@ -77,6 +80,7 @@ export default class AdminCategoriesController {
         const row = await ProductCategory.find(ctx.params.id);
         if (!row) return ctx.response.status(404).json({ error: "category_not_found" });
         await row.delete();
+        await CacheInvalidation.taxonomyChanged();
         return ctx.response.status(204);
     }
 }

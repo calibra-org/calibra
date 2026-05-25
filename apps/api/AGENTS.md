@@ -25,6 +25,33 @@ AdonisJS 7 backend. Source of truth for products, orders, customers, auth, and a
 
 Local docs cache for the agent doing the work: `~/adonis-v7-docs/content/` (framework) and `~/adonis-lucid-docs/content/docs/` (ORM). Read those before reaching for memory.
 
+## Caching (`@adonisjs/cache` / Bentocache)
+
+The api uses `@adonisjs/cache` (Bentocache under the hood) configured as a **multi-tier store**: in-memory L1 + Redis L2 + Redis bus, defined in `config/cache.ts`. The bus keeps the L1 layer of every process (api + queue worker + future replicas) coherent — when one writes, the others evict.
+
+**Default story** for read endpoints: wrap the heavy fetch in `cache.getOrSet({ key, ttl, grace, tags, factory })`. The factory only runs on a real miss; stampede protection means 10,000 simultaneous misses still produce one query. Set a `grace` window so a brief Postgres / Redis hiccup serves slightly-stale data instead of a 500 — this is a UX feature, not a perf hack.
+
+**The "never cache" list** — these read paths mutate per request or carry correctness consequences if stale:
+- Cart contents (per-session mutation surface).
+- `inventory_items.stock_status` (oversell risk).
+- Order detail/list/history, payment attempts, refunds (legal/financial state).
+- Authenticated `/account/*` (per-user, low cache hit rate, high freshness expectation).
+- Customer notes, customer timeline (admin operators expect live data).
+
+When in doubt, ask: **"if this is 30 seconds stale, does a user see a wrong price, oversell, or wrong status?"** If yes → don't cache, or cache with `grace: undefined` and a sub-minute TTL.
+
+**Keys + tags** live in `app/services/cache_keys.ts`. Always go through the builders — no inline string templates in controllers. Every key includes the locale segment (`fa` / `en`) because Persian and English responses are different bytes. Filter keys are built from a **sorted, normalized** parameter object so `?a=1&b=2` and `?b=2&a=1` collide.
+
+**Invalidation is the contract.** Every write path must `cache.deleteByTag({ tags: [...] })` for the tags it touches. The mapping lives next to the tag constants in `cache_keys.ts`; wire it through domain events (`app/events/*`) where possible so a refund issued via any controller invalidates correctly. **A new read endpoint without a paired tag and a write-path invalidation is a bug — it ships stale data the moment anything changes.**
+
+**Tests are mandatory.** Every cached endpoint needs a Japa functional test covering: (1) cold-miss populates the cache, (2) warm-hit doesn't re-query, (3) tag invalidation after a write returns fresh data, (4) the cached response still passes `assertAgainstApiSpec()`.
+
+**Tunable defaults** (`config/cache.ts`): `ttl: "5m"`, `grace: "24h"`, `graceBackoff: "30s"`, soft `timeout: "200ms"`, `hardTimeout: "2s"`. Override per call when the data has different freshness needs (taxonomy → `30m`, admin counts → `2m`, shipping → `5m` no grace, single-use values → `pull`).
+
+**Ace ops**: `node ace cache:clear` (whole store), `cache:clear --tags=catalog:products` (targeted), `cache:delete <key>` (surgical), `cache:prune` (n/a for Redis, only DB driver).
+
+**Local docs cache**: `~/adonis-v7-docs/content/guides/digging_deeper/cache.md` (framework integration) and `~/Julien-R44/bentocache/docs/content/docs/` (engine details — grace, stampede, multi-tier, tags, namespaces, adaptive caching). Read these before reaching for memory.
+
 ## Local observability & search (per-spin)
 
 Every `pnpm spin <slug>` brings up a full prod-parity infra alongside the app:

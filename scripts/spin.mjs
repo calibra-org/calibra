@@ -496,6 +496,8 @@ async function ensureEnvFiles(meta) {
              *  - `sync` (set in .env.test only): runs jobs inline; no worker, no transport needed.
              */
             `QUEUE_DRIVER=database`,
+            /** Default cache store — selects the multi-tier redis store in `config/cache.ts`. */
+            `CACHE_DRIVER=redis`,
             /**
              * Meilisearch. Per-spin instance brought up by docker-compose.meili.yml; the api
              * reaches it on the host (HMR runs the api outside docker). Key is the master key

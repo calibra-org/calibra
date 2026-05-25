@@ -1,6 +1,7 @@
 import type { HttpContext } from "@adonisjs/core/http";
 
 import ProductAttribute from "#models/product_attribute";
+import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductAttributeTransformer from "#transformers/product_attribute_transformer";
@@ -41,6 +42,7 @@ export default class AdminAttributesController {
         });
         await row.refresh();
         await row.load("translations");
+        await CacheInvalidation.taxonomyChanged();
         ctx.response.status(201);
         return resource(ProductAttributeTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -66,6 +68,7 @@ export default class AdminAttributesController {
             }
         });
         await row.load("translations");
+        await CacheInvalidation.taxonomyChanged();
         return resource(ProductAttributeTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
 
@@ -73,6 +76,7 @@ export default class AdminAttributesController {
         const row = await ProductAttribute.find(ctx.params.id);
         if (!row) return ctx.response.status(404).json({ error: "attribute_not_found" });
         await row.delete();
+        await CacheInvalidation.taxonomyChanged();
         return ctx.response.status(204);
     }
 }

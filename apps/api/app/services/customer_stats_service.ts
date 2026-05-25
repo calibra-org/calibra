@@ -1,6 +1,8 @@
+import cache from "@adonisjs/cache/services/main";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
+import { CacheKeys, CacheTags } from "#services/cache_keys";
 import type { AdminStatsRow } from "#transformers/customer_transformer";
 
 /**
@@ -25,11 +27,55 @@ interface AggregateRow {
     first_order_at: string | Date | null;
 }
 
+const EMPTY_STATS: AdminStatsRow = {
+    lifetimeOrderCount: 0,
+    lifetimeSpendMinor: 0,
+    averageOrderValueMinor: 0,
+    lastOrderAt: null,
+    firstOrderAt: null,
+    daysSinceLastOrder: null,
+};
+
 /**
  * Aggregates lifetime order metrics across many customers in a single GROUP BY query. The list
  * controller calls this once per page so the per-row stats never go through an N+1 path.
+ *
+ * Cached **per customer id** (not per page), so navigating list → segment filter → next page
+ * reuses every id whose stats were already computed. Only the missing ids hit the GROUP BY.
  */
 export async function aggregateForCustomerIds(customerIds: ReadonlyArray<number>): Promise<Map<number, AdminStatsRow>> {
+    const result = new Map<number, AdminStatsRow>();
+    if (customerIds.length === 0) return result;
+
+    const missing: number[] = [];
+    for (const id of customerIds) {
+        const cached = await cache.get<AdminStatsRow>({ key: CacheKeys.admin.customerAggregate(id) });
+        if (cached !== undefined) {
+            result.set(id, cached);
+        } else {
+            missing.push(id);
+        }
+    }
+
+    if (missing.length > 0) {
+        const computed = await fetchAggregateRows(missing);
+        for (const id of missing) {
+            const stats = computed.get(id) ?? EMPTY_STATS;
+            result.set(id, stats);
+            await cache.set({
+                key: CacheKeys.admin.customerAggregate(id),
+                value: stats,
+                ttl: "2m",
+                grace: "1h",
+                tags: [CacheTags.adminCustomer(id), CacheTags.adminCustomers],
+            });
+        }
+    }
+
+    return result;
+}
+
+async function fetchAggregateRows(customerIds: ReadonlyArray<number>): Promise<Map<number, AdminStatsRow>> {
     const result = new Map<number, AdminStatsRow>();
     if (customerIds.length === 0) return result;
 
@@ -70,14 +116,7 @@ export async function aggregateForCustomerIds(customerIds: ReadonlyArray<number>
 
     for (const id of customerIds) {
         if (!result.has(id)) {
-            result.set(id, {
-                lifetimeOrderCount: 0,
-                lifetimeSpendMinor: 0,
-                averageOrderValueMinor: 0,
-                lastOrderAt: null,
-                firstOrderAt: null,
-                daysSinceLastOrder: null,
-            });
+            result.set(id, { ...EMPTY_STATS });
         }
     }
     return result;
@@ -95,17 +134,23 @@ interface FavoriteRow {
 /**
  * Single-customer stats bundle — same row as the aggregate query plus a 12-month spend series
  * and a "favorite product" slot for the detail page sparkline + recommendation banner.
+ *
+ * Cached 2m with a 1h grace under `admin:customers:stats:<id>`; invalidated through the
+ * `admin:customer:<id>` tag (refunds, edits, order state transitions all hit this).
  */
 export async function forSingleCustomer(customerId: number): Promise<CustomerStatsBundle> {
-    const map = await aggregateForCustomerIds([customerId]);
-    const stats = map.get(customerId) ?? {
-        lifetimeOrderCount: 0,
-        lifetimeSpendMinor: 0,
-        averageOrderValueMinor: 0,
-        lastOrderAt: null,
-        firstOrderAt: null,
-        daysSinceLastOrder: null,
-    };
+    return cache.getOrSet({
+        key: CacheKeys.admin.customerStats(customerId),
+        ttl: "2m",
+        grace: "1h",
+        tags: [CacheTags.adminCustomer(customerId), CacheTags.adminCustomers],
+        factory: () => computeSingleCustomerBundle(customerId),
+    });
+}
+
+async function computeSingleCustomerBundle(customerId: number): Promise<CustomerStatsBundle> {
+    const aggregateMap = await fetchAggregateRows([customerId]);
+    const stats = aggregateMap.get(customerId) ?? { ...EMPTY_STATS };
 
     const paidPlaceholders = ORDER_PAID_STATUSES.map(() => "?").join(",");
     const countedPlaceholders = ORDER_COUNTED_STATUSES.map(() => "?").join(",");
@@ -189,8 +234,21 @@ interface CountRow {
  * Tab counts + summary aggregates for the list page. Four counts come from one customers-only
  * query; three need to join orders and run as separate queries (parallelized). The big_spenders
  * threshold is the 90th percentile of per-customer spend across the whole base.
+ *
+ * Cached 2m with a 1h grace under `admin:customers:counts`; invalidated through `admin:customers`
+ * on any customer write or order transition.
  */
 export async function fetchCounts(): Promise<CustomerCounts> {
+    return cache.getOrSet({
+        key: CacheKeys.admin.customerCounts(),
+        ttl: "2m",
+        grace: "1h",
+        tags: [CacheTags.adminCustomers],
+        factory: () => computeCounts(),
+    });
+}
+
+async function computeCounts(): Promise<CustomerCounts> {
     const countedPlaceholders = ORDER_COUNTED_STATUSES.map(() => "?").join(",");
     const paidPlaceholders = ORDER_PAID_STATUSES.map(() => "?").join(",");
 

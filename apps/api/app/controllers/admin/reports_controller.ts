@@ -1,7 +1,9 @@
+import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
+import { CacheKeys, CacheTags } from "#services/cache_keys";
 import { adminTopProductsValidator } from "#validators/admin/report_validator";
 
 const DEFAULT_DAYS = 30;
@@ -37,9 +39,19 @@ export default class AdminReportsController {
         const payload = await ctx.request.validateUsing(adminTopProductsValidator);
         const days = payload.days ?? DEFAULT_DAYS;
         const limit = payload.limit ?? DEFAULT_LIMIT;
-        const since = DateTime.utc().minus({ days }).toJSDate();
         const locale = ctx.i18n.locale;
 
+        return cache.getOrSet({
+            key: CacheKeys.admin.topProducts(days, limit, locale),
+            ttl: "5m",
+            grace: "1h",
+            tags: [CacheTags.adminReports, CacheTags.catalogProducts],
+            factory: () => this.computeTopProducts(days, limit, locale),
+        });
+    }
+
+    private async computeTopProducts(days: number, limit: number, locale: string) {
+        const since = DateTime.utc().minus({ days }).toJSDate();
         const { rows } = await db.rawQuery<{ rows: TopProductRow[] }>(
             `
             WITH agg AS (

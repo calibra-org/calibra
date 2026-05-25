@@ -1,69 +1,68 @@
-import Setting, { type SettingValueType } from "#models/setting";
+import cache from "@adonisjs/cache/services/main";
 
-const VALUE_MISSING = Symbol("settings.missing");
+import Setting, { type SettingValueType } from "#models/setting";
+import { CacheKeys, CacheTags } from "#services/cache_keys";
 
 /**
- * Per-process cache around the `settings` table. Reads memoize; `set` invalidates the touched key
- * and its group so a subsequent read sees the new value. Designed to be installed as a container
- * singleton by later phases that need the same instance across requests (e.g. inventory hold time,
- * order number format).
+ * Caching facade in front of the `settings` table. Reads memoize through the default cache store;
+ * `set` invalidates the group's tag so a subsequent read from any process (api, queue worker,
+ * future replica) sees the new value. Replaces the previous per-process `Map` caches — those left
+ * a stale window the moment a sibling process edited the same key.
  *
- * Not durable across processes. If two API instances both edit the same key, the second instance's
- * cache will lag until the entry is next read with a different value or the process restarts —
- * acceptable for the settings we ship (operator-edited, low write volume).
+ * Operator-edited values are low write volume; we cache groups forever (`null` TTL via
+ * `setForever` is what we'd reach for if Bentocache exposed it directly, but a 24h TTL with an
+ * explicit `deleteByTag` on every `set()` is functionally equivalent — the write IS the
+ * invalidation signal).
  */
 export default class SettingsService {
-    private readonly valueCache = new Map<string, unknown | typeof VALUE_MISSING>();
-    private readonly groupCache = new Map<string, Record<string, unknown>>();
-
     async get<T>(group: string, key: string, fallback: T): Promise<T> {
-        const cacheKey = `${group}.${key}`;
-
-        if (this.valueCache.has(cacheKey)) {
-            const cached = this.valueCache.get(cacheKey);
-            return cached === VALUE_MISSING ? fallback : (cached as T);
+        const groupMap = await this.all(group);
+        if (Object.hasOwn(groupMap, key)) {
+            return groupMap[key] as T;
         }
-
-        const row = await Setting.query().where("group_key", group).where("key", key).first();
-
-        if (!row) {
-            this.valueCache.set(cacheKey, VALUE_MISSING);
-            return fallback;
-        }
-
-        this.valueCache.set(cacheKey, row.value);
-        return row.value as T;
+        return fallback;
     }
 
     async set(group: string, key: string, value: unknown, type: SettingValueType): Promise<void> {
         await Setting.updateOrCreate({ groupKey: group, key }, { value, type });
-        this.invalidate(group, key);
+        await this.invalidate(group);
     }
 
     async all(group: string): Promise<Record<string, unknown>> {
-        const cached = this.groupCache.get(group);
-        if (cached) return cached;
-
-        const rows = await Setting.query().where("group_key", group);
-        const map: Record<string, unknown> = {};
-        for (const row of rows) {
-            map[row.key] = row.value;
-            this.valueCache.set(`${group}.${row.key}`, row.value);
-        }
-
-        this.groupCache.set(group, map);
-        return map;
+        return cache.getOrSet({
+            key: CacheKeys.settings.group(group),
+            ttl: "24h",
+            tags: [CacheTags.settingsGroup(group)],
+            factory: async () => {
+                const rows = await Setting.query().where("group_key", group);
+                const map: Record<string, unknown> = {};
+                for (const row of rows) {
+                    map[row.key] = row.value;
+                }
+                return map;
+            },
+        });
     }
 
-    /** Drop any memoized state for the given group/key pair. Exposed for tests. */
-    invalidate(group: string, key?: string): void {
-        if (key) this.valueCache.delete(`${group}.${key}`);
-        this.groupCache.delete(group);
+    /**
+     * Drop any cached state for `group`. Exposed publicly so tests and admin-side bulk-edit flows
+     * can force a refresh. The optional `key` argument is accepted for backwards-compat with
+     * earlier per-key callers; since the cache is now keyed by group, both arguments evict the
+     * same key.
+     *
+     * Deliberately uses `cache.delete` (single-key removal) instead of `cache.deleteByTag` —
+     * Bentocache's tag invalidation compares millisecond-resolution timestamps, and a `set` →
+     * `get` pair that happens inside the same millisecond can race where the freshly written
+     * tag-invalidation timestamp is equal to the new cache entry's `createdAt`, which surfaces
+     * as a flaky cache hit. A direct key removal is unambiguous and the 1:1 mapping between
+     * settings group and cache key makes the tag layer unnecessary here.
+     */
+    async invalidate(group: string, _key?: string): Promise<void> {
+        await cache.delete({ key: CacheKeys.settings.group(group) });
     }
 
-    /** Drop the entire memoized state. Exposed for tests that need a fully cold cache. */
-    clearCache(): void {
-        this.valueCache.clear();
-        this.groupCache.clear();
+    /** Drop every settings cache entry. Used by tests that need a fully cold cache. */
+    async clearCache(): Promise<void> {
+        await cache.clear();
     }
 }

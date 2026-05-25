@@ -11,6 +11,7 @@ import OrderLineItem from "#models/order_line_item";
 import PaymentGateway from "#models/payment_gateway";
 import Product from "#models/product";
 import ProductVariation from "#models/product_variation";
+import { CacheInvalidation } from "#services/cache_invalidation";
 import { orderNumberService } from "#services/order_number_service";
 import { orderStateMachine } from "#services/order_state_machine";
 import OrderTransformer from "#transformers/order_transformer";
@@ -201,6 +202,7 @@ export default class AdminOrdersController {
         ctx.response.status(201);
         await order.refresh();
         await this.loadForResponse(order);
+        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
         return { data: new OrderTransformer(order).forAdmin() };
     }
 
@@ -211,6 +213,7 @@ export default class AdminOrdersController {
         if (payload.billing_email !== undefined) order.billingEmail = payload.billing_email ?? null;
         await order.save();
         await this.loadForResponse(order);
+        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
         return { data: new OrderTransformer(order).forAdmin() };
     }
 
@@ -218,6 +221,7 @@ export default class AdminOrdersController {
         const order = await this.findOrFail(ctx.params.id);
         order.deletedAt = DateTime.utc();
         await order.save();
+        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
         return ctx.response.noContent();
     }
 

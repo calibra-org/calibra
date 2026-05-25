@@ -2,6 +2,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 
 import ProductAttribute from "#models/product_attribute";
 import ProductAttributeTerm from "#models/product_attribute_term";
+import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductAttributeTermTransformer from "#transformers/product_attribute_term_transformer";
@@ -42,6 +43,7 @@ export default class AdminAttributeTermsController {
             return created;
         });
         await row.load("translations");
+        await CacheInvalidation.taxonomyChanged();
         ctx.response.status(201);
         return resource(ProductAttributeTermTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -69,6 +71,7 @@ export default class AdminAttributeTermsController {
             }
         });
         await row.load("translations");
+        await CacheInvalidation.taxonomyChanged();
         return resource(ProductAttributeTermTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
 
@@ -79,6 +82,7 @@ export default class AdminAttributeTermsController {
             .first();
         if (!row) return ctx.response.status(404).json({ error: "term_not_found" });
         await row.delete();
+        await CacheInvalidation.taxonomyChanged();
         return ctx.response.status(204);
     }
 }
