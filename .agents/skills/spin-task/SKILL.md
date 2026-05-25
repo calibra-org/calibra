@@ -63,19 +63,18 @@ Do **not** invoke for unrelated mentions of "spinner", "spin up the API", or oth
 
    Expect the script to take 30–90 seconds. The slow steps (container provisioning, install, seed) are normal; do NOT interrupt unless the script fails or stalls past 5 minutes.
 
-4. **Hand off.** The script prints a handoff card on success. Re-print the relevant lines verbatim, plus the seed credentials and the stop command. Format:
+4. **Hand off.** The script prints a handoff card on success. Re-print the relevant lines verbatim, plus the stop command. Lead with the spin dashboard URL — that page surfaces every per-service URL, Grafana / Prometheus / Loki deep-links, seed credentials, and live health pills, so the operator doesn't need a wall of URLs in chat. Format:
 
    ```
    ready: <slug>
-     admin   http://localhost:<port>
-     api     http://localhost:<port>
-     pgadmin http://localhost:<port>
-     pr      <pr url, or "(skipped — pnpm spin pr <slug>)" if --no-pr>
-     login   admin@bulk.calibra.dev / Passw0rd1!
-     stop    pnpm spin stop <slug>
+     dashboard https://<slug>.spin.localhost:<caddyHttps>/
+     pr        <pr url, or "(skipped — pnpm spin pr <slug>)" if --no-pr>
+     stop      pnpm spin stop <slug>
    ```
 
-   Do not add a victory lap or summary after this card — the URLs and login are the only payload the operator needs.
+   The draft PR body matches — a single link to the dashboard, no ports table, no creds dump. Per-service URLs (admin / api / db / pgadmin / mailpit / grafana / …) live on the dashboard.
+
+   Do not add a victory lap or summary after this card.
 
 ## Failure modes
 
@@ -98,12 +97,9 @@ Do **not** invoke for unrelated mentions of "spinner", "spin up the API", or oth
 >
 > ```
 > ready: tags-workbench-polish
->   admin   http://localhost:13123
->   api     http://localhost:13122
->   pgadmin http://localhost:13121
->   pr      https://github.com/calibra-org/calibra/pull/42
->   login   admin@bulk.calibra.dev / Passw0rd1!
->   stop    pnpm spin stop tags-workbench-polish
+>   dashboard https://tags-workbench-polish.spin.localhost:13725/
+>   pr        https://github.com/calibra-org/calibra/pull/42
+>   stop      pnpm spin stop tags-workbench-polish
 > ```
 
 ### Operator supplies the slug

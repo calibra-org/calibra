@@ -193,7 +193,7 @@ So a half-finished bootstrap (Ctrl-C, daemon crash, network blip) resumes cleanl
 
 - No `web` autoboot by default. Pass `--with-web` if your task touches the storefront.
 - No auto-cleanup when the PR merges. Run `pnpm spin stop <slug> --remove` manually.
-- No PR template — the draft body lists ports + seed creds + a placeholder `## Tasks` section, but it doesn't pull from `.github/PULL_REQUEST_TEMPLATE.md` (we don't have one).
+- No PR template — the draft body is a one-line link to the spin dashboard (`https://<slug>.spin.localhost:<caddyHttps>/`) plus the teardown command. Per-service URLs, seed credentials, and live health pills live on the dashboard itself; replicating them into every PR body just added noise. Rewrite the body with the actual scope as your first non-bootstrap commit lands.
 - Slug name is also the branch name (`spin/<slug>`). Pick something descriptive.
 
 See [#21](https://github.com/calibra-org/calibra/issues/21) for the broader design rationale and the items currently parked.

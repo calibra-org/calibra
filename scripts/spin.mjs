@@ -1315,27 +1315,20 @@ async function ensureDraftPrInternal(meta) {
     await run("git", ["push", "-u", "origin", meta.branch], { cwd: meta.worktreePath });
 
     step("PR", "gh pr create --draft");
+    const caddyHttps = requirePort(meta, "caddyHttps");
+    /**
+     * Single link to the spin's homepage. The homepage surfaces every per-service URL,
+     * Grafana + Prometheus + Loki deep-links, seed credentials, action buttons, and a live
+     * log tail — no need to duplicate any of that into the PR body. Keeps the body short
+     * enough that the human-authored Summary / Implementation sections (added later) aren't
+     * buried under boilerplate.
+     */
     const body = [
         `Bootstrapped by \`pnpm spin ${meta.slug}\`.`,
         ``,
-        `## Ports`,
+        `**Spin dashboard:** https://${meta.slug}.spin.localhost:${caddyHttps}/`,
         ``,
-        `| service | URL |`,
-        `| --- | --- |`,
-        `| admin   | http://localhost:${meta.ports.admin} |`,
-        `| api     | http://localhost:${meta.ports.api} |`,
-        `| pgadmin | http://localhost:${meta.ports.pgadmin} |`,
-        `| db      | postgres://calibra:calibra@localhost:${meta.ports.db}/calibra |`,
-        ``,
-        `## Seed credentials`,
-        ``,
-        `Admin login: \`admin@bulk.calibra.dev\` / \`Passw0rd1!\` (from the bulk seeder).`,
-        ``,
-        `## Tasks`,
-        ``,
-        `- [ ] Replace this section with the actual scope.`,
-        ``,
-        `<sub>Teardown: \`pnpm spin stop ${meta.slug}\` · containers + processes only.  Add \`--purge --remove\` to wipe everything.</sub>`,
+        `<sub>Teardown: \`pnpm spin stop ${meta.slug}\` · containers + processes only. Add \`--purge --remove\` to wipe everything.</sub>`,
     ].join("\n");
     const result = spawnSync(
         "gh",
