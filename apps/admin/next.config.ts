@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
     /** `@calibra/shared` ships as raw TS source — Next compiles it like any local file. */
     transpilePackages: ["@calibra/shared"],
     /**
+     * Allow dev-server cross-origin requests from the per-spin Caddy hostnames. The spin
+     * fronts the dev server at `https://admin.<slug>.spin.localhost:<caddyHttps>`; without
+     * this list Next.js 15.3+ blocks `/_next/webpack-hmr` and other dev resources because
+     * they originate from a hostname other than the dev server's own. Wildcard covers every
+     * slug; legacy bare-port access still works (Next allows same-origin by default).
+     */
+    allowedDevOrigins: ["*.spin.localhost"],
+    /**
      * Pin Turbopack's workspace root to the monorepo this `apps/admin` lives in. Without
      * this, when the dir tree contains another `pnpm-workspace.yaml` higher up (e.g. when
      * `apps/admin` runs from inside a `.claude/worktrees/<slug>/apps/admin` directory nested
