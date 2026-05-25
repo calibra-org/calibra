@@ -34,17 +34,24 @@ That's the entire workflow. Open the admin URL, log in, start coding inside `.cl
 
 ## What gets allocated
 
-Each spin gets a stable 5-port block in the 13xxx range, derived from `sha256(slug)`. The mapping is deterministic — the same slug always lands on the same ports across reboots, so bookmarks stick. Collisions (two slugs hashing to the same block) trigger a nudge until a free slot is found, and the resolved ports are persisted in `.claude/worktrees/<slug>/.spin.json` so subsequent starts reuse them.
+Each spin gets a stable 10-port block in the 13xxx range, derived from `sha256(slug)`. The mapping is deterministic — the same slug always lands on the same ports across reboots, so bookmarks stick. Collisions (two slugs hashing to the same block) trigger a nudge until a free slot is found, and the resolved ports are persisted in `.claude/worktrees/<slug>/.spin.json` so subsequent starts reuse them.
 
 ```
-db        +0
-pgadmin   +1
-api       +2
-admin     +3
-web       +4
+db             +0
+pgadmin        +1
+api            +2
+admin          +3
+web            +4
+mailpit SMTP   +5
+mailpit web    +6
+redis          +7
+redisinsight   +8
+adminer        +9
 ```
 
-Isolation comes from `COMPOSE_PROJECT_NAME=calibra-spin-<slug>` — each spin gets its own docker network, its own volume, its own container names. Two spins running side by side never see each other's data.
+Isolation comes from `COMPOSE_PROJECT_NAME=calibra-spin-<slug>` — every container in the table above runs under that project name. Two spins running side by side get fully independent dev-ui state: separate Mailpit inboxes, separate Redis (no shared cache / pub-sub / queue), separate Adminer, separate volumes.
+
+Spins created before this layout (no per-spin dev-ui ports in their meta file) keep talking to the legacy shared `calibra-dev-ui` containers on the original fixed ports (mailpit 18025, redis 16379, redisinsight 15540, adminer 18080). They migrate to per-spin layout on the next `pnpm spin stop <slug> && pnpm spin <slug>` cycle.
 
 ## State files
 
