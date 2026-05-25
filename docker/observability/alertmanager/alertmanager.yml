@@ -1,0 +1,13 @@
+# Alertmanager config — no routes ship in this PR; rule authoring is a follow-up. The
+# `null` receiver is a deliberate no-op so prom rules can fire without panicking on a
+# missing receiver. Production wires a Telegram / email / PagerDuty receiver here.
+
+route:
+    receiver: 'null'
+    group_by: ['alertname']
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 12h
+
+receivers:
+    - name: 'null'
