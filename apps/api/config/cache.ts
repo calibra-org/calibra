@@ -11,7 +11,11 @@ import env from "#start/env";
  * — its meta-keys snapshot is intentionally per-process (warm restart wins) and doesn't need
  * coherency with other api instances.
  *
- * Tests set `CACHE_DRIVER=memory` so Japa runs never touch Redis. Production sets it to `redis`.
+ * **`CACHE_DRIVER` is load-bearing**: when it's `memory`, the `redis` store is *not declared* at
+ * all (not just not-default). Bentocache's `redisBus` subscribes to its pub/sub channel as soon
+ * as the store is constructed, so leaving the definition around in a test/CI boot — where Redis
+ * isn't running — exhausts `ioredis`'s retry budget and crashes the process. Dropping the
+ * declaration entirely is cheaper and clearer than wiring suppressors around it.
  *
  * **Global defaults** below are tuned for "the catalog stays up if Postgres dies":
  *  - `ttl: "5m"` — fresh data window. Per-call overrides tighten this on hot paths and relax it
@@ -26,33 +30,52 @@ import env from "#start/env";
  *  - `hardTimeout: "2s"` — absolute upper bound. The factory keeps running and will populate the
  *    cache for the next request, but this request fails fast.
  */
-const cacheConfig = defineConfig({
-    default: env.get("CACHE_DRIVER"),
-    ttl: "5m",
-    grace: "24h",
-    graceBackoff: "30s",
-    timeout: "200ms",
-    hardTimeout: "2s",
-    stores: {
-        /**
-         * Multi-tier production store. The L1 ceiling is sized so a handful of large
-         * paginated catalog responses fit comfortably without crowding the api heap; raise it
-         * if `cache:clear`d under load and L1 hit-rate stays low. The bus uses the same
-         * `main` Redis connection — `config/redis.ts` already namespaces keys + pub-sub
-         * channels by `APP_NAME` so two spins or two replicas don't cross-pollinate.
-         */
-        redis: store()
-            .useL1Layer(drivers.memory({ maxSize: "64mb" }))
-            .useL2Layer(drivers.redis({ connectionName: "main" }))
-            .useBus(drivers.redisBus({ connectionName: "main" })),
+const cacheDriver = env.get("CACHE_DRIVER");
 
-        /**
-         * Single-tier in-process store. The export wizard's distinct-meta-keys snapshot calls
-         * `cache.use("memory")` so its 60s TTL behaves identically per process (warm restart
-         * recomputes, no Redis dependency for that particular shape).
-         */
-        memory: store().useL1Layer(drivers.memory({ maxSize: "32mb" })),
-    },
-});
+/**
+ * Multi-tier production store. The L1 ceiling is sized so a handful of large paginated catalog
+ * responses fit comfortably without crowding the api heap; raise it if `cache:clear`d under load
+ * and L1 hit-rate stays low. The bus uses the same `main` Redis connection — `config/redis.ts`
+ * already namespaces keys + pub-sub channels by `APP_NAME` so two spins or two replicas don't
+ * cross-pollinate.
+ */
+const redisStore = () =>
+    store()
+        .useL1Layer(drivers.memory({ maxSize: "64mb" }))
+        .useL2Layer(drivers.redis({ connectionName: "main" }))
+        .useBus(drivers.redisBus({ connectionName: "main" }));
+
+/**
+ * Single-tier in-process store. The export wizard's distinct-meta-keys snapshot calls
+ * `cache.use("memory")` so its 60s TTL behaves identically per process (warm restart recomputes,
+ * no Redis dependency for that particular shape).
+ */
+const memoryStore = () => store().useL1Layer(drivers.memory({ maxSize: "32mb" }));
+
+const cacheConfig =
+    cacheDriver === "redis"
+        ? defineConfig({
+              default: "redis" as const,
+              ttl: "5m",
+              grace: "24h",
+              graceBackoff: "30s",
+              timeout: "200ms",
+              hardTimeout: "2s",
+              stores: {
+                  redis: redisStore(),
+                  memory: memoryStore(),
+              },
+          })
+        : defineConfig({
+              default: "memory" as const,
+              ttl: "5m",
+              grace: "24h",
+              graceBackoff: "30s",
+              timeout: "200ms",
+              hardTimeout: "2s",
+              stores: {
+                  memory: memoryStore(),
+              },
+          });
 
 export default cacheConfig;
