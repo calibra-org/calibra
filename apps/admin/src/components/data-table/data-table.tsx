@@ -718,8 +718,14 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
                     "first:before:hidden",
                     /** Start-side pinned cells (select / favorite) sit flush with the row gutter — actions keeps its leading divider. */
                     SORTABLE_HEADER_NO_LEADING_DIVIDER.has(header.column.id) && "before:hidden",
-                    /** The select column gets extra horizontal room so the focus ring around the checkbox isn't clipped. */
-                    header.column.id === "select" && "min-w-12 overflow-visible",
+                    /**
+                     * Select column overrides:
+                     *  - `!px-2` collapses the density's wide horizontal padding so the 16px
+                     *    checkbox actually fits inside the 44px column without visual cropping.
+                     *  - `min-w-12` reserves room for the focus ring; `overflow-visible` lets the
+                     *    3px ring extend past the cell box without being clipped.
+                     */
+                    header.column.id === "select" && "!px-2 min-w-12 overflow-visible",
                     headerMeta?.headerClassName,
                 )}
                 style={{ ...widthStyle, ...dragStyle }}
@@ -823,12 +829,13 @@ function DataTableBodyRow<TData>({
                             stickiness === "start" && STICKY_START_SHADOW,
                             stickiness === "end" && STICKY_END_SHADOW,
                             /**
-                             * The select column needs visible overflow so the checkbox focus
-                             * ring (3px) and the indeterminate state don't get clipped by the
-                             * cell box — and a slight min-width so the ring has room. The cell
-                             * background already covers the divider underneath.
+                             * Select column overrides (mirror the header):
+                             *  - `!px-2` overrides the density's `px-4` so the checkbox is
+                             *    centered in the 44px column instead of being squeezed.
+                             *  - `min-w-12 overflow-visible` keeps the 3px focus ring + the
+                             *    indeterminate dash painted in full.
                              */
-                            cell.column.id === "select" && "min-w-12 overflow-visible",
+                            cell.column.id === "select" && "!px-2 min-w-12 overflow-visible",
                             (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
                         )}
                         style={
