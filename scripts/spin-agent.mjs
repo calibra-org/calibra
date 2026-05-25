@@ -702,6 +702,11 @@ Import-Certificate -FilePath "$env:USERPROFILE\\Downloads\\caddy-root.crt" -Cert
     </section>
 
     <section class="panel" style="margin-top: 16px;">
+        <h2><span class="glyph">◎</span>prometheus quick-links</h2>
+        <div class="dashboards-grid" id="prometheus-grid"></div>
+    </section>
+
+    <section class="panel" style="margin-top: 16px;">
         <h2><span class="glyph">⌗</span>meilisearch credentials</h2>
         <div class="secret-row">
             <span class="secret-label">master key</span>
@@ -790,6 +795,36 @@ function renderDashboardCards() {
         '<div class="dash-title">' + d.title + '</div>' +
         '<div class="dash-desc">' + d.desc + '</div>' +
         '<div class="dash-meta"><span class="badge">' + d.uid.replace(/^calibra-/, '') + '</span><span class="arrow">→</span></div>' +
+        '</a>'
+    ).join('');
+}
+
+/**
+ * Catalog of Prometheus operator pages + pre-loaded graph queries. The graph URLs reference the
+ * recording rules we ship under docker/observability/prometheus/rules/ so they always have a
+ * stable series to plot against — pointing them at raw rate(...) expressions would break the
+ * second someone renames a metric.
+ */
+const PROMETHEUS_LINKS = [
+    { path: '/alerts', title: 'Alerts', desc: 'What's firing right now + pending. Drill-down from a red Grafana stat.', icon: '🚨', badge: 'alerts', accent: 'rgba(239, 68, 68, 0.18)' },
+    { path: '/rules', title: 'Rules', desc: 'All recording + alert rules loaded from the per-spin rules dir.', icon: '📐', badge: 'rules', accent: 'rgba(167, 139, 250, 0.18)' },
+    { path: '/targets', title: 'Targets', desc: 'Scrape health — is the api /metrics endpoint reachable?', icon: '🎯', badge: 'targets', accent: 'rgba(52, 211, 153, 0.18)' },
+    { path: '/graph?g0.expr=' + encodeURIComponent('calibra:api_error_ratio:5m') + '&g0.tab=0&g0.range_input=15m', title: 'API error ratio', desc: 'Live graph of 5xx / total over 5m. Ad-hoc PromQL playground.', icon: '📈', badge: 'graph', accent: 'rgba(110, 168, 254, 0.18)' },
+    { path: '/graph?g0.expr=' + encodeURIComponent('calibra:api_latency_p95:5m') + '&g0.tab=0&g0.range_input=15m', title: 'API p95 latency', desc: 'Per-route p95 latency, recorded every 30s.', icon: '⏱️', badge: 'graph', accent: 'rgba(56, 189, 248, 0.18)' },
+    { path: '/graph?g0.expr=' + encodeURIComponent('calibra_queue_jobs_active') + '&g0.tab=0&g0.range_input=15m', title: 'Queue depth', desc: 'Pending + active + delayed jobs per queue, refreshed every 10s.', icon: '📥', badge: 'graph', accent: 'rgba(251, 191, 36, 0.18)' },
+];
+
+function renderPrometheusCards() {
+    const grid = document.getElementById('prometheus-grid');
+    if (!grid) return;
+    const port = readMetaCaddyPort();
+    const base = 'https://prom.' + SLUG + '.spin.localhost:' + port;
+    grid.innerHTML = PROMETHEUS_LINKS.map(d =>
+        '<a class="dashboard-card" style="--card-accent: ' + d.accent + '" href="' + base + d.path + '" target="_blank" rel="noopener">' +
+        '<span class="dash-icon">' + d.icon + '</span>' +
+        '<div class="dash-title">' + d.title + '</div>' +
+        '<div class="dash-desc">' + d.desc + '</div>' +
+        '<div class="dash-meta"><span class="badge">' + d.badge + '</span><span class="arrow">→</span></div>' +
         '</a>'
     ).join('');
 }
@@ -1034,6 +1069,7 @@ document.querySelectorAll('.copy').forEach(btn => {
 });
 
 renderDashboardCards();
+renderPrometheusCards();
 refreshStatus();
 setInterval(refreshStatus, 5000);
 startLogStream('api.ndjson');
