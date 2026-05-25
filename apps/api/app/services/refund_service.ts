@@ -59,7 +59,7 @@ export class RefundService {
             throw new Exception("Order not found", { status: 404, code: "E_NOT_FOUND" });
         }
 
-        const refund = await db.transaction(async (trx) => {
+        const { refund, customerId } = await db.transaction(async (trx) => {
             /** Row-lock the order — concurrent refunds on the same order serialize here. */
             const orderRow = await trx.from("orders").where("id", numericOrderId).forUpdate().first();
             if (!orderRow) {
@@ -74,7 +74,10 @@ export class RefundService {
                     .first();
                 if (existing) {
                     await existing.load("lineItems");
-                    return existing;
+                    return {
+                        refund: existing,
+                        customerId: order.customerId === null || order.customerId === undefined ? null : Number(order.customerId),
+                    };
                 }
             }
 
@@ -163,7 +166,10 @@ export class RefundService {
 
             await this.writeAuditNote(trx, order, refund);
 
-            return refund;
+            return {
+                refund,
+                customerId: order.customerId === null || order.customerId === undefined ? null : Number(order.customerId),
+            };
         });
 
         /** Fire after commit so listeners observe persisted state. */
@@ -171,6 +177,7 @@ export class RefundService {
             orderId: Number(refund.orderId),
             refundId: Number(refund.id),
             amountMinor: Number(refund.amountMinor),
+            customerId,
         });
 
         return refund;
@@ -376,6 +383,6 @@ export const refundService = new RefundService();
 
 declare module "@adonisjs/core/types" {
     interface EventsList {
-        "order:refunded": { orderId: number; refundId: number; amountMinor: number };
+        "order:refunded": { orderId: number; refundId: number; amountMinor: number; customerId: number | null };
     }
 }

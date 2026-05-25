@@ -1,6 +1,7 @@
 import type { HttpContext } from "@adonisjs/core/http";
 
 import ProductTag from "#models/product_tag";
+import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductTagTransformer from "#transformers/product_tag_transformer";
@@ -38,6 +39,7 @@ export default class AdminTagsController {
             return created;
         });
         await row.load("translations");
+        await CacheInvalidation.taxonomyChanged();
         ctx.response.status(201);
         return resource(ProductTagTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -62,6 +64,7 @@ export default class AdminTagsController {
             }
         });
         await row.load("translations");
+        await CacheInvalidation.taxonomyChanged();
         return resource(ProductTagTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
 
@@ -69,6 +72,7 @@ export default class AdminTagsController {
         const row = await ProductTag.find(ctx.params.id);
         if (!row) return ctx.response.status(404).json({ error: "tag_not_found" });
         await row.delete();
+        await CacheInvalidation.taxonomyChanged();
         return ctx.response.status(204);
     }
 }

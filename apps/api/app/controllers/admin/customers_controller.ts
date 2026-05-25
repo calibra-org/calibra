@@ -6,6 +6,7 @@ import { DateTime } from "luxon";
 import Customer from "#models/customer";
 import CustomerDownload from "#models/customer_download";
 import User from "#models/user";
+import { CacheInvalidation } from "#services/cache_invalidation";
 import { aggregateForCustomerIds, fetchCounts, forSingleCustomer } from "#services/customer_stats_service";
 import phoneService from "#services/phone_service";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
@@ -361,6 +362,7 @@ export default class AdminCustomersController {
 
         ctx.response.status(201);
         await customer.load("user");
+        await CacheInvalidation.customerChanged(customer.id);
         return {
             data: {
                 ...new CustomerTransformer(customer).toObject(),
@@ -397,6 +399,7 @@ export default class AdminCustomersController {
             }
         });
 
+        await CacheInvalidation.customerChanged(customer.id);
         return {
             data: {
                 ...new CustomerTransformer(customer).toObject(),
@@ -425,6 +428,7 @@ export default class AdminCustomersController {
                 await trx.from("auth_access_tokens").where("tokenable_id", Number(customer.user.id)).delete();
             }
         });
+        await CacheInvalidation.customerChanged(customer.id);
         return ctx.response.noContent();
     }
 
@@ -530,6 +534,11 @@ export default class AdminCustomersController {
             return { created, updated, deletedIds };
         });
 
+        const touched = [...result.created.map((c) => c.id), ...result.updated.map((c) => c.id), ...result.deletedIds];
+        for (const id of touched) {
+            await CacheInvalidation.customerChanged(id);
+        }
+
         return {
             data: {
                 created: result.created.map((c) => new CustomerTransformer(c).toObject()),
@@ -566,6 +575,7 @@ export default class AdminCustomersController {
                 await customer.user.save();
             }
         });
+        await CacheInvalidation.customerChanged(customer.id);
         return {
             data: {
                 ...new CustomerTransformer(customer).toObject(),

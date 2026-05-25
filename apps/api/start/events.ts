@@ -3,6 +3,7 @@ import { DateTime } from "luxon";
 
 import AdminActionPerformed from "#events/admin_action_performed";
 import AdminAuditLog from "#models/admin_audit_log";
+import { CacheInvalidation } from "#services/cache_invalidation";
 
 /**
  * Wire domain events to their listeners. Each listener does exactly one thing — keeping
@@ -27,4 +28,26 @@ emitter.on(AdminActionPerformed, async (event) => {
     } catch {
         /** Swallow — never let an audit failure break the actor's request. */
     }
+});
+
+/**
+ * Order lifecycle → cache invalidation. Every status flip mutates per-customer aggregates and
+ * the global counts/reports, so we invalidate `admin:customer:<id>` + `admin:customers` +
+ * `admin:reports` on every transition. The fan-out is cheap (tag-only, not key-scan) and keeps
+ * the admin dashboard honest with whatever the operator just did.
+ *
+ * Order:placed is a special case where the order is brand-new — invalidate broadly because the
+ * counts (`new_30d`, etc.) move too.
+ */
+emitter.on("order:status_changed", async ({ order }) => {
+    await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+});
+emitter.on("order:placed", async ({ order }) => {
+    await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+});
+emitter.on("order:completed", async ({ order }) => {
+    await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+});
+emitter.on("order:refunded", async ({ customerId }) => {
+    await CacheInvalidation.customerChanged(customerId);
 });

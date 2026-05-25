@@ -385,6 +385,10 @@ async function ensureEnvFiles(meta) {
              *  - `sync` (set in .env.test only): runs jobs inline; no worker, no transport needed.
              */
             `QUEUE_DRIVER=database`,
+            /** Rate-limiter counter store shared across api ↔ queue worker. */
+            `LIMITER_STORE=redis`,
+            /** Default cache store — selects the multi-tier redis store in `config/cache.ts`. */
+            `CACHE_DRIVER=redis`,
             "",
         ].join("\n"),
     );

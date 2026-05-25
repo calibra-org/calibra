@@ -125,6 +125,13 @@ export default class InventoryService {
             item.useTransaction(trx);
             item.stockQuantity = nextStock;
             item.stockStatus = computeStatus(nextStock, item.backorders);
+            /**
+             * Cache invariant: `stock_status` is intentionally NOT cached anywhere today (see
+             * the "never cache" list in apps/api/AGENTS.md — oversell risk). If a future caller
+             * starts caching the storefront's stock indicator, this is the spot to call
+             * `CacheInvalidation.productChanged(item.productId)` so the cached value can't
+             * drift behind a sold-out flip.
+             */
             await item.save();
 
             const movement = new InventoryMovement();

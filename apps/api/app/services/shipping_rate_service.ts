@@ -1,7 +1,9 @@
+import cache from "@adonisjs/cache/services/main";
 import db from "@adonisjs/lucid/services/db";
 
 import Region from "#models/region";
 import type ShippingZone from "#models/shipping_zone";
+import { bucketMinor, CacheKeys, CacheTags } from "#services/cache_keys";
 import { matchShippingZone } from "#services/shipping_zone_match";
 
 /**
@@ -31,6 +33,23 @@ export interface ShippingRateOption {
 }
 
 /**
+ * Cart subtotal bucket width (in minor units) used by the cache key for {@link enumerateShippingRates}.
+ * Two carts whose subtotals share a bucket share a cache slot — the price the storefront shows
+ * is identical between them. The cache wrap deliberately uses `grace: undefined` (no graced
+ * stale serve) because shipping cost is checkout-critical: better to fail loudly than to charge
+ * the wrong amount.
+ *
+ * **Threshold invariant**: `free_shipping.min_amount` MUST be a multiple of this bucket width.
+ * The current configured `free_shipping` rows in the seed are configured per Iranian retail
+ * convention (whole-Rial thresholds), so 10,000 minor units (≈100 Rial) is well below any
+ * realistic free-shipping threshold and the floor-bucket can never drift the `itemsTotal < min`
+ * decision. If a future operator sets `min_amount` to a non-multiple, the bucket can produce a
+ * cart that sees free-shipping when it shouldn't; the {@link bucketShippingTotal} comment is the
+ * place to revisit when that day comes.
+ */
+const SHIPPING_TOTAL_BUCKET_MINOR = 10_000;
+
+/**
  * Enumerate every shipping rate the storefront should show for `address`. Returns an empty array
  * when no matching zone (and no fallback) is configured — the controller should surface this as
  * "no shipping options available" rather than treating it as a system error.
@@ -38,41 +57,62 @@ export interface ShippingRateOption {
  * `itemsTotal` (cart subtotal in minor units, pre-discount) is required because `free_shipping`
  * eligibility checks against its `min_amount` setting; passing `0` is safe and matches the
  * "before any items are added" UX where free_shipping should not appear yet.
+ *
+ * Cached 5 minutes, tagged `shipping:zones`, **no grace** — see {@link SHIPPING_TOTAL_BUCKET_MINOR}
+ * for why. Any shipping zone / method / rate write must `cache.deleteByTag({ tags: [shipping:zones] })`.
  */
 export async function enumerateShippingRates(address: ShippingRateAddress, itemsTotal: number): Promise<ShippingRateOption[]> {
-    const zone = await resolveZone(address);
-    if (!zone) return [];
+    const key = CacheKeys.shipping.rates({
+        country: address.country,
+        regionId: address.regionId,
+        postcode: address.postcode,
+        itemsTotalBucket: bucketShippingTotal(itemsTotal),
+    });
+    return cache.getOrSet({
+        key,
+        ttl: "5m",
+        grace: undefined,
+        tags: [CacheTags.shippingZones],
+        factory: async () => {
+            const zone = await resolveZone(address);
+            if (!zone) return [];
 
-    const rows = await db
-        .from("shipping_zone_methods as szm")
-        .innerJoin("shipping_methods as sm", "sm.id", "szm.method_id")
-        .where("szm.zone_id", Number(zone.id))
-        .where("szm.enabled", true)
-        .select(
-            "szm.id as id",
-            "szm.title_override as title_override",
-            "szm.settings as settings",
-            "szm.ordering as ordering",
-            "sm.code as code",
-            "sm.title_default as title_default",
-        )
-        .orderBy("szm.ordering", "asc");
+            const rows = await db
+                .from("shipping_zone_methods as szm")
+                .innerJoin("shipping_methods as sm", "sm.id", "szm.method_id")
+                .where("szm.zone_id", Number(zone.id))
+                .where("szm.enabled", true)
+                .select(
+                    "szm.id as id",
+                    "szm.title_override as title_override",
+                    "szm.settings as settings",
+                    "szm.ordering as ordering",
+                    "sm.code as code",
+                    "sm.title_default as title_default",
+                )
+                .orderBy("szm.ordering", "asc");
 
-    const options: ShippingRateOption[] = [];
-    for (const row of rows) {
-        const settings = parseSettings(row.settings);
-        const resolved = resolveMethodCost(row.code, settings, itemsTotal);
-        if (!resolved) continue;
-        options.push({
-            id: Number(row.id),
-            methodCode: row.code,
-            title: (row.title_override ?? row.title_default) as string,
-            cost: resolved.cost,
-            taxable: resolved.taxable,
-            zoneId: Number(zone.id),
-        });
-    }
-    return options;
+            const options: ShippingRateOption[] = [];
+            for (const row of rows) {
+                const settings = parseSettings(row.settings);
+                const resolved = resolveMethodCost(row.code, settings, itemsTotal);
+                if (!resolved) continue;
+                options.push({
+                    id: Number(row.id),
+                    methodCode: row.code,
+                    title: (row.title_override ?? row.title_default) as string,
+                    cost: resolved.cost,
+                    taxable: resolved.taxable,
+                    zoneId: Number(zone.id),
+                });
+            }
+            return options;
+        },
+    });
+}
+
+function bucketShippingTotal(itemsTotal: number): string {
+    return bucketMinor(itemsTotal, SHIPPING_TOTAL_BUCKET_MINOR);
 }
 
 /**
