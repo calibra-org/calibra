@@ -1,0 +1,28 @@
+# Per-spin Meilisearch instance. Owns its own index volume so a re-index in one spin doesn't
+# poison another. The api on the host reads MEILISEARCH_HOST + MEILISEARCH_API_KEY from
+# `apps/api/.env` (written by spin.mjs) and talks to this container on its published port.
+#
+# Indexing logic lands in a follow-up PR — this stack only stands the service up and verifies
+# the api can reach it. `MEILI_NO_ANALYTICS=true` keeps the dev instance from phoning home.
+
+services:
+    meilisearch:
+        image: getmeili/meilisearch:v1.11
+        restart: unless-stopped
+        ports:
+            - "${MEILISEARCH_PORT}:7700"
+        environment:
+            MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+            MEILI_NO_ANALYTICS: "true"
+            MEILI_ENV: development
+            MEILI_LOG_LEVEL: WARN
+        volumes:
+            - meili_data:/meili_data
+        healthcheck:
+            test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:7700/health"]
+            interval: 10s
+            timeout: 3s
+            retries: 5
+
+volumes:
+    meili_data:

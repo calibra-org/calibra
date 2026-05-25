@@ -75,4 +75,34 @@ export default await Env.create(new URL("../", import.meta.url), {
      * OTLP collector (Tempo, Jaeger, Honeycomb's free tier, Grafana Cloud free tier).
      */
     OTEL_EXPORTER_OTLP_ENDPOINT: Env.schema.string.optional(),
+
+    /**
+     * Meilisearch — full-text + faceted search. Per-spin instance brought up by
+     * `docker/observability/docker-compose.meili.yml`; production points at the managed
+     * Meilisearch cluster. Both vars are optional so legacy spins and ace commands that
+     * don't touch search still boot.
+     */
+    MEILISEARCH_HOST: Env.schema.string.optional(),
+    MEILISEARCH_API_KEY: Env.schema.string.optional(),
+
+    /**
+     * GlitchTip (Sentry-protocol) DSN. Optional — when blank the `@sentry/node` init is
+     * skipped and uncaught exceptions surface only through Pino. When set, exceptions
+     * ship to the per-spin GlitchTip instance and appear at `errors.<slug>.spin.localhost`.
+     */
+    GLITCHTIP_DSN: Env.schema.string.optional(),
+
+    /**
+     * Per-spin observability mode. When `true`, `config/logger.ts` adds a JSON-line
+     * file target (`SPIN_API_LOG_PATH`) so Promtail can ship logs to Loki. When `false`
+     * (production, tests, no-spin dev), only the default transport runs.
+     */
+    DEV_OBSERVABILITY: Env.schema.boolean.optional(),
+
+    /**
+     * Absolute path the file logger writes ndjson into when `DEV_OBSERVABILITY=true`.
+     * Set by `scripts/spin.mjs` to `<worktree>/.spin/logs/api.ndjson` so the file lands
+     * exactly where Promtail's bind-mount expects it. Optional; ignored without observability.
+     */
+    SPIN_API_LOG_PATH: Env.schema.string.optional(),
 });
