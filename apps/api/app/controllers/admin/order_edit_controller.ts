@@ -14,6 +14,7 @@ import OrderMeta from "#models/order_meta";
 import OrderShippingLine from "#models/order_shipping_line";
 import Product from "#models/product";
 import ProductVariation from "#models/product_variation";
+import { CacheInvalidation } from "#services/cache_invalidation";
 import OrderTransformer from "#transformers/order_transformer";
 import {
     adminOrderAddressUpdateValidator,
@@ -395,6 +396,7 @@ export default class AdminOrderEditController {
     private async respondWithOrder(order: Order) {
         await order.refresh();
         await this.loadForResponse(order);
+        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
         return { data: new OrderTransformer(order).forAdmin() };
     }
 

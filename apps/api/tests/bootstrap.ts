@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { authApiClient } from "@adonisjs/auth/plugins/api_client";
+import cache from "@adonisjs/cache/services/main";
 import app from "@adonisjs/core/services/app";
 import testUtils from "@adonisjs/core/services/test_utils";
 import limiter from "@adonisjs/limiter/services/main";
@@ -39,6 +40,17 @@ export const runnerHooks: Required<Pick<Config, "setup" | "teardown">> = {
 };
 
 export const configureSuite: Config["configureSuite"] = (suite) => {
+    /**
+     * The cache lives in process-global state (Bentocache's in-memory L1, configured per
+     * `config/cache.ts`). Wipe it before every test in every suite so stale entries from a
+     * previous test never bleed into the current one — every test sees a cold cache.
+     */
+    suite.onGroup((group) => {
+        group.each.setup(async () => {
+            await cache.clear();
+            await cache.use("memory").clear();
+        });
+    });
     if (["browser", "functional", "e2e"].includes(suite.name)) {
         suite.setup(() => testUtils.httpServer().start());
         /**

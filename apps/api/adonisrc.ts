@@ -19,6 +19,7 @@ export default defineConfig({
         () => import("@adonisjs/lucid/commands"),
         () => import("@adonisjs/queue/commands"),
         () => import("@adonisjs/bouncer/commands"),
+        () => import("@adonisjs/cache/commands"),
     ],
 
     /**

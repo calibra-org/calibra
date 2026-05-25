@@ -2,6 +2,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 import { DateTime } from "luxon";
 
 import Product from "#models/product";
+import { CacheInvalidation } from "#services/cache_invalidation";
 import { syncLinks, syncProductImages, upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductTransformer from "#transformers/product_transformer";
@@ -101,6 +102,7 @@ export default class AdminProductsController {
             return row;
         });
         const reloaded = await this.reload(product.id);
+        await CacheInvalidation.productChanged(product.id);
         ctx.response.status(201);
         return resource(ProductTransformer.transform(reloaded!, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -131,6 +133,7 @@ export default class AdminProductsController {
             await syncProductImages(trx, product.id, payload.image_media_ids);
         });
         const reloaded = await this.reload(product.id);
+        await CacheInvalidation.productChanged(product.id);
         return resource(ProductTransformer.transform(reloaded!, ctx.i18n.locale).useVariant("forAdmin"));
     }
 
@@ -141,6 +144,7 @@ export default class AdminProductsController {
         }
         product.deletedAt = DateTime.utc();
         await product.save();
+        await CacheInvalidation.productChanged(product.id);
         return ctx.response.status(204);
     }
 
@@ -200,6 +204,7 @@ export default class AdminProductsController {
             return row;
         });
         const reloaded = await this.reload(copy.id);
+        await CacheInvalidation.productChanged(copy.id);
         ctx.response.status(201);
         return resource(ProductTransformer.transform(reloaded!, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -263,6 +268,7 @@ export default class AdminProductsController {
                 deletedIds.push(Number(id));
             }
         });
+        await CacheInvalidation.productsChanged([...createdIds, ...updatedIds, ...deletedIds]);
         return { data: { created: createdIds, updated: updatedIds, deleted: deletedIds } };
     }
 

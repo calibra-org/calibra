@@ -70,6 +70,14 @@ export default await Env.create(new URL("../", import.meta.url), {
     LIMITER_STORE: Env.schema.enum(["redis", "memory"] as const),
 
     /**
+     * Default cache store name. `redis` is the production multi-tier store (L1 memory + L2 Redis
+     * + Redis bus) used by every hot read path. `memory` is the single-tier in-process fallback —
+     * .env.test sets it so Japa runs never reach Redis. Per-call `cache.use("...")` still works
+     * either way; this only sets the *default* store when callers do not specify one.
+     */
+    CACHE_DRIVER: Env.schema.enum(["redis", "memory"] as const),
+
+    /**
      * OpenTelemetry OTLP endpoint. Optional — when blank we skip the exporter and the
      * SDK falls back to no-op (spans are created in-memory and dropped). Point at any
      * OTLP collector (Tempo, Jaeger, Honeycomb's free tier, Grafana Cloud free tier).

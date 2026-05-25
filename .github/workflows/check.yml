@@ -146,6 +146,7 @@ jobs:
                   TRANSMIT_TRANSPORT: none
                   QUEUE_DRIVER: sync
                   LIMITER_STORE: memory
+                  CACHE_DRIVER: memory
               run: node ace check:api-docs
 
     sdk-codegen-sync:

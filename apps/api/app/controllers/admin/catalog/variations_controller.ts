@@ -5,6 +5,7 @@ import { DateTime } from "luxon";
 import Product from "#models/product";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductVariation from "#models/product_variation";
+import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductVariationTransformer from "#transformers/product_variation_transformer";
@@ -69,6 +70,7 @@ export default class AdminVariationsController {
         await row.refresh();
         await row.load("translations");
         await row.load("attributePins");
+        await CacheInvalidation.productChanged(product.id);
         ctx.response.status(201);
         return resource(ProductVariationTransformer.transform(row, ctx.i18n.locale));
     }
@@ -98,6 +100,7 @@ export default class AdminVariationsController {
         });
         await row.load("translations");
         await row.load("attributePins");
+        await CacheInvalidation.productChanged(row.productId);
         return resource(ProductVariationTransformer.transform(row, ctx.i18n.locale));
     }
 
@@ -109,6 +112,7 @@ export default class AdminVariationsController {
         if (!row) return ctx.response.status(404).json({ error: "variation_not_found" });
         row.deletedAt = DateTime.utc();
         await row.save();
+        await CacheInvalidation.productChanged(row.productId);
         return ctx.response.status(204);
     }
 }
