@@ -61,4 +61,18 @@ export default await Env.create(new URL("../", import.meta.url), {
      * needing live SSE and shouldn't crash if Redis is unreachable.
      */
     TRANSMIT_TRANSPORT: Env.schema.enum(["redis", "none"] as const),
+
+    /**
+     * Rate limiter store. `redis` shares counters across the api ↔ queue worker processes;
+     * `memory` is used by tests and any boot path that should not touch Redis. The composite
+     * limiters in `start/limiter.ts` key off the active store via `limiter.use("...")`.
+     */
+    LIMITER_STORE: Env.schema.enum(["redis", "memory"] as const),
+
+    /**
+     * OpenTelemetry OTLP endpoint. Optional — when blank we skip the exporter and the
+     * SDK falls back to no-op (spans are created in-memory and dropped). Point at any
+     * OTLP collector (Tempo, Jaeger, Honeycomb's free tier, Grafana Cloud free tier).
+     */
+    OTEL_EXPORTER_OTLP_ENDPOINT: Env.schema.string.optional(),
 });

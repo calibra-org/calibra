@@ -8,7 +8,26 @@
 
 import router from "@adonisjs/core/services/router";
 
+import { healthChecks } from "#start/health";
+
+/**
+ * Always-200 liveness probe. The orchestrator uses this to know the process is alive
+ * (sockets opened, event loop running); failing it triggers a restart.
+ */
 router.get("/health", async () => ({ status: "ok" }));
+router.get("/health/live", async () => ({ status: "ok" }));
+
+/**
+ * Readiness probe — 200 when every registered check is healthy, 503 when any single
+ * one is not. The orchestrator routes traffic away from a 503 pod, but does not
+ * restart it (a flaky dependency isn't the pod's fault). Report body is JSON for the
+ * `spin doctor` summary table.
+ */
+router.get("/health/ready", async ({ response }) => {
+    const report = await healthChecks.run();
+    response.status(report.isHealthy ? 200 : 503);
+    return report;
+});
 
 await import("./routes/catalog.js");
 await import("./routes/auth.js");

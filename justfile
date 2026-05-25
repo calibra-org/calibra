@@ -148,7 +148,7 @@ docs-lint:
 # Diff the live Adonis router against the bundled OpenAPI specs (fails on new drift)
 docs-check:
     pnpm --filter @calibra/api-docs run build:json
-    pnpm --filter @calibra/api exec node ace check:api-docs
+    TRANSMIT_TRANSPORT=none QUEUE_DRIVER=sync LIMITER_STORE=memory pnpm --filter @calibra/api exec node ace check:api-docs
 
 # Clean build artifacts and caches
 clean:

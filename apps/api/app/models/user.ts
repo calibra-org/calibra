@@ -3,7 +3,7 @@ import { DbAccessTokensProvider } from "@adonisjs/auth/access_tokens";
 import { withAuthFinder } from "@adonisjs/auth/mixins/lucid";
 import { compose } from "@adonisjs/core/helpers";
 import hash from "@adonisjs/core/services/hash";
-import { hasOne } from "@adonisjs/lucid/orm";
+import { beforeSave, hasOne } from "@adonisjs/lucid/orm";
 import type { HasOne } from "@adonisjs/lucid/types/relations";
 
 import { UserSchema } from "#database/schema";
@@ -45,4 +45,16 @@ export default class User extends compose(UserSchema, AuthFinder) {
         type: "auth_token",
         tokenSecretLength: 40,
     });
+
+    /**
+     * Normalise the email to lowercase before every save. The `citext` column type also
+     * does case-insensitive lookups, but stamping a canonical form on write keeps the
+     * audit log + welcome-email render free of mixed-case eyesores like `Foo@Bar.Com`.
+     */
+    @beforeSave()
+    static lowercaseEmail(user: User) {
+        if (user.$dirty.email !== undefined && typeof user.email === "string") {
+            user.email = user.email.toLowerCase();
+        }
+    }
 }

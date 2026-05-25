@@ -52,7 +52,7 @@ test.group("GET /api/v1/account/orders", (group) => {
         assert.equal(body.data[0].status, "pending");
     });
 
-    test("cross-tenant order id returns 404", async ({ client }) => {
+    test("cross-tenant order id returns 403", async ({ client }) => {
         const { user } = await createUserWithCustomer();
         const other = await Customer.create({
             firstName: "X",
@@ -70,7 +70,7 @@ test.group("GET /api/v1/account/orders", (group) => {
         await orderStateMachine.transition(draft, OrderStatus.Pending);
 
         const response = await client.get(`/api/v1/account/orders/${draft.id}`).loginAs(user);
-        response.assertStatus(404);
+        response.assertStatus(403);
     });
 
     test("single-order view includes line items + addresses + history", async ({ client, assert }) => {

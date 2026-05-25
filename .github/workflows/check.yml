@@ -66,6 +66,15 @@ jobs:
                     --health-interval 5s
                     --health-timeout 5s
                     --health-retries 10
+            redis:
+                image: redis:7-alpine
+                ports:
+                    - 6379:6379
+                options: >-
+                    --health-cmd "redis-cli ping"
+                    --health-interval 5s
+                    --health-timeout 3s
+                    --health-retries 10
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
@@ -136,6 +145,7 @@ jobs:
                   REDIS_PORT: "6379"
                   TRANSMIT_TRANSPORT: none
                   QUEUE_DRIVER: sync
+                  LIMITER_STORE: memory
               run: node ace check:api-docs
 
     sdk-codegen-sync:

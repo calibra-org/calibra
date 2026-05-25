@@ -1,6 +1,7 @@
 import router from "@adonisjs/core/services/router";
 
 import { middleware } from "#start/kernel";
+import { authLimiter, loginEmailLimiter } from "#start/limiter";
 
 const RegisterController = () => import("#controllers/auth/register_controller");
 const LoginController = () => import("#controllers/auth/login_controller");
@@ -11,10 +12,10 @@ const MeController = () => import("#controllers/account/me_controller");
 
 router
     .group(() => {
-        router.post("/register", [RegisterController, "handle"]).as("auth.register");
-        router.post("/login", [LoginController, "handle"]).as("auth.login");
-        router.post("/password/forgot", [PasswordForgotController, "handle"]).as("auth.password.forgot");
-        router.post("/password/reset", [PasswordResetController, "handle"]).as("auth.password.reset");
+        router.post("/register", [RegisterController, "handle"]).as("auth.register").use(authLimiter);
+        router.post("/login", [LoginController, "handle"]).as("auth.login").use([authLimiter, loginEmailLimiter]);
+        router.post("/password/forgot", [PasswordForgotController, "handle"]).as("auth.password.forgot").use(authLimiter);
+        router.post("/password/reset", [PasswordResetController, "handle"]).as("auth.password.reset").use(authLimiter);
 
         router
             .group(() => {

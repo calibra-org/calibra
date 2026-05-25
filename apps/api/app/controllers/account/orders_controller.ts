@@ -1,6 +1,7 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 
+import { viewOrder } from "#abilities/main";
 import { OrderStatus } from "#enums/order_status";
 import Order from "#models/order";
 import OrderTransformer from "#transformers/order_transformer";
@@ -8,9 +9,9 @@ import OrderTransformer from "#transformers/order_transformer";
 const DEFAULT_PER_PAGE = 20;
 
 /**
- * `GET /api/v1/account/orders`. Returns the authenticated customer's orders, excluding drafts and
- * soft-deleted rows. Cross-tenant access produces a 404, never a 403, so probes cannot enumerate
- * other customers' order ids.
+ * `GET /api/v1/account/orders`. The list endpoint filters at the SQL layer (Bouncer would
+ * be wasteful here); the detail endpoint loads the row by id, then authorises with the
+ * {@link viewOrder} ability so a cross-tenant probe yields 403, not 404.
  */
 export default class AccountOrdersController {
     async index(ctx: HttpContext) {
@@ -22,6 +23,9 @@ export default class AccountOrdersController {
             .where("customer_id", Number(customer.id))
             .whereNot("status", OrderStatus.Draft)
             .whereNull("deleted_at")
+            .preload("lineItems")
+            .preload("billingAddress")
+            .preload("shippingAddress")
             .orderBy("id", "desc")
             .paginate(page, perPage);
 
@@ -38,27 +42,26 @@ export default class AccountOrdersController {
     }
 
     async show(ctx: HttpContext) {
-        const customer = await this.requireCustomer(ctx);
         const numericId = Number(ctx.params.id);
         if (!Number.isFinite(numericId)) {
             throw new Exception("Order not found", { status: 404, code: "E_NOT_FOUND" });
         }
         const order = await Order.query()
             .where("id", numericId)
-            .where("customer_id", Number(customer.id))
             .whereNot("status", OrderStatus.Draft)
             .whereNull("deleted_at")
+            .preload("lineItems")
+            .preload("billingAddress")
+            .preload("shippingAddress")
+            .preload("shippingLines")
+            .preload("taxLines")
+            .preload("statusHistory")
             .first();
         if (!order) {
             throw new Exception("Order not found", { status: 404, code: "E_NOT_FOUND" });
         }
 
-        await order.load("lineItems");
-        await order.load("billingAddress");
-        await order.load("shippingAddress");
-        await order.load("shippingLines");
-        await order.load("taxLines");
-        await order.load("statusHistory");
+        await ctx.bouncer.authorize(viewOrder, order);
 
         return { data: new OrderTransformer(order).forDetail() };
     }

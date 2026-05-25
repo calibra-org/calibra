@@ -5,6 +5,15 @@ AdonisJS 7 backend. Source of truth for products, orders, customers, auth, and a
 ## Stack
 
 - **AdonisJS 7** (TypeScript ESM, hot-reload via `hot-hook`, `@poppinss/ts-exec` as the JIT loader).
+- **`@adonisjs/bouncer`** — abilities under `app/abilities/main.ts` enforce per-row ownership. Throw via `ctx.bouncer.authorize(ability, resource)` from controllers; the framework's self-handled `E_AUTHORIZATION_FAILURE` turns into a 403. Use a `findOrFail` + `authorize` pair instead of inline `where("user_id", ctx.auth.user!.id)` lookups.
+- **`@adonisjs/limiter`** — named limiters in `start/limiter.ts` (auth/login_email/payments/webhooks/admin_writes). Apply per-route via `.use(limiterName)`. The bootstrap clears the memory store between specs so tests don't collide.
+- **`@adonisjs/shield`** — security headers (CSP report-only, HSTS, X-Frame DENY, X-Content-Type nosniff). CSRF is disabled — bearer-token API has no cookie surface.
+- **`@adonisjs/lock`** — distributed mutex via `lock.createLock(key, ttl).runImmediately(callback)`. Wrap any critical section where two concurrent requests with the same id would corrupt state (import rollback, refund issuance, PSP verify). Returns `[acquired, result]`; treat `acquired=false` as 409.
+- **`@adonisjs/core/health`** — `/health/live` + `/health/ready`. The ready probe runs registered checks from `start/health.ts` (DB, Redis, memory, disk) and returns 503 on degraded.
+- **`@adonisjs/otel`** — env-gated. `OTEL_EXPORTER_OTLP_ENDPOINT` enables tracing; pointed at any OTLP collector (Tempo, Jaeger, Grafana Cloud free tier). Error reporting today is Pino structured logs only; a Sentry-protocol receiver like GlitchTip can be wired later if/when needed.
+- **Domain events** — `app/events/<event>.ts` subclasses `BaseEvent`. Listeners register in `start/events.ts`. Use events to decouple side effects (audit log writes, broadcasts) from the request flow.
+- **Domain exceptions** — `app/exceptions/domain_exceptions.ts` provides `ResourceNotFound` (404), `ResourceConflict` (409), `ResourceGone` (410), `BusinessRule` (422). Each self-handles to the consistent `{ errors: [{ message, code, ...meta }] }` envelope.
+- **Request ID** — every response carries `X-Request-Id`; the global exception handler tags Sentry with it. Upstream-provided IDs (load balancer, Cloudflare) are honoured verbatim.
 - **Lucid 22** ORM on **PostgreSQL 17**. v22 auto-generates `database/schema.ts` from migrations — models extend the generated `<Entity>Schema` classes (column types come for free, no hand-maintained `@column` boilerplate).
 - **VineJS 4** for request validation. Schemas compile once at module scope.
 - **`@adonisjs/auth` 10** with the `access_tokens` guard (configured on first wiring — see "Auth" below).

@@ -81,7 +81,7 @@ test.group("GET /api/v1/.../orders/:id/history", (group) => {
         assert.equal(last.label_key, "order.status.completed");
     });
 
-    test("customer cannot read another customer's history (404)", async ({ client }) => {
+    test("customer cannot read another customer's history (403)", async ({ client }) => {
         const { user } = await makeCustomerUser();
         const { customer: other } = await makeCustomerUser();
         const product = await createTaxableProduct({ regularPrice: 1_000_000 });
@@ -94,6 +94,6 @@ test.group("GET /api/v1/.../orders/:id/history", (group) => {
         await advanceOrderTo(order, OrderStatus.Processing);
 
         const response = await client.get(`/api/v1/account/orders/${order.id}/history`).loginAs(user);
-        response.assertStatus(404);
+        response.assertStatus(403);
     });
 });

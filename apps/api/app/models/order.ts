@@ -1,8 +1,9 @@
-import { belongsTo, column, hasMany, hasOne } from "@adonisjs/lucid/orm";
+import { belongsTo, column, hasMany, hasOne, scope } from "@adonisjs/lucid/orm";
 import type { BelongsTo, HasMany, HasOne } from "@adonisjs/lucid/types/relations";
 
 import { OrderSchema } from "#database/schema";
 import type { OrderStatus } from "#enums/order_status";
+import { OrderStatus as OrderStatusEnum } from "#enums/order_status";
 import Customer from "#models/customer";
 import OrderAddress from "#models/order_address";
 import OrderCouponLine from "#models/order_coupon_line";
@@ -85,4 +86,13 @@ export default class Order extends OrderSchema {
 
     @belongsTo(() => PaymentAttempt, { foreignKey: "lastPaymentAttemptId" })
     declare lastPaymentAttempt: BelongsTo<typeof PaymentAttempt>;
+
+    /** Hides soft-deleted rows. Most reads should layer this in via `.apply(s => s.notTrashed())`. */
+    static notTrashed = scope((query) => query.whereNull("deleted_at"));
+
+    /** Mirror — returns only soft-deleted rows. Useful for admin "trash bin" views. */
+    static onlyTrashed = scope((query) => query.whereNotNull("deleted_at"));
+
+    /** Drops draft orders (carts in flight). Storefront + customer-facing surfaces always want this. */
+    static notDraft = scope((query) => query.whereNot("status", OrderStatusEnum.Draft));
 }

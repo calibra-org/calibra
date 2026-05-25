@@ -48,6 +48,7 @@ export function StepExporting({ exportRow, onFinished, onBackToList }: StepExpor
         }
     }, []);
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: see end-of-effect note
     useEffect(() => {
         if (finishedRef.current) return;
         let cancelled = false;
@@ -69,7 +70,8 @@ export function StepExporting({ exportRow, onFinished, onBackToList }: StepExpor
                  */
                 onFinished(response.data, tokenRef.current ?? response.download_token);
             } catch {
-                onFinished(row, tokenRef.current);
+                /** Last-ditch fallback when the GET also fails — hand back the initial row. */
+                onFinished(exportRow, tokenRef.current);
             }
         };
 
@@ -96,6 +98,32 @@ export function StepExporting({ exportRow, onFinished, onBackToList }: StepExpor
             }
         };
 
+        /**
+         * Reconcile against the row's true backend state before opening SSE. Without this,
+         * a wizard that mounts on a row whose terminal event already fired (operator
+         * refreshed mid-run, came back from a deep-link, api/queue worker was restarted
+         * mid-run and the terminal broadcast was lost) sits forever on the in-progress
+         * screen — SSE only delivers events that occur *after* it subscribes.
+         */
+        void (async () => {
+            try {
+                const response = await getExport(exportRow.id, locale);
+                if (cancelled || finishedRef.current) return;
+                setRow(response.data);
+                if (
+                    response.data.status === "completed" ||
+                    response.data.status === "completed_with_errors" ||
+                    response.data.status === "failed" ||
+                    response.data.status === "cancelled"
+                ) {
+                    finishedRef.current = true;
+                    onFinished(response.data, tokenRef.current ?? response.download_token);
+                }
+            } catch {
+                /** GET failure isn't fatal — SSE / polling will recover. */
+            }
+        })();
+
         const unsubscribe = streamExport(exportRow.id, {
             onOpen: () => {
                 if (cancelled) return;
@@ -116,7 +144,13 @@ export function StepExporting({ exportRow, onFinished, onBackToList }: StepExpor
             cancelled = true;
             unsubscribe();
         };
-    }, [exportRow.id, locale, onFinished, row]);
+        /**
+         * Intentionally omit `row` from deps — including it tears the SSE down + re-opens it
+         * on every progress update, which guarantees event loss between unsubscribe and
+         * resubscribe. The handlers reach `row` via `setRow((current) => …)` instead, and the
+         * catch-fallback inside `finalize()` uses the immutable `exportRow` prop.
+         */
+    }, [exportRow, locale, onFinished]);
 
     useEffect(() => {
         if (!pollingActive || finishedRef.current) return;

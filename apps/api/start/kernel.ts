@@ -10,13 +10,19 @@ import server from "@adonisjs/core/services/server";
 server.errorHandler(() => import("#exceptions/handler"));
 
 server.use([
+    () => import("#middleware/request_id_middleware"),
     () => import("#middleware/container_bindings_middleware"),
     () => import("#middleware/force_json_response_middleware"),
     () => import("#middleware/detect_user_locale_middleware"),
     () => import("@adonisjs/cors/cors_middleware"),
 ]);
 
-router.use([() => import("@adonisjs/core/bodyparser_middleware"), () => import("@adonisjs/auth/initialize_auth_middleware")]);
+router.use([
+    () => import("@adonisjs/core/bodyparser_middleware"),
+    () => import("@adonisjs/auth/initialize_auth_middleware"),
+    () => import("#middleware/initialize_bouncer_middleware"),
+    () => import("@adonisjs/shield/shield_middleware"),
+]);
 
 export const middleware = router.named({
     auth: () => import("#middleware/auth_middleware"),
