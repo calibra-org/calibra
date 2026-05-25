@@ -53,6 +53,7 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
     }, []);
 
     /** Open SSE stream. */
+    // biome-ignore lint/correctness/useExhaustiveDependencies: see end-of-effect note
     useEffect(() => {
         if (finishedRef.current) return;
         let cancelled = false;
@@ -69,7 +70,8 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
                 }
                 onFinished(data);
             } catch {
-                onFinished(row);
+                /** Last-ditch fallback when the GET also fails — hand back the initial row. */
+                onFinished(importRow);
             }
         };
 
@@ -100,6 +102,33 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
             }
         };
 
+        /**
+         * Reconcile against the row's true backend state before opening SSE. Without this,
+         * a wizard that mounts on a row whose terminal event already fired (operator
+         * refreshed mid-run, came back from a deep-link, api/queue worker was restarted
+         * mid-run and the terminal broadcast was lost) sits forever on the in-progress
+         * screen — SSE only delivers events that occur *after* it subscribes.
+         */
+        void (async () => {
+            try {
+                const { data } = await getImport(importRow.id, locale);
+                if (cancelled || finishedRef.current) return;
+                setRow(data);
+                if (
+                    data.status === "completed" ||
+                    data.status === "completed_with_errors" ||
+                    data.status === "failed" ||
+                    data.status === "cancelled" ||
+                    data.status === "rolled_back"
+                ) {
+                    finishedRef.current = true;
+                    onFinished(data);
+                }
+            } catch {
+                /** GET failure isn't fatal — SSE / polling will recover. */
+            }
+        })();
+
         const unsubscribe = streamImport(importRow.id, {
             onOpen: () => {
                 if (cancelled) return;
@@ -120,7 +149,13 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
             cancelled = true;
             unsubscribe();
         };
-    }, [importRow.id, locale, onFinished, row]);
+        /**
+         * Intentionally omit `row` from deps — including it tears the SSE down + re-opens it
+         * on every progress update, which guarantees event loss between unsubscribe and
+         * resubscribe. The handlers reach `row` via `setRow((current) => …)` instead, and the
+         * catch-fallback inside `finalize()` uses the immutable `importRow` prop.
+         */
+    }, [importRow, locale, onFinished]);
 
     /** Polling fallback. */
     useEffect(() => {
