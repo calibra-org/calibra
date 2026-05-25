@@ -9,11 +9,9 @@
  * can mark the row as `invalid_date`.
  */
 
-import jalaali from "jalaali-js";
+import { isValidJalaaliDate, toGregorian, toJalaali } from "@mohammadxali/jalaali-js";
 
 import { toEnglishDigits } from "./digits";
-
-const { isValidJalaaliDate, toGregorian, toJalaali } = jalaali;
 
 export interface JalaliDate {
     jy: number;

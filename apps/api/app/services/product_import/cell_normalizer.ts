@@ -5,9 +5,7 @@
  * If the api ever consumes `@calibra/shared` directly, drop this file and re-export from there.
  */
 
-import jalaali from "jalaali-js";
-
-const { isValidJalaaliDate, toGregorian } = jalaali;
+import { isValidJalaaliDate, toGregorian } from "@mohammadxali/jalaali-js";
 
 const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
 const ARABIC_INDIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";

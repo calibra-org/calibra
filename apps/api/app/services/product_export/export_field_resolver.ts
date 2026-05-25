@@ -1,4 +1,4 @@
-import jalaali from "jalaali-js";
+import { toJalaali } from "@mohammadxali/jalaali-js";
 
 import { toPersianDigits } from "#services/product_import/cell_normalizer";
 import { IMPORT_FIELD_BY_KEY } from "#services/product_import/import_field_catalog";
@@ -121,7 +121,7 @@ function formatDate(value: unknown, opts: ExportFormatOptions): string {
     const d = date.getUTCDate();
     let formatted: string;
     if (opts.date_format === "jalali") {
-        const { jy, jm, jd } = jalaali.toJalaali(y, m, d);
+        const { jy, jm, jd } = toJalaali(y, m, d);
         formatted = `${jy}/${pad(jm)}/${pad(jd)}`;
     } else if (opts.date_format === "ddmmyyyy") {
         formatted = `${pad(d)}/${pad(m)}/${y}`;
