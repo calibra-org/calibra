@@ -166,6 +166,62 @@ test.group("/api/v1/admin/products/export — download signed URL", (group) => {
             .loginAs(admin);
         response.assertStatus(403);
     });
+
+    /**
+     * Regression test for the seconds-vs-milliseconds TTL bug. The signed-URL helper passed
+     * `Math.floor((expiresAt - now) / 1000)` to `messageVerifier.sign`'s `expiresIn` arg, but
+     * Adonis interprets a numeric `expiresIn` as MILLISECONDS — so a 24h window collapsed to
+     * ~86 seconds. The download endpoint failed minutes after the export completed. We
+     * verify two things here: (1) the happy path returns 200 with a real CSV body, and (2)
+     * the token's embedded `expiryDate` actually sits in the long future, not seconds away.
+     */
+    test("download with freshly minted token returns the CSV — TTL well in the future", async ({ client, assert }) => {
+        const admin = await createExportAdmin();
+        const start = await client
+            .post("/api/v1/admin/products/export/start")
+            .withGuard("api")
+            .loginAs(admin)
+            .json({ columns: ["sku"], status: ["publish"] });
+        const id = (start.body() as { data: { id: number } }).data.id;
+        await waitForCompletion(id);
+
+        const show = await client.get(`/api/v1/admin/products/export/${id}`).withGuard("api").loginAs(admin);
+        show.assertStatus(200);
+        const token = (show.body() as { download_token: string | null }).download_token;
+        assert.isString(token);
+        assert.isAbove(token!.length, 0);
+
+        /**
+         * Decode the verifier's payload (base64url first segment, no signature check —
+         * that's the api's job at /download). The embedded `expiryDate` must be far
+         * enough in the future that an operator clicking download within ~1 hour still
+         * works. The bug had this expiry at "now + ~86s".
+         */
+        const [encoded] = token!.split(".");
+        const padded = encoded + "=".repeat((4 - (encoded.length % 4)) % 4);
+        const payload = JSON.parse(Buffer.from(padded, "base64url").toString("utf8")) as {
+            message: { userId: number; exportId: number };
+            purpose: string;
+            expiryDate: string;
+        };
+        assert.equal(payload.purpose, "export_download");
+        assert.equal(payload.message.exportId, id);
+        const ttlMs = new Date(payload.expiryDate).getTime() - Date.now();
+        assert.isAbove(
+            ttlMs,
+            60 * 60 * 1000,
+            `download token TTL ${ttlMs}ms is < 1h — likely the seconds-vs-ms regression returned`,
+        );
+
+        const download = await client
+            .get(`/api/v1/admin/products/export/${id}/download`)
+            .qs({ token: token! })
+            .withGuard("api")
+            .loginAs(admin);
+        download.assertStatus(200);
+        assert.match(download.headers()["content-type"] ?? "", /text\/csv/);
+        assert.include(download.text(), "sku");
+    });
 });
 
 test.group("/api/v1/admin/products/export — presets CRUD", (group) => {

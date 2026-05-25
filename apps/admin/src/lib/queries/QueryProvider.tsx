@@ -20,20 +20,40 @@ const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 /**
  * Bumped whenever the persisted query shape changes (queryFn return type, queryKey schema). A
  * mismatch wipes the cache instead of trying to rehydrate stale entries into new types.
+ *
+ * Bumped to "v2" on the namespace-per-origin + refetch-on-mount fix so any browser carrying a
+ * pre-existing "v1" cache (which could have absorbed an empty snapshot from a now-purged spin)
+ * gets a clean rehydrate on first load.
  */
-const PERSIST_BUSTER = "v1";
+const PERSIST_BUSTER = "v2";
 
-const STORE_NAME = "calibra-admin-query-cache";
 const STORE_KEY = "react-query-cache";
+
+/**
+ * Per-origin IDB database name. Different spins / staging / production all hit different
+ * origins (`admin.<slug>.spin.localhost:<caddyHttps>`, `admin.staging.example.com`, …); giving
+ * each its own IDB database prevents one environment's cache from rehydrating into another.
+ * Falls back to a stable name on the server (the persister is window-only anyway, but the
+ * function gets evaluated during static analysis too).
+ */
+function storeName(): string {
+    if (typeof window === "undefined") return "calibra-admin-query-cache";
+    return `calibra-admin-query-cache:${window.location.host}`;
+}
 
 /**
  * Builds a QueryClient with admin-panel defaults:
  *
- * - `staleTime: 5 min` so dashboard widgets cache between navigations.
- * - `gcTime: 30 min` so a hot back-nav skips the network entirely.
+ * - `staleTime: 5 min` so dashboard widgets dedupe across components that mount together.
+ * - `gcTime: 30 min` so a hot back-nav has the data ready for the optimistic first paint.
  * - `retry: 1` (keeps the UI snappy when the API is down without spinning on every render).
  * - `refetchOnWindowFocus: true` (operators bouncing between admin and another tab want fresh
  *   numbers, not a stale snapshot).
+ * - `refetchOnMount: "always"` — even when persisted data rehydrates as `success` within
+ *   `staleTime`, every page mount also fires a fresh network request in the background. The
+ *   cache is purely an optimistic paint layer; the network is authoritative. Without this, a
+ *   stale persisted snapshot (e.g. empty arrays cached from a previous build, a deleted
+ *   environment, or a logged-out session) could trap the operator on skeletons forever.
  */
 function buildClient(): QueryClient {
     return new QueryClient({
@@ -43,6 +63,7 @@ function buildClient(): QueryClient {
                 gcTime: 30 * 60 * 1000,
                 retry: 1,
                 refetchOnWindowFocus: true,
+                refetchOnMount: "always",
             },
         },
     });
@@ -50,12 +71,13 @@ function buildClient(): QueryClient {
 
 /**
  * idb-keyval storage adapter shaped like the Web Storage API the async-storage persister expects.
- * Lives in its own IDB database (`calibra-admin-query-cache`) so it doesn't collide with other
- * idb-keyval consumers and can be wiped wholesale via the browser's site-data UI.
+ * Lives in a per-origin IDB database (see {@link storeName}) so it doesn't collide with other
+ * idb-keyval consumers AND so different environments don't pollute each other's cache. The DB
+ * can be wiped wholesale via the browser's site-data UI when needed.
  */
 function buildPersister() {
     if (typeof window === "undefined") return undefined;
-    const idbStore = createStore(STORE_NAME, "kv");
+    const idbStore = createStore(storeName(), "kv");
     return createAsyncStoragePersister({
         storage: {
             getItem: async (key) => {

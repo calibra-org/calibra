@@ -14,10 +14,21 @@ const nextConfig: NextConfig = {
      * Allow dev-server cross-origin requests from the per-spin Caddy hostnames. The spin
      * fronts the dev server at `https://admin.<slug>.spin.localhost:<caddyHttps>`; without
      * this list Next.js 15.3+ blocks `/_next/webpack-hmr` and other dev resources because
-     * they originate from a hostname other than the dev server's own. Wildcard covers every
-     * slug; legacy bare-port access still works (Next allows same-origin by default).
+     * they originate from a hostname other than the dev server's own.
+     *
+     * Next's glob `*` matches a single dot-less segment, so `*.spin.localhost` only catches
+     * `<one>.spin.localhost`. Our hostnames have two labels before `.spin.localhost`
+     * (`admin.<slug>.spin.localhost`), so we also include `*.*.spin.localhost`. Spin.mjs
+     * additionally emits `NEXT_DEV_ALLOWED_ORIGINS` with the literal hostnames as belt-and-
+     * suspenders for any pattern Next doesn't accept; we merge that in here.
      */
-    allowedDevOrigins: ["*.spin.localhost"],
+    allowedDevOrigins: [
+        "*.spin.localhost",
+        "*.*.spin.localhost",
+        ...(process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(",")
+            .map((s) => s.trim())
+            .filter(Boolean) ?? []),
+    ],
     /**
      * Pin Turbopack's workspace root to the monorepo this `apps/admin` lives in. Without
      * this, when the dir tree contains another `pnpm-workspace.yaml` higher up (e.g. when
