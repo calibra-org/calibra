@@ -10,6 +10,10 @@ export interface EntityPickerProps {
     /** Selected entity ids, displayed as chips. */
     selectedIds: number[];
     onSelectionChange: (next: number[]) => void;
+    /** Optional add hook — fires with the full option when one is selected, for rich row rendering. */
+    onAdd?: (option: ComboboxOption) => void;
+    /** Optional remove hook — fires with the id when one is deselected. */
+    onRemove?: (id: number) => void;
     /** Async loader — called with the user's typed query (debounced). */
     onSearch: (query: string) => Promise<ComboboxOption[]>;
     /** Resolver for selected ids → chip metadata. Falls back to `#${id}` when not provided. */
@@ -39,6 +43,8 @@ export interface EntityPickerProps {
 export function EntityPicker({
     selectedIds,
     onSelectionChange,
+    onAdd,
+    onRemove,
     onSearch,
     onResolve,
     placeholder,
@@ -59,6 +65,8 @@ export function EntityPicker({
         <MultiCombobox
             selectedIds={selectedIds}
             onSelectionChange={(next) => onSelectionChange(next.map((id) => Number(id)))}
+            onAdd={onAdd}
+            onRemove={onRemove === undefined ? undefined : (id) => onRemove(Number(id))}
             onSearch={onSearch}
             onResolve={onResolve === undefined ? undefined : (ids) => onResolve(ids.map((id) => Number(id)))}
             labels={{

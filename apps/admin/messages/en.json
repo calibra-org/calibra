@@ -2512,6 +2512,7 @@
             "products": "Cart products",
             "addProduct": "Add product",
             "removeItem": "Remove item",
+            "quantity": "Quantity",
             "email": "Buyer email",
             "country": "Country",
             "runTest": "Run test",

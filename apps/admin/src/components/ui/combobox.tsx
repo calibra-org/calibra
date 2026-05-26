@@ -13,6 +13,8 @@ export interface ComboboxOption {
     id: number | string;
     label: string;
     sublabel?: string;
+    /** Optional thumbnail URL rendered as a 32px square inside the list row + chip when present. */
+    imageUrl?: string | null;
     /** Disabled rows can't be selected (e.g. items the operator already used elsewhere). */
     disabled?: boolean;
 }
@@ -33,6 +35,14 @@ export interface MultiComboboxLabels {
 interface BaseProps {
     selectedIds: (number | string)[];
     onSelectionChange: (next: (number | string)[]) => void;
+    /**
+     * Optional callback fired when an option is added to the selection. Receives the full
+     * option (label, sublabel, imageUrl) so callers that need to render rich selection rows
+     * (thumbnail + name + sku) can capture metadata at pick-time without re-fetching.
+     */
+    onAdd?: (option: ComboboxOption) => void;
+    /** Optional callback fired when an option is removed; receives the option id. */
+    onRemove?: (id: number | string) => void;
     /** Async loader called with the debounced search query. Returns the option list to render. */
     onSearch: (query: string) => Promise<ComboboxOption[]>;
     /**
@@ -70,6 +80,8 @@ interface BaseProps {
 export function MultiCombobox({
     selectedIds,
     onSelectionChange,
+    onAdd,
+    onRemove,
     onSearch,
     onResolve,
     labels,
@@ -129,12 +141,18 @@ export function MultiCombobox({
     const toggle = (entityId: number | string) => {
         if (selectedIds.includes(entityId)) {
             onSelectionChange(selectedIds.filter((existing) => existing !== entityId));
+            onRemove?.(entityId);
         } else {
             onSelectionChange([...selectedIds, entityId]);
+            const option = options.find((opt) => opt.id === entityId) ?? resolved.get(entityId);
+            if (option !== undefined) onAdd?.(option);
         }
     };
 
-    const removeAll = () => onSelectionChange([]);
+    const removeAll = () => {
+        for (const id of selectedIds) onRemove?.(id);
+        onSelectionChange([]);
+    };
 
     const selectedChips = selectedIds.map((sid) => resolved.get(sid) ?? { id: sid, label: `#${sid}` });
 
@@ -277,6 +295,15 @@ export function MultiCombobox({
                                                         >
                                                             {isSelected && <Check className="size-3" aria-hidden="true" />}
                                                         </span>
+                                                        {opt.imageUrl !== undefined && opt.imageUrl !== null && (
+                                                            // eslint-disable-next-line @next/next/no-img-element
+                                                            <img
+                                                                src={opt.imageUrl}
+                                                                alt=""
+                                                                className="size-8 shrink-0 rounded border border-border bg-muted object-cover"
+                                                                loading="lazy"
+                                                            />
+                                                        )}
                                                         <span className="flex min-w-0 flex-col">
                                                             <span className="truncate">{opt.label}</span>
                                                             {opt.sublabel !== undefined && (

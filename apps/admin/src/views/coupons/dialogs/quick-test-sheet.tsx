@@ -23,6 +23,10 @@ interface QuickTestSheetProps {
 interface LineItem {
     productId: number;
     quantity: number;
+    /** Snapshot of the picker option so we can render thumbnail + name + sku without re-fetching. */
+    label: string;
+    sublabel?: string;
+    imageUrl?: string | null;
 }
 
 /**
@@ -56,11 +60,21 @@ export function QuickTestSheet({ open, onOpenChange, couponId }: QuickTestSheetP
 
     const test = useTestCoupon(couponId);
 
-    const addProduct = (productId: number) => {
+    const addProduct = (option: { id: number | string; label: string; sublabel?: string; imageUrl?: string | null }) => {
+        const productId = Number(option.id);
         setItems((prev) => {
             const existing = prev.find((row) => row.productId === productId);
             if (existing) return prev;
-            return [...prev, { productId, quantity: 1 }];
+            return [
+                ...prev,
+                {
+                    productId,
+                    quantity: 1,
+                    label: option.label,
+                    sublabel: option.sublabel,
+                    imageUrl: option.imageUrl ?? null,
+                },
+            ];
         });
     };
 
@@ -96,24 +110,46 @@ export function QuickTestSheet({ open, onOpenChange, couponId }: QuickTestSheetP
                         <ProductPicker
                             selectedIds={items.map((row) => row.productId)}
                             onSelectionChange={(next) => {
-                                const removed = items.filter((row) => !next.includes(row.productId)).map((row) => row.productId);
-                                for (const id of removed) removeItem(id);
-                                const added = next.filter((id) => !items.find((row) => row.productId === id));
-                                for (const id of added) addProduct(id);
+                                /** Drop any rows the operator deselected; the onAdd hook handles
+                                 * adds with full option metadata so we don't run an `addProduct(id)`
+                                 * pass here too. */
+                                setItems((prev) => prev.filter((row) => next.includes(row.productId)));
                             }}
+                            onAdd={(option) => addProduct(option)}
+                            onRemove={(id) => removeItem(id)}
                             placeholder={t("addProduct")}
                         />
                         {items.length > 0 && (
                             <div className="flex flex-col gap-2 rounded-md border border-border p-2">
                                 {items.map((row) => (
-                                    <div key={row.productId} className="flex items-center gap-2 text-sm">
-                                        <span className="grow truncate">#{row.productId}</span>
+                                    <div key={row.productId} className="flex items-center gap-3 text-sm">
+                                        {row.imageUrl !== undefined && row.imageUrl !== null ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img
+                                                src={row.imageUrl}
+                                                alt=""
+                                                className="size-10 shrink-0 rounded border border-border bg-muted object-cover"
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div
+                                                aria-hidden="true"
+                                                className="size-10 shrink-0 rounded border border-border bg-muted"
+                                            />
+                                        )}
+                                        <div className="flex min-w-0 grow flex-col">
+                                            <span className="truncate text-sm">{row.label}</span>
+                                            {row.sublabel !== undefined && (
+                                                <span className="truncate text-muted-foreground text-xs">{row.sublabel}</span>
+                                            )}
+                                        </div>
                                         <Input
                                             type="number"
                                             min="1"
                                             value={row.quantity}
                                             onChange={(e) => setQuantity(row.productId, Math.max(1, Number(e.target.value) || 1))}
-                                            className="h-8 w-20"
+                                            className="h-8 w-16"
+                                            aria-label={t("quantity")}
                                         />
                                         <Button
                                             type="button"
