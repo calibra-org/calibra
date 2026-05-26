@@ -3,9 +3,14 @@ import { z } from "zod";
 import type { AdminProductDetailView } from "#/lib/adapters/product-detail";
 
 /**
- * Zod schema for the full product detail form. Money is kept as Toman MAJOR units (the input
- * layer renders Toman; the submit adapter multiplies ×10 to convert back to Rial minor units).
- * Dates are ISO strings (UTC); the Jalali date input handles display conversion.
+ * Zod schema for the product detail form. **Single-language content**: the CMS treats Persian
+ * as the only source of truth — `name`, `slug`, `description`, `shortDescription`, `purchaseNote`,
+ * and `externalButtonText` live as flat string fields. The API still accepts a `translations[]`
+ * array for back-compat, but the admin only ever sends a single `{ locale: "fa", … }` entry; the
+ * formValuesToPayload adapter handles the wire shape.
+ *
+ * Money is kept as Toman MAJOR units (the input layer renders Toman; the submit adapter
+ * multiplies ×10 to convert back to Rial minor units). Dates are ISO strings (UTC).
  */
 export const productDetailSchema = z
     .object({
@@ -33,24 +38,12 @@ export const productDetailSchema = z
         externalUrl: z.string().nullable(),
         menuOrder: z.number().int(),
         posAvailable: z.boolean(),
-        translations: z.object({
-            fa: z.object({
-                name: z.string().min(1, "name_required").max(300),
-                slug: z.string().min(1).max(320),
-                description: z.string().nullable(),
-                shortDescription: z.string().max(500).nullable(),
-                purchaseNote: z.string().max(2000).nullable(),
-                externalButtonText: z.string().max(120).nullable(),
-            }),
-            en: z.object({
-                name: z.string().max(300),
-                slug: z.string().max(320),
-                description: z.string().nullable(),
-                shortDescription: z.string().max(500).nullable(),
-                purchaseNote: z.string().max(2000).nullable(),
-                externalButtonText: z.string().max(120).nullable(),
-            }),
-        }),
+        name: z.string().min(1, "name_required").max(300),
+        slug: z.string().min(1).max(320),
+        description: z.string().nullable(),
+        shortDescription: z.string().max(500).nullable(),
+        purchaseNote: z.string().max(2000).nullable(),
+        externalButtonText: z.string().max(120).nullable(),
         categoryIds: z.array(z.number()),
         tagIds: z.array(z.number()),
         brandId: z.number().nullable(),
@@ -79,7 +72,7 @@ export const productDetailSchema = z
 
 export type ProductDetailFormValues = z.infer<typeof productDetailSchema>;
 
-/** Default values for the New Product flow. Persian-first; ready for the operator to fill in. */
+/** Default values for the New Product flow. */
 export function emptyProductDetailValues(): ProductDetailFormValues {
     return {
         type: "simple",
@@ -106,10 +99,12 @@ export function emptyProductDetailValues(): ProductDetailFormValues {
         externalUrl: null,
         menuOrder: 0,
         posAvailable: true,
-        translations: {
-            fa: { name: "", slug: "", description: null, shortDescription: null, purchaseNote: null, externalButtonText: null },
-            en: { name: "", slug: "", description: null, shortDescription: null, purchaseNote: null, externalButtonText: null },
-        },
+        name: "",
+        slug: "",
+        description: null,
+        shortDescription: null,
+        purchaseNote: null,
+        externalButtonText: null,
         categoryIds: [],
         tagIds: [],
         brandId: null,
@@ -122,12 +117,12 @@ export function emptyProductDetailValues(): ProductDetailFormValues {
 }
 
 /**
- * Maps the loaded server-side product into form values. Rial-minor prices become Toman major
- * via /10. Translations get bucketed by locale (fa/en); a missing locale becomes empty strings.
+ * Maps the loaded server-side product into form values. Picks the `fa` translation when present,
+ * falls back to the first available row, then to empty strings. Rial-minor prices become Toman
+ * major via /10.
  */
 export function productToFormValues(p: AdminProductDetailView): ProductDetailFormValues {
-    const fa = p.translations.find((t) => t.locale === "fa");
-    const en = p.translations.find((t) => t.locale === "en");
+    const t = p.translations.find((row) => row.locale === "fa") ?? p.translations[0];
     return {
         type: p.type,
         sku: p.sku,
@@ -153,24 +148,12 @@ export function productToFormValues(p: AdminProductDetailView): ProductDetailFor
         externalUrl: p.externalUrl,
         menuOrder: p.menuOrder,
         posAvailable: p.posAvailable,
-        translations: {
-            fa: {
-                name: fa?.name ?? "",
-                slug: fa?.slug ?? "",
-                description: fa?.description ?? null,
-                shortDescription: fa?.shortDescription ?? null,
-                purchaseNote: fa?.purchaseNote ?? null,
-                externalButtonText: fa?.externalButtonText ?? null,
-            },
-            en: {
-                name: en?.name ?? "",
-                slug: en?.slug ?? "",
-                description: en?.description ?? null,
-                shortDescription: en?.shortDescription ?? null,
-                purchaseNote: en?.purchaseNote ?? null,
-                externalButtonText: en?.externalButtonText ?? null,
-            },
-        },
+        name: t?.name ?? "",
+        slug: t?.slug ?? "",
+        description: t?.description ?? null,
+        shortDescription: t?.shortDescription ?? null,
+        purchaseNote: t?.purchaseNote ?? null,
+        externalButtonText: t?.externalButtonText ?? null,
         categoryIds: p.categoryIds,
         tagIds: p.tagIds,
         brandId: p.brandId,
@@ -190,35 +173,13 @@ export function productToFormValues(p: AdminProductDetailView): ProductDetailFor
 }
 
 /**
- * Map form values to the wire payload the API understands. Toman → Rial. Translations packed
- * into the array shape `[{ locale: "fa", … }, { locale: "en", … }]` (English is skipped when
- * empty so the API doesn't create an empty translation row).
+ * Map form values to the wire payload the API understands. Toman → Rial. The content fields
+ * (`name`, `slug`, …) get packed into a single-entry `translations[{ locale: "fa", … }]` array —
+ * the API still owns the translations table, the admin just stops pretending the catalog is
+ * multilingual. If/when the API drops `translations[]` for products, this is the only place that
+ * needs to change.
  */
 export function formValuesToPayload(values: ProductDetailFormValues): Record<string, unknown> {
-    const translations: Record<string, unknown>[] = [];
-    if (values.translations.fa.name.length > 0) {
-        translations.push({
-            locale: "fa",
-            name: values.translations.fa.name,
-            slug: values.translations.fa.slug,
-            description: values.translations.fa.description,
-            short_description: values.translations.fa.shortDescription,
-            purchase_note: values.translations.fa.purchaseNote,
-            external_button_text: values.translations.fa.externalButtonText,
-        });
-    }
-    if (values.translations.en.name.length > 0) {
-        translations.push({
-            locale: "en",
-            name: values.translations.en.name,
-            slug: values.translations.en.slug,
-            description: values.translations.en.description,
-            short_description: values.translations.en.shortDescription,
-            purchase_note: values.translations.en.purchaseNote,
-            external_button_text: values.translations.en.externalButtonText,
-        });
-    }
-
     return {
         type: values.type,
         sku: values.sku === null || values.sku.length === 0 ? null : values.sku,
@@ -244,7 +205,17 @@ export function formValuesToPayload(values: ProductDetailFormValues): Record<str
         external_url: values.externalUrl === null || values.externalUrl.length === 0 ? null : values.externalUrl,
         menu_order: values.menuOrder,
         pos_available: values.posAvailable,
-        translations,
+        translations: [
+            {
+                locale: "fa",
+                name: values.name,
+                slug: values.slug,
+                description: values.description,
+                short_description: values.shortDescription,
+                purchase_note: values.purchaseNote,
+                external_button_text: values.externalButtonText,
+            },
+        ],
         category_ids: values.categoryIds,
         tag_ids: values.tagIds,
         brand_ids: values.brandId === null ? [] : [values.brandId],

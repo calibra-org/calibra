@@ -9,8 +9,7 @@ import { Button } from "#/components/ui/button";
 import { Link } from "#/lib/i18n/navigation";
 
 export interface DetailHeaderProps {
-    titleFa: string;
-    titleEn: string;
+    title: string;
     sku: string | null;
     type: "simple" | "variable" | "grouped" | "external";
     status: "draft" | "publish" | "pending" | "private";
@@ -34,25 +33,14 @@ const statusTone: Record<DetailHeaderProps["status"], StatusTone> = {
  * and is the primary call-to-action; the More menu lives next to it (rendered by the parent so
  * the wrapper can hold the duplicate / trash mutations).
  */
-export function DetailHeader({
-    titleFa,
-    titleEn,
-    sku,
-    type,
-    status,
-    updatedAt,
-    isDirty,
-    isSubmitting,
-    onSave,
-    isNew,
-}: DetailHeaderProps) {
+export function DetailHeader({ title, sku, type, status, updatedAt, isDirty, isSubmitting, onSave, isNew }: DetailHeaderProps) {
     const t = useTranslations("Products.detail");
     const tStatus = useTranslations("ProductStatus");
     const tType = useTranslations("Products.detail.types");
     const locale = useLocale();
     const isRtl = locale === "fa";
     const BackIcon = isRtl ? ArrowRight : ArrowLeft;
-    const displayTitle = isRtl ? titleFa || titleEn : titleEn || titleFa;
+    const displayTitle = title;
 
     return (
         <div className="sticky top-0 z-30 -mx-4 mb-4 border-border border-b bg-background/95 px-4 py-3 backdrop-blur">

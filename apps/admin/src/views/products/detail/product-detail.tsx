@@ -118,8 +118,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
         <FormProvider {...form}>
             <NavigationGuard when={form.formState.isDirty} />
             <DetailHeader
-                titleFa={form.watch("translations.fa.name")}
-                titleEn={form.watch("translations.en.name")}
+                title={form.watch("name")}
                 sku={form.watch("sku")}
                 type={type}
                 status={form.watch("status")}
@@ -201,7 +200,7 @@ function GeneralCard({ locale }: { locale: Locale }) {
     const tType = useTranslations("Products.detail.types");
     const tDesc = useTranslations("Products.detail.types.descriptions");
     const { control, register, watch, formState } = useFormFromCtx();
-    const slug = watch("translations.fa.slug");
+    const slug = watch("slug");
     const slugCheck = useSlugAvailability({ slug, locale });
 
     return (
@@ -237,24 +236,24 @@ function GeneralCard({ locale }: { locale: Locale }) {
                 />
 
                 <Field
-                    id="name-fa"
-                    label={`${tField("name")} (فا)`}
+                    id="name"
+                    label={tField("name")}
                     span="col-span-12 md:col-span-9"
-                    error={formState.errors.translations?.fa?.name?.message}
+                    error={formState.errors.name?.message}
                     helper={<HelperTooltip>{tTip("name")}</HelperTooltip>}
                 >
-                    <Input id="name-fa" {...register("translations.fa.name")} />
+                    <Input id="name" {...register("name")} />
                 </Field>
 
                 <Field
-                    id="slug-fa"
-                    label={`${tField("slug")} (فا)`}
+                    id="slug"
+                    label={tField("slug")}
                     span="col-span-12 md:col-span-6"
-                    error={formState.errors.translations?.fa?.slug?.message}
+                    error={formState.errors.slug?.message}
                     helper={<HelperTooltip>{tTip("slug")}</HelperTooltip>}
                     hint={slugCheck.data === false ? t("slugTaken") : undefined}
                 >
-                    <Input id="slug-fa" dir="ltr" className="font-mono" {...register("translations.fa.slug")} />
+                    <Input id="slug" dir="ltr" className="font-mono" {...register("slug")} />
                 </Field>
 
                 <Field
@@ -285,21 +284,13 @@ function GeneralCard({ locale }: { locale: Locale }) {
                     />
                 </Field>
 
-                <Field id="name-en" label={`${tField("name")} (en)`} span="col-span-12 md:col-span-6">
-                    <Input id="name-en" dir="ltr" {...register("translations.en.name")} />
-                </Field>
-
-                <Field id="slug-en" label={`${tField("slug")} (en)`} span="col-span-12 md:col-span-6">
-                    <Input id="slug-en" dir="ltr" className="font-mono" {...register("translations.en.slug")} />
-                </Field>
-
                 <Field
-                    id="short-fa"
-                    label={`${tField("shortDescription")} (فا)`}
+                    id="shortDescription"
+                    label={tField("shortDescription")}
                     span="col-span-12"
                     helper={<HelperTooltip>{tTip("shortDescription")}</HelperTooltip>}
                 >
-                    <Textarea id="short-fa" rows={2} {...register("translations.fa.shortDescription")} />
+                    <Textarea id="shortDescription" rows={2} {...register("shortDescription")} />
                 </Field>
             </div>
         </SectionCard>
@@ -316,11 +307,11 @@ function DescriptionCard() {
         <SectionCard title={t("sections.description")} helper={<HelperTooltip>{tTip("description")}</HelperTooltip>}>
             <Controller
                 control={control}
-                name="translations.fa.description"
+                name="description"
                 render={({ field }) => (
-                    <Field id="description-fa" label={`${tField("description")} (فا)`}>
+                    <Field id="description" label={tField("description")}>
                         <Textarea
-                            id="description-fa"
+                            id="description"
                             rows={6}
                             value={field.value ?? ""}
                             onChange={(event) => field.onChange(event.target.value)}
@@ -421,6 +412,7 @@ function PricingCard({ externalUrlVariant }: { externalUrlVariant: boolean }) {
                                                     starts.onChange(next.from ?? null);
                                                     ends.onChange(next.to ?? null);
                                                 }}
+                                                direction="future"
                                             />
                                         </Field>
                                     )}
@@ -589,7 +581,7 @@ function AdvancedCard() {
                     )}
                 />
                 <Field id="purchaseNote" label={tField("purchaseNote")} span="col-span-12">
-                    <Textarea id="purchaseNote" rows={2} {...register("translations.fa.purchaseNote")} />
+                    <Textarea id="purchaseNote" rows={2} {...register("purchaseNote")} />
                 </Field>
                 <Controller
                     control={control}
