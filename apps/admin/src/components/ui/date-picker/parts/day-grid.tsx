@@ -130,9 +130,14 @@ export function DayGrid({
      */
     const modifiersClassNames = useMemo(
         () => ({
-            previewRange: "[&_button]:bg-primary/30 [&_button]:text-primary-foreground",
+            /** Hover-preview band paints the cell directly (matching range_middle's geometry)
+             * at half opacity so the in-progress range reads as a translucent extension of
+             * the anchor circle. */
+            previewRange:
+                "before:absolute before:inset-y-0.5 before:inset-x-0 before:bg-primary/40 [&_button]:!border-0 [&_button]:!bg-transparent [&_button]:!text-primary-foreground",
             today: "[&_button]:border [&_button]:border-foreground/40",
-            anchor: "[&_button]:!bg-primary [&_button]:!text-primary-foreground",
+            /** Anchor (within-mode first click) reads as a filled circle, today-border off. */
+            anchor: "[&_button]:!border-0 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
         }),
         [],
     );
@@ -212,31 +217,34 @@ export function DayGrid({
                 day_button:
                     "relative z-10 mx-auto inline-flex size-8 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                 outside: "text-muted-foreground/30",
-                selected: "[&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
+                /**
+                 * Selected / start / end / middle all suppress the today border (`!border-0`)
+                 * — otherwise the today ring fires alongside the range modifier and outlines
+                 * the inner circle, which makes the circle read as a separate shape from the
+                 * band cap behind it. With the border off the circle and the cap blend into
+                 * one continuous pill.
+                 */
+                selected:
+                    "[&_button]:!border-0 [&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
                 /**
                  * Range visualization (Linear-style):
-                 * - middle days paint their full `<td>` with `bg-primary/30` so adjacent cells
-                 *   join into one continuous band; the day number stays on a WHITE-equivalent
-                 *   `text-foreground` so the band passes WCAG AA on the dark theme;
-                 * - start / end cells paint only HALF of the cell via a `before:` pseudo, so
-                 *   the band visually starts at the selected circle's centre rather than the
-                 *   cell edge. `start-1/2` + `end-0` (logical Tailwind) auto-flips in RTL,
-                 *   which we need because Persian timelines run right→left. `rounded-s-full`
-                 *   / `rounded-e-full` give the band a pill cap that hugs the selected circle.
-                 */
-                /**
-                 * The band sits at `inset-y-0.5` (2 px from each cell edge) so its 32 px
-                 * height matches the `size-8` button exactly. With matched diameters the
-                 * `rounded-s-full` / `rounded-e-full` cap traces the same circle as the start
-                 * / end button, and the cap + circle read as one continuous pill instead of a
-                 * smaller band with bulging circles riding on top.
+                 * - middle days paint their full `<td>` band with `bg-primary` so adjacent
+                 *   cells join into one continuous strip; the day number stays on
+                 *   `text-primary-foreground` so it passes WCAG AA on the band;
+                 * - start / end cells paint HALF of the cell via a `before:` pseudo, so the
+                 *   band visually starts at the selected circle's centre rather than the cell
+                 *   edge. `start-1/2` + `end-0` (logical Tailwind) auto-flips in RTL.
+                 * `inset-y-0.5` gives the band 32 px so its height matches the `size-8` button
+                 * exactly — same diameter means the `rounded-s-full` / `rounded-e-full` cap
+                 * traces the same circle as the start / end button, and the cap + circle read
+                 * as one continuous pill.
                  */
                 range_start:
-                    "before:absolute before:inset-y-0.5 before:end-0 before:start-1/2 before:rounded-s-full before:bg-primary [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                    "before:absolute before:inset-y-0.5 before:end-0 before:start-1/2 before:rounded-s-full before:bg-primary [&_button]:!border-0 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
                 range_end:
-                    "before:absolute before:inset-y-0.5 before:start-0 before:end-1/2 before:rounded-e-full before:bg-primary [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                    "before:absolute before:inset-y-0.5 before:start-0 before:end-1/2 before:rounded-e-full before:bg-primary [&_button]:!border-0 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
                 range_middle:
-                    "before:absolute before:inset-y-0.5 before:inset-x-0 before:bg-primary [&_button]:!bg-transparent [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
+                    "before:absolute before:inset-y-0.5 before:inset-x-0 before:bg-primary [&_button]:!border-0 [&_button]:!bg-transparent [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
                 disabled: "text-muted-foreground/30 cursor-not-allowed before:!hidden [&_button]:!bg-transparent",
             }}
         />
