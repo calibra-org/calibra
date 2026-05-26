@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { AlertTriangle, ImageOff } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, ImageOff, Tag as TagIcon } from "lucide-react";
 import type { useTranslations } from "next-intl";
 
 type TFunction = ReturnType<typeof useTranslations>;
@@ -11,8 +11,10 @@ import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "#/components/ui/hover-card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "#/components/ui/tooltip";
 import { formatDate, formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
+import { useBulkUpdateProducts } from "#/lib/products/mutations";
 import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
@@ -68,10 +70,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
     return [
         {
             id: "select",
-            meta: {
-                headerClassName: "!px-2 sticky start-0 z-20 bg-muted",
-                cellClassName: "!px-2 sticky start-0 z-10 bg-card",
-            },
+            meta: { headerClassName: "!px-2", cellClassName: "!px-2" },
             header: ({ table }) => {
                 const all = table.getIsAllRowsSelected();
                 const some = table.getIsSomeRowsSelected();
@@ -98,15 +97,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         },
         {
             id: "favorite",
-            /**
-             * Sticky-start offset of `start-11` (44px) puts the favorite column flush with the
-             * trailing edge of the select column, so on horizontal scroll the checkbox + star
-             * sit pinned together as a single 92px gutter.
-             */
-            meta: {
-                headerClassName: "!px-2 sticky start-11 z-20 bg-muted",
-                cellClassName: "!px-2 sticky start-11 z-10 bg-card",
-            },
+            meta: { headerClassName: "!px-2", cellClassName: "!px-2" },
             header: () => (
                 <span className="sr-only" aria-hidden="true">
                     {ctx.t("columns.favorite")}
@@ -211,27 +202,90 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             id: "stock",
             header: sortableHeader("stock", ctx.t("columns.stock")),
             meta: { cellClassName: "text-start" },
-            cell: ({ row }) => {
-                const product = row.original;
-                const showLow =
-                    product.stockQuantity !== null && product.stockQuantity > 0 && product.stockQuantity <= ctx.lowStockThreshold;
-                return (
-                    <span className="inline-flex items-center gap-2">
-                        {product.stockQuantity !== null && (
-                            <span className="text-muted-foreground text-xs tabular-nums">
-                                {formatNumber(product.stockQuantity, ctx.locale)}
-                            </span>
-                        )}
-                        <StatusBadge tone={stockTone[product.stockStatus]}>{ctx.stockT(product.stockStatus)}</StatusBadge>
-                        {showLow && (
-                            <span title={ctx.t("lowStock")} className="text-amber-500">
-                                <AlertTriangle className="size-3.5" aria-hidden="true" />
-                            </span>
-                        )}
-                    </span>
-                );
-            },
+            cell: ({ row }) => (
+                <StockCell
+                    quantity={row.original.stockQuantity}
+                    stockStatus={row.original.stockStatus}
+                    lowStock={row.original.lowStock}
+                    lowStockThreshold={ctx.lowStockThreshold}
+                    locale={ctx.locale}
+                    stockT={ctx.stockT}
+                    t={ctx.t}
+                />
+            ),
+            size: 168,
+        },
+        {
+            id: "visibility",
+            header: () => (
+                <DataTableColumnHeader
+                    columnId="visibility"
+                    title={ctx.t("columns.visibility")}
+                    canSort={false}
+                    sort={ctx.sort}
+                    onSort={ctx.onSort}
+                    onHide={() => ctx.onHideColumn("visibility")}
+                    labels={ctx.sortLabels}
+                />
+            ),
+            cell: ({ row }) => <VisibilityCell productId={row.original.id} value={row.original.catalogVisibility} t={ctx.t} />,
+            enableSorting: false,
+            size: 132,
+        },
+        {
+            id: "salePeriod",
+            header: () => (
+                <DataTableColumnHeader
+                    columnId="salePeriod"
+                    title={ctx.t("columns.salePeriod")}
+                    canSort={false}
+                    sort={ctx.sort}
+                    onSort={ctx.onSort}
+                    onHide={() => ctx.onHideColumn("salePeriod")}
+                    labels={ctx.sortLabels}
+                />
+            ),
+            cell: ({ row }) => (
+                <SalePeriodCell from={row.original.saleStartsAt} to={row.original.saleEndsAt} locale={ctx.locale} />
+            ),
+            enableSorting: false,
             size: 160,
+        },
+        {
+            id: "inventory",
+            header: () => (
+                <DataTableColumnHeader
+                    columnId="inventory"
+                    title={ctx.t("columns.inventory")}
+                    canSort={false}
+                    sort={ctx.sort}
+                    onSort={ctx.onSort}
+                    onHide={() => ctx.onHideColumn("inventory")}
+                    labels={ctx.sortLabels}
+                />
+            ),
+            cell: ({ row }) =>
+                row.original.stockQuantity === null ? (
+                    <span className="text-muted-foreground">—</span>
+                ) : (
+                    <span className="tabular-nums">{formatNumber(row.original.stockQuantity, ctx.locale)}</span>
+                ),
+            enableSorting: false,
+            size: 100,
+        },
+        {
+            id: "createdAt",
+            header: sortableHeader("created_at", ctx.t("columns.createdAt")),
+            cell: ({ row }) => (
+                <time
+                    dateTime={row.original.createdAt}
+                    title={formatDate(row.original.createdAt, ctx.locale)}
+                    className="text-muted-foreground text-xs"
+                >
+                    {formatDate(row.original.createdAt, ctx.locale)}
+                </time>
+            ),
+            size: 140,
         },
         {
             id: "price",
@@ -334,7 +388,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
         },
         {
             id: "actions",
-            meta: { headerClassName: "!px-2", cellClassName: "!px-2 sticky end-0 bg-card" },
+            meta: { headerClassName: "!px-2", cellClassName: "!px-2" },
             header: () => (
                 <span className="sr-only" aria-hidden="true">
                     {ctx.t("columns.actions")}
@@ -356,6 +410,135 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
 
 function Separator() {
     return <span className="size-1 rounded-full bg-muted-foreground/40" aria-hidden="true" />;
+}
+
+interface StockCellProps {
+    quantity: number | null;
+    stockStatus: StockStatus;
+    lowStock: boolean;
+    lowStockThreshold: number;
+    locale: Locale;
+    stockT: TFunction;
+    t: TFunction;
+}
+
+/**
+ * Compact stock cell. Badge color is binary — green when there's stock, red when the rolled-up
+ * total is 0. The "low stock" state lives *outside* the badge as a separate warning chip so the
+ * primary in-stock signal stays unambiguously green; the operator scans down the column and
+ * spots "warning next to in-stock" without re-reading every chip.
+ *
+ *   ۱۸۱ موجود                                ← plain green chip
+ *   ۳ موجود   ⚠ کم‌موجود                       ← green chip + amber warning chip beside it
+ *   ۰ ناموجود                                ← red chip
+ *
+ * For products without an inventory row (`manage_stock=false` / untracked) the cell renders the
+ * status-only chip without a quantity, since the number would always be `0` and read as out of
+ * stock by mistake.
+ */
+function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale, stockT, t }: StockCellProps) {
+    const tracked = quantity !== null;
+    const isOut = tracked && quantity <= 0;
+    const isLow = !isOut && tracked && (lowStock || (quantity ?? 0) <= lowStockThreshold);
+    const isInStock = !isOut;
+
+    const wrapCls = isInStock
+        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+        : "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300";
+    const label = stockT(isInStock ? "instock" : "outofstock");
+
+    return (
+        <span className="inline-flex items-center gap-1.5">
+            <span
+                className={cn("inline-flex h-5 items-center gap-1 rounded-full border px-1.5 text-[11px] leading-none", wrapCls)}
+                title={tracked ? `${formatNumber(quantity ?? 0, locale)} — ${label}` : label}
+            >
+                {tracked && <span className="font-semibold tabular-nums">{formatNumber(quantity ?? 0, locale)}</span>}
+                <span className="font-medium">{label}</span>
+            </span>
+            {isLow && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={(props) => (
+                                <button
+                                    type="button"
+                                    aria-label={t("lowStock")}
+                                    {...props}
+                                    className="inline-flex size-5 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                >
+                                    <AlertTriangle className="size-3" aria-hidden="true" />
+                                </button>
+                            )}
+                        />
+                        <TooltipContent>{t("lowStock")}</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
+        </span>
+    );
+}
+
+interface VisibilityCellProps {
+    productId: number;
+    value: AdminProduct["catalogVisibility"];
+    t: TFunction;
+}
+
+/**
+ * Inline visibility toggle. Clicking flips between `hidden` and the previous shown state
+ * (default `visible`); intermediate states `catalog` / `search` collapse to `hidden` on toggle.
+ * Wire through `useBulkUpdateProducts({ ids: [id], catalogVisibility: … })` so the same
+ * server-side audit + cache invalidation as the bulk action runs for free.
+ */
+function VisibilityCell({ productId, value, t }: VisibilityCellProps) {
+    const mutation = useBulkUpdateProducts();
+    const isHidden = value === "hidden";
+    const Icon = isHidden ? EyeOff : Eye;
+    const label = t(isHidden ? "columns.visibilityHidden" : "columns.visibilityShown");
+
+    const onToggle = () => {
+        if (mutation.isPending) return;
+        mutation.mutate({
+            ids: [productId],
+            catalogVisibility: isHidden ? "visible" : "hidden",
+        });
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={onToggle}
+            disabled={mutation.isPending}
+            aria-pressed={!isHidden}
+            title={label}
+            className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-foreground text-xs transition-colors hover:bg-accent hover:text-foreground",
+                isHidden && "text-muted-foreground",
+                mutation.isPending && "opacity-60",
+            )}
+        >
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
+            <span>{label}</span>
+        </button>
+    );
+}
+
+interface SalePeriodCellProps {
+    from: string | null;
+    to: string | null;
+    locale: Locale;
+}
+
+function SalePeriodCell({ from, to, locale }: SalePeriodCellProps) {
+    if (from === null && to === null) return <span className="text-muted-foreground">—</span>;
+    const display = [from, to].map((iso) => (iso === null ? "…" : formatDate(iso, locale))).join(" → ");
+    return (
+        <Badge variant="outline" className="font-normal text-xs">
+            <TagIcon className="size-3" aria-hidden="true" />
+            {display}
+        </Badge>
+    );
 }
 
 interface CategoriesCellProps {

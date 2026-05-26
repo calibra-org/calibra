@@ -14,6 +14,7 @@ export const createProductValidator = vine.compile(
     vine.object({
         type: vine.enum(["simple", "variable", "grouped", "external"]).optional(),
         sku: vine.string().trim().maxLength(100).nullable().optional(),
+        gtin: vine.string().trim().maxLength(64).nullable().optional(),
         status: vine.enum(["draft", "publish", "private", "pending"]).optional(),
         catalog_visibility: vine.enum(["visible", "catalog", "search", "hidden"]).optional(),
         featured: vine.boolean().optional(),
@@ -53,6 +54,7 @@ export const updateProductValidator = vine.compile(
     vine.object({
         type: vine.enum(["simple", "variable", "grouped", "external"]).optional(),
         sku: vine.string().trim().maxLength(100).nullable().optional(),
+        gtin: vine.string().trim().maxLength(64).nullable().optional(),
         status: vine.enum(["draft", "publish", "private", "pending"]).optional(),
         catalog_visibility: vine.enum(["visible", "catalog", "search", "hidden"]).optional(),
         featured: vine.boolean().optional(),
@@ -90,14 +92,27 @@ export const updateProductValidator = vine.compile(
 
 export const batchProductsValidator = vine.compile(
     vine.object({
+        /**
+         * Each `create` / `update` entry is re-validated inside the controller via
+         * `createProductValidator` / `updateProductValidator` — keep these as `vine.any()` so
+         * the outer batch validator doesn't strip the per-entry fields before they reach the
+         * inner validator. The earlier object-with-just-`id` shape silently dropped every other
+         * field, which is why bulk `catalog_visibility` / `featured` / `stock_status` toggles
+         * looked like no-ops on the wire.
+         */
         create: vine.array(vine.any()).optional(),
-        update: vine
-            .array(
-                vine.object({
-                    id: vine.number(),
-                }),
-            )
-            .optional(),
-        delete: vine.array(vine.number()).optional(),
+        update: vine.array(vine.any()).optional(),
+        /**
+         * Either `[1, 2, 3]` (soft-trash by id) or `[{ id, force?: true }, …]` (per-entry hard-
+         * delete control). The controller pattern-matches on the shape, so accept either form.
+         */
+        delete: vine.array(vine.any()).optional(),
+    }),
+);
+
+/** Bulk restore payload — `POST /admin/products/restore`. */
+export const restoreProductsValidator = vine.compile(
+    vine.object({
+        ids: vine.array(vine.number()).minLength(1),
     }),
 );

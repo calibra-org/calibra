@@ -73,11 +73,16 @@ const _VIEW_PRODUCT_STATUS_MAP: Record<string, ProductStatus> = {
     archived: "draft",
 };
 
-const SDK_PRODUCT_STATUS_MAP: Record<ProductStatus, "draft" | "published" | "archived" | undefined> = {
+/**
+ * The view's status vocabulary (`draft | publish | pending | private`) is now a direct subset
+ * of the API's (`draft | publish | pending | private | archived`), so we no longer need the
+ * lossy translation that used to silently drop `pending` / `private` to `undefined`.
+ */
+const SDK_PRODUCT_STATUS_MAP: Record<ProductStatus, "draft" | "publish" | "pending" | "private"> = {
     draft: "draft",
-    publish: "published",
-    pending: undefined,
-    private: undefined,
+    publish: "publish",
+    pending: "pending",
+    private: "private",
 };
 
 /* -------------------------------------------------------------------------- */

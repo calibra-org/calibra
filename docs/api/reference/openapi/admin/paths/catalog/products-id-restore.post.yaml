@@ -1,0 +1,27 @@
+operationId: adminProductRestore
+summary: Restore a trashed product (admin)
+description: >
+    Un-trashes a single soft-deleted product. Returns 404 if the product does not exist or is
+    not currently trashed.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+
+responses:
+    "200":
+        description: Restored product.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminProductDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

@@ -22,27 +22,36 @@ export type ProductStatus = "draft" | "publish" | "private" | "pending";
 export type ProductType = "simple" | "variable" | "grouped" | "external";
 export type StockStatus = "instock" | "outofstock" | "onbackorder";
 
+export type CatalogVisibility = "visible" | "catalog" | "search" | "hidden";
+
 export interface AdminProduct {
     id: number;
     sku: string;
+    gtin: string | null;
     type: ProductType;
     status: ProductStatus;
+    catalogVisibility: CatalogVisibility;
     name: LocalizedString;
     slug: LocalizedString;
     shortDescription: LocalizedString;
     regularPrice: MoneyMinor;
     salePrice: MoneyMinor | null;
+    saleStartsAt: string | null;
+    saleEndsAt: string | null;
     stockQuantity: number | null;
     stockStatus: StockStatus;
     manageStock: boolean;
+    lowStock: boolean;
     featured: boolean;
     categoryIds: number[];
     brandId: number | null;
     tagIds: number[];
     imageUrl: string | null;
+    galleryImageUrls: string[];
     weightGrams: number | null;
     createdAt: string;
     updatedAt: string;
+    deletedAt: string | null;
 }
 
 export interface AdminCategory {

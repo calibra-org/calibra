@@ -2019,7 +2019,7 @@ export interface paths {
         };
         /**
          * List products (admin)
-         * @description Paginated list of every non-deleted product, including drafts and archived rows. Filter by status, type, free-text search, category/tag/brand, on-sale flag, and stock status.
+         * @description Paginated list of every non-deleted product, including drafts and archived rows. Filter by status, type, free-text search, category/tag/brand, on-sale flag (schedule-aware), catalog visibility, stock status / level, created date range, image presence, soft-delete state, and arbitrary id whitelists. Optional facet counts are returned when `include=facet_counts`.
          */
         get: operations["adminProductsIndex"];
         put?: never;
@@ -2028,6 +2028,44 @@ export interface paths {
          * @description Creates a product row plus its `product_translations`, `product_images`, and (when the type is `variable`) attribute → terms mapping. Slugs default to the locale-aware slugify of each translation's `name`. The created product lands in `status=draft` unless the payload sets `status=published`.
          */
         post: operations["adminProductCreate"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Status tab counts (admin)
+         * @description Returns counts per product status (`any`, `publish`, `draft`, `pending`, `private`, `trash`) under the active filter set. Used by the line-tab strip on the admin products list to show live counts that reflect the operator's current filters.
+         */
+        get: operations["adminProductsCounts"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
@@ -2066,6 +2104,26 @@ export interface paths {
          * @description Runs every operation in `{ create?, update?, delete? }` inside one DB transaction. A failure anywhere rolls back the whole batch.
          */
         post: operations["adminProductsBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk restore trashed products (admin)
+         * @description Un-trashes each id in the payload that is currently in trash. Missing or already-restored ids are silently skipped; the response lists the ids that were actually restored.
+         */
+        post: operations["adminProductsRestoreBatch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2136,6 +2194,26 @@ export interface paths {
          * @description Deep-clones the product row, all translations, images, attribute mappings, and variations into a new draft. The clone's slugs get a `-copy` suffix; ids are fresh; `status` is forced to `draft` regardless of the source's status. Returns the new product detail envelope.
          */
         post: operations["adminProductDuplicate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore a trashed product (admin)
+         * @description Un-trashes a single soft-deleted product. Returns 404 if the product does not exist or is not currently trashed.
+         */
+        post: operations["adminProductRestore"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3906,8 +3984,10 @@ export interface components {
             /** @enum {string} */
             type: "simple" | "variable" | "virtual" | "downloadable" | "external";
             sku?: string | null;
+            /** @description Global Trade Item Number (UPC/EAN/JAN/ISBN). */
+            gtin?: string | null;
             /** @enum {string} */
-            status: "draft" | "publish" | "archived";
+            status: "draft" | "publish" | "pending" | "private" | "archived";
             /** @enum {string} */
             catalog_visibility?: "catalog" | "search" | "hidden" | "both" | "visible";
             featured?: boolean;
@@ -3939,6 +4019,26 @@ export interface components {
             short_description?: string | null;
             locale?: string;
             featured_image_url?: string | null;
+            /** @description Full media URLs of all gallery images, ordered by position. */
+            gallery_image_urls?: string[];
+            /** @description Aggregated stock across all product-level inventory locations. */
+            inventory?: {
+                total?: number;
+                low_stock?: boolean;
+                /** @description Global `inventory.low_stock_threshold_default` setting at the time the transformer ran. Per-location `low_stock_threshold` overrides it. */
+                default_low_stock_threshold?: number;
+                locations?: {
+                    id?: number;
+                    location_id?: number | null;
+                    stock_quantity?: number;
+                    manage_stock?: boolean;
+                    low_stock_threshold?: number | null;
+                    /** @enum {string} */
+                    backorders?: "no" | "notify" | "yes";
+                    /** @enum {string} */
+                    stock_status?: "instock" | "outofstock" | "onbackorder";
+                }[];
+            };
         };
         /**
          * AdminTranslationInput
@@ -7559,13 +7659,24 @@ export interface operations {
                 /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
                 perPage?: components["parameters"]["PerPageQuery"];
                 search?: string;
-                status?: "draft" | "published" | "archived";
-                type?: "simple" | "variable" | "virtual" | "downloadable" | "external";
+                status?: "draft" | "publish" | "pending" | "private" | "archived";
+                type?: "simple" | "variable" | "virtual" | "downloadable" | "external" | "grouped";
                 category?: number;
                 tag?: number;
                 brand?: number;
                 on_sale?: boolean;
-                stock_status?: "in_stock" | "out_of_stock" | "on_backorder";
+                stock_status?: "instock" | "outofstock" | "onbackorder";
+                stock_level?: "instock" | "low" | "outofstock";
+                catalog_visibility?: "visible" | "catalog" | "search" | "hidden";
+                featured?: boolean;
+                has_image?: boolean;
+                with_trashed?: boolean;
+                only_trashed?: boolean;
+                created_from?: string;
+                created_to?: string;
+                sort?: string;
+                ids?: string;
+                include?: string;
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -7585,6 +7696,12 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["AdminProduct"][];
                         meta: components["schemas"]["PaginationMeta"];
+                        /** @description Facet counts under the active filter set (one bucket per facet, minus self). */
+                        facets?: {
+                            [key: string]: {
+                                [key: string]: number;
+                            };
+                        };
                     };
                 };
             };
@@ -7678,6 +7795,50 @@ export interface operations {
             422: components["responses"]["ValidationError"];
         };
     };
+    adminProductsCounts: {
+        parameters: {
+            query?: {
+                search?: string;
+                type?: string;
+                category?: number;
+                tag?: number;
+                brand?: number;
+                catalog_visibility?: string;
+                featured?: boolean;
+                on_sale?: boolean;
+                stock_level?: "instock" | "low" | "outofstock";
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts per status. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            any?: number;
+                            publish?: number;
+                            draft?: number;
+                            pending?: number;
+                            private?: number;
+                            trash?: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     adminProductsBatch: {
         parameters: {
             query?: never;
@@ -7698,6 +7859,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BatchResult"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminProductsRestoreBatch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: number[];
+                };
+            };
+        };
+        responses: {
+            /** @description Restored ids. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            restored: number[];
+                        };
+                    };
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -7840,6 +8037,36 @@ export interface operations {
         responses: {
             /** @description Duplicated product detail. */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminProductDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminProductRestore: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Restored product. */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -10,9 +10,10 @@ properties:
         type: string
         enum: [simple, variable, virtual, downloadable, external]
     sku: { type: [string, "null"] }
+    gtin: { type: [string, "null"], description: Global Trade Item Number (UPC/EAN/JAN/ISBN). }
     status:
         type: string
-        enum: [draft, publish, archived]
+        enum: [draft, publish, pending, private, archived]
     catalog_visibility:
         type: string
         enum: [catalog, search, hidden, both, visible]
@@ -41,6 +42,33 @@ properties:
     short_description: { type: [string, "null"] }
     locale: { type: string }
     featured_image_url: { type: [string, "null"] }
+    gallery_image_urls:
+        type: array
+        items: { type: string }
+        description: Full media URLs of all gallery images, ordered by position.
+    inventory:
+        type: object
+        description: Aggregated stock across all product-level inventory locations.
+        properties:
+            total: { type: integer }
+            low_stock: { type: boolean }
+            default_low_stock_threshold:
+                type: integer
+                description: >
+                    Global `inventory.low_stock_threshold_default` setting at the time the
+                    transformer ran. Per-location `low_stock_threshold` overrides it.
+            locations:
+                type: array
+                items:
+                    type: object
+                    properties:
+                        id: { type: integer }
+                        location_id: { type: [integer, "null"] }
+                        stock_quantity: { type: integer }
+                        manage_stock: { type: boolean }
+                        low_stock_threshold: { type: [integer, "null"] }
+                        backorders: { type: string, enum: [no, notify, yes] }
+                        stock_status: { type: string, enum: [instock, outofstock, onbackorder] }
 required:
     - id
     - type

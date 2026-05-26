@@ -1,13 +1,27 @@
 import { BaseTransformer } from "@adonisjs/core/transformers";
 
+import type InventoryItem from "#models/inventory_item";
 import type Product from "#models/product";
 import { resolvePrice } from "#services/price_resolver";
 import { pickTranslation } from "#transformers/i18n_helpers";
+
+/** Final fallback when neither the per-row nor the global low-stock threshold is configured. */
+const FALLBACK_LOW_STOCK_THRESHOLD = 5;
+
+export interface ProductTransformerOptions {
+    /**
+     * Global low-stock threshold from the `inventory.low_stock_threshold` setting. Per-row
+     * `inventory_items.low_stock_threshold` overrides this; this is the fallback when the row
+     * leaves it null (which is the common case — operators rarely set it per-row).
+     */
+    defaultLowStockThreshold?: number;
+}
 
 export default class ProductTransformer extends BaseTransformer<Product> {
     constructor(
         resource: Product,
         protected locale: string = "fa",
+        protected options: ProductTransformerOptions = {},
     ) {
         super(resource);
     }
@@ -37,6 +51,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             id: Number(p.id),
             type: p.type,
             sku: p.sku,
+            gtin: (p as unknown as { gtin?: string | null }).gtin ?? null,
             status: p.status,
             catalog_visibility: p.catalogVisibility,
             featured: p.featured,
@@ -64,6 +79,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             short_description: translation?.shortDescription ?? null,
             locale: translation?.locale ?? this.locale,
             featured_image_url: images[0]?.url ?? null,
+            gallery_image_urls: images.map((img) => img.url).filter((url): url is string => typeof url === "string"),
         };
     }
 
@@ -91,6 +107,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             return {
                 id: Number(v.id),
                 sku: v.sku,
+                gtin: (v as unknown as { gtin?: string | null }).gtin ?? null,
                 regular_price: v.regularPrice === null ? null : Number(v.regularPrice),
                 sale_price: v.salePrice === null ? null : Number(v.salePrice),
                 effective_price: variationPrice.effectivePrice === null ? null : Number(variationPrice.effectivePrice),
@@ -138,6 +155,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             categories,
             tags,
             brands,
+            inventory: this.buildInventoryAggregate(p.inventoryItems ?? []),
         };
     }
 
@@ -160,6 +178,46 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             created_at: p.createdAt?.toISO(),
             updated_at: p.updatedAt?.toISO(),
             deleted_at: p.deletedAt?.toISO() ?? null,
+        };
+    }
+
+    /**
+     * Rolls up inventory across both product-level rows and variation-level rows. The list cell
+     * needs the *operator-meaningful* total — for a variable product that's the sum across every
+     * variation's stock; for a simple product it's the per-product row. The `locations` slot
+     * still surfaces only the product-level rows so the per-warehouse editor (Prompt 2) doesn't
+     * accidentally try to edit a variation row as if it were a warehouse.
+     *
+     * `low_stock` resolves the threshold in priority order:
+     *   1. `inventory_items.low_stock_threshold` (per-row override)
+     *   2. `this.options.defaultLowStockThreshold` (global `inventory.low_stock_threshold` setting)
+     *   3. `FALLBACK_LOW_STOCK_THRESHOLD` (hard-coded baseline)
+     */
+    private buildInventoryAggregate(items: InventoryItem[]) {
+        const productLevel = items.filter((i) => i.variationId === null || i.variationId === undefined);
+        const total = items.reduce((sum, i) => sum + Number(i.stockQuantity ?? 0), 0);
+        const defaultThreshold = this.options.defaultLowStockThreshold ?? FALLBACK_LOW_STOCK_THRESHOLD;
+        const locations = productLevel.map((i) => ({
+            id: Number(i.id),
+            location_id: i.locationId === null || i.locationId === undefined ? null : Number(i.locationId),
+            stock_quantity: Number(i.stockQuantity ?? 0),
+            manage_stock: !!i.manageStock,
+            low_stock_threshold: i.lowStockThreshold ?? null,
+            backorders: i.backorders ?? "no",
+            stock_status: i.stockStatus ?? "instock",
+        }));
+        const lowStockHit = items.some((i) => {
+            if (!i.manageStock) return false;
+            const qty = Number(i.stockQuantity ?? 0);
+            if (qty <= 0) return false;
+            const threshold = i.lowStockThreshold ?? defaultThreshold;
+            return qty <= threshold;
+        });
+        return {
+            total,
+            low_stock: lowStockHit,
+            default_low_stock_threshold: defaultThreshold,
+            locations,
         };
     }
 }

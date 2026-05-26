@@ -54,6 +54,14 @@ import { DataTableEmpty } from "./data-table-empty";
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableSkeleton } from "./data-table-skeleton";
 import {
+    buildStickyPlan,
+    type PlannableColumn,
+    resolveStickyCell,
+    resolveStickyHeader,
+    type StickyConfig,
+    type StickyPlan,
+} from "./sticky-columns";
+import {
     type BulkActionsRenderer,
     type CardRenderer,
     type DataTableDensity,
@@ -63,38 +71,14 @@ import {
     type SubRowRenderer,
 } from "./types";
 
-/**
- * Stickiness for the start-side pinned cluster (`select` / `favorite`) and the end-side cluster
- * (`actions`). Anchored via CSS logical properties so RTL flips for free — `inset-inline-start`
- * resolves to `right: 0` under `dir="rtl"`. The `bg-inherit` lets the cell pick up whatever
- * background the row currently paints (hover, selected, focus-visible), which is critical for
- * making non-sticky cells slide *under* the pinned cell without visual leakage.
- */
-const STICKY_START_CELL = "sticky inset-inline-start-0 z-10 bg-inherit";
-const STICKY_END_CELL = "sticky inset-inline-end-0 z-10 bg-inherit";
-const STICKY_START_HEADER = "sticky inset-inline-start-0 z-20 bg-muted/95 supports-[backdrop-filter]:bg-muted/70";
-const STICKY_END_HEADER = "sticky inset-inline-end-0 z-20 bg-muted/95 supports-[backdrop-filter]:bg-muted/70";
+const DEFAULT_STICKY_CONFIG: StickyConfig = { start: ["select", "favorite"], end: ["actions"] };
 
 /**
- * Edge-shadow utilities applied to a sticky cell when more scrollable content remains under it.
- * The shadow is drawn as an inset `box-shadow` on the side facing the hidden content so it
- * stays anchored to the sticky cell regardless of row state. RTL-aware via container data attrs.
- *  - `data-x-scroll-start` is present on the scroll container when `scrollLeft > 0` from the
- *    inline-start edge (i.e., content is hidden behind the start-pinned column).
- *  - `data-x-scroll-end` is present when the container has not yet reached its end edge.
+ * Sticky-column wiring lives in `./sticky-columns.ts`. The data-table builds a plan once per
+ * render from the visible columns + the `stickyColumns` prop, then asks the helpers for
+ * per-cell className + style + data-attrs. RTL flipping is automatic because the plan speaks
+ * `inset-inline-{start,end}` logical properties.
  */
-const STICKY_START_SHADOW =
-    "after:pointer-events-none after:absolute after:inset-y-0 after:end-0 after:w-2 after:bg-gradient-to-l after:from-foreground/8 after:to-transparent after:opacity-0 after:transition-opacity after:rtl:bg-gradient-to-r [&[data-sticky-edge='start-shadow']]:after:opacity-100";
-const STICKY_END_SHADOW =
-    "after:pointer-events-none after:absolute after:inset-y-0 after:start-0 after:w-2 after:bg-gradient-to-r after:from-foreground/8 after:to-transparent after:opacity-0 after:transition-opacity after:rtl:bg-gradient-to-l [&[data-sticky-edge='end-shadow']]:after:opacity-100";
-
-/** Column-id check honoring both the canonical pinned ids and the `meta.sticky` opt-in. */
-function getColumnStickiness(columnId: string, meta: unknown): "start" | "end" | undefined {
-    if (columnId === "select" || columnId === "favorite") return "start";
-    if (columnId === "actions") return "end";
-    const m = meta as { sticky?: "start" | "end" } | undefined;
-    return m?.sticky;
-}
 
 /**
  * Watches a scroll container's `scrollLeft` (or its RTL equivalent) and writes `data-x-scroll-
@@ -116,6 +100,21 @@ function useStickyEdgeShadows(scrollRef: RefObject<HTMLDivElement | null>) {
             const hasEnd = maxScroll - offset > 1;
             el.toggleAttribute("data-x-scroll-start", hasStart);
             el.toggleAttribute("data-x-scroll-end", hasEnd);
+            /**
+             * Viewport-width CSS var consumed by {@link VIEWPORT_CELL_CONTENT_CLASS}. "Viewport-wide"
+             * cells (Quick Edit sub-row, empty state, error banner, skeleton) live inside a
+             * `<td colSpan={all}>` that stretches across the full scrollable table. The inner
+             * wrapper uses this var as its explicit `width` + `position: sticky` to stay pinned
+             * inside the visible viewport regardless of horizontal scroll — so Quick Edit's
+             * buttons never fall off-screen behind the scroll band.
+             */
+            el.style.setProperty("--dt-viewport-width", `${el.clientWidth}px`);
+            /**
+             * Paint `data-sticky-edge` on every sticky cell — the CSS shadow selector also requires
+             * `data-sticky-edge-position='edge'`, so interior pinned cells stay flat. Setting the
+             * attribute even on interior cells (when their cluster has scroll behind it) is fine —
+             * the position predicate is the gate.
+             */
             for (const cell of el.querySelectorAll<HTMLElement>("[data-sticky='start']")) {
                 cell.dataset.stickyEdge = hasStart ? "start-shadow" : "";
             }
@@ -138,6 +137,21 @@ function useStickyEdgeShadows(scrollRef: RefObject<HTMLDivElement | null>) {
         };
     }, [scrollRef]);
 }
+
+/**
+ * Inner-cell wrapper for "viewport-wide" content (Quick Edit sub-row, empty state, error
+ * banner, loading skeleton). The cell itself spans every column via `colSpan`, so its width is
+ * the full scrollable table width. This inner wrapper pins to the inline-start edge of the
+ * scroll container via `position: sticky` and reads `--dt-viewport-width` (written by
+ * {@link useStickyEdgeShadows}) so the rendered content stays exactly the size of the visible
+ * viewport — no horizontal scroll required to reach the buttons inside.
+ *
+ * `width` is applied as an inline style (not a Tailwind arbitrary-value class) so the comma in
+ * the `var()` fallback doesn't trip up Tailwind's class-extractor. RTL flips for free because
+ * `start-0` maps to `inset-inline-start: 0`.
+ */
+const VIEWPORT_CELL_CONTENT_CLASS = "sticky start-0";
+const VIEWPORT_CELL_CONTENT_STYLE: CSSProperties = { width: "var(--dt-viewport-width, 100%)" };
 
 export interface DataTableProps<TData> {
     data: TData[];
@@ -232,6 +246,17 @@ export interface DataTableProps<TData> {
 
     /** Keyboard nav: `j`/`k` step through rows, `x` toggles selection, `e` opens sub-row, `Enter` opens detail. */
     onRowOpen?: (row: TData) => void;
+
+    /**
+     * Sticky-column plan. See `./sticky-columns.ts` for the full design. Columns listed in
+     * `start` pin to the inline-start edge in their declared order; `end` pins to the inline-end
+     * edge. Only the edge column of each cluster draws the scroll shadow — interior pinned
+     * columns sit flat behind it.
+     *
+     * Falls back to `{ start: ["select", "favorite"], end: ["actions"] }` when omitted so
+     * existing consumers keep working without touching every call site.
+     */
+    stickyColumns?: StickyConfig;
 }
 
 /**
@@ -253,6 +278,7 @@ export function DataTable<TData>({
     onPerPageChange,
     sort: _sort,
     onSortChange: _onSortChange,
+    stickyColumns,
     selectedIds,
     onSelectedIdsChange,
     columnVisibility,
@@ -317,8 +343,9 @@ export function DataTable<TData>({
      *    exist drop out; newly-added columns slot in at the tail.
      *  - An empty persisted order falls back to TanStack's natural definition order.
      */
-    const PINNED_START_IDS = useMemo(() => new Set(["select", "favorite"]), []);
-    const PINNED_END_IDS = useMemo(() => new Set(["actions"]), []);
+    const resolvedStickyConfig = stickyColumns ?? DEFAULT_STICKY_CONFIG;
+    const PINNED_START_IDS = useMemo(() => new Set(resolvedStickyConfig.start ?? []), [resolvedStickyConfig.start]);
+    const PINNED_END_IDS = useMemo(() => new Set(resolvedStickyConfig.end ?? []), [resolvedStickyConfig.end]);
 
     const effectiveColumnOrder = useMemo<ColumnOrderState>(() => {
         const allIds = columns.map((column) => column.id).filter((id): id is string => typeof id === "string");
@@ -406,6 +433,31 @@ export function DataTable<TData>({
         () => effectiveColumnOrder.filter((id) => !PINNED_START_IDS.has(id) && !PINNED_END_IDS.has(id)),
         [effectiveColumnOrder, PINNED_START_IDS, PINNED_END_IDS],
     );
+
+    /**
+     * Union of `start` + `end` pinned ids, used by SortableHeader to disable dnd on pinned
+     * cells. Plain Set instead of Map because the lookup is just `has(id)`.
+     */
+    const pinnedIds = useMemo<ReadonlySet<string>>(
+        () => new Set([...(resolvedStickyConfig.start ?? []), ...(resolvedStickyConfig.end ?? [])]),
+        [resolvedStickyConfig.start, resolvedStickyConfig.end],
+    );
+
+    /**
+     * Resolves the sticky plan for the currently-visible columns in their currently-ordered
+     * position. Recomputes on column order/visibility changes so adding a new pinned column
+     * shifts subsequent offsets without a remount.
+     */
+    const stickyPlan = useMemo<StickyPlan>(() => {
+        const visible = effectiveColumnOrder
+            .filter((id) => visibilityState[id] !== false)
+            .map<PlannableColumn>((id) => {
+                const def = columns.find((c) => c.id === id);
+                const metaSticky = (def?.meta as { sticky?: "start" | "end" } | undefined)?.sticky;
+                return { id, size: def?.size, metaSticky };
+            });
+        return buildStickyPlan(visible, resolvedStickyConfig);
+    }, [effectiveColumnOrder, visibilityState, columns, resolvedStickyConfig]);
 
     const visibleRows = table.getRowModel().rows;
     const cellClass = DENSITY_CLASSES[density].cell;
@@ -515,7 +567,13 @@ export function DataTable<TData>({
                                         {table.getHeaderGroups().map((headerGroup) => (
                                             <TableRow key={headerGroup.id} className="border-border border-b">
                                                 {headerGroup.headers.map((header) => (
-                                                    <SortableHeader key={header.id} header={header} cellClass={cellClass} />
+                                                    <SortableHeader
+                                                        key={header.id}
+                                                        header={header}
+                                                        cellClass={cellClass}
+                                                        stickyPlan={stickyPlan}
+                                                        pinnedIds={pinnedIds}
+                                                    />
                                                 ))}
                                             </TableRow>
                                         ))}
@@ -525,9 +583,15 @@ export function DataTable<TData>({
                                             <TableRow>
                                                 <TableCell
                                                     colSpan={table.getVisibleLeafColumns().length}
-                                                    className="bg-destructive/5 px-4 py-3"
+                                                    className="bg-destructive/5 p-0 [&]:px-0 [&]:py-0"
                                                 >
-                                                    <div className="flex items-center gap-3 text-destructive">
+                                                    <div
+                                                        className={cn(
+                                                            VIEWPORT_CELL_CONTENT_CLASS,
+                                                            "flex items-center gap-3 px-4 py-3 text-destructive",
+                                                        )}
+                                                        style={VIEWPORT_CELL_CONTENT_STYLE}
+                                                    >
                                                         <AlertTriangle className="size-4" aria-hidden="true" />
                                                         <span className="text-sm">{labels.errorTitle}</span>
                                                         {onRetry !== undefined && (
@@ -546,12 +610,17 @@ export function DataTable<TData>({
                                                     colSpan={table.getVisibleLeafColumns().length}
                                                     className="p-0 [&]:px-0 [&]:py-0"
                                                 >
-                                                    <DataTableSkeleton
-                                                        columnWidths={
-                                                            skeletonColumnWidths ?? table.getVisibleLeafColumns().map(() => 1)
-                                                        }
-                                                        rowHeightClass={rowHeightClass}
-                                                    />
+                                                    <div
+                                                        className={VIEWPORT_CELL_CONTENT_CLASS}
+                                                        style={VIEWPORT_CELL_CONTENT_STYLE}
+                                                    >
+                                                        <DataTableSkeleton
+                                                            columnWidths={
+                                                                skeletonColumnWidths ?? table.getVisibleLeafColumns().map(() => 1)
+                                                            }
+                                                            rowHeightClass={rowHeightClass}
+                                                        />
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ) : visibleRows.length === 0 ? (
@@ -560,25 +629,32 @@ export function DataTable<TData>({
                                                     colSpan={table.getVisibleLeafColumns().length}
                                                     className="p-0 [&]:px-0 [&]:py-0"
                                                 >
-                                                    <DataTableEmpty
-                                                        variant={hasActiveFilters === true ? "filtered" : "empty"}
-                                                        title={
-                                                            hasActiveFilters === true ? labels.filtered.title : labels.empty.title
-                                                        }
-                                                        description={
-                                                            hasActiveFilters === true
-                                                                ? labels.filtered.description
-                                                                : labels.empty.description
-                                                        }
-                                                        secondaryAction={
-                                                            hasActiveFilters === true && onClearFilters !== undefined
-                                                                ? {
-                                                                      label: labels.clearFiltersLabel ?? "Clear",
-                                                                      onClick: onClearFilters,
-                                                                  }
-                                                                : undefined
-                                                        }
-                                                    />
+                                                    <div
+                                                        className={VIEWPORT_CELL_CONTENT_CLASS}
+                                                        style={VIEWPORT_CELL_CONTENT_STYLE}
+                                                    >
+                                                        <DataTableEmpty
+                                                            variant={hasActiveFilters === true ? "filtered" : "empty"}
+                                                            title={
+                                                                hasActiveFilters === true
+                                                                    ? labels.filtered.title
+                                                                    : labels.empty.title
+                                                            }
+                                                            description={
+                                                                hasActiveFilters === true
+                                                                    ? labels.filtered.description
+                                                                    : labels.empty.description
+                                                            }
+                                                            secondaryAction={
+                                                                hasActiveFilters === true && onClearFilters !== undefined
+                                                                    ? {
+                                                                          label: labels.clearFiltersLabel ?? "Clear",
+                                                                          onClick: onClearFilters,
+                                                                      }
+                                                                    : undefined
+                                                            }
+                                                        />
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
@@ -592,6 +668,7 @@ export function DataTable<TData>({
                                                     renderSubComponent={renderSubComponent}
                                                     rowOverride={renderRowOverride?.(row)}
                                                     onRowOpen={onRowOpen}
+                                                    stickyPlan={stickyPlan}
                                                 />
                                             ))
                                         )}
@@ -647,26 +724,26 @@ export function DataTable<TData>({
 interface SortableHeaderProps<TData> {
     header: Header<TData, unknown>;
     cellClass: string;
+    stickyPlan: StickyPlan;
+    pinnedIds: ReadonlySet<string>;
 }
 
 /**
- * `<th>` wrapper that registers with the surrounding `SortableContext`. Pinned columns
- * (`select` / `actions`) skip dnd and render in place. While dragging the cell is translated
- * via the `transform` returned by `useSortable`; opacity drops so the source position is still
- * visible under the cursor.
+ * `<th>` wrapper that registers with the surrounding `SortableContext`. Pinned columns skip
+ * dnd and render in place. While dragging the cell is translated via the `transform` returned
+ * by `useSortable`; opacity drops so the source position is still visible under the cursor.
  */
-const SORTABLE_HEADER_PINNED = new Set(["select", "favorite", "actions"]);
 /**
- * Subset of `SORTABLE_HEADER_PINNED` whose leading divider should be suppressed. The
- * start-side cluster (`select`, `favorite`) sits flush with the row gutter, so a divider
- * between them reads as noise. `actions` lives at the end and benefits from a leading
- * divider that separates the row-actions cell from the last data column.
+ * Leading-divider suppression for body cells is decided by the sticky plan now: any column
+ * pinned to the start side sits flush with the row gutter, so the inline `before:` divider
+ * is hidden. End-side pinned cells keep their leading divider (it separates the actions
+ * column from the data band).
  */
-const SORTABLE_HEADER_NO_LEADING_DIVIDER = new Set(["select", "favorite"]);
 
-function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>) {
-    const isPinned = SORTABLE_HEADER_PINNED.has(header.column.id);
-    const stickiness = getColumnStickiness(header.column.id, header.column.columnDef.meta);
+function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: SortableHeaderProps<TData>) {
+    const isPinned = pinnedIds.has(header.column.id);
+    const placement = stickyPlan.get(header.column.id);
+    const sticky = resolveStickyHeader(placement);
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
         id: header.column.id,
         disabled: isPinned,
@@ -690,45 +767,41 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
         <ColumnDragHandleProvider attributes={attributes} listeners={listeners} isDragging={isDragging} isDraggable={!isPinned}>
             <TableHead
                 ref={setNodeRef}
-                data-sticky={stickiness}
+                {...(sticky?.dataAttrs ?? {})}
                 /**
                  * Sticky on each `<th>` (not the `<thead>`) — `<thead>` sticky breaks when there's
                  * an inner `overflow-x-auto` ancestor. Cell-level sticky anchors directly to the
-                 * outer scroll viewport every time. Pinned start/end cells additionally stick on
-                 * the inline axis so they survive horizontal scroll; the z-index is bumped above
-                 * the top-only stickies so the intersection corner cell wins all stacking ties.
+                 * outer scroll viewport every time. The vertical-sticky lives here; horizontal
+                 * sticky offsets come from `stickyPlan` via `resolveStickyHeader`.
                  */
                 className={cn(
                     cellClass,
-                    "relative sticky top-0 z-10 bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
-                    "group/header",
-                    stickiness === "start" && STICKY_START_HEADER,
-                    stickiness === "end" && STICKY_END_HEADER,
-                    stickiness === "start" && STICKY_START_SHADOW,
-                    stickiness === "end" && STICKY_END_SHADOW,
                     /**
-                     * Full-height vertical separator drawn as an absolutely positioned pseudo-
-                     * element. `<th>` + `border-collapse: collapse` + logical-property borders are
-                     * rendered inconsistently across browsers when the cell also has a
-                     * backdrop-filter / sticky positioning combo — a pseudo element is the most
-                     * deterministic way to draw the divider. `foreground/15` stays tone-neutral
-                     * and visible in both modes regardless of the muted header background.
+                     * `z-[15]` keeps every header (sticky-on-top only AND sticky-on-both-axes)
+                     * above the body cells during vertical scroll. Body sticky cells live at
+                     * 10/11; the corner cells (horizontal + vertical sticky) override this to
+                     * 20/21 from `sticky?.style.zIndex`, so the corner still wins all stacking
+                     * ties — without that bump, body sticky cells with z-index 11 used to paint
+                     * OVER the non-pinned header during vertical scroll.
                      */
+                    "relative sticky top-0 z-[15] bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
+                    "group/header",
+                    sticky?.className,
+                    /** Full-height vertical separator (pseudo-element so it survives sticky + backdrop-filter combos). */
                     "before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
                     "first:before:hidden",
-                    /** Start-side pinned cells (select / favorite) sit flush with the row gutter — actions keeps its leading divider. */
-                    SORTABLE_HEADER_NO_LEADING_DIVIDER.has(header.column.id) && "before:hidden",
+                    /** Start-cluster pinned cells sit flush with the row gutter — the end cluster keeps a leading divider. */
+                    placement?.side === "start" && "before:hidden",
                     /**
                      * Select column overrides:
                      *  - `!px-2` collapses the density's wide horizontal padding so the 16px
                      *    checkbox actually fits inside the 44px column without visual cropping.
-                     *  - `min-w-12` reserves room for the focus ring; `overflow-visible` lets the
-                     *    3px ring extend past the cell box without being clipped.
+                     *  - `min-w-12 overflow-visible` keeps the 3px focus ring drawn in full.
                      */
                     header.column.id === "select" && "!px-2 min-w-12 overflow-visible",
                     headerMeta?.headerClassName,
                 )}
-                style={{ ...widthStyle, ...dragStyle }}
+                style={{ ...(sticky?.style ?? {}), ...widthStyle, ...dragStyle }}
             >
                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
             </TableHead>
@@ -745,6 +818,7 @@ interface BodyRowProps<TData> {
     /** When set, the row's cells are replaced by this node (Gmail-style trash-with-undo). */
     rowOverride?: ReactNode;
     onRowOpen?: (row: TData) => void;
+    stickyPlan: StickyPlan;
 }
 
 function DataTableBodyRow<TData>({
@@ -755,6 +829,7 @@ function DataTableBodyRow<TData>({
     renderSubComponent,
     rowOverride,
     onRowOpen,
+    stickyPlan,
 }: BodyRowProps<TData>) {
     const isExpanded = row.getIsExpanded();
     const visibleCellCount = row.getVisibleCells().length;
@@ -767,7 +842,9 @@ function DataTableBodyRow<TData>({
         return (
             <TableRow className="border-border border-y bg-muted/40">
                 <TableCell colSpan={visibleCellCount} className="p-0">
-                    {rowOverride}
+                    <div className={VIEWPORT_CELL_CONTENT_CLASS} style={VIEWPORT_CELL_CONTENT_STYLE}>
+                        {rowOverride}
+                    </div>
                 </TableCell>
             </TableRow>
         );
@@ -775,14 +852,18 @@ function DataTableBodyRow<TData>({
 
     /**
      * Quick Edit takes over the entire row WordPress-style — when expanded, the row's regular
-     * cells are replaced by a single full-width cell hosting the editor. Saves us a stacked
-     * sub-row that competed with the original row for context.
+     * cells are replaced by a single full-width cell hosting the editor. The inner wrapper
+     * applies {@link VIEWPORT_CELL_CONTENT_CLASS} so the form pins to the visible viewport width
+     * instead of stretching across the full scrollable table — every field + button reachable
+     * without horizontal scroll.
      */
     if (isExpanded && renderSubComponent !== undefined) {
         return (
             <TableRow className="border-primary/30 border-y bg-muted/30">
                 <TableCell colSpan={visibleCellCount} className="p-0">
-                    {renderSubComponent(row)}
+                    <div className={VIEWPORT_CELL_CONTENT_CLASS} style={VIEWPORT_CELL_CONTENT_STYLE}>
+                        {renderSubComponent(row)}
+                    </div>
                 </TableCell>
             </TableRow>
         );
@@ -796,13 +877,16 @@ function DataTableBodyRow<TData>({
             className={cn(
                 rowHeightClass,
                 /**
-                 * The row owns the painted background. Sticky cells set `bg-inherit` so they
-                 * pick up whichever state-colour the row currently shows — hover, selected, and
-                 * focus-visible all stay coherent under the pinned columns.
+                 * Row owns the painted background; sticky cells set `bg-inherit` so the same
+                 * state colour shows under the pinned columns. Every state colour MUST be fully
+                 * opaque — sticky cells with an alpha background let the non-sticky body cells
+                 * (currently scrolled behind them) bleed through, which surfaced as ghost text
+                 * overlapping the product name on hover. Use solid muted / accent tones instead
+                 * of the previous `/40` alpha variants.
                  */
-                "bg-card outline-none transition-colors focus-visible:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring",
-                "group/row hover:bg-muted/40",
-                row.getIsSelected() && "bg-accent/40",
+                "bg-card outline-none transition-colors focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+                "group/row hover:bg-muted",
+                row.getIsSelected() && "bg-accent",
             )}
             onClick={(event) => {
                 if (onRowOpen === undefined) return;
@@ -813,36 +897,27 @@ function DataTableBodyRow<TData>({
         >
             {row.getVisibleCells().map((cell) => {
                 const explicitWidth = cell.column.columnDef.size;
-                const stickiness = getColumnStickiness(cell.column.id, cell.column.columnDef.meta);
+                const placement = stickyPlan.get(cell.column.id);
+                const sticky = resolveStickyCell(placement);
+                const widthStyle: CSSProperties =
+                    explicitWidth !== undefined ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth } : {};
                 return (
                     <TableCell
                         key={cell.id}
-                        data-sticky={stickiness}
+                        {...(sticky?.dataAttrs ?? {})}
                         className={cn(
                             cellClass,
                             /** Mirror of the header pseudo-divider — same opacity so header + body grid read as one. */
                             "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
                             "first:before:hidden",
-                            SORTABLE_HEADER_NO_LEADING_DIVIDER.has(cell.column.id) && "before:hidden",
-                            stickiness === "start" && STICKY_START_CELL,
-                            stickiness === "end" && STICKY_END_CELL,
-                            stickiness === "start" && STICKY_START_SHADOW,
-                            stickiness === "end" && STICKY_END_SHADOW,
-                            /**
-                             * Select column overrides (mirror the header):
-                             *  - `!px-2` overrides the density's `px-4` so the checkbox is
-                             *    centered in the 44px column instead of being squeezed.
-                             *  - `min-w-12 overflow-visible` keeps the 3px focus ring + the
-                             *    indeterminate dash painted in full.
-                             */
+                            /** Start-pinned cells sit flush with the row gutter — no leading divider. */
+                            placement?.side === "start" && "before:hidden",
+                            sticky?.className,
+                            /** Select-column padding overrides for the checkbox column. */
                             cell.column.id === "select" && "!px-2 min-w-12 overflow-visible",
                             (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
                         )}
-                        style={
-                            explicitWidth !== undefined
-                                ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth }
-                                : undefined
-                        }
+                        style={{ ...(sticky?.style ?? {}), ...widthStyle }}
                     >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>

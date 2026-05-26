@@ -24,13 +24,16 @@ export default class MainSeeder extends BaseSeeder {
         await this.runSeeder(await import("#database/seed_modules/0001_foundation_seeder"));
 
         /**
-         * Small demo dataset for dev + tests: 100 products / 50 users (+ the FIXED_ADMINS roster)
-         * with derived orders + reviews. Completes in ~2 seconds against the dev compose Postgres.
-         * For realistic-scale data, run `node ace db:bulk-seed` explicitly.
+         * Demo dataset for dev + tests: 250 products / 80 users (+ the FIXED_ADMINS roster) with
+         * derived orders + reviews. Bumped from 100/50 so the admin list shows multiple pages,
+         * every status tab has rows, and the facet popovers (category / brand / tag) all render
+         * with meaningful counts. Still completes in a handful of seconds.
+         *
+         * For production-scale data, run `node ace db:bulk-seed` explicitly.
          */
         const { default: BulkDatasetSeeder } = await import("#database/seed_modules/0010_bulk_dataset_seeder");
         const bulk = new BulkDatasetSeeder(this.client);
-        bulk.setOptions({ products: 100, users: 50 });
+        bulk.setOptions({ products: 250, users: 80 });
         await bulk.run();
 
         await this.runSeeder(await import("#database/seed_modules/0006_coupons_demo_seeder"));

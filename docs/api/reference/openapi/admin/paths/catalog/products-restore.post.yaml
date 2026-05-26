@@ -1,0 +1,42 @@
+operationId: adminProductsRestoreBatch
+summary: Bulk restore trashed products (admin)
+description: >
+    Un-trashes each id in the payload that is currently in trash. Missing or already-restored
+    ids are silently skipped; the response lists the ids that were actually restored.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [ids]
+                properties:
+                    ids:
+                        type: array
+                        minItems: 1
+                        items: { type: integer }
+
+responses:
+    "200":
+        description: Restored ids.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [restored]
+                            properties:
+                                restored:
+                                    type: array
+                                    items: { type: integer }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

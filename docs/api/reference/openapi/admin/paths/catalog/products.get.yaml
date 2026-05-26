@@ -2,7 +2,9 @@ operationId: adminProductsIndex
 summary: List products (admin)
 description: >
     Paginated list of every non-deleted product, including drafts and archived rows. Filter by
-    status, type, free-text search, category/tag/brand, on-sale flag, and stock status.
+    status, type, free-text search, category/tag/brand, on-sale flag (schedule-aware), catalog
+    visibility, stock status / level, created date range, image presence, soft-delete state, and
+    arbitrary id whitelists. Optional facet counts are returned when `include=facet_counts`.
 tags: [Admin / Catalog / Products]
 
 parameters:
@@ -10,13 +12,36 @@ parameters:
     - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: search, in: query, schema: { type: string } }
-    - { name: status, in: query, schema: { type: string, enum: [draft, published, archived] } }
-    - { name: type, in: query, schema: { type: string, enum: [simple, variable, virtual, downloadable, external] } }
+    - { name: status, in: query, schema: { type: string, enum: [draft, publish, pending, private, archived] } }
+    - { name: type, in: query, schema: { type: string, enum: [simple, variable, virtual, downloadable, external, grouped] } }
     - { name: category, in: query, schema: { type: integer } }
     - { name: tag, in: query, schema: { type: integer } }
     - { name: brand, in: query, schema: { type: integer } }
     - { name: on_sale, in: query, schema: { type: boolean } }
-    - { name: stock_status, in: query, schema: { type: string, enum: [in_stock, out_of_stock, on_backorder] } }
+    - { name: stock_status, in: query, schema: { type: string, enum: [instock, outofstock, onbackorder] } }
+    - { name: stock_level, in: query, schema: { type: string, enum: [instock, low, outofstock] } }
+    - { name: catalog_visibility, in: query, schema: { type: string, enum: [visible, catalog, search, hidden] } }
+    - { name: featured, in: query, schema: { type: boolean } }
+    - { name: has_image, in: query, schema: { type: boolean } }
+    - { name: with_trashed, in: query, schema: { type: boolean } }
+    - { name: only_trashed, in: query, schema: { type: boolean } }
+    - { name: created_from, in: query, schema: { type: string, format: date } }
+    - { name: created_to, in: query, schema: { type: string, format: date } }
+    - name: sort
+      in: query
+      schema:
+          type: string
+          description: 'Whitelist: name, sku, regular_price, created_at, updated_at, menu_order, stock_quantity. Prefix "-" for descending.'
+    - name: ids
+      in: query
+      schema:
+          type: string
+          description: 'CSV of product ids to narrow the result set.'
+    - name: include
+      in: query
+      schema:
+          type: string
+          description: 'Comma list. "facet_counts" adds a `facets` block to the envelope.'
 
 responses:
     "200":
@@ -31,5 +56,11 @@ responses:
                             type: array
                             items: { $ref: "../../components/schemas/AdminProduct.yaml" }
                         meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+                        facets:
+                            type: object
+                            description: Facet counts under the active filter set (one bucket per facet, minus self).
+                            additionalProperties:
+                                type: object
+                                additionalProperties: { type: integer }
     "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
     "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

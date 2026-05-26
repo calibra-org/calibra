@@ -69,7 +69,41 @@
         "yesterday": "دیروز",
         "thisWeek": "این هفته",
         "comparison": "نسبت به دوره قبل",
-        "showing": "نمایش {from} تا {to} از {total}"
+        "showing": "نمایش {from} تا {to} از {total}",
+        "moreInfo": "اطلاعات بیشتر",
+        "dismiss": "بستن",
+        "learnMore": "بیشتر بدانید",
+        "select": "انتخاب کنید",
+        "remove": "حذف",
+        "clearAll": "پاک کردن همه",
+        "create": "ساخت «{name}»",
+        "money": {
+            "tomanShort": "تومان",
+            "rialShort": "ریال"
+        },
+        "dateRange": {
+            "today": "امروز",
+            "yesterday": "دیروز",
+            "last7": "۷ روز گذشته",
+            "last30": "۳۰ روز گذشته",
+            "thisMonth": "این ماه",
+            "lastMonth": "ماه گذشته"
+        },
+        "shortcuts": {
+            "title": "میانبرها",
+            "search": "تمرکز روی جستجو",
+            "new": "محصول جدید",
+            "refresh": "بازخوانی",
+            "edit": "ویرایش",
+            "quickEdit": "ویرایش سریع",
+            "duplicate": "تکثیر",
+            "trash": "انتقال به زباله‌دان",
+            "deletePermanently": "حذف کامل",
+            "selectAll": "انتخاب همه",
+            "clearSelection": "لغو انتخاب",
+            "open": "باز کردن",
+            "navigation": "ناوبری"
+        }
     },
     "Login": {
         "title": "ورود به پنل مدیریت",
@@ -703,7 +737,24 @@
                 "category": "دسته‌بندی",
                 "brand": "برند",
                 "tag": "برچسب",
-                "favorites": "علاقه‌مندی‌ها"
+                "favorites": "علاقه‌مندی‌ها",
+                "onSale": "فقط فروش ویژه",
+                "featured": "فقط ویژه",
+                "hasImage": "دارای تصویر",
+                "visibility": "قابلیت دیدن",
+                "stockLevelLabel": "سطح موجودی",
+                "dateRange": "تاریخ ایجاد",
+                "stockLevel": {
+                    "instock": "موجود",
+                    "low": "کم‌موجود",
+                    "outofstock": "ناموجود"
+                },
+                "visibilityOption": {
+                    "visible": "همه‌جا",
+                    "catalog": "فقط فروشگاه",
+                    "search": "فقط جستجو",
+                    "hidden": "مخفی"
+                }
             },
             "type": {
                 "simple": "ساده",
@@ -731,7 +782,15 @@
                 "brand": "برند",
                 "date": "وضعیت / تاریخ",
                 "views": "بازدید",
-                "actions": "عملیات"
+                "actions": "عملیات",
+                "visibility": "قابلیت دیدن",
+                "visibilityShown": "نمایش",
+                "visibilityHidden": "مخفی",
+                "salePeriod": "بازه فروش ویژه",
+                "lowStock": "کم‌موجود",
+                "inventory": "کل موجودی",
+                "createdAt": "تاریخ ایجاد",
+                "updatedAt": "آخرین تغییر"
             },
             "actions": {
                 "edit": "ویرایش",
@@ -741,7 +800,9 @@
                 "openShop": "نمایش در فروشگاه",
                 "copyLink": "کپی پیوند",
                 "copyId": "کپی شناسه",
-                "trash": "انتقال به زباله‌دان"
+                "trash": "انتقال به زباله‌دان",
+                "restore": "بازگردانی",
+                "deletePermanently": "حذف کامل"
             },
             "rowActionsLabel": "عملیات ردیف",
             "selectAll": "انتخاب همه",
@@ -787,14 +848,27 @@
                 "duplicate": "تکثیر",
                 "favorite": "افزودن به علاقه‌مندی",
                 "category": "تغییر دسته‌بندی",
-                "trash": "انتقال به زباله‌دان"
+                "trash": "انتقال به زباله‌دان",
+                "restore": "بازگردانی",
+                "deletePermanently": "حذف کامل",
+                "setVisibility": "تغییر قابلیت دیدن",
+                "setStock": "تغییر وضعیت موجودی",
+                "setFeatured": "تنظیم وضعیت ویژه",
+                "assignBrand": "تخصیص برند",
+                "assignTags": "تخصیص برچسب",
+                "exportSelected": "خروجی موارد انتخابی"
             },
             "bulkStatusChanged": "وضعیت بروزرسانی شد",
             "bulkDuplicated": "محصولات انتخاب‌شده تکثیر شدند",
             "bulkTrashed": "به زباله‌دان منتقل شدند",
+            "bulkRestored": "بازگردانده شدند",
+            "bulkForceDeleted": "محصولات انتخاب‌شده برای همیشه حذف شدند",
+            "bulkForceSkipped": "{count} محصول به دلیل وجود سفارش فعال حذف نشد",
             "bulkFailed": "عملیات گروهی با خطا مواجه شد",
             "bulkTrashTitle": "حذف گروهی؟",
             "bulkTrashDescription": "{count} محصول انتخاب‌شده به زباله‌دان منتقل خواهد شد. ادامه می‌دهید؟",
+            "bulkForceTitle": "حذف کامل گروهی؟",
+            "bulkForceDescription": "{count} محصول برای همیشه حذف خواهد شد. این عملیات قابل بازگشت نیست.",
             "bulkFavoritedTodo": "افزودن گروهی به علاقه‌مندی‌ها به‌زودی",
             "bulkCategoryTodo": "تغییر دسته‌بندی گروهی به‌زودی",
             "quickEdit": {
@@ -808,18 +882,31 @@
                 "name": "نام محصول",
                 "slug": "نامک",
                 "sku": "شناسه (SKU)",
+                "gtin": "GTIN/UPC/EAN",
+                "gtinHint": "شناسه‌ی جهانی محصول؛ برای جستجوی گوگل شاپینگ مفید است.",
                 "shortDescription": "توضیح کوتاه",
                 "status": "وضعیت",
+                "visibility": "قابلیت دیدن",
                 "featured": "محصول ویژه",
                 "featuredHint": "در صفحه‌های ویژه نمایش داده شود",
                 "regularPrice": "قیمت اصلی",
                 "salePrice": "قیمت تخفیف",
                 "salePriceHint": "برای حذف تخفیف، خالی بگذارید.",
+                "saleSchedule": "بازه فروش ویژه",
+                "saleScheduleHint": "خالی = همیشه فعال. در غیر این صورت فقط بین این دو تاریخ.",
                 "currency": "تومان",
                 "manageStock": "مدیریت موجودی",
                 "manageStockHint": "موجودی را در سطح این محصول مدیریت کن",
                 "stockQuantity": "تعداد موجودی",
                 "stockStatus": "وضعیت موجودی",
+                "lowStockThreshold": "آستانه کم‌موجود",
+                "lowStockThresholdHint": "زیر این عدد، هشدار کم‌موجودی نشان داده می‌شود.",
+                "backorders": "پیش‌سفارش",
+                "backordersOptions": {
+                    "no": "اجازه نده",
+                    "notify": "اجازه بده — اطلاع‌رسانی",
+                    "yes": "اجازه بده"
+                },
                 "categories": "شناسه‌ی دسته‌بندی‌ها",
                 "tags": "شناسه‌ی برچسب‌ها",
                 "brand": "شناسه‌ی برند",
@@ -833,6 +920,50 @@
                 "discardConfirm": "تغییرات ذخیره‌نشده وجود دارد. واقعاً انصراف می‌دهید؟",
                 "dirty": "ذخیره‌نشده",
                 "lastEdited": "آخرین ویرایش: {relative}"
+            },
+            "rowActions": {
+                "viewOnStore": "نمایش در فروشگاه",
+                "copyLink": "کپی لینک",
+                "restore": "بازگردانی",
+                "deletePermanently": "حذف کامل"
+            },
+            "rowActionsKbd": {
+                "edit": "E",
+                "quickEdit": "Q",
+                "duplicate": "D",
+                "trash": "Del",
+                "deletePermanently": "Shift+Del"
+            },
+            "emptyHint": {
+                "title": "اولین محصول خود را اضافه کنید",
+                "description": "با افزودن محصولات، فروشگاه شما زنده می‌شود.",
+                "cta": "محصول جدید"
+            },
+            "restore": {
+                "ok": "بازگردانده شد",
+                "failed": "بازگردانی با خطا مواجه شد"
+            },
+            "forceDelete": {
+                "ok": "محصول برای همیشه حذف شد",
+                "failed": "حذف کامل با خطا مواجه شد",
+                "title": "حذف کامل؟",
+                "description": "محصول «{name}» برای همیشه حذف خواهد شد. این عملیات قابل بازگشت نیست.",
+                "confirm": "حذف کامل",
+                "skippedActiveOrder": "این محصول در یک سفارش فعال استفاده شده — ابتدا آن را لغو کنید."
+            },
+            "shortcuts": {
+                "title": "میانبرهای صفحه‌کلید",
+                "search": "تمرکز روی جستجو",
+                "new": "محصول جدید",
+                "refresh": "بازخوانی",
+                "open": "باز کردن میانبرها",
+                "edit": "ویرایش",
+                "quickEdit": "ویرایش سریع",
+                "duplicate": "تکثیر",
+                "trash": "انتقال به زباله‌دان",
+                "selectAll": "انتخاب همه",
+                "clearSelection": "لغو انتخاب",
+                "navigate": "ناوبری ردیف‌ها"
             },
             "errors": {
                 "nameRequired": "نام محصول الزامی است",

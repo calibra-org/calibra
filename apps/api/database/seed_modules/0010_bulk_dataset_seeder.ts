@@ -640,14 +640,31 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             const slugFa = uniqueSlug(existingProductSlugsEn, slugify(`${nameFa}-${sku}`, "fa"));
             const slugEn = uniqueSlug(existingProductSlugsEn, slugify(`${nameEn}-${sku}`, "en"));
 
+            /**
+             * Every product gets at least one category (its leaf) and roughly one in three picks
+             * up a sibling cross-category link so the bulk dataset exercises multi-category
+             * products too.
+             */
             const chosenCategoryIds = [leaf.categoryId];
+            if (faker.datatype.boolean({ probability: 0.3 })) {
+                const otherLeaf = faker.helpers.arrayElement(leafCategories);
+                if (otherLeaf.categoryId !== leaf.categoryId) chosenCategoryIds.push(otherLeaf.categoryId);
+            }
 
-            const brandChosen =
-                brandIds.length > 0 && faker.datatype.boolean({ probability: 0.5 }) ? faker.helpers.arrayElement(brandIds) : null;
+            /**
+             * Every product gets a brand — operators on the admin list expect the brand column
+             * to be populated. 50/50 left half the rows brandless which made the filter and
+             * column look broken.
+             */
+            const brandChosen = brandIds.length > 0 ? faker.helpers.arrayElement(brandIds) : null;
 
+            /**
+             * Every product gets between 1 and 4 tags (was 0–3 with 30% chance of skipping
+             * entirely — operators want the tag chips to actually appear in the list).
+             */
             const chosenTagIds =
-                tagIds.length > 0 && faker.datatype.boolean({ probability: 0.7 })
-                    ? faker.helpers.arrayElements(tagIds, faker.number.int({ min: 1, max: Math.min(3, tagIds.length) }))
+                tagIds.length > 0
+                    ? faker.helpers.arrayElements(tagIds, faker.number.int({ min: 1, max: Math.min(4, tagIds.length) }))
                     : [];
 
             const variations: Array<{ sku: string; regular_price: number; sale_price: number | null }> = [];
@@ -780,14 +797,28 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             productImageLinks.push({ product_id: productId, slug: spec.slug_en, image_count: imageCount, alt: spec.name_en });
 
             if (spec.type === "simple" || spec.type === "grouped") {
+                /**
+                 * Realistic distribution: ~80% well-stocked (8–250), ~10% low-stock (1–7),
+                 * ~10% out-of-stock (0). The previous min:0 / uniform distribution made the
+                 * stock column look broken with way too many zeros.
+                 */
+                const stockBucket = faker.number.float({ min: 0, max: 1 });
+                const stockQty =
+                    stockBucket < 0.1
+                        ? 0
+                        : stockBucket < 0.2
+                          ? faker.number.int({ min: 1, max: 7 })
+                          : faker.number.int({ min: 8, max: 250 });
+                const stockStatus = stockQty === 0 ? "outofstock" : "instock";
                 inventoryRows.push({
                     product_id: productId,
                     variation_id: null,
                     location_id: null,
-                    stock_quantity: faker.number.int({ min: 0, max: 250 }),
+                    stock_quantity: stockQty,
                     manage_stock: true,
                     backorders: "no",
-                    stock_status: faker.helpers.arrayElement(["instock", "instock", "instock", "outofstock"]),
+                    low_stock_threshold: 5,
+                    stock_status: stockStatus,
                     created_at: now,
                     updated_at: now,
                 });
@@ -842,14 +873,23 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             const variationInventoryRows: Array<Record<string, unknown>> = [];
             for (const [pid, variationIds] of insertedVariationIdsByProduct.entries()) {
                 for (const vid of variationIds) {
+                    /** Same realistic distribution as simple products — most variations are well-stocked. */
+                    const stockBucket = faker.number.float({ min: 0, max: 1 });
+                    const stockQty =
+                        stockBucket < 0.1
+                            ? 0
+                            : stockBucket < 0.2
+                              ? faker.number.int({ min: 1, max: 7 })
+                              : faker.number.int({ min: 5, max: 80 });
                     variationInventoryRows.push({
                         product_id: pid,
                         variation_id: vid,
                         location_id: null,
-                        stock_quantity: faker.number.int({ min: 0, max: 100 }),
+                        stock_quantity: stockQty,
                         manage_stock: true,
                         backorders: "no",
-                        stock_status: faker.helpers.arrayElement(["instock", "instock", "instock", "outofstock"]),
+                        low_stock_threshold: 5,
+                        stock_status: stockQty === 0 ? "outofstock" : "instock",
                         created_at: now,
                         updated_at: now,
                     });
