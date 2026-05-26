@@ -63,7 +63,6 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
 
     const [hoveredCounty, setHoveredCounty] = useState<AdminRegionalCounty | null>(null);
     const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
-    const [backHovered, setBackHovered] = useState(false);
 
     /**
      * Stable counties array for `ProvinceSvg` — only changes when `data.counties` does.
@@ -164,46 +163,22 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                             />
                         </MapZoomWrapper>
                     )}
-                    {(() => {
-                        const provinceName = data?.name[locale] ?? code;
-                        const backLabel = t("backToCountry");
-                        /** Pre-pick the longer label so the chip stays one size — no width jitter. */
-                        const sizerLabel = provinceName.length >= backLabel.length ? provinceName : backLabel;
-                        const transitionMs = reduce ? 0 : 180;
-                        return (
-                            <motion.button
-                                type="button"
-                                onClick={onBack}
-                                onPointerEnter={() => setBackHovered(true)}
-                                onPointerLeave={() => setBackHovered(false)}
-                                onFocus={() => setBackHovered(true)}
-                                onBlur={() => setBackHovered(false)}
-                                whileTap={reduce ? undefined : { scale: 0.97 }}
-                                className="absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md border bg-card/90 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent"
-                                aria-label={backLabel}
-                                title={backLabel}
-                            >
-                                <ChevronLeft className="size-3.5 shrink-0 rtl:-scale-x-100" aria-hidden="true" />
-                                <span className="relative inline-block">
-                                    <span aria-hidden className="invisible whitespace-nowrap font-semibold">
-                                        {sizerLabel}
-                                    </span>
-                                    <span
-                                        className="absolute inset-0 whitespace-nowrap text-end font-semibold text-foreground"
-                                        style={{ opacity: backHovered ? 0 : 1, transition: `opacity ${transitionMs}ms ease-out` }}
-                                    >
-                                        {provinceName}
-                                    </span>
-                                    <span
-                                        className="absolute inset-0 whitespace-nowrap text-end font-semibold text-foreground"
-                                        style={{ opacity: backHovered ? 1 : 0, transition: `opacity ${transitionMs}ms ease-out` }}
-                                    >
-                                        {backLabel}
-                                    </span>
-                                </span>
-                            </motion.button>
-                        );
-                    })()}
+                    <motion.button
+                        type="button"
+                        onClick={onBack}
+                        whileTap={reduce ? undefined : { scale: 0.97 }}
+                        className="absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md border bg-card/90 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent"
+                        aria-label={t("backToCountry")}
+                        title={t("backToCountry")}
+                    >
+                        <ChevronLeft className="size-3.5 shrink-0 rtl:-scale-x-100" aria-hidden="true" />
+                        <span className="whitespace-nowrap font-semibold text-foreground">{t("backToCountry")}</span>
+                    </motion.button>
+                    <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center">
+                        <span className="rounded-md border bg-card/90 px-3 py-1 font-semibold text-foreground text-sm shadow-sm backdrop-blur-sm">
+                            {data?.name[locale] ?? code}
+                        </span>
+                    </div>
                     {hoveredCounty !== null && pointer !== null ? (
                         <MapTooltip position={pointer}>
                             <div className="flex flex-col gap-0.5">
