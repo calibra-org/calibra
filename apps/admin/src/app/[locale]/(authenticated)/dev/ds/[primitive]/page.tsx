@@ -4,6 +4,7 @@ import { setRequestLocale } from "next-intl/server";
 import { Badge } from "#/components/ui/badge";
 import { Card } from "#/components/ui/card";
 import { CodeBlock } from "#/components/ui/code-block";
+import { hasDemo, PrimitiveDemo } from "#/design-system/showcase/demos";
 import { getByName, PRIMITIVES } from "#/design-system/showcase/registry";
 import { Link } from "#/lib/i18n/navigation";
 
@@ -47,6 +48,10 @@ export default async function PrimitivePage({ params }: PrimitivePageProps) {
 
             <Card title="Import">
                 <CodeBlock code={sample} language="tsx" />
+            </Card>
+
+            <Card title={hasDemo(meta.name) ? "Live demo" : "Demo (TBD)"}>
+                <PrimitiveDemo name={meta.name} />
             </Card>
 
             <Card title="Documentation">
