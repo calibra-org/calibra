@@ -12,8 +12,8 @@ import { COUNTRY_WATER_PATHS, PROVINCE_WATER_PATHS } from "#/vendor/iran-map/wat
  * heatmap chrome on smaller widths.
  */
 
-const SEA_FILL = "#1e40af";
-const SEA_STROKE = "#1e3a8a";
+const SEA_FILL = "#7bdaff";
+const SEA_STROKE = "#4cb6e0";
 
 interface SeaDecorationsProps {
     locale: Locale;
