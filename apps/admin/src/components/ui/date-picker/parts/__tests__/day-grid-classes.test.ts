@@ -161,9 +161,19 @@ describe("modifier composition — overlap invariants", () => {
         expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewEnd).toMatch(/\bbg-primary\/\d+/);
     });
 
-    it("disabled never paints a bg — it's a non-interactive cell, not a styled state", () => {
+    it("disabled never paints a coloured bg and forces `!bg-transparent` so co-fired range modifiers can't leak the band onto it", () => {
+        expect(DAY_GRID_CLASS_NAMES.disabled).toMatch(/!bg-transparent/);
         const classes = classList(DAY_GRID_CLASS_NAMES.disabled);
-        const bgs = classes.filter((c) => c.startsWith("bg-"));
-        expect(bgs).toEqual([]);
+        const colouredBgs = classes.filter((c) => c.startsWith("bg-") && !c.startsWith("bg-transparent"));
+        expect(colouredBgs).toEqual([]);
+    });
+
+    it("outside days force `!bg-transparent` + `!rounded-none` so the band can't leak onto hidden-button cells", () => {
+        /** With `showOutsideDays={false}` the inner button is suppressed, but the `<td>`
+         * still gets range_* / preview* modifiers if the date lands in the picked range.
+         * Without these overrides, the band paints on the empty cell and the user sees a
+         * "highlighted blank row" leaking into the prev/next month's leading days. */
+        expect(DAY_GRID_CLASS_NAMES.outside).toMatch(/!bg-transparent/);
+        expect(DAY_GRID_CLASS_NAMES.outside).toMatch(/!rounded-none/);
     });
 });

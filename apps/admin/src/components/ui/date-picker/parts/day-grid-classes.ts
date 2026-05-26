@@ -75,7 +75,15 @@ export const DAY_GRID_CLASS_NAMES = {
      */
     day_button:
         "mx-auto inline-flex size-8 items-center justify-center rounded-full bg-transparent p-0 cursor-pointer text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
-    outside: "text-muted-foreground/30",
+    /**
+     * Outside days. With `showOutsideDays={false}` the inner `<button>` is suppressed, but the
+     * `<td>` still exists in the grid and RDP still applies range_* / preview* modifiers when
+     * the corresponding date falls inside the picked range. That paints the band on an empty
+     * cell, which the user perceives as "the band is leaking into rows without numbers".
+     * `!bg-transparent` + `!rounded-none` kill any background AND any inherited cap geometry
+     * so an outside cell stays neutral regardless of how many modifiers co-fire on it.
+     */
+    outside: "text-muted-foreground/30 !bg-transparent !rounded-none",
     /**
      * Single-day selected (operator !== "within") — the whole cell becomes a filled circle.
      * `!ring-0` on the button suppresses today's circular ring when both modifiers overlap.
@@ -94,7 +102,7 @@ export const DAY_GRID_CLASS_NAMES = {
     range_end: "rounded-e-full bg-primary text-primary-foreground [&_button]:!ring-0",
     /** Middle: square `<td>` filled edge-to-edge so adjacent cells form one continuous strip. */
     range_middle: "bg-primary text-primary-foreground [&_button]:!ring-0",
-    disabled: "text-muted-foreground/30 cursor-not-allowed",
+    disabled: "text-muted-foreground/30 cursor-not-allowed !bg-transparent !rounded-none",
 } as const;
 
 /**
