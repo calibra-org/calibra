@@ -2409,6 +2409,7 @@
                 "expand": "Expand section"
             },
             "sections": {
+                "actions": "Actions",
                 "general": "General",
                 "discount": "Discount type and value",
                 "time": "Time window",
@@ -2481,7 +2482,8 @@
                 "save": "Save changes",
                 "create": "Create and save",
                 "cancel": "Cancel",
-                "dirty": "{count} unsaved changes"
+                "dirty": "{count} unsaved changes",
+                "clean": "All changes saved"
             }
         },
         "duplicateDialog": {
