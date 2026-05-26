@@ -1,6 +1,8 @@
 # Build the Calibra Admin Design System
 
 > **How to use this prompt**: Paste the body (everything below the `---` separator) as the first user turn in a fresh Claude Code session. The agent will read the listed files, surface the open questions, and wait for your answers before writing code.
+>
+> _Last refreshed: 2026-05-26 — keep this file in `.agents/prompts/` so edits land alongside code._
 
 ---
 
