@@ -52,7 +52,7 @@ export function RegionalMapCard() {
                     locale={locale}
                 />
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent>
                 <LayoutGroup id="regional-map">
                     <AnimatePresence mode="wait" initial={false}>
                         {selectedCode === null ? (
