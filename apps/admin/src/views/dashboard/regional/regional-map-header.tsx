@@ -1,10 +1,9 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { RotateCw, Sliders } from "lucide-react";
+import { Sliders } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "#/components/ui/button";
 import { DateFilterChip, type DateFilterValue } from "#/components/ui/date-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Slider } from "#/components/ui/slider";
@@ -20,14 +19,14 @@ interface RegionalMapHeaderProps {
     onDateFilterChange: (next: DateFilterValue | null) => void;
     topX: number;
     onTopXChange: (next: number) => void;
-    onRefresh: () => void;
     locale: Locale;
 }
 
 /**
- * Card-header controls cluster: metric pill toggle, date picker, top-X slider popover, refresh.
- * The header is a pure render — every piece of state lives in the parent card so the picker /
- * slider don't need to sync with anything else.
+ * Card-header controls cluster styled like the standard admin toolbar (matches the list pages'
+ * `DataTableToolbar`): `h-8` rounded-md elements, dashed border for add-affordances, solid
+ * border once a value is set, refresh as a ghost icon button. Wrapped in `flex flex-wrap` so
+ * the row collapses cleanly under narrow widths.
  */
 export function RegionalMapHeader({
     metric,
@@ -36,15 +35,14 @@ export function RegionalMapHeader({
     onDateFilterChange,
     topX,
     onTopXChange,
-    onRefresh,
     locale,
 }: RegionalMapHeaderProps) {
     const t = useTranslations("Dashboard.regional");
-    const tCommon = useTranslations("Common");
 
     return (
         <div className="flex flex-wrap items-center gap-2">
             <MetricPillToggle value={metric} onChange={onMetricChange} />
+
             <DateFilterChip
                 fieldLabel={t("dateRangeLabel")}
                 addLabel={t("dateRangeAddLabel")}
@@ -54,6 +52,7 @@ export function RegionalMapHeader({
                 allowedOperators={["within", "in", "before", "after"]}
                 allowedGranularities={["day", "month", "quarter", "half_year", "year"]}
             />
+
             <Popover>
                 <PopoverTrigger
                     render={(props) => (
@@ -61,14 +60,14 @@ export function RegionalMapHeader({
                             {...(props as React.ComponentProps<"button">)}
                             type="button"
                             className={cn(
-                                "inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs",
-                                "transition-colors hover:bg-accent hover:text-accent-foreground",
+                                "inline-flex h-8 items-center gap-2 rounded-md border border-input border-solid bg-background px-2.5 text-sm outline-none transition-colors",
+                                "hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring",
                             )}
                         >
-                            <Sliders className="size-3.5" aria-hidden="true" />
-                            <span>
-                                {t("topProductsLabel")}: {topX}
-                            </span>
+                            <Sliders className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                            <span>{t("topProductsLabel")}</span>
+                            <span className="h-4 w-px bg-border" aria-hidden="true" />
+                            <span className="font-medium tabular-nums">{topX}</span>
                         </button>
                     )}
                 />
@@ -88,10 +87,6 @@ export function RegionalMapHeader({
                     </div>
                 </PopoverContent>
             </Popover>
-            <Button variant="outline" size="sm" onClick={onRefresh} className="ms-auto gap-1.5">
-                <RotateCw className="size-3.5" aria-hidden="true" />
-                <span>{tCommon("refresh")}</span>
-            </Button>
         </div>
     );
 }

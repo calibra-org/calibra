@@ -1,7 +1,6 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, LayoutGroup } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -25,7 +24,6 @@ import type { HeatmapMetric } from "./heatmap-scale";
 export function RegionalMapCard() {
     const locale = useLocale() as Locale;
     const t = useTranslations("Dashboard.regional");
-    const queryClient = useQueryClient();
 
     const [metric, setMetric] = useState<HeatmapMetric>("orders");
     const [dateFilter, setDateFilter] = useState<DateFilterValue | null>(null);
@@ -52,7 +50,6 @@ export function RegionalMapCard() {
                         onDateFilterChange={setDateFilter}
                         topX={topX}
                         onTopXChange={setTopX}
-                        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["dashboard", "regional"] })}
                         locale={locale}
                     />
                 </div>
