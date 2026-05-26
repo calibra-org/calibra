@@ -2,9 +2,8 @@ import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 import { DateTime } from "luxon";
 
-import Product from "#models/product";
-
 import { createProduct } from "./helpers.js";
+import Product from "#models/product";
 
 /**
  * Coverage for the trash / restore / force-delete + counts + new index filter dimensions
@@ -64,7 +63,9 @@ test.group("Admin products — trash, restore, force-delete, counts", (group) =>
         res.assertStatus(200);
         assert.deepEqual(res.body().data.restored.sort(), [Number(a.id), Number(b.id)].sort());
 
-        const live = await Product.query().whereIn("id", [Number(a.id), Number(b.id)]).whereNull("deleted_at");
+        const live = await Product.query()
+            .whereIn("id", [Number(a.id), Number(b.id)])
+            .whereNull("deleted_at");
         assert.equal(live.length, 2);
     });
 
