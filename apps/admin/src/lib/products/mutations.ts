@@ -376,28 +376,10 @@ export function useBatchVariations(productId: number) {
 }
 
 /**
- * Inline mutations the variations grid uses for creating global attributes / terms on the fly
- * (custom-attribute inline form). Both write to the global taxonomy admin endpoints.
+ * Inline term creation — the chip bar on an attribute-link row lets operators type a new term
+ * and press Enter. Attribute creation itself stays on the global /products/attributes page so
+ * there's only one place that owns the taxonomy.
  */
-export function useCreateAttribute() {
-    const queryClient = useQueryClient();
-    const locale = useLocale() as Locale;
-    return useMutation<{ data: { id: number } }, Error, { name: string; isCustom?: boolean }>({
-        mutationFn: ({ name, isCustom }) =>
-            apiMutate<{ data: { id: number } }>("POST", "attributes", {
-                locale,
-                body: {
-                    code: slugify(name),
-                    is_custom: isCustom ?? false,
-                    translations: [{ locale: "fa", name }],
-                },
-            }),
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: ["admin", "attributes"] });
-        },
-    });
-}
-
 export function useCreateAttributeTerm(attributeId: number) {
     const queryClient = useQueryClient();
     const locale = useLocale() as Locale;

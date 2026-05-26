@@ -321,7 +321,6 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             .from("product_attributes as a")
             .leftJoin("product_attribute_terms as t", "t.attribute_id", "a.id")
             .whereIn("a.code", ["color", "size", "weight", "material", "capacity"])
-            .where("a.is_custom", false)
             .select("a.id as attribute_id", "t.id as term_id")
             .orderBy("a.id")
             .orderBy("t.menu_order");

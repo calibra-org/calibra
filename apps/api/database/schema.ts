@@ -1296,7 +1296,7 @@ export class ProductAttributeTranslationSchema extends BaseModel {
 }
 
 export class ProductAttributeSchema extends BaseModel {
-  static $columns = ['attributes', 'code', 'createdAt', 'hasArchives', 'id', 'isCustom', 'orderBy', 'updatedAt'] as const
+  static $columns = ['attributes', 'code', 'createdAt', 'hasArchives', 'id', 'orderBy', 'updatedAt'] as const
   $columns = ProductAttributeSchema.$columns
   @column()
   declare attributes: any
@@ -1308,8 +1308,6 @@ export class ProductAttributeSchema extends BaseModel {
   declare hasArchives: boolean
   @column({ isPrimary: true })
   declare id: bigint | number
-  @column()
-  declare isCustom: boolean
   @column()
   declare orderBy: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })

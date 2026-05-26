@@ -7,12 +7,11 @@ import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 
 import { Button } from "#/components/ui/button";
 import { HelperTooltip } from "#/components/ui/helper-tooltip";
-import { Input } from "#/components/ui/input";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Switch } from "#/components/ui/switch";
 import { toast } from "#/components/ui/toast";
-import { useCreateAttribute, useCreateAttributeTerm } from "#/lib/products/mutations";
+import { useCreateAttributeTerm } from "#/lib/products/mutations";
 import { useGlobalAttributes, useGlobalAttributeTerms } from "#/lib/products/queries";
 import { cn } from "#/lib/utils";
 
@@ -22,8 +21,11 @@ import type { ProductDetailFormValues } from "../schema";
 /**
  * Attributes card body. Mounted inside the DraggableSectionGrid. Edits attribute_links — which
  * global attributes this product uses, with which terms, with which visibility + variation
- * eligibility flags. Custom attributes are created inline via `useCreateAttribute(isCustom=true)`
- * and become indistinguishable from global ones once saved.
+ * eligibility flags.
+ *
+ * Attribute creation lives only on the global `/products/attributes` admin page; this card just
+ * picks from existing ones. Single source of truth keeps the relationship between products,
+ * variations, and the global taxonomy clean.
  *
  * The "Use for variations" toggle is the load-bearing UX: it's the bridge between this card and
  * the Variations card. Toggling it off when variations already use the attribute opens a
@@ -34,8 +36,6 @@ export function AttributesBody({ productType }: { productType: "simple" | "varia
     const { control } = useFormContext<ProductDetailFormValues>();
     const { fields, append, remove } = useFieldArray({ control, name: "attributeLinks" });
     const attributes = useGlobalAttributes();
-    const createAttribute = useCreateAttribute();
-    const [customOpen, setCustomOpen] = useState(false);
 
     const usedAttributeIds = new Set(fields.map((f) => f.attributeId));
 
@@ -49,7 +49,7 @@ export function AttributesBody({ productType }: { productType: "simple" | "varia
                     title={t("empty.title")}
                     description={t("empty.description")}
                 />
-                <div className="flex flex-wrap gap-2">
+                <div>
                     <AddExistingPopover
                         attributes={attributes.data ?? []}
                         usedAttributeIds={usedAttributeIds}
@@ -64,28 +64,7 @@ export function AttributesBody({ productType }: { productType: "simple" | "varia
                         }
                         label={t("empty.addExisting")}
                     />
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCustomOpen(true)}>
-                        <Plus className="size-3.5" aria-hidden="true" />
-                        {t("empty.addCustom")}
-                    </Button>
                 </div>
-                {customOpen ? (
-                    <AddCustomAttributeForm
-                        onClose={() => setCustomOpen(false)}
-                        onCreated={(id) => {
-                            append({
-                                attributeId: id,
-                                position: 0,
-                                visible: true,
-                                usedForVariation: productType === "variable",
-                                termIds: [],
-                            });
-                            setCustomOpen(false);
-                        }}
-                        createAttribute={createAttribute}
-                        labels={t}
-                    />
-                ) : null}
             </div>
         );
     }
@@ -110,28 +89,7 @@ export function AttributesBody({ productType }: { productType: "simple" | "varia
                     }
                     label={t("empty.addExisting")}
                 />
-                <Button type="button" variant="outline" size="sm" onClick={() => setCustomOpen(true)}>
-                    <Plus className="size-3.5" aria-hidden="true" />
-                    {t("empty.addCustom")}
-                </Button>
             </div>
-            {customOpen ? (
-                <AddCustomAttributeForm
-                    onClose={() => setCustomOpen(false)}
-                    onCreated={(id) => {
-                        append({
-                            attributeId: id,
-                            position: fields.length,
-                            visible: true,
-                            usedForVariation: productType === "variable",
-                            termIds: [],
-                        });
-                        setCustomOpen(false);
-                    }}
-                    createAttribute={createAttribute}
-                    labels={t}
-                />
-            ) : null}
         </div>
     );
 }
@@ -324,51 +282,5 @@ function InlineTermCreator({ onCreate, placeholder }: { onCreate: (name: string)
             placeholder={placeholder}
             className="h-7 rounded border border-border border-dashed bg-transparent px-2 text-xs outline-none focus:border-ring"
         />
-    );
-}
-
-function AddCustomAttributeForm({
-    onClose,
-    onCreated,
-    createAttribute,
-    labels,
-}: {
-    onClose: () => void;
-    onCreated: (id: number) => void;
-    createAttribute: ReturnType<typeof useCreateAttribute>;
-    labels: ReturnType<typeof useTranslations<"Products.detail.attributes">>;
-}) {
-    const [name, setName] = useState("");
-    const [busy, setBusy] = useState(false);
-
-    return (
-        <div className="rounded-md border border-border border-dashed bg-card p-3">
-            <h4 className="font-semibold text-foreground text-sm">{labels("custom.title")}</h4>
-            <p className="mt-1 text-muted-foreground text-xs">{labels("custom.description")}</p>
-            <div className="mt-2 flex items-end gap-2">
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={labels("custom.namePlaceholder")} />
-                <Button
-                    type="button"
-                    onClick={async () => {
-                        if (name.trim().length === 0) return;
-                        setBusy(true);
-                        try {
-                            const result = await createAttribute.mutateAsync({ name: name.trim(), isCustom: true });
-                            onCreated(result.data.id);
-                        } catch (error) {
-                            toast.add({ title: labels("custom.failed"), description: String(error), data: { tone: "error" } });
-                        } finally {
-                            setBusy(false);
-                        }
-                    }}
-                    disabled={busy || name.trim().length === 0}
-                >
-                    {labels("custom.create")}
-                </Button>
-                <Button type="button" variant="ghost" onClick={onClose}>
-                    {labels("custom.cancel")}
-                </Button>
-            </div>
-        </div>
     );
 }

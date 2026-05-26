@@ -35,7 +35,6 @@ export default class AttributesSeeder extends BaseSeeder {
                     code: definition.code,
                     order_by: definition.orderBy ?? "menu_order",
                     has_archives: false,
-                    is_custom: false,
                     attributes: JSON.stringify({}),
                     created_at: now,
                     updated_at: now,
