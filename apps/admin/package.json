@@ -39,6 +39,7 @@
         "next": "catalog:",
         "next-intl": "catalog:",
         "nuqs": "catalog:",
+        "radix-ui": "catalog:",
         "react": "catalog:",
         "react-day-picker": "catalog:",
         "react-dom": "catalog:",

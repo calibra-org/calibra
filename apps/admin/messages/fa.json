@@ -120,6 +120,26 @@
                 "total": "نمودار ۳۰ روزه تعداد مشتری‌های جدید",
                 "spend": "نمودار ۳۰ روزه درآمد دریافتی"
             }
+        },
+        "regional": {
+            "title": "نقشهٔ سفارش‌ها",
+            "subtitle": "بازهٔ زمانی و معیار رنگ‌بندی را تغییر دهید",
+            "metricOrders": "تعداد سفارش‌ها",
+            "metricRevenue": "مبلغ فروش",
+            "topProductsLabel": "محصولات برتر",
+            "topProductsCount": "تعداد",
+            "backToCountry": "بازگشت به نقشهٔ کشور",
+            "totalOrders": "کل سفارش‌ها",
+            "totalRevenue": "کل فروش",
+            "topProvince": "استان برتر",
+            "topCity": "شهر برتر",
+            "empty": "سفارشی در بازهٔ انتخاب‌شده ثبت نشده است",
+            "emptyProvince": "بدون سفارش",
+            "tooltipHint": "برای جزئیات کلیک کنید",
+            "legendTitle": "راهنمای رنگ‌ها",
+            "citiesHeading": "شهرها",
+            "unmappedCitiesHeading": "شهرهای بدون نقشه",
+            "unmatchedCity": "شهر شناسایی‌نشده"
         }
     },
     "ProductsExport": {

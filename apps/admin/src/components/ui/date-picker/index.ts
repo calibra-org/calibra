@@ -1,7 +1,7 @@
 /** Public entry point for the admin date-picker primitive. */
 
 export { DateField } from "./date-field";
-export { dateToValueString, getDateLib, toGregorianISO, valueStringToDate } from "./date-lib";
+export { dateToValueString, getDateLib, periodEnd, toGregorianISO, valueStringToDate } from "./date-lib";
 export { DatePickerDialog } from "./date-picker-dialog";
 export { DatePickerPopover } from "./date-picker-popover";
 export { DateRangeField } from "./date-range-field";

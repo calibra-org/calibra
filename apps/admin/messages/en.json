@@ -120,6 +120,26 @@
                 "total": "30-day daily new customer count",
                 "spend": "30-day daily revenue"
             }
+        },
+        "regional": {
+            "title": "Regional orders",
+            "subtitle": "Tune the date range and heatmap metric",
+            "metricOrders": "Orders",
+            "metricRevenue": "Revenue",
+            "topProductsLabel": "Top products",
+            "topProductsCount": "Count",
+            "backToCountry": "Back to country",
+            "totalOrders": "Total orders",
+            "totalRevenue": "Total revenue",
+            "topProvince": "Top province",
+            "topCity": "Top city",
+            "empty": "No orders in the selected range",
+            "emptyProvince": "Empty province",
+            "tooltipHint": "Click for details",
+            "legendTitle": "Legend",
+            "citiesHeading": "Cities",
+            "unmappedCitiesHeading": "Cities not on the map",
+            "unmatchedCity": "Unrecognised city"
         }
     },
     "ProductsExport": {
