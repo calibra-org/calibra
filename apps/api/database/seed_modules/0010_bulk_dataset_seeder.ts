@@ -266,7 +266,16 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         await this.client.from("inventory_items").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_translations").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_images").whereIn("product_id", productsFilter).delete();
+        await this.client
+            .from("product_variation_attributes")
+            .whereIn("variation_id", this.client.from("product_variations").whereIn("product_id", productsFilter).select("id"))
+            .delete();
         await this.client.from("product_variations").whereIn("product_id", productsFilter).delete();
+        await this.client
+            .from("product_attribute_link_terms")
+            .whereIn("link_id", this.client.from("product_attribute_links").whereIn("product_id", productsFilter).select("id"))
+            .delete();
+        await this.client.from("product_attribute_links").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_category_links").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_brand_links").whereIn("product_id", productsFilter).delete();
         await this.client.from("product_tag_links").whereIn("product_id", productsFilter).delete();
@@ -302,6 +311,34 @@ export default class BulkDatasetSeeder extends BaseSeeder {
     /**
      * Brand roster owned by the bulk seeder. Each entry seeds one `product_brands` row + its
      * `(fa, en)` translations. Idempotent via `product_brand_translations`'s unique
+     * Reads the global attribute taxonomy (Color · Size · Weight · Material · Capacity) seeded
+     * by `0002_attributes_seeder`. Returns one axis per attribute with its term ids so variable
+     * products can pin variations along them. Empty array when the taxonomy hasn't been seeded
+     * — the variable-product flow is a no-op in that case, products fall back to plain rows.
+     */
+    private async loadAttributeAxes(): Promise<Array<{ attributeId: number; termIds: number[] }>> {
+        const rows = await this.client
+            .from("product_attributes as a")
+            .leftJoin("product_attribute_terms as t", "t.attribute_id", "a.id")
+            .whereIn("a.code", ["color", "size", "weight", "material", "capacity"])
+            .where("a.is_custom", false)
+            .select("a.id as attribute_id", "t.id as term_id")
+            .orderBy("a.id")
+            .orderBy("t.menu_order");
+        const byAttribute = new Map<number, number[]>();
+        for (const row of rows as Array<{ attribute_id: number | string; term_id: number | string | null }>) {
+            const attributeId = Number(row.attribute_id);
+            if (row.term_id === null || row.term_id === undefined) continue;
+            const arr = byAttribute.get(attributeId) ?? [];
+            arr.push(Number(row.term_id));
+            byAttribute.set(attributeId, arr);
+        }
+        return Array.from(byAttribute.entries())
+            .filter(([, termIds]) => termIds.length > 0)
+            .map(([attributeId, termIds]) => ({ attributeId, termIds }));
+    }
+
+    /**
      * `(locale, slug)` constraint, so re-runs reuse the existing ids.
      */
     private async ensureBulkBrands(now: string): Promise<number[]> {
@@ -609,8 +646,20 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             categoryIds: number[];
             brandId: number | null;
             tagIds: number[];
-            variations: Array<{ sku: string; regular_price: number; sale_price: number | null }>;
+            variations: Array<{
+                sku: string;
+                regular_price: number;
+                sale_price: number | null;
+                pins: Array<{ attribute_id: number; term_id: number | null }>;
+            }>;
+            attributeLinks: Array<{ attribute_id: number; term_ids: number[]; used_for_variation: boolean }>;
         }> = [];
+
+        /**
+         * Load the global attribute taxonomy seeded by `0002_attributes_seeder`. Variable products
+         * pick 1–2 of these and pin each variation to a unique combination of terms.
+         */
+        const attributeAxes = await this.loadAttributeAxes();
 
         for (let i = 0; i < target; i += 1) {
             const sku = uniqueBulkSku(existingSkus, i);
@@ -667,15 +716,56 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                     ? faker.helpers.arrayElements(tagIds, faker.number.int({ min: 1, max: Math.min(4, tagIds.length) }))
                     : [];
 
-            const variations: Array<{ sku: string; regular_price: number; sale_price: number | null }> = [];
-            if (type === "variable") {
-                const variationCount = faker.number.int({ min: 2, max: 6 });
-                for (let v = 0; v < variationCount; v += 1) {
+            const variations: Array<{
+                sku: string;
+                regular_price: number;
+                sale_price: number | null;
+                pins: Array<{ attribute_id: number; term_id: number | null }>;
+            }> = [];
+            const attributeLinks: Array<{ attribute_id: number; term_ids: number[]; used_for_variation: boolean }> = [];
+            if (type === "variable" && attributeAxes.length > 0) {
+                /**
+                 * Pick 1 or 2 attributes for this product. Two-axis products feel more realistic
+                 * (e.g. Color × Size for apparel; Material × Capacity for housewares) but the
+                 * majority stay single-axis so the variation grid doesn't explode.
+                 */
+                const axisCount = faker.number.float({ min: 0, max: 1 }) < 0.65 ? 1 : 2;
+                const pickedAxes = faker.helpers.arrayElements(attributeAxes, axisCount);
+                const pickedTermsPerAxis = pickedAxes.map((axis) => {
+                    const take = Math.min(axis.termIds.length, faker.number.int({ min: 2, max: 4 }));
+                    return {
+                        attribute_id: axis.attributeId,
+                        term_ids: faker.helpers.arrayElements(axis.termIds, take),
+                    };
+                });
+                for (const link of pickedTermsPerAxis) {
+                    attributeLinks.push({
+                        attribute_id: link.attribute_id,
+                        term_ids: link.term_ids,
+                        used_for_variation: true,
+                    });
+                }
+
+                /** Cartesian of the picked terms — one variation per combination, capped at 8. */
+                let combos: Array<Array<{ attribute_id: number; term_id: number | null }>> = [[]];
+                for (const link of pickedTermsPerAxis) {
+                    const next: Array<Array<{ attribute_id: number; term_id: number | null }>> = [];
+                    for (const partial of combos) {
+                        for (const termId of link.term_ids) {
+                            next.push([...partial, { attribute_id: link.attribute_id, term_id: termId }]);
+                        }
+                    }
+                    combos = next;
+                }
+                if (combos.length > 8) combos = faker.helpers.arrayElements(combos, 8);
+
+                for (let v = 0; v < combos.length; v += 1) {
                     const vPrice = Math.floor(regular * faker.number.float({ min: 0.9, max: 1.2 }));
                     variations.push({
                         sku: `${sku}-V${v + 1}`,
                         regular_price: vPrice,
                         sale_price: sale ? Math.floor(vPrice * 0.9) : null,
+                        pins: combos[v]!,
                     });
                 }
             }
@@ -697,6 +787,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 description_en: `${blurb}\n\n${fakerEn.lorem.paragraphs(2, "\n\n")}`,
                 categoryIds: chosenCategoryIds,
                 brandId: brandChosen,
+                attributeLinks,
                 tagIds: chosenTagIds,
                 variations,
             });
@@ -899,6 +990,96 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 await this.client.table("inventory_items").insert(chunk);
             }
             inventoryCount += variationInventoryRows.length;
+
+            /**
+             * Write the attribute_links + link_terms + variation pins now that we have variation
+             * ids. The order matches the productSpecs walk above: for every variable spec, the
+             * insertedVariationIdsByProduct has its ids in the same order as `spec.variations`.
+             */
+            const attributeLinkRows: Array<Record<string, unknown>> = [];
+            const attributeLinkInsertOrder: Array<{ productId: number; attributeId: number; termIds: number[] }> = [];
+            const variationAttributeRows: Array<Record<string, unknown>> = [];
+            const defaultVariationByProduct = new Map<number, number>();
+
+            for (let i = 0; i < productSpecs.length; i += 1) {
+                const spec = productSpecs[i]!;
+                if (spec.type !== "variable") continue;
+                const productId = insertedProductIds[i]!;
+                const variationIds = insertedVariationIdsByProduct.get(productId) ?? [];
+                if (variationIds.length === 0) continue;
+
+                spec.attributeLinks.forEach((link, position) => {
+                    attributeLinkRows.push({
+                        product_id: productId,
+                        attribute_id: link.attribute_id,
+                        position,
+                        visible: true,
+                        used_for_variation: link.used_for_variation,
+                        created_at: now,
+                        updated_at: now,
+                    });
+                    attributeLinkInsertOrder.push({ productId, attributeId: link.attribute_id, termIds: link.term_ids });
+                });
+
+                for (let v = 0; v < spec.variations.length; v += 1) {
+                    const variationId = variationIds[v];
+                    if (variationId === undefined) continue;
+                    for (const pin of spec.variations[v]!.pins) {
+                        variationAttributeRows.push({
+                            variation_id: variationId,
+                            attribute_id: pin.attribute_id,
+                            term_id: pin.term_id,
+                            created_at: now,
+                            updated_at: now,
+                        });
+                    }
+                }
+
+                defaultVariationByProduct.set(productId, variationIds[0]!);
+            }
+
+            if (attributeLinkRows.length > 0) {
+                /**
+                 * Returning ids row-by-row so the link_terms inserts can map back to the link's
+                 * id. The link rows are ordered identically to `attributeLinkInsertOrder`, so we
+                 * walk both lists in lockstep.
+                 */
+                const insertedLinkIds: number[] = [];
+                for (const chunk of chunked(attributeLinkRows, BATCH)) {
+                    const rows = await this.client.table("product_attribute_links").returning("id").insert(chunk);
+                    for (const r of rows) insertedLinkIds.push(Number(r.id));
+                }
+
+                const linkTermRows: Array<Record<string, unknown>> = [];
+                for (let i = 0; i < insertedLinkIds.length; i += 1) {
+                    const linkId = insertedLinkIds[i]!;
+                    const meta = attributeLinkInsertOrder[i]!;
+                    for (const termId of meta.termIds) {
+                        linkTermRows.push({
+                            link_id: linkId,
+                            term_id: termId,
+                            created_at: now,
+                            updated_at: now,
+                        });
+                    }
+                }
+                for (const chunk of chunked(linkTermRows, BATCH)) {
+                    await this.client.table("product_attribute_link_terms").insert(chunk);
+                }
+            }
+
+            for (const chunk of chunked(variationAttributeRows, BATCH)) {
+                await this.client.table("product_variation_attributes").insert(chunk);
+            }
+
+            if (defaultVariationByProduct.size > 0) {
+                for (const [productId, variationId] of defaultVariationByProduct.entries()) {
+                    await this.client
+                        .from("products")
+                        .where("id", productId)
+                        .update({ default_variation_id: variationId, updated_at: now });
+                }
+            }
         }
 
         for (const chunk of chunked(inventoryRows, BATCH)) {
