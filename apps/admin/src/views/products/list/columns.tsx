@@ -460,22 +460,19 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
         labelKey = stockStatus;
     }
 
-    const toneClasses: Record<typeof tone, { wrap: string; dot: string; qty: string; label: string }> = {
+    const toneClasses: Record<typeof tone, { wrap: string; qty: string; label: string }> = {
         emerald: {
             wrap: "border-emerald-500/30 bg-emerald-500/10",
-            dot: "bg-emerald-500",
             qty: "text-emerald-700 dark:text-emerald-300",
             label: "text-emerald-700 dark:text-emerald-300",
         },
         amber: {
             wrap: "border-amber-500/30 bg-amber-500/10",
-            dot: "bg-amber-500",
             qty: "text-amber-700 dark:text-amber-300",
             label: "text-amber-700 dark:text-amber-300",
         },
         rose: {
             wrap: "border-rose-500/30 bg-rose-500/10",
-            dot: "bg-rose-500",
             qty: "text-rose-700 dark:text-rose-300",
             label: "text-rose-700 dark:text-rose-300",
         },
@@ -490,7 +487,6 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
             className={cn("inline-flex h-6 items-center gap-1.5 rounded-full border px-2 text-xs", cls.wrap)}
             title={tracked ? `${formatNumber(quantity ?? 0, locale)} — ${label}` : label}
         >
-            <span className={cn("size-1.5 shrink-0 rounded-full", cls.dot)} aria-hidden="true" />
             {tracked && (
                 <span className={cn("min-w-[1.25rem] text-end font-medium tabular-nums", cls.qty)}>
                     {formatNumber(quantity ?? 0, locale)}
