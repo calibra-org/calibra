@@ -19,6 +19,12 @@ properties:
         type: [string, "null"]
         description: Convenience read-only URL resolved from the linked media row; `null` when no asset is attached.
     menu_order: { type: integer }
+    used_count:
+        type: [integer, "null"]
+        description: >
+            Number of products linked to this taxonomy row. Populated by `GET ?sort=-used_count`
+            on the admin index endpoints; `null` on every other read (the default index path does
+            not compute it).
     translations:
         type: array
         items:

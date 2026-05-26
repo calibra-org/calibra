@@ -9,6 +9,15 @@ parameters:
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: parent_id, in: query, schema: { type: integer }, description: "Filter children of a parent. Pass `0` for top-level rows." }
     - { name: search, in: query, schema: { type: string } }
+    - name: sort
+      in: query
+      description: >
+          Optional ordering. `-used_count` ranks the rows most-used-first (categories with the
+          most attached products), `used_count` ranks ascending. Default (omitted) is
+          `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write.
+      schema:
+          type: string
+          enum: [used_count, -used_count, menu_order, -menu_order]
 
 responses:
     "200":
@@ -17,7 +26,7 @@ responses:
             application/json:
                 schema:
                     type: object
-                    required: [data, meta]
+                    required: [data]
                     properties:
                         data:
                             type: array

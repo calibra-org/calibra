@@ -8,6 +8,15 @@ parameters:
     - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: search, in: query, schema: { type: string } }
+    - name: sort
+      in: query
+      description: >
+          Optional ordering. `-used_count` ranks tags most-used-first; `used_count` ranks
+          ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes;
+          invalidated on any taxonomy write.
+      schema:
+          type: string
+          enum: [used_count, -used_count, menu_order, -menu_order]
 
 responses:
     "200":
@@ -16,7 +25,7 @@ responses:
             application/json:
                 schema:
                     type: object
-                    required: [data, meta]
+                    required: [data]
                     properties:
                         data:
                             type: array

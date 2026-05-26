@@ -125,6 +125,14 @@ export const CacheKeys = {
     admin: {
         topProducts: (days: number, limit: number, locale: string): string =>
             `admin:reports:top-products:${days}:${limit}:${locale}`,
+        /**
+         * Most-used ranking for the admin taxonomy pickers (categories / tags / brands sidebar
+         * cards on `/products/{id}`). Hashes the full filter object so `?perPage=10&sort=-used_count`
+         * and `?sort=-used_count&perPage=10` collide. Locale-scoped because the resolved name /
+         * slug fields differ per locale.
+         */
+        taxonomyUsedCount: (resource: "categories" | "tags" | "brands", filters: Record<string, unknown>, locale: string): string =>
+            `admin:taxonomy:used-count:${resource}:${hashFilters(filters)}:${locale}`,
         customerCounts: (): string => "admin:customers:counts",
         customerInsights: (): string => "admin:insights:customers",
         customerStats: (customerId: number | string | bigint): string => `admin:customers:stats:${String(customerId)}`,

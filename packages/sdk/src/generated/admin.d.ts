@@ -4367,6 +4367,8 @@ export interface components {
             /** @description Convenience read-only URL resolved from the linked media row; `null` when no asset is attached. */
             image_url?: string | null;
             menu_order?: number;
+            /** @description Number of products linked to this taxonomy row. Populated by `GET ?sort=-used_count` on the admin index endpoints; `null` on every other read (the default index path does not compute it). */
+            used_count?: number | null;
             translations?: {
                 locale?: string;
                 name?: string;
@@ -8948,6 +8950,8 @@ export interface operations {
                 /** @description Filter children of a parent. Pass `0` for top-level rows. */
                 parent_id?: number;
                 search?: string;
+                /** @description Optional ordering. `-used_count` ranks the rows most-used-first (categories with the most attached products), `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
+                sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -8966,7 +8970,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxonomy"][];
-                        meta: components["schemas"]["PaginationMeta"];
+                        meta?: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -9138,6 +9142,8 @@ export interface operations {
                 /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
                 perPage?: components["parameters"]["PerPageQuery"];
                 search?: string;
+                /** @description Optional ordering. `-used_count` ranks tags most-used-first; `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
+                sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -9156,7 +9162,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxonomy"][];
-                        meta: components["schemas"]["PaginationMeta"];
+                        meta?: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -9324,6 +9330,8 @@ export interface operations {
                 /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
                 perPage?: components["parameters"]["PerPageQuery"];
                 search?: string;
+                /** @description Optional ordering. `-used_count` ranks brands most-used-first; `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
+                sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -9342,7 +9350,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxonomy"][];
-                        meta: components["schemas"]["PaginationMeta"];
+                        meta?: components["schemas"]["PaginationMeta"];
                     };
                 };
             };

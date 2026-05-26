@@ -1,7 +1,9 @@
+import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
 
 import ProductCategory from "#models/product_category";
 import { CacheInvalidation } from "#services/cache_invalidation";
+import { CacheKeys, CacheTags } from "#services/cache_keys";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductCategoryTransformer from "#transformers/product_category_transformer";
@@ -9,10 +11,45 @@ import { createCategoryValidator, updateCategoryValidator } from "#validators/ca
 
 const TAXONOMY_FIELDS = ["name", "slug", "description"] as const;
 
+type TaxonomySort = "-used_count" | "used_count" | "menu_order" | "-menu_order" | undefined;
+
+function parseSort(input: unknown): TaxonomySort {
+    const value = typeof input === "string" ? input : "";
+    if (value === "-used_count" || value === "used_count" || value === "menu_order" || value === "-menu_order") {
+        return value;
+    }
+    return undefined;
+}
+
 export default class AdminCategoriesController {
     async index(ctx: HttpContext) {
+        const sort = parseSort(ctx.request.input("sort"));
+        const locale = ctx.i18n.locale;
+
+        if (sort === "-used_count" || sort === "used_count") {
+            const direction = sort === "-used_count" ? "desc" : "asc";
+            const perPageRaw = Number(ctx.request.input("perPage", 0)) || 0;
+            const perPage = perPageRaw > 0 && perPageRaw <= 500 ? perPageRaw : 0;
+            return cache.getOrSet({
+                key: CacheKeys.admin.taxonomyUsedCount("categories", { sort, perPage }, locale),
+                ttl: "2m",
+                tags: [CacheTags.catalogTaxonomy],
+                factory: async () => {
+                    let query = ProductCategory.query()
+                        .preload("translations")
+                        .preload("image")
+                        .withCount("products", (q) => q.as("used_count"))
+                        .orderBy("used_count", direction)
+                        .orderBy("id");
+                    if (perPage > 0) query = query.limit(perPage);
+                    const rows = await query;
+                    return collection(ProductCategoryTransformer.transform(rows, locale).useVariant("forAdmin"));
+                },
+            });
+        }
+
         const rows = await ProductCategory.query().preload("translations").preload("image").orderBy("menu_order").orderBy("id");
-        return collection(ProductCategoryTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"));
+        return collection(ProductCategoryTransformer.transform(rows, locale).useVariant("forAdmin"));
     }
 
     async show(ctx: HttpContext) {
@@ -26,9 +63,9 @@ export default class AdminCategoriesController {
         const row = await withTransaction(async (trx) => {
             const created = new ProductCategory();
             created.useTransaction(trx);
-            if (payload.parent_id !== undefined) created.parentId = payload.parent_id as bigint | number | null;
+            created.parentId = (payload.parent_id ?? null) as bigint | number | null;
             if (payload.display !== undefined) created.display = payload.display;
-            if (payload.image_media_id !== undefined) created.imageMediaId = payload.image_media_id as bigint | number | null;
+            created.imageMediaId = (payload.image_media_id ?? null) as bigint | number | null;
             if (payload.menu_order !== undefined) created.menuOrder = payload.menu_order;
             await created.save();
             await upsertTranslations(
