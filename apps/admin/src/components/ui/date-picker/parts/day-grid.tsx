@@ -216,12 +216,19 @@ export function DayGrid({
                  *   which we need because Persian timelines run right→left. `rounded-s-full`
                  *   / `rounded-e-full` give the band a pill cap that hugs the selected circle.
                  */
+                /**
+                 * The band sits at `inset-y-0.5` (2 px from each cell edge) so its 32 px
+                 * height matches the `size-8` button exactly. With matched diameters the
+                 * `rounded-s-full` / `rounded-e-full` cap traces the same circle as the start
+                 * / end button, and the cap + circle read as one continuous pill instead of a
+                 * smaller band with bulging circles riding on top.
+                 */
                 range_start:
-                    "before:absolute before:inset-y-1 before:end-0 before:start-1/2 before:rounded-s-full before:bg-primary [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                    "before:absolute before:inset-y-0.5 before:end-0 before:start-1/2 before:rounded-s-full before:bg-primary [&_button]:!bg-primary [&_button]:!text-primary-foreground",
                 range_end:
-                    "before:absolute before:inset-y-1 before:start-0 before:end-1/2 before:rounded-e-full before:bg-primary [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                    "before:absolute before:inset-y-0.5 before:start-0 before:end-1/2 before:rounded-e-full before:bg-primary [&_button]:!bg-primary [&_button]:!text-primary-foreground",
                 range_middle:
-                    "before:absolute before:inset-y-1 before:inset-x-0 before:bg-primary [&_button]:!bg-transparent [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
+                    "before:absolute before:inset-y-0.5 before:inset-x-0 before:bg-primary [&_button]:!bg-transparent [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
                 disabled: "text-muted-foreground/30 cursor-not-allowed before:!hidden [&_button]:!bg-transparent",
             }}
         />
