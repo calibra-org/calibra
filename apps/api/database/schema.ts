@@ -1216,6 +1216,35 @@ export class PaymentLinkSchema extends BaseModel {
   declare usedCount: number
 }
 
+export class ProcessedWebhookEventSchema extends BaseModel {
+  static $columns = ['createdAt', 'eventId', 'eventKind', 'id', 'orderId', 'outcome', 'payloadHash', 'paymentAttemptId', 'processedAt', 'provider', 'receivedAt', 'updatedAt'] as const
+  $columns = ProcessedWebhookEventSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare eventId: string
+  @column()
+  declare eventKind: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare orderId: bigint | number | null
+  @column()
+  declare outcome: string
+  @column()
+  declare payloadHash: string
+  @column()
+  declare paymentAttemptId: bigint | number | null
+  @column.dateTime()
+  declare processedAt: DateTime | null
+  @column()
+  declare provider: string
+  @column.dateTime()
+  declare receivedAt: DateTime
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
 export class ProductAttributeLinkTermSchema extends BaseModel {
   static $columns = ['createdAt', 'linkId', 'termId', 'updatedAt'] as const
   $columns = ProductAttributeLinkTermSchema.$columns
