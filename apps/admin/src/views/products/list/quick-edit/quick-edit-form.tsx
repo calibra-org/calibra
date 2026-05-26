@@ -18,8 +18,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#
 import { Switch } from "#/components/ui/switch";
 import { toast } from "#/components/ui/toast";
 import { Link } from "#/lib/i18n/navigation";
-import { useQuickEditProduct } from "#/lib/products/mutations";
+import { type CatalogVisibility, useQuickEditProduct } from "#/lib/products/mutations";
 import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
+import { HelperTooltip } from "#/components/ui/helper-tooltip";
+import { JalaliDateRangeInput } from "#/components/ui/jalali-date-range-input";
 import { cn } from "#/lib/utils";
 
 import { formatIdList, parseIdList, type QuickEditValues, quickEditSchema } from "./quick-edit-schema";
@@ -31,6 +33,8 @@ interface QuickEditFormProps {
 
 const STATUSES: ProductStatus[] = ["publish", "draft", "pending", "private"];
 const STOCK_STATUSES: StockStatus[] = ["instock", "outofstock", "onbackorder"];
+const VISIBILITIES: CatalogVisibility[] = ["visible", "catalog", "search", "hidden"];
+const BACKORDER_OPTIONS = ["no", "notify", "yes"] as const;
 
 const productStatusTone: Record<ProductStatus, StatusTone> = {
     publish: "success",
@@ -49,6 +53,8 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
     const t = useTranslations("Products.list.quickEdit");
     const statusT = useTranslations("ProductStatus");
     const stockT = useTranslations("StockStatus");
+    const visibilityT = useTranslations("Products.list.filters.visibilityOption");
+    const backordersT = useTranslations("Products.list.quickEdit.backordersOptions");
     const locale = useLocale() as Locale;
     const mutation = useQuickEditProduct();
 
@@ -57,12 +63,18 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
         slug: product.slug[locale],
         shortDescription: product.shortDescription[locale],
         status: product.status,
+        catalogVisibility: product.catalogVisibility,
         sku: product.sku,
+        gtin: product.gtin ?? "",
         regularPriceMajor: product.regularPrice / 10,
         salePriceMajor: product.salePrice === null ? null : product.salePrice / 10,
+        saleStartsAt: product.saleStartsAt,
+        saleEndsAt: product.saleEndsAt,
         manageStock: product.manageStock,
         stockQuantity: product.stockQuantity,
         stockStatus: product.stockStatus,
+        lowStockThreshold: null,
+        backorders: "no",
         featured: product.featured,
         categoryIdsCsv: formatIdList(product.categoryIds),
         tagIdsCsv: formatIdList(product.tagIds),
@@ -89,12 +101,18 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                     slug: values.slug,
                     shortDescription: values.shortDescription,
                     status: values.status,
+                    catalogVisibility: values.catalogVisibility,
                     sku: values.sku,
+                    gtin: values.gtin.length > 0 ? values.gtin : null,
                     regularPrice: Math.round(values.regularPriceMajor * 10),
                     salePrice: values.salePriceMajor === null ? null : Math.round(values.salePriceMajor * 10),
+                    saleStartsAt: values.saleStartsAt,
+                    saleEndsAt: values.saleEndsAt,
                     manageStock: values.manageStock,
                     stockQuantity: values.manageStock ? (values.stockQuantity ?? 0) : null,
                     stockStatus: values.stockStatus,
+                    lowStockThreshold: values.lowStockThreshold,
+                    backorders: values.backorders,
                     featured: values.featured,
                     categoryIds: parseIdList(values.categoryIdsCsv),
                     tagIds: parseIdList(values.tagIdsCsv),
@@ -189,8 +207,17 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                 >
                     <Input id="slug" dir="ltr" className="font-mono text-xs" {...register("slug")} />
                 </Field>
-                <Field id="sku" label={t("sku")} error={errors.sku?.message} span="col-span-6 md:col-span-3">
+                <Field
+                    id="sku"
+                    label={t("sku")}
+                    helper={<HelperTooltip>{t("gtinHint")}</HelperTooltip>}
+                    error={errors.sku?.message}
+                    span="col-span-6 md:col-span-2"
+                >
                     <Input id="sku" dir="ltr" className="font-mono text-xs" {...register("sku")} />
+                </Field>
+                <Field id="gtin" label={t("gtin")} span="col-span-6 md:col-span-2">
+                    <Input id="gtin" dir="ltr" className="font-mono text-xs" {...register("gtin")} />
                 </Field>
 
                 <Controller
@@ -250,6 +277,34 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
 
                 <Controller
                     control={control}
+                    name="catalogVisibility"
+                    render={({ field }) => (
+                        <Field
+                            id="catalogVisibility"
+                            label={t("visibility")}
+                            span="col-span-6 md:col-span-3"
+                        >
+                            <Select
+                                value={field.value}
+                                onValueChange={(value) => field.onChange(value as CatalogVisibility)}
+                            >
+                                <SelectTrigger id="catalogVisibility">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {VISIBILITIES.map((value) => (
+                                        <SelectItem key={value} value={value}>
+                                            {visibilityT(value)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                    )}
+                />
+
+                <Controller
+                    control={control}
                     name="brandId"
                     render={({ field }) => (
                         <Field id="brandId" label={t("brand")} span="col-span-6 md:col-span-3">
@@ -264,6 +319,89 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                         </Field>
                     )}
                 />
+
+                <Controller
+                    control={control}
+                    name="saleStartsAt"
+                    render={({ field: startsField }) => (
+                        <Controller
+                            control={control}
+                            name="saleEndsAt"
+                            render={({ field: endsField }) => (
+                                <Field
+                                    id="saleSchedule"
+                                    label={t("saleSchedule")}
+                                    hint={t("saleScheduleHint")}
+                                    helper={<HelperTooltip>{t("saleScheduleHint")}</HelperTooltip>}
+                                    span="col-span-12"
+                                >
+                                    <JalaliDateRangeInput
+                                        value={{
+                                            from: typeof startsField.value === "string" ? startsField.value.slice(0, 10) : null,
+                                            to: typeof endsField.value === "string" ? endsField.value.slice(0, 10) : null,
+                                        }}
+                                        onChange={(next) => {
+                                            startsField.onChange(next.from);
+                                            endsField.onChange(next.to);
+                                        }}
+                                        hideQuickPicks
+                                    />
+                                </Field>
+                            )}
+                        />
+                    )}
+                />
+
+                {manageStock && (
+                    <Controller
+                        control={control}
+                        name="lowStockThreshold"
+                        render={({ field }) => (
+                            <Field
+                                id="lowStockThreshold"
+                                label={t("lowStockThreshold")}
+                                helper={<HelperTooltip>{t("lowStockThresholdHint")}</HelperTooltip>}
+                                span="col-span-6 md:col-span-3"
+                            >
+                                <NumberField
+                                    id="lowStockThreshold"
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    nullable
+                                    min={0}
+                                />
+                            </Field>
+                        )}
+                    />
+                )}
+
+                {manageStock && (
+                    <Controller
+                        control={control}
+                        name="backorders"
+                        render={({ field }) => (
+                            <Field id="backorders" label={t("backorders")} span="col-span-6 md:col-span-3">
+                                <Select
+                                    value={field.value}
+                                    onValueChange={(value) =>
+                                        field.onChange(value as "no" | "notify" | "yes")
+                                    }
+                                >
+                                    <SelectTrigger id="backorders">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {BACKORDER_OPTIONS.map((value) => (
+                                            <SelectItem key={value} value={value}>
+                                                {backordersT(value)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                        )}
+                    />
+                )}
 
                 <Controller
                     control={control}
@@ -383,14 +521,17 @@ interface FieldProps {
     error?: string;
     hint?: string;
     span?: string;
+    /** Inline helper slot rendered next to the label (typically a HelperTooltip). */
+    helper?: React.ReactNode;
     children: React.ReactNode;
 }
 
-function Field({ id, label, error, hint, span, children }: FieldProps) {
+function Field({ id, label, error, hint, span, helper, children }: FieldProps) {
     return (
         <div className={cn("flex min-w-0 flex-col gap-1", span)}>
-            <Label htmlFor={id} className="font-medium text-foreground text-xs">
+            <Label htmlFor={id} className="flex items-center font-medium text-foreground text-xs">
                 {label}
+                {helper}
             </Label>
             {children}
             {error !== undefined ? (

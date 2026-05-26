@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { AlertTriangle, ImageOff } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, ImageOff, Search, ShoppingBag, Tag as TagIcon } from "lucide-react";
 import type { useTranslations } from "next-intl";
 
 type TFunction = ReturnType<typeof useTranslations>;
@@ -214,7 +214,10 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             cell: ({ row }) => {
                 const product = row.original;
                 const showLow =
-                    product.stockQuantity !== null && product.stockQuantity > 0 && product.stockQuantity <= ctx.lowStockThreshold;
+                    product.lowStock ||
+                    (product.stockQuantity !== null &&
+                        product.stockQuantity > 0 &&
+                        product.stockQuantity <= ctx.lowStockThreshold);
                 return (
                     <span className="inline-flex items-center gap-2">
                         {product.stockQuantity !== null && (
@@ -232,6 +235,76 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                 );
             },
             size: 160,
+        },
+        {
+            id: "visibility",
+            header: () => (
+                <DataTableColumnHeader
+                    columnId="visibility"
+                    title={ctx.t("columns.visibility")}
+                    canSort={false}
+                    sort={ctx.sort}
+                    onSort={ctx.onSort}
+                    onHide={() => ctx.onHideColumn("visibility")}
+                    labels={ctx.sortLabels}
+                />
+            ),
+            cell: ({ row }) => <VisibilityCell value={row.original.catalogVisibility} t={ctx.t} />,
+            enableSorting: false,
+            size: 64,
+        },
+        {
+            id: "salePeriod",
+            header: () => (
+                <DataTableColumnHeader
+                    columnId="salePeriod"
+                    title={ctx.t("columns.salePeriod")}
+                    canSort={false}
+                    sort={ctx.sort}
+                    onSort={ctx.onSort}
+                    onHide={() => ctx.onHideColumn("salePeriod")}
+                    labels={ctx.sortLabels}
+                />
+            ),
+            cell: ({ row }) => <SalePeriodCell from={row.original.saleStartsAt} to={row.original.saleEndsAt} locale={ctx.locale} />,
+            enableSorting: false,
+            size: 160,
+        },
+        {
+            id: "inventory",
+            header: () => (
+                <DataTableColumnHeader
+                    columnId="inventory"
+                    title={ctx.t("columns.inventory")}
+                    canSort={false}
+                    sort={ctx.sort}
+                    onSort={ctx.onSort}
+                    onHide={() => ctx.onHideColumn("inventory")}
+                    labels={ctx.sortLabels}
+                />
+            ),
+            cell: ({ row }) =>
+                row.original.stockQuantity === null ? (
+                    <span className="text-muted-foreground">—</span>
+                ) : (
+                    <span className="tabular-nums">{formatNumber(row.original.stockQuantity, ctx.locale)}</span>
+                ),
+            enableSorting: false,
+            size: 100,
+        },
+        {
+            id: "createdAt",
+            header: sortableHeader("created_at", ctx.t("columns.createdAt")),
+            cell: ({ row }) => (
+                <time
+                    dateTime={row.original.createdAt}
+                    title={formatDate(row.original.createdAt, ctx.locale)}
+                    className="text-muted-foreground text-xs"
+                >
+                    {formatDate(row.original.createdAt, ctx.locale)}
+                </time>
+            ),
+            size: 140,
         },
         {
             id: "price",
@@ -356,6 +429,46 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
 
 function Separator() {
     return <span className="size-1 rounded-full bg-muted-foreground/40" aria-hidden="true" />;
+}
+
+interface VisibilityCellProps {
+    value: AdminProduct["catalogVisibility"];
+    t: TFunction;
+}
+
+function VisibilityCell({ value, t }: VisibilityCellProps) {
+    const config: Record<AdminProduct["catalogVisibility"], { icon: typeof Eye; tone: string }> = {
+        visible: { icon: Eye, tone: "text-emerald-500" },
+        catalog: { icon: ShoppingBag, tone: "text-sky-500" },
+        search: { icon: Search, tone: "text-indigo-500" },
+        hidden: { icon: EyeOff, tone: "text-muted-foreground" },
+    };
+    const entry = config[value] ?? config.visible;
+    const Icon = entry.icon;
+    return (
+        <span title={t(`filters.visibilityOption.${value}` as never)} className={cn("inline-flex", entry.tone)}>
+            <Icon className="size-4" aria-hidden="true" />
+        </span>
+    );
+}
+
+interface SalePeriodCellProps {
+    from: string | null;
+    to: string | null;
+    locale: Locale;
+}
+
+function SalePeriodCell({ from, to, locale }: SalePeriodCellProps) {
+    if (from === null && to === null) return <span className="text-muted-foreground">—</span>;
+    const display = [from, to]
+        .map((iso) => (iso === null ? "…" : formatDate(iso, locale)))
+        .join(" → ");
+    return (
+        <Badge variant="outline" className="font-normal text-xs">
+            <TagIcon className="size-3" aria-hidden="true" />
+            {display}
+        </Badge>
+    );
 }
 
 interface CategoriesCellProps {
