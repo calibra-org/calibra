@@ -2090,6 +2090,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/products/check-slug": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check product slug availability
+         * @description Returns whether the supplied slug is free for the given locale. Powers the debounced async blur-time uniqueness check on the product detail page. Pass `excludeId` when editing an existing product so its own row is ignored.
+         */
+        get: operations["adminProductsCheckSlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products/batch": {
         parameters: {
             query?: never;
@@ -2818,6 +2856,98 @@ export interface paths {
          * @description Patch the included fields; translations are upserted per locale.
          */
         patch: operations["adminShippingClassPatch"];
+        trace?: never;
+    };
+    "/api/v1/admin/tax-classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List tax classes
+         * @description Returns every tax class. Not paginated — the dataset is small (typically <20 rows).
+         */
+        get: operations["adminTaxClassesIndex"];
+        put?: never;
+        /**
+         * Create a tax class
+         * @description Creates a tax-class row. Slug must be globally unique.
+         */
+        post: operations["adminTaxClassCreate"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tax-classes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a tax class
+         * @description Returns the tax-class row by id.
+         */
+        get: operations["adminTaxClassShow"];
+        /**
+         * Replace a tax class
+         * @description Replaces the slug and name on a tax class.
+         */
+        put: operations["adminTaxClassReplace"];
+        post?: never;
+        /**
+         * Delete a tax class
+         * @description Hard-deletes the tax-class row. Products referencing it have their `tax_class_id` set to NULL by the foreign-key cascade (see migration `1747200120000_create_products_table.ts`).
+         */
+        delete: operations["adminTaxClassDelete"];
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Partial-update a tax class
+         * @description Patch the included fields. Slug uniqueness is re-checked when it changes.
+         */
+        patch: operations["adminTaxClassPatch"];
         trace?: never;
     };
     "/api/v1/admin/reviews": {
@@ -4118,6 +4248,23 @@ export interface components {
                 purchase_note?: string | null;
                 external_button_text?: string | null;
             }[];
+            /** @description Whether this product can be sold via the in-store POS app. Decoupled from the storefront `status` / `catalog_visibility` axes — a product can be Published online but hidden from POS, or vice versa. */
+            pos_available?: boolean;
+            /** @description Recommended-next-step product ids, ordered by `position`. */
+            upsell_ids?: number[];
+            /** @description Cart upsell product ids, ordered by `position`. */
+            cross_sell_ids?: number[];
+            /** @description Member-product ids for `type=grouped` bundles, ordered by `position`. */
+            grouped_member_ids?: number[];
+            downloads?: {
+                id: number;
+                media_id: number;
+                file_label: string;
+                download_limit?: number | null;
+                download_expiry_days?: number | null;
+                position: number;
+                url?: string | null;
+            }[];
             /** Format: date-time */
             created_at?: string | null;
             /** Format: date-time */
@@ -4220,6 +4367,19 @@ export interface components {
                 name?: string;
                 description?: string | null;
             }[];
+        };
+        /**
+         * AdminTaxClass
+         * @description Tax class — groups products that share VAT/sales-tax behaviour. The class id is referenced from `products.tax_class_id` and from the tax-rates table.
+         */
+        AdminTaxClass: {
+            id: number;
+            slug: string;
+            name: string;
+            /** Format: date-time */
+            created_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
         };
         /**
          * AdminReview
@@ -7839,6 +7999,40 @@ export interface operations {
             403: components["responses"]["Forbidden"];
         };
     };
+    adminProductsCheckSlug: {
+        parameters: {
+            query: {
+                slug: string;
+                locale: string;
+                excludeId?: number;
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Slug availability result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            available: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
     adminProductsBatch: {
         parameters: {
             query?: never;
@@ -7935,7 +8129,10 @@ export interface operations {
     adminProductReplace: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Optional optimistic-concurrency token — pass the `updated_at` ISO string from the row the operator originally fetched. Returns 409 if the row has changed since. */
+                "If-Match"?: string;
+            };
             path: {
                 id: number;
             };
@@ -7963,6 +8160,25 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            /** @description Optimistic-concurrency mismatch. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: {
+                            message?: string;
+                            code?: string;
+                        }[];
+                        data?: {
+                            id?: number;
+                            /** Format: date-time */
+                            updated_at?: string;
+                        };
+                    };
+                };
+            };
             422: components["responses"]["ValidationError"];
         };
     };
@@ -7993,7 +8209,10 @@ export interface operations {
     adminProductPatch: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Optional optimistic-concurrency token — pass the `updated_at` ISO string from the row the operator originally fetched. The server compares this against the current value and returns 409 if the row has changed since, so two operators can't silently clobber each other's edits. Callers that don't care can omit the header (last-write-wins). */
+                "If-Match"?: string;
+            };
             path: {
                 id: number;
             };
@@ -8021,6 +8240,25 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            /** @description Optimistic-concurrency mismatch — the row changed since the If-Match value was fetched. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: {
+                            message?: string;
+                            code?: string;
+                        }[];
+                        data?: {
+                            id?: number;
+                            /** Format: date-time */
+                            updated_at?: string;
+                        };
+                    };
+                };
+            };
             422: components["responses"]["ValidationError"];
         };
     };
@@ -9380,6 +9618,207 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTaxClassesIndex: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tax-class list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminTaxClassCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    slug: string;
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Tax class created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Slug already taken by another tax class. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTaxClassShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tax class detail. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminTaxClassReplace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated tax class. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Slug already taken by another tax class. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTaxClassDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminTaxClassPatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated tax class. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Slug already taken by another tax class. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["ValidationError"];
         };
     };
