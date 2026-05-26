@@ -3,6 +3,7 @@ import emitter from "@adonisjs/core/services/emitter";
 import lock from "@adonisjs/lock/services/main";
 import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
+import * as Sentry from "@sentry/node";
 import { DateTime } from "luxon";
 
 import { ResourceConflictException } from "#exceptions/domain_exceptions";
@@ -363,6 +364,20 @@ export class RefundService {
                     ...((refund.attributes as Record<string, unknown>) ?? {}),
                     gateway_refund: { ok: false, error_code: result.error_code, error_message: result.error_message },
                 };
+                /**
+                 * PSP refund didn't throw but came back !ok. Booking still proceeds (manual
+                 * reconciliation later) so we surface the failure to error tracking — silent
+                 * `ok: false` rows pile up unnoticed otherwise.
+                 */
+                Sentry.captureMessage("refund_psp_returned_failure", {
+                    level: "warning",
+                    tags: {
+                        order_id: String(order.id),
+                        refund_id: String(refund.id),
+                        error_code: result.error_code ?? "unknown",
+                    },
+                    extra: { error_message: result.error_message },
+                });
             }
             await refund.save();
         } catch (error) {
@@ -372,6 +387,14 @@ export class RefundService {
                 gateway_refund: { ok: false, error_code: "exception", error_message: (error as Error).message ?? "unknown" },
             };
             await refund.save();
+            /**
+             * Caught here so the booking proceeds (and the refund row records the failure),
+             * which means the global exception handler never sees it. Explicit capture so the
+             * silent-failure path stays visible.
+             */
+            Sentry.captureException(error, {
+                tags: { order_id: String(order.id), refund_id: String(refund.id), phase: "gateway_refund" },
+            });
         }
     }
 

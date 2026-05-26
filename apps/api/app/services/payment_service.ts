@@ -3,6 +3,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 import emitter from "@adonisjs/core/services/emitter";
 import lock from "@adonisjs/lock/services/main";
 import db from "@adonisjs/lucid/services/db";
+import * as Sentry from "@sentry/node";
 import { DateTime } from "luxon";
 
 import { OrderStatus } from "#enums/order_status";
@@ -316,6 +317,15 @@ export class PaymentService {
              * no double-verification, no double-transition.
              */
             if (attempt.status === PaymentAttemptStatus.Verified) {
+                Sentry.captureMessage("webhook_out_of_order", {
+                    level: "warning",
+                    tags: {
+                        gateway: gatewayCode,
+                        order_id: String(order.id),
+                        attempt_id: String(attempt.id),
+                        prior_status: attempt.status,
+                    },
+                });
                 await webhookIdempotencyService.finalize(ledgerRow, "verified_out_of_order", { trx });
                 return { order, attempt, redirect: this.attachOrderKey(successUrl, order) };
             }
@@ -338,6 +348,26 @@ export class PaymentService {
                 verifyResult.amount_minor !== Number(attempt.amountMinor);
 
             if (!verifyResult.ok || amountMismatch) {
+                if (amountMismatch) {
+                    /**
+                     * Amount mismatch is a HIGH-severity tampering signal — the PSP echoed a
+                     * different amount than we sent, which in production means either a sandbox
+                     * bug, a PSP misconfiguration, or active forgery. Capture as `error` so
+                     * GlitchTip flags it for the on-call channel.
+                     */
+                    Sentry.captureMessage("payment_amount_mismatch", {
+                        level: "error",
+                        tags: {
+                            gateway: gatewayCode,
+                            order_id: String(order.id),
+                            attempt_id: String(attempt.id),
+                        },
+                        extra: {
+                            expected_minor: Number(attempt.amountMinor),
+                            received_minor: (verifyResult as { amount_minor: number }).amount_minor,
+                        },
+                    });
+                }
                 attempt.status = PaymentAttemptStatus.Failed;
                 attempt.errorCode = amountMismatch ? "amount_mismatch" : (verifyResult as { error_code: string }).error_code;
                 attempt.errorMessage = amountMismatch
