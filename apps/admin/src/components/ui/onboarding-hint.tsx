@@ -2,7 +2,7 @@
 
 import { type LucideIcon, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
@@ -124,12 +124,7 @@ export function OnboardingHint({
     }
 
     return (
-        <div
-            className={cn(
-                "relative flex items-start gap-3 rounded-md border border-border bg-muted/40 p-3 text-sm",
-                className,
-            )}
-        >
+        <div className={cn("relative flex items-start gap-3 rounded-md border border-border bg-muted/40 p-3 text-sm", className)}>
             <span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
                 <Icon className="size-4" aria-hidden="true" />
             </span>
@@ -139,11 +134,7 @@ export function OnboardingHint({
                 {(cta !== undefined || learnMore !== undefined) && (
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                         {cta !== undefined && (
-                            <button
-                                type="button"
-                                onClick={cta.onClick}
-                                className="text-primary text-xs hover:underline"
-                            >
+                            <button type="button" onClick={cta.onClick} className="text-primary text-xs hover:underline">
                                 {cta.label}
                             </button>
                         )}

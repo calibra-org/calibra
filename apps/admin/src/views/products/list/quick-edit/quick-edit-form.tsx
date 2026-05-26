@@ -10,7 +10,9 @@ import { Controller, useForm } from "react-hook-form";
 import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
+import { HelperTooltip } from "#/components/ui/helper-tooltip";
 import { Input } from "#/components/ui/input";
+import { JalaliDateRangeInput } from "#/components/ui/jalali-date-range-input";
 import { Label } from "#/components/ui/label";
 import { MoneyInput } from "#/components/ui/money-input";
 import { NumberField } from "#/components/ui/number-field";
@@ -20,8 +22,6 @@ import { toast } from "#/components/ui/toast";
 import { Link } from "#/lib/i18n/navigation";
 import { type CatalogVisibility, useQuickEditProduct } from "#/lib/products/mutations";
 import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
-import { HelperTooltip } from "#/components/ui/helper-tooltip";
-import { JalaliDateRangeInput } from "#/components/ui/jalali-date-range-input";
 import { cn } from "#/lib/utils";
 
 import { formatIdList, parseIdList, type QuickEditValues, quickEditSchema } from "./quick-edit-schema";
@@ -279,15 +279,8 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                     control={control}
                     name="catalogVisibility"
                     render={({ field }) => (
-                        <Field
-                            id="catalogVisibility"
-                            label={t("visibility")}
-                            span="col-span-6 md:col-span-3"
-                        >
-                            <Select
-                                value={field.value}
-                                onValueChange={(value) => field.onChange(value as CatalogVisibility)}
-                            >
+                        <Field id="catalogVisibility" label={t("visibility")} span="col-span-6 md:col-span-3">
+                            <Select value={field.value} onValueChange={(value) => field.onChange(value as CatalogVisibility)}>
                                 <SelectTrigger id="catalogVisibility">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -383,9 +376,7 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                             <Field id="backorders" label={t("backorders")} span="col-span-6 md:col-span-3">
                                 <Select
                                     value={field.value}
-                                    onValueChange={(value) =>
-                                        field.onChange(value as "no" | "notify" | "yes")
-                                    }
+                                    onValueChange={(value) => field.onChange(value as "no" | "notify" | "yes")}
                                 >
                                     <SelectTrigger id="backorders">
                                         <SelectValue />

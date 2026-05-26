@@ -1,7 +1,7 @@
 import { BaseTransformer } from "@adonisjs/core/transformers";
 
-import type Product from "#models/product";
 import type InventoryItem from "#models/inventory_item";
+import type Product from "#models/product";
 import { resolvePrice } from "#services/price_resolver";
 import { pickTranslation } from "#transformers/i18n_helpers";
 

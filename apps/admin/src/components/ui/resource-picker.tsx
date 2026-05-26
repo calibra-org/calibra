@@ -235,11 +235,7 @@ function SingleResourcePicker({
                             </Button>
                         )}
                     />
-                    <PopoverContent
-                        side="bottom"
-                        align="start"
-                        className="w-[min(20rem,calc(100vw-2rem))] overflow-hidden p-0"
-                    >
+                    <PopoverContent side="bottom" align="start" className="w-[min(20rem,calc(100vw-2rem))] overflow-hidden p-0">
                         <div className="flex items-center gap-2 border-border border-b px-3 py-2">
                             <Search className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
                             <input

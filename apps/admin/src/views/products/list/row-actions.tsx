@@ -16,12 +16,7 @@ import {
 import { Button } from "#/components/ui/button";
 import { DropdownMenuItem, DropdownMenuSeparator } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";
-import {
-    useDuplicateProduct,
-    useForceDeleteProducts,
-    useRestoreProducts,
-    useTrashProducts,
-} from "#/lib/products/mutations";
+import { useDuplicateProduct, useForceDeleteProducts, useRestoreProducts, useTrashProducts } from "#/lib/products/mutations";
 import type { AdminProduct } from "#/lib/types";
 
 interface RowActionsProps {
@@ -181,9 +176,7 @@ export function RowActions({ product, onQuickEdit, onOpenDetail }: RowActionsPro
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>{t("forceDelete.title")}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {t("forceDelete.description", { name: product.name.fa })}
-                        </AlertDialogDescription>
+                        <AlertDialogDescription>{t("forceDelete.description", { name: product.name.fa })}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <Button variant="ghost" onClick={() => setForceOpen(false)}>

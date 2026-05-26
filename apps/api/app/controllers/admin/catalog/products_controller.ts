@@ -3,9 +3,9 @@ import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import Product from "#models/product";
+import { recordAudit } from "#services/admin_audit_log_service";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { syncLinks, syncProductImages, upsertTranslations, withTransaction } from "#services/catalog_writer";
-import { recordAudit } from "#services/admin_audit_log_service";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductTransformer from "#transformers/product_transformer";
 import {
@@ -24,24 +24,9 @@ const PRODUCT_TRANSLATION_FIELDS = [
     "external_button_text",
 ] as const;
 
-const SORTABLE_COLUMNS = new Set([
-    "name",
-    "sku",
-    "regular_price",
-    "created_at",
-    "updated_at",
-    "menu_order",
-    "stock_quantity",
-]);
+const SORTABLE_COLUMNS = new Set(["name", "sku", "regular_price", "created_at", "updated_at", "menu_order", "stock_quantity"]);
 
-const FACET_COUNT_KEYS = [
-    "type",
-    "stock_status",
-    "category",
-    "brand",
-    "tag",
-    "catalog_visibility",
-] as const;
+const FACET_COUNT_KEYS = ["type", "stock_status", "category", "brand", "tag", "catalog_visibility"] as const;
 
 /** Orders whose line items still pin a real product reference for the "in use" force-delete guard. */
 const ACTIVE_ORDER_STATUSES = ["pending", "on_hold", "processing", "completed"] as const;
@@ -69,7 +54,9 @@ export default class AdminProductsController {
         const page = Math.max(1, Number(request.input("page", 1)) || 1);
         const perPage = Math.min(200, Math.max(1, Number(request.input("per_page", request.input("perPage", 20))) || 20));
 
-        const query = Product.query().preload("translations").preload("images", (q) => q.preload("media"));
+        const query = Product.query()
+            .preload("translations")
+            .preload("images", (q) => q.preload("media"));
         this.applyListFilters(query, request);
         this.applyListSort(query, request);
 
@@ -81,9 +68,7 @@ export default class AdminProductsController {
             .map((s) => s.trim())
             .filter(Boolean);
         if (includes.includes("facet_counts")) {
-            (envelope as { facets?: Record<string, Record<string, number>> }).facets = await this.computeFacetCounts(
-                request,
-            );
+            (envelope as { facets?: Record<string, Record<string, number>> }).facets = await this.computeFacetCounts(request);
         }
 
         return envelope;
@@ -126,17 +111,13 @@ export default class AdminProductsController {
         if (skipFacet !== "tag") {
             const tagId = Number(request.input("tag", 0));
             if (Number.isFinite(tagId) && tagId > 0) {
-                query.whereIn("id", (sub) =>
-                    sub.select("product_id").from("product_tag_links").where("tag_id", tagId),
-                );
+                query.whereIn("id", (sub) => sub.select("product_id").from("product_tag_links").where("tag_id", tagId));
             }
         }
         if (skipFacet !== "brand") {
             const brandId = Number(request.input("brand", 0));
             if (Number.isFinite(brandId) && brandId > 0) {
-                query.whereIn("id", (sub) =>
-                    sub.select("product_id").from("product_brand_links").where("brand_id", brandId),
-                );
+                query.whereIn("id", (sub) => sub.select("product_id").from("product_brand_links").where("brand_id", brandId));
             }
         }
 
@@ -170,11 +151,7 @@ export default class AdminProductsController {
         const stockLevel = request.input("stock_level");
         if (stockLevel === "outofstock") {
             query.whereIn("id", (sub) =>
-                sub
-                    .select("product_id")
-                    .from("inventory_items")
-                    .groupBy("product_id")
-                    .havingRaw("SUM(stock_quantity) <= 0"),
+                sub.select("product_id").from("inventory_items").groupBy("product_id").havingRaw("SUM(stock_quantity) <= 0"),
             );
         } else if (stockLevel === "low") {
             query.whereIn("id", (sub) =>
@@ -188,11 +165,7 @@ export default class AdminProductsController {
             );
         } else if (stockLevel === "instock") {
             query.whereIn("id", (sub) =>
-                sub
-                    .select("product_id")
-                    .from("inventory_items")
-                    .groupBy("product_id")
-                    .havingRaw("SUM(stock_quantity) > 0"),
+                sub.select("product_id").from("inventory_items").groupBy("product_id").havingRaw("SUM(stock_quantity) > 0"),
             );
         }
 
@@ -210,9 +183,7 @@ export default class AdminProductsController {
             const needle = `%${String(search)}%`;
             query.where((scope) => {
                 scope
-                    .whereIn("id", (sub) =>
-                        sub.select("product_id").from("product_translations").whereILike("name", needle),
-                    )
+                    .whereIn("id", (sub) => sub.select("product_id").from("product_translations").whereILike("name", needle))
                     .orWhereILike("sku", needle);
             });
         }
@@ -245,9 +216,7 @@ export default class AdminProductsController {
         query.orderBy(column, direction);
     }
 
-    private async computeFacetCounts(
-        request: HttpContext["request"],
-    ): Promise<Record<string, Record<string, number>>> {
+    private async computeFacetCounts(request: HttpContext["request"]): Promise<Record<string, Record<string, number>>> {
         const result: Record<string, Record<string, number>> = {};
         for (const facet of FACET_COUNT_KEYS) {
             const sub = Product.query();

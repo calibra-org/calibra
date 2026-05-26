@@ -92,9 +92,7 @@ export function HelperTooltip({ children, side = "top", learnMore, iconClassName
                         </button>
                     )}
                 />
-                <TooltipContent className="max-w-[20rem] whitespace-normal leading-relaxed">
-                    {children}
-                </TooltipContent>
+                <TooltipContent className="max-w-[20rem] whitespace-normal leading-relaxed">{children}</TooltipContent>
             </Tooltip>
         </TooltipProvider>
     );

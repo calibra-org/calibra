@@ -9,9 +9,7 @@ export default class extends BaseSchema {
             table.string("gtin", 64).nullable();
         });
         this.schema.raw(`CREATE INDEX "products_gtin_idx" ON "products" (gtin) WHERE gtin IS NOT NULL`);
-        this.schema.raw(
-            `CREATE INDEX "product_variations_gtin_idx" ON "product_variations" (gtin) WHERE gtin IS NOT NULL`,
-        );
+        this.schema.raw(`CREATE INDEX "product_variations_gtin_idx" ON "product_variations" (gtin) WHERE gtin IS NOT NULL`);
     }
 
     async down() {

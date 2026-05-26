@@ -195,10 +195,7 @@ export function BulkActions({ selectedIds, onClear, onTrashTab = false }: BulkAc
                             />
                             <DropdownMenuContent align="center" className="min-w-40">
                                 {VISIBILITY_VALUES.map((value) => (
-                                    <DropdownMenuItem
-                                        key={value}
-                                        onClick={() => void runUpdate({ catalogVisibility: value })}
-                                    >
+                                    <DropdownMenuItem key={value} onClick={() => void runUpdate({ catalogVisibility: value })}>
                                         {visibilityT(value)}
                                     </DropdownMenuItem>
                                 ))}

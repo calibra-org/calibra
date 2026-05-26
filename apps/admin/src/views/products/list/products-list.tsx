@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
-import { Plus, PackagePlus, Star } from "lucide-react";
+import { PackagePlus, Plus, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
@@ -16,18 +16,14 @@ import {
     type FacetedFilterDef,
 } from "#/components/data-table";
 import { useDataTable } from "#/components/data-table/use-data-table";
+import { ShortcutsDialog } from "#/components/shortcuts-dialog";
 import { Button } from "#/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
-import {
-    type CatalogVisibility,
-    type StockLevel,
-    useProductCountsByStatus,
-    useProductsList,
-} from "#/lib/products/queries";
+import { type CatalogVisibility, type StockLevel, useProductCountsByStatus, useProductsList } from "#/lib/products/queries";
 import type { AdminProduct, ProductStatus, ProductType, StockStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
@@ -36,7 +32,6 @@ import { useFavorites } from "./favorite-toggle";
 import { useProductFilters } from "./filters";
 import { QuickEditPanel } from "./quick-edit/quick-edit-panel";
 import { useProductsListShortcuts } from "./shortcuts";
-import { ShortcutsDialog } from "#/components/shortcuts-dialog";
 
 const TABLE_ID = "products.list";
 const STATUS_TABS: (ProductStatus | "any")[] = ["any", "publish", "draft", "pending"];

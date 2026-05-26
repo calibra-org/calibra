@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { tomanToRial, rialToToman } from "#/lib/money";
+import { rialToToman, tomanToRial } from "#/lib/money";
 
 describe("Toman ↔ Rial round-trip", () => {
     it("89,000 Toman = 890,000 Rial", () => {

@@ -266,7 +266,9 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                     labels={ctx.sortLabels}
                 />
             ),
-            cell: ({ row }) => <SalePeriodCell from={row.original.saleStartsAt} to={row.original.saleEndsAt} locale={ctx.locale} />,
+            cell: ({ row }) => (
+                <SalePeriodCell from={row.original.saleStartsAt} to={row.original.saleEndsAt} locale={ctx.locale} />
+            ),
             enableSorting: false,
             size: 160,
         },
@@ -460,9 +462,7 @@ interface SalePeriodCellProps {
 
 function SalePeriodCell({ from, to, locale }: SalePeriodCellProps) {
     if (from === null && to === null) return <span className="text-muted-foreground">—</span>;
-    const display = [from, to]
-        .map((iso) => (iso === null ? "…" : formatDate(iso, locale)))
-        .join(" → ");
+    const display = [from, to].map((iso) => (iso === null ? "…" : formatDate(iso, locale))).join(" → ");
     return (
         <Badge variant="outline" className="font-normal text-xs">
             <TagIcon className="size-3" aria-hidden="true" />

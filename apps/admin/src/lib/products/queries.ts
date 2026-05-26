@@ -7,15 +7,7 @@ import { useLocale } from "next-intl";
 
 import { toAdminProduct } from "#/lib/adapters/products";
 import { apiGet } from "#/lib/queries/api-client";
-import type {
-    AdminBrand,
-    AdminCategory,
-    AdminProduct,
-    AdminTag,
-    ProductStatus,
-    ProductType,
-    StockStatus,
-} from "#/lib/types";
+import type { AdminBrand, AdminCategory, AdminProduct, AdminTag, ProductStatus, ProductType, StockStatus } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];
 
@@ -79,9 +71,9 @@ export interface ProductsListResult {
  * Trash semantics: `onlyTrashed` is mutually-exclusive with `withTrashed`; passing `onlyTrashed`
  * narrows the list to soft-deleted rows. Passing neither hides them.
  */
-export function useProductsList(params: ProductsListParams = {}): ReturnType<
-    typeof useQuery<ProductListEnvelope, Error, ProductsListResult>
-> {
+export function useProductsList(
+    params: ProductsListParams = {},
+): ReturnType<typeof useQuery<ProductListEnvelope, Error, ProductsListResult>> {
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
     const perPage = params.perPage ?? 20;

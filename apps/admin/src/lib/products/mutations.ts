@@ -67,9 +67,7 @@ export function useQuickEditProduct() {
                     sale_price: payload.salePrice,
                     ...(payload.saleStartsAt !== undefined ? { sale_starts_at: payload.saleStartsAt } : {}),
                     ...(payload.saleEndsAt !== undefined ? { sale_ends_at: payload.saleEndsAt } : {}),
-                    ...(payload.catalogVisibility !== undefined
-                        ? { catalog_visibility: payload.catalogVisibility }
-                        : {}),
+                    ...(payload.catalogVisibility !== undefined ? { catalog_visibility: payload.catalogVisibility } : {}),
                     featured: payload.featured,
                     category_ids: payload.categoryIds,
                     tag_ids: payload.tagIds,
@@ -242,16 +240,12 @@ export function useForceDeleteProducts() {
                 await apiMutate<unknown>("DELETE", `products/${ids[0]}`, { locale, query: { force: 1 } });
                 return { data: { force_deleted: ids } };
             }
-            return apiMutate<{ data?: { force_deleted?: number[]; skipped_force?: number[] } }>(
-                "POST",
-                "products/batch",
-                {
-                    locale,
-                    body: {
-                        delete: ids.map((id) => ({ id, force: true })),
-                    },
+            return apiMutate<{ data?: { force_deleted?: number[]; skipped_force?: number[] } }>("POST", "products/batch", {
+                locale,
+                body: {
+                    delete: ids.map((id) => ({ id, force: true })),
                 },
-            );
+            });
         },
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });

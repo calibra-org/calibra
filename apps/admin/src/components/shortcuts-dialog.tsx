@@ -35,10 +35,10 @@ export function ShortcutsDialog({ open, onOpenChange, title, groups, footer }: S
     return (
         <BaseDialog.Root open={open} onOpenChange={onOpenChange}>
             <BaseDialog.Portal>
-                <BaseDialog.Backdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 transition-opacity duration-150" />
+                <BaseDialog.Backdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] transition-opacity duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
                 <BaseDialog.Popup
                     className={cn(
-                        "-translate-x-1/2 -translate-y-1/2 fixed start-1/2 top-1/2 z-50 flex w-[min(40rem,calc(100vw-2rem))] flex-col gap-4 rounded-lg border border-border bg-popover p-6 text-popover-foreground shadow-lg outline-none",
+                        "fixed start-1/2 top-1/2 z-50 flex w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-lg border border-border bg-popover p-6 text-popover-foreground shadow-lg outline-none",
                         "data-[ending-style]:scale-95 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
                         "transition-[opacity,scale] duration-150",
                     )}
