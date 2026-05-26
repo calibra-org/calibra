@@ -217,19 +217,83 @@ export default class FoundationSeeder extends BaseSeeder {
     }
 
     private async seedPaymentGateways(): Promise<void> {
+        /**
+         * `signed_callback` reflects each PSP's actual posture. None of the Iranian gateways
+         * we ship sign their redirect-hop callbacks today — replay protection comes from the
+         * `processed_webhook_events` ledger + amount guard + `order:<id>` lock instead. If a
+         * gateway adds HMAC support upstream, flip this to `true` and populate
+         * `webhook_secret_env_key` / `webhook_signature_header` so the middleware kicks in.
+         */
         const gateways = [
-            { code: "zarinpal", enabled: false, ordering: 1, settings: { merchant_id: "" }, supports: { refunds: false } },
-            { code: "idpay", enabled: false, ordering: 2, settings: { api_key: "" }, supports: { refunds: false } },
-            { code: "nextpay", enabled: false, ordering: 3, settings: { api_key: "" }, supports: { refunds: false } },
-            { code: "payir", enabled: false, ordering: 4, settings: { api_key: "" }, supports: { refunds: false } },
-            { code: "zibal", enabled: false, ordering: 5, settings: { merchant_id: "" }, supports: { refunds: false } },
-            { code: "cod", enabled: true, ordering: 6, settings: {}, supports: { refunds: false } },
+            {
+                code: "zarinpal",
+                enabled: false,
+                ordering: 1,
+                settings: { merchant_id: "" },
+                supports: { refunds: false },
+                signedCallback: false,
+                webhookSecretEnvKey: null,
+                webhookSignatureHeader: null,
+            },
+            {
+                code: "idpay",
+                enabled: false,
+                ordering: 2,
+                settings: { api_key: "" },
+                supports: { refunds: false },
+                signedCallback: false,
+                webhookSecretEnvKey: null,
+                webhookSignatureHeader: null,
+            },
+            {
+                code: "nextpay",
+                enabled: false,
+                ordering: 3,
+                settings: { api_key: "" },
+                supports: { refunds: false },
+                signedCallback: false,
+                webhookSecretEnvKey: null,
+                webhookSignatureHeader: null,
+            },
+            {
+                code: "payir",
+                enabled: false,
+                ordering: 4,
+                settings: { api_key: "" },
+                supports: { refunds: false },
+                signedCallback: false,
+                webhookSecretEnvKey: null,
+                webhookSignatureHeader: null,
+            },
+            {
+                code: "zibal",
+                enabled: false,
+                ordering: 5,
+                settings: { merchant_id: "" },
+                supports: { refunds: false },
+                signedCallback: false,
+                webhookSecretEnvKey: null,
+                webhookSignatureHeader: null,
+            },
+            {
+                code: "cod",
+                enabled: true,
+                ordering: 6,
+                settings: {},
+                supports: { refunds: false },
+                signedCallback: false,
+                webhookSecretEnvKey: null,
+                webhookSignatureHeader: null,
+            },
             {
                 code: "bank_transfer",
                 enabled: true,
                 ordering: 7,
                 settings: { iban: "", account_name: "" },
                 supports: { refunds: false },
+                signedCallback: false,
+                webhookSecretEnvKey: null,
+                webhookSignatureHeader: null,
             },
         ];
 

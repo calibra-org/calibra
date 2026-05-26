@@ -1155,7 +1155,7 @@ export class PaymentAttemptSchema extends BaseModel {
 }
 
 export class PaymentGatewaySchema extends BaseModel {
-  static $columns = ['code', 'createdAt', 'enabled', 'id', 'ordering', 'settings', 'supports', 'updatedAt'] as const
+  static $columns = ['code', 'createdAt', 'enabled', 'id', 'ordering', 'settings', 'signedCallback', 'supports', 'updatedAt', 'webhookSecretEnvKey', 'webhookSignatureHeader'] as const
   $columns = PaymentGatewaySchema.$columns
   @column()
   declare code: string
@@ -1170,9 +1170,15 @@ export class PaymentGatewaySchema extends BaseModel {
   @column()
   declare settings: any
   @column()
+  declare signedCallback: boolean
+  @column()
   declare supports: any
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+  @column()
+  declare webhookSecretEnvKey: string | null
+  @column()
+  declare webhookSignatureHeader: string | null
 }
 
 export class PaymentLinkSchema extends BaseModel {
