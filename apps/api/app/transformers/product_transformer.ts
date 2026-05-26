@@ -120,14 +120,17 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             };
         });
 
-        const attributeLinks = (p.attributeLinks ?? []).map((link) => ({
-            id: Number(link.id),
-            attribute_id: Number(link.attributeId),
-            position: link.position,
-            visible: link.visible,
-            used_for_variation: link.usedForVariation,
-            term_ids: (link.terms ?? []).map((t) => Number(t.id)),
-        }));
+        const attributeLinks = (p.attributeLinks ?? [])
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map((link) => ({
+                id: Number(link.id),
+                attribute_id: Number(link.attributeId),
+                position: link.position,
+                visible: link.visible,
+                used_for_variation: link.usedForVariation,
+                term_ids: (link.terms ?? []).map((t) => Number(t.id)),
+            }));
 
         const categories = (p.categories ?? []).map((c) => ({
             id: Number(c.id),
@@ -191,6 +194,11 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             global_unique_id: p.globalUniqueId,
             attributes: p.attributes ?? {},
             pos_available: (p as unknown as { posAvailable?: boolean }).posAvailable ?? true,
+            default_variation_id:
+                (p as unknown as { defaultVariationId?: number | null }).defaultVariationId === null ||
+                (p as unknown as { defaultVariationId?: number | null }).defaultVariationId === undefined
+                    ? null
+                    : Number((p as unknown as { defaultVariationId: number }).defaultVariationId),
             upsell_ids: upsellIds,
             cross_sell_ids: crossSellIds,
             grouped_member_ids: groupedMemberIds,

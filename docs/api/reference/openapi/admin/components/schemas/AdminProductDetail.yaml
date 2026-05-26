@@ -100,6 +100,11 @@ allOf:
                       short_description: { type: [string, "null"] }
                       purchase_note: { type: [string, "null"] }
                       external_button_text: { type: [string, "null"] }
+          default_variation_id:
+              type: [integer, "null"]
+              description: >
+                  Variation pre-selected on the storefront product page. Set to null to let the
+                  storefront pick the first available variation.
           pos_available:
               type: boolean
               description: >

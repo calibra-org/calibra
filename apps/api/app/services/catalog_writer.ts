@@ -170,6 +170,60 @@ export async function syncProductDownloads(
     }
 }
 
+export interface AttributeLinkInput {
+    attribute_id: number;
+    position?: number;
+    visible?: boolean;
+    used_for_variation?: boolean;
+    term_ids: number[];
+}
+
+/**
+ * Replace-all sync for the `product_attribute_links` table + its `product_attribute_link_terms`
+ * children. Inbound `term_ids` must already belong to the linked attribute — the caller is
+ * responsible for that check (validator-side). Order in the array becomes `position`. No-ops
+ * when `links` is undefined.
+ */
+export async function syncProductAttributeLinks(
+    trx: TransactionClientContract,
+    productId: bigint | number,
+    links: AttributeLinkInput[] | undefined,
+): Promise<void> {
+    if (links === undefined) return;
+    const now = DateTime.utc().toSQL();
+    await trx.from("product_attribute_link_terms").whereIn(
+        "link_id",
+        trx.from("product_attribute_links").where("product_id", String(productId)).select("id"),
+    ).delete();
+    await trx.from("product_attribute_links").where("product_id", String(productId)).delete();
+    if (links.length === 0) return;
+    for (let i = 0; i < links.length; i += 1) {
+        const link = links[i]!;
+        const [{ id }] = await trx
+            .table("product_attribute_links")
+            .returning("id")
+            .insert({
+                product_id: productId,
+                attribute_id: link.attribute_id,
+                position: link.position ?? i,
+                visible: link.visible ?? true,
+                used_for_variation: link.used_for_variation ?? false,
+                created_at: now,
+                updated_at: now,
+            });
+        if (link.term_ids.length > 0) {
+            await trx.table("product_attribute_link_terms").insert(
+                link.term_ids.map((termId) => ({
+                    link_id: id,
+                    term_id: termId,
+                    created_at: now,
+                    updated_at: now,
+                })),
+            );
+        }
+    }
+}
+
 /** Replace `product_images` rows for a product with the given media ids, preserving order. */
 export async function syncProductImages(
     trx: TransactionClientContract,

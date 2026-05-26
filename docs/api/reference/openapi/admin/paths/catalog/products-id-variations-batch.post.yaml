@@ -1,0 +1,53 @@
+operationId: adminProductVariationsBatch
+summary: Batch create / update / delete variations
+description: >
+    Atomic `{create, update, delete}` operation over a variable product's variations. The cartesian
+    "Generate from all attributes" flow on the detail page uses this to land all rows in one
+    transaction. Refuses with 422 when the parent product isn't `variable`.
+tags: [Admin / Catalog / Variations]
+
+parameters:
+    - { name: product_id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    create:
+                        type: array
+                        items: { type: object, additionalProperties: true }
+                    update:
+                        type: array
+                        items:
+                            type: object
+                            additionalProperties: true
+                            required: [id]
+                            properties:
+                                id: { type: integer }
+                    delete:
+                        type: array
+                        items: { type: integer }
+
+responses:
+    "200":
+        description: Batch result.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [created, updated, deleted]
+                            properties:
+                                created: { type: array, items: { type: integer } }
+                                updated: { type: array, items: { type: integer } }
+                                deleted: { type: array, items: { type: integer } }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

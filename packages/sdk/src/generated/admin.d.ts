@@ -2300,6 +2300,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/products/{product_id}/variations/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Batch create / update / delete variations
+         * @description Atomic `{create, update, delete}` operation over a variable product's variations. The cartesian "Generate from all attributes" flow on the detail page uses this to land all rows in one transaction. Refuses with 422 when the parent product isn't `variable`.
+         */
+        post: operations["adminProductVariationsBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products/{product_id}/variations/{id}": {
         parameters: {
             query?: never;
@@ -4248,6 +4268,8 @@ export interface components {
                 purchase_note?: string | null;
                 external_button_text?: string | null;
             }[];
+            /** @description Variation pre-selected on the storefront product page. Set to null to let the storefront pick the first available variation. */
+            default_variation_id?: number | null;
             /** @description Whether this product can be sold via the in-store POS app. Decoupled from the storefront `status` / `catalog_visibility` axes — a product can be Published online but hidden from POS, or vice versa. */
             pos_available?: boolean;
             /** @description Recommended-next-step product ids, ordered by `position`. */
@@ -8398,6 +8420,52 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminProductVariation"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminProductVariationsBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    create?: {
+                        [key: string]: unknown;
+                    }[];
+                    update?: ({
+                        id: number;
+                    } & {
+                        [key: string]: unknown;
+                    })[];
+                    delete?: number[];
+                };
+            };
+        };
+        responses: {
+            /** @description Batch result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created: number[];
+                            updated: number[];
+                            deleted: number[];
+                        };
                     };
                 };
             };

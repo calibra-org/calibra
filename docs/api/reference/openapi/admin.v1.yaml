@@ -450,6 +450,9 @@ paths:
             $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
             $ref: "./admin/paths/catalog/variations.post.yaml"
+    /api/v1/admin/products/{product_id}/variations/batch:
+        post:
+            $ref: "./admin/paths/catalog/products-id-variations-batch.post.yaml"
     /api/v1/admin/products/{product_id}/variations/{id}:
         put:
             $ref: "./admin/paths/catalog/variations-id.put.yaml"

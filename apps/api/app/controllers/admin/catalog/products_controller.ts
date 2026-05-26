@@ -9,11 +9,13 @@ import { CacheInvalidation } from "#services/cache_invalidation";
 import {
     syncLinks,
     syncOrderedLinks,
+    syncProductAttributeLinks,
     syncProductDownloads,
     syncProductImages,
     upsertTranslations,
     withTransaction,
 } from "#services/catalog_writer";
+import ProductAttributeTerm from "#models/product_attribute_term";
 import SettingsService from "#services/settings_service";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductTransformer, { type ProductTransformerOptions } from "#transformers/product_transformer";
@@ -355,6 +357,7 @@ export default class AdminProductsController {
     async store(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(createProductValidator);
         await this.assertLinkedProductsExist(payload.upsell_ids, payload.cross_sell_ids, payload.grouped_member_ids);
+        await this.assertAttributeLinkTermsBelong(payload.attribute_links);
         const product = await withTransaction(async (trx) => {
             const row = new Product();
             row.useTransaction(trx);
@@ -390,6 +393,7 @@ export default class AdminProductsController {
                 payload.grouped_member_ids,
             );
             await syncProductDownloads(trx, row.id, payload.downloads);
+            await syncProductAttributeLinks(trx, row.id, payload.attribute_links);
             return row;
         });
         const reloaded = await this.reload(product.id);
@@ -409,9 +413,11 @@ export default class AdminProductsController {
         if (conflict) return conflict;
         const payload = await ctx.request.validateUsing(updateProductValidator);
         await this.assertLinkedProductsExist(payload.upsell_ids, payload.cross_sell_ids, payload.grouped_member_ids);
+        await this.assertAttributeLinkTermsBelong(payload.attribute_links);
         const linkedTouched =
             payload.upsell_ids !== undefined || payload.cross_sell_ids !== undefined || payload.grouped_member_ids !== undefined;
         const downloadsTouched = payload.downloads !== undefined;
+        const attributesTouched = payload.attribute_links !== undefined;
         await withTransaction(async (trx) => {
             product.useTransaction(trx);
             assignProductFields(product, payload);
@@ -448,9 +454,18 @@ export default class AdminProductsController {
                 payload.grouped_member_ids,
             );
             await syncProductDownloads(trx, product.id, payload.downloads);
+            await syncProductAttributeLinks(trx, product.id, payload.attribute_links);
         });
         const reloaded = await this.reload(product.id);
         await CacheInvalidation.productChanged(product.id);
+        if (attributesTouched) {
+            await recordAudit({
+                ctx,
+                action: "product.attribute_links.update",
+                entityKind: "product",
+                entityId: Number(product.id),
+            });
+        }
         if (linkedTouched) {
             await recordAudit({
                 ctx,
@@ -513,6 +528,36 @@ export default class AdminProductsController {
             throw new BusinessRuleException("linked_product_not_found", "linked_product_exists", {
                 field: "linked_products",
                 missing_ids: missing,
+            });
+        }
+    }
+
+    /**
+     * Every `term_id` inside an attribute_link must belong to that link's `attribute_id`. The
+     * validator only checks shape; this check guards against cross-attribute term ids planted
+     * by a malicious client (or a buggy admin UI). Throws 422 with the offending pairs.
+     */
+    private async assertAttributeLinkTermsBelong(
+        links: { attribute_id: number; term_ids: number[] }[] | undefined,
+    ): Promise<void> {
+        if (links === undefined || links.length === 0) return;
+        const termIds = Array.from(new Set(links.flatMap((l) => l.term_ids)));
+        if (termIds.length === 0) return;
+        const rows = await ProductAttributeTerm.query().whereIn("id", termIds).select("id", "attribute_id");
+        const termAttribute = new Map(rows.map((r) => [Number(r.id), Number(r.attributeId)]));
+        const mismatched: { attribute_id: number; term_id: number }[] = [];
+        for (const link of links) {
+            for (const termId of link.term_ids) {
+                const owner = termAttribute.get(termId);
+                if (owner === undefined || owner !== link.attribute_id) {
+                    mismatched.push({ attribute_id: link.attribute_id, term_id: termId });
+                }
+            }
+        }
+        if (mismatched.length > 0) {
+            throw new BusinessRuleException("attribute_term_attribute_mismatch", "attribute_link_terms_belong", {
+                field: "attribute_links",
+                mismatched,
             });
         }
     }
@@ -838,5 +883,9 @@ function assignProductFields(row: Product, payload: Record<string, unknown>): vo
     if (payload.attributes !== undefined) row.attributes = payload.attributes ?? {};
     if (payload.pos_available !== undefined) {
         (row as unknown as { posAvailable: boolean }).posAvailable = !!payload.pos_available;
+    }
+    if (payload.default_variation_id !== undefined) {
+        (row as unknown as { defaultVariationId: number | null }).defaultVariationId =
+            (payload.default_variation_id as number | null) ?? null;
     }
 }

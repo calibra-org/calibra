@@ -10,6 +10,14 @@ const TRANSLATION_SCHEMA = vine.object({
     external_button_text: vine.string().trim().maxLength(120).nullable().optional(),
 });
 
+const ATTRIBUTE_LINK_SCHEMA = vine.object({
+    attribute_id: vine.number(),
+    position: vine.number().min(0).optional(),
+    visible: vine.boolean().optional(),
+    used_for_variation: vine.boolean().optional(),
+    term_ids: vine.array(vine.number()),
+});
+
 const DOWNLOAD_SCHEMA = vine.object({
     id: vine.number().optional(),
     media_id: vine.number(),
@@ -61,6 +69,8 @@ export const createProductValidator = vine.compile(
         grouped_member_ids: vine.array(vine.number()).optional(),
         downloads: vine.array(DOWNLOAD_SCHEMA).optional(),
         pos_available: vine.boolean().optional(),
+        attribute_links: vine.array(ATTRIBUTE_LINK_SCHEMA).optional(),
+        default_variation_id: vine.number().nullable().optional(),
     }),
 );
 
@@ -106,6 +116,8 @@ export const updateProductValidator = vine.compile(
         grouped_member_ids: vine.array(vine.number()).optional(),
         downloads: vine.array(DOWNLOAD_SCHEMA).optional(),
         pos_available: vine.boolean().optional(),
+        attribute_links: vine.array(ATTRIBUTE_LINK_SCHEMA).optional(),
+        default_variation_id: vine.number().nullable().optional(),
     }),
 );
 

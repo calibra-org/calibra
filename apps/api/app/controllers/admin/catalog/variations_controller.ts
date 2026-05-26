@@ -9,7 +9,7 @@ import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductVariationTransformer from "#transformers/product_variation_transformer";
-import { createVariationValidator, updateVariationValidator } from "#validators/catalog/variation_validator";
+import { batchVariationsValidator, createVariationValidator, updateVariationValidator } from "#validators/catalog/variation_validator";
 
 const VARIATION_FIELDS = ["description"] as const;
 
@@ -115,6 +115,97 @@ export default class AdminVariationsController {
         await CacheInvalidation.productChanged(row.productId);
         return ctx.response.status(204);
     }
+
+    /**
+     * `POST /admin/products/:product_id/variations/batch` — atomic `{create, update, delete}` over
+     * a variable product's variations. Refuses with 422 when the parent product isn't `variable`.
+     * Each create/update entry re-runs through the single-row validator (the outer validator only
+     * checks shape), mirroring the products-batch pattern.
+     */
+    async batch(ctx: HttpContext) {
+        const product = await Product.find(ctx.params.product_id);
+        if (!product) return ctx.response.status(404).json({ error: "product_not_found" });
+        if (product.type !== "variable") {
+            return ctx.response.status(422).json({ error: "parent_product_not_variable" });
+        }
+        const payload = await ctx.request.validateUsing(batchVariationsValidator);
+
+        const allowedAttributeIds = (
+            await ProductAttributeLink.query()
+                .where("product_id", String(product.id))
+                .where("used_for_variation", true)
+                .select("attribute_id")
+        ).map((row) => Number(row.attributeId));
+
+        const created: number[] = [];
+        const updated: number[] = [];
+        const deleted: number[] = [];
+
+        await withTransaction(async (trx) => {
+            for (const body of payload.create ?? []) {
+                const validated = await createVariationValidator.validate(body);
+                if (validated.attribute_pins) {
+                    for (const pin of validated.attribute_pins) {
+                        if (!allowedAttributeIds.includes(pin.attribute_id)) {
+                            throw new Error(`attribute_pin_not_variation_attribute:${pin.attribute_id}`);
+                        }
+                    }
+                }
+                const row = new ProductVariation();
+                row.useTransaction(trx);
+                row.productId = product.id;
+                applyVariationFields(row, validated);
+                await row.save();
+                if (validated.translations) {
+                    await upsertTranslations(
+                        trx,
+                        "product_variation_translations",
+                        "variation_id",
+                        row.id,
+                        validated.translations as never,
+                        VARIATION_FIELDS as never,
+                    );
+                }
+                await syncVariationAttributePins(trx, row.id, validated.attribute_pins);
+                created.push(Number(row.id));
+            }
+            for (const body of payload.update ?? []) {
+                const id = (body as { id?: number }).id;
+                if (typeof id !== "number") continue;
+                const row = await ProductVariation.query({ client: trx })
+                    .where("product_id", String(product.id))
+                    .where("id", id)
+                    .first();
+                if (!row) continue;
+                const validated = await updateVariationValidator.validate(body);
+                applyVariationFields(row, validated);
+                await row.save();
+                if (validated.translations) {
+                    await upsertTranslations(
+                        trx,
+                        "product_variation_translations",
+                        "variation_id",
+                        row.id,
+                        validated.translations as never,
+                        VARIATION_FIELDS as never,
+                    );
+                }
+                await syncVariationAttributePins(trx, row.id, validated.attribute_pins);
+                updated.push(Number(row.id));
+            }
+            for (const id of payload.delete ?? []) {
+                if (!Number.isFinite(id) || id <= 0) continue;
+                await ProductVariation.query({ client: trx })
+                    .where("product_id", String(product.id))
+                    .where("id", id)
+                    .update({ deleted_at: DateTime.utc().toSQL() });
+                deleted.push(id);
+            }
+        });
+
+        await CacheInvalidation.productChanged(product.id);
+        return { data: { created, updated, deleted } };
+    }
 }
 
 function applyVariationFields(row: ProductVariation, payload: Record<string, unknown>): void {
@@ -141,7 +232,7 @@ function applyVariationFields(row: ProductVariation, payload: Record<string, unk
 async function syncVariationAttributePins(
     trx: TransactionClientContract,
     variationId: bigint | number,
-    pins: Array<{ attribute_id: number; term_id: number }> | undefined,
+    pins: Array<{ attribute_id: number; term_id: number | null }> | undefined,
 ): Promise<void> {
     if (pins === undefined) return;
     await trx.from("product_variation_attributes").where("variation_id", String(variationId)).delete();
