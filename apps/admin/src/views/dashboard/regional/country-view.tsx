@@ -164,12 +164,7 @@ function TopProvinceList({
     return (
         <div className="rounded-lg border bg-card">
             <ScrollArea className="h-80">
-                <motion.ul
-                    className="flex flex-col gap-2 p-3"
-                    variants={listVariants}
-                    initial="hidden"
-                    animate="show"
-                >
+                <motion.ul className="flex flex-col gap-2 p-3" variants={listVariants} initial="hidden" animate="show">
                     {rows.map((row) => {
                         const value = metric === "revenue" ? row.revenueMinor : row.ordersCount;
                         const percent = (value / max) * 100;
