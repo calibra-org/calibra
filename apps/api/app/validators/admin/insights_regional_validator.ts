@@ -12,7 +12,7 @@ export const adminRegionalProvincesValidator = vine.compile(
     vine.object({
         from: vine.date({ formats: { utc: true } }).optional(),
         to: vine.date({ formats: { utc: true } }).optional(),
-        metric: vine.enum(["orders", "revenue"]).optional(),
+        metric: vine.enum(["orders", "revenue", "customers"]).optional(),
     }),
 );
 

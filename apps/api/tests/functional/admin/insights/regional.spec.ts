@@ -139,20 +139,70 @@ test.group("GET /api/v1/admin/insights/regional/provinces", (group) => {
         response.assertAgainstApiSpec();
 
         const body = response.body() as {
-            data: Array<{ code: string; orders_count: number; revenue_minor: string; name: { fa: string; en: string } }>;
-            meta: { totals: { orders_count: number; revenue_minor: string } };
+            data: Array<{
+                code: string;
+                orders_count: number;
+                revenue_minor: string;
+                customers_count: number;
+                name: { fa: string; en: string };
+            }>;
+            meta: { totals: { orders_count: number; revenue_minor: string; customers_count: number } };
         };
 
         assert.lengthOf(body.data, 31);
         assert.equal(body.meta.totals.orders_count, 0);
         assert.equal(body.meta.totals.revenue_minor, "0");
+        assert.equal(body.meta.totals.customers_count, 0);
         for (const row of body.data) {
             assert.match(row.code, /^IR-(0[1-9]|[12][0-9]|3[01])$/);
             assert.equal(row.orders_count, 0);
+            assert.equal(row.customers_count, 0);
         }
         const tehran = body.data.find((r) => r.code === "IR-24");
         assert.exists(tehran);
         assert.equal(tehran?.name.en, "Tehran");
+    });
+
+    test("counts distinct registered customers — repeat buyers count once, guest orders are excluded", async ({
+        client,
+        assert,
+    }) => {
+        const admin = await adminUser();
+        const buyerA = await plainUser();
+        const buyerB = await plainUser();
+        const buyerACustomer = await Customer.findByOrFail("userId", buyerA.id);
+        const buyerBCustomer = await Customer.findByOrFail("userId", buyerB.id);
+
+        await seedOrder({ regionCode: "IR-24", grandTotal: 100, city: "تهران" });
+        await seedOrder({ regionCode: "IR-24", grandTotal: 100, city: "تهران" });
+
+        const orderA1 = await seedOrder({ regionCode: "IR-24", grandTotal: 100 });
+        orderA1.customerId = buyerACustomer.id;
+        await orderA1.save();
+        const orderA2 = await seedOrder({ regionCode: "IR-24", grandTotal: 100 });
+        orderA2.customerId = buyerACustomer.id;
+        await orderA2.save();
+        const orderB = await seedOrder({ regionCode: "IR-08", grandTotal: 100 });
+        orderB.customerId = buyerBCustomer.id;
+        await orderB.save();
+
+        const response = await client.get("/api/v1/admin/insights/regional/provinces").withGuard("api").loginAs(admin);
+        response.assertStatus(200);
+        response.assertAgainstApiSpec();
+
+        const body = response.body() as {
+            data: Array<{ code: string; customers_count: number }>;
+            meta: { totals: { customers_count: number } };
+        };
+        const tehran = body.data.find((r) => r.code === "IR-24");
+        const isfahan = body.data.find((r) => r.code === "IR-08");
+        assert.equal(tehran?.customers_count, 1, "buyerA placed two Tehran orders → counted once");
+        assert.equal(isfahan?.customers_count, 1);
+        assert.equal(
+            body.meta.totals.customers_count,
+            2,
+            "country-wide distinct is computed globally — buyerA isn't double-counted across provinces",
+        );
     });
 
     test("totals equal the sum of row contributions", async ({ client, assert }) => {

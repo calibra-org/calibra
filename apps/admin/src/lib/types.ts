@@ -604,12 +604,13 @@ export interface AdminRegionalProvinceRow {
     name: LocalizedString;
     ordersCount: number;
     revenueMinor: MoneyMinor;
+    customersCount: number;
 }
 
 /** Country-mode envelope: 31 province rows plus a totals + range summary. */
 export interface AdminRegionalCountry {
     rows: AdminRegionalProvinceRow[];
-    totals: { ordersCount: number; revenueMinor: MoneyMinor };
+    totals: { ordersCount: number; revenueMinor: MoneyMinor; customersCount: number };
     range: { from: string; to: string };
 }
 
@@ -623,6 +624,7 @@ export interface AdminRegionalCounty {
     name: { fa: string; en: string | null };
     ordersCount: number;
     revenueMinor: MoneyMinor;
+    customersCount: number;
     matched: boolean;
 }
 
@@ -633,6 +635,7 @@ export interface AdminRegionalProvinceDetail {
     name: LocalizedString;
     ordersCount: number;
     revenueMinor: MoneyMinor;
+    customersCount: number;
     topProducts: Array<{
         productId: number;
         name: string;

@@ -22,6 +22,7 @@ export function MetricPillToggle({ value, onChange }: MetricPillToggleProps) {
     const options: ReadonlyArray<{ value: HeatmapMetric; label: string }> = [
         { value: "orders", label: t("metricOrders") },
         { value: "revenue", label: t("metricRevenue") },
+        { value: "customers", label: t("metricCustomers") },
     ];
 
     return (

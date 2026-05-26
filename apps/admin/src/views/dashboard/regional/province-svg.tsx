@@ -8,13 +8,14 @@ import { IRAN_COUNTRY_PROVINCES } from "#/vendor/iran-map";
 import { loadProvinceGeometry, type ProvinceGeometry } from "#/vendor/iran-map/provinces";
 
 import { contrastTextColor } from "./contrast";
-import { buildHeatmapScale, type HeatmapMetric } from "./heatmap-scale";
+import { buildHeatmapScale, type HeatmapMetric, metricValue } from "./heatmap-scale";
 import { ProvinceSea, SEA_FILL } from "./sea-decorations";
 
 export interface CountyMarker {
     name: string;
     ordersCount: number;
     revenueMinor: number;
+    customersCount: number;
     matched: boolean;
 }
 
@@ -86,7 +87,7 @@ export function ProvinceSvg({ code, counties, metric, onCountyHover, onPointerMo
         const values = geometry.counties.map((county) => {
             const matched = countiesByNormalized.get(normalizeIranText(county.fa));
             if (!matched) return 0;
-            return metric === "revenue" ? matched.revenueMinor : matched.ordersCount;
+            return metricValue(matched, metric);
         });
         return buildHeatmapScale(values, metric);
     }, [geometry, countiesByNormalized, metric]);
@@ -95,7 +96,7 @@ export function ProvinceSvg({ code, counties, metric, onCountyHover, onPointerMo
         (countyName: string) => {
             const matched = countiesByNormalized.get(normalizeIranText(countyName));
             if (!matched) return scale.fillFor(0);
-            return scale.fillFor(metric === "revenue" ? matched.revenueMinor : matched.ordersCount);
+            return scale.fillFor(metricValue(matched, metric));
         },
         [countiesByNormalized, metric, scale],
     );
@@ -212,6 +213,7 @@ export function ProvinceSvg({ code, counties, metric, onCountyHover, onPointerMo
                                         name: county.fa,
                                         ordersCount: 0,
                                         revenueMinor: 0,
+                                        customersCount: 0,
                                         matched: false,
                                     });
                                 }

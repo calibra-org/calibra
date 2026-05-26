@@ -15,13 +15,14 @@ interface SdkProvinceRow {
     name: { fa: string; en: string };
     orders_count: number;
     revenue_minor: string;
+    customers_count: number;
 }
 
 interface SdkCountryEnvelope {
     data: SdkProvinceRow[];
     meta: {
         range: { from: string; to: string };
-        totals: { orders_count: number; revenue_minor: string };
+        totals: { orders_count: number; revenue_minor: string; customers_count: number };
         locale: string;
     };
 }
@@ -30,6 +31,7 @@ interface SdkRegionalCounty {
     name: { fa: string; en: string | null };
     orders_count: number;
     revenue_minor: string;
+    customers_count: number;
     matched: boolean;
 }
 
@@ -40,6 +42,7 @@ interface SdkProvinceDetailEnvelope {
         name: { fa: string; en: string };
         orders_count: number;
         revenue_minor: string;
+        customers_count: number;
         top_products: Array<{
             product_id: number;
             name: string;
@@ -64,10 +67,12 @@ function adaptCountry(payload: SdkCountryEnvelope): AdminRegionalCountry {
             name: row.name,
             ordersCount: row.orders_count,
             revenueMinor: Number(row.revenue_minor),
+            customersCount: row.customers_count,
         })),
         totals: {
             ordersCount: payload.meta.totals.orders_count,
             revenueMinor: Number(payload.meta.totals.revenue_minor),
+            customersCount: payload.meta.totals.customers_count,
         },
         range: payload.meta.range,
     };
@@ -80,6 +85,7 @@ function adaptProvince(payload: SdkProvinceDetailEnvelope): AdminRegionalProvinc
         name: payload.data.name,
         ordersCount: payload.data.orders_count,
         revenueMinor: Number(payload.data.revenue_minor),
+        customersCount: payload.data.customers_count,
         topProducts: payload.data.top_products.map((p) => ({
             productId: p.product_id,
             name: p.name,
@@ -92,6 +98,7 @@ function adaptProvince(payload: SdkProvinceDetailEnvelope): AdminRegionalProvinc
             name: c.name,
             ordersCount: c.orders_count,
             revenueMinor: Number(c.revenue_minor),
+            customersCount: c.customers_count,
             matched: c.matched,
         })),
         range: payload.meta.range,
@@ -103,7 +110,7 @@ export interface RegionalFilters {
     from?: string;
     /** ISO datetime (Gregorian UTC). Omit for the trailing-30-days server default. */
     to?: string;
-    metric?: "orders" | "revenue";
+    metric?: "orders" | "revenue" | "customers";
 }
 
 /**

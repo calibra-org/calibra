@@ -27,10 +27,10 @@ parameters:
     - name: metric
       in: query
       required: false
-      description: Informational flag (response always carries both orders + revenue). Kept on the cache key so each mode gets its own slot.
+      description: Informational flag (response always carries orders + revenue + customers). Kept on the cache key so each mode gets its own slot.
       schema:
           type: string
-          enum: [orders, revenue]
+          enum: [orders, revenue, customers]
 responses:
     "200":
         description: Country-wide regional insights snapshot.
@@ -54,7 +54,7 @@ responses:
                                     $ref: "../../../common/components/schemas/RegionalRange.yaml"
                                 totals:
                                     type: object
-                                    required: [orders_count, revenue_minor]
+                                    required: [orders_count, revenue_minor, customers_count]
                                     properties:
                                         orders_count:
                                             type: integer
@@ -62,6 +62,15 @@ responses:
                                         revenue_minor:
                                             type: string
                                             pattern: "^-?\\d+$"
+                                        customers_count:
+                                            type: integer
+                                            minimum: 0
+                                            description: >
+                                                Country-wide distinct registered customers who placed
+                                                an order within the window. Counted via a single
+                                                `COUNT(DISTINCT customer_id)` over all provinces
+                                                (not the sum of per-row figures) so a customer who
+                                                shipped to two provinces is counted once.
                                 locale:
                                     type: string
                                     examples: ["fa", "en"]

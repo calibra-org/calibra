@@ -24,12 +24,14 @@ interface ProvinceAggregateRow {
     en_name: string | null;
     orders_count: string | number;
     revenue_minor: string | number | null;
+    customers_count: string | number;
 }
 
 interface CityAggregateRow {
     city_raw: string;
     orders_count: string | number;
     revenue_minor: string | number | null;
+    customers_count: string | number;
 }
 
 interface TopProductRow {
@@ -146,7 +148,11 @@ export default class AdminInsightsRegionalController {
                 COALESCE(SUM(CASE WHEN o.status IN ('processing','completed')
                                   AND o.created_at >= :from AND o.created_at < :to
                                   AND o.deleted_at IS NULL
-                                  THEN o.grand_total ELSE 0 END), 0)::bigint AS revenue_minor
+                                  THEN o.grand_total ELSE 0 END), 0)::bigint AS revenue_minor,
+                COUNT(DISTINCT CASE WHEN o.status IN ('processing','completed')
+                                    AND o.created_at >= :from AND o.created_at < :to
+                                    AND o.deleted_at IS NULL
+                                    THEN o.customer_id END)::bigint AS customers_count
             FROM regions r
             LEFT JOIN region_translations t_fa ON t_fa.region_id = r.id AND t_fa.locale = 'fa'
             LEFT JOIN region_translations t_en ON t_en.region_id = r.id AND t_en.locale = 'en'
@@ -164,6 +170,7 @@ export default class AdminInsightsRegionalController {
         const data = rows.map((row) => {
             const orders = BigInt(row.orders_count);
             const revenue = BigInt(row.revenue_minor ?? 0);
+            const customers = Number(row.customers_count);
             totalOrders += orders;
             totalRevenue += revenue;
             return {
@@ -172,8 +179,11 @@ export default class AdminInsightsRegionalController {
                 name: { fa: row.fa_name ?? row.code, en: row.en_name ?? row.code },
                 orders_count: Number(orders),
                 revenue_minor: revenue.toString(),
+                customers_count: customers,
             };
         });
+
+        const totalCustomers = await this.fetchDistinctCustomerCount(range);
 
         return {
             data,
@@ -182,10 +192,33 @@ export default class AdminInsightsRegionalController {
                 totals: {
                     orders_count: Number(totalOrders),
                     revenue_minor: totalRevenue.toString(),
+                    customers_count: totalCustomers,
                 },
                 locale,
             },
         };
+    }
+
+    /**
+     * Country-wide `COUNT(DISTINCT customer_id)` for the totals tile. We can't sum the per-province
+     * row values — the same customer can ship to two provinces, and naive summing would double-count
+     * them — so the totals figure runs a single global aggregate scoped to the same window/status.
+     */
+    private async fetchDistinctCustomerCount(range: NormalizedRange): Promise<number> {
+        const { rows } = await db.rawQuery<{ rows: Array<{ customers_count: string | number }> }>(
+            `
+            SELECT COUNT(DISTINCT o.customer_id)::bigint AS customers_count
+            FROM orders o
+            INNER JOIN order_addresses oa ON oa.order_id = o.id AND oa.kind = 'shipping'
+            INNER JOIN regions r ON r.id = oa.region_id AND r.country_code = 'IR' AND r.parent_id IS NULL
+            WHERE o.status IN ('processing','completed')
+                AND o.created_at >= :from AND o.created_at < :to
+                AND o.deleted_at IS NULL
+                AND o.customer_id IS NOT NULL
+            `,
+            { from: range.from, to: range.to },
+        );
+        return Number(rows[0]?.customers_count ?? 0);
     }
 
     private async computeProvince(
@@ -205,6 +238,7 @@ export default class AdminInsightsRegionalController {
                 name: { fa: provinceRow.fa_name ?? provinceRow.code, en: provinceRow.en_name ?? provinceRow.code },
                 orders_count: Number(BigInt(provinceRow.orders_count)),
                 revenue_minor: BigInt(provinceRow.revenue_minor ?? 0).toString(),
+                customers_count: Number(provinceRow.customers_count),
                 top_products: topProducts,
                 counties,
             },
@@ -233,7 +267,11 @@ export default class AdminInsightsRegionalController {
                 COALESCE(SUM(CASE WHEN o.status IN ('processing','completed')
                                   AND o.created_at >= :from AND o.created_at < :to
                                   AND o.deleted_at IS NULL
-                                  THEN o.grand_total ELSE 0 END), 0)::bigint AS revenue_minor
+                                  THEN o.grand_total ELSE 0 END), 0)::bigint AS revenue_minor,
+                COUNT(DISTINCT CASE WHEN o.status IN ('processing','completed')
+                                    AND o.created_at >= :from AND o.created_at < :to
+                                    AND o.deleted_at IS NULL
+                                    THEN o.customer_id END)::bigint AS customers_count
             FROM regions r
             LEFT JOIN region_translations t_fa ON t_fa.region_id = r.id AND t_fa.locale = 'fa'
             LEFT JOIN region_translations t_en ON t_en.region_id = r.id AND t_en.locale = 'en'
@@ -345,6 +383,7 @@ export default class AdminInsightsRegionalController {
             name: { fa: string; en: string | null };
             orders_count: number;
             revenue_minor: string;
+            customers_count: number;
             matched: boolean;
         }>
     > {
@@ -354,6 +393,7 @@ export default class AdminInsightsRegionalController {
             name: { fa: string; en: string | null };
             orders_count: number;
             revenue_minor: bigint;
+            customers_count: number;
             matched: boolean;
         };
         /** Pre-seed every county with zeroed totals so the response always lists every county. */
@@ -363,6 +403,7 @@ export default class AdminInsightsRegionalController {
                 name: { fa: county.fa, en: null },
                 orders_count: 0,
                 revenue_minor: 0n,
+                customers_count: 0,
                 matched: true,
             });
         }
@@ -370,12 +411,21 @@ export default class AdminInsightsRegionalController {
         for (const row of rawCities) {
             const orders = Number(row.orders_count);
             const revenue = BigInt(row.revenue_minor ?? 0);
+            const customers = Number(row.customers_count);
             const resolved = resolveCounty(row.city_raw);
             const slot = resolved ? `county:${resolved.countyFa}` : `raw:${normalizeIranText(row.city_raw) || row.city_raw}`;
             const existing = merged.get(slot);
             if (existing) {
                 existing.orders_count += orders;
                 existing.revenue_minor += revenue;
+                /**
+                 * Two raw-city aggregate rows that resolve to the same county can share a
+                 * customer (one shipped a parcel to City A and another to City B inside the
+                 * same county). The per-row `COUNT(DISTINCT)` runs at city granularity, so
+                 * summing here is an upper bound, not exact — but order-of-magnitude tells the
+                 * operator what they need without a second roundtrip per province.
+                 */
+                existing.customers_count += customers;
                 continue;
             }
             if (resolved) {
@@ -383,6 +433,7 @@ export default class AdminInsightsRegionalController {
                     name: { fa: resolved.countyFa, en: null },
                     orders_count: orders,
                     revenue_minor: revenue,
+                    customers_count: customers,
                     matched: true,
                 });
             } else {
@@ -390,6 +441,7 @@ export default class AdminInsightsRegionalController {
                     name: { fa: row.city_raw, en: null },
                     orders_count: orders,
                     revenue_minor: revenue,
+                    customers_count: customers,
                     matched: false,
                 });
             }
@@ -408,6 +460,7 @@ export default class AdminInsightsRegionalController {
                 name: row.name,
                 orders_count: row.orders_count,
                 revenue_minor: row.revenue_minor.toString(),
+                customers_count: row.customers_count,
                 matched: row.matched,
             }));
     }
@@ -421,7 +474,8 @@ export default class AdminInsightsRegionalController {
             SELECT
                 MIN(oa.city) AS city_raw,
                 COUNT(o.id)::bigint AS orders_count,
-                COALESCE(SUM(o.grand_total), 0)::bigint AS revenue_minor
+                COALESCE(SUM(o.grand_total), 0)::bigint AS revenue_minor,
+                COUNT(DISTINCT o.customer_id)::bigint AS customers_count
             FROM order_addresses oa
             INNER JOIN orders o ON o.id = oa.order_id
             WHERE oa.kind = 'shipping'

@@ -6,7 +6,7 @@ description: >
     county surface with `matched: false` carrying the raw snapshot text — they stay visible so
     junk-import patterns remain obvious instead of silently hidden.
 type: object
-required: [name, orders_count, revenue_minor, matched]
+required: [name, orders_count, revenue_minor, customers_count, matched]
 properties:
     name:
         type: object
@@ -28,6 +28,14 @@ properties:
         pattern: "^-?\\d+$"
         description: Total revenue in Rial minor units, encoded as a numeric string.
         examples: ["7000000000"]
+    customers_count:
+        type: integer
+        minimum: 0
+        description: >
+            Approximate count of distinct customers whose shipping address rolled up to this
+            county within the window. Aggregated over the per-city `COUNT(DISTINCT customer_id)`
+            so a single customer who shipped to two cities in the same county can be counted
+            twice — this is an upper bound suitable for relative comparison, not exact figures.
     matched:
         type: boolean
         description: True when the raw snapshot resolved to a sajaddp county; false for unrecognised snapshot text passed through as-is.

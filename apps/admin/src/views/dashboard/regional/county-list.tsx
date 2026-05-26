@@ -8,8 +8,8 @@ import { ScrollArea } from "#/components/ui/scroll-area";
 import { formatMoney, formatNumber } from "#/lib/format";
 import type { AdminRegionalCounty } from "#/lib/types";
 
+import { type HeatmapMetric, metricValue } from "./heatmap-scale";
 import { itemVariants, listVariants } from "./motion-variants";
-import type { HeatmapMetric } from "./heatmap-scale";
 
 interface CountyListProps {
     counties: AdminRegionalCounty[];
@@ -26,9 +26,7 @@ export function CountyList({ counties, metric, locale }: CountyListProps) {
     const t = useTranslations("Dashboard.regional");
     const tCommon = useTranslations("Common");
 
-    const ranked = [...counties].sort((a, b) =>
-        metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
-    );
+    const ranked = [...counties].sort((a, b) => metricValue(b, metric) - metricValue(a, metric));
 
     if (ranked.length === 0) {
         return (
@@ -38,22 +36,16 @@ export function CountyList({ counties, metric, locale }: CountyListProps) {
         );
     }
 
-    const max =
-        metric === "revenue"
-            ? Math.max(...ranked.map((c) => c.revenueMinor), 1)
-            : Math.max(...ranked.map((c) => c.ordersCount), 1);
+    const max = Math.max(...ranked.map((c) => metricValue(c, metric)), 1);
 
     return (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card">
             <ScrollArea className="h-full">
                 <motion.ul className="flex flex-col gap-2 p-3" variants={listVariants} initial="hidden" animate="show">
                     {ranked.map((county, index) => {
-                        const value = metric === "revenue" ? county.revenueMinor : county.ordersCount;
+                        const value = metricValue(county, metric);
                         const percent = (value / max) * 100;
-                        const formatted =
-                            metric === "revenue"
-                                ? formatMoney(county.revenueMinor, locale)
-                                : formatNumber(county.ordersCount, locale);
+                        const formatted = metric === "revenue" ? formatMoney(value, locale) : formatNumber(value, locale);
                         const key = `${county.matched ? "c" : "u"}-${index.toString()}-${county.name.fa}`;
                         return (
                             <motion.li

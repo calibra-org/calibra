@@ -27,9 +27,9 @@ export const TOOLTIP_SPRING: Transition = {
 
 export const COUNT_UP_SPRING: Transition = {
     type: "spring",
-    stiffness: 120,
-    damping: 24,
-    mass: 0.8,
+    stiffness: 280,
+    damping: 32,
+    mass: 0.5,
 };
 
 /** Container for staggered children (top products list, cities list). */

@@ -3493,6 +3493,8 @@ export interface components {
              * @example 9876543210
              */
             revenue_minor: string;
+            /** @description Count of distinct customers (logged-in `customer_id`) whose shipping address pointed at this province within the window. Guest orders (`customer_id IS NULL`) are not counted — the metric semantically means "registered users who bought". */
+            customers_count: number;
         };
         /**
          * RegionalRange
@@ -3533,6 +3535,8 @@ export interface components {
              * @example 7000000000
              */
             revenue_minor: string;
+            /** @description Approximate count of distinct customers whose shipping address rolled up to this county within the window. Aggregated over the per-city `COUNT(DISTINCT customer_id)` so a single customer who shipped to two cities in the same county can be counted twice — this is an upper bound suitable for relative comparison, not exact figures. */
+            customers_count: number;
             /** @description True when the raw snapshot resolved to a sajaddp county; false for unrecognised snapshot text passed through as-is. */
             matched: boolean;
         };
@@ -3550,6 +3554,8 @@ export interface components {
             };
             orders_count: number;
             revenue_minor: string;
+            /** @description Distinct registered customers who shipped to this province within the window. */
+            customers_count: number;
             /** @description Top-X products by revenue inside the window. `X` is the `top_products` query param (1..10, default 5). */
             top_products: {
                 product_id: number;
@@ -6022,8 +6028,8 @@ export interface operations {
                 from?: string;
                 /** @description Exclusive upper bound of the window as ISO-8601 (Gregorian UTC). Defaults to now. */
                 to?: string;
-                /** @description Informational flag (response always carries both orders + revenue). Kept on the cache key so each mode gets its own slot. */
-                metric?: "orders" | "revenue";
+                /** @description Informational flag (response always carries orders + revenue + customers). Kept on the cache key so each mode gets its own slot. */
+                metric?: "orders" | "revenue" | "customers";
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -6047,6 +6053,8 @@ export interface operations {
                             totals: {
                                 orders_count: number;
                                 revenue_minor: string;
+                                /** @description Country-wide distinct registered customers who placed an order within the window. Counted via a single `COUNT(DISTINCT customer_id)` over all provinces (not the sum of per-row figures) so a customer who shipped to two provinces is counted once. */
+                                customers_count: number;
                             };
                             /**
                              * @example fa

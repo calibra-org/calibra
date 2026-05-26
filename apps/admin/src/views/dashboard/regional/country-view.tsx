@@ -10,7 +10,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { formatMoney, formatNumber } from "#/lib/format";
 import type { AdminRegionalCountry } from "#/lib/types";
 
-import { buildHeatmapScale, type HeatmapMetric } from "./heatmap-scale";
+import { buildHeatmapScale, type HeatmapMetric, metricValue } from "./heatmap-scale";
 import { KpiTile } from "./kpi-tile";
 import { MapLegend } from "./map-legend";
 import { MapSvg } from "./map-svg";
@@ -38,34 +38,34 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
     const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
 
     const valuesByCode = useMemo(() => {
-        const map = new Map<string, { orders: number; revenue: number; name: { fa: string; en: string } }>();
+        const map = new Map<string, { orders: number; revenue: number; customers: number; name: { fa: string; en: string } }>();
         if (!data) return map;
         for (const row of data.rows) {
-            map.set(row.code, { orders: row.ordersCount, revenue: row.revenueMinor, name: row.name });
+            map.set(row.code, {
+                orders: row.ordersCount,
+                revenue: row.revenueMinor,
+                customers: row.customersCount,
+                name: row.name,
+            });
         }
         return map;
     }, [data]);
 
     const scale = useMemo(() => {
         if (!data) return buildHeatmapScale([], metric);
-        const values = data.rows.map((r) => (metric === "revenue" ? r.revenueMinor : r.ordersCount));
+        const values = data.rows.map((r) => metricValue(r, metric));
         return buildHeatmapScale(values, metric);
     }, [data, metric]);
 
     const fillForCode = (code: string) => {
         const row = valuesByCode.get(code);
-        const value = row ? (metric === "revenue" ? row.revenue : row.orders) : 0;
-        return scale.fillFor(value);
+        if (!row) return scale.fillFor(0);
+        return scale.fillFor(
+            metricValue({ ordersCount: row.orders, revenueMinor: row.revenue, customersCount: row.customers }, metric),
+        );
     };
 
     const hovered = hoveredCode ? valuesByCode.get(hoveredCode) : null;
-    const topProvince = useMemo(() => {
-        if (!data) return null;
-        const sorted = [...data.rows].sort((a, b) =>
-            metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
-        );
-        return sorted[0] ?? null;
-    }, [data, metric]);
 
     return (
         <div className="flex flex-col gap-4">
@@ -87,13 +87,12 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
                     isError={isError}
                 />
                 <KpiTile
-                    label={t("topProvince")}
-                    value={topProvince ? (metric === "revenue" ? topProvince.revenueMinor : topProvince.ordersCount) : 0}
-                    formatAs={metric === "revenue" ? "money" : "number"}
+                    label={t("totalCustomers")}
+                    value={data?.totals.customersCount ?? 0}
+                    formatAs="number"
                     locale={locale}
                     isPending={isPending}
                     isError={isError}
-                    sublabel={topProvince?.name[locale]}
                 />
             </div>
 
@@ -139,6 +138,9 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
                         <span className="text-muted-foreground">
                             {t("totalRevenue")}: {formatMoney(hovered.revenue, locale)}
                         </span>
+                        <span className="text-muted-foreground">
+                            {t("totalCustomers")}: {formatNumber(hovered.customers, locale)}
+                        </span>
                         <span className="text-muted-foreground italic">{t("tooltipHint")}</span>
                     </div>
                 </MapTooltip>
@@ -159,21 +161,17 @@ function TopProvinceList({
     onSelect: (code: string) => void;
 }) {
     if (!data) return null;
-    const rows = [...data.rows].sort((a, b) =>
-        metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
-    );
-    const max =
-        metric === "revenue" ? Math.max(...rows.map((r) => r.revenueMinor), 1) : Math.max(...rows.map((r) => r.ordersCount), 1);
+    const rows = [...data.rows].sort((a, b) => metricValue(b, metric) - metricValue(a, metric));
+    const max = Math.max(...rows.map((r) => metricValue(r, metric)), 1);
 
     return (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card">
             <ScrollArea className="h-full">
                 <motion.ul className="flex flex-col gap-2 p-3" variants={listVariants} initial="hidden" animate="show">
                     {rows.map((row) => {
-                        const value = metric === "revenue" ? row.revenueMinor : row.ordersCount;
+                        const value = metricValue(row, metric);
                         const percent = (value / max) * 100;
-                        const formatted =
-                            metric === "revenue" ? formatMoney(row.revenueMinor, locale) : formatNumber(row.ordersCount, locale);
+                        const formatted = metric === "revenue" ? formatMoney(value, locale) : formatNumber(value, locale);
                         return (
                             <motion.li
                                 key={row.code}

@@ -11,7 +11,7 @@ import { formatMoney, formatNumber } from "#/lib/format";
 import type { AdminRegionalCounty, AdminRegionalProvinceDetail } from "#/lib/types";
 
 import { CountyList } from "./county-list";
-import { buildHeatmapScale, type HeatmapMetric } from "./heatmap-scale";
+import { buildHeatmapScale, type HeatmapMetric, metricValue } from "./heatmap-scale";
 import { KpiTile } from "./kpi-tile";
 import { MapLegend } from "./map-legend";
 import { MapTooltip } from "./map-tooltip";
@@ -48,16 +48,9 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
         return () => window.removeEventListener("keydown", onKey);
     }, [onBack]);
 
-    const topCounty =
-        data?.counties && data.counties.length > 0
-            ? [...data.counties].sort((a, b) =>
-                  metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
-              )[0]
-            : null;
-
     const scale = useMemo(() => {
         if (!data) return buildHeatmapScale([], metric);
-        const values = data.counties.map((c) => (metric === "revenue" ? c.revenueMinor : c.ordersCount));
+        const values = data.counties.map((c) => metricValue(c, metric));
         return buildHeatmapScale(values, metric);
     }, [data, metric]);
 
@@ -76,6 +69,7 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                 name: c.name.fa,
                 ordersCount: c.ordersCount,
                 revenueMinor: c.revenueMinor,
+                customersCount: c.customersCount,
                 matched: c.matched,
             })),
         [data?.counties],
@@ -131,13 +125,12 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                     isError={isError}
                 />
                 <KpiTile
-                    label={t("topCounty")}
-                    value={topCounty ? (metric === "revenue" ? topCounty.revenueMinor : topCounty.ordersCount) : 0}
-                    formatAs={metric === "revenue" ? "money" : "number"}
+                    label={t("totalCustomers")}
+                    value={data?.customersCount ?? 0}
+                    formatAs="number"
                     locale={locale}
                     isPending={isPending}
                     isError={isError}
-                    sublabel={topCounty?.name.fa}
                 />
             </div>
 
@@ -188,6 +181,9 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                                 </span>
                                 <span className="text-muted-foreground">
                                     {t("totalRevenue")}: {formatMoney(hoveredCounty.revenueMinor, locale)}
+                                </span>
+                                <span className="text-muted-foreground">
+                                    {t("totalCustomers")}: {formatNumber(hoveredCounty.customersCount, locale)}
                                 </span>
                                 {!hoveredCounty.matched ? (
                                     <span className="text-muted-foreground italic">{t("unmatchedCounty")}</span>
