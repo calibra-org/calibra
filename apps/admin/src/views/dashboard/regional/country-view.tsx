@@ -97,7 +97,7 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[3fr_2fr]">
+            <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[3fr_2fr]">
                 <motion.div
                     key="country"
                     variants={svgVariants}

@@ -160,9 +160,8 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[3fr_2fr]">
-                <div className="relative flex flex-col gap-2">
-                    <h3 className="font-semibold text-foreground text-lg">{data?.name[locale] ?? code}</h3>
+            <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[3fr_2fr]">
+                <div className="relative">
                     {isPending ? (
                         <Skeleton className="h-[420px] w-full" />
                     ) : (
@@ -185,6 +184,9 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                             />
                         </MapZoomWrapper>
                     )}
+                    <div className="pointer-events-none absolute top-3 start-3 z-10 rounded-md bg-card/80 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm">
+                        <span className="font-semibold text-foreground">{data?.name[locale] ?? code}</span>
+                    </div>
                     {hoveredCity !== null && pointer !== null ? (
                         <MapTooltip position={pointer}>
                             <div className="flex flex-col gap-0.5">
