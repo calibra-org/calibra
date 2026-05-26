@@ -150,34 +150,45 @@ export function DayGrid({
                     "absolute start-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 button_next:
                     "absolute end-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                /**
+                 * `border-collapse` + `border-spacing-0` kill the default `<table>` cell gaps
+                 * (RDP's bundled stylesheet still leaves a hair-line spacing that breaks the
+                 * continuous range band when adjacent cells should join into a single strip).
+                 */
+                month_grid: "border-collapse border-spacing-0",
                 weekday: "text-muted-foreground text-xs font-normal pb-1 text-center",
                 /**
-                 * Day cell: `p-0.5` gives the day-number circles breathing room so they don't
-                 * touch their neighbours, and `text-center` keeps the inline-flex button below
-                 * centred horizontally inside the cell. `grid` on the cell would override
-                 * `display: table-cell` and collapse the whole month grid into a single column.
+                 * Day cell: zero padding so the `<td>` background — which paints the range
+                 * band — extends edge-to-edge and connects seamlessly with the next day in
+                 * the row. `relative` is the positioning context for the `before:` pseudo
+                 * that paints the half-cell band on range start / end cells.
                  */
-                day: "p-0.5 text-center",
+                day: "relative h-9 w-9 p-0 align-middle text-center",
                 /**
-                 * Day-number button: `size-8` (32 px) is small enough that 7 columns × 2 months
-                 * still fit comfortably inside `max-w-xl` without horizontal overflow.
-                 * `rounded-full` gives Linear-style circular cells; the today border + selected
-                 * fill (both applied via the descendant-button modifier classes above) paint
-                 * the same outer circle so indicators sit concentric across the same week row.
+                 * Day-number button: `size-8` (32 px) sits inside the 36 px cell with a 2 px
+                 * gutter on every side, so the today border + selected fill never touch the
+                 * numerals in adjacent cells. `relative z-10` keeps the button above the
+                 * `before:` pseudo that paints the range half-band on start / end cells.
                  */
                 day_button:
-                    "mx-auto inline-flex size-8 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                    "relative z-10 mx-auto inline-flex size-8 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                 outside: "text-muted-foreground/40",
                 selected: "[&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
                 /**
-                 * Range visualization: the lighter band is painted on the `<td>` itself so the
-                 * `p-0.5` cell padding fills with colour and adjacent cells join into a
-                 * continuous strip. The button keeps its `rounded-full` circle on top so the
-                 * start / end days still read as Linear-style filled circles.
+                 * Range visualization (Linear-style):
+                 * - middle days paint their full `<td>` with `bg-primary/25` so adjacent
+                 *   cells join into one continuous band;
+                 * - start / end cells paint only HALF of the cell via a `before:` pseudo,
+                 *   so the band visually starts at the selected circle's centre rather than
+                 *   the cell edge. `start-1/2` + `end-0` (logical Tailwind) auto-flips in
+                 *   RTL, which we need because Persian timelines run right→left.
                  */
-                range_start: "bg-primary/15 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
-                range_end: "bg-primary/15 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
-                range_middle: "bg-primary/15 [&_button]:!bg-transparent [&_button]:!text-foreground [&_button]:hover:!bg-primary/10",
+                range_start:
+                    "before:absolute before:inset-y-1 before:end-0 before:start-1/2 before:bg-primary/25 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                range_end:
+                    "before:absolute before:inset-y-1 before:start-0 before:end-1/2 before:bg-primary/25 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                range_middle:
+                    "before:absolute before:inset-y-1 before:inset-x-0 before:bg-primary/25 [&_button]:!bg-transparent [&_button]:!text-foreground [&_button]:hover:!bg-primary/15",
                 disabled: "text-muted-foreground/30 cursor-not-allowed",
             }}
         />
