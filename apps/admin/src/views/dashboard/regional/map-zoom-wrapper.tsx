@@ -10,8 +10,6 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 1.25;
 const WHEEL_STEP = 1.1;
-/** How long after the last wheel tick the anchor + transition-suppression stay locked. */
-const WHEEL_SESSION_MS = 280;
 
 interface MapZoomWrapperProps {
     children: ReactNode;
@@ -27,14 +25,16 @@ interface DragState {
 }
 
 /**
- * Wraps the regional map SVG with a contained zoom + pan widget. Zoom level applied as a CSS
- * `transform: translate(...) scale(...)` on the inner container so the SVG geometry stays
- * intact — no viewBox math, no jitter, no impact on the page's own scroll/zoom.
+ * Wraps the regional map SVG with a contained zoom + pan widget. Zoom always anchors at the
+ * container centre so the operator can predict where the next step lands — cursor-anchored
+ * zoom drifted under rapid wheel input (the cursor's CSS-pixel position vs the inner element's
+ * post-scale position don't agree during the transform animation, so successive ticks fought
+ * each other). Pan handles the "navigate after zoom" case explicitly.
  *
  * Pan modes (Figma-style):
  *
  *   - **Hold space + left-drag** → grab cursor; click-and-drag moves the map.
- *   - **Middle-mouse drag** → same, without needing space (handy on three-button mice).
+ *   - **Middle-mouse drag** → same, without needing space.
  *
  * The wheel handler attaches with `passive: false` so `preventDefault()` traps mouse-wheel
  * zoom over the map and never propagates to the document scroll.
@@ -46,53 +46,15 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
     const [dragging, setDragging] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const dragRef = useRef<DragState | null>(null);
-    const wheelSessionRef = useRef<{ x: number; y: number; expires: number; timer: number | null }>({
-        x: 0,
-        y: 0,
-        expires: 0,
-        timer: null,
-    });
-    const [animateTransition, setAnimateTransition] = useState(true);
 
-    /**
-     * Zoom from a specific cursor anchor (Figma / Google Maps semantics): the point under
-     * the cursor stays under the cursor before and after the zoom. Math (with `origin-top-left`
-     * on the inner container):
-     *
-     *   newPan = cursorContainer - (cursorContainer - pan) * (newZoom / oldZoom)
-     *
-     * `cursorContainer` is the cursor position relative to the wrapper's top-left.
-     */
-    const setZoomAt = useCallback((next: number, cursorContainerX: number, cursorContainerY: number) => {
+    const setBoundedZoom = useCallback((next: number) => {
         setZoom((current) => {
             const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
-            if (clamped === current) return current;
-            if (clamped === 1) {
-                setPan({ x: 0, y: 0 });
-                return clamped;
-            }
-            const ratio = clamped / current;
-            setPan((prev) => ({
-                x: cursorContainerX - (cursorContainerX - prev.x) * ratio,
-                y: cursorContainerY - (cursorContainerY - prev.y) * ratio,
-            }));
+            /** Snap pan back to centre when fully zoomed out — nothing left to pan to. */
+            if (clamped === 1) setPan({ x: 0, y: 0 });
             return clamped;
         });
     }, []);
-
-    /** Button-driven zoom anchors at the container centre (no cursor context). */
-    const setBoundedZoomFromCenter = useCallback(
-        (next: number) => {
-            const el = containerRef.current;
-            if (!el) {
-                setZoom((current) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next)));
-                return;
-            }
-            const rect = el.getBoundingClientRect();
-            setZoomAt(next, rect.width / 2, rect.height / 2);
-        },
-        [setZoomAt],
-    );
 
     const resetAll = useCallback(() => {
         setZoom(1);
@@ -123,49 +85,18 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
         };
     }, []);
 
-    /**
-     * Wheel zoom — bound natively so `passive: false` works under React 19. The first wheel
-     * tick captures the cursor as the session anchor; every subsequent tick within
-     * `WHEEL_SESSION_MS` reuses that anchor, so rapid scrolling zooms into the user's original
-     * intent point instead of drifting along with the animated cursor-relative drift. CSS
-     * transitions are suppressed during a wheel session so individual ticks read as immediate
-     * — the transition re-engages once the session expires (for the next button click etc).
-     */
+    /** Wheel zoom — bound natively so `passive: false` works under React 19. */
     useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
         const handler = (e: WheelEvent) => {
             e.preventDefault();
-            const rect = el.getBoundingClientRect();
-            const now = performance.now();
-            const session = wheelSessionRef.current;
-
-            if (now > session.expires) {
-                /** New session — capture the cursor as the anchor for the burst. */
-                session.x = e.clientX - rect.left;
-                session.y = e.clientY - rect.top;
-                setAnimateTransition(false);
-            }
-            session.expires = now + WHEEL_SESSION_MS;
-            if (session.timer !== null) window.clearTimeout(session.timer);
-            session.timer = window.setTimeout(() => {
-                session.timer = null;
-                setAnimateTransition(true);
-            }, WHEEL_SESSION_MS);
-
             const direction = e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
-            setZoomAt(zoom * direction, session.x, session.y);
+            setBoundedZoom(zoom * direction);
         };
         el.addEventListener("wheel", handler, { passive: false });
         return () => el.removeEventListener("wheel", handler);
-    }, [zoom, setZoomAt]);
-
-    useEffect(
-        () => () => {
-            if (wheelSessionRef.current.timer !== null) window.clearTimeout(wheelSessionRef.current.timer);
-        },
-        [],
-    );
+    }, [zoom, setBoundedZoom]);
 
     const onPointerDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
@@ -212,7 +143,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
 
     return (
         <div
-            className={cn("relative overflow-hidden rounded-lg border bg-card select-none", className)}
+            className={cn("relative select-none overflow-hidden rounded-lg border bg-card", className)}
             ref={containerRef}
             style={{ cursor }}
             onPointerDown={onPointerDown}
@@ -222,7 +153,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
             onAuxClick={onAuxClick}
         >
             <div
-                className={cn("origin-top-left", animateTransition && "transition-transform duration-150 ease-out")}
+                className="origin-center transition-transform duration-150 ease-out"
                 style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
             >
                 {children}
@@ -235,7 +166,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
                     className="size-7"
                     aria-label="Zoom out"
                     title="Zoom out"
-                    onClick={() => setBoundedZoomFromCenter(zoom / ZOOM_STEP)}
+                    onClick={() => setBoundedZoom(zoom / ZOOM_STEP)}
                     disabled={zoom <= MIN_ZOOM + 0.001}
                 >
                     <Minus className="size-3.5" aria-hidden="true" />
@@ -258,7 +189,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
                     className="size-7"
                     aria-label="Zoom in"
                     title="Zoom in"
-                    onClick={() => setBoundedZoomFromCenter(zoom * ZOOM_STEP)}
+                    onClick={() => setBoundedZoom(zoom * ZOOM_STEP)}
                     disabled={zoom >= MAX_ZOOM - 0.001}
                 >
                     <Plus className="size-3.5" aria-hidden="true" />
