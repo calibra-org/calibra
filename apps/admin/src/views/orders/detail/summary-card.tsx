@@ -35,11 +35,7 @@ function Row({ label, value, muted, emphasis }: { label: string; value: string; 
         <div className="flex justify-between">
             <span
                 className={
-                    emphasis
-                        ? "font-semibold text-base"
-                        : muted
-                          ? "text-emerald-700 dark:text-emerald-300"
-                          : "text-muted-foreground"
+                    emphasis ? "font-semibold text-base" : muted ? "text-success dark:text-success" : "text-muted-foreground"
                 }
             >
                 {label}
@@ -49,7 +45,7 @@ function Row({ label, value, muted, emphasis }: { label: string; value: string; 
                     emphasis
                         ? "font-semibold text-base tabular-nums"
                         : muted
-                          ? "text-emerald-700 tabular-nums dark:text-emerald-300"
+                          ? "text-success tabular-nums dark:text-success"
                           : "tabular-nums"
                 }
             >

@@ -551,7 +551,7 @@ function ReviewCard({ row, onOpen }: ReviewCardProps) {
                 <button type="button" onClick={onOpen} className="text-start font-medium text-foreground hover:underline">
                     {row.reviewerName}
                 </button>
-                <span className="inline-flex items-center gap-0.5 text-amber-500">
+                <span className="inline-flex items-center gap-0.5 text-warning">
                     {Array.from({ length: 5 }).map((_, index) => (
                         <Star
                             // biome-ignore lint/suspicious/noArrayIndexKey: rating stars rendered in fixed order

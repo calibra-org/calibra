@@ -116,7 +116,7 @@ export function RowActions({ order, onOpenPreview, onOpenDetail }: RowActionsPro
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     onClick={() => setConfirmTrash(true)}
-                    className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
+                    className="text-danger hover:bg-danger/10 hover:text-danger"
                 >
                     <Trash2 className="size-3.5" aria-hidden="true" />
                     {t("actions.trash")}

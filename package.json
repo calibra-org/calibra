@@ -15,7 +15,7 @@
         "lint:fix": "pnpm run lint:biome:fix",
         "lint:biome": "biome lint . && biome check .",
         "lint:biome:fix": "biome lint . --write && biome check . --write",
-        "lint:tokens": "node scripts/lint-tokens.mjs --scope=apps/admin/src --level=warn",
+        "lint:tokens": "node scripts/lint-tokens.mjs --scope=apps/admin/src --level=error",
         "lint:ws": "pnpm dlx sherif@latest --ignore-rule root-package-dependencies",
         "lint:ws:fix": "pnpm dlx sherif@latest --fix",
         "spin": "node scripts/spin.mjs",

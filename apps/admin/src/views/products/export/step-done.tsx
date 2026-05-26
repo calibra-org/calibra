@@ -47,7 +47,7 @@ export function StepDone({ exportRow, token, onAnother, onBackToList }: StepDone
 
     const sizeLabel = formatBytes(exportRow.file_size_bytes, fmt);
     const StatusIcon = exportRow.status === "completed" ? CheckCircle2 : XCircle;
-    const statusTone = exportRow.status === "completed" ? "text-emerald-500" : "text-destructive";
+    const statusTone = exportRow.status === "completed" ? "text-success" : "text-destructive";
 
     return (
         <article className="flex flex-col gap-4">
@@ -59,7 +59,7 @@ export function StepDone({ exportRow, token, onAnother, onBackToList }: StepDone
                         <p className="mt-1 text-muted-foreground text-sm">{exportRow.original_filename}</p>
                     </div>
                     {exportRow.compressed ? (
-                        <Badge variant="outline" className="text-emerald-700 text-xs dark:text-emerald-300">
+                        <Badge variant="outline" className="text-success text-xs dark:text-success">
                             gzip
                         </Badge>
                     ) : null}
@@ -93,7 +93,7 @@ export function StepDone({ exportRow, token, onAnother, onBackToList }: StepDone
                         </Button>
                     </div>
                 ) : exportRow.status === "completed" ? (
-                    <div className="mt-6 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-amber-900 text-sm dark:text-amber-100">
+                    <div className="mt-6 rounded-md border border-warning/30 bg-warning/5 p-3 text-sm text-warning dark:text-warning">
                         {t("noLongerAvailable")}
                     </div>
                 ) : null}

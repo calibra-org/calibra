@@ -29,7 +29,7 @@ export function useReviewFiltersConfig(): {
                 options: ratings.map((row) => ({
                     value: row.value,
                     label: (
-                        <span className="inline-flex items-center gap-0.5 text-amber-500">
+                        <span className="inline-flex items-center gap-0.5 text-warning">
                             {Array.from({ length: 5 }).map((_, index) => (
                                 <Star
                                     // biome-ignore lint/suspicious/noArrayIndexKey: rating stars rendered in fixed order
@@ -59,7 +59,7 @@ export function useReviewFiltersConfig(): {
             {
                 paramKey: "verified",
                 label: t("verified"),
-                icon: <BadgeCheck className="size-3.5 text-emerald-500" aria-hidden="true" />,
+                icon: <BadgeCheck className="size-3.5 text-success" aria-hidden="true" />,
             },
         ],
         [t],

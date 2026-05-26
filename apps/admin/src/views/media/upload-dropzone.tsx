@@ -245,7 +245,7 @@ function QueueThumbnail({ entry }: QueueThumbnailProps) {
             {entry.status === "uploaded" && (
                 <span
                     aria-hidden="true"
-                    className="absolute end-[-3px] top-[-3px] inline-flex size-4 items-center justify-center rounded-full border-2 border-card bg-emerald-500 text-white"
+                    className="absolute end-[-3px] top-[-3px] inline-flex size-4 items-center justify-center rounded-full border-2 border-card bg-success text-white"
                 >
                     <Check className="size-2.5" />
                 </span>

@@ -147,7 +147,7 @@ export function BulkActions({ selectedIds, onClear, onTrashTab = false }: BulkAc
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 gap-1.5 px-2 text-rose-100 hover:bg-rose-500/30 hover:text-background"
+                            className="h-7 gap-1.5 px-2 text-danger hover:bg-danger/30 hover:text-background"
                             onClick={() => setForceOpen(true)}
                         >
                             <Trash2 className="size-3.5" aria-hidden="true" />
@@ -256,7 +256,7 @@ export function BulkActions({ selectedIds, onClear, onTrashTab = false }: BulkAc
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 gap-1.5 px-2 text-rose-100 hover:bg-rose-500/30 hover:text-background"
+                            className="h-7 gap-1.5 px-2 text-danger hover:bg-danger/30 hover:text-background"
                             onClick={() => setTrashOpen(true)}
                         >
                             <Trash2 className="size-3.5" aria-hidden="true" />

@@ -44,7 +44,7 @@ export function StatCard({ label, value, delta, description, icon: Icon }: StatC
                         <span
                             className={cn(
                                 "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium",
-                                trendingUp ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600",
+                                trendingUp ? "bg-success/10 text-success" : "bg-danger/10 text-danger",
                             )}
                         >
                             <TrendIcon className="size-3" aria-hidden="true" />

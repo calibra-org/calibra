@@ -443,8 +443,8 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
     const isInStock = !isOut;
 
     const wrapCls = isInStock
-        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-        : "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300";
+        ? "border-success/30 bg-success/10 text-success dark:text-success"
+        : "border-danger/30 bg-danger/10 text-danger dark:text-danger";
     const label = stockT(isInStock ? "instock" : "outofstock");
 
     return (
@@ -465,7 +465,7 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
                                     type="button"
                                     aria-label={t("lowStock")}
                                     {...props}
-                                    className="inline-flex size-5 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                    className="inline-flex size-5 items-center justify-center rounded-full border border-warning/30 bg-warning/10 text-warning dark:text-warning"
                                 >
                                     <AlertTriangle className="size-3" aria-hidden="true" />
                                 </button>

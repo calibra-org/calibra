@@ -256,7 +256,7 @@ function Field({ label, error, children }: { label: string; error: string | unde
         <div className="flex flex-col gap-1">
             <Label>{label}</Label>
             {children}
-            {error && <p className="text-rose-600 text-xs">{error}</p>}
+            {error && <p className="text-danger text-xs">{error}</p>}
         </div>
     );
 }

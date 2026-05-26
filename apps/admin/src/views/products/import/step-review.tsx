@@ -241,9 +241,9 @@ function ControlRow({ id, checked, onCheckedChange, label, help, disabled, tone 
             className={cn(
                 "flex items-start gap-3 rounded-md border p-3 transition-colors",
                 checked && tone === "primary" && "border-primary/40 bg-primary/5",
-                checked && tone === "success" && "border-emerald-500/40 bg-emerald-500/5",
-                checked && tone === "info" && "border-sky-500/40 bg-sky-500/5",
-                checked && tone === "warning" && "border-amber-500/40 bg-amber-500/5",
+                checked && tone === "success" && "border-success/40 bg-success/5",
+                checked && tone === "info" && "border-info/40 bg-info/5",
+                checked && tone === "warning" && "border-warning/40 bg-warning/5",
                 disabled && "opacity-50",
             )}
         >
@@ -276,8 +276,8 @@ function EffectiveRow({ label, value, tone }: EffectiveRowProps): React.JSX.Elem
             <dd
                 className={cn(
                     "font-semibold",
-                    tone === "success" && "text-emerald-600 dark:text-emerald-400",
-                    tone === "info" && "text-sky-600 dark:text-sky-400",
+                    tone === "success" && "text-success dark:text-success",
+                    tone === "info" && "text-info dark:text-info",
                     tone === "danger" && "text-destructive",
                 )}
             >

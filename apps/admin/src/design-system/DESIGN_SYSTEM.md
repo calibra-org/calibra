@@ -370,7 +370,7 @@ Same shape as above, plus:
 | Rule | Enforcer | Status today |
 |--- |--- |--- |
 | No raw lucide-react imports outside `#/icons` | Biome `noRestrictedImports` | `warn` — flips to `error` after the prompt 02–05 sweep |
-| No raw Tailwind colour utilities | `scripts/lint-tokens.mjs` | `warn` — flips to `error` after prompt `06` |
+| No raw Tailwind colour utilities | `scripts/lint-tokens.mjs` | `error` — sweep landed (prompt 06); 0 offenders |
 | Import sort | Biome `assist.actions.source.organizeImports` | `on` |
 | `useExportType` | Biome `style.useExportType` | `error` |
 | Next.js + React rule sets | Biome `domains.next: all` / `react: all` | `recommended/all` |

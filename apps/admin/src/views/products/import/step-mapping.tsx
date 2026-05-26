@@ -103,11 +103,9 @@ export function StepMapping({ state, onChange, onReview }: StepMappingProps): Re
                 </header>
 
                 {state.presetMatch !== null ? (
-                    <div className="mt-4 flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
-                        <Wand2 className="size-4 shrink-0 text-amber-600 dark:text-amber-300" aria-hidden />
-                        <p className="text-amber-900 dark:text-amber-100">
-                            {t("presetApplied", { name: state.presetMatch.name })}
-                        </p>
+                    <div className="mt-4 flex items-start gap-3 rounded-md border border-warning/40 bg-warning/5 p-3 text-sm">
+                        <Wand2 className="size-4 shrink-0 text-warning dark:text-warning" aria-hidden />
+                        <p className="text-warning dark:text-warning">{t("presetApplied", { name: state.presetMatch.name })}</p>
                     </div>
                 ) : null}
 
@@ -131,7 +129,7 @@ export function StepMapping({ state, onChange, onReview }: StepMappingProps): Re
                         {inlineWarnings.map((warning) => (
                             <li
                                 key={warning}
-                                className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-amber-900 dark:text-amber-100"
+                                className="rounded-md border border-warning/30 bg-warning/5 p-3 text-warning dark:text-warning"
                             >
                                 {warning}
                             </li>

@@ -161,10 +161,10 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                 <StatusBadge tone={productStatusTone[watchedStatus]}>{statusT(watchedStatus)}</StatusBadge>
                 {isDirty && (
                     <span
-                        className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-amber-700 text-xs dark:text-amber-300"
+                        className="inline-flex items-center gap-1 rounded-md bg-warning/15 px-1.5 py-0.5 text-warning text-xs dark:text-warning"
                         title={t("dirty")}
                     >
-                        <span className="size-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                        <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
                         {t("dirty")}
                     </span>
                 )}

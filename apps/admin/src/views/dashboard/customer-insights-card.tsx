@@ -164,8 +164,8 @@ function Kpi({
             <span
                 className={
                     isUp
-                        ? "flex items-center gap-1 text-emerald-600 text-xs dark:text-emerald-400"
-                        : "flex items-center gap-1 text-red-600 text-xs dark:text-red-400"
+                        ? "flex items-center gap-1 text-success text-xs dark:text-success"
+                        : "flex items-center gap-1 text-danger text-xs dark:text-danger"
                 }
             >
                 <TrendIcon className="size-3" aria-hidden="true" />

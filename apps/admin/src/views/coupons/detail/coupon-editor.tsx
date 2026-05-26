@@ -496,7 +496,7 @@ export function CouponEditor({ id }: CouponEditorProps) {
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         onClick={onDelete}
-                                        className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
+                                        className="text-danger hover:bg-danger/10 hover:text-danger"
                                     >
                                         <Trash2 className="me-2 size-4" aria-hidden="true" />
                                         {t("actions.delete")}
@@ -623,7 +623,7 @@ function EditorActionsCard({
                         type="button"
                         variant="ghost"
                         onClick={onDelete}
-                        className="w-full justify-start text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
+                        className="w-full justify-start text-danger hover:bg-danger/10 hover:text-danger"
                     >
                         <Trash2 className="me-2 size-4" aria-hidden="true" />
                         {labels.delete}
@@ -679,7 +679,7 @@ function GeneralSection({
                             codeBlocking
                                 ? "text-destructive text-xs"
                                 : codeAvailable
-                                  ? "text-emerald-600 text-xs dark:text-emerald-400"
+                                  ? "text-success text-xs dark:text-success"
                                   : "text-muted-foreground text-xs"
                         }
                     >

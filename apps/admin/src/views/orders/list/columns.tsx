@@ -251,7 +251,7 @@ export function buildOrderColumns(ctx: ColumnContext): ColumnDef<AdminOrder>[] {
                             </span>
                         )}
                         {order.status === "refunded" && (
-                            <span className="text-rose-600 dark:text-rose-300">
+                            <span className="text-danger dark:text-danger">
                                 <ArrowDownRight className="me-1 inline size-3" aria-hidden="true" />
                                 {ctx.t("refundedShort")}
                             </span>

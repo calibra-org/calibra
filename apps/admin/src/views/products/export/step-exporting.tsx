@@ -217,7 +217,7 @@ export function StepExporting({ exportRow, onFinished, onBackToList }: StepExpor
                     <div className="h-full bg-primary transition-all" style={{ width: `${percent}%` }} />
                 </div>
                 {slow ? (
-                    <p className="mt-2 flex items-center gap-2 text-amber-600 text-xs dark:text-amber-300">
+                    <p className="mt-2 flex items-center gap-2 text-warning text-xs dark:text-warning">
                         <Loader2 className="size-3.5 animate-spin" aria-hidden />
                         {t("slowChunk", { row: fmt(row.processed_rows + 1) })}
                     </p>
@@ -241,7 +241,7 @@ export function StepExporting({ exportRow, onFinished, onBackToList }: StepExpor
 
 function ConnectionPill({ state }: { state: "sse" | "polling" | "connecting" }): React.JSX.Element {
     const t = useTranslations("ProductsExport.exporting.connection");
-    const color = state === "sse" ? "bg-emerald-500" : state === "polling" ? "bg-amber-500" : "bg-muted-foreground";
+    const color = state === "sse" ? "bg-success" : state === "polling" ? "bg-warning" : "bg-muted-foreground";
     return (
         <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
             <span className={cn("size-1.5 rounded-full", color)} aria-hidden />

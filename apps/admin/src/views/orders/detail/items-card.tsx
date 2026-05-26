@@ -187,7 +187,7 @@ function LineRow({ line, locale, readOnly, dirty, onPatch, onRemove }: LineRowPr
     const lineTotal = quantity * priceMinor;
     const isDirty = dirty !== undefined;
     return (
-        <TableRow className={`border-border/40 ${isDirty ? "bg-amber-50/40 dark:bg-amber-900/15" : ""}`}>
+        <TableRow className={`border-border/40 ${isDirty ? "bg-warning/40 dark:bg-warning/15" : ""}`}>
             <TableCell className="px-2 py-3">
                 <div className="flex items-center gap-3">
                     {line.imageUrl !== null ? (
@@ -260,7 +260,7 @@ function LineRow({ line, locale, readOnly, dirty, onPatch, onRemove }: LineRowPr
                     type="button"
                     size="icon"
                     variant="ghost"
-                    className="size-7 text-rose-600 hover:bg-rose-500/10 hover:text-rose-700"
+                    className="size-7 text-danger hover:bg-danger/10 hover:text-danger"
                     disabled={readOnly}
                     onClick={onRemove}
                     aria-label="remove"

@@ -49,7 +49,7 @@ export function LoginForm({ locale }: LoginFormProps) {
             </div>
 
             {state.error !== null && (
-                <p role="alert" className="text-rose-600 text-sm">
+                <p role="alert" className="text-danger text-sm">
                     {state.error}
                 </p>
             )}
