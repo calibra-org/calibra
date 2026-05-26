@@ -1,0 +1,40 @@
+operationId: adminProductsCounts
+summary: Status tab counts (admin)
+description: >
+    Returns counts per product status (`any`, `publish`, `draft`, `pending`, `private`, `trash`)
+    under the active filter set. Used by the line-tab strip on the admin products list to show
+    live counts that reflect the operator's current filters.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: search, in: query, schema: { type: string } }
+    - { name: type, in: query, schema: { type: string } }
+    - { name: category, in: query, schema: { type: integer } }
+    - { name: tag, in: query, schema: { type: integer } }
+    - { name: brand, in: query, schema: { type: integer } }
+    - { name: catalog_visibility, in: query, schema: { type: string } }
+    - { name: featured, in: query, schema: { type: boolean } }
+    - { name: on_sale, in: query, schema: { type: boolean } }
+    - { name: stock_level, in: query, schema: { type: string, enum: [instock, low, outofstock] } }
+
+responses:
+    "200":
+        description: Counts per status.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            properties:
+                                any: { type: integer }
+                                publish: { type: integer }
+                                draft: { type: integer }
+                                pending: { type: integer }
+                                private: { type: integer }
+                                trash: { type: integer }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

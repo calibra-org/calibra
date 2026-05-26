@@ -398,9 +398,17 @@ paths:
             $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
             $ref: "./admin/paths/catalog/products.post.yaml"
+    /api/v1/admin/products/counts:
+        get:
+            $ref: "./admin/paths/catalog/products-counts.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/products/batch:
         post:
             $ref: "./admin/paths/catalog/products-batch.post.yaml"
+    /api/v1/admin/products/restore:
+        post:
+            $ref: "./admin/paths/catalog/products-restore.post.yaml"
     /api/v1/admin/products/{id}:
         get:
             $ref: "./admin/paths/catalog/products-id.get.yaml"
@@ -415,6 +423,9 @@ paths:
     /api/v1/admin/products/{id}/duplicate:
         post:
             $ref: "./admin/paths/catalog/products-id-duplicate.post.yaml"
+    /api/v1/admin/products/{id}/restore:
+        post:
+            $ref: "./admin/paths/catalog/products-id-restore.post.yaml"
     /api/v1/admin/products/{product_id}/variations:
         get:
             $ref: "./admin/paths/catalog/variations.get.yaml"

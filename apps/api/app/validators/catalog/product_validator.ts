@@ -14,6 +14,7 @@ export const createProductValidator = vine.compile(
     vine.object({
         type: vine.enum(["simple", "variable", "grouped", "external"]).optional(),
         sku: vine.string().trim().maxLength(100).nullable().optional(),
+        gtin: vine.string().trim().maxLength(64).nullable().optional(),
         status: vine.enum(["draft", "publish", "private", "pending"]).optional(),
         catalog_visibility: vine.enum(["visible", "catalog", "search", "hidden"]).optional(),
         featured: vine.boolean().optional(),
@@ -53,6 +54,7 @@ export const updateProductValidator = vine.compile(
     vine.object({
         type: vine.enum(["simple", "variable", "grouped", "external"]).optional(),
         sku: vine.string().trim().maxLength(100).nullable().optional(),
+        gtin: vine.string().trim().maxLength(64).nullable().optional(),
         status: vine.enum(["draft", "publish", "private", "pending"]).optional(),
         catalog_visibility: vine.enum(["visible", "catalog", "search", "hidden"]).optional(),
         featured: vine.boolean().optional(),
@@ -99,5 +101,12 @@ export const batchProductsValidator = vine.compile(
             )
             .optional(),
         delete: vine.array(vine.number()).optional(),
+    }),
+);
+
+/** Bulk restore payload — `POST /admin/products/restore`. */
+export const restoreProductsValidator = vine.compile(
+    vine.object({
+        ids: vine.array(vine.number()).minLength(1),
     }),
 );

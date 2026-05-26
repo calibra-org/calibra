@@ -1889,7 +1889,7 @@ export class ProductVariationTranslationSchema extends BaseModel {
 }
 
 export class ProductVariationSchema extends BaseModel {
-  static $columns = ['attributes', 'createdAt', 'deletedAt', 'downloadable', 'heightMm', 'id', 'imageMediaId', 'lengthMm', 'manageStockMode', 'menuOrder', 'productId', 'regularPrice', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'sku', 'taxClassId', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
+  static $columns = ['attributes', 'createdAt', 'deletedAt', 'downloadable', 'gtin', 'heightMm', 'id', 'imageMediaId', 'lengthMm', 'manageStockMode', 'menuOrder', 'productId', 'regularPrice', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'sku', 'taxClassId', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
   $columns = ProductVariationSchema.$columns
   @column()
   declare attributes: any
@@ -1899,6 +1899,8 @@ export class ProductVariationSchema extends BaseModel {
   declare deletedAt: DateTime | null
   @column()
   declare downloadable: boolean
+  @column()
+  declare gtin: string | null
   @column()
   declare heightMm: number | null
   @column({ isPrimary: true })
@@ -1936,7 +1938,7 @@ export class ProductVariationSchema extends BaseModel {
 }
 
 export class ProductSchema extends BaseModel {
-  static $columns = ['attributes', 'catalogVisibility', 'createdAt', 'deletedAt', 'downloadable', 'externalUrl', 'featured', 'globalUniqueId', 'heightMm', 'id', 'lengthMm', 'menuOrder', 'regularPrice', 'reviewsAllowed', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'shippingClassId', 'sku', 'soldIndividually', 'status', 'taxClassId', 'taxStatus', 'type', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
+  static $columns = ['attributes', 'catalogVisibility', 'createdAt', 'deletedAt', 'downloadable', 'externalUrl', 'featured', 'globalUniqueId', 'gtin', 'heightMm', 'id', 'lengthMm', 'menuOrder', 'regularPrice', 'reviewsAllowed', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'shippingClassId', 'sku', 'soldIndividually', 'status', 'taxClassId', 'taxStatus', 'type', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
   $columns = ProductSchema.$columns
   @column()
   declare attributes: any
@@ -1954,6 +1956,8 @@ export class ProductSchema extends BaseModel {
   declare featured: boolean
   @column()
   declare globalUniqueId: string | null
+  @column()
+  declare gtin: string | null
   @column()
   declare heightMm: number | null
   @column({ isPrimary: true })

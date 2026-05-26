@@ -1,6 +1,7 @@
 import { BaseTransformer } from "@adonisjs/core/transformers";
 
 import type Product from "#models/product";
+import type InventoryItem from "#models/inventory_item";
 import { resolvePrice } from "#services/price_resolver";
 import { pickTranslation } from "#transformers/i18n_helpers";
 
@@ -37,6 +38,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             id: Number(p.id),
             type: p.type,
             sku: p.sku,
+            gtin: (p as unknown as { gtin?: string | null }).gtin ?? null,
             status: p.status,
             catalog_visibility: p.catalogVisibility,
             featured: p.featured,
@@ -64,6 +66,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             short_description: translation?.shortDescription ?? null,
             locale: translation?.locale ?? this.locale,
             featured_image_url: images[0]?.url ?? null,
+            gallery_image_urls: images.map((img) => img.url).filter((url): url is string => typeof url === "string"),
         };
     }
 
@@ -91,6 +94,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             return {
                 id: Number(v.id),
                 sku: v.sku,
+                gtin: (v as unknown as { gtin?: string | null }).gtin ?? null,
                 regular_price: v.regularPrice === null ? null : Number(v.regularPrice),
                 sale_price: v.salePrice === null ? null : Number(v.salePrice),
                 effective_price: variationPrice.effectivePrice === null ? null : Number(variationPrice.effectivePrice),
@@ -138,6 +142,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             categories,
             tags,
             brands,
+            inventory: this.buildInventoryAggregate(p.inventoryItems ?? []),
         };
     }
 
@@ -161,5 +166,28 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             updated_at: p.updatedAt?.toISO(),
             deleted_at: p.deletedAt?.toISO() ?? null,
         };
+    }
+
+    private buildInventoryAggregate(items: InventoryItem[]) {
+        const productLevel = items.filter((i) => i.variationId === null || i.variationId === undefined);
+        const total = productLevel.reduce((sum, i) => sum + Number(i.stockQuantity ?? 0), 0);
+        const locations = productLevel.map((i) => ({
+            id: Number(i.id),
+            location_id: i.locationId === null || i.locationId === undefined ? null : Number(i.locationId),
+            stock_quantity: Number(i.stockQuantity ?? 0),
+            manage_stock: !!i.manageStock,
+            low_stock_threshold: i.lowStockThreshold ?? null,
+            backorders: i.backorders ?? "no",
+            stock_status: i.stockStatus ?? "instock",
+        }));
+        const lowStockHit = productLevel.some(
+            (i) =>
+                i.manageStock &&
+                i.lowStockThreshold !== null &&
+                i.lowStockThreshold !== undefined &&
+                Number(i.stockQuantity ?? 0) > 0 &&
+                Number(i.stockQuantity ?? 0) <= Number(i.lowStockThreshold),
+        );
+        return { total, low_stock: lowStockHit, locations };
     }
 }

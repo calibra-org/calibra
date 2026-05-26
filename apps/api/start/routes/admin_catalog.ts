@@ -13,13 +13,16 @@ import AdminVariationsController from "#controllers/admin/catalog/variations_con
 router
     .group(() => {
         router.get("/products", [AdminProductsController, "index"]).as("admin.products.index");
+        router.get("/products/counts", [AdminProductsController, "counts"]).as("admin.products.counts");
         router.post("/products", [AdminProductsController, "store"]).as("admin.products.store");
         router.post("/products/batch", [AdminProductsController, "batch"]).as("admin.products.batch");
+        router.post("/products/restore", [AdminProductsController, "restoreBatch"]).as("admin.products.restoreBatch");
         router.get("/products/:id", [AdminProductsController, "show"]).as("admin.products.show");
         router.put("/products/:id", [AdminProductsController, "update"]).as("admin.products.update");
         router.patch("/products/:id", [AdminProductsController, "update"]).as("admin.products.patch");
         router.delete("/products/:id", [AdminProductsController, "destroy"]).as("admin.products.destroy");
         router.post("/products/:id/duplicate", [AdminProductsController, "duplicate"]).as("admin.products.duplicate");
+        router.post("/products/:id/restore", [AdminProductsController, "restore"]).as("admin.products.restore");
 
         router.get("/products/:product_id/variations", [AdminVariationsController, "index"]).as("admin.variations.index");
         router.post("/products/:product_id/variations", [AdminVariationsController, "store"]).as("admin.variations.store");
