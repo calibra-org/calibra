@@ -48,7 +48,7 @@ export function CategoryPicker({ selectedIds, onSelectionChange, placeholder }: 
         async (query: string): Promise<EntityOption[]> => {
             const payload = await apiGet<CategoryListEnvelope>("categories", {
                 locale,
-                query: { q: query, perPage: 50 },
+                query: { search: query, perPage: 50 },
             });
             return (payload.data ?? []).map((row) => ({
                 id: row.id,

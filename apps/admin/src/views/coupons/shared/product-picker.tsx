@@ -49,7 +49,9 @@ export function ProductPicker({ selectedIds, onSelectionChange, placeholder }: P
         async (query: string): Promise<EntityOption[]> => {
             const payload = await apiGet<ProductListEnvelope>("products", {
                 locale,
-                query: { q: query, perPage: 20 },
+                /** The admin products controller filters by `search`, not `q`. Passing `q=` matches
+                 * nothing on the server side and silently returns every product unfiltered. */
+                query: { search: query, perPage: 20 },
             });
             return (payload.data ?? []).map((row) => ({
                 id: row.id,

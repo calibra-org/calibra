@@ -325,13 +325,20 @@ export function CouponsListClient() {
                 formatNumber={(value: number) => formatNumber(value, locale)}
             />
 
-            {quickTestRow !== null && (
-                <QuickTestSheet
-                    open={quickTestRow !== null}
-                    onOpenChange={(open) => !open && setQuickTestRow(null)}
-                    couponId={quickTestRow.id}
-                />
-            )}
+            {/**
+             * Sheets / dialogs are kept mounted across opens so Base UI's `data-starting-style`
+             * transition fires every time `open` flips true. Conditional remounting on every row
+             * change skips the open animation because the popup hasn't existed long enough for
+             * the starting style to take effect before the transition starts. We `key` each one
+             * by the row id so React rebuilds the internal state cleanly when the operator
+             * jumps from one coupon to the next without closing in between.
+             */}
+            <QuickTestSheet
+                key={`qt-${quickTestRow?.id ?? "idle"}`}
+                open={quickTestRow !== null}
+                onOpenChange={(open) => !open && setQuickTestRow(null)}
+                couponId={quickTestRow?.id ?? 0}
+            />
             {duplicateRow !== null && (
                 <DuplicateCouponDialog
                     open={duplicateRow !== null}
@@ -340,17 +347,17 @@ export function CouponsListClient() {
                     sourcePayload={buildDuplicatePayload(duplicateRow)}
                 />
             )}
-            {expiryRow !== null && (
-                <ExpirySheet
-                    open={expiryRow !== null}
-                    onOpenChange={(open) => !open && setExpiryRow(null)}
-                    currentExpiresAt={expiryRow.expiresAt ? expiryRow.expiresAt.slice(0, 10) : ""}
-                    onApply={async (nextDate) => {
-                        await bulkMutation.mutateAsync({ update: [{ id: expiryRow.id, expires_at: nextDate }] });
-                        setExpiryRow(null);
-                    }}
-                />
-            )}
+            <ExpirySheet
+                key={`ex-${expiryRow?.id ?? "idle"}`}
+                open={expiryRow !== null}
+                onOpenChange={(open) => !open && setExpiryRow(null)}
+                currentExpiresAt={expiryRow?.expiresAt ? expiryRow.expiresAt.slice(0, 10) : ""}
+                onApply={async (nextDate) => {
+                    if (expiryRow === null) return;
+                    await bulkMutation.mutateAsync({ update: [{ id: expiryRow.id, expires_at: nextDate }] });
+                    setExpiryRow(null);
+                }}
+            />
         </section>
     );
 }

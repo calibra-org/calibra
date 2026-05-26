@@ -178,7 +178,14 @@ export function MultiCombobox({
                 <BaseCombobox.Root
                     open={open}
                     onOpenChange={setOpen}
-                    items={options}
+                    /**
+                     * **Do not pass `items`** here. When `items` is supplied, Base UI runs its own
+                     * local filter against `inputValue` using `itemToStringLabel`, and that filter
+                     * runs *on top of* the parent's `onSearch` results — typing in the input then
+                     * looks like "all rows still showing" because Base UI doesn't know our results
+                     * came back pre-filtered from the server. Render `Combobox.Item` children
+                     * directly from the resolved list and skip the items prop entirely.
+                     */
                     multiple
                     inputValue={query}
                     onInputValueChange={(next) => setQuery(next)}
