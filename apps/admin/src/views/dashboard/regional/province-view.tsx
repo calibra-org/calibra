@@ -132,7 +132,7 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                 </motion.button>
             </AnimatePresence>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiTile
                     label={t("totalOrders")}
                     value={data?.ordersCount ?? 0}
@@ -160,12 +160,12 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                 />
             </div>
 
-            <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[3fr_2fr]">
-                <div className="relative">
+            <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
+                <div className="relative xl:col-span-2">
                     {isPending ? (
-                        <Skeleton className="h-[420px] w-full" />
+                        <Skeleton className="h-[500px] w-full" />
                     ) : (
-                        <MapZoomWrapper className="h-[420px]">
+                        <MapZoomWrapper className="h-[500px]">
                             <ProvinceSvg
                                 code={code}
                                 cities={childCities}
