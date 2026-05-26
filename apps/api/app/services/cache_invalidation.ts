@@ -50,7 +50,7 @@ export const CacheInvalidation = {
 
     /** Customer write (admin CRUD, order state transitions, refunds). */
     customerChanged: async (customerId: bigint | number | null | undefined): Promise<void> => {
-        const tags: string[] = [CacheTags.adminCustomers, CacheTags.adminReports];
+        const tags: string[] = [CacheTags.adminCustomers, CacheTags.adminReports, CacheTags.regionalProvinces];
         if (customerId !== null && customerId !== undefined) {
             tags.push(CacheTags.adminCustomer(Number(customerId)));
         }

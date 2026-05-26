@@ -1,0 +1,19 @@
+title: RegionalRange
+description: >
+    Time window an admin regional-insights query was computed over. `from` and `to` are full
+    ISO-8601 timestamps in UTC (Gregorian); the controller normalises any `Accept-Language` /
+    Jalali input into Gregorian before serialising. The window is half-open `[from, to)` — orders
+    with `created_at >= from AND created_at < to` are included.
+type: object
+required: [from, to]
+properties:
+    from:
+        type: string
+        format: date-time
+        description: Inclusive lower bound (Gregorian UTC ISO datetime).
+    to:
+        type: string
+        format: date-time
+        description: Exclusive upper bound (Gregorian UTC ISO datetime).
+examples:
+    - { from: "2026-04-26T00:00:00.000Z", to: "2026-05-26T00:00:00.000Z" }

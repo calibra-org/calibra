@@ -1,0 +1,5218 @@
+{
+  "اراک": {
+    "provinceCode": "IR-01",
+    "countyFa": "اراک"
+  },
+  "داودآباد": {
+    "provinceCode": "IR-01",
+    "countyFa": "اراک"
+  },
+  "ساروق": {
+    "provinceCode": "IR-01",
+    "countyFa": "اراک"
+  },
+  "کارچان": {
+    "provinceCode": "IR-01",
+    "countyFa": "اراک"
+  },
+  "آشتیان": {
+    "provinceCode": "IR-01",
+    "countyFa": "آشتیان"
+  },
+  "خمین": {
+    "provinceCode": "IR-01",
+    "countyFa": "خمین"
+  },
+  "تفرش": {
+    "provinceCode": "IR-01",
+    "countyFa": "تفرش"
+  },
+  "شهباز": {
+    "provinceCode": "IR-01",
+    "countyFa": "شازند"
+  },
+  "ساوه": {
+    "provinceCode": "IR-01",
+    "countyFa": "ساوه"
+  },
+  "آوه": {
+    "provinceCode": "IR-01",
+    "countyFa": "ساوه"
+  },
+  "نوبران": {
+    "provinceCode": "IR-01",
+    "countyFa": "ساوه"
+  },
+  "دلیجان": {
+    "provinceCode": "IR-01",
+    "countyFa": "دلیجان"
+  },
+  "نراق": {
+    "provinceCode": "IR-01",
+    "countyFa": "دلیجان"
+  },
+  "مهاجران": {
+    "provinceCode": "IR-01",
+    "countyFa": "شازند"
+  },
+  "توره": {
+    "provinceCode": "IR-01",
+    "countyFa": "شازند"
+  },
+  "آستانه": {
+    "provinceCode": "IR-01",
+    "countyFa": "شازند"
+  },
+  "شازند": {
+    "provinceCode": "IR-01",
+    "countyFa": "شازند"
+  },
+  "هندودر": {
+    "provinceCode": "IR-01",
+    "countyFa": "شازند"
+  },
+  "جاورسیان": {
+    "provinceCode": "IR-01",
+    "countyFa": "خنداب"
+  },
+  "محلات": {
+    "provinceCode": "IR-01",
+    "countyFa": "محلات"
+  },
+  "نیمور": {
+    "provinceCode": "IR-01",
+    "countyFa": "محلات"
+  },
+  "رازقان": {
+    "provinceCode": "IR-01",
+    "countyFa": "زرندیه"
+  },
+  "مامونیه": {
+    "provinceCode": "IR-01",
+    "countyFa": "زرندیه"
+  },
+  "خشکرود": {
+    "provinceCode": "IR-01",
+    "countyFa": "زرندیه"
+  },
+  "پرندک": {
+    "provinceCode": "IR-01",
+    "countyFa": "زرندیه"
+  },
+  "زاویه": {
+    "provinceCode": "IR-01",
+    "countyFa": "زرندیه"
+  },
+  "کمیجان": {
+    "provinceCode": "IR-01",
+    "countyFa": "کمیجان"
+  },
+  "میلاجرد": {
+    "provinceCode": "IR-01",
+    "countyFa": "کمیجان"
+  },
+  "خنداب": {
+    "provinceCode": "IR-01",
+    "countyFa": "خنداب"
+  },
+  "فرمهین": {
+    "provinceCode": "IR-01",
+    "countyFa": "فراهان"
+  },
+  "خنجین": {
+    "provinceCode": "IR-01",
+    "countyFa": "فراهان"
+  },
+  "تلخاب": {
+    "provinceCode": "IR-01",
+    "countyFa": "فراهان"
+  },
+  "آستارا": {
+    "provinceCode": "IR-02",
+    "countyFa": "آستارا"
+  },
+  "لوندویل": {
+    "provinceCode": "IR-02",
+    "countyFa": "آستارا"
+  },
+  "کیاشهر": {
+    "provinceCode": "IR-02",
+    "countyFa": "آستانه اشرفیه"
+  },
+  "بندرانزلی": {
+    "provinceCode": "IR-02",
+    "countyFa": "بندرانزلی"
+  },
+  "لیسار": {
+    "provinceCode": "IR-02",
+    "countyFa": "طوالش"
+  },
+  "لوشان": {
+    "provinceCode": "IR-02",
+    "countyFa": "رودبار"
+  },
+  "رودبار": {
+    "provinceCode": "IR-02",
+    "countyFa": "رودبار"
+  },
+  "منجیل": {
+    "provinceCode": "IR-02",
+    "countyFa": "رودبار"
+  },
+  "اسالم": {
+    "provinceCode": "IR-02",
+    "countyFa": "طوالش"
+  },
+  "حویق": {
+    "provinceCode": "IR-02",
+    "countyFa": "طوالش"
+  },
+  "چوبر": {
+    "provinceCode": "IR-02",
+    "countyFa": "طوالش"
+  },
+  "سنگر": {
+    "provinceCode": "IR-02",
+    "countyFa": "رشت"
+  },
+  "کوچصفهان": {
+    "provinceCode": "IR-02",
+    "countyFa": "رشت"
+  },
+  "لولمان": {
+    "provinceCode": "IR-02",
+    "countyFa": "رشت"
+  },
+  "پیربازار": {
+    "provinceCode": "IR-02",
+    "countyFa": "رشت"
+  },
+  "فومن": {
+    "provinceCode": "IR-02",
+    "countyFa": "فومن"
+  },
+  "ماسوله": {
+    "provinceCode": "IR-02",
+    "countyFa": "فومن"
+  },
+  "ماکلوان": {
+    "provinceCode": "IR-02",
+    "countyFa": "فومن"
+  },
+  "لنگرود": {
+    "provinceCode": "IR-02",
+    "countyFa": "لنگرود"
+  },
+  "رشت": {
+    "provinceCode": "IR-02",
+    "countyFa": "رشت"
+  },
+  "خشکبیجار": {
+    "provinceCode": "IR-02",
+    "countyFa": "رشت"
+  },
+  "توتکابن": {
+    "provinceCode": "IR-02",
+    "countyFa": "رودبار"
+  },
+  "جیرنده": {
+    "provinceCode": "IR-02",
+    "countyFa": "رودبار"
+  },
+  "رودسر": {
+    "provinceCode": "IR-02",
+    "countyFa": "رودسر"
+  },
+  "چابکسر": {
+    "provinceCode": "IR-02",
+    "countyFa": "رودسر"
+  },
+  "کلاچای": {
+    "provinceCode": "IR-02",
+    "countyFa": "رودسر"
+  },
+  "واجارگاه": {
+    "provinceCode": "IR-02",
+    "countyFa": "رودسر"
+  },
+  "مرجقل": {
+    "provinceCode": "IR-02",
+    "countyFa": "صومعه سرا"
+  },
+  "ضیابر": {
+    "provinceCode": "IR-02",
+    "countyFa": "صومعه سرا"
+  },
+  "اطاقور": {
+    "provinceCode": "IR-02",
+    "countyFa": "لنگرود"
+  },
+  "کومله": {
+    "provinceCode": "IR-02",
+    "countyFa": "لنگرود"
+  },
+  "شلمان": {
+    "provinceCode": "IR-02",
+    "countyFa": "لنگرود"
+  },
+  "لاهیجان": {
+    "provinceCode": "IR-02",
+    "countyFa": "لاهیجان"
+  },
+  "رودبنه": {
+    "provinceCode": "IR-02",
+    "countyFa": "لاهیجان"
+  },
+  "شفت": {
+    "provinceCode": "IR-02",
+    "countyFa": "شفت"
+  },
+  "رانکوه": {
+    "provinceCode": "IR-02",
+    "countyFa": "املش"
+  },
+  "املش": {
+    "provinceCode": "IR-02",
+    "countyFa": "املش"
+  },
+  "رضوانشهر": {
+    "provinceCode": "IR-02",
+    "countyFa": "رضوانشهر"
+  },
+  "دیلمان": {
+    "provinceCode": "IR-02",
+    "countyFa": "سیاهکل"
+  },
+  "سیاهکل": {
+    "provinceCode": "IR-02",
+    "countyFa": "سیاهکل"
+  },
+  "ماسال": {
+    "provinceCode": "IR-02",
+    "countyFa": "ماسال"
+  },
+  "خمام": {
+    "provinceCode": "IR-02",
+    "countyFa": "خمام"
+  },
+  "چوکام": {
+    "provinceCode": "IR-02",
+    "countyFa": "خمام"
+  },
+  "رینه": {
+    "provinceCode": "IR-03",
+    "countyFa": "آمل"
+  },
+  "گزنک": {
+    "provinceCode": "IR-03",
+    "countyFa": "آمل"
+  },
+  "آمل": {
+    "provinceCode": "IR-03",
+    "countyFa": "آمل"
+  },
+  "دابودشت": {
+    "provinceCode": "IR-03",
+    "countyFa": "آمل"
+  },
+  "بابکان": {
+    "provinceCode": "IR-03",
+    "countyFa": "آمل"
+  },
+  "امیرکلا": {
+    "provinceCode": "IR-03",
+    "countyFa": "بابل"
+  },
+  "بابل": {
+    "provinceCode": "IR-03",
+    "countyFa": "بابل"
+  },
+  "گلوگاه": {
+    "provinceCode": "IR-03",
+    "countyFa": "بابل"
+  },
+  "مرزیکلا": {
+    "provinceCode": "IR-03",
+    "countyFa": "بابل"
+  },
+  "زرگر": {
+    "provinceCode": "IR-03",
+    "countyFa": "بابل"
+  },
+  "گتاب": {
+    "provinceCode": "IR-03",
+    "countyFa": "بابل"
+  },
+  "بهشهر": {
+    "provinceCode": "IR-03",
+    "countyFa": "بهشهر"
+  },
+  "رستمکلا": {
+    "provinceCode": "IR-03",
+    "countyFa": "بهشهر"
+  },
+  "شیرود": {
+    "provinceCode": "IR-03",
+    "countyFa": "تنکابن"
+  },
+  "تنکابن": {
+    "provinceCode": "IR-03",
+    "countyFa": "تنکابن"
+  },
+  "نشتارود": {
+    "provinceCode": "IR-03",
+    "countyFa": "تنکابن"
+  },
+  "رامسر": {
+    "provinceCode": "IR-03",
+    "countyFa": "رامسر"
+  },
+  "دالخانی": {
+    "provinceCode": "IR-03",
+    "countyFa": "رامسر"
+  },
+  "کیاسر": {
+    "provinceCode": "IR-03",
+    "countyFa": "ساری"
+  },
+  "فریم": {
+    "provinceCode": "IR-03",
+    "countyFa": "ساری"
+  },
+  "ساری": {
+    "provinceCode": "IR-03",
+    "countyFa": "ساری"
+  },
+  "اکند": {
+    "provinceCode": "IR-03",
+    "countyFa": "ساری"
+  },
+  "بلده": {
+    "provinceCode": "IR-03",
+    "countyFa": "نور"
+  },
+  "آلاشت": {
+    "provinceCode": "IR-03",
+    "countyFa": "سوادکوه"
+  },
+  "زیرآب": {
+    "provinceCode": "IR-03",
+    "countyFa": "سوادکوه"
+  },
+  "ارطه": {
+    "provinceCode": "IR-03",
+    "countyFa": "قایم شهر"
+  },
+  "بهنمیر": {
+    "provinceCode": "IR-03",
+    "countyFa": "بابلسر"
+  },
+  "چمستان": {
+    "provinceCode": "IR-03",
+    "countyFa": "نور"
+  },
+  "نور": {
+    "provinceCode": "IR-03",
+    "countyFa": "نور"
+  },
+  "رویان": {
+    "provinceCode": "IR-03",
+    "countyFa": "نور"
+  },
+  "ایزدشهر": {
+    "provinceCode": "IR-03",
+    "countyFa": "نور"
+  },
+  "پول": {
+    "provinceCode": "IR-03",
+    "countyFa": "نوشهر"
+  },
+  "کجور": {
+    "provinceCode": "IR-03",
+    "countyFa": "نوشهر"
+  },
+  "نوشهر": {
+    "provinceCode": "IR-03",
+    "countyFa": "نوشهر"
+  },
+  "بابلسر": {
+    "provinceCode": "IR-03",
+    "countyFa": "بابلسر"
+  },
+  "سرخرود": {
+    "provinceCode": "IR-03",
+    "countyFa": "محمودآباد"
+  },
+  "محمودآباد": {
+    "provinceCode": "IR-03",
+    "countyFa": "محمودآباد"
+  },
+  "نکا": {
+    "provinceCode": "IR-03",
+    "countyFa": "نکا"
+  },
+  "چالوس": {
+    "provinceCode": "IR-03",
+    "countyFa": "چالوس"
+  },
+  "هچیرود": {
+    "provinceCode": "IR-03",
+    "countyFa": "چالوس"
+  },
+  "جویبار": {
+    "provinceCode": "IR-03",
+    "countyFa": "جویبار"
+  },
+  "فریدونکنار": {
+    "provinceCode": "IR-03",
+    "countyFa": "فریدونکنار"
+  },
+  "کلارآباد": {
+    "provinceCode": "IR-03",
+    "countyFa": "عباس آباد"
+  },
+  "سورک": {
+    "provinceCode": "IR-03",
+    "countyFa": "میاندورود"
+  },
+  "طبقده": {
+    "provinceCode": "IR-03",
+    "countyFa": "میاندورود"
+  },
+  "کیاکلا": {
+    "provinceCode": "IR-03",
+    "countyFa": "سیمرغ"
+  },
+  "شیرگاه": {
+    "provinceCode": "IR-03",
+    "countyFa": "سوادکوه شمالی"
+  },
+  "کلاردشت": {
+    "provinceCode": "IR-03",
+    "countyFa": "کلاردشت"
+  },
+  "اهر": {
+    "provinceCode": "IR-04",
+    "countyFa": "اهر"
+  },
+  "تبریز": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "سردرود": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "تبریز1": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "تبریز2": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "تبریز3": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "تبریز4": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "تبریز5": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "تبریز6": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "تبریز7": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "تبریز8": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "اسفهلان": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "خسروشاه": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "مهربان": {
+    "provinceCode": "IR-04",
+    "countyFa": "سراب"
+  },
+  "شربیان": {
+    "provinceCode": "IR-04",
+    "countyFa": "سراب"
+  },
+  "دوزدوزان": {
+    "provinceCode": "IR-04",
+    "countyFa": "سراب"
+  },
+  "باسمنج": {
+    "provinceCode": "IR-04",
+    "countyFa": "تبریز"
+  },
+  "سراب": {
+    "provinceCode": "IR-04",
+    "countyFa": "سراب"
+  },
+  "مراغه": {
+    "provinceCode": "IR-04",
+    "countyFa": "مراغه"
+  },
+  "خداجوخراجو": {
+    "provinceCode": "IR-04",
+    "countyFa": "مراغه"
+  },
+  "زنوز": {
+    "provinceCode": "IR-04",
+    "countyFa": "مرند"
+  },
+  "مرند": {
+    "provinceCode": "IR-04",
+    "countyFa": "مرند"
+  },
+  "یامچی": {
+    "provinceCode": "IR-04",
+    "countyFa": "مرند"
+  },
+  "کشکسرای": {
+    "provinceCode": "IR-04",
+    "countyFa": "مرند"
+  },
+  "ترکمانچای": {
+    "provinceCode": "IR-04",
+    "countyFa": "میانه"
+  },
+  "آقکند": {
+    "provinceCode": "IR-04",
+    "countyFa": "میانه"
+  },
+  "ترک": {
+    "provinceCode": "IR-04",
+    "countyFa": "میانه"
+  },
+  "میانه": {
+    "provinceCode": "IR-04",
+    "countyFa": "میانه"
+  },
+  "اچاچی": {
+    "provinceCode": "IR-04",
+    "countyFa": "میانه"
+  },
+  "هشترود": {
+    "provinceCode": "IR-04",
+    "countyFa": "هشترود"
+  },
+  "نظرکهریزی": {
+    "provinceCode": "IR-04",
+    "countyFa": "هشترود"
+  },
+  "بناب": {
+    "provinceCode": "IR-04",
+    "countyFa": "بناب"
+  },
+  "کلیبر": {
+    "provinceCode": "IR-04",
+    "countyFa": "کلیبر"
+  },
+  "کردکندی": {
+    "provinceCode": "IR-04",
+    "countyFa": "بستان آباد"
+  },
+  "صوفیان": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "خامنه": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "شبستر": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "شرفخانه": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "شندآباد": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "سیس": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "وایقان": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "داریان": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "علیشاه": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "تسوج": {
+    "provinceCode": "IR-04",
+    "countyFa": "شبستر"
+  },
+  "خواجه": {
+    "provinceCode": "IR-04",
+    "countyFa": "هریس"
+  },
+  "اربطان": {
+    "provinceCode": "IR-04",
+    "countyFa": "هریس"
+  },
+  "هریس": {
+    "provinceCode": "IR-04",
+    "countyFa": "هریس"
+  },
+  "زرنق": {
+    "provinceCode": "IR-04",
+    "countyFa": "هریس"
+  },
+  "بخشایش": {
+    "provinceCode": "IR-04",
+    "countyFa": "هریس"
+  },
+  "کلوانق": {
+    "provinceCode": "IR-04",
+    "countyFa": "هریس"
+  },
+  "جلفا": {
+    "provinceCode": "IR-04",
+    "countyFa": "جلفا"
+  },
+  "هادیشهر": {
+    "provinceCode": "IR-04",
+    "countyFa": "جلفا"
+  },
+  "ملکان": {
+    "provinceCode": "IR-04",
+    "countyFa": "ملکان"
+  },
+  "گوگان": {
+    "provinceCode": "IR-04",
+    "countyFa": "آذرشهر"
+  },
+  "تیمورلو": {
+    "provinceCode": "IR-04",
+    "countyFa": "آذرشهر"
+  },
+  "ممقان": {
+    "provinceCode": "IR-04",
+    "countyFa": "آذرشهر"
+  },
+  "ایلخچی": {
+    "provinceCode": "IR-04",
+    "countyFa": "اسکو"
+  },
+  "اسکو": {
+    "provinceCode": "IR-04",
+    "countyFa": "اسکو"
+  },
+  "سهند": {
+    "provinceCode": "IR-04",
+    "countyFa": "اسکو"
+  },
+  "آذرشهر": {
+    "provinceCode": "IR-04",
+    "countyFa": "آذرشهر"
+  },
+  "خاروانا": {
+    "provinceCode": "IR-04",
+    "countyFa": "ورزقان"
+  },
+  "ورزقان": {
+    "provinceCode": "IR-04",
+    "countyFa": "ورزقان"
+  },
+  "خمارلو": {
+    "provinceCode": "IR-04",
+    "countyFa": "خداآفرین"
+  },
+  "عاشقلو": {
+    "provinceCode": "IR-04",
+    "countyFa": "خداآفرین"
+  },
+  "لاریجان": {
+    "provinceCode": "IR-04",
+    "countyFa": "خداآفرین"
+  },
+  "هوراند": {
+    "provinceCode": "IR-04",
+    "countyFa": "هوراند"
+  },
+  "لیلان": {
+    "provinceCode": "IR-04",
+    "countyFa": "لیلان"
+  },
+  "قوشچی": {
+    "provinceCode": "IR-05",
+    "countyFa": "ارومیه"
+  },
+  "سیلوانه": {
+    "provinceCode": "IR-05",
+    "countyFa": "ارومیه"
+  },
+  "سرو": {
+    "provinceCode": "IR-05",
+    "countyFa": "ارومیه"
+  },
+  "ارومیه": {
+    "provinceCode": "IR-05",
+    "countyFa": "ارومیه"
+  },
+  "نوشین": {
+    "provinceCode": "IR-05",
+    "countyFa": "ارومیه"
+  },
+  "پیرانشهر": {
+    "provinceCode": "IR-05",
+    "countyFa": "پیرانشهر"
+  },
+  "لاجان": {
+    "provinceCode": "IR-05",
+    "countyFa": "پیرانشهر"
+  },
+  "خوی": {
+    "provinceCode": "IR-05",
+    "countyFa": "خوی"
+  },
+  "زرآباد": {
+    "provinceCode": "IR-05",
+    "countyFa": "خوی"
+  },
+  "ایواوغلی": {
+    "provinceCode": "IR-05",
+    "countyFa": "خوی"
+  },
+  "قطور": {
+    "provinceCode": "IR-05",
+    "countyFa": "خوی"
+  },
+  "فیرورق": {
+    "provinceCode": "IR-05",
+    "countyFa": "خوی"
+  },
+  "سلماس": {
+    "provinceCode": "IR-05",
+    "countyFa": "سلماس"
+  },
+  "سردشت": {
+    "provinceCode": "IR-05",
+    "countyFa": "سردشت"
+  },
+  "ربط": {
+    "provinceCode": "IR-05",
+    "countyFa": "سردشت"
+  },
+  "نلاس": {
+    "provinceCode": "IR-05",
+    "countyFa": "سردشت"
+  },
+  "ماکو": {
+    "provinceCode": "IR-05",
+    "countyFa": "ماکو"
+  },
+  "بازرگان": {
+    "provinceCode": "IR-05",
+    "countyFa": "ماکو"
+  },
+  "خلیفان": {
+    "provinceCode": "IR-05",
+    "countyFa": "مهاباد"
+  },
+  "مهاباد": {
+    "provinceCode": "IR-05",
+    "countyFa": "مهاباد"
+  },
+  "میاندوآب": {
+    "provinceCode": "IR-05",
+    "countyFa": "میاندوآب"
+  },
+  "بکتاش": {
+    "provinceCode": "IR-05",
+    "countyFa": "میاندوآب"
+  },
+  "نقده": {
+    "provinceCode": "IR-05",
+    "countyFa": "نقده"
+  },
+  "محمدیار": {
+    "provinceCode": "IR-05",
+    "countyFa": "نقده"
+  },
+  "سیمینه": {
+    "provinceCode": "IR-05",
+    "countyFa": "بوکان"
+  },
+  "بوکان": {
+    "provinceCode": "IR-05",
+    "countyFa": "بوکان"
+  },
+  "کشاورز": {
+    "provinceCode": "IR-05",
+    "countyFa": "شاهین دژ"
+  },
+  "تکاب": {
+    "provinceCode": "IR-05",
+    "countyFa": "تکاب"
+  },
+  "اشنویه": {
+    "provinceCode": "IR-05",
+    "countyFa": "اشنویه"
+  },
+  "نالوس": {
+    "provinceCode": "IR-05",
+    "countyFa": "اشنویه"
+  },
+  "آواجیق": {
+    "provinceCode": "IR-05",
+    "countyFa": "چالدران"
+  },
+  "پلدشت": {
+    "provinceCode": "IR-05",
+    "countyFa": "پلدشت"
+  },
+  "حاجیلار": {
+    "provinceCode": "IR-05",
+    "countyFa": "چایپاره"
+  },
+  "مرگنلر": {
+    "provinceCode": "IR-05",
+    "countyFa": "شوط"
+  },
+  "شوط": {
+    "provinceCode": "IR-05",
+    "countyFa": "شوط"
+  },
+  "یولاگلدی": {
+    "provinceCode": "IR-05",
+    "countyFa": "شوط"
+  },
+  "چهاربرج": {
+    "provinceCode": "IR-05",
+    "countyFa": "چهاربرج"
+  },
+  "باروق": {
+    "provinceCode": "IR-05",
+    "countyFa": "باروق"
+  },
+  "میرآباد": {
+    "provinceCode": "IR-05",
+    "countyFa": "میرآباد"
+  },
+  "حمیل": {
+    "provinceCode": "IR-06",
+    "countyFa": "اسلام آبادغرب"
+  },
+  "هلشی": {
+    "provinceCode": "IR-06",
+    "countyFa": "کرمانشاه"
+  },
+  "کرمانشاه": {
+    "provinceCode": "IR-06",
+    "countyFa": "کرمانشاه"
+  },
+  "رباط": {
+    "provinceCode": "IR-06",
+    "countyFa": "کرمانشاه"
+  },
+  "کوزران": {
+    "provinceCode": "IR-06",
+    "countyFa": "کرمانشاه"
+  },
+  "قلعه": {
+    "provinceCode": "IR-06",
+    "countyFa": "کرمانشاه"
+  },
+  "باینگان": {
+    "provinceCode": "IR-06",
+    "countyFa": "پاوه"
+  },
+  "بانوره": {
+    "provinceCode": "IR-06",
+    "countyFa": "پاوه"
+  },
+  "پاوه": {
+    "provinceCode": "IR-06",
+    "countyFa": "پاوه"
+  },
+  "نودشه": {
+    "provinceCode": "IR-06",
+    "countyFa": "پاوه"
+  },
+  "نوسود": {
+    "provinceCode": "IR-06",
+    "countyFa": "پاوه"
+  },
+  "سنقر": {
+    "provinceCode": "IR-06",
+    "countyFa": "سنقر"
+  },
+  "سطر": {
+    "provinceCode": "IR-06",
+    "countyFa": "سنقر"
+  },
+  "سومار": {
+    "provinceCode": "IR-06",
+    "countyFa": "قصرشیرین"
+  },
+  "قصرشیرین": {
+    "provinceCode": "IR-06",
+    "countyFa": "قصرشیرین"
+  },
+  "کنگاور": {
+    "provinceCode": "IR-06",
+    "countyFa": "کنگاور"
+  },
+  "گودین": {
+    "provinceCode": "IR-06",
+    "countyFa": "کنگاور"
+  },
+  "سرمست": {
+    "provinceCode": "IR-06",
+    "countyFa": "گیلانغرب"
+  },
+  "گیلانغرب": {
+    "provinceCode": "IR-06",
+    "countyFa": "گیلانغرب"
+  },
+  "جوانرود": {
+    "provinceCode": "IR-06",
+    "countyFa": "جوانرود"
+  },
+  "شروینه": {
+    "provinceCode": "IR-06",
+    "countyFa": "جوانرود"
+  },
+  "دینور": {
+    "provinceCode": "IR-06",
+    "countyFa": "صحنه"
+  },
+  "صحنه": {
+    "provinceCode": "IR-06",
+    "countyFa": "صحنه"
+  },
+  "بیستون": {
+    "provinceCode": "IR-06",
+    "countyFa": "هرسین"
+  },
+  "هرسین": {
+    "provinceCode": "IR-06",
+    "countyFa": "هرسین"
+  },
+  "ازگله": {
+    "provinceCode": "IR-06",
+    "countyFa": "ثلاث باباجانی"
+  },
+  "گهواره": {
+    "provinceCode": "IR-06",
+    "countyFa": "دالاهو"
+  },
+  "کرند": {
+    "provinceCode": "IR-06",
+    "countyFa": "دالاهو"
+  },
+  "ریجاب": {
+    "provinceCode": "IR-06",
+    "countyFa": "دالاهو"
+  },
+  "شاهو": {
+    "provinceCode": "IR-06",
+    "countyFa": "روانسر"
+  },
+  "روانسر": {
+    "provinceCode": "IR-06",
+    "countyFa": "روانسر"
+  },
+  "اروندکنار": {
+    "provinceCode": "IR-07",
+    "countyFa": "آبادان"
+  },
+  "آبادان": {
+    "provinceCode": "IR-07",
+    "countyFa": "آبادان"
+  },
+  "چویبده": {
+    "provinceCode": "IR-07",
+    "countyFa": "آبادان"
+  },
+  "حسینیه": {
+    "provinceCode": "IR-07",
+    "countyFa": "اندیمشک"
+  },
+  "بیدروبه": {
+    "provinceCode": "IR-07",
+    "countyFa": "اندیمشک"
+  },
+  "اندیمشک": {
+    "provinceCode": "IR-07",
+    "countyFa": "اندیمشک"
+  },
+  "آزادی": {
+    "provinceCode": "IR-07",
+    "countyFa": "اندیمشک"
+  },
+  "اهواز": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "اهواز1": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "اهواز2": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "اهواز3": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "اهواز4": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "اهواز5": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "اهواز6": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "اهواز7": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "اهواز8": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "الهایی": {
+    "provinceCode": "IR-07",
+    "countyFa": "اهواز"
+  },
+  "ایذه": {
+    "provinceCode": "IR-07",
+    "countyFa": "ایذه"
+  },
+  "بندرماهشهر": {
+    "provinceCode": "IR-07",
+    "countyFa": "بندرماهشهر"
+  },
+  "چمران": {
+    "provinceCode": "IR-07",
+    "countyFa": "بندرماهشهر"
+  },
+  "بهبهان": {
+    "provinceCode": "IR-07",
+    "countyFa": "بهبهان"
+  },
+  "منصوریه": {
+    "provinceCode": "IR-07",
+    "countyFa": "بهبهان"
+  },
+  "تشان": {
+    "provinceCode": "IR-07",
+    "countyFa": "بهبهان"
+  },
+  "خرمشهر": {
+    "provinceCode": "IR-07",
+    "countyFa": "خرمشهر"
+  },
+  "مقاومت": {
+    "provinceCode": "IR-07",
+    "countyFa": "خرمشهر"
+  },
+  "مینوشهر": {
+    "provinceCode": "IR-07",
+    "countyFa": "خرمشهر"
+  },
+  "حمزه": {
+    "provinceCode": "IR-07",
+    "countyFa": "دزفول"
+  },
+  "سالند": {
+    "provinceCode": "IR-07",
+    "countyFa": "دزفول"
+  },
+  "دزفول": {
+    "provinceCode": "IR-07",
+    "countyFa": "دزفول"
+  },
+  "میانرود": {
+    "provinceCode": "IR-07",
+    "countyFa": "دزفول"
+  },
+  "منتظران": {
+    "provinceCode": "IR-07",
+    "countyFa": "دزفول"
+  },
+  "چغامیش": {
+    "provinceCode": "IR-07",
+    "countyFa": "دزفول"
+  },
+  "شهیون": {
+    "provinceCode": "IR-07",
+    "countyFa": "دزفول"
+  },
+  "بستان": {
+    "provinceCode": "IR-07",
+    "countyFa": "دشت آزادگان"
+  },
+  "سوسنگرد": {
+    "provinceCode": "IR-07",
+    "countyFa": "دشت آزادگان"
+  },
+  "ابوحمیظه": {
+    "provinceCode": "IR-07",
+    "countyFa": "دشت آزادگان"
+  },
+  "رامهرمز": {
+    "provinceCode": "IR-07",
+    "countyFa": "رامهرمز"
+  },
+  "باوج": {
+    "provinceCode": "IR-07",
+    "countyFa": "رامهرمز"
+  },
+  "شادگان": {
+    "provinceCode": "IR-07",
+    "countyFa": "شادگان"
+  },
+  "خنافره": {
+    "provinceCode": "IR-07",
+    "countyFa": "شادگان"
+  },
+  "دارخوین": {
+    "provinceCode": "IR-07",
+    "countyFa": "شادگان"
+  },
+  "شوشتر": {
+    "provinceCode": "IR-07",
+    "countyFa": "شوشتر"
+  },
+  "شرافت": {
+    "provinceCode": "IR-07",
+    "countyFa": "شوشتر"
+  },
+  "سرداران": {
+    "provinceCode": "IR-07",
+    "countyFa": "شوشتر"
+  },
+  "گوریه": {
+    "provinceCode": "IR-07",
+    "countyFa": "شوشتر"
+  },
+  "مسجدسلیمان": {
+    "provinceCode": "IR-07",
+    "countyFa": "مسجدسلیمان"
+  },
+  "گلگیر": {
+    "provinceCode": "IR-07",
+    "countyFa": "مسجدسلیمان"
+  },
+  "عنبر": {
+    "provinceCode": "IR-07",
+    "countyFa": "مسجدسلیمان"
+  },
+  "شوش": {
+    "provinceCode": "IR-07",
+    "countyFa": "شوش"
+  },
+  "حر": {
+    "provinceCode": "IR-07",
+    "countyFa": "شوش"
+  },
+  "هندیجان": {
+    "provinceCode": "IR-07",
+    "countyFa": "هندیجان"
+  },
+  "میداود": {
+    "provinceCode": "IR-07",
+    "countyFa": "باغ ملک"
+  },
+  "جایزان": {
+    "provinceCode": "IR-07",
+    "countyFa": "امیدیه"
+  },
+  "امیدیه": {
+    "provinceCode": "IR-07",
+    "countyFa": "امیدیه"
+  },
+  "میانکوه": {
+    "provinceCode": "IR-07",
+    "countyFa": "امیدیه"
+  },
+  "لالی": {
+    "provinceCode": "IR-07",
+    "countyFa": "لالی"
+  },
+  "تراز": {
+    "provinceCode": "IR-07",
+    "countyFa": "لالی"
+  },
+  "زهره": {
+    "provinceCode": "IR-07",
+    "countyFa": "هندیجان"
+  },
+  "رامشیر": {
+    "provinceCode": "IR-07",
+    "countyFa": "رامشیر"
+  },
+  "مشراگه": {
+    "provinceCode": "IR-07",
+    "countyFa": "رامشیر"
+  },
+  "ترکالکی": {
+    "provinceCode": "IR-07",
+    "countyFa": "گتوند"
+  },
+  "سماله": {
+    "provinceCode": "IR-07",
+    "countyFa": "گتوند"
+  },
+  "گتوند": {
+    "provinceCode": "IR-07",
+    "countyFa": "گتوند"
+  },
+  "آبژدان": {
+    "provinceCode": "IR-07",
+    "countyFa": "اندیکا"
+  },
+  "زاووت": {
+    "provinceCode": "IR-07",
+    "countyFa": "اندیکا"
+  },
+  "هفتگل": {
+    "provinceCode": "IR-07",
+    "countyFa": "هفتکل"
+  },
+  "رفیع": {
+    "provinceCode": "IR-07",
+    "countyFa": "هویزه"
+  },
+  "هویزه": {
+    "provinceCode": "IR-07",
+    "countyFa": "هویزه"
+  },
+  "ملاثانی": {
+    "provinceCode": "IR-07",
+    "countyFa": "باوی"
+  },
+  "ویس": {
+    "provinceCode": "IR-07",
+    "countyFa": "باوی"
+  },
+  "شیبان": {
+    "provinceCode": "IR-07",
+    "countyFa": "باوی"
+  },
+  "حمیدیه": {
+    "provinceCode": "IR-07",
+    "countyFa": "حمیدیه"
+  },
+  "آغاجاری": {
+    "provinceCode": "IR-07",
+    "countyFa": "آغاجاری"
+  },
+  "جولکی": {
+    "provinceCode": "IR-07",
+    "countyFa": "آغاجاری"
+  },
+  "الوان": {
+    "provinceCode": "IR-07",
+    "countyFa": "کرخه"
+  },
+  "شاوور": {
+    "provinceCode": "IR-07",
+    "countyFa": "کرخه"
+  },
+  "دهدز": {
+    "provinceCode": "IR-07",
+    "countyFa": "دزپارت"
+  },
+  "صیدون": {
+    "provinceCode": "IR-07",
+    "countyFa": "صیدون"
+  },
+  "آباده": {
+    "provinceCode": "IR-08",
+    "countyFa": "آباده"
+  },
+  "ایزدخواست": {
+    "provinceCode": "IR-08",
+    "countyFa": "آباده"
+  },
+  "سورمق": {
+    "provinceCode": "IR-08",
+    "countyFa": "آباده"
+  },
+  "صغاد": {
+    "provinceCode": "IR-08",
+    "countyFa": "آباده"
+  },
+  "بهمن": {
+    "provinceCode": "IR-08",
+    "countyFa": "آباده"
+  },
+  "رونیز": {
+    "provinceCode": "IR-08",
+    "countyFa": "استهبان"
+  },
+  "استهبان": {
+    "provinceCode": "IR-08",
+    "countyFa": "استهبان"
+  },
+  "ایج": {
+    "provinceCode": "IR-08",
+    "countyFa": "استهبان"
+  },
+  "دژکرد": {
+    "provinceCode": "IR-08",
+    "countyFa": "اقلید"
+  },
+  "سده": {
+    "provinceCode": "IR-08",
+    "countyFa": "اقلید"
+  },
+  "اقلید": {
+    "provinceCode": "IR-08",
+    "countyFa": "اقلید"
+  },
+  "دوزه": {
+    "provinceCode": "IR-08",
+    "countyFa": "جهرم"
+  },
+  "جهرم": {
+    "provinceCode": "IR-08",
+    "countyFa": "جهرم"
+  },
+  "رستاق": {
+    "provinceCode": "IR-08",
+    "countyFa": "داراب"
+  },
+  "داراب": {
+    "provinceCode": "IR-08",
+    "countyFa": "داراب"
+  },
+  "فدامی": {
+    "provinceCode": "IR-08",
+    "countyFa": "داراب"
+  },
+  "دوبرجی": {
+    "provinceCode": "IR-08",
+    "countyFa": "داراب"
+  },
+  "پاسخن": {
+    "provinceCode": "IR-08",
+    "countyFa": "داراب"
+  },
+  "اردکان": {
+    "provinceCode": "IR-08",
+    "countyFa": "سپیدان"
+  },
+  "هماشهر": {
+    "provinceCode": "IR-08",
+    "countyFa": "سپیدان"
+  },
+  "شیراز": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "شیراز1": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "شیراز2": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "شیراز3": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "شیراز4": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "شیراز5": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "شیراز6": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "شهرصدرا": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "شیراز7": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "شیراز8": {
+    "provinceCode": "IR-08",
+    "countyFa": "شیراز"
+  },
+  "ششده": {
+    "provinceCode": "IR-08",
+    "countyFa": "فسا"
+  },
+  "زاهدشهر": {
+    "provinceCode": "IR-08",
+    "countyFa": "فسا"
+  },
+  "میانشهر": {
+    "provinceCode": "IR-08",
+    "countyFa": "فسا"
+  },
+  "فسا": {
+    "provinceCode": "IR-08",
+    "countyFa": "فسا"
+  },
+  "نوبندگان": {
+    "provinceCode": "IR-08",
+    "countyFa": "فسا"
+  },
+  "فیروزآباد": {
+    "provinceCode": "IR-08",
+    "countyFa": "فیروزآباد"
+  },
+  "میمند": {
+    "provinceCode": "IR-08",
+    "countyFa": "فیروزآباد"
+  },
+  "بالاده": {
+    "provinceCode": "IR-08",
+    "countyFa": "کازرون"
+  },
+  "کنارتخته": {
+    "provinceCode": "IR-08",
+    "countyFa": "کازرون"
+  },
+  "کازرون": {
+    "provinceCode": "IR-08",
+    "countyFa": "کازرون"
+  },
+  "خشت": {
+    "provinceCode": "IR-08",
+    "countyFa": "کازرون"
+  },
+  "لار": {
+    "provinceCode": "IR-08",
+    "countyFa": "لارستان"
+  },
+  "لطیفی": {
+    "provinceCode": "IR-08",
+    "countyFa": "لارستان"
+  },
+  "خور": {
+    "provinceCode": "IR-08",
+    "countyFa": "لارستان"
+  },
+  "دهکویه": {
+    "provinceCode": "IR-08",
+    "countyFa": "لارستان"
+  },
+  "بیرم": {
+    "provinceCode": "IR-08",
+    "countyFa": "لارستان"
+  },
+  "بنارویه": {
+    "provinceCode": "IR-08",
+    "countyFa": "لارستان"
+  },
+  "کامفیروز": {
+    "provinceCode": "IR-08",
+    "countyFa": "مرودشت"
+  },
+  "مرودشت": {
+    "provinceCode": "IR-08",
+    "countyFa": "مرودشت"
+  },
+  "رامجرد": {
+    "provinceCode": "IR-08",
+    "countyFa": "مرودشت"
+  },
+  "مشکان": {
+    "provinceCode": "IR-08",
+    "countyFa": "نی ریز"
+  },
+  "سیدان": {
+    "provinceCode": "IR-08",
+    "countyFa": "مرودشت"
+  },
+  "فاروق": {
+    "provinceCode": "IR-08",
+    "countyFa": "مرودشت"
+  },
+  "خانیمن": {
+    "provinceCode": "IR-08",
+    "countyFa": "مرودشت"
+  },
+  "بابامنیر": {
+    "provinceCode": "IR-08",
+    "countyFa": "ممسنی"
+  },
+  "نورآباد": {
+    "provinceCode": "IR-08",
+    "countyFa": "ممسنی"
+  },
+  "قطرویه": {
+    "provinceCode": "IR-08",
+    "countyFa": "نی ریز"
+  },
+  "لامرد": {
+    "provinceCode": "IR-08",
+    "countyFa": "لامرد"
+  },
+  "اشکنان": {
+    "provinceCode": "IR-08",
+    "countyFa": "لامرد"
+  },
+  "اهل": {
+    "provinceCode": "IR-08",
+    "countyFa": "لامرد"
+  },
+  "علامرودشت": {
+    "provinceCode": "IR-08",
+    "countyFa": "لامرد"
+  },
+  "خیرگو": {
+    "provinceCode": "IR-08",
+    "countyFa": "لامرد"
+  },
+  "بوانات": {
+    "provinceCode": "IR-08",
+    "countyFa": "بوانات"
+  },
+  "مزایجان": {
+    "provinceCode": "IR-08",
+    "countyFa": "بوانات"
+  },
+  "ارسنجان": {
+    "provinceCode": "IR-08",
+    "countyFa": "ارسنجان"
+  },
+  "قادراباد": {
+    "provinceCode": "IR-08",
+    "countyFa": "خرم بید"
+  },
+  "صفاشهر": {
+    "provinceCode": "IR-08",
+    "countyFa": "خرم بید"
+  },
+  "شهرپیر": {
+    "provinceCode": "IR-08",
+    "countyFa": "زرین دشت"
+  },
+  "دبیران": {
+    "provinceCode": "IR-08",
+    "countyFa": "زرین دشت"
+  },
+  "افزر": {
+    "provinceCode": "IR-08",
+    "countyFa": "قیروکارزین"
+  },
+  "قیر": {
+    "provinceCode": "IR-08",
+    "countyFa": "قیروکارزین"
+  },
+  "فال": {
+    "provinceCode": "IR-08",
+    "countyFa": "مهر"
+  },
+  "مهر": {
+    "provinceCode": "IR-08",
+    "countyFa": "مهر"
+  },
+  "وراوی": {
+    "provinceCode": "IR-08",
+    "countyFa": "مهر"
+  },
+  "خوزی": {
+    "provinceCode": "IR-08",
+    "countyFa": "مهر"
+  },
+  "اسیر": {
+    "provinceCode": "IR-08",
+    "countyFa": "مهر"
+  },
+  "فراشبند": {
+    "provinceCode": "IR-08",
+    "countyFa": "فراشبند"
+  },
+  "نوجین": {
+    "provinceCode": "IR-08",
+    "countyFa": "فراشبند"
+  },
+  "دهرم": {
+    "provinceCode": "IR-08",
+    "countyFa": "فراشبند"
+  },
+  "مادرسلیمان": {
+    "provinceCode": "IR-08",
+    "countyFa": "پاسارگاد"
+  },
+  "محمله": {
+    "provinceCode": "IR-08",
+    "countyFa": "خنج"
+  },
+  "طسوج": {
+    "provinceCode": "IR-08",
+    "countyFa": "کوار"
+  },
+  "خنج": {
+    "provinceCode": "IR-08",
+    "countyFa": "خنج"
+  },
+  "کوهنجان": {
+    "provinceCode": "IR-08",
+    "countyFa": "سروستان"
+  },
+  "سروستان": {
+    "provinceCode": "IR-08",
+    "countyFa": "سروستان"
+  },
+  "کوپن": {
+    "provinceCode": "IR-08",
+    "countyFa": "رستم"
+  },
+  "مصیری": {
+    "provinceCode": "IR-08",
+    "countyFa": "رستم"
+  },
+  "گراش": {
+    "provinceCode": "IR-08",
+    "countyFa": "گراش"
+  },
+  "ارد": {
+    "provinceCode": "IR-08",
+    "countyFa": "گراش"
+  },
+  "اکبرآباد": {
+    "provinceCode": "IR-08",
+    "countyFa": "کوار"
+  },
+  "مظفری": {
+    "provinceCode": "IR-08",
+    "countyFa": "کوار"
+  },
+  "کوار": {
+    "provinceCode": "IR-08",
+    "countyFa": "کوار"
+  },
+  "خرامه": {
+    "provinceCode": "IR-08",
+    "countyFa": "خرامه"
+  },
+  "معزآبادجابری": {
+    "provinceCode": "IR-08",
+    "countyFa": "خرامه"
+  },
+  "خیراباد": {
+    "provinceCode": "IR-08",
+    "countyFa": "خرامه"
+  },
+  "زرقان": {
+    "provinceCode": "IR-08",
+    "countyFa": "زرقان"
+  },
+  "لپویی": {
+    "provinceCode": "IR-08",
+    "countyFa": "زرقان"
+  },
+  "بیضا": {
+    "provinceCode": "IR-08",
+    "countyFa": "بیضا"
+  },
+  "حسامی": {
+    "provinceCode": "IR-08",
+    "countyFa": "سرچهان"
+  },
+  "توجردی": {
+    "provinceCode": "IR-08",
+    "countyFa": "سرچهان"
+  },
+  "قایمیه": {
+    "provinceCode": "IR-08",
+    "countyFa": "کوه چنار"
+  },
+  "نودان": {
+    "provinceCode": "IR-08",
+    "countyFa": "کوه چنار"
+  },
+  "خاوران": {
+    "provinceCode": "IR-08",
+    "countyFa": "خفر"
+  },
+  "اوز": {
+    "provinceCode": "IR-08",
+    "countyFa": "اوز"
+  },
+  "کوره": {
+    "provinceCode": "IR-08",
+    "countyFa": "اوز"
+  },
+  "جویم": {
+    "provinceCode": "IR-08",
+    "countyFa": "جویم"
+  },
+  "بافت": {
+    "provinceCode": "IR-09",
+    "countyFa": "بافت"
+  },
+  "بزنجان": {
+    "provinceCode": "IR-09",
+    "countyFa": "بافت"
+  },
+  "کشکوییه": {
+    "provinceCode": "IR-09",
+    "countyFa": "بافت"
+  },
+  "بم": {
+    "provinceCode": "IR-09",
+    "countyFa": "بم"
+  },
+  "بروات": {
+    "provinceCode": "IR-09",
+    "countyFa": "بم"
+  },
+  "دهبکری": {
+    "provinceCode": "IR-09",
+    "countyFa": "بم"
+  },
+  "جبالبارز": {
+    "provinceCode": "IR-09",
+    "countyFa": "جیرفت"
+  },
+  "جیرفت": {
+    "provinceCode": "IR-09",
+    "countyFa": "جیرفت"
+  },
+  "بلوک": {
+    "provinceCode": "IR-09",
+    "countyFa": "جیرفت"
+  },
+  "رفسنجان": {
+    "provinceCode": "IR-09",
+    "countyFa": "رفسنجان"
+  },
+  "بهرمان": {
+    "provinceCode": "IR-09",
+    "countyFa": "رفسنجان"
+  },
+  "صفاییه": {
+    "provinceCode": "IR-09",
+    "countyFa": "رفسنجان"
+  },
+  "زرند": {
+    "provinceCode": "IR-09",
+    "countyFa": "زرند"
+  },
+  "خانوک": {
+    "provinceCode": "IR-09",
+    "countyFa": "زرند"
+  },
+  "ریحان": {
+    "provinceCode": "IR-09",
+    "countyFa": "زرند"
+  },
+  "سیریز": {
+    "provinceCode": "IR-09",
+    "countyFa": "زرند"
+  },
+  "سیرجان": {
+    "provinceCode": "IR-09",
+    "countyFa": "سیرجان"
+  },
+  "پاریز": {
+    "provinceCode": "IR-09",
+    "countyFa": "سیرجان"
+  },
+  "زیدآباد": {
+    "provinceCode": "IR-09",
+    "countyFa": "سیرجان"
+  },
+  "بلورد": {
+    "provinceCode": "IR-09",
+    "countyFa": "سیرجان"
+  },
+  "شهداد": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "اندوهجرد": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "گلباف": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "شهربابک": {
+    "provinceCode": "IR-09",
+    "countyFa": "شهربابک"
+  },
+  "خورسند": {
+    "provinceCode": "IR-09",
+    "countyFa": "شهربابک"
+  },
+  "جوزم": {
+    "provinceCode": "IR-09",
+    "countyFa": "شهربابک"
+  },
+  "دهج": {
+    "provinceCode": "IR-09",
+    "countyFa": "شهربابک"
+  },
+  "جوپار": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "ماهان": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "کرمان": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "باغین": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "اختیارآباد": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "راین": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "چترود": {
+    "provinceCode": "IR-09",
+    "countyFa": "کرمان"
+  },
+  "کهنوج": {
+    "provinceCode": "IR-09",
+    "countyFa": "کهنوج"
+  },
+  "بردسیر": {
+    "provinceCode": "IR-09",
+    "countyFa": "بردسیر"
+  },
+  "دشتکار": {
+    "provinceCode": "IR-09",
+    "countyFa": "بردسیر"
+  },
+  "گلزار": {
+    "provinceCode": "IR-09",
+    "countyFa": "بردسیر"
+  },
+  "نگار": {
+    "provinceCode": "IR-09",
+    "countyFa": "بردسیر"
+  },
+  "هجدک": {
+    "provinceCode": "IR-09",
+    "countyFa": "راور"
+  },
+  "راور": {
+    "provinceCode": "IR-09",
+    "countyFa": "راور"
+  },
+  "عنبرآباد": {
+    "provinceCode": "IR-09",
+    "countyFa": "عنبرآباد"
+  },
+  "دوساری": {
+    "provinceCode": "IR-09",
+    "countyFa": "عنبرآباد"
+  },
+  "مردهک": {
+    "provinceCode": "IR-09",
+    "countyFa": "عنبرآباد"
+  },
+  "منوجان": {
+    "provinceCode": "IR-09",
+    "countyFa": "منوجان"
+  },
+  "نودژ": {
+    "provinceCode": "IR-09",
+    "countyFa": "منوجان"
+  },
+  "کیانشهر": {
+    "provinceCode": "IR-09",
+    "countyFa": "کوهبنان"
+  },
+  "کوهبنان": {
+    "provinceCode": "IR-09",
+    "countyFa": "کوهبنان"
+  },
+  "رمشک": {
+    "provinceCode": "IR-09",
+    "countyFa": "قلعه گنج"
+  },
+  "محمدآباد": {
+    "provinceCode": "IR-09",
+    "countyFa": "ریگان"
+  },
+  "رابر": {
+    "provinceCode": "IR-09",
+    "countyFa": "رابر"
+  },
+  "هنزا": {
+    "provinceCode": "IR-09",
+    "countyFa": "رابر"
+  },
+  "فهرج": {
+    "provinceCode": "IR-09",
+    "countyFa": "فهرج"
+  },
+  "انار": {
+    "provinceCode": "IR-09",
+    "countyFa": "انار"
+  },
+  "نرماشیر": {
+    "provinceCode": "IR-09",
+    "countyFa": "نرماشیر"
+  },
+  "فاریاب": {
+    "provinceCode": "IR-09",
+    "countyFa": "فاریاب"
+  },
+  "پاسفید": {
+    "provinceCode": "IR-09",
+    "countyFa": "فاریاب"
+  },
+  "ارزوییه": {
+    "provinceCode": "IR-09",
+    "countyFa": "ارزوییه"
+  },
+  "گنبکی": {
+    "provinceCode": "IR-09",
+    "countyFa": "گنبکی"
+  },
+  "زهکلوت": {
+    "provinceCode": "IR-09",
+    "countyFa": "جازموریان"
+  },
+  "تایباد": {
+    "provinceCode": "IR-10",
+    "countyFa": "تایباد"
+  },
+  "کاریز": {
+    "provinceCode": "IR-10",
+    "countyFa": "تایباد"
+  },
+  "بایک": {
+    "provinceCode": "IR-10",
+    "countyFa": "تربت حیدریه"
+  },
+  "کدکن": {
+    "provinceCode": "IR-10",
+    "countyFa": "تربت حیدریه"
+  },
+  "نصرآباد": {
+    "provinceCode": "IR-10",
+    "countyFa": "تربت جام"
+  },
+  "نسر": {
+    "provinceCode": "IR-10",
+    "countyFa": "تربت حیدریه"
+  },
+  "چاپشلو": {
+    "provinceCode": "IR-10",
+    "countyFa": "درگز"
+  },
+  "درگز": {
+    "provinceCode": "IR-10",
+    "countyFa": "درگز"
+  },
+  "نوخندان": {
+    "provinceCode": "IR-10",
+    "countyFa": "درگز"
+  },
+  "باجگیران": {
+    "provinceCode": "IR-10",
+    "countyFa": "قوچان"
+  },
+  "روداب": {
+    "provinceCode": "IR-10",
+    "countyFa": "سبزوار"
+  },
+  "سبزوار": {
+    "provinceCode": "IR-10",
+    "countyFa": "سبزوار"
+  },
+  "سبزوار1": {
+    "provinceCode": "IR-10",
+    "countyFa": "سبزوار"
+  },
+  "سبزوار2": {
+    "provinceCode": "IR-10",
+    "countyFa": "سبزوار"
+  },
+  "مزرج": {
+    "provinceCode": "IR-10",
+    "countyFa": "قوچان"
+  },
+  "قوچان": {
+    "provinceCode": "IR-10",
+    "countyFa": "قوچان"
+  },
+  "آلماجق": {
+    "provinceCode": "IR-10",
+    "countyFa": "قوچان"
+  },
+  "کاشمر": {
+    "provinceCode": "IR-10",
+    "countyFa": "کاشمر"
+  },
+  "بیدخت": {
+    "provinceCode": "IR-10",
+    "countyFa": "گناباد"
+  },
+  "گناباد": {
+    "provinceCode": "IR-10",
+    "countyFa": "گناباد"
+  },
+  "روشناوند": {
+    "provinceCode": "IR-10",
+    "countyFa": "گناباد"
+  },
+  "کاخک": {
+    "provinceCode": "IR-10",
+    "countyFa": "گناباد"
+  },
+  "مشهد": {
+    "provinceCode": "IR-10",
+    "countyFa": "مشهد"
+  },
+  "رضویه": {
+    "provinceCode": "IR-10",
+    "countyFa": "مشهد"
+  },
+  "چکنه": {
+    "provinceCode": "IR-10",
+    "countyFa": "نیشابور"
+  },
+  "نیشابور": {
+    "provinceCode": "IR-10",
+    "countyFa": "نیشابور"
+  },
+  "بار": {
+    "provinceCode": "IR-10",
+    "countyFa": "نیشابور"
+  },
+  "فریمان": {
+    "provinceCode": "IR-10",
+    "countyFa": "فریمان"
+  },
+  "فرهادگرد": {
+    "provinceCode": "IR-10",
+    "countyFa": "فریمان"
+  },
+  "چناران": {
+    "provinceCode": "IR-10",
+    "countyFa": "چناران"
+  },
+  "رادکان": {
+    "provinceCode": "IR-10",
+    "countyFa": "چناران"
+  },
+  "سیدآباد": {
+    "provinceCode": "IR-10",
+    "countyFa": "چناران"
+  },
+  "سنگان": {
+    "provinceCode": "IR-10",
+    "countyFa": "خواف"
+  },
+  "خواف": {
+    "provinceCode": "IR-10",
+    "countyFa": "خواف"
+  },
+  "نشتیفان": {
+    "provinceCode": "IR-10",
+    "countyFa": "خواف"
+  },
+  "سلامی": {
+    "provinceCode": "IR-10",
+    "countyFa": "خواف"
+  },
+  "مزدآوند": {
+    "provinceCode": "IR-10",
+    "countyFa": "سرخس"
+  },
+  "سرخس": {
+    "provinceCode": "IR-10",
+    "countyFa": "سرخس"
+  },
+  "انابد": {
+    "provinceCode": "IR-10",
+    "countyFa": "بردسکن"
+  },
+  "بردسکن": {
+    "provinceCode": "IR-10",
+    "countyFa": "بردسکن"
+  },
+  "شهرآباد": {
+    "provinceCode": "IR-10",
+    "countyFa": "بردسکن"
+  },
+  "جنگل": {
+    "provinceCode": "IR-10",
+    "countyFa": "رشتخوار"
+  },
+  "رشتخوار": {
+    "provinceCode": "IR-10",
+    "countyFa": "رشتخوار"
+  },
+  "چنار": {
+    "provinceCode": "IR-10",
+    "countyFa": "کلات"
+  },
+  "کلات": {
+    "provinceCode": "IR-10",
+    "countyFa": "کلات"
+  },
+  "کندر": {
+    "provinceCode": "IR-10",
+    "countyFa": "خلیل آباد"
+  },
+  "شادمهر": {
+    "provinceCode": "IR-10",
+    "countyFa": "مه ولات"
+  },
+  "بجستان": {
+    "provinceCode": "IR-10",
+    "countyFa": "بجستان"
+  },
+  "یونسی": {
+    "provinceCode": "IR-10",
+    "countyFa": "بجستان"
+  },
+  "طرقبه": {
+    "provinceCode": "IR-10",
+    "countyFa": "طرقبه شاندیز"
+  },
+  "فیروزه": {
+    "provinceCode": "IR-10",
+    "countyFa": "فیروزه"
+  },
+  "شاندیز": {
+    "provinceCode": "IR-10",
+    "countyFa": "طرقبه شاندیز"
+  },
+  "گرماب": {
+    "provinceCode": "IR-10",
+    "countyFa": "فیروزه"
+  },
+  "جغتای": {
+    "provinceCode": "IR-10",
+    "countyFa": "جغتای"
+  },
+  "ریواده": {
+    "provinceCode": "IR-10",
+    "countyFa": "جغتای"
+  },
+  "چخماق": {
+    "provinceCode": "IR-10",
+    "countyFa": "زاوه"
+  },
+  "نقاب": {
+    "provinceCode": "IR-10",
+    "countyFa": "جوین"
+  },
+  "باخرز": {
+    "provinceCode": "IR-10",
+    "countyFa": "باخرز"
+  },
+  "داورزن": {
+    "provinceCode": "IR-10",
+    "countyFa": "داورزن"
+  },
+  "ریوند": {
+    "provinceCode": "IR-10",
+    "countyFa": "داورزن"
+  },
+  "ریوش": {
+    "provinceCode": "IR-10",
+    "countyFa": "کوهسرخ"
+  },
+  "درود": {
+    "provinceCode": "IR-10",
+    "countyFa": "زبرخان"
+  },
+  "قدمگاه": {
+    "provinceCode": "IR-10",
+    "countyFa": "زبرخان"
+  },
+  "خرو": {
+    "provinceCode": "IR-10",
+    "countyFa": "زبرخان"
+  },
+  "گلبهار": {
+    "provinceCode": "IR-10",
+    "countyFa": "گلبهار"
+  },
+  "ششتمد": {
+    "provinceCode": "IR-10",
+    "countyFa": "ششتمد"
+  },
+  "شامکان": {
+    "provinceCode": "IR-10",
+    "countyFa": "ششتمد"
+  },
+  "گلمکان": {
+    "provinceCode": "IR-10",
+    "countyFa": "گلبهار"
+  },
+  "اردستان": {
+    "provinceCode": "IR-11",
+    "countyFa": "اردستان"
+  },
+  "زواره": {
+    "provinceCode": "IR-11",
+    "countyFa": "اردستان"
+  },
+  "بیده": {
+    "provinceCode": "IR-11",
+    "countyFa": "سمیرم"
+  },
+  "اصفهان": {
+    "provinceCode": "IR-11",
+    "countyFa": "اصفهان"
+  },
+  "قهجاورستان": {
+    "provinceCode": "IR-11",
+    "countyFa": "اصفهان"
+  },
+  "بهارستان": {
+    "provinceCode": "IR-11",
+    "countyFa": "اصفهان"
+  },
+  "زیار": {
+    "provinceCode": "IR-11",
+    "countyFa": "اصفهان"
+  },
+  "درچه": {
+    "provinceCode": "IR-11",
+    "countyFa": "خمینی شهر"
+  },
+  "کوشک": {
+    "provinceCode": "IR-11",
+    "countyFa": "خمینی شهر"
+  },
+  "اصغرآباد": {
+    "provinceCode": "IR-11",
+    "countyFa": "خمینی شهر"
+  },
+  "ویست": {
+    "provinceCode": "IR-11",
+    "countyFa": "خوانسار"
+  },
+  "خوانسار": {
+    "provinceCode": "IR-11",
+    "countyFa": "خوانسار"
+  },
+  "کمه": {
+    "provinceCode": "IR-11",
+    "countyFa": "سمیرم"
+  },
+  "سمیرم": {
+    "provinceCode": "IR-11",
+    "countyFa": "سمیرم"
+  },
+  "حنا": {
+    "provinceCode": "IR-11",
+    "countyFa": "سمیرم"
+  },
+  "ونک": {
+    "provinceCode": "IR-11",
+    "countyFa": "سمیرم"
+  },
+  "داران": {
+    "provinceCode": "IR-11",
+    "countyFa": "فریدن"
+  },
+  "دامنه": {
+    "provinceCode": "IR-11",
+    "countyFa": "فریدن"
+  },
+  "فریدونشهر": {
+    "provinceCode": "IR-11",
+    "countyFa": "فریدونشهر"
+  },
+  "طاد": {
+    "provinceCode": "IR-11",
+    "countyFa": "فلاورجان"
+  },
+  "پیربکران": {
+    "provinceCode": "IR-11",
+    "countyFa": "فلاورجان"
+  },
+  "فلاورجان": {
+    "provinceCode": "IR-11",
+    "countyFa": "فلاورجان"
+  },
+  "ابریشم": {
+    "provinceCode": "IR-11",
+    "countyFa": "فلاورجان"
+  },
+  "اشترجان": {
+    "provinceCode": "IR-11",
+    "countyFa": "فلاورجان"
+  },
+  "مینادشت": {
+    "provinceCode": "IR-11",
+    "countyFa": "فلاورجان"
+  },
+  "قهدریجان": {
+    "provinceCode": "IR-11",
+    "countyFa": "فلاورجان"
+  },
+  "زازران": {
+    "provinceCode": "IR-11",
+    "countyFa": "فلاورجان"
+  },
+  "شهرضا": {
+    "provinceCode": "IR-11",
+    "countyFa": "شهرضا"
+  },
+  "منظریه": {
+    "provinceCode": "IR-11",
+    "countyFa": "شهرضا"
+  },
+  "قمصر": {
+    "provinceCode": "IR-11",
+    "countyFa": "کاشان"
+  },
+  "کاشان": {
+    "provinceCode": "IR-11",
+    "countyFa": "کاشان"
+  },
+  "مشکات": {
+    "provinceCode": "IR-11",
+    "countyFa": "کاشان"
+  },
+  "نیاسر": {
+    "provinceCode": "IR-11",
+    "countyFa": "کاشان"
+  },
+  "برزک": {
+    "provinceCode": "IR-11",
+    "countyFa": "کاشان"
+  },
+  "گلپایگان": {
+    "provinceCode": "IR-11",
+    "countyFa": "گلپایگان"
+  },
+  "گوگد": {
+    "provinceCode": "IR-11",
+    "countyFa": "گلپایگان"
+  },
+  "گلشهر": {
+    "provinceCode": "IR-11",
+    "countyFa": "گلپایگان"
+  },
+  "چرمهین": {
+    "provinceCode": "IR-11",
+    "countyFa": "لنجان"
+  },
+  "چمگردان": {
+    "provinceCode": "IR-11",
+    "countyFa": "لنجان"
+  },
+  "ورنامخواست": {
+    "provinceCode": "IR-11",
+    "countyFa": "لنجان"
+  },
+  "فولادشهر": {
+    "provinceCode": "IR-11",
+    "countyFa": "لنجان"
+  },
+  "باغشاد": {
+    "provinceCode": "IR-11",
+    "countyFa": "لنجان"
+  },
+  "انارک": {
+    "provinceCode": "IR-11",
+    "countyFa": "نایین"
+  },
+  "نایین": {
+    "provinceCode": "IR-11",
+    "countyFa": "نایین"
+  },
+  "بافران": {
+    "provinceCode": "IR-11",
+    "countyFa": "نایین"
+  },
+  "جوزدان": {
+    "provinceCode": "IR-11",
+    "countyFa": "نجف آباد"
+  },
+  "گلدشت": {
+    "provinceCode": "IR-11",
+    "countyFa": "نجف آباد"
+  },
+  "کهریزسنگ": {
+    "provinceCode": "IR-11",
+    "countyFa": "نجف آباد"
+  },
+  "دهق": {
+    "provinceCode": "IR-11",
+    "countyFa": "نجف آباد"
+  },
+  "علویجه": {
+    "provinceCode": "IR-11",
+    "countyFa": "نجف آباد"
+  },
+  "نطنز": {
+    "provinceCode": "IR-11",
+    "countyFa": "نطنز"
+  },
+  "بادرود": {
+    "provinceCode": "IR-11",
+    "countyFa": "نطنز"
+  },
+  "خالدآباد": {
+    "provinceCode": "IR-11",
+    "countyFa": "نطنز"
+  },
+  "میمه": {
+    "provinceCode": "IR-11",
+    "countyFa": "شاهین شهرو میمه"
+  },
+  "وزوان": {
+    "provinceCode": "IR-11",
+    "countyFa": "شاهین شهرو میمه"
+  },
+  "گزبرخوار": {
+    "provinceCode": "IR-11",
+    "countyFa": "شاهین شهرو میمه"
+  },
+  "گرگاب": {
+    "provinceCode": "IR-11",
+    "countyFa": "شاهین شهرو میمه"
+  },
+  "مبارکه": {
+    "provinceCode": "IR-11",
+    "countyFa": "مبارکه"
+  },
+  "مجلسی": {
+    "provinceCode": "IR-11",
+    "countyFa": "مبارکه"
+  },
+  "دیزیچه": {
+    "provinceCode": "IR-11",
+    "countyFa": "مبارکه"
+  },
+  "طالخونچه": {
+    "provinceCode": "IR-11",
+    "countyFa": "مبارکه"
+  },
+  "کرکوند": {
+    "provinceCode": "IR-11",
+    "countyFa": "مبارکه"
+  },
+  "زیباشهر": {
+    "provinceCode": "IR-11",
+    "countyFa": "مبارکه"
+  },
+  "ابوزیدآباد": {
+    "provinceCode": "IR-11",
+    "countyFa": "آران و بیدگل"
+  },
+  "عسگران": {
+    "provinceCode": "IR-11",
+    "countyFa": "تیران وکرون"
+  },
+  "تیران": {
+    "provinceCode": "IR-11",
+    "countyFa": "تیران وکرون"
+  },
+  "چادگان": {
+    "provinceCode": "IR-11",
+    "countyFa": "چادگان"
+  },
+  "رزوه": {
+    "provinceCode": "IR-11",
+    "countyFa": "چادگان"
+  },
+  "دهاقان": {
+    "provinceCode": "IR-11",
+    "countyFa": "دهاقان"
+  },
+  "گلشن": {
+    "provinceCode": "IR-11",
+    "countyFa": "دهاقان"
+  },
+  "شاپورآباد": {
+    "provinceCode": "IR-11",
+    "countyFa": "برخوار"
+  },
+  "کمشچه": {
+    "provinceCode": "IR-11",
+    "countyFa": "برخوار"
+  },
+  "خورزوق": {
+    "provinceCode": "IR-11",
+    "countyFa": "برخوار"
+  },
+  "دستگرد": {
+    "provinceCode": "IR-11",
+    "countyFa": "برخوار"
+  },
+  "سین": {
+    "provinceCode": "IR-11",
+    "countyFa": "برخوار"
+  },
+  "فرخی": {
+    "provinceCode": "IR-11",
+    "countyFa": "خور و بیابانک"
+  },
+  "جندق": {
+    "provinceCode": "IR-11",
+    "countyFa": "خور و بیابانک"
+  },
+  "افوس": {
+    "provinceCode": "IR-11",
+    "countyFa": "بویین و میاندشت"
+  },
+  "کوهپایه": {
+    "provinceCode": "IR-11",
+    "countyFa": "کوهپایه"
+  },
+  "تودشک": {
+    "provinceCode": "IR-11",
+    "countyFa": "کوهپایه"
+  },
+  "سجزی": {
+    "provinceCode": "IR-11",
+    "countyFa": "کوهپایه"
+  },
+  "ورزنه": {
+    "provinceCode": "IR-11",
+    "countyFa": "ورزنه"
+  },
+  "هرند": {
+    "provinceCode": "IR-11",
+    "countyFa": "هرند"
+  },
+  "اژیه": {
+    "provinceCode": "IR-11",
+    "countyFa": "هرند"
+  },
+  "بزمان": {
+    "provinceCode": "IR-12",
+    "countyFa": "ایرانشهر"
+  },
+  "ایرانشهر": {
+    "provinceCode": "IR-12",
+    "countyFa": "ایرانشهر"
+  },
+  "پلان": {
+    "provinceCode": "IR-12",
+    "countyFa": "چاه بهار"
+  },
+  "خاش": {
+    "provinceCode": "IR-12",
+    "countyFa": "خاش"
+  },
+  "زابل": {
+    "provinceCode": "IR-12",
+    "countyFa": "زابل"
+  },
+  "بنجار": {
+    "provinceCode": "IR-12",
+    "countyFa": "زابل"
+  },
+  "زاهدان": {
+    "provinceCode": "IR-12",
+    "countyFa": "زاهدان"
+  },
+  "سرجنگل": {
+    "provinceCode": "IR-12",
+    "countyFa": "زاهدان"
+  },
+  "سراوان": {
+    "provinceCode": "IR-12",
+    "countyFa": "سراوان"
+  },
+  "محمدی": {
+    "provinceCode": "IR-12",
+    "countyFa": "سراوان"
+  },
+  "گشت": {
+    "provinceCode": "IR-12",
+    "countyFa": "سراوان"
+  },
+  "سیرکان": {
+    "provinceCode": "IR-12",
+    "countyFa": "سراوان"
+  },
+  "اسفندک": {
+    "provinceCode": "IR-12",
+    "countyFa": "سراوان"
+  },
+  "بنت": {
+    "provinceCode": "IR-12",
+    "countyFa": "نیک شهر"
+  },
+  "چانف": {
+    "provinceCode": "IR-12",
+    "countyFa": "نیک شهر"
+  },
+  "پیشین": {
+    "provinceCode": "IR-12",
+    "countyFa": "راسک"
+  },
+  "راسک": {
+    "provinceCode": "IR-12",
+    "countyFa": "راسک"
+  },
+  "پارود": {
+    "provinceCode": "IR-12",
+    "countyFa": "راسک"
+  },
+  "کنارک": {
+    "provinceCode": "IR-12",
+    "countyFa": "کنارک"
+  },
+  "جزینک": {
+    "provinceCode": "IR-12",
+    "countyFa": "زهک"
+  },
+  "زهک": {
+    "provinceCode": "IR-12",
+    "countyFa": "زهک"
+  },
+  "قرقری": {
+    "provinceCode": "IR-12",
+    "countyFa": "هیرمند"
+  },
+  "گلمورتی": {
+    "provinceCode": "IR-12",
+    "countyFa": "دلگان"
+  },
+  "چگرد": {
+    "provinceCode": "IR-12",
+    "countyFa": "دلگان"
+  },
+  "مهرستان": {
+    "provinceCode": "IR-12",
+    "countyFa": "مهرستان"
+  },
+  "آشار": {
+    "provinceCode": "IR-12",
+    "countyFa": "مهرستان"
+  },
+  "سیب": {
+    "provinceCode": "IR-12",
+    "countyFa": "سیب و سوران"
+  },
+  "سوران": {
+    "provinceCode": "IR-12",
+    "countyFa": "سیب و سوران"
+  },
+  "هیدوچ": {
+    "provinceCode": "IR-12",
+    "countyFa": "سیب و سوران"
+  },
+  "ادیمی": {
+    "provinceCode": "IR-12",
+    "countyFa": "نیمروز"
+  },
+  "میرجاوه": {
+    "provinceCode": "IR-12",
+    "countyFa": "میرجاوه"
+  },
+  "لادیز": {
+    "provinceCode": "IR-12",
+    "countyFa": "میرجاوه"
+  },
+  "قصرقند": {
+    "provinceCode": "IR-12",
+    "countyFa": "قصرقند"
+  },
+  "ساربوک": {
+    "provinceCode": "IR-12",
+    "countyFa": "قصرقند"
+  },
+  "فنوج": {
+    "provinceCode": "IR-12",
+    "countyFa": "فنوج"
+  },
+  "گتیج": {
+    "provinceCode": "IR-12",
+    "countyFa": "فنوج"
+  },
+  "محمدان": {
+    "provinceCode": "IR-12",
+    "countyFa": "بمپور"
+  },
+  "بمپور": {
+    "provinceCode": "IR-12",
+    "countyFa": "بمپور"
+  },
+  "بریس": {
+    "provinceCode": "IR-12",
+    "countyFa": "دشتیاری"
+  },
+  "نگور": {
+    "provinceCode": "IR-12",
+    "countyFa": "دشتیاری"
+  },
+  "سرباز": {
+    "provinceCode": "IR-12",
+    "countyFa": "سرباز"
+  },
+  "جالق": {
+    "provinceCode": "IR-12",
+    "countyFa": "گلشن"
+  },
+  "اسپکه": {
+    "provinceCode": "IR-12",
+    "countyFa": "لاشار"
+  },
+  "آرمرده": {
+    "provinceCode": "IR-13",
+    "countyFa": "بانه"
+  },
+  "بابارشانی": {
+    "provinceCode": "IR-13",
+    "countyFa": "بیجار"
+  },
+  "پیرتاج": {
+    "provinceCode": "IR-13",
+    "countyFa": "بیجار"
+  },
+  "بانه": {
+    "provinceCode": "IR-13",
+    "countyFa": "بانه"
+  },
+  "یاسوکند": {
+    "provinceCode": "IR-13",
+    "countyFa": "بیجار"
+  },
+  "بیجار": {
+    "provinceCode": "IR-13",
+    "countyFa": "بیجار"
+  },
+  "صاحب": {
+    "provinceCode": "IR-13",
+    "countyFa": "سقز"
+  },
+  "سقز": {
+    "provinceCode": "IR-13",
+    "countyFa": "سقز"
+  },
+  "سنته": {
+    "provinceCode": "IR-13",
+    "countyFa": "سقز"
+  },
+  "سنندج": {
+    "provinceCode": "IR-13",
+    "countyFa": "سنندج"
+  },
+  "شویشه": {
+    "provinceCode": "IR-13",
+    "countyFa": "سنندج"
+  },
+  "قروه": {
+    "provinceCode": "IR-13",
+    "countyFa": "قروه"
+  },
+  "دزج": {
+    "provinceCode": "IR-13",
+    "countyFa": "قروه"
+  },
+  "مالوجه": {
+    "provinceCode": "IR-13",
+    "countyFa": "قروه"
+  },
+  "دلبران": {
+    "provinceCode": "IR-13",
+    "countyFa": "قروه"
+  },
+  "چناره": {
+    "provinceCode": "IR-13",
+    "countyFa": "مریوان"
+  },
+  "مریوان": {
+    "provinceCode": "IR-13",
+    "countyFa": "مریوان"
+  },
+  "زرینه": {
+    "provinceCode": "IR-13",
+    "countyFa": "دیواندره"
+  },
+  "دیواندره": {
+    "provinceCode": "IR-13",
+    "countyFa": "دیواندره"
+  },
+  "هزارکانیان": {
+    "provinceCode": "IR-13",
+    "countyFa": "دیواندره"
+  },
+  "کامیاران": {
+    "provinceCode": "IR-13",
+    "countyFa": "کامیاران"
+  },
+  "موچش": {
+    "provinceCode": "IR-13",
+    "countyFa": "کامیاران"
+  },
+  "سروآباد": {
+    "provinceCode": "IR-13",
+    "countyFa": "سروآباد"
+  },
+  "دهگلان": {
+    "provinceCode": "IR-13",
+    "countyFa": "دهگلان"
+  },
+  "فرسفج": {
+    "provinceCode": "IR-14",
+    "countyFa": "تویسرکان"
+  },
+  "تویسرکان": {
+    "provinceCode": "IR-14",
+    "countyFa": "تویسرکان"
+  },
+  "سرکان": {
+    "provinceCode": "IR-14",
+    "countyFa": "تویسرکان"
+  },
+  "ازندریان": {
+    "provinceCode": "IR-14",
+    "countyFa": "ملایر"
+  },
+  "جوکار": {
+    "provinceCode": "IR-14",
+    "countyFa": "ملایر"
+  },
+  "سامن": {
+    "provinceCode": "IR-14",
+    "countyFa": "ملایر"
+  },
+  "ملایر": {
+    "provinceCode": "IR-14",
+    "countyFa": "ملایر"
+  },
+  "زنگنه": {
+    "provinceCode": "IR-14",
+    "countyFa": "ملایر"
+  },
+  "فیروزان": {
+    "provinceCode": "IR-14",
+    "countyFa": "نهاوند"
+  },
+  "نهاوند": {
+    "provinceCode": "IR-14",
+    "countyFa": "نهاوند"
+  },
+  "برزول": {
+    "provinceCode": "IR-14",
+    "countyFa": "نهاوند"
+  },
+  "گیان": {
+    "provinceCode": "IR-14",
+    "countyFa": "نهاوند"
+  },
+  "قهاوند": {
+    "provinceCode": "IR-14",
+    "countyFa": "همدان"
+  },
+  "مریانج": {
+    "provinceCode": "IR-14",
+    "countyFa": "همدان"
+  },
+  "همدان": {
+    "provinceCode": "IR-14",
+    "countyFa": "همدان"
+  },
+  "جورقان": {
+    "provinceCode": "IR-14",
+    "countyFa": "همدان"
+  },
+  "کبودرآهنگ": {
+    "provinceCode": "IR-14",
+    "countyFa": "کبودرآهنگ"
+  },
+  "اسدآباد": {
+    "provinceCode": "IR-14",
+    "countyFa": "اسدآباد"
+  },
+  "پالیز": {
+    "provinceCode": "IR-14",
+    "countyFa": "اسدآباد"
+  },
+  "دمق": {
+    "provinceCode": "IR-14",
+    "countyFa": "رزن"
+  },
+  "آجین": {
+    "provinceCode": "IR-14",
+    "countyFa": "اسدآباد"
+  },
+  "لالجین": {
+    "provinceCode": "IR-14",
+    "countyFa": "بهار"
+  },
+  "بهار": {
+    "provinceCode": "IR-14",
+    "countyFa": "بهار"
+  },
+  "رزن": {
+    "provinceCode": "IR-14",
+    "countyFa": "رزن"
+  },
+  "فامنین": {
+    "provinceCode": "IR-14",
+    "countyFa": "فامنین"
+  },
+  "شاهنجرین": {
+    "provinceCode": "IR-14",
+    "countyFa": "درگزین"
+  },
+  "کرفس": {
+    "provinceCode": "IR-14",
+    "countyFa": "درگزین"
+  },
+  "گندمان": {
+    "provinceCode": "IR-15",
+    "countyFa": "بروجن"
+  },
+  "بروجن": {
+    "provinceCode": "IR-15",
+    "countyFa": "بروجن"
+  },
+  "فرادبنه": {
+    "provinceCode": "IR-15",
+    "countyFa": "بروجن"
+  },
+  "سفیددشت": {
+    "provinceCode": "IR-15",
+    "countyFa": "بروجن"
+  },
+  "نقنه": {
+    "provinceCode": "IR-15",
+    "countyFa": "بروجن"
+  },
+  "بلداجی": {
+    "provinceCode": "IR-15",
+    "countyFa": "بروجن"
+  },
+  "شهرکرد": {
+    "provinceCode": "IR-15",
+    "countyFa": "شهرکرد"
+  },
+  "هفشجان": {
+    "provinceCode": "IR-15",
+    "countyFa": "شهرکرد"
+  },
+  "کیان": {
+    "provinceCode": "IR-15",
+    "countyFa": "شهرکرد"
+  },
+  "طاقانک": {
+    "provinceCode": "IR-15",
+    "countyFa": "شهرکرد"
+  },
+  "نافچ": {
+    "provinceCode": "IR-15",
+    "countyFa": "شهرکرد"
+  },
+  "سورشجان": {
+    "provinceCode": "IR-15",
+    "countyFa": "شهرکرد"
+  },
+  "سودجان": {
+    "provinceCode": "IR-15",
+    "countyFa": "شهرکرد"
+  },
+  "هارونی": {
+    "provinceCode": "IR-15",
+    "countyFa": "شهرکرد"
+  },
+  "فارسان": {
+    "provinceCode": "IR-15",
+    "countyFa": "فارسان"
+  },
+  "گوجان": {
+    "provinceCode": "IR-15",
+    "countyFa": "فارسان"
+  },
+  "بآباحیدر": {
+    "provinceCode": "IR-15",
+    "countyFa": "فارسان"
+  },
+  "جونقان": {
+    "provinceCode": "IR-15",
+    "countyFa": "فارسان"
+  },
+  "پردنجان": {
+    "provinceCode": "IR-15",
+    "countyFa": "فارسان"
+  },
+  "چلیچه": {
+    "provinceCode": "IR-15",
+    "countyFa": "فارسان"
+  },
+  "لردگان": {
+    "provinceCode": "IR-15",
+    "countyFa": "لردگان"
+  },
+  "منج": {
+    "provinceCode": "IR-15",
+    "countyFa": "لردگان"
+  },
+  "اردل": {
+    "provinceCode": "IR-15",
+    "countyFa": "اردل"
+  },
+  "کاج": {
+    "provinceCode": "IR-15",
+    "countyFa": "اردل"
+  },
+  "دشتک": {
+    "provinceCode": "IR-15",
+    "countyFa": "اردل"
+  },
+  "سرخون": {
+    "provinceCode": "IR-15",
+    "countyFa": "اردل"
+  },
+  "بازفت": {
+    "provinceCode": "IR-15",
+    "countyFa": "کوهرنگ"
+  },
+  "چلگرد": {
+    "provinceCode": "IR-15",
+    "countyFa": "کوهرنگ"
+  },
+  "صمصامی": {
+    "provinceCode": "IR-15",
+    "countyFa": "کوهرنگ"
+  },
+  "شلمزار": {
+    "provinceCode": "IR-15",
+    "countyFa": "کیار"
+  },
+  "گهرو": {
+    "provinceCode": "IR-15",
+    "countyFa": "کیار"
+  },
+  "دستنا": {
+    "provinceCode": "IR-15",
+    "countyFa": "کیار"
+  },
+  "ناغان": {
+    "provinceCode": "IR-15",
+    "countyFa": "کیار"
+  },
+  "سامان": {
+    "provinceCode": "IR-15",
+    "countyFa": "سامان"
+  },
+  "هوره": {
+    "provinceCode": "IR-15",
+    "countyFa": "سامان"
+  },
+  "بن": {
+    "provinceCode": "IR-15",
+    "countyFa": "بن"
+  },
+  "وردنجان": {
+    "provinceCode": "IR-15",
+    "countyFa": "بن"
+  },
+  "آلونی": {
+    "provinceCode": "IR-15",
+    "countyFa": "خانمیرزا"
+  },
+  "الیگودرز": {
+    "provinceCode": "IR-16",
+    "countyFa": "الیگودرز"
+  },
+  "شاهپوراباد": {
+    "provinceCode": "IR-16",
+    "countyFa": "الیگودرز"
+  },
+  "اشترینان": {
+    "provinceCode": "IR-16",
+    "countyFa": "بروجرد"
+  },
+  "ونایی": {
+    "provinceCode": "IR-16",
+    "countyFa": "بروجرد"
+  },
+  "بروجرد": {
+    "provinceCode": "IR-16",
+    "countyFa": "بروجرد"
+  },
+  "بروجرد1": {
+    "provinceCode": "IR-16",
+    "countyFa": "بروجرد"
+  },
+  "بروجرد2": {
+    "provinceCode": "IR-16",
+    "countyFa": "بروجرد"
+  },
+  "سپیددشت": {
+    "provinceCode": "IR-16",
+    "countyFa": "خرم آباد"
+  },
+  "زاغه": {
+    "provinceCode": "IR-16",
+    "countyFa": "خرم آباد"
+  },
+  "برخوردار": {
+    "provinceCode": "IR-16",
+    "countyFa": "دلفان"
+  },
+  "چالانچولان": {
+    "provinceCode": "IR-16",
+    "countyFa": "دورود"
+  },
+  "دورود": {
+    "provinceCode": "IR-16",
+    "countyFa": "دورود"
+  },
+  "گراب": {
+    "provinceCode": "IR-16",
+    "countyFa": "کوهدشت"
+  },
+  "کوهدشت": {
+    "provinceCode": "IR-16",
+    "countyFa": "کوهدشت"
+  },
+  "کوهنانی": {
+    "provinceCode": "IR-16",
+    "countyFa": "کوهدشت"
+  },
+  "ازنا": {
+    "provinceCode": "IR-16",
+    "countyFa": "ازنا"
+  },
+  "پلدختر": {
+    "provinceCode": "IR-16",
+    "countyFa": "پلدختر"
+  },
+  "الشتر": {
+    "provinceCode": "IR-16",
+    "countyFa": "سلسله"
+  },
+  "ویسیان": {
+    "provinceCode": "IR-16",
+    "countyFa": "چگنی"
+  },
+  "سوری": {
+    "provinceCode": "IR-16",
+    "countyFa": "رومشکان"
+  },
+  "چقابل": {
+    "provinceCode": "IR-16",
+    "countyFa": "رومشکان"
+  },
+  "معمولان": {
+    "provinceCode": "IR-16",
+    "countyFa": "معمولان"
+  },
+  "ایلام": {
+    "provinceCode": "IR-17",
+    "countyFa": "ایلام"
+  },
+  "جعفراباد": {
+    "provinceCode": "IR-17",
+    "countyFa": "ایلام"
+  },
+  "ماژین": {
+    "provinceCode": "IR-17",
+    "countyFa": "دره شهر"
+  },
+  "پهله": {
+    "provinceCode": "IR-17",
+    "countyFa": "دهلران"
+  },
+  "دهلران": {
+    "provinceCode": "IR-17",
+    "countyFa": "دهلران"
+  },
+  "موسیان": {
+    "provinceCode": "IR-17",
+    "countyFa": "دهلران"
+  },
+  "سرابله": {
+    "provinceCode": "IR-17",
+    "countyFa": "چرداول"
+  },
+  "شباب": {
+    "provinceCode": "IR-17",
+    "countyFa": "چرداول"
+  },
+  "بلاوه": {
+    "provinceCode": "IR-17",
+    "countyFa": "چرداول"
+  },
+  "مهران": {
+    "provinceCode": "IR-17",
+    "countyFa": "مهران"
+  },
+  "مورموری": {
+    "provinceCode": "IR-17",
+    "countyFa": "آبدانان"
+  },
+  "آبدانان": {
+    "provinceCode": "IR-17",
+    "countyFa": "آبدانان"
+  },
+  "زرنه": {
+    "provinceCode": "IR-17",
+    "countyFa": "ایوان"
+  },
+  "چوار": {
+    "provinceCode": "IR-17",
+    "countyFa": "چوار"
+  },
+  "ایوان": {
+    "provinceCode": "IR-17",
+    "countyFa": "ایوان"
+  },
+  "ارکواز": {
+    "provinceCode": "IR-17",
+    "countyFa": "ملکشاهی"
+  },
+  "دلگشا": {
+    "provinceCode": "IR-17",
+    "countyFa": "ملکشاهی"
+  },
+  "لومار": {
+    "provinceCode": "IR-17",
+    "countyFa": "سیروان"
+  },
+  "بدره": {
+    "provinceCode": "IR-17",
+    "countyFa": "بدره"
+  },
+  "توحید": {
+    "provinceCode": "IR-17",
+    "countyFa": "هلیلان"
+  },
+  "یاسوج": {
+    "provinceCode": "IR-18",
+    "countyFa": "بویراحمد"
+  },
+  "مادوان": {
+    "provinceCode": "IR-18",
+    "countyFa": "بویراحمد"
+  },
+  "چیتاب": {
+    "provinceCode": "IR-18",
+    "countyFa": "بویراحمد"
+  },
+  "سپیدار": {
+    "provinceCode": "IR-18",
+    "countyFa": "بویراحمد"
+  },
+  "دهدشت": {
+    "provinceCode": "IR-18",
+    "countyFa": "کهگیلویه"
+  },
+  "دیشموک": {
+    "provinceCode": "IR-18",
+    "countyFa": "کهگیلویه"
+  },
+  "سوق": {
+    "provinceCode": "IR-18",
+    "countyFa": "کهگیلویه"
+  },
+  "دوگنبدان": {
+    "provinceCode": "IR-18",
+    "countyFa": "گچساران"
+  },
+  "پاتاوه": {
+    "provinceCode": "IR-18",
+    "countyFa": "دنا"
+  },
+  "لیکک": {
+    "provinceCode": "IR-18",
+    "countyFa": "بهمیی"
+  },
+  "چرام": {
+    "provinceCode": "IR-18",
+    "countyFa": "چرام"
+  },
+  "سرفاریاب": {
+    "provinceCode": "IR-18",
+    "countyFa": "چرام"
+  },
+  "باشت": {
+    "provinceCode": "IR-18",
+    "countyFa": "باشت"
+  },
+  "بوستان": {
+    "provinceCode": "IR-18",
+    "countyFa": "باشت"
+  },
+  "لنده": {
+    "provinceCode": "IR-18",
+    "countyFa": "لنده"
+  },
+  "مارگون": {
+    "provinceCode": "IR-18",
+    "countyFa": "مارگون"
+  },
+  "خارک": {
+    "provinceCode": "IR-19",
+    "countyFa": "بوشهر"
+  },
+  "بوشهر": {
+    "provinceCode": "IR-19",
+    "countyFa": "بوشهر"
+  },
+  "بوشهر1": {
+    "provinceCode": "IR-19",
+    "countyFa": "بوشهر"
+  },
+  "بوشهر2": {
+    "provinceCode": "IR-19",
+    "countyFa": "بوشهر"
+  },
+  "چغادک": {
+    "provinceCode": "IR-19",
+    "countyFa": "بوشهر"
+  },
+  "دلوار": {
+    "provinceCode": "IR-19",
+    "countyFa": "تنگستان"
+  },
+  "برازجان": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتستان"
+  },
+  "دالکی": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتستان"
+  },
+  "اهرم": {
+    "provinceCode": "IR-19",
+    "countyFa": "تنگستان"
+  },
+  "آباد": {
+    "provinceCode": "IR-19",
+    "countyFa": "تنگستان"
+  },
+  "وحدتیه": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتستان"
+  },
+  "شبانکاره": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتستان"
+  },
+  "کلمه": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتستان"
+  },
+  "بوشکان": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتستان"
+  },
+  "کاکی": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتی"
+  },
+  "بادوله": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتی"
+  },
+  "خورموج": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتی"
+  },
+  "شنبه": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتی"
+  },
+  "بردخون": {
+    "provinceCode": "IR-19",
+    "countyFa": "دیر"
+  },
+  "بندردیر": {
+    "provinceCode": "IR-19",
+    "countyFa": "دیر"
+  },
+  "بردستان": {
+    "provinceCode": "IR-19",
+    "countyFa": "دیر"
+  },
+  "دوراهک": {
+    "provinceCode": "IR-19",
+    "countyFa": "دیر"
+  },
+  "آبدان": {
+    "provinceCode": "IR-19",
+    "countyFa": "دیر"
+  },
+  "بندرکنگان": {
+    "provinceCode": "IR-19",
+    "countyFa": "کنگان"
+  },
+  "بنک": {
+    "provinceCode": "IR-19",
+    "countyFa": "کنگان"
+  },
+  "شیرینو": {
+    "provinceCode": "IR-19",
+    "countyFa": "کنگان"
+  },
+  "سیراف": {
+    "provinceCode": "IR-19",
+    "countyFa": "کنگان"
+  },
+  "بندرریگ": {
+    "provinceCode": "IR-19",
+    "countyFa": "گناوه"
+  },
+  "بندرگناوه": {
+    "provinceCode": "IR-19",
+    "countyFa": "گناوه"
+  },
+  "بندردیلم": {
+    "provinceCode": "IR-19",
+    "countyFa": "دیلم"
+  },
+  "انارستان": {
+    "provinceCode": "IR-19",
+    "countyFa": "جم"
+  },
+  "ریز": {
+    "provinceCode": "IR-19",
+    "countyFa": "جم"
+  },
+  "جم": {
+    "provinceCode": "IR-19",
+    "countyFa": "جم"
+  },
+  "عسلویه": {
+    "provinceCode": "IR-19",
+    "countyFa": "عسلویه"
+  },
+  "بیدخون": {
+    "provinceCode": "IR-19",
+    "countyFa": "عسلویه"
+  },
+  "ابهر": {
+    "provinceCode": "IR-20",
+    "countyFa": "ابهر"
+  },
+  "هیدج": {
+    "provinceCode": "IR-20",
+    "countyFa": "ابهر"
+  },
+  "قیدار": {
+    "provinceCode": "IR-20",
+    "countyFa": "خدابنده"
+  },
+  "سهرورد": {
+    "provinceCode": "IR-20",
+    "countyFa": "خدابنده"
+  },
+  "کرسف": {
+    "provinceCode": "IR-20",
+    "countyFa": "خدابنده"
+  },
+  "نوربهار": {
+    "provinceCode": "IR-20",
+    "countyFa": "خدابنده"
+  },
+  "سجاس": {
+    "provinceCode": "IR-20",
+    "countyFa": "خدابنده"
+  },
+  "زنجان": {
+    "provinceCode": "IR-20",
+    "countyFa": "زنجان"
+  },
+  "ارمغانخانه": {
+    "provinceCode": "IR-20",
+    "countyFa": "زنجان"
+  },
+  "حلب": {
+    "provinceCode": "IR-20",
+    "countyFa": "ایجرود"
+  },
+  "خرمدره": {
+    "provinceCode": "IR-20",
+    "countyFa": "خرمدره"
+  },
+  "چورزق": {
+    "provinceCode": "IR-20",
+    "countyFa": "طارم"
+  },
+  "دندی": {
+    "provinceCode": "IR-20",
+    "countyFa": "ماهنشان"
+  },
+  "سلطانیه": {
+    "provinceCode": "IR-20",
+    "countyFa": "سلطانیه"
+  },
+  "امیریه": {
+    "provinceCode": "IR-21",
+    "countyFa": "دامغان"
+  },
+  "دامغان": {
+    "provinceCode": "IR-21",
+    "countyFa": "دامغان"
+  },
+  "دیباج": {
+    "provinceCode": "IR-21",
+    "countyFa": "دامغان"
+  },
+  "کلاته": {
+    "provinceCode": "IR-21",
+    "countyFa": "دامغان"
+  },
+  "سمنان": {
+    "provinceCode": "IR-21",
+    "countyFa": "سمنان"
+  },
+  "بسطام": {
+    "provinceCode": "IR-21",
+    "countyFa": "شاهرود"
+  },
+  "مجن": {
+    "provinceCode": "IR-21",
+    "countyFa": "شاهرود"
+  },
+  "بیارجمند": {
+    "provinceCode": "IR-21",
+    "countyFa": "شاهرود"
+  },
+  "شاهرود": {
+    "provinceCode": "IR-21",
+    "countyFa": "شاهرود"
+  },
+  "رودیان": {
+    "provinceCode": "IR-21",
+    "countyFa": "شاهرود"
+  },
+  "ایوانکی": {
+    "provinceCode": "IR-21",
+    "countyFa": "گرمسار"
+  },
+  "گرمسار": {
+    "provinceCode": "IR-21",
+    "countyFa": "گرمسار"
+  },
+  "شهمیرزاد": {
+    "provinceCode": "IR-21",
+    "countyFa": "مهدی شهر"
+  },
+  "درجزین": {
+    "provinceCode": "IR-21",
+    "countyFa": "مهدی شهر"
+  },
+  "آرادان": {
+    "provinceCode": "IR-21",
+    "countyFa": "آرادان"
+  },
+  "میامی": {
+    "provinceCode": "IR-21",
+    "countyFa": "میامی"
+  },
+  "رضوان": {
+    "provinceCode": "IR-21",
+    "countyFa": "میامی"
+  },
+  "سرخه": {
+    "provinceCode": "IR-21",
+    "countyFa": "سرخه"
+  },
+  "خرانق": {
+    "provinceCode": "IR-22",
+    "countyFa": "اردکان"
+  },
+  "عقدا": {
+    "provinceCode": "IR-22",
+    "countyFa": "اردکان"
+  },
+  "بافق": {
+    "provinceCode": "IR-22",
+    "countyFa": "بافق"
+  },
+  "تفت": {
+    "provinceCode": "IR-22",
+    "countyFa": "تفت"
+  },
+  "نیر": {
+    "provinceCode": "IR-22",
+    "countyFa": "تفت"
+  },
+  "بخ": {
+    "provinceCode": "IR-22",
+    "countyFa": "تفت"
+  },
+  "مهریز": {
+    "provinceCode": "IR-22",
+    "countyFa": "مهریز"
+  },
+  "یزد": {
+    "provinceCode": "IR-22",
+    "countyFa": "یزد"
+  },
+  "شاهدیه": {
+    "provinceCode": "IR-22",
+    "countyFa": "یزد"
+  },
+  "حمیدیا": {
+    "provinceCode": "IR-22",
+    "countyFa": "یزد"
+  },
+  "میبد": {
+    "provinceCode": "IR-22",
+    "countyFa": "میبد"
+  },
+  "ندوشن": {
+    "provinceCode": "IR-22",
+    "countyFa": "میبد"
+  },
+  "بفروییه": {
+    "provinceCode": "IR-22",
+    "countyFa": "میبد"
+  },
+  "خضرآباد": {
+    "provinceCode": "IR-22",
+    "countyFa": "اشکذر"
+  },
+  "مهردشت": {
+    "provinceCode": "IR-22",
+    "countyFa": "ابرکوه"
+  },
+  "ابرکوه": {
+    "provinceCode": "IR-22",
+    "countyFa": "ابرکوه"
+  },
+  "اشکذر": {
+    "provinceCode": "IR-22",
+    "countyFa": "اشکذر"
+  },
+  "مجومرد": {
+    "provinceCode": "IR-22",
+    "countyFa": "اشکذر"
+  },
+  "هرات": {
+    "provinceCode": "IR-22",
+    "countyFa": "خاتم"
+  },
+  "بهاباد": {
+    "provinceCode": "IR-22",
+    "countyFa": "بهاباد"
+  },
+  "مروست": {
+    "provinceCode": "IR-22",
+    "countyFa": "مروست"
+  },
+  "زارچ": {
+    "provinceCode": "IR-22",
+    "countyFa": "زارچ"
+  },
+  "ابوموسی": {
+    "provinceCode": "IR-23",
+    "countyFa": "ابوموسی"
+  },
+  "فین": {
+    "provinceCode": "IR-23",
+    "countyFa": "بندر عباس"
+  },
+  "تخت": {
+    "provinceCode": "IR-23",
+    "countyFa": "بندر عباس"
+  },
+  "هرمز": {
+    "provinceCode": "IR-23",
+    "countyFa": "بندر عباس"
+  },
+  "چارک": {
+    "provinceCode": "IR-23",
+    "countyFa": "بندر لنگه"
+  },
+  "کیش": {
+    "provinceCode": "IR-23",
+    "countyFa": "بندر لنگه"
+  },
+  "کنگ": {
+    "provinceCode": "IR-23",
+    "countyFa": "بندر لنگه"
+  },
+  "لمزان": {
+    "provinceCode": "IR-23",
+    "countyFa": "بندر لنگه"
+  },
+  "سوزا": {
+    "provinceCode": "IR-23",
+    "countyFa": "قشم"
+  },
+  "رمکان": {
+    "provinceCode": "IR-23",
+    "countyFa": "قشم"
+  },
+  "لافت": {
+    "provinceCode": "IR-23",
+    "countyFa": "قشم"
+  },
+  "قشم": {
+    "provinceCode": "IR-23",
+    "countyFa": "قشم"
+  },
+  "درگهان": {
+    "provinceCode": "IR-23",
+    "countyFa": "قشم"
+  },
+  "طبل": {
+    "provinceCode": "IR-23",
+    "countyFa": "قشم"
+  },
+  "سندرک": {
+    "provinceCode": "IR-23",
+    "countyFa": "میناب"
+  },
+  "میناب": {
+    "provinceCode": "IR-23",
+    "countyFa": "میناب"
+  },
+  "تیرور": {
+    "provinceCode": "IR-23",
+    "countyFa": "میناب"
+  },
+  "هشتبندی": {
+    "provinceCode": "IR-23",
+    "countyFa": "میناب"
+  },
+  "زهوکی": {
+    "provinceCode": "IR-23",
+    "countyFa": "میناب"
+  },
+  "کرگان": {
+    "provinceCode": "IR-23",
+    "countyFa": "میناب"
+  },
+  "لیردف": {
+    "provinceCode": "IR-23",
+    "countyFa": "جاسک"
+  },
+  "زیارتعلی": {
+    "provinceCode": "IR-23",
+    "countyFa": "رودان"
+  },
+  "دهبارز": {
+    "provinceCode": "IR-23",
+    "countyFa": "رودان"
+  },
+  "بیکاء": {
+    "provinceCode": "IR-23",
+    "countyFa": "رودان"
+  },
+  "فارغان": {
+    "provinceCode": "IR-23",
+    "countyFa": "حاجی آباد"
+  },
+  "سرگز": {
+    "provinceCode": "IR-23",
+    "countyFa": "حاجی آباد"
+  },
+  "جناح": {
+    "provinceCode": "IR-23",
+    "countyFa": "بستک"
+  },
+  "هنگوییه": {
+    "provinceCode": "IR-23",
+    "countyFa": "بستک"
+  },
+  "بستک": {
+    "provinceCode": "IR-23",
+    "countyFa": "بستک"
+  },
+  "کوهیچ": {
+    "provinceCode": "IR-23",
+    "countyFa": "بستک"
+  },
+  "رویدر": {
+    "provinceCode": "IR-23",
+    "countyFa": "خمیر"
+  },
+  "خمیر": {
+    "provinceCode": "IR-23",
+    "countyFa": "خمیر"
+  },
+  "پل": {
+    "provinceCode": "IR-23",
+    "countyFa": "خمیر"
+  },
+  "کوشکنار": {
+    "provinceCode": "IR-23",
+    "countyFa": "پارسیان"
+  },
+  "پارسیان": {
+    "provinceCode": "IR-23",
+    "countyFa": "پارسیان"
+  },
+  "دشتی": {
+    "provinceCode": "IR-23",
+    "countyFa": "پارسیان"
+  },
+  "کوهستک": {
+    "provinceCode": "IR-23",
+    "countyFa": "سیریک"
+  },
+  "سیریک": {
+    "provinceCode": "IR-23",
+    "countyFa": "سیریک"
+  },
+  "گروک": {
+    "provinceCode": "IR-23",
+    "countyFa": "سیریک"
+  },
+  "گوهران": {
+    "provinceCode": "IR-23",
+    "countyFa": "بشاگرد"
+  },
+  "تهران": {
+    "provinceCode": "IR-24",
+    "countyFa": "تهران"
+  },
+  "دماوند": {
+    "provinceCode": "IR-24",
+    "countyFa": "دماوند"
+  },
+  "کیلان": {
+    "provinceCode": "IR-24",
+    "countyFa": "دماوند"
+  },
+  "آبسرد": {
+    "provinceCode": "IR-24",
+    "countyFa": "دماوند"
+  },
+  "رودهن": {
+    "provinceCode": "IR-24",
+    "countyFa": "دماوند"
+  },
+  "آبعلی": {
+    "provinceCode": "IR-24",
+    "countyFa": "دماوند"
+  },
+  "ملارد": {
+    "provinceCode": "IR-24",
+    "countyFa": "ملارد"
+  },
+  "صفادشت": {
+    "provinceCode": "IR-24",
+    "countyFa": "ملارد"
+  },
+  "پیشوا": {
+    "provinceCode": "IR-24",
+    "countyFa": "پیشوا"
+  },
+  "باقرشهر": {
+    "provinceCode": "IR-24",
+    "countyFa": "ری"
+  },
+  "کهریزک": {
+    "provinceCode": "IR-24",
+    "countyFa": "ری"
+  },
+  "ری": {
+    "provinceCode": "IR-24",
+    "countyFa": "ری"
+  },
+  "فشم": {
+    "provinceCode": "IR-24",
+    "countyFa": "شمیرانات"
+  },
+  "تجریش": {
+    "provinceCode": "IR-24",
+    "countyFa": "شمیرانات"
+  },
+  "شمشک": {
+    "provinceCode": "IR-24",
+    "countyFa": "شمیرانات"
+  },
+  "لواسان": {
+    "provinceCode": "IR-24",
+    "countyFa": "شمیرانات"
+  },
+  "جوادآباد": {
+    "provinceCode": "IR-24",
+    "countyFa": "ورامین"
+  },
+  "ورامین": {
+    "provinceCode": "IR-24",
+    "countyFa": "ورامین"
+  },
+  "شهریار": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "صباشهر": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "شاهدشهر": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "باغستان": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "اندیشه": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "شهریار1": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "شهریار2": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "شهریار3": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "وحیدیه": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "فردوسیه": {
+    "provinceCode": "IR-24",
+    "countyFa": "شهریار"
+  },
+  "چهاردانگه": {
+    "provinceCode": "IR-24",
+    "countyFa": "اسلامشهر"
+  },
+  "اسلامشهر": {
+    "provinceCode": "IR-24",
+    "countyFa": "اسلامشهر"
+  },
+  "رباطکریم": {
+    "provinceCode": "IR-24",
+    "countyFa": "رباط کریم"
+  },
+  "نصیرشهر": {
+    "provinceCode": "IR-24",
+    "countyFa": "رباط کریم"
+  },
+  "پرند": {
+    "provinceCode": "IR-24",
+    "countyFa": "رباط کریم"
+  },
+  "پاکدشت": {
+    "provinceCode": "IR-24",
+    "countyFa": "پاکدشت"
+  },
+  "ارجمند": {
+    "provinceCode": "IR-24",
+    "countyFa": "فیروزکوه"
+  },
+  "فیروزکوه": {
+    "provinceCode": "IR-24",
+    "countyFa": "فیروزکوه"
+  },
+  "قدس": {
+    "provinceCode": "IR-24",
+    "countyFa": "قدس"
+  },
+  "گلستان": {
+    "provinceCode": "IR-24",
+    "countyFa": "بهارستان"
+  },
+  "صالحیه": {
+    "provinceCode": "IR-24",
+    "countyFa": "بهارستان"
+  },
+  "بومهن": {
+    "provinceCode": "IR-24",
+    "countyFa": "پردیس"
+  },
+  "سعیداباد": {
+    "provinceCode": "IR-24",
+    "countyFa": "پردیس"
+  },
+  "خسرواباد": {
+    "provinceCode": "IR-24",
+    "countyFa": "پردیس"
+  },
+  "پردیس": {
+    "provinceCode": "IR-24",
+    "countyFa": "پردیس"
+  },
+  "قرچک": {
+    "provinceCode": "IR-24",
+    "countyFa": "قرچک"
+  },
+  "هشتجین": {
+    "provinceCode": "IR-25",
+    "countyFa": "خلخال"
+  },
+  "کلور": {
+    "provinceCode": "IR-25",
+    "countyFa": "خلخال"
+  },
+  "اردبیل": {
+    "provinceCode": "IR-25",
+    "countyFa": "اردبیل"
+  },
+  "هیر": {
+    "provinceCode": "IR-25",
+    "countyFa": "اردبیل"
+  },
+  "آراللو": {
+    "provinceCode": "IR-25",
+    "countyFa": "اردبیل"
+  },
+  "ثمرین": {
+    "provinceCode": "IR-25",
+    "countyFa": "اردبیل"
+  },
+  "جعفرآباد": {
+    "provinceCode": "IR-25",
+    "countyFa": "بیله سوار"
+  },
+  "خلخال": {
+    "provinceCode": "IR-25",
+    "countyFa": "خلخال"
+  },
+  "رضی": {
+    "provinceCode": "IR-25",
+    "countyFa": "مشگین شهر"
+  },
+  "النی": {
+    "provinceCode": "IR-25",
+    "countyFa": "مشگین شهر"
+  },
+  "لاهرود": {
+    "provinceCode": "IR-25",
+    "countyFa": "مشگین شهر"
+  },
+  "فخراباد": {
+    "provinceCode": "IR-25",
+    "countyFa": "مشگین شهر"
+  },
+  "مرادلو": {
+    "provinceCode": "IR-25",
+    "countyFa": "مشگین شهر"
+  },
+  "قصابه": {
+    "provinceCode": "IR-25",
+    "countyFa": "مشگین شهر"
+  },
+  "گرمی": {
+    "provinceCode": "IR-25",
+    "countyFa": "گرمی"
+  },
+  "زهرا": {
+    "provinceCode": "IR-25",
+    "countyFa": "گرمی"
+  },
+  "اولتان": {
+    "provinceCode": "IR-25",
+    "countyFa": "پارس آباد"
+  },
+  "گیوی": {
+    "provinceCode": "IR-25",
+    "countyFa": "کوثر"
+  },
+  "نمین": {
+    "provinceCode": "IR-25",
+    "countyFa": "نمین"
+  },
+  "عنبران": {
+    "provinceCode": "IR-25",
+    "countyFa": "نمین"
+  },
+  "کوراییم": {
+    "provinceCode": "IR-25",
+    "countyFa": "نیر"
+  },
+  "سرعین": {
+    "provinceCode": "IR-25",
+    "countyFa": "سرعین"
+  },
+  "اردیموسی": {
+    "provinceCode": "IR-25",
+    "countyFa": "سرعین"
+  },
+  "اصلاندوز": {
+    "provinceCode": "IR-25",
+    "countyFa": "اصلاندوز"
+  },
+  "زیوه": {
+    "provinceCode": "IR-25",
+    "countyFa": "انگوت"
+  },
+  "دستجرد": {
+    "provinceCode": "IR-26",
+    "countyFa": "قم"
+  },
+  "قم": {
+    "provinceCode": "IR-26",
+    "countyFa": "قم"
+  },
+  "قنوات": {
+    "provinceCode": "IR-26",
+    "countyFa": "قم"
+  },
+  "سلفچگان": {
+    "provinceCode": "IR-26",
+    "countyFa": "قم"
+  },
+  "جعفریه": {
+    "provinceCode": "IR-26",
+    "countyFa": "جعفرآباد"
+  },
+  "قاهان": {
+    "provinceCode": "IR-26",
+    "countyFa": "جعفرآباد"
+  },
+  "کهک": {
+    "provinceCode": "IR-26",
+    "countyFa": "کهک"
+  },
+  "دانسفهان": {
+    "provinceCode": "IR-27",
+    "countyFa": "بویین زهرا"
+  },
+  "شال": {
+    "provinceCode": "IR-27",
+    "countyFa": "بویین زهرا"
+  },
+  "سگزآباد": {
+    "provinceCode": "IR-27",
+    "countyFa": "بویین زهرا"
+  },
+  "ارداق": {
+    "provinceCode": "IR-27",
+    "countyFa": "بویین زهرا"
+  },
+  "اسفرورین": {
+    "provinceCode": "IR-27",
+    "countyFa": "تاکستان"
+  },
+  "خرمدشت": {
+    "provinceCode": "IR-27",
+    "countyFa": "تاکستان"
+  },
+  "ضیاآباد": {
+    "provinceCode": "IR-27",
+    "countyFa": "تاکستان"
+  },
+  "تاکستان": {
+    "provinceCode": "IR-27",
+    "countyFa": "تاکستان"
+  },
+  "نرجه": {
+    "provinceCode": "IR-27",
+    "countyFa": "تاکستان"
+  },
+  "رازمیان": {
+    "provinceCode": "IR-27",
+    "countyFa": "قزوین"
+  },
+  "سیردان": {
+    "provinceCode": "IR-27",
+    "countyFa": "قزوین"
+  },
+  "قزوین": {
+    "provinceCode": "IR-27",
+    "countyFa": "قزوین"
+  },
+  "اقبالیه": {
+    "provinceCode": "IR-27",
+    "countyFa": "قزوین"
+  },
+  "محمودآبادنمونه": {
+    "provinceCode": "IR-27",
+    "countyFa": "قزوین"
+  },
+  "کوهین": {
+    "provinceCode": "IR-27",
+    "countyFa": "قزوین"
+  },
+  "خاکعلی": {
+    "provinceCode": "IR-27",
+    "countyFa": "آبیک"
+  },
+  "آبیک": {
+    "provinceCode": "IR-27",
+    "countyFa": "آبیک"
+  },
+  "زیاران": {
+    "provinceCode": "IR-27",
+    "countyFa": "آبیک"
+  },
+  "قشلاق": {
+    "provinceCode": "IR-27",
+    "countyFa": "آبیک"
+  },
+  "شریفیه": {
+    "provinceCode": "IR-27",
+    "countyFa": "البرز"
+  },
+  "محمدیه": {
+    "provinceCode": "IR-27",
+    "countyFa": "البرز"
+  },
+  "بیدستان": {
+    "provinceCode": "IR-27",
+    "countyFa": "البرز"
+  },
+  "الوند": {
+    "provinceCode": "IR-27",
+    "countyFa": "البرز"
+  },
+  "آوج": {
+    "provinceCode": "IR-27",
+    "countyFa": "آوج"
+  },
+  "آبگرم": {
+    "provinceCode": "IR-27",
+    "countyFa": "آوج"
+  },
+  "بندرگز": {
+    "provinceCode": "IR-28",
+    "countyFa": "بندرگز"
+  },
+  "نوکنده": {
+    "provinceCode": "IR-28",
+    "countyFa": "بندرگز"
+  },
+  "بندرترکمن": {
+    "provinceCode": "IR-28",
+    "countyFa": "ترکمن"
+  },
+  "سیجوال": {
+    "provinceCode": "IR-28",
+    "countyFa": "ترکمن"
+  },
+  "مزرعه": {
+    "provinceCode": "IR-28",
+    "countyFa": "علی آباد کتول"
+  },
+  "سنگدوین": {
+    "provinceCode": "IR-28",
+    "countyFa": "علی آباد کتول"
+  },
+  "کردکوی": {
+    "provinceCode": "IR-28",
+    "countyFa": "کردکوی"
+  },
+  "گرگان": {
+    "provinceCode": "IR-28",
+    "countyFa": "گرگان"
+  },
+  "جلین": {
+    "provinceCode": "IR-28",
+    "countyFa": "گرگان"
+  },
+  "سرخنکلاته": {
+    "provinceCode": "IR-28",
+    "countyFa": "گرگان"
+  },
+  "قرق": {
+    "provinceCode": "IR-28",
+    "countyFa": "گرگان"
+  },
+  "فراغی": {
+    "provinceCode": "IR-28",
+    "countyFa": "کلاله"
+  },
+  "گنبدکاووس": {
+    "provinceCode": "IR-28",
+    "countyFa": "گنبدکاووس"
+  },
+  "القجر": {
+    "provinceCode": "IR-28",
+    "countyFa": "مینودشت"
+  },
+  "مینودشت": {
+    "provinceCode": "IR-28",
+    "countyFa": "مینودشت"
+  },
+  "دوزین": {
+    "provinceCode": "IR-28",
+    "countyFa": "مینودشت"
+  },
+  "کلاله": {
+    "provinceCode": "IR-28",
+    "countyFa": "کلاله"
+  },
+  "آزادشهر": {
+    "provinceCode": "IR-28",
+    "countyFa": "آزادشهر"
+  },
+  "رامیان": {
+    "provinceCode": "IR-28",
+    "countyFa": "رامیان"
+  },
+  "دلند": {
+    "provinceCode": "IR-28",
+    "countyFa": "رامیان"
+  },
+  "مراوه": {
+    "provinceCode": "IR-28",
+    "countyFa": "مراوه تپه"
+  },
+  "گلیداغ": {
+    "provinceCode": "IR-28",
+    "countyFa": "مراوه تپه"
+  },
+  "ینقاق": {
+    "provinceCode": "IR-28",
+    "countyFa": "گالیکش"
+  },
+  "گالیکش": {
+    "provinceCode": "IR-28",
+    "countyFa": "گالیکش"
+  },
+  "اسفراین": {
+    "provinceCode": "IR-29",
+    "countyFa": "اسفراین"
+  },
+  "بجنورد": {
+    "provinceCode": "IR-29",
+    "countyFa": "بجنورد"
+  },
+  "بجنورد1": {
+    "provinceCode": "IR-29",
+    "countyFa": "بجنورد"
+  },
+  "بجنورد2": {
+    "provinceCode": "IR-29",
+    "countyFa": "بجنورد"
+  },
+  "حصارگرمخان": {
+    "provinceCode": "IR-29",
+    "countyFa": "بجنورد"
+  },
+  "سنخواست": {
+    "provinceCode": "IR-29",
+    "countyFa": "جاجرم"
+  },
+  "شوقان": {
+    "provinceCode": "IR-29",
+    "countyFa": "جاجرم"
+  },
+  "جاجرم": {
+    "provinceCode": "IR-29",
+    "countyFa": "جاجرم"
+  },
+  "لوجلی": {
+    "provinceCode": "IR-29",
+    "countyFa": "شیروان"
+  },
+  "خانلق": {
+    "provinceCode": "IR-29",
+    "countyFa": "شیروان"
+  },
+  "شیروان": {
+    "provinceCode": "IR-29",
+    "countyFa": "شیروان"
+  },
+  "زیارت": {
+    "provinceCode": "IR-29",
+    "countyFa": "شیروان"
+  },
+  "قوشخانه": {
+    "provinceCode": "IR-29",
+    "countyFa": "شیروان"
+  },
+  "تیتکانلو": {
+    "provinceCode": "IR-29",
+    "countyFa": "فاروج"
+  },
+  "فاروج": {
+    "provinceCode": "IR-29",
+    "countyFa": "فاروج"
+  },
+  "قاضی": {
+    "provinceCode": "IR-29",
+    "countyFa": "سملقان"
+  },
+  "آوا": {
+    "provinceCode": "IR-29",
+    "countyFa": "سملقان"
+  },
+  "آشخانه": {
+    "provinceCode": "IR-29",
+    "countyFa": "سملقان"
+  },
+  "ایور": {
+    "provinceCode": "IR-29",
+    "countyFa": "گرمه"
+  },
+  "گرمه": {
+    "provinceCode": "IR-29",
+    "countyFa": "گرمه"
+  },
+  "درق": {
+    "provinceCode": "IR-29",
+    "countyFa": "گرمه"
+  },
+  "راز": {
+    "provinceCode": "IR-29",
+    "countyFa": "راز و جرگلان"
+  },
+  "غلامان": {
+    "provinceCode": "IR-29",
+    "countyFa": "راز و جرگلان"
+  },
+  "بیرجند": {
+    "provinceCode": "IR-30",
+    "countyFa": "بیرجند"
+  },
+  "بیرجند1": {
+    "provinceCode": "IR-30",
+    "countyFa": "بیرجند"
+  },
+  "بیرجند2": {
+    "provinceCode": "IR-30",
+    "countyFa": "بیرجند"
+  },
+  "قهستان": {
+    "provinceCode": "IR-30",
+    "countyFa": "درمیان"
+  },
+  "گزیک": {
+    "provinceCode": "IR-30",
+    "countyFa": "درمیان"
+  },
+  "اسدیه": {
+    "provinceCode": "IR-30",
+    "countyFa": "درمیان"
+  },
+  "سربیشه": {
+    "provinceCode": "IR-30",
+    "countyFa": "سربیشه"
+  },
+  "مود": {
+    "provinceCode": "IR-30",
+    "countyFa": "سربیشه"
+  },
+  "درح": {
+    "provinceCode": "IR-30",
+    "countyFa": "سربیشه"
+  },
+  "قاین": {
+    "provinceCode": "IR-30",
+    "countyFa": "قاینات"
+  },
+  "اسفدن": {
+    "provinceCode": "IR-30",
+    "countyFa": "قاینات"
+  },
+  "نیمبلوک": {
+    "provinceCode": "IR-30",
+    "countyFa": "قاینات"
+  },
+  "شوسف": {
+    "provinceCode": "IR-30",
+    "countyFa": "نهبندان"
+  },
+  "نهبندان": {
+    "provinceCode": "IR-30",
+    "countyFa": "نهبندان"
+  },
+  "سرایان": {
+    "provinceCode": "IR-30",
+    "countyFa": "سرایان"
+  },
+  "آیسک": {
+    "provinceCode": "IR-30",
+    "countyFa": "سرایان"
+  },
+  "اسلامیه": {
+    "provinceCode": "IR-30",
+    "countyFa": "فردوس"
+  },
+  "فردوس": {
+    "provinceCode": "IR-30",
+    "countyFa": "فردوس"
+  },
+  "زهان": {
+    "provinceCode": "IR-30",
+    "countyFa": "زیرکوه"
+  },
+  "بشرویه": {
+    "provinceCode": "IR-30",
+    "countyFa": "بشرویه"
+  },
+  "ارسک": {
+    "provinceCode": "IR-30",
+    "countyFa": "بشرویه"
+  },
+  "آبیز": {
+    "provinceCode": "IR-30",
+    "countyFa": "زیرکوه"
+  },
+  "خوسف": {
+    "provinceCode": "IR-30",
+    "countyFa": "خوسف"
+  },
+  "ماژان": {
+    "provinceCode": "IR-30",
+    "countyFa": "خوسف"
+  },
+  "طبس": {
+    "provinceCode": "IR-30",
+    "countyFa": "طبس"
+  },
+  "دیهوک": {
+    "provinceCode": "IR-30",
+    "countyFa": "طبس"
+  },
+  "کرج": {
+    "provinceCode": "IR-31",
+    "countyFa": "کرج"
+  },
+  "ماهدشت": {
+    "provinceCode": "IR-31",
+    "countyFa": "کرج"
+  },
+  "گرمدره": {
+    "provinceCode": "IR-31",
+    "countyFa": "کرج"
+  },
+  "آسارا": {
+    "provinceCode": "IR-31",
+    "countyFa": "کرج"
+  },
+  "هشتگرد": {
+    "provinceCode": "IR-31",
+    "countyFa": "ساوجبلاغ"
+  },
+  "گلسار": {
+    "provinceCode": "IR-31",
+    "countyFa": "ساوجبلاغ"
+  },
+  "مهستان": {
+    "provinceCode": "IR-31",
+    "countyFa": "ساوجبلاغ"
+  },
+  "کوهسار": {
+    "provinceCode": "IR-31",
+    "countyFa": "ساوجبلاغ"
+  },
+  "نظرآباد": {
+    "provinceCode": "IR-31",
+    "countyFa": "نظرآباد"
+  },
+  "تنکمان": {
+    "provinceCode": "IR-31",
+    "countyFa": "نظرآباد"
+  },
+  "طالقان": {
+    "provinceCode": "IR-31",
+    "countyFa": "طالقان"
+  },
+  "اشتهارد": {
+    "provinceCode": "IR-31",
+    "countyFa": "اشتهارد"
+  },
+  "فردیس": {
+    "provinceCode": "IR-31",
+    "countyFa": "فردیس"
+  },
+  "چهارباغ": {
+    "provinceCode": "IR-31",
+    "countyFa": "چهارباغ"
+  },
+  "آستانه اشرفیه": {
+    "provinceCode": "IR-02",
+    "countyFa": "آستانه اشرفیه"
+  },
+  "طوالش": {
+    "provinceCode": "IR-02",
+    "countyFa": "طوالش"
+  },
+  "صومعه سرا": {
+    "provinceCode": "IR-02",
+    "countyFa": "صومعه سرا"
+  },
+  "سوادکوه": {
+    "provinceCode": "IR-03",
+    "countyFa": "سوادکوه"
+  },
+  "اسلام آبادغرب": {
+    "provinceCode": "IR-06",
+    "countyFa": "اسلام آبادغرب"
+  },
+  "سرپل ذهاب": {
+    "provinceCode": "IR-06",
+    "countyFa": "سرپل ذهاب"
+  },
+  "دشت آزادگان": {
+    "provinceCode": "IR-07",
+    "countyFa": "دشت آزادگان"
+  },
+  "سپیدان": {
+    "provinceCode": "IR-08",
+    "countyFa": "سپیدان"
+  },
+  "تربت حیدریه": {
+    "provinceCode": "IR-10",
+    "countyFa": "تربت حیدریه"
+  },
+  "تربت جام": {
+    "provinceCode": "IR-10",
+    "countyFa": "تربت جام"
+  },
+  "خمینی شهر": {
+    "provinceCode": "IR-11",
+    "countyFa": "خمینی شهر"
+  },
+  "فریدن": {
+    "provinceCode": "IR-11",
+    "countyFa": "فریدن"
+  },
+  "چاه بهار": {
+    "provinceCode": "IR-12",
+    "countyFa": "چاه بهار"
+  },
+  "نیک شهر": {
+    "provinceCode": "IR-12",
+    "countyFa": "نیک شهر"
+  },
+  "کوهرنگ": {
+    "provinceCode": "IR-15",
+    "countyFa": "کوهرنگ"
+  },
+  "کیار": {
+    "provinceCode": "IR-15",
+    "countyFa": "کیار"
+  },
+  "خرم آباد": {
+    "provinceCode": "IR-16",
+    "countyFa": "خرم آباد"
+  },
+  "دلفان": {
+    "provinceCode": "IR-16",
+    "countyFa": "دلفان"
+  },
+  "سلسله": {
+    "provinceCode": "IR-16",
+    "countyFa": "سلسله"
+  },
+  "دره شهر": {
+    "provinceCode": "IR-17",
+    "countyFa": "دره شهر"
+  },
+  "چرداول": {
+    "provinceCode": "IR-17",
+    "countyFa": "چرداول"
+  },
+  "ملکشاهی": {
+    "provinceCode": "IR-17",
+    "countyFa": "ملکشاهی"
+  },
+  "سیروان": {
+    "provinceCode": "IR-17",
+    "countyFa": "سیروان"
+  },
+  "بویراحمد": {
+    "provinceCode": "IR-18",
+    "countyFa": "بویراحمد"
+  },
+  "کهگیلویه": {
+    "provinceCode": "IR-18",
+    "countyFa": "کهگیلویه"
+  },
+  "گچساران": {
+    "provinceCode": "IR-18",
+    "countyFa": "گچساران"
+  },
+  "دنا": {
+    "provinceCode": "IR-18",
+    "countyFa": "دنا"
+  },
+  "بهمیی": {
+    "provinceCode": "IR-18",
+    "countyFa": "بهمیی"
+  },
+  "تنگستان": {
+    "provinceCode": "IR-19",
+    "countyFa": "تنگستان"
+  },
+  "دشتستان": {
+    "provinceCode": "IR-19",
+    "countyFa": "دشتستان"
+  },
+  "دیر": {
+    "provinceCode": "IR-19",
+    "countyFa": "دیر"
+  },
+  "کنگان": {
+    "provinceCode": "IR-19",
+    "countyFa": "کنگان"
+  },
+  "گناوه": {
+    "provinceCode": "IR-19",
+    "countyFa": "گناوه"
+  },
+  "دیلم": {
+    "provinceCode": "IR-19",
+    "countyFa": "دیلم"
+  },
+  "خدابنده": {
+    "provinceCode": "IR-20",
+    "countyFa": "خدابنده"
+  },
+  "ایجرود": {
+    "provinceCode": "IR-20",
+    "countyFa": "ایجرود"
+  },
+  "طارم": {
+    "provinceCode": "IR-20",
+    "countyFa": "طارم"
+  },
+  "ماهنشان": {
+    "provinceCode": "IR-20",
+    "countyFa": "ماهنشان"
+  },
+  "مهدی شهر": {
+    "provinceCode": "IR-21",
+    "countyFa": "مهدی شهر"
+  },
+  "خاتم": {
+    "provinceCode": "IR-22",
+    "countyFa": "خاتم"
+  },
+  "بندر عباس": {
+    "provinceCode": "IR-23",
+    "countyFa": "بندر عباس"
+  },
+  "بندر لنگه": {
+    "provinceCode": "IR-23",
+    "countyFa": "بندر لنگه"
+  },
+  "جاسک": {
+    "provinceCode": "IR-23",
+    "countyFa": "جاسک"
+  },
+  "رودان": {
+    "provinceCode": "IR-23",
+    "countyFa": "رودان"
+  },
+  "حاجی آباد": {
+    "provinceCode": "IR-23",
+    "countyFa": "حاجی آباد"
+  },
+  "شمیرانات": {
+    "provinceCode": "IR-24",
+    "countyFa": "شمیرانات"
+  },
+  "بیله سوار": {
+    "provinceCode": "IR-25",
+    "countyFa": "بیله سوار"
+  },
+  "مشگین شهر": {
+    "provinceCode": "IR-25",
+    "countyFa": "مشگین شهر"
+  },
+  "پارس آباد": {
+    "provinceCode": "IR-25",
+    "countyFa": "پارس آباد"
+  },
+  "کوثر": {
+    "provinceCode": "IR-25",
+    "countyFa": "کوثر"
+  },
+  "بویین زهرا": {
+    "provinceCode": "IR-27",
+    "countyFa": "بویین زهرا"
+  },
+  "البرز": {
+    "provinceCode": "IR-27",
+    "countyFa": "البرز"
+  },
+  "ترکمن": {
+    "provinceCode": "IR-28",
+    "countyFa": "ترکمن"
+  },
+  "علی آباد کتول": {
+    "provinceCode": "IR-28",
+    "countyFa": "علی آباد کتول"
+  },
+  "آق قلا": {
+    "provinceCode": "IR-28",
+    "countyFa": "آق قلا"
+  },
+  "سملقان": {
+    "provinceCode": "IR-29",
+    "countyFa": "سملقان"
+  },
+  "راز و جرگلان": {
+    "provinceCode": "IR-29",
+    "countyFa": "راز و جرگلان"
+  },
+  "بام و صفی آباد": {
+    "provinceCode": "IR-29",
+    "countyFa": "بام و صفی آباد"
+  },
+  "درمیان": {
+    "provinceCode": "IR-30",
+    "countyFa": "درمیان"
+  },
+  "قاینات": {
+    "provinceCode": "IR-30",
+    "countyFa": "قاینات"
+  },
+  "زیرکوه": {
+    "provinceCode": "IR-30",
+    "countyFa": "زیرکوه"
+  },
+  "ساوجبلاغ": {
+    "provinceCode": "IR-31",
+    "countyFa": "ساوجبلاغ"
+  },
+  "زرندیه": {
+    "provinceCode": "IR-01",
+    "countyFa": "زرندیه"
+  },
+  "فراهان": {
+    "provinceCode": "IR-01",
+    "countyFa": "فراهان"
+  },
+  "قایم شهر": {
+    "provinceCode": "IR-03",
+    "countyFa": "قایم شهر"
+  },
+  "عباس آباد": {
+    "provinceCode": "IR-03",
+    "countyFa": "عباس آباد"
+  },
+  "میاندورود": {
+    "provinceCode": "IR-03",
+    "countyFa": "میاندورود"
+  },
+  "سیمرغ": {
+    "provinceCode": "IR-03",
+    "countyFa": "سیمرغ"
+  },
+  "سوادکوه شمالی": {
+    "provinceCode": "IR-03",
+    "countyFa": "سوادکوه شمالی"
+  },
+  "بستان آباد": {
+    "provinceCode": "IR-04",
+    "countyFa": "بستان آباد"
+  },
+  "چاراویماق": {
+    "provinceCode": "IR-04",
+    "countyFa": "چاراویماق"
+  },
+  "عجب شیر": {
+    "provinceCode": "IR-04",
+    "countyFa": "عجب شیر"
+  },
+  "خداآفرین": {
+    "provinceCode": "IR-04",
+    "countyFa": "خداآفرین"
+  },
+  "شاهین دژ": {
+    "provinceCode": "IR-05",
+    "countyFa": "شاهین دژ"
+  },
+  "چالدران": {
+    "provinceCode": "IR-05",
+    "countyFa": "چالدران"
+  },
+  "چایپاره": {
+    "provinceCode": "IR-05",
+    "countyFa": "چایپاره"
+  },
+  "ثلاث باباجانی": {
+    "provinceCode": "IR-06",
+    "countyFa": "ثلاث باباجانی"
+  },
+  "دالاهو": {
+    "provinceCode": "IR-06",
+    "countyFa": "دالاهو"
+  },
+  "باغ ملک": {
+    "provinceCode": "IR-07",
+    "countyFa": "باغ ملک"
+  },
+  "اندیکا": {
+    "provinceCode": "IR-07",
+    "countyFa": "اندیکا"
+  },
+  "هفتکل": {
+    "provinceCode": "IR-07",
+    "countyFa": "هفتکل"
+  },
+  "باوی": {
+    "provinceCode": "IR-07",
+    "countyFa": "باوی"
+  },
+  "کارون": {
+    "provinceCode": "IR-07",
+    "countyFa": "کارون"
+  },
+  "کرخه": {
+    "provinceCode": "IR-07",
+    "countyFa": "کرخه"
+  },
+  "دزپارت": {
+    "provinceCode": "IR-07",
+    "countyFa": "دزپارت"
+  },
+  "لارستان": {
+    "provinceCode": "IR-08",
+    "countyFa": "لارستان"
+  },
+  "ممسنی": {
+    "provinceCode": "IR-08",
+    "countyFa": "ممسنی"
+  },
+  "نی ریز": {
+    "provinceCode": "IR-08",
+    "countyFa": "نی ریز"
+  },
+  "خرم بید": {
+    "provinceCode": "IR-08",
+    "countyFa": "خرم بید"
+  },
+  "زرین دشت": {
+    "provinceCode": "IR-08",
+    "countyFa": "زرین دشت"
+  },
+  "قیروکارزین": {
+    "provinceCode": "IR-08",
+    "countyFa": "قیروکارزین"
+  },
+  "پاسارگاد": {
+    "provinceCode": "IR-08",
+    "countyFa": "پاسارگاد"
+  },
+  "رستم": {
+    "provinceCode": "IR-08",
+    "countyFa": "رستم"
+  },
+  "سرچهان": {
+    "provinceCode": "IR-08",
+    "countyFa": "سرچهان"
+  },
+  "کوه چنار": {
+    "provinceCode": "IR-08",
+    "countyFa": "کوه چنار"
+  },
+  "خفر": {
+    "provinceCode": "IR-08",
+    "countyFa": "خفر"
+  },
+  "بختگان": {
+    "provinceCode": "IR-08",
+    "countyFa": "بختگان"
+  },
+  "رودبارجنوب": {
+    "provinceCode": "IR-09",
+    "countyFa": "رودبارجنوب"
+  },
+  "قلعه گنج": {
+    "provinceCode": "IR-09",
+    "countyFa": "قلعه گنج"
+  },
+  "ریگان": {
+    "provinceCode": "IR-09",
+    "countyFa": "ریگان"
+  },
+  "جازموریان": {
+    "provinceCode": "IR-09",
+    "countyFa": "جازموریان"
+  },
+  "خلیل آباد": {
+    "provinceCode": "IR-10",
+    "countyFa": "خلیل آباد"
+  },
+  "مه ولات": {
+    "provinceCode": "IR-10",
+    "countyFa": "مه ولات"
+  },
+  "طرقبه شاندیز": {
+    "provinceCode": "IR-10",
+    "countyFa": "طرقبه شاندیز"
+  },
+  "زاوه": {
+    "provinceCode": "IR-10",
+    "countyFa": "زاوه"
+  },
+  "جوین": {
+    "provinceCode": "IR-10",
+    "countyFa": "جوین"
+  },
+  "خوشاب": {
+    "provinceCode": "IR-10",
+    "countyFa": "خوشاب"
+  },
+  "صالح آباد": {
+    "provinceCode": "IR-10",
+    "countyFa": "صالح آباد"
+  },
+  "کوهسرخ": {
+    "provinceCode": "IR-10",
+    "countyFa": "کوهسرخ"
+  },
+  "زبرخان": {
+    "provinceCode": "IR-10",
+    "countyFa": "زبرخان"
+  },
+  "میان جلگه": {
+    "provinceCode": "IR-10",
+    "countyFa": "میان جلگه"
+  },
+  "لنجان": {
+    "provinceCode": "IR-11",
+    "countyFa": "لنجان"
+  },
+  "نجف آباد": {
+    "provinceCode": "IR-11",
+    "countyFa": "نجف آباد"
+  },
+  "شاهین شهرو میمه": {
+    "provinceCode": "IR-11",
+    "countyFa": "شاهین شهرو میمه"
+  },
+  "آران و بیدگل": {
+    "provinceCode": "IR-11",
+    "countyFa": "آران و بیدگل"
+  },
+  "تیران وکرون": {
+    "provinceCode": "IR-11",
+    "countyFa": "تیران وکرون"
+  },
+  "برخوار": {
+    "provinceCode": "IR-11",
+    "countyFa": "برخوار"
+  },
+  "خور و بیابانک": {
+    "provinceCode": "IR-11",
+    "countyFa": "خور و بیابانک"
+  },
+  "بویین و میاندشت": {
+    "provinceCode": "IR-11",
+    "countyFa": "بویین و میاندشت"
+  },
+  "جرقویه": {
+    "provinceCode": "IR-11",
+    "countyFa": "جرقویه"
+  },
+  "هیرمند": {
+    "provinceCode": "IR-12",
+    "countyFa": "هیرمند"
+  },
+  "دلگان": {
+    "provinceCode": "IR-12",
+    "countyFa": "دلگان"
+  },
+  "سیب و سوران": {
+    "provinceCode": "IR-12",
+    "countyFa": "سیب و سوران"
+  },
+  "نیمروز": {
+    "provinceCode": "IR-12",
+    "countyFa": "نیمروز"
+  },
+  "هامون": {
+    "provinceCode": "IR-12",
+    "countyFa": "هامون"
+  },
+  "تفتان": {
+    "provinceCode": "IR-12",
+    "countyFa": "تفتان"
+  },
+  "دشتیاری": {
+    "provinceCode": "IR-12",
+    "countyFa": "دشتیاری"
+  },
+  "لاشار": {
+    "provinceCode": "IR-12",
+    "countyFa": "لاشار"
+  },
+  "درگزین": {
+    "provinceCode": "IR-14",
+    "countyFa": "درگزین"
+  },
+  "خانمیرزا": {
+    "provinceCode": "IR-15",
+    "countyFa": "خانمیرزا"
+  },
+  "فلارد": {
+    "provinceCode": "IR-15",
+    "countyFa": "فلارد"
+  },
+  "فرخ شهر": {
+    "provinceCode": "IR-15",
+    "countyFa": "فرخ شهر"
+  },
+  "چگنی": {
+    "provinceCode": "IR-16",
+    "countyFa": "چگنی"
+  },
+  "رومشکان": {
+    "provinceCode": "IR-16",
+    "countyFa": "رومشکان"
+  },
+  "هلیلان": {
+    "provinceCode": "IR-17",
+    "countyFa": "هلیلان"
+  },
+  "بشاگرد": {
+    "provinceCode": "IR-23",
+    "countyFa": "بشاگرد"
+  },
+  "رباط کریم": {
+    "provinceCode": "IR-24",
+    "countyFa": "رباط کریم"
+  },
+  "انگوت": {
+    "provinceCode": "IR-25",
+    "countyFa": "انگوت"
+  },
+  "مراوه تپه": {
+    "provinceCode": "IR-28",
+    "countyFa": "مراوه تپه"
+  },
+  "گمیشان": {
+    "provinceCode": "IR-28",
+    "countyFa": "گمیشان"
+  },
+  "مانه": {
+    "provinceCode": "IR-29",
+    "countyFa": "مانه"
+  }
+}
