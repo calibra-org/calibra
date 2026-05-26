@@ -1,41 +1,51 @@
 import { type ScaleQuantile, scaleQuantile } from "d3-scale";
-import { interpolateInferno, interpolateViridis } from "d3-scale-chromatic";
-
-/** Local `quantize` so we don't pull `d3-interpolate` into the catalog just for this. */
-function quantize(interpolator: (t: number) => string, n: number): string[] {
-    if (n < 1) return [];
-    if (n === 1) return [interpolator(0.5)];
-    const out: string[] = [];
-    for (let i = 0; i < n; i += 1) out.push(interpolator(i / (n - 1)));
-    return out;
-}
 
 /**
- * Perceptually-uniform multi-hue choropleth palettes, sampled at 7 stops and partitioned via
- * `scaleQuantile` so heavy-tailed order distributions still read cleanly (Tehran absorbs ~30%
- * of any dataset; equal-interval bins would collapse 30 of 31 provinces into the lightest stop).
+ * Single-hue (shades) choropleth palettes, partitioned via `scaleQuantile` so heavy-tailed
+ * order distributions still read cleanly (Tehran absorbs ~30% of any dataset; equal-interval
+ * bins would collapse 30 of 31 provinces into the lightest stop).
  *
- * Both palettes are scientific colour maps in the spirit of the GMT / Fabio Crameri Scientific
- * Colour Maps reference (`https://docs.generic-mapping-tools.org/dev/reference/cpts.html`):
+ * Palettes start at the Tailwind 300 stop instead of 100/200 — the very light stops vanish on
+ * a dark card background, and the very dark stops (900+) vanish on a light card background. The
+ * 300→900 range stays visible across both modes without per-theme branching.
  *
- *   - **Orders → Viridis** — purple → teal → green → yellow. Perceptually uniform, colour-blind
- *     safe, monotonic in luminance. No blue overlap with the dark-blue sea.
- *   - **Revenue → Inferno** — black → purple → red → orange → yellow. Heat-style, intuitive
- *     for "more = hotter", monotonic in luminance, colour-blind safe.
+ *   - **Orders → Emerald shades** — saturated green ramp, vivid against both light and dark
+ *     cards, distinct from the dark-blue sea.
+ *   - **Revenue → Rose shades** — warm red/pink ramp, reads as "hotter = more" without the
+ *     low-luminance washout of pure red at the dark end.
  *
- * Zero is a distinct category (`#f3f4f6`) so absent-data provinces never collide with the
- * palette floor.
+ * Zero is a distinct category (`#94a3b8` slate-400, mid-luminance) so absent-data regions
+ * never collide with the palette floor on either theme. The WCAG contrast pass picks white
+ * text on it under either mode (luminance ≈ 0.36, below the 0.4 threshold).
  */
 
 export type HeatmapMetric = "orders" | "revenue";
 
-export const ZERO_COLOR = "#f3f4f6";
+export const ZERO_COLOR = "#94a3b8";
 
-const STOPS = 7;
+const EMERALD: readonly string[] = [
+    "#6ee7b7",
+    "#34d399",
+    "#10b981",
+    "#059669",
+    "#047857",
+    "#065f46",
+    "#064e3b",
+];
+
+const ROSE: readonly string[] = [
+    "#fda4af",
+    "#fb7185",
+    "#f43f5e",
+    "#e11d48",
+    "#be123c",
+    "#9f1239",
+    "#881337",
+];
 
 const PALETTES: Record<HeatmapMetric, readonly string[]> = {
-    orders: quantize(interpolateViridis, STOPS),
-    revenue: quantize(interpolateInferno, STOPS),
+    orders: EMERALD,
+    revenue: ROSE,
 };
 
 export interface HeatmapScale {
@@ -46,9 +56,8 @@ export interface HeatmapScale {
 const EMPTY_BANDS: ReadonlyArray<{ from: number; to: number; color: string }> = [];
 
 /**
- * Build a quantile scale over the non-zero values. Returns `null`-equivalent (every value paints
- * the zero color) when the input is empty — the caller renders the legend as "no orders" in that
- * case.
+ * Build a quantile scale over the non-zero values. Returns a constant zero-paint when no
+ * non-zero values exist — the caller renders the legend as "no orders" in that case.
  */
 export function buildHeatmapScale(values: ReadonlyArray<number>, metric: HeatmapMetric): HeatmapScale {
     const palette = PALETTES[metric];
