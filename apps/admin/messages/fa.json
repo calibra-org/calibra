@@ -970,6 +970,144 @@
                 "slugRequired": "نامک الزامی است",
                 "numberRequired": "عدد معتبر وارد کنید"
             }
+        },
+        "detail": {
+            "backToList": "بازگشت به فهرست محصولات",
+            "untitled": "محصول بدون عنوان",
+            "newProductTitle": "محصول جدید",
+            "lastEditedAt": "آخرین ویرایش: {at}",
+            "slugTaken": "این نامک قبلاً استفاده شده است",
+            "unsavedConfirm": "تغییرات ذخیره‌نشده دارید. ادامه می‌دهید؟",
+            "trashBanner": "این محصول در زباله‌دان است.",
+            "idListHint": "شناسه‌ها را با کاما جدا کنید",
+            "idHint": "شناسهٔ عددی",
+            "noneSelected": "بدون انتخاب",
+            "sections": {
+                "general": "عمومی",
+                "description": "توضیحات",
+                "pricing": "قیمت‌گذاری",
+                "inventory": "موجودی",
+                "shipping": "ارسال",
+                "shippingClass": "کلاس ارسال",
+                "linked": "محصولات مرتبط",
+                "advanced": "پیشرفته",
+                "publish": "انتشار",
+                "image": "تصویر شاخص",
+                "gallery": "گالری",
+                "categories": "دسته‌بندی‌ها",
+                "brand": "برند",
+                "tags": "برچسب‌ها",
+                "tax": "مالیات",
+                "reviews": "نظرات"
+            },
+            "fields": {
+                "type": "نوع محصول",
+                "name": "نام",
+                "slug": "نامک",
+                "shortDescription": "توضیح کوتاه",
+                "description": "توضیح کامل",
+                "regularPrice": "قیمت اصلی",
+                "salePrice": "قیمت حراج",
+                "saleWindow": "بازهٔ حراج",
+                "taxStatus": "وضعیت مالیات",
+                "taxClass": "کلاس مالیاتی",
+                "externalUrl": "آدرس بیرونی",
+                "buttonText": "متن دکمه",
+                "sku": "SKU",
+                "gtin": "GTIN/EAN",
+                "manageStock": "مدیریت موجودی",
+                "stockQuantity": "تعداد موجودی",
+                "lowStockThreshold": "آستانهٔ کم‌بودن موجودی",
+                "backorders": "پیش‌سفارش",
+                "stockStatus": "وضعیت موجودی",
+                "soldIndividually": "فقط یک عدد در سفارش",
+                "weight": "وزن (گرم)",
+                "length": "طول (mm)",
+                "width": "عرض (mm)",
+                "height": "ارتفاع (mm)",
+                "shippingClass": "کلاس ارسال",
+                "virtual": "محصول مجازی",
+                "downloadable": "قابل دانلود",
+                "upsells": "Up-sell",
+                "crossSells": "Cross-sell",
+                "groupedMembers": "محصولات عضو",
+                "purchaseNote": "یادداشت پس از خرید",
+                "menuOrder": "ترتیب در منو",
+                "enableReviews": "اجازهٔ ثبت نظر",
+                "posAvailable": "نمایش در صندوق فروشگاهی",
+                "visibility": "نمایش‌پذیری",
+                "publishOn": "تاریخ انتشار",
+                "status": "وضعیت",
+                "featured": "محصول ویژه"
+            },
+            "tooltips": {
+                "type": "ساده = یک محصول مستقل. متغیر = دارای تنوع (مثلاً سایز + رنگ). گروهی = بستهٔ چند محصول. بیرونی = پیوند به سایت دیگر.",
+                "name": "در فروشگاه، جستجو، سبد خرید و ایمیل سفارش نمایش داده می‌شود.",
+                "slug": "شناسهٔ URL. حروف کوچک و خط تیره. در صورت خالی بودن از روی نام ساخته می‌شود.",
+                "shortDescription": "خلاصهٔ بالای صفحه و در لیست‌ها.",
+                "description": "متن کامل صفحهٔ محصول.",
+                "regularPrice": "قیمت پایه به تومان.",
+                "salePrice": "قیمت حراج؛ اگر تعیین شود به‌جای قیمت اصلی نمایش داده می‌شود.",
+                "saleWindow": "حراج فقط در این بازه اعمال می‌شود.",
+                "sku": "شناسه داخلی موجودی و گزارش‌ها.",
+                "gtin": "شناسهٔ کالای جهانی؛ برای فروش در فروشگاه‌های بزرگ مفید.",
+                "externalUrl": "آدرس صفحهٔ شریک."
+            },
+            "types": {
+                "simple": "ساده",
+                "variable": "متغیر",
+                "grouped": "گروهی",
+                "external": "بیرونی/وابسته",
+                "descriptions": {
+                    "simple": "یک محصول مستقل بدون تنوع.",
+                    "variable": "محصولی با چند تنوع (سایز/رنگ/...).",
+                    "grouped": "مجموعه‌ای از محصولات مرتبط.",
+                    "external": "پیوند به سایت دیگر."
+                }
+            },
+            "taxStatus": {
+                "taxable": "مشمول مالیات",
+                "shipping": "فقط بر ارسال",
+                "none": "بدون مالیات"
+            },
+            "visibility": {
+                "visible": "همه‌جا",
+                "catalog": "فقط در دسته‌ها",
+                "search": "فقط در جستجو",
+                "hidden": "پنهان"
+            },
+            "actions": {
+                "save": "ذخیره",
+                "saving": "در حال ذخیره...",
+                "saved": "ذخیره شد",
+                "create": "ساخت محصول",
+                "creating": "در حال ساخت...",
+                "duplicate": "تکثیر",
+                "trash": "انتقال به زباله‌دان",
+                "restore": "بازیابی",
+                "deletePermanently": "حذف دائم",
+                "viewOnStorefront": "مشاهده در فروشگاه",
+                "copyLink": "کپی لینک",
+                "openShortcuts": "میانبرهای صفحه‌کلید",
+                "addDownload": "افزودن فایل دانلودی",
+                "removeDownload": "حذف فایل"
+            },
+            "toasts": {
+                "saved": "محصول ذخیره شد",
+                "created": "محصول ساخته شد",
+                "error": "ذخیره ناموفق بود"
+            },
+            "conflictDialog": {
+                "title": "تغییرات هم‌زمان",
+                "message": "این محصول از زمان بارگذاری شما تغییر کرده است. بارگذاری دوباره کنید یا تغییرات خود را اعمال کنید.",
+                "reload": "بارگذاری دوباره",
+                "overwrite": "اعمال تغییرات من",
+                "viewDiff": "نمایش تفاوت‌ها"
+            },
+            "variations": {
+                "placeholderTitle": "تنوعات",
+                "placeholderBody": "صفحهٔ مدیریت تنوعات در نسخهٔ بعدی فعال می‌شود."
+            }
         }
     },
     "ProductStatus": {

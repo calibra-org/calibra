@@ -970,6 +970,144 @@
                 "slugRequired": "Slug is required",
                 "numberRequired": "Enter a valid number"
             }
+        },
+        "detail": {
+            "backToList": "Back to products",
+            "untitled": "Untitled product",
+            "newProductTitle": "New product",
+            "lastEditedAt": "Last edited: {at}",
+            "slugTaken": "This slug is already taken",
+            "unsavedConfirm": "You have unsaved changes. Continue?",
+            "trashBanner": "This product is in trash.",
+            "idListHint": "Comma-separated ids",
+            "idHint": "Numeric id",
+            "noneSelected": "None",
+            "sections": {
+                "general": "General",
+                "description": "Description",
+                "pricing": "Pricing",
+                "inventory": "Inventory",
+                "shipping": "Shipping",
+                "shippingClass": "Shipping class",
+                "linked": "Linked products",
+                "advanced": "Advanced",
+                "publish": "Publish",
+                "image": "Featured image",
+                "gallery": "Gallery",
+                "categories": "Categories",
+                "brand": "Brand",
+                "tags": "Tags",
+                "tax": "Tax",
+                "reviews": "Reviews"
+            },
+            "fields": {
+                "type": "Product type",
+                "name": "Name",
+                "slug": "Slug",
+                "shortDescription": "Short description",
+                "description": "Full description",
+                "regularPrice": "Regular price",
+                "salePrice": "Sale price",
+                "saleWindow": "Sale window",
+                "taxStatus": "Tax status",
+                "taxClass": "Tax class",
+                "externalUrl": "External URL",
+                "buttonText": "Button text",
+                "sku": "SKU",
+                "gtin": "GTIN/EAN",
+                "manageStock": "Manage stock",
+                "stockQuantity": "Stock quantity",
+                "lowStockThreshold": "Low-stock threshold",
+                "backorders": "Backorders",
+                "stockStatus": "Stock status",
+                "soldIndividually": "Limit to 1 per order",
+                "weight": "Weight (g)",
+                "length": "Length (mm)",
+                "width": "Width (mm)",
+                "height": "Height (mm)",
+                "shippingClass": "Shipping class",
+                "virtual": "Virtual",
+                "downloadable": "Downloadable",
+                "upsells": "Up-sells",
+                "crossSells": "Cross-sells",
+                "groupedMembers": "Member products",
+                "purchaseNote": "Purchase note",
+                "menuOrder": "Menu order",
+                "enableReviews": "Enable reviews",
+                "posAvailable": "Available at POS",
+                "visibility": "Visibility",
+                "publishOn": "Publish on",
+                "status": "Status",
+                "featured": "Featured"
+            },
+            "tooltips": {
+                "type": "Simple = standalone. Variable = has variations. Grouped = a bundle. External = link to another site.",
+                "name": "Shown in the storefront, search, cart, and order emails.",
+                "slug": "URL identifier. Auto-generated from the name when left blank.",
+                "shortDescription": "Excerpt shown above the storefront fold.",
+                "description": "Full body of the product page.",
+                "regularPrice": "Base price in Toman before discount.",
+                "salePrice": "Discounted price; replaces the regular price when set.",
+                "saleWindow": "Sale price only applies between these dates.",
+                "sku": "Internal id for inventory and reports.",
+                "gtin": "Global Trade Item Number; useful for marketplaces.",
+                "externalUrl": "URL of the partner page."
+            },
+            "types": {
+                "simple": "Simple",
+                "variable": "Variable",
+                "grouped": "Grouped",
+                "external": "External / Affiliate",
+                "descriptions": {
+                    "simple": "A standalone product with no variations.",
+                    "variable": "A product with several variations (size/color/...).",
+                    "grouped": "A bundle of related products.",
+                    "external": "Links to another website."
+                }
+            },
+            "taxStatus": {
+                "taxable": "Taxable",
+                "shipping": "Shipping only",
+                "none": "None"
+            },
+            "visibility": {
+                "visible": "Shop and search",
+                "catalog": "Shop only",
+                "search": "Search only",
+                "hidden": "Hidden"
+            },
+            "actions": {
+                "save": "Save",
+                "saving": "Saving…",
+                "saved": "Saved",
+                "create": "Create product",
+                "creating": "Creating…",
+                "duplicate": "Duplicate",
+                "trash": "Move to trash",
+                "restore": "Restore",
+                "deletePermanently": "Delete permanently",
+                "viewOnStorefront": "View on storefront",
+                "copyLink": "Copy link",
+                "openShortcuts": "Keyboard shortcuts",
+                "addDownload": "Add download",
+                "removeDownload": "Remove"
+            },
+            "toasts": {
+                "saved": "Product saved",
+                "created": "Product created",
+                "error": "Save failed"
+            },
+            "conflictDialog": {
+                "title": "Concurrent edits",
+                "message": "This product changed since you loaded it. Reload or overwrite with your changes.",
+                "reload": "Reload",
+                "overwrite": "Overwrite",
+                "viewDiff": "View diff"
+            },
+            "variations": {
+                "placeholderTitle": "Variations",
+                "placeholderBody": "Variation management ships in the next iteration."
+            }
         }
     },
     "ProductStatus": {
