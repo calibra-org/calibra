@@ -7,6 +7,7 @@ import { normalizeIranText } from "#/lib/iran-text-normalize";
 import { IRAN_COUNTRY_PROVINCES } from "#/vendor/iran-map";
 import { loadProvinceGeometry, type ProvinceGeometry } from "#/vendor/iran-map/provinces";
 
+import { contrastTextColor } from "./contrast";
 import { type HeatmapMetric, ZERO_COLOR } from "./heatmap-scale";
 import { ProvinceSea } from "./sea-decorations";
 
@@ -26,7 +27,7 @@ interface ProvinceSvgProps {
     onPointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;
 }
 
-const COUNTY_FILL_BASE_ORDERS = ["#f5f3ff", "#ede9fe", "#ddd6fe", "#c4b5fd", "#a78bfa", "#8b5cf6", "#7c3aed"] as const;
+const COUNTY_FILL_BASE_ORDERS = ["#f0fdf4", "#dcfce7", "#bbf7d0", "#86efac", "#4ade80", "#22c55e", "#16a34a"] as const;
 const COUNTY_FILL_BASE_REVENUE = ["#fef2f2", "#fee2e2", "#fecaca", "#fca5a5", "#f87171", "#ef4444", "#dc2626"] as const;
 
 interface CountyCenter {
@@ -71,7 +72,7 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
                 name: county.fa,
                 cx: box.x + box.width / 2,
                 cy: box.y + box.height / 2,
-                fontSize: Math.max(8, Math.min(box.width, box.height) * 0.18),
+                fontSize: Math.max(6, Math.min(box.width, box.height) * 0.12),
             });
         }
         setCenters(next);
@@ -180,18 +181,21 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
                 })}
             </g>
             <g style={{ pointerEvents: "none" }}>
-                {centers.map((c) => (
-                    <text
-                        key={`label-${c.name}`}
-                        x={c.cx}
-                        y={c.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        style={{ fontSize: c.fontSize, fontWeight: 600, fill: "#0f172a" }}
-                    >
-                        {c.name}
-                    </text>
-                ))}
+                {centers.map((c) => {
+                    const bg = fillFor(c.name);
+                    return (
+                        <text
+                            key={`label-${c.name}`}
+                            x={c.cx}
+                            y={c.cy}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            style={{ fontSize: c.fontSize, fontWeight: 600, fill: contrastTextColor(bg) }}
+                        >
+                            {c.name}
+                        </text>
+                    );
+                })}
             </g>
         </svg>
     );
