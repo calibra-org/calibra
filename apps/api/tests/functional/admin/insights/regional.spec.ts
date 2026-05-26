@@ -9,6 +9,7 @@ import Customer from "#models/customer";
 import Order from "#models/order";
 import OrderAddress from "#models/order_address";
 import OrderLineItem from "#models/order_line_item";
+import PaymentGateway from "#models/payment_gateway";
 import Region from "#models/region";
 import { createTaxableProduct } from "#tests/helpers/cart";
 import { resetPhase05 } from "#tests/helpers/orders";
@@ -58,6 +59,11 @@ async function regionId(code: string): Promise<number> {
     return Number(region.id);
 }
 
+async function gatewayId(): Promise<number> {
+    const gateway = await PaymentGateway.findByOrFail("code", "cod");
+    return Number(gateway.id);
+}
+
 async function seedOrder(args: OrderSeed): Promise<Order> {
     const province = await regionId(args.regionCode);
     const order = await Order.create({
@@ -67,7 +73,7 @@ async function seedOrder(args: OrderSeed): Promise<Order> {
         currencyDisplay: "IRT",
         pricesIncludeTax: true,
         createdVia: "checkout",
-        paymentGatewayIdSnapshot: 1,
+        paymentGatewayIdSnapshot: await gatewayId(),
         paymentMethodCodeSnapshot: "cod",
         paymentMethodTitleSnapshot: "cod",
         itemsTotal: args.grandTotal,

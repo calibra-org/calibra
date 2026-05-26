@@ -17,14 +17,14 @@ test.group("Foundation seeder", (group) => {
         return cleanup;
     });
 
-    test("seeds 31 Iran regions, each with fa and en translations", async ({ assert }) => {
-        const iranRegions = await Region.query().where("country_code", "IR");
-        assert.equal(iranRegions.length, 31);
+    test("seeds 31 Iran provinces, each with fa and en translations", async ({ assert }) => {
+        const iranProvinces = await Region.query().where("country_code", "IR").whereNull("parent_id");
+        assert.equal(iranProvinces.length, 31);
 
-        for (const region of iranRegions) {
-            const translations = await RegionTranslation.query().where("region_id", String(region.id));
+        for (const province of iranProvinces) {
+            const translations = await RegionTranslation.query().where("region_id", String(province.id));
             const locales = translations.map((row) => row.locale).sort();
-            assert.deepEqual(locales, ["en", "fa"], `region ${region.code} missing fa/en translations`);
+            assert.deepEqual(locales, ["en", "fa"], `province ${province.code} missing fa/en translations`);
         }
     });
 
@@ -77,8 +77,19 @@ test.group("Foundation seeder", (group) => {
             return Number(rows[0]?.count ?? 0);
         };
 
+        /** Province baseline = top-level IR regions only (cities/counties are seeded under a parent). */
+        const provinceCount = async (): Promise<number> => {
+            const rows = (await db
+                .from("regions")
+                .where("country_code", "IR")
+                .whereNull("parent_id")
+                .count("* as count")) as Array<{ count: string | number }>;
+            return Number(rows[0]?.count ?? 0);
+        };
+
         const before = {
             regions: await countOf("regions"),
+            provinces: await provinceCount(),
             translations: await countOf("region_translations"),
             settings: await countOf("settings"),
             gateways: await countOf("payment_gateways"),
@@ -88,19 +99,24 @@ test.group("Foundation seeder", (group) => {
 
         const after = {
             regions: await countOf("regions"),
+            provinces: await provinceCount(),
             translations: await countOf("region_translations"),
             settings: await countOf("settings"),
             gateways: await countOf("payment_gateways"),
         };
 
-        assert.equal(before.regions, 31);
+        assert.equal(before.provinces, 31);
         assert.equal(after.regions, before.regions);
+        assert.equal(after.provinces, before.provinces);
         assert.equal(after.translations, before.translations);
         assert.equal(after.settings, before.settings);
         assert.equal(after.gateways, before.gateways);
     });
 
     test("regions table is country-scoped — inserting a US row succeeds without a migration", async ({ assert }) => {
+        const beforeRows = (await db.from("regions").count("* as count")) as Array<{ count: string | number }>;
+        const before = Number(beforeRows[0]?.count ?? 0);
+
         const usRegion = await Region.create({
             countryCode: "US",
             code: "US-CA",
@@ -111,7 +127,7 @@ test.group("Foundation seeder", (group) => {
         assert.equal(usRegion.countryCode, "US");
         assert.equal(usRegion.code, "US-CA");
 
-        const totalAfter = await db.from("regions").count("* as count");
-        assert.equal(Number(totalAfter[0]?.count), 32);
+        const afterRows = (await db.from("regions").count("* as count")) as Array<{ count: string | number }>;
+        assert.equal(Number(afterRows[0]?.count), before + 1);
     });
 });
