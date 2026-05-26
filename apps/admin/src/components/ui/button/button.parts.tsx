@@ -42,10 +42,30 @@ export function ButtonRoot({
 }: ButtonRootProps) {
     const Comp = asChild ? Slot : "button";
     const effectiveDisabled = disabled || isLoading;
+    /**
+     * Radix Slot requires exactly one React-element child. When `asChild` is true we therefore
+     * pass `children` through unchanged — loading state is incompatible with `asChild` (you can't
+     * overlay a spinner inside an arbitrary cloned element without breaking its layout) and is
+     * silently ignored in that path. When `asChild` is false we wrap children + the spinner overlay
+     * the way the original primitive did.
+     */
+    if (asChild) {
+        return (
+            <Comp
+                data-slot="button"
+                disabled={effectiveDisabled}
+                aria-busy={isLoading || undefined}
+                className={cn(buttonVariants({ variant, tone, size }), className)}
+                {...props}
+            >
+                {children}
+            </Comp>
+        );
+    }
     return (
         <Comp
             data-slot="button"
-            type={asChild ? undefined : (type ?? "button")}
+            type={type ?? "button"}
             disabled={effectiveDisabled}
             aria-busy={isLoading || undefined}
             className={cn(buttonVariants({ variant, tone, size }), isLoading && "relative", className)}
