@@ -1,8 +1,11 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import emitter from "@adonisjs/core/services/emitter";
+import lock from "@adonisjs/lock/services/main";
 import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
+
+import { ResourceConflictException } from "#exceptions/domain_exceptions";
 
 import { OrderStatus } from "#enums/order_status";
 import Order from "#models/order";
@@ -59,7 +62,46 @@ export class RefundService {
             throw new Exception("Order not found", { status: 404, code: "E_NOT_FOUND" });
         }
 
-        const { refund, customerId } = await db.transaction(async (trx) => {
+        /**
+         * Order-scoped distributed lock. Serialises concurrent admin refunds AND any in-flight
+         * `payment_service.verifyCallback` on the same order. The DB-level `FOR UPDATE` row lock
+         * inside the transaction still applies (defence-in-depth); this lock gives a faster fail
+         * path with a 409 instead of blocking on a transaction queue.
+         */
+        const [acquired, value] = await lock
+            .createLock(`order:${numericOrderId}`, "30s")
+            .runImmediately(() => this.createInsideLock(numericOrderId, payload, opts));
+        if (!acquired) {
+            throw new ResourceConflictException("order is being processed concurrently", {
+                resource: "orders",
+                id: numericOrderId,
+                code: "E_CONCURRENT_PROCESSING",
+            });
+        }
+        const { refund, customerId } = value;
+
+        /** Fire after commit so listeners observe persisted state. */
+        await emitter.emit("order:refunded", {
+            orderId: Number(refund.orderId),
+            refundId: Number(refund.id),
+            amountMinor: Number(refund.amountMinor),
+            customerId,
+        });
+
+        return refund;
+    }
+
+    /**
+     * The inner half of `create`, run inside both the per-order `@adonisjs/lock` mutex and the
+     * Lucid transaction. Pulled out so the public `create` keeps the lock + post-commit emit
+     * shell readable.
+     */
+    private async createInsideLock(
+        numericOrderId: number,
+        payload: RefundInput,
+        opts: RefundCreateOptions,
+    ): Promise<{ refund: OrderRefund; customerId: number | null }> {
+        return db.transaction(async (trx) => {
             /** Row-lock the order — concurrent refunds on the same order serialize here. */
             const orderRow = await trx.from("orders").where("id", numericOrderId).forUpdate().first();
             if (!orderRow) {
@@ -171,16 +213,6 @@ export class RefundService {
                 customerId: order.customerId === null || order.customerId === undefined ? null : Number(order.customerId),
             };
         });
-
-        /** Fire after commit so listeners observe persisted state. */
-        await emitter.emit("order:refunded", {
-            orderId: Number(refund.orderId),
-            refundId: Number(refund.id),
-            amountMinor: Number(refund.amountMinor),
-            customerId,
-        });
-
-        return refund;
     }
 
     /**
