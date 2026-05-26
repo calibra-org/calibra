@@ -37,12 +37,12 @@ export function RegionalMapCard() {
 
     return (
         <Card>
-            <CardHeader className="flex flex-col gap-3 border-b pb-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <CardTitle className="text-base">{t("title")}</CardTitle>
-                        <CardDescription>{t("subtitle")}</CardDescription>
-                    </div>
+            <CardHeader className="flex flex-col gap-4 border-b pb-4">
+                <div>
+                    <CardTitle className="text-base">{t("title")}</CardTitle>
+                    <CardDescription>{t("subtitle")}</CardDescription>
+                </div>
+                <div className="flex w-full justify-end">
                     <RegionalMapHeader
                         metric={metric}
                         onMetricChange={setMetric}
