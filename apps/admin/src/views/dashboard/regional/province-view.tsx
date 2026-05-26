@@ -167,34 +167,46 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                             />
                         </MapZoomWrapper>
                     )}
-                    <motion.button
-                        type="button"
-                        onClick={onBack}
-                        onPointerEnter={() => setBackHovered(true)}
-                        onPointerLeave={() => setBackHovered(false)}
-                        onFocus={() => setBackHovered(true)}
-                        onBlur={() => setBackHovered(false)}
-                        layout={reduce ? false : "size"}
-                        transition={reduce ? { duration: 0 } : { layout: { type: "spring", stiffness: 320, damping: 30 } }}
-                        whileTap={reduce ? undefined : { scale: 0.97 }}
-                        className="absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 overflow-hidden rounded-md border bg-card/90 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent"
-                        aria-label={t("backToCountry")}
-                        title={t("backToCountry")}
-                    >
-                        <ChevronLeft className="size-3.5 shrink-0 rtl:-scale-x-100" aria-hidden="true" />
-                        <AnimatePresence mode="wait" initial={false}>
-                            <motion.span
-                                key={backHovered ? "back" : "name"}
-                                initial={reduce ? false : { opacity: 0, x: backHovered ? 4 : -4 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={reduce ? { opacity: 0 } : { opacity: 0, x: backHovered ? -4 : 4 }}
-                                transition={reduce ? { duration: 0 } : { duration: 0.14 }}
-                                className="whitespace-nowrap font-semibold text-foreground"
+                    {(() => {
+                        const provinceName = data?.name[locale] ?? code;
+                        const backLabel = t("backToCountry");
+                        /** Pre-pick the longer label so the chip stays one size — no width jitter. */
+                        const sizerLabel = provinceName.length >= backLabel.length ? provinceName : backLabel;
+                        const transitionMs = reduce ? 0 : 180;
+                        return (
+                            <motion.button
+                                type="button"
+                                onClick={onBack}
+                                onPointerEnter={() => setBackHovered(true)}
+                                onPointerLeave={() => setBackHovered(false)}
+                                onFocus={() => setBackHovered(true)}
+                                onBlur={() => setBackHovered(false)}
+                                whileTap={reduce ? undefined : { scale: 0.97 }}
+                                className="absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md border bg-card/90 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent"
+                                aria-label={backLabel}
+                                title={backLabel}
                             >
-                                {backHovered ? t("backToCountry") : (data?.name[locale] ?? code)}
-                            </motion.span>
-                        </AnimatePresence>
-                    </motion.button>
+                                <ChevronLeft className="size-3.5 shrink-0 rtl:-scale-x-100" aria-hidden="true" />
+                                <span className="relative inline-block">
+                                    <span aria-hidden className="invisible whitespace-nowrap font-semibold">
+                                        {sizerLabel}
+                                    </span>
+                                    <span
+                                        className="absolute inset-0 whitespace-nowrap text-end font-semibold text-foreground"
+                                        style={{ opacity: backHovered ? 0 : 1, transition: `opacity ${transitionMs}ms ease-out` }}
+                                    >
+                                        {provinceName}
+                                    </span>
+                                    <span
+                                        className="absolute inset-0 whitespace-nowrap text-end font-semibold text-foreground"
+                                        style={{ opacity: backHovered ? 1 : 0, transition: `opacity ${transitionMs}ms ease-out` }}
+                                    >
+                                        {backLabel}
+                                    </span>
+                                </span>
+                            </motion.button>
+                        );
+                    })()}
                     {hoveredCity !== null && pointer !== null ? (
                         <MapTooltip position={pointer}>
                             <div className="flex flex-col gap-0.5">
