@@ -28,10 +28,10 @@ interface DatePickerBodyProps {
  */
 export function DatePickerBody({ state, fieldLabel }: DatePickerBodyProps) {
     const t = useTranslations("DatePicker");
-    const numberOfMonths = useResponsiveMonthCount();
+    const [numberOfMonths, containerRef] = useResponsiveMonthCount();
 
     return (
-        <div className="flex flex-col gap-3">
+        <div ref={containerRef} className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
                 <span className="font-semibold text-foreground text-sm">{fieldLabel ?? t("defaultFieldLabel")}</span>
                 <OperatorChips
@@ -165,18 +165,27 @@ function yearSelection(sel: UseDateFilterReturn["selection"]): number | null {
 }
 
 /**
- * Responsive helper — two month panes side-by-side from ≥ 640px, single pane below. Returns 2 on
- * SSR so the first paint matches the most common desktop layout.
+ * Returns 1 or 2 based on the container's actual width via `ResizeObserver` — preferable to a
+ * viewport media query because the picker mounts inside dialogs/popovers/sheets that may be
+ * narrower than the window itself (e.g. a 576 px dialog on a 1200 px monitor still can't fit
+ * two month grids comfortably). Threshold is 560 px: two full 7-column day grids + gap +
+ * padding fit around there. Falls back to 2 during SSR so the desktop-first first paint
+ * matches the most common case.
  */
-function useResponsiveMonthCount(): number {
+function useResponsiveMonthCount(): [number, React.RefCallback<HTMLDivElement>] {
     const [count, setCount] = useState(2);
+    const [element, setElement] = useState<HTMLDivElement | null>(null);
+
     useEffect(() => {
-        if (typeof window === "undefined") return;
-        const query = window.matchMedia("(min-width: 640px)");
-        const sync = () => setCount(query.matches ? 2 : 1);
-        sync();
-        query.addEventListener("change", sync);
-        return () => query.removeEventListener("change", sync);
-    }, []);
-    return count;
+        if (element === null || typeof ResizeObserver === "undefined") return;
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (entry === undefined) return;
+            setCount(entry.contentRect.width >= 560 ? 2 : 1);
+        });
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, [element]);
+
+    return [count, setElement];
 }
