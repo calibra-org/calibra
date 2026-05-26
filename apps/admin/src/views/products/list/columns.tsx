@@ -460,21 +460,18 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
         labelKey = stockStatus;
     }
 
-    const toneClasses: Record<typeof tone, { wrap: string; qty: string; label: string }> = {
+    const toneClasses: Record<typeof tone, { wrap: string; text: string }> = {
         emerald: {
             wrap: "border-emerald-500/30 bg-emerald-500/10",
-            qty: "text-emerald-700 dark:text-emerald-300",
-            label: "text-emerald-700 dark:text-emerald-300",
+            text: "text-emerald-700 dark:text-emerald-300",
         },
         amber: {
             wrap: "border-amber-500/30 bg-amber-500/10",
-            qty: "text-amber-700 dark:text-amber-300",
-            label: "text-amber-700 dark:text-amber-300",
+            text: "text-amber-700 dark:text-amber-300",
         },
         rose: {
             wrap: "border-rose-500/30 bg-rose-500/10",
-            qty: "text-rose-700 dark:text-rose-300",
-            label: "text-rose-700 dark:text-rose-300",
+            text: "text-rose-700 dark:text-rose-300",
         },
     };
     const cls = toneClasses[tone];
@@ -484,16 +481,16 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
 
     return (
         <span
-            className={cn("inline-flex h-6 items-center gap-1.5 rounded-full border px-2 text-xs", cls.wrap)}
+            className={cn(
+                "inline-flex h-5 items-center gap-1 rounded-full border px-1.5 text-[11px] leading-none",
+                cls.wrap,
+                cls.text,
+            )}
             title={tracked ? `${formatNumber(quantity ?? 0, locale)} — ${label}` : label}
         >
-            {tracked && (
-                <span className={cn("min-w-[1.25rem] text-end font-medium tabular-nums", cls.qty)}>
-                    {formatNumber(quantity ?? 0, locale)}
-                </span>
-            )}
-            <span className={cn("font-medium", cls.label)}>{label}</span>
-            {isLow && <AlertTriangle className={cn("size-3 shrink-0", cls.label)} aria-hidden="true" />}
+            {isLow && <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />}
+            {tracked && <span className="font-semibold tabular-nums">{formatNumber(quantity ?? 0, locale)}</span>}
+            <span className="font-medium">{label}</span>
         </span>
     );
 }
