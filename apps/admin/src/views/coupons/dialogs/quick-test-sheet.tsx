@@ -118,6 +118,7 @@ export function QuickTestSheet({ open, onOpenChange, couponId }: QuickTestSheetP
                             onAdd={(option) => addProduct(option)}
                             onRemove={(id) => removeItem(id)}
                             placeholder={t("addProduct")}
+                            hideChips
                         />
                         {items.length > 0 && (
                             <div className="flex flex-col gap-2 rounded-md border border-border p-2">

@@ -32,6 +32,8 @@ export interface EntityPickerProps {
     disabled?: boolean;
     /** Optional render override for each chip. */
     renderChip?: (option: ComboboxOption) => ReactNode;
+    /** Suppress the default chip strip; caller renders its own selection display. */
+    hideChips?: boolean;
 }
 
 /**
@@ -51,6 +53,7 @@ export function EntityPicker({
     labels,
     disabled = false,
     renderChip,
+    hideChips,
 }: EntityPickerProps) {
     /**
      * The legacy `renderChip` signature didn't pass the `remove` callback through. Bridge it
@@ -78,6 +81,7 @@ export function EntityPicker({
             }}
             disabled={disabled}
             renderChip={renderChip !== undefined ? wrappedRenderChip : undefined}
+            hideChips={hideChips}
         />
     );
 }

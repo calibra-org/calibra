@@ -15,6 +15,8 @@ interface ProductPickerProps {
     /** Optional remove hook — fires with the id when one is deselected. */
     onRemove?: (id: number) => void;
     placeholder: string;
+    /** Suppress the default chip strip; caller renders its own selection display. */
+    hideChips?: boolean;
 }
 
 interface ProductListItem {
@@ -46,7 +48,14 @@ function labelFor(product: ProductListItem, locale: Locale): string {
  * chip labels for ids that were never in the search-result list (initial hydration of a saved
  * coupon).
  */
-export function ProductPicker({ selectedIds, onSelectionChange, onAdd, onRemove, placeholder }: ProductPickerProps) {
+export function ProductPicker({
+    selectedIds,
+    onSelectionChange,
+    onAdd,
+    onRemove,
+    placeholder,
+    hideChips,
+}: ProductPickerProps) {
     const locale = useLocale() as Locale;
     const t = useTranslations("Coupons.editor.pickers");
 
@@ -94,6 +103,7 @@ export function ProductPicker({ selectedIds, onSelectionChange, onAdd, onRemove,
             onSearch={onSearch}
             onResolve={onResolve}
             placeholder={placeholder}
+            hideChips={hideChips}
             labels={{
                 search: t("searchProducts"),
                 empty: t("noResults"),

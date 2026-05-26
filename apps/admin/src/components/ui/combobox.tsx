@@ -58,6 +58,13 @@ interface BaseProps {
     preload?: boolean;
     /** Optional chip renderer override. */
     renderChip?: (option: ComboboxOption, remove: () => void) => ReactNode;
+    /**
+     * When `true`, the default chip strip above the trigger is suppressed. Use this when the
+     * caller renders its own richer selection display (e.g. a thumbnail + name + qty list).
+     * A compact "Clear all" link still appears next to the trigger when ≥ 1 item is selected
+     * so the operator can wipe the selection from one consistent control surface.
+     */
+    hideChips?: boolean;
 }
 
 /**
@@ -88,6 +95,7 @@ export function MultiCombobox({
     disabled = false,
     preload = false,
     renderChip,
+    hideChips = false,
 }: BaseProps) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -158,7 +166,7 @@ export function MultiCombobox({
 
     return (
         <div className="flex flex-col gap-2">
-            {selectedChips.length > 0 && (
+            {!hideChips && selectedChips.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5" id={`${id}-chips`}>
                     {selectedChips.map((opt) => {
                         const remove = () => toggle(opt.id);
@@ -193,6 +201,7 @@ export function MultiCombobox({
                 </div>
             )}
             {!disabled && (
+                <div className="flex flex-wrap items-center gap-2">
                 <BaseCombobox.Root
                     open={open}
                     onOpenChange={setOpen}
@@ -322,6 +331,18 @@ export function MultiCombobox({
                         </BaseCombobox.Positioner>
                     </BaseCombobox.Portal>
                 </BaseCombobox.Root>
+                {hideChips && selectedIds.length > 0 && (
+                    /**
+                     * When chips are suppressed the operator still needs an obvious affordance to
+                     * wipe the whole selection — surface it as a compact ghost button right after
+                     * the picker trigger, so the "two controls / one row" rhythm reads as one
+                     * pair instead of a floating link.
+                     */
+                    <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={removeAll}>
+                        {labels.clearAll}
+                    </Button>
+                )}
+                </div>
             )}
         </div>
     );
