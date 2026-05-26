@@ -734,7 +734,15 @@ function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: Sor
                  */
                 className={cn(
                     cellClass,
-                    "relative sticky top-0 bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
+                    /**
+                     * `z-[15]` keeps every header (sticky-on-top only AND sticky-on-both-axes)
+                     * above the body cells during vertical scroll. Body sticky cells live at
+                     * 10/11; the corner cells (horizontal + vertical sticky) override this to
+                     * 20/21 from `sticky?.style.zIndex`, so the corner still wins all stacking
+                     * ties — without that bump, body sticky cells with z-index 11 used to paint
+                     * OVER the non-pinned header during vertical scroll.
+                     */
+                    "relative sticky top-0 z-[15] bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
                     "group/header",
                     sticky?.className,
                     /** Full-height vertical separator (pseudo-element so it survives sticky + backdrop-filter combos). */

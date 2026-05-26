@@ -150,14 +150,13 @@ const STICKY_HEADER_BASE = "sticky bg-muted/95 supports-[backdrop-filter]:bg-mut
  * has content hidden in the corresponding direction (data attributes set by the parent's
  * scroll-edge watcher).
  *
- * The shadow lives on the inline-end side of a start-pinned edge and the inline-start side of
- * an end-pinned edge so it always points *into* the scrollable band. Interior sticky columns
- * never match the `[data-sticky-edge-position='edge']` predicate, so they stay flat.
+ * **Shadow is start-side only.** The end-side cluster (Actions / overflow buttons) reads
+ * unbalanced when the operator scrolls and a shadow paints next to it — the actions sit
+ * visually anchored to the inline-end edge already, and the gradient adds noise without
+ * orientation value. Only the start-side edge column draws the shadow.
  */
 const SHADOW_START_EDGE =
     "after:pointer-events-none after:absolute after:inset-y-0 after:end-0 after:w-2 after:bg-gradient-to-l after:from-foreground/8 after:to-transparent after:opacity-0 after:transition-opacity after:rtl:bg-gradient-to-r [&[data-sticky-edge-position='edge'][data-sticky-edge='start-shadow']]:after:opacity-100";
-const SHADOW_END_EDGE =
-    "after:pointer-events-none after:absolute after:inset-y-0 after:start-0 after:w-2 after:bg-gradient-to-r after:from-foreground/8 after:to-transparent after:opacity-0 after:transition-opacity after:rtl:bg-gradient-to-l [&[data-sticky-edge-position='edge'][data-sticky-edge='end-shadow']]:after:opacity-100";
 
 export interface StickyCellAttrs {
     className: string;
@@ -185,7 +184,7 @@ export function resolveStickyCell(placement: StickyPlacement | undefined): Stick
          * `before:` pseudo-divider still anchors correctly when we drop `relative` from the
          * sticky helper and apply `sticky` LAST in the merge.
          */
-        className: cn(STICKY_CELL_BASE, placement.side === "start" ? SHADOW_START_EDGE : SHADOW_END_EDGE),
+        className: cn(STICKY_CELL_BASE, placement.side === "start" && SHADOW_START_EDGE),
         style: {
             insetInlineStart: placement.side === "start" ? inset : undefined,
             insetInlineEnd: placement.side === "end" ? inset : undefined,
@@ -203,7 +202,7 @@ export function resolveStickyHeader(placement: StickyPlacement | undefined): Sti
     if (placement === undefined) return undefined;
     const inset = `${placement.offsetPx}px`;
     return {
-        className: cn(STICKY_HEADER_BASE, placement.side === "start" ? SHADOW_START_EDGE : SHADOW_END_EDGE),
+        className: cn(STICKY_HEADER_BASE, placement.side === "start" && SHADOW_START_EDGE),
         style: {
             insetInlineStart: placement.side === "start" ? inset : undefined,
             insetInlineEnd: placement.side === "end" ? inset : undefined,
