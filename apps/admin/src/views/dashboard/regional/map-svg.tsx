@@ -32,15 +32,7 @@ interface MapSvgProps {
  * the WCAG-readable colour (black or white) into the label's `fill`. The seas use the same
  * mechanism — labels that land on the dark-blue water flip to white automatically.
  */
-export function MapSvg({
-    fillForCode,
-    hoveredCode,
-    onHoverChange,
-    onPointerMove,
-    onSelect,
-    isolatedCode,
-    locale,
-}: MapSvgProps) {
+export function MapSvg({ fillForCode, hoveredCode, onHoverChange, onPointerMove, onSelect, isolatedCode, locale }: MapSvgProps) {
     const reduce = useReducedMotion();
     const svgRef = useRef<SVGSVGElement | null>(null);
 

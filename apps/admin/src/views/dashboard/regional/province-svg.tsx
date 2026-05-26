@@ -8,8 +8,8 @@ import { IRAN_COUNTRY_PROVINCES } from "#/vendor/iran-map";
 import { loadProvinceGeometry, type ProvinceGeometry } from "#/vendor/iran-map/provinces";
 
 import { contrastTextColor } from "./contrast";
-import { type HeatmapMetric, ZERO_COLOR } from "./heatmap-scale";
-import { ProvinceSea } from "./sea-decorations";
+import { buildHeatmapScale, type HeatmapMetric } from "./heatmap-scale";
+import { ProvinceSea, SEA_FILL } from "./sea-decorations";
 
 export interface CityMarker {
     regionCode: string | null;
@@ -27,9 +27,6 @@ interface ProvinceSvgProps {
     onPointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;
 }
 
-const COUNTY_FILL_BASE_ORDERS = ["#f0fdf4", "#dcfce7", "#bbf7d0", "#86efac", "#4ade80", "#22c55e", "#16a34a"] as const;
-const COUNTY_FILL_BASE_REVENUE = ["#fef2f2", "#fee2e2", "#fecaca", "#fca5a5", "#f87171", "#ef4444", "#dc2626"] as const;
-
 interface CountyCenter {
     name: string;
     cx: number;
@@ -37,18 +34,26 @@ interface CountyCenter {
     fontSize: number;
 }
 
+const LABEL_MIN_FONT = 6;
+const LABEL_MAX_FONT = 14;
+
 /**
  * Province-mode SVG. Loads per-province county (شهرستان) geometry from
- * `vendor/iran-map/provinces/IR-XX.ts` (dynamic import, one bundle per province) and renders
- * each polygon as a `<motion.path>`. After mount, the component measures every county's
- * `getBBox()` and overlays a `<text>` label at the polygon's geometric center sized to the
- * polygon's height. Each county is matched to a seeded city by `normalizeIranText` and the
- * polygon fill reflects the city's order / revenue count.
+ * `vendor/iran-map/provinces/IR-XX.ts` (one bundle per province, lazy-loaded) and renders each
+ * polygon as a `<motion.path>`. Counties are matched to seeded cities by `normalizeIranText`
+ * and coloured with the SAME `buildHeatmapScale` quantile pipeline the country view uses, so
+ * the visual language carries through (palette + threshold logic + empty-zero handling).
+ *
+ * Hover treatment matches the country path — stroke thickens, no brightness filter (which made
+ * already-light bins go white). Labels run through the same point-in-fill contrast pass so each
+ * county name flips to black or white depending on its polygon underneath.
  */
 export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }: ProvinceSvgProps) {
     const reduce = useReducedMotion();
-    const [geometry, setGeometry] = useState<ProvinceGeometry | null>(null);
+    const svgRef = useRef<SVGSVGElement | null>(null);
     const pathRefs = useRef(new Map<string, SVGPathElement | null>());
+    const [geometry, setGeometry] = useState<ProvinceGeometry | null>(null);
+    const [hoveredName, setHoveredName] = useState<string | null>(null);
     const [centers, setCenters] = useState<CountyCenter[]>([]);
 
     useEffect(() => {
@@ -61,22 +66,95 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
         };
     }, [code]);
 
+    const province = useMemo(() => IRAN_COUNTRY_PROVINCES.find((p) => p.code === code) ?? null, [code]);
+
+    const citiesByNormalized = useMemo(() => {
+        const map = new Map<string, CityMarker>();
+        for (const c of cities) {
+            const key = normalizeIranText(c.name);
+            if (key) map.set(key, c);
+        }
+        return map;
+    }, [cities]);
+
+    /**
+     * Build the same quantile scale the country view uses, but over THIS province's counties.
+     * Counties without a seeded match contribute nothing to the domain — they render in the
+     * scale's empty colour.
+     */
+    const scale = useMemo(() => {
+        if (!geometry) return buildHeatmapScale([], metric);
+        const values = geometry.counties.map((county) => {
+            const matched = citiesByNormalized.get(normalizeIranText(county.fa));
+            if (!matched) return 0;
+            return metric === "revenue" ? matched.revenueMinor : matched.ordersCount;
+        });
+        return buildHeatmapScale(values, metric);
+    }, [geometry, citiesByNormalized, metric]);
+
+    const fillForName = useCallback(
+        (countyName: string) => {
+            const matched = citiesByNormalized.get(normalizeIranText(countyName));
+            if (!matched) return scale.fillFor(0);
+            return scale.fillFor(metric === "revenue" ? matched.revenueMinor : matched.ordersCount);
+        },
+        [citiesByNormalized, metric, scale],
+    );
+
     useEffect(() => {
-        if (!geometry) return;
+        if (!geometry || !svgRef.current) return;
+        const svg = svgRef.current;
         const next: CountyCenter[] = [];
         for (const county of geometry.counties) {
             const el = pathRefs.current.get(county.fa);
             if (!el) continue;
             const box = el.getBBox();
+            const fontSize = Math.max(LABEL_MIN_FONT, Math.min(LABEL_MAX_FONT, Math.min(box.width, box.height) * 0.18));
             next.push({
                 name: county.fa,
                 cx: box.x + box.width / 2,
                 cy: box.y + box.height / 2,
-                fontSize: Math.max(6, Math.min(box.width, box.height) * 0.12),
+                fontSize,
             });
         }
         setCenters(next);
-    }, [geometry]);
+
+        /**
+         * Same point-in-fill contrast pass as `MapSvg`. After geometry mounts (and on metric
+         * flip via the changing `fillForName` identity), each county label flips to the
+         * readable side against its polygon's fill.
+         */
+        const labels = svg.querySelectorAll<SVGGraphicsElement>("[data-county-label]");
+        const countyPaths = svg.querySelectorAll<SVGPathElement>("[data-county-name]");
+        const seaPaths = svg.querySelectorAll<SVGPathElement>("[data-region-sea]");
+
+        for (const label of labels) {
+            const box = label.getBBox();
+            const point = svg.createSVGPoint();
+            point.x = box.x + box.width / 2;
+            point.y = box.y + box.height / 2;
+
+            let bg: string | null = null;
+            for (const sea of seaPaths) {
+                if (sea.isPointInFill(point)) {
+                    bg = SEA_FILL;
+                    break;
+                }
+            }
+            if (bg === null) {
+                for (const path of countyPaths) {
+                    if (path.isPointInFill(point)) {
+                        const name = path.getAttribute("data-county-name");
+                        bg = name ? fillForName(name) : null;
+                        break;
+                    }
+                }
+            }
+            if (bg !== null) {
+                label.setAttribute("fill", contrastTextColor(bg));
+            }
+        }
+    }, [geometry, fillForName]);
 
     const setPathRef = useCallback((fa: string) => {
         return (el: SVGPathElement | null) => {
@@ -88,81 +166,42 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
         };
     }, []);
 
-    const citiesByNormalized = useMemo(() => {
-        const map = new Map<string, CityMarker>();
-        for (const c of cities) {
-            const key = normalizeIranText(c.name);
-            if (key) map.set(key, c);
-        }
-        return map;
-    }, [cities]);
-
-    const province = useMemo(() => IRAN_COUNTRY_PROVINCES.find((p) => p.code === code) ?? null, [code]);
-
-    const palette = metric === "revenue" ? COUNTY_FILL_BASE_REVENUE : COUNTY_FILL_BASE_ORDERS;
-
-    const ranges = useMemo(() => {
-        if (!geometry) return { max: 0, ladder: [] as Array<{ threshold: number; color: string }> };
-        const values: number[] = [];
-        for (const county of geometry.counties) {
-            const key = normalizeIranText(county.fa);
-            const matched = citiesByNormalized.get(key);
-            if (matched) {
-                values.push(metric === "revenue" ? matched.revenueMinor : matched.ordersCount);
-            }
-        }
-        const nonZero = values.filter((v) => v > 0).sort((a, b) => a - b);
-        if (nonZero.length === 0) return { max: 0, ladder: [] };
-        const max = nonZero[nonZero.length - 1] ?? 0;
-        const ladder = palette.map((color, i) => ({
-            threshold: nonZero[Math.floor((nonZero.length - 1) * (i / (palette.length - 1)))] ?? max,
-            color,
-        }));
-        return { max, ladder };
-    }, [geometry, citiesByNormalized, metric, palette]);
-
-    const fillFor = (countyName: string) => {
-        const key = normalizeIranText(countyName);
-        const matched = citiesByNormalized.get(key);
-        if (!matched) return ZERO_COLOR;
-        const value = metric === "revenue" ? matched.revenueMinor : matched.ordersCount;
-        if (value <= 0) return ZERO_COLOR;
-        for (const stop of ranges.ladder) {
-            if (value <= stop.threshold) return stop.color;
-        }
-        return ranges.ladder[ranges.ladder.length - 1]?.color ?? ZERO_COLOR;
-    };
-
     if (!geometry || !province) {
         return <div className="aspect-square w-full animate-pulse rounded bg-muted" />;
     }
 
     return (
         <svg
+            ref={svgRef}
             viewBox={geometry.viewBox}
             role="img"
             aria-label={`Province ${province.fa}`}
             className="h-auto w-full"
             onPointerMove={onPointerMove}
+            onPointerLeave={() => {
+                setHoveredName(null);
+                onCityHover(null);
+            }}
         >
             <ProvinceSea code={code} />
             <g>
                 {geometry.counties.map((county) => {
-                    const key = normalizeIranText(county.fa);
-                    const matched = citiesByNormalized.get(key) ?? null;
+                    const matched = citiesByNormalized.get(normalizeIranText(county.fa)) ?? null;
+                    const isHovered = hoveredName === county.fa;
                     return (
                         <motion.path
                             ref={setPathRef(county.fa)}
                             key={county.fa}
                             d={county.path}
+                            data-county-name={county.fa}
                             stroke="white"
-                            strokeWidth={0.8}
-                            initial={{ fill: ZERO_COLOR, opacity: 0 }}
-                            animate={{ fill: fillFor(county.fa), opacity: 1 }}
-                            transition={reduce ? { duration: 0 } : { duration: 0.4, ease: "easeInOut" }}
-                            whileHover={reduce ? undefined : { filter: "brightness(1.12)" }}
+                            strokeWidth={isHovered ? 1.6 : 0.6}
+                            initial={{ fill: fillForName(county.fa), opacity: 1 }}
+                            animate={{ fill: fillForName(county.fa) }}
+                            transition={reduce ? { duration: 0 } : { duration: 0.35, ease: "easeInOut" }}
                             style={{ cursor: matched ? "pointer" : "default" }}
                             onPointerEnter={() => {
+                                setHoveredName(county.fa);
                                 if (matched) {
                                     onCityHover(matched);
                                 } else {
@@ -175,27 +214,25 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
                                     });
                                 }
                             }}
-                            onPointerLeave={() => onCityHover(null)}
                         />
                     );
                 })}
             </g>
             <g style={{ pointerEvents: "none" }}>
-                {centers.map((c) => {
-                    const bg = fillFor(c.name);
-                    return (
-                        <text
-                            key={`label-${c.name}`}
-                            x={c.cx}
-                            y={c.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            style={{ fontSize: c.fontSize, fontWeight: 600, fill: contrastTextColor(bg) }}
-                        >
-                            {c.name}
-                        </text>
-                    );
-                })}
+                {centers.map((c) => (
+                    <text
+                        key={`label-${c.name}`}
+                        data-county-label=""
+                        x={c.cx}
+                        y={c.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="#0f172a"
+                        style={{ fontSize: c.fontSize, fontWeight: 600 }}
+                    >
+                        {c.name}
+                    </text>
+                ))}
             </g>
         </svg>
     );
