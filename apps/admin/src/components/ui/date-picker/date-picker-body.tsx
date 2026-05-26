@@ -167,10 +167,11 @@ function yearSelection(sel: UseDateFilterReturn["selection"]): number | null {
 /**
  * Returns 1 or 2 based on the container's actual width via `ResizeObserver` — preferable to a
  * viewport media query because the picker mounts inside dialogs/popovers/sheets that may be
- * narrower than the window itself (e.g. a 576 px dialog on a 1200 px monitor still can't fit
- * two month grids comfortably). Threshold is 560 px: two full 7-column day grids + gap +
- * padding fit around there. Falls back to 2 during SSR so the desktop-first first paint
- * matches the most common case.
+ * narrower than the window itself. Threshold is 500 px: each 7-column day grid is ≈ 252 px
+ * (7 × 36 px cells), two side-by-side with a 16 px gap + 16 px root padding is ≈ 536 px, so
+ * the picker body needs ≳ 500 px to comfortably render two months. Below that we drop to
+ * one. Falls back to 2 during SSR so the desktop-first first paint matches the most common
+ * case.
  */
 function useResponsiveMonthCount(): [number, React.RefCallback<HTMLDivElement>] {
     const [count, setCount] = useState(2);
@@ -181,7 +182,7 @@ function useResponsiveMonthCount(): [number, React.RefCallback<HTMLDivElement>] 
         const observer = new ResizeObserver((entries) => {
             const entry = entries[0];
             if (entry === undefined) return;
-            setCount(entry.contentRect.width >= 560 ? 2 : 1);
+            setCount(entry.contentRect.width >= 500 ? 2 : 1);
         });
         observer.observe(element);
         return () => observer.disconnect();
