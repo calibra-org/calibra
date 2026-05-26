@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { Star } from "lucide-react";
+import { ImagePlus, Sparkles, Star, Tag } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
@@ -11,19 +11,19 @@ import type { ProductType, StockStatus } from "#/lib/types";
 
 const PRODUCT_TYPES: ProductType[] = ["simple", "variable", "grouped", "external"];
 const STOCK_STATUSES: StockStatus[] = ["instock", "outofstock", "onbackorder"];
+const STOCK_LEVELS = ["instock", "low", "outofstock"] as const;
+const CATALOG_VISIBILITIES = ["visible", "catalog", "search", "hidden"] as const;
 
 /**
- * Builds the toolbar's faceted-filter array. Categories / brands / tags come from a single facets
- * query (`/categories`, `/brands`, `/tags`); type and stock-status come from the schema enums so
- * the popover renders even when the catalog is empty.
- *
- * The function intentionally returns a fresh array on every render — toolbar receives stable
- * `paramKey` strings so React Query's key comparison stays correct.
+ * Builds the toolbar's faceted + toggle filter arrays. Categories / brands / tags come from
+ * the global facets query; the remaining facets are static enums.
  */
 export function useProductFilters(): { facets: FacetedFilterDef[]; toggles: ToggleFilterDef[]; isLoading: boolean } {
     const t = useTranslations("Products.list.filters");
     const productTypeT = useTranslations("Products.list.type");
     const stockT = useTranslations("StockStatus");
+    const stockLevelT = useTranslations("Products.list.filters.stockLevel");
+    const visibilityT = useTranslations("Products.list.filters.visibilityOption");
     const _locale = useLocale() as Locale;
     const { data, isPending } = useProductFacets();
 
@@ -40,6 +40,18 @@ export function useProductFilters(): { facets: FacetedFilterDef[]; toggles: Togg
                 label: t("stock"),
                 multiple: false,
                 options: STOCK_STATUSES.map((value) => ({ value, label: stockT(value) })),
+            },
+            {
+                paramKey: "stockLevel",
+                label: t("stockLevelLabel"),
+                multiple: false,
+                options: STOCK_LEVELS.map((value) => ({ value, label: stockLevelT(value) })),
+            },
+            {
+                paramKey: "visibility",
+                label: t("visibility"),
+                multiple: false,
+                options: CATALOG_VISIBILITIES.map((value) => ({ value, label: visibilityT(value) })),
             },
             {
                 paramKey: "category",
@@ -60,7 +72,7 @@ export function useProductFilters(): { facets: FacetedFilterDef[]; toggles: Togg
                 options: data?.tags.map((row) => ({ value: row.value, label: row.label, count: row.count })) ?? [],
             },
         ],
-        [data, productTypeT, stockT, t],
+        [data, productTypeT, stockT, stockLevelT, visibilityT, t],
     );
 
     const toggles = useMemo<ToggleFilterDef[]>(
@@ -69,6 +81,21 @@ export function useProductFilters(): { facets: FacetedFilterDef[]; toggles: Togg
                 paramKey: "fav",
                 label: t("favorites"),
                 icon: <Star className="size-3.5" aria-hidden="true" />,
+            },
+            {
+                paramKey: "onSale",
+                label: t("onSale"),
+                icon: <Tag className="size-3.5" aria-hidden="true" />,
+            },
+            {
+                paramKey: "featured",
+                label: t("featured"),
+                icon: <Sparkles className="size-3.5" aria-hidden="true" />,
+            },
+            {
+                paramKey: "hasImage",
+                label: t("hasImage"),
+                icon: <ImagePlus className="size-3.5" aria-hidden="true" />,
             },
         ],
         [t],

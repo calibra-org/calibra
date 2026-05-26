@@ -714,7 +714,24 @@
                 "category": "Category",
                 "brand": "Brand",
                 "tag": "Tag",
-                "favorites": "Favorites"
+                "favorites": "Favorites",
+                "onSale": "On sale only",
+                "featured": "Featured only",
+                "hasImage": "Has image",
+                "visibility": "Visibility",
+                "stockLevelLabel": "Stock level",
+                "dateRange": "Created date",
+                "stockLevel": {
+                    "instock": "In stock",
+                    "low": "Low stock",
+                    "outofstock": "Out of stock"
+                },
+                "visibilityOption": {
+                    "visible": "Everywhere",
+                    "catalog": "Catalog only",
+                    "search": "Search only",
+                    "hidden": "Hidden"
+                }
             },
             "type": {
                 "simple": "Simple",
@@ -742,7 +759,13 @@
                 "brand": "Brand",
                 "date": "Status / Date",
                 "views": "Views",
-                "actions": "Actions"
+                "actions": "Actions",
+                "visibility": "Visibility",
+                "salePeriod": "Sale window",
+                "lowStock": "Low stock",
+                "inventory": "Inventory",
+                "createdAt": "Created",
+                "updatedAt": "Updated"
             },
             "actions": {
                 "edit": "Edit",
@@ -752,7 +775,9 @@
                 "openShop": "View in shop",
                 "copyLink": "Copy link",
                 "copyId": "Copy ID",
-                "trash": "Move to trash"
+                "trash": "Move to trash",
+                "restore": "Restore",
+                "deletePermanently": "Delete permanently"
             },
             "rowActionsLabel": "Row actions",
             "selectAll": "Select all",
@@ -798,14 +823,27 @@
                 "duplicate": "Duplicate",
                 "favorite": "Add to favorites",
                 "category": "Change category",
-                "trash": "Move to trash"
+                "trash": "Move to trash",
+                "restore": "Restore",
+                "deletePermanently": "Delete permanently",
+                "setVisibility": "Set visibility",
+                "setStock": "Set stock status",
+                "setFeatured": "Set featured",
+                "assignBrand": "Assign brand",
+                "assignTags": "Assign tags",
+                "exportSelected": "Export selected"
             },
             "bulkStatusChanged": "Status updated",
             "bulkDuplicated": "Selected products duplicated",
             "bulkTrashed": "Moved to trash",
+            "bulkRestored": "Restored",
+            "bulkForceDeleted": "Selected products permanently deleted",
+            "bulkForceSkipped": "{count} product(s) skipped — they're in an active order",
             "bulkFailed": "Bulk action failed",
             "bulkTrashTitle": "Trash selected?",
             "bulkTrashDescription": "{count} products will be moved to the trash. Continue?",
+            "bulkForceTitle": "Delete permanently?",
+            "bulkForceDescription": "{count} products will be permanently deleted. This cannot be undone.",
             "bulkFavoritedTodo": "Bulk favorites coming soon",
             "bulkCategoryTodo": "Bulk category change coming soon",
             "quickEdit": {
@@ -819,18 +857,31 @@
                 "name": "Product name",
                 "slug": "Slug",
                 "sku": "SKU",
+                "gtin": "GTIN/UPC/EAN",
+                "gtinHint": "Global Trade Item Number — improves search visibility on Google Shopping.",
                 "shortDescription": "Short description",
                 "status": "Status",
+                "visibility": "Visibility",
                 "featured": "Featured",
                 "featuredHint": "Highlight on featured sections",
                 "regularPrice": "Regular price",
                 "salePrice": "Sale price",
                 "salePriceHint": "Leave empty for no sale.",
+                "saleSchedule": "Sale window",
+                "saleScheduleHint": "Leave empty for an always-on sale.",
                 "currency": "Toman",
                 "manageStock": "Manage stock",
                 "manageStockHint": "Track stock at the product level",
                 "stockQuantity": "Stock quantity",
                 "stockStatus": "Stock status",
+                "lowStockThreshold": "Low-stock threshold",
+                "lowStockThresholdHint": "Shows a warning badge when quantity drops to this.",
+                "backorders": "Backorders",
+                "backordersOptions": {
+                    "no": "Don't allow",
+                    "notify": "Allow, with note",
+                    "yes": "Allow"
+                },
                 "categories": "Category IDs",
                 "tags": "Tag IDs",
                 "brand": "Brand ID",
@@ -844,6 +895,50 @@
                 "discardConfirm": "You have unsaved changes. Discard?",
                 "dirty": "Unsaved",
                 "lastEdited": "Last edited {relative}"
+            },
+            "rowActions": {
+                "viewOnStore": "View on storefront",
+                "copyLink": "Copy link",
+                "restore": "Restore",
+                "deletePermanently": "Delete permanently"
+            },
+            "rowActionsKbd": {
+                "edit": "E",
+                "quickEdit": "Q",
+                "duplicate": "D",
+                "trash": "Del",
+                "deletePermanently": "Shift+Del"
+            },
+            "emptyHint": {
+                "title": "Add your first product",
+                "description": "Adding products brings your storefront to life.",
+                "cta": "New product"
+            },
+            "restore": {
+                "ok": "Restored",
+                "failed": "Restore failed"
+            },
+            "forceDelete": {
+                "ok": "Product permanently deleted",
+                "failed": "Permanent delete failed",
+                "title": "Delete permanently?",
+                "description": "\"{name}\" will be deleted permanently. This cannot be undone.",
+                "confirm": "Delete permanently",
+                "skippedActiveOrder": "This product is referenced by an active order — cancel the order first."
+            },
+            "shortcuts": {
+                "title": "Keyboard shortcuts",
+                "search": "Focus search",
+                "new": "New product",
+                "refresh": "Refresh",
+                "open": "Open shortcuts",
+                "edit": "Edit",
+                "quickEdit": "Quick edit",
+                "duplicate": "Duplicate",
+                "trash": "Move to trash",
+                "selectAll": "Select all on page",
+                "clearSelection": "Clear selection",
+                "navigate": "Navigate rows"
             },
             "errors": {
                 "nameRequired": "Product name is required",

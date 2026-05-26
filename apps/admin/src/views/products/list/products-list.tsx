@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
-import { Plus, Star } from "lucide-react";
+import { Plus, PackagePlus, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
@@ -18,10 +18,16 @@ import {
 import { useDataTable } from "#/components/data-table/use-data-table";
 import { Button } from "#/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
+import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
-import { useProductCountsByStatus, useProductsList } from "#/lib/products/queries";
+import {
+    type CatalogVisibility,
+    type StockLevel,
+    useProductCountsByStatus,
+    useProductsList,
+} from "#/lib/products/queries";
 import type { AdminProduct, ProductStatus, ProductType, StockStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
@@ -29,10 +35,14 @@ import { buildProductColumns } from "./columns";
 import { useFavorites } from "./favorite-toggle";
 import { useProductFilters } from "./filters";
 import { QuickEditPanel } from "./quick-edit/quick-edit-panel";
+import { useProductsListShortcuts } from "./shortcuts";
+import { ShortcutsDialog } from "#/components/shortcuts-dialog";
 
 const TABLE_ID = "products.list";
 const STATUS_TABS: (ProductStatus | "any")[] = ["any", "publish", "draft", "pending"];
 const TRASH_TAB = "trash" as const;
+const TAB_VALUES: readonly string[] = [...STATUS_TABS, TRASH_TAB];
+type TabValue = ProductStatus | "any" | typeof TRASH_TAB;
 const LOW_STOCK_THRESHOLD = 5;
 
 /**
@@ -53,13 +63,16 @@ export function ProductsList() {
     const { facets, toggles } = useProductFilters();
 
     /**
-     * Status is driven by the tab strip rather than a faceted-filter popover, but it still needs
-     * to be a URL-backed facet so `tableState.setFacetValues("status", …)` from `onTabChange`
-     * actually round-trips through nuqs. Register it alongside the toolbar facets — the empty
-     * `options` array means it never renders as a filter chip / popover.
+     * Status + Trash live in URL-backed facets even though the tab strip drives them — that way
+     * deep links and the browser back button restore the exact tab. They're registered with
+     * empty option lists so they don't render as toolbar chips / popovers.
      */
     const facetsWithStatus = useMemo<FacetedFilterDef[]>(
-        () => [...facets, { paramKey: "status", label: "status", multiple: false, options: [] }],
+        () => [
+            ...facets,
+            { paramKey: "status", label: "status", multiple: false, options: [] },
+            { paramKey: "trashed", label: "trashed", multiple: false, options: [] },
+        ],
         [facets],
     );
 
@@ -67,21 +80,30 @@ export function ProductsList() {
         id: TABLE_ID,
         facets: facetsWithStatus,
         toggles,
-        defaultColumnVisibility: { tags: false, views: false },
+        defaultColumnVisibility: { tags: false, views: false, inventory: false, salePeriod: false, createdAt: false },
     });
 
+    const onlyTrashed = tableState.facetValues.trashed?.[0] === "1";
     const status: ProductStatus | "any" = useMemo(() => {
+        if (onlyTrashed) return "any";
         const value = tableState.facetValues.status?.[0];
         if (value === "publish" || value === "draft" || value === "pending" || value === "private") return value;
         return "any";
-    }, [tableState.facetValues.status]);
+    }, [tableState.facetValues.status, onlyTrashed]);
+
+    const activeTab: TabValue = onlyTrashed ? TRASH_TAB : status;
 
     const productTypeValue = tableState.facetValues.type?.[0] as ProductType | undefined;
     const stockStatusValue = tableState.facetValues.stock?.[0] as StockStatus | undefined;
+    const stockLevelValue = tableState.facetValues.stockLevel?.[0] as StockLevel | undefined;
+    const visibilityValue = tableState.facetValues.visibility?.[0] as CatalogVisibility | undefined;
     const categoryId = numericFirst(tableState.facetValues.category);
     const brandId = numericFirst(tableState.facetValues.brand);
     const tagId = numericFirst(tableState.facetValues.tag);
     const favOnly = tableState.toggleValues.fav === true;
+    const onSale = tableState.toggleValues.onSale === true;
+    const featured = tableState.toggleValues.featured === true;
+    const hasImage = tableState.toggleValues.hasImage === true;
 
     const { data: statusCounts } = useProductCountsByStatus();
 
@@ -97,9 +119,15 @@ export function ProductsList() {
         status,
         type: productTypeValue,
         stockStatus: stockStatusValue,
+        stockLevel: stockLevelValue,
+        catalogVisibility: visibilityValue,
         categoryId,
         brandId,
         tagId,
+        onSale: onSale ? true : undefined,
+        featured: featured ? true : undefined,
+        hasImage: hasImage ? true : undefined,
+        onlyTrashed: onlyTrashed ? true : undefined,
         favoriteIds: favOnly ? Array.from(favorites) : undefined,
         search: tableState.q.length > 0 ? tableState.q : undefined,
     });
@@ -182,20 +210,66 @@ export function ProductsList() {
     }, [facets, tableState.facetValues]);
 
     const onTabChange = (value: string) => {
-        if (value === "any") {
+        if (!TAB_VALUES.includes(value)) return;
+        if (value === TRASH_TAB) {
             tableState.setFacetValues("status", []);
+            tableState.setFacetValues("trashed", ["1"]);
             return;
         }
-        if (value === TRASH_TAB) {
-            /** TODO(api): no `trashed` filter exists yet — keep the tab routed to a no-op for now. */
-            tableState.setFacetValues("status", ["draft"]);
+        tableState.setFacetValues("trashed", []);
+        if (value === "any") {
+            tableState.setFacetValues("status", []);
             return;
         }
         tableState.setFacetValues("status", [value]);
     };
 
+    const [shortcutsOpen, setShortcutsOpen] = useState(false);
+    useProductsListShortcuts({
+        onFocusSearch: () => {
+            const el = document.querySelector<HTMLInputElement>('input[type="search"], input[placeholder]');
+            el?.focus();
+        },
+        onNew: () => router.push("/products/new" as never),
+        onRefresh: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product-counts"] });
+        },
+        onOpenShortcuts: () => setShortcutsOpen(true),
+        onClearSelection: () => tableState.setSelected(new Set<string>()),
+    });
+
+    const shortcutGroups = useMemo(() => {
+        const shortcutT = (key: string): string => t(`shortcuts.${key}` as never);
+        return [
+            {
+                title: shortcutT("navigate"),
+                items: [
+                    { label: shortcutT("search"), keys: ["/"] },
+                    { label: shortcutT("new"), keys: ["n"] },
+                    { label: shortcutT("refresh"), keys: ["r"] },
+                    { label: shortcutT("open"), keys: ["?"] },
+                ],
+            },
+            {
+                title: t("rowActionsLabel"),
+                items: [
+                    { label: shortcutT("edit"), keys: ["E"] },
+                    { label: shortcutT("quickEdit"), keys: ["Q"] },
+                    { label: shortcutT("duplicate"), keys: ["D"] },
+                    { label: shortcutT("trash"), keys: ["Del"] },
+                    { label: shortcutT("selectAll"), keys: ["Shift", "A"] },
+                    { label: shortcutT("clearSelection"), keys: ["Esc"] },
+                ],
+            },
+        ];
+    }, [t]);
+
     const headerSubtitle =
         data === undefined ? t("loadingTotal") : t("totalProducts", { count: formatNumber(meta.total, locale) });
+
+    const hasNoFiltersOrSearch = !tableState.hasActiveFilters && tableState.q.length === 0 && !onlyTrashed;
+    const showOnboardingHint = hasNoFiltersOrSearch && !isPending && !isError && rows.length === 0;
 
     return (
         <section className="flex flex-col gap-6">
@@ -235,7 +309,7 @@ export function ProductsList() {
              * underline that slides between active selections. Each tab label inlines the
              * parenthetical count exactly like the Positions / Open Orders bar in the reference.
              */}
-            <Tabs value={status} onValueChange={onTabChange} variant="line" aria-label={t("title")}>
+            <Tabs value={activeTab} onValueChange={onTabChange} variant="line" aria-label={t("title")}>
                 <TabsList className="h-10 gap-6 px-0">
                     {STATUS_TABS.map((value) => {
                         const count = statusCounts?.[value];
@@ -251,8 +325,27 @@ export function ProductsList() {
                             </TabsTrigger>
                         );
                     })}
+                    <TabsTrigger value={TRASH_TAB} className="px-0">
+                        <span>{t("status.trash")}</span>
+                        {statusCounts?.trash !== undefined && (
+                            <span className="ms-1 text-muted-foreground/80 tabular-nums">
+                                ({formatNumber(statusCounts.trash, locale)})
+                            </span>
+                        )}
+                    </TabsTrigger>
                 </TabsList>
             </Tabs>
+
+            {showOnboardingHint && (
+                <OnboardingHint
+                    id="products.list.empty"
+                    icon={PackagePlus}
+                    title={t("emptyHint.title")}
+                    description={t("emptyHint.description")}
+                    cta={{ label: t("emptyHint.cta"), onClick: () => router.push("/products/new" as never) }}
+                    variant="card"
+                />
+            )}
 
             <DataTable<AdminProduct>
                 data={rows}
@@ -371,7 +464,16 @@ export function ProductsList() {
                 }}
                 formatNumber={(value) => formatNumber(value, locale)}
                 skeletonColumnWidths={[2, 1, 2, 6, 3, 3, 3, 3, 2, 3, 1]}
-                bulkActions={(bulk) => <BulkActions selectedIds={bulk.selectedIds} onClear={bulk.clearSelection} />}
+                bulkActions={(bulk) => (
+                    <BulkActions selectedIds={bulk.selectedIds} onClear={bulk.clearSelection} onTrashTab={onlyTrashed} />
+                )}
+            />
+
+            <ShortcutsDialog
+                open={shortcutsOpen}
+                onOpenChange={setShortcutsOpen}
+                title={t("shortcuts.title")}
+                groups={shortcutGroups}
             />
         </section>
     );
