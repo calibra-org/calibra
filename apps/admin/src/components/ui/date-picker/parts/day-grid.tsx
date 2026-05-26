@@ -12,15 +12,19 @@ import type { Calendar, Operator } from "../types";
  * RDP chevron slot. Lives outside the parent so the lint rule against nested component
  * definitions stays happy and so React can stabilise the slot reference across renders.
  *
- * RDP v9 already accounts for `dir="rtl"` by flipping the `orientation` it passes — `previous`
- * arrives as `orientation: "right"` in RTL, `"left"` in LTR. We honour that signal verbatim;
- * any extra locale-aware flipping here would double-invert.
+ * RDP v9 does **not** auto-flip its `orientation` prop when `dir="rtl"` — the previous button
+ * always reports `orientation: "left"`, the next button `"right"`, regardless of direction. The
+ * repo's convention for icons in RTL contexts is `className="rtl:rotate-180"` (see
+ * `apps/admin/src/views/products/export/step-exporting.tsx`, `media-details-modal.tsx`, etc.).
+ * That Tailwind modifier flips the icon under any `dir="rtl"` ancestor, so a previous button
+ * visually-on-the-right in RTL ends up pointing right (toward "older" on a Persian timeline)
+ * and a next button visually-on-the-left points left.
  */
 function PickerChevron({ orientation }: ChevronProps) {
     return orientation === "left" ? (
-        <ChevronLeft className="size-4" aria-hidden="true" />
+        <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
     ) : (
-        <ChevronRight className="size-4" aria-hidden="true" />
+        <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />
     );
 }
 
