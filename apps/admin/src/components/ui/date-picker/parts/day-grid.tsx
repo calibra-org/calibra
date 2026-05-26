@@ -152,20 +152,21 @@ export function DayGrid({
                     "absolute end-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 weekday: "text-muted-foreground text-xs font-normal pb-1 text-center",
                 /**
-                 * Day cell: a tiny `p-0.5` gutter on each side prevents the day-number circles
-                 * from touching their neighbours. `text-center` keeps the inline-flex button
-                 * below centred horizontally inside the cell. `grid` on the cell would override
+                 * Day cell: `p-0.5` gives the day-number circles breathing room so they don't
+                 * touch their neighbours, and `text-center` keeps the inline-flex button below
+                 * centred horizontally inside the cell. `grid` on the cell would override
                  * `display: table-cell` and collapse the whole month grid into a single column.
                  */
                 day: "p-0.5 text-center",
                 /**
-                 * `rounded-full` gives Linear-style circular day cells; the today border + the
-                 * selected fill (both applied via the descendant-button modifier classes above)
-                 * paint the same outer circle so the two indicators sit concentric across the
-                 * same week row.
+                 * Day-number button: `size-8` (32 px) is small enough that 7 columns × 2 months
+                 * still fit comfortably inside `max-w-xl` without horizontal overflow.
+                 * `rounded-full` gives Linear-style circular cells; the today border + selected
+                 * fill (both applied via the descendant-button modifier classes above) paint
+                 * the same outer circle so indicators sit concentric across the same week row.
                  */
                 day_button:
-                    "mx-auto inline-flex size-9 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                    "mx-auto inline-flex size-8 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                 outside: "text-muted-foreground/40",
                 selected: "[&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
                 /**
