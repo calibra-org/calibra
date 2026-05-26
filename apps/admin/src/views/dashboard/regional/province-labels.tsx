@@ -22,10 +22,16 @@ export function ProvinceLabels() {
             {TEXT_LABELS.map((entry) => (
                 <text
                     key={entry.label}
+                    /**
+                     * Initial position from upstream — `MapSvg`'s effect re-centres these on
+                     * the matching province polygon via `data-text-label-name`, so the matrix
+                     * is just a placeholder until that pass runs.
+                     */
                     transform={`matrix(${entry.matrix})`}
                     data-region-label=""
+                    data-text-label-name={entry.label}
                     fill="#0f172a"
-                    style={{ fontSize: 14, fontWeight: 500 }}
+                    style={{ fontWeight: 500 }}
                 >
                     {entry.label}
                 </text>

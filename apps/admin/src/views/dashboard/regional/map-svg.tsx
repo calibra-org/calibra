@@ -44,9 +44,35 @@ export function MapSvg({ fillForCode, hoveredCode, onHoverChange, onPointerMove,
          */
         const svg = svgRef.current;
         if (!svg) return;
-        const labels = svg.querySelectorAll<SVGGraphicsElement>("[data-region-label]");
         const provincePaths = svg.querySelectorAll<SVGPathElement>("[data-region-code]");
         const seaPaths = svg.querySelectorAll<SVGPathElement>("[data-region-sea]");
+
+        /**
+         * Recentre `<text>` labels (currently just قم / Qom) on their actual province polygon.
+         * The upstream matrix targets the upstream's default font-size, so at our smaller
+         * font the text drifts into the surrounding province, taking the wrong fill colour and
+         * looking misplaced. After this step the contrast pass below samples the correct
+         * polygon underneath.
+         */
+        const textLabels = svg.querySelectorAll<SVGTextElement>("[data-text-label-name]");
+        for (const text of textLabels) {
+            const name = text.getAttribute("data-text-label-name");
+            if (!name) continue;
+            const province = svg.querySelector<SVGPathElement>(`[data-region-name="${name}"]`);
+            if (!province) continue;
+            const box = province.getBBox();
+            const cx = box.x + box.width / 2;
+            const cy = box.y + box.height / 2;
+            const fontSize = Math.max(7, Math.min(12, Math.min(box.width, box.height) * 0.35));
+            text.removeAttribute("transform");
+            text.setAttribute("x", String(cx));
+            text.setAttribute("y", String(cy));
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("font-size", String(fontSize));
+        }
+
+        const labels = svg.querySelectorAll<SVGGraphicsElement>("[data-region-label]");
 
         for (const label of labels) {
             const box = label.getBBox();
