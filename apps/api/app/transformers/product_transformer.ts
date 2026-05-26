@@ -5,10 +5,23 @@ import type Product from "#models/product";
 import { resolvePrice } from "#services/price_resolver";
 import { pickTranslation } from "#transformers/i18n_helpers";
 
+/** Final fallback when neither the per-row nor the global low-stock threshold is configured. */
+const FALLBACK_LOW_STOCK_THRESHOLD = 5;
+
+export interface ProductTransformerOptions {
+    /**
+     * Global low-stock threshold from the `inventory.low_stock_threshold` setting. Per-row
+     * `inventory_items.low_stock_threshold` overrides this; this is the fallback when the row
+     * leaves it null (which is the common case — operators rarely set it per-row).
+     */
+    defaultLowStockThreshold?: number;
+}
+
 export default class ProductTransformer extends BaseTransformer<Product> {
     constructor(
         resource: Product,
         protected locale: string = "fa",
+        protected options: ProductTransformerOptions = {},
     ) {
         super(resource);
     }
@@ -174,10 +187,16 @@ export default class ProductTransformer extends BaseTransformer<Product> {
      * variation's stock; for a simple product it's the per-product row. The `locations` slot
      * still surfaces only the product-level rows so the per-warehouse editor (Prompt 2) doesn't
      * accidentally try to edit a variation row as if it were a warehouse.
+     *
+     * `low_stock` resolves the threshold in priority order:
+     *   1. `inventory_items.low_stock_threshold` (per-row override)
+     *   2. `this.options.defaultLowStockThreshold` (global `inventory.low_stock_threshold` setting)
+     *   3. `FALLBACK_LOW_STOCK_THRESHOLD` (hard-coded baseline)
      */
     private buildInventoryAggregate(items: InventoryItem[]) {
         const productLevel = items.filter((i) => i.variationId === null || i.variationId === undefined);
         const total = items.reduce((sum, i) => sum + Number(i.stockQuantity ?? 0), 0);
+        const defaultThreshold = this.options.defaultLowStockThreshold ?? FALLBACK_LOW_STOCK_THRESHOLD;
         const locations = productLevel.map((i) => ({
             id: Number(i.id),
             location_id: i.locationId === null || i.locationId === undefined ? null : Number(i.locationId),
@@ -187,14 +206,18 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             backorders: i.backorders ?? "no",
             stock_status: i.stockStatus ?? "instock",
         }));
-        const lowStockHit = items.some(
-            (i) =>
-                i.manageStock &&
-                i.lowStockThreshold !== null &&
-                i.lowStockThreshold !== undefined &&
-                Number(i.stockQuantity ?? 0) > 0 &&
-                Number(i.stockQuantity ?? 0) <= Number(i.lowStockThreshold),
-        );
-        return { total, low_stock: lowStockHit, locations };
+        const lowStockHit = items.some((i) => {
+            if (!i.manageStock) return false;
+            const qty = Number(i.stockQuantity ?? 0);
+            if (qty <= 0) return false;
+            const threshold = i.lowStockThreshold ?? defaultThreshold;
+            return qty <= threshold;
+        });
+        return {
+            total,
+            low_stock: lowStockHit,
+            default_low_stock_threshold: defaultThreshold,
+            locations,
+        };
     }
 }

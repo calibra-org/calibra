@@ -6,8 +6,9 @@ import Product from "#models/product";
 import { recordAudit } from "#services/admin_audit_log_service";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { syncLinks, syncProductImages, upsertTranslations, withTransaction } from "#services/catalog_writer";
+import SettingsService from "#services/settings_service";
 import { paginated, resource } from "#transformers/api_envelope";
-import ProductTransformer from "#transformers/product_transformer";
+import ProductTransformer, { type ProductTransformerOptions } from "#transformers/product_transformer";
 import {
     batchProductsValidator,
     createProductValidator,
@@ -62,7 +63,11 @@ export default class AdminProductsController {
         this.applyListSort(query, request);
 
         const paginator = await query.paginate(page, perPage);
-        const envelope = paginated(ProductTransformer.transform(paginator.all()).useVariant("forAdmin"), paginator);
+        const transformerOptions = await this.transformerOptions();
+        const envelope = paginated(
+            ProductTransformer.transform(paginator.all(), ctx.i18n.locale, transformerOptions).useVariant("forAdmin"),
+            paginator,
+        );
 
         const includes = String(request.input("include", ""))
             .split(",")
@@ -325,7 +330,9 @@ export default class AdminProductsController {
         if (!product) {
             return ctx.response.status(404).json({ error: "product_not_found" });
         }
-        return resource(ProductTransformer.transform(product, ctx.i18n.locale).useVariant("forAdmin"));
+        return resource(
+            ProductTransformer.transform(product, ctx.i18n.locale, await this.transformerOptions()).useVariant("forAdmin"),
+        );
     }
 
     async store(ctx: HttpContext) {
@@ -352,7 +359,9 @@ export default class AdminProductsController {
         const reloaded = await this.reload(product.id);
         await CacheInvalidation.productChanged(product.id);
         ctx.response.status(201);
-        return resource(ProductTransformer.transform(reloaded!, ctx.i18n.locale).useVariant("forAdmin"));
+        return resource(
+            ProductTransformer.transform(reloaded!, ctx.i18n.locale, await this.transformerOptions()).useVariant("forAdmin"),
+        );
     }
 
     async update(ctx: HttpContext) {
@@ -382,7 +391,9 @@ export default class AdminProductsController {
         });
         const reloaded = await this.reload(product.id);
         await CacheInvalidation.productChanged(product.id);
-        return resource(ProductTransformer.transform(reloaded!, ctx.i18n.locale).useVariant("forAdmin"));
+        return resource(
+            ProductTransformer.transform(reloaded!, ctx.i18n.locale, await this.transformerOptions()).useVariant("forAdmin"),
+        );
     }
 
     /**
@@ -438,7 +449,9 @@ export default class AdminProductsController {
         });
         await CacheInvalidation.productChanged(product.id);
         const reloaded = await this.reload(product.id);
-        return resource(ProductTransformer.transform(reloaded!, ctx.i18n.locale).useVariant("forAdmin"));
+        return resource(
+            ProductTransformer.transform(reloaded!, ctx.i18n.locale, await this.transformerOptions()).useVariant("forAdmin"),
+        );
     }
 
     /** `POST /api/v1/admin/products/restore` — bulk restore. */
@@ -538,7 +551,9 @@ export default class AdminProductsController {
         const reloaded = await this.reload(copy.id);
         await CacheInvalidation.productChanged(copy.id);
         ctx.response.status(201);
-        return resource(ProductTransformer.transform(reloaded!, ctx.i18n.locale).useVariant("forAdmin"));
+        return resource(
+            ProductTransformer.transform(reloaded!, ctx.i18n.locale, await this.transformerOptions()).useVariant("forAdmin"),
+        );
     }
 
     /**
@@ -629,6 +644,17 @@ export default class AdminProductsController {
                 skipped_force: skippedForceIds,
             },
         };
+    }
+
+    /**
+     * Resolves the cross-controller transformer options — currently just the global low-stock
+     * threshold setting. Reads through {@link SettingsService} so the value is cached and a
+     * single SQL hit serves every concurrent request until the operator updates the setting.
+     */
+    private async transformerOptions(): Promise<ProductTransformerOptions> {
+        const settings = new SettingsService();
+        const defaultLowStockThreshold = await settings.get<number>("inventory", "low_stock_threshold_default", 5);
+        return { defaultLowStockThreshold };
     }
 
     private async reload(id: bigint | number): Promise<Product | null> {

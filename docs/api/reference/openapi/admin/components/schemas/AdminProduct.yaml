@@ -52,6 +52,11 @@ properties:
         properties:
             total: { type: integer }
             low_stock: { type: boolean }
+            default_low_stock_threshold:
+                type: integer
+                description: >
+                    Global `inventory.low_stock_threshold_default` setting at the time the
+                    transformer ran. Per-location `low_stock_threshold` overrides it.
             locations:
                 type: array
                 items:

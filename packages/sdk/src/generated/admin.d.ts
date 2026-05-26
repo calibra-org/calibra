@@ -3846,6 +3846,8 @@ export interface components {
             inventory?: {
                 total?: number;
                 low_stock?: boolean;
+                /** @description Global `inventory.low_stock_threshold_default` setting at the time the transformer ran. Per-location `low_stock_threshold` overrides it. */
+                default_low_stock_threshold?: number;
                 locations?: {
                     id?: number;
                     location_id?: number | null;

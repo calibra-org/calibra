@@ -432,65 +432,48 @@ interface StockCellProps {
 }
 
 /**
- * Compact stock pill. Three visual states, chosen by *quantity* (the rollup is the source of
- * truth — a stale `stock_status` column can't override what the inventory says):
+ * Compact stock cell. Badge color is binary — green when there's stock, red when the rolled-up
+ * total is 0. The "low stock" state lives *outside* the badge as a separate warning chip so the
+ * primary in-stock signal stays unambiguously green; the operator scans down the column and
+ * spots "warning next to in-stock" without re-reading every chip.
  *
- *   In stock (≥ threshold)  — emerald pill,  ●  ۱۸۱  موجود
- *   Low stock (1 .. thr)    — amber pill,    ●  ۳    کم‌موجود
- *   Out of stock (== 0)     — rose pill,     ●  ۰    ناموجود
+ *   ۱۸۱ موجود                                ← plain green chip
+ *   ۳ موجود   ⚠ کم‌موجود                       ← green chip + amber warning chip beside it
+ *   ۰ ناموجود                                ← red chip
  *
- * For products with `manage_stock=false` (untracked) the cell renders only the status portion
- * (no quantity), since the number would always be `0` and read as "out of stock" by mistake.
+ * For products without an inventory row (`manage_stock=false` / untracked) the cell renders the
+ * status-only chip without a quantity, since the number would always be `0` and read as out of
+ * stock by mistake.
  */
 function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale, stockT, t }: StockCellProps) {
     const tracked = quantity !== null;
     const isOut = tracked && quantity <= 0;
     const isLow = !isOut && tracked && (lowStock || (quantity ?? 0) <= lowStockThreshold);
+    const isInStock = !isOut;
 
-    let tone: "emerald" | "amber" | "rose";
-    let labelKey: StockStatus;
-    if (isOut) {
-        tone = "rose";
-        labelKey = "outofstock";
-    } else if (isLow) {
-        tone = "amber";
-        labelKey = "onbackorder";
-    } else {
-        tone = stockStatus === "outofstock" ? "rose" : stockStatus === "onbackorder" ? "amber" : "emerald";
-        labelKey = stockStatus;
-    }
-
-    const toneClasses: Record<typeof tone, { wrap: string; text: string }> = {
-        emerald: {
-            wrap: "border-emerald-500/30 bg-emerald-500/10",
-            text: "text-emerald-700 dark:text-emerald-300",
-        },
-        amber: {
-            wrap: "border-amber-500/30 bg-amber-500/10",
-            text: "text-amber-700 dark:text-amber-300",
-        },
-        rose: {
-            wrap: "border-rose-500/30 bg-rose-500/10",
-            text: "text-rose-700 dark:text-rose-300",
-        },
-    };
-    const cls = toneClasses[tone];
-
-    /** Localized label for the low-stock visual state — falls back to the OOS / onbackorder keys. */
-    const label = isLow ? t("lowStock") : stockT(labelKey);
+    const wrapCls = isInStock
+        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+        : "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300";
+    const label = stockT(isInStock ? "instock" : "outofstock");
 
     return (
-        <span
-            className={cn(
-                "inline-flex h-5 items-center gap-1 rounded-full border px-1.5 text-[11px] leading-none",
-                cls.wrap,
-                cls.text,
+        <span className="inline-flex items-center gap-1.5">
+            <span
+                className={cn("inline-flex h-5 items-center gap-1 rounded-full border px-1.5 text-[11px] leading-none", wrapCls)}
+                title={tracked ? `${formatNumber(quantity ?? 0, locale)} — ${label}` : label}
+            >
+                {tracked && <span className="font-semibold tabular-nums">{formatNumber(quantity ?? 0, locale)}</span>}
+                <span className="font-medium">{label}</span>
+            </span>
+            {isLow && (
+                <span
+                    className="inline-flex h-5 items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 text-[11px] text-amber-700 leading-none dark:text-amber-300"
+                    title={t("lowStock")}
+                >
+                    <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />
+                    <span className="font-medium">{t("lowStock")}</span>
+                </span>
             )}
-            title={tracked ? `${formatNumber(quantity ?? 0, locale)} — ${label}` : label}
-        >
-            {isLow && <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />}
-            {tracked && <span className="font-semibold tabular-nums">{formatNumber(quantity ?? 0, locale)}</span>}
-            <span className="font-medium">{label}</span>
         </span>
     );
 }
