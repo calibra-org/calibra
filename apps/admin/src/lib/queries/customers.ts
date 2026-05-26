@@ -50,10 +50,10 @@ export interface CustomersListParams {
     acquisitionChannels?: string[];
     optInEmail?: boolean;
     optInSms?: boolean;
-    createdAfter?: string;
-    createdBefore?: string;
-    lastOrderAfter?: string;
-    lastOrderBefore?: string;
+    /** Unified date filter string (`<op>:<value>`); applied to `customers.created_at`. */
+    created?: string;
+    /** Unified date filter string applied to the customer's most-recent counted order. */
+    lastOrder?: string;
     hasNationalId?: boolean;
     withOrders?: boolean;
     noOrders?: boolean;
@@ -80,10 +80,8 @@ function listQuery(params: CustomersListParams): Record<string, string | number 
         acquisition_channels: csv(params.acquisitionChannels),
         opt_in_email: params.optInEmail,
         opt_in_sms: params.optInSms,
-        created_after: params.createdAfter,
-        created_before: params.createdBefore,
-        last_order_after: params.lastOrderAfter,
-        last_order_before: params.lastOrderBefore,
+        created: params.created,
+        last_order: params.lastOrder,
         has_national_id: params.hasNationalId,
         with_orders: params.withOrders,
         no_orders: params.noOrders,

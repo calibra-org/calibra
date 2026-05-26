@@ -12,6 +12,7 @@ import PaymentGateway from "#models/payment_gateway";
 import Product from "#models/product";
 import ProductVariation from "#models/product_variation";
 import { CacheInvalidation } from "#services/cache_invalidation";
+import { parseDateFilter } from "#services/date_filter_parser";
 import { orderNumberService } from "#services/order_number_service";
 import { orderStateMachine } from "#services/order_state_machine";
 import OrderTransformer from "#transformers/order_transformer";
@@ -68,8 +69,13 @@ export default class AdminOrdersController {
                 }
             });
         }
-        if (payload.after) query.where("created_at", ">=", payload.after);
-        if (payload.before) query.where("created_at", "<=", payload.before);
+        const createdRange = parseDateFilter(payload.created);
+        if (createdRange?.after !== null && createdRange?.after !== undefined) {
+            query.where("created_at", ">=", createdRange.after);
+        }
+        if (createdRange?.before !== null && createdRange?.before !== undefined) {
+            query.where("created_at", "<=", createdRange.before);
+        }
 
         query.preload("lineItems").preload("couponLines");
         query.orderBy(sort.column, sort.direction);

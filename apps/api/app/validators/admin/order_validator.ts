@@ -61,8 +61,13 @@ export const adminOrderListValidator = vine.compile(
         /** Multi-value filter against the billing-address country (ISO-3166 alpha-2). */
         country: csvList,
         search: vine.string().trim().minLength(1).maxLength(120).optional(),
-        after: vine.string().trim().optional(),
-        before: vine.string().trim().optional(),
+        /**
+         * Unified date-filter shape parsed by {@link parseDateFilter}. Single URL param replaces
+         * the previous `after`/`before` pair; admits `before:<period>`, `after:<period>`,
+         * `in:YYYY-Q1`, `in:YYYY-H1`, `in:YYYY-MM`, `in:YYYY`, and `within:YYYY-MM-DD..YYYY-MM-DD`.
+         * The picker UI mirrors this exact grammar.
+         */
+        created: vine.string().trim().maxLength(60).optional(),
         sort: vine.string().trim().maxLength(40).optional(),
     }),
 );

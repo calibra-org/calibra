@@ -3851,8 +3851,8 @@ export interface operations {
                 status?: "draft" | "pending" | "on_hold" | "processing" | "completed" | "cancelled" | "refunded" | "failed";
                 customer_id?: number;
                 search?: string;
-                created_from?: string;
-                created_to?: string;
+                /** @description Unified date filter — `<op>:<value>` where op ∈ `in|before|after|within`; value ∈ `YYYY-MM-DD`, `YYYY-MM`, `YYYY-Q1..Q4`, `YYYY-H1|H2`, `YYYY`. Use `within:YYYY-MM-DD..YYYY-MM-DD` for closed ranges. Year < 1700 parses as Jalali and converts to Gregorian server-side. */
+                created?: string;
                 include_drafts?: boolean;
                 /** @description Sort key. Hyphen prefix for descending. Allowed keys&#58; `id`, `order_number`, `created_at`, `grand_total`, `status`, `paid`, `completed`. */
                 sort?: string;
@@ -5436,20 +5436,10 @@ export interface operations {
                 email_verified?: boolean;
                 opt_in_email?: boolean;
                 opt_in_sms?: boolean;
-                created_after?: string;
-                created_before?: string;
-                /**
-                 * @deprecated
-                 * @description Use `created_after`.
-                 */
-                created_from?: string;
-                /**
-                 * @deprecated
-                 * @description Use `created_before`.
-                 */
-                created_to?: string;
-                last_order_after?: string;
-                last_order_before?: string;
+                /** @description Unified date filter — `<op>:<value>` where op ∈ `in|before|after|within`; value ∈ `YYYY-MM-DD`, `YYYY-MM`, `YYYY-Q1..Q4`, `YYYY-H1|H2`, `YYYY`. Use `within:YYYY-MM-DD..YYYY-MM-DD` for closed ranges. Year < 1700 parses as Jalali and converts to Gregorian server-side. */
+                created?: string;
+                /** @description Same shape as `created`, filters by the customer's last counted order date. */
+                last_order?: string;
                 order_count_min?: number;
                 order_count_max?: number;
                 lifetime_spend_min?: number;
