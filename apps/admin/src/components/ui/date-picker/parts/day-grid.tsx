@@ -89,10 +89,16 @@ export function DayGrid({
         [previewRange],
     );
 
+    /**
+     * RDP applies modifier classes to the `<td>` cell, not the inner `<button>`. Linear's design
+     * wants the today ring and the selected fill to wrap the day number as a circle — that means
+     * styling the button, not the cell. We use Tailwind's `[&_button]:` descendant selector so
+     * each modifier class on the cell paints the button instead.
+     */
     const modifiersClassNames = useMemo(
         () => ({
-            previewRange: "bg-primary/10 text-foreground",
-            today: "ring-1 ring-foreground/40 ring-inset",
+            previewRange: "[&_button]:bg-primary/10 [&_button]:text-foreground",
+            today: "[&_button]:ring-1 [&_button]:ring-foreground/40 [&_button]:ring-inset",
         }),
         [],
     );
@@ -122,23 +128,33 @@ export function DayGrid({
             components={{ Chevron: PickerChevron }}
             classNames={{
                 root: "p-2 text-foreground",
-                months: "flex flex-col sm:flex-row gap-4",
+                /**
+                 * `relative` on `months` is the positioning anchor for the absolutely-placed
+                 * nav buttons. Without it the buttons fall through to the Dialog's `fixed`
+                 * popup and end up colliding with the field-label / operator-chips header.
+                 */
+                months: "relative flex flex-col sm:flex-row gap-4 pt-1",
                 month: "space-y-3 flex-1",
-                month_caption: "relative flex h-8 items-center justify-center text-sm font-semibold",
+                month_caption: "flex h-8 items-center justify-center text-sm font-semibold",
                 caption_label: "text-sm",
                 nav: "contents",
                 button_previous:
-                    "absolute start-1 top-0 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "absolute start-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 button_next:
-                    "absolute end-1 top-0 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "absolute end-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 weekday: "text-muted-foreground text-xs font-normal pb-1",
+                /**
+                 * `rounded-full` gives Linear-style circular day cells; the today ring + selected
+                 * fill (both applied via the descendant-button modifier classes above) inherit
+                 * the circle shape.
+                 */
                 day_button:
-                    "inline-flex size-9 items-center justify-center rounded-md text-sm outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                    "inline-flex size-9 items-center justify-center rounded-full text-sm outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                 outside: "text-muted-foreground/40",
-                selected: "!bg-primary !text-primary-foreground hover:!bg-primary",
-                range_start: "!bg-primary !text-primary-foreground",
-                range_end: "!bg-primary !text-primary-foreground",
-                range_middle: "!bg-primary/25 !text-foreground rounded-none",
+                selected: "[&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
+                range_start: "[&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                range_end: "[&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                range_middle: "[&_button]:!bg-primary/25 [&_button]:!text-foreground [&_button]:!rounded-none",
                 disabled: "text-muted-foreground/30 cursor-not-allowed",
             }}
         />

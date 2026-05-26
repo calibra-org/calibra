@@ -147,6 +147,25 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
     const inputDebounceRef = useRef<number | null>(null);
 
     /**
+     * Mirror the staged selection back into the input field whenever the user hasn't typed —
+     * grid clicks, operator switches, and granularity tab changes all update `selection`, and
+     * the input should reflect what's currently picked rather than sit empty until the user
+     * commits. Once they start typing, `isInputDirty` flips true and this effect lets them
+     * own the text until cancel/commit clears it again.
+     */
+    useEffect(() => {
+        if (isInputDirty) return;
+        if (selection.kind === "none") {
+            setInputValueState("");
+            return;
+        }
+        const preview = buildValueFromSelection(selection, operator, calendar);
+        if (preview !== null) {
+            setInputValueState(formatValueOnly(preview, { locale }));
+        }
+    }, [calendar, isInputDirty, locale, operator, selection]);
+
+    /**
      * Operator switch. Within → before/after collapses any pending range to its earlier
      * endpoint; before/after → within seeds the range from the current point.
      */
