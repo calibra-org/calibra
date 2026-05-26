@@ -257,6 +257,94 @@ export function useProduct(
     });
 }
 
+export interface VariationView {
+    id: number;
+    sku: string | null;
+    gtin: string | null;
+    regularPriceMinor: number | null;
+    salePriceMinor: number | null;
+    saleStartsAt: string | null;
+    saleEndsAt: string | null;
+    weightGrams: number | null;
+    lengthMm: number | null;
+    widthMm: number | null;
+    heightMm: number | null;
+    imageMediaId: number | null;
+    virtual: boolean;
+    downloadable: boolean;
+    manageStockMode: "own" | "parent";
+    menuOrder: number;
+    pins: { attribute_id: number; term_id: number | null }[];
+    description: string | null;
+}
+
+/** Reads the variations list for a variable product. */
+export function useProductVariations(productId: number | null) {
+    const locale = useLocale() as Locale;
+    return useQuery<{ data: unknown[] }, Error, VariationView[]>({
+        queryKey: ["admin", "product-variations", productId, locale],
+        enabled: productId !== null && productId !== undefined,
+        queryFn: async () => apiGet<{ data: unknown[] }>(`products/${productId}/variations`, { locale }),
+        select: (envelope) =>
+            envelope.data.map((row) => {
+                const r = row as Record<string, unknown>;
+                return {
+                    id: Number(r.id),
+                    sku: (r.sku as string | null) ?? null,
+                    gtin: (r.gtin as string | null) ?? null,
+                    regularPriceMinor: r.regular_price === null || r.regular_price === undefined ? null : Number(r.regular_price),
+                    salePriceMinor: r.sale_price === null || r.sale_price === undefined ? null : Number(r.sale_price),
+                    saleStartsAt: (r.sale_starts_at as string | null) ?? null,
+                    saleEndsAt: (r.sale_ends_at as string | null) ?? null,
+                    weightGrams: (r.weight_grams as number | null) ?? null,
+                    lengthMm: (r.length_mm as number | null) ?? null,
+                    widthMm: (r.width_mm as number | null) ?? null,
+                    heightMm: (r.height_mm as number | null) ?? null,
+                    imageMediaId: (r.image_media_id as number | null) ?? null,
+                    virtual: Boolean(r.virtual),
+                    downloadable: Boolean(r.downloadable),
+                    manageStockMode: ((r.manage_stock_mode as string) ?? "own") as "own" | "parent",
+                    menuOrder: Number((r.menu_order as number | undefined) ?? 0),
+                    pins: ((r.attribute_pins as { attribute_id: number; term_id: number | null }[] | undefined) ?? []).map((p) => ({
+                        attribute_id: Number(p.attribute_id),
+                        term_id: p.term_id === null || p.term_id === undefined ? null : Number(p.term_id),
+                    })),
+                    description: (r.description as string | null) ?? null,
+                };
+            }),
+        staleTime: 10 * 1000,
+    });
+}
+
+/**
+ * Global attributes list — used by the Add-attribute popover on the Attributes card. Cached
+ * aggressively since the taxonomy rarely changes.
+ */
+export function useGlobalAttributes() {
+    const locale = useLocale() as Locale;
+    return useQuery<{ data: { id: number; name?: string; code?: string }[] }, Error, { id: number; name: string }[]>({
+        queryKey: ["admin", "attributes", "global", locale],
+        queryFn: async () => apiGet<{ data: { id: number; name?: string; code?: string }[] }>("attributes", { locale }),
+        select: (envelope) =>
+            envelope.data.map((row) => ({ id: Number(row.id), name: row.name ?? row.code ?? `#${row.id}` })),
+        staleTime: 5 * 60 * 1000,
+    });
+}
+
+/** Per-attribute terms list — used by the term chip picker on attribute-link rows. */
+export function useGlobalAttributeTerms(attributeId: number | null) {
+    const locale = useLocale() as Locale;
+    return useQuery<{ data: { id: number; name?: string; slug?: string }[] }, Error, { id: number; name: string }[]>({
+        queryKey: ["admin", "attributes", attributeId, "terms", locale],
+        enabled: attributeId !== null && attributeId !== undefined,
+        queryFn: async () =>
+            apiGet<{ data: { id: number; name?: string; slug?: string }[] }>(`attributes/${attributeId}/terms`, { locale }),
+        select: (envelope) =>
+            envelope.data.map((row) => ({ id: Number(row.id), name: row.name ?? row.slug ?? `#${row.id}` })),
+        staleTime: 60 * 1000,
+    });
+}
+
 /**
  * Debounced async slug availability check. The hook is intentionally NOT a `useMutation`; it's a
  * read-after-blur predicate the form treats as a hint, not a write. Callers pass the current slug

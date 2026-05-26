@@ -30,6 +30,7 @@ catalogs:
         "@tanstack/react-query-devtools": ^5.100.11
         "@tanstack/react-query-persist-client": ^5.100.11
         "@tanstack/react-table": ^8.21.3
+        "@tanstack/react-virtual": ^3.13.4
         idb-keyval: ^6.2.2
         "@vitest/coverage-v8": ^4.1.5
         class-variance-authority: 0.7.1
