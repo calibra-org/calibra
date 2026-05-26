@@ -92,15 +92,21 @@ export const updateProductValidator = vine.compile(
 
 export const batchProductsValidator = vine.compile(
     vine.object({
+        /**
+         * Each `create` / `update` entry is re-validated inside the controller via
+         * `createProductValidator` / `updateProductValidator` — keep these as `vine.any()` so
+         * the outer batch validator doesn't strip the per-entry fields before they reach the
+         * inner validator. The earlier object-with-just-`id` shape silently dropped every other
+         * field, which is why bulk `catalog_visibility` / `featured` / `stock_status` toggles
+         * looked like no-ops on the wire.
+         */
         create: vine.array(vine.any()).optional(),
-        update: vine
-            .array(
-                vine.object({
-                    id: vine.number(),
-                }),
-            )
-            .optional(),
-        delete: vine.array(vine.number()).optional(),
+        update: vine.array(vine.any()).optional(),
+        /**
+         * Either `[1, 2, 3]` (soft-trash by id) or `[{ id, force?: true }, …]` (per-entry hard-
+         * delete control). The controller pattern-matches on the shape, so accept either form.
+         */
+        delete: vine.array(vine.any()).optional(),
     }),
 );
 

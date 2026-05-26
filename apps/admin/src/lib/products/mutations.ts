@@ -169,7 +169,47 @@ export function useBulkUpdateProducts() {
                     })),
                 },
             }),
-        onSuccess: () => {
+        onMutate: async ({ ids, status, featured, catalogVisibility, stockStatus }) => {
+            /**
+             * Optimistic patch so cell-level toggles (visibility / featured / status) feel
+             * instant. Save the per-key snapshot so `onError` can roll back exactly the rows
+             * we touched without clobbering other concurrent invalidations.
+             */
+            await queryClient.cancelQueries({ queryKey: ["admin", "products", "list"] });
+            const previous = queryClient.getQueriesData<{ data: AdminProduct[] }>({
+                queryKey: ["admin", "products", "list"],
+            });
+            const idSet = new Set(ids);
+            for (const [key, snapshot] of previous) {
+                if (snapshot === undefined) continue;
+                queryClient.setQueryData<{ data: AdminProduct[]; meta: unknown } | undefined>(key, (existing) => {
+                    if (existing === undefined) return existing;
+                    return {
+                        ...existing,
+                        data: existing.data.map((row) =>
+                            idSet.has(row.id)
+                                ? {
+                                      ...row,
+                                      ...(status !== undefined ? { status } : {}),
+                                      ...(featured !== undefined ? { featured } : {}),
+                                      ...(catalogVisibility !== undefined ? { catalogVisibility } : {}),
+                                      ...(stockStatus !== undefined ? { stockStatus } : {}),
+                                  }
+                                : row,
+                        ),
+                    };
+                });
+            }
+            return { previous };
+        },
+        onError: (_error, _vars, context) => {
+            const previous = (context as { previous?: [unknown, unknown][] } | undefined)?.previous;
+            if (previous === undefined) return;
+            for (const [key, snapshot] of previous) {
+                queryClient.setQueryData(key as readonly unknown[], snapshot);
+            }
+        },
+        onSettled: () => {
             void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });
             void queryClient.invalidateQueries({ queryKey: ["admin", "product-counts"] });
         },
