@@ -11,11 +11,13 @@ import {
     DataTable,
     DataTableToolbar,
     DataTableViewOptions,
+    type DateFacetDef,
     type FacetedFilterDef,
 } from "#/components/data-table";
 import { useDataTable } from "#/components/data-table/use-data-table";
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
+import { serializeDateFilter } from "#/components/ui/date-picker";
 import { formatNumber } from "#/lib/format";
 import {
     type CustomerTabKey,
@@ -80,9 +82,18 @@ export function CustomersListClient() {
         [t, statusT],
     );
 
+    const dateFacets = useMemo<DateFacetDef[]>(
+        () => [
+            { paramKey: "created", label: t("table.createdAt"), calendar: "auto" },
+            { paramKey: "lastOrder", label: t("table.lastOrder"), calendar: "auto" },
+        ],
+        [t],
+    );
+
     const tableState = useDataTable({
         id: TABLE_ID,
         facets,
+        dateFacets,
         defaultPerPage: 20,
         defaultColumnVisibility: {
             nationalId: false,
@@ -91,6 +102,17 @@ export function CustomersListClient() {
             createdAt: false,
         },
     });
+
+    const createdValue = tableState.dateFacetValues.created;
+    const lastOrderValue = tableState.dateFacetValues.lastOrder;
+    const createdParam = useMemo(
+        () => (createdValue === null ? undefined : serializeDateFilter(createdValue).main),
+        [createdValue],
+    );
+    const lastOrderParam = useMemo(
+        () => (lastOrderValue === null ? undefined : serializeDateFilter(lastOrderValue).main),
+        [lastOrderValue],
+    );
 
     const {
         data: result,
@@ -109,6 +131,8 @@ export function CustomersListClient() {
         includeStats: true,
         countries: tableState.facetValues.country,
         statuses: (tableState.facetValues.status ?? []) as ("active" | "suspended")[],
+        created: createdParam,
+        lastOrder: lastOrderParam,
     });
 
     const deleteMutation = useDeleteCustomer();
@@ -277,6 +301,10 @@ export function CustomersListClient() {
                             toggles={[]}
                             toggleValues={tableState.toggleValues}
                             onToggleChange={tableState.setToggleValue}
+                            dateFacets={dateFacets}
+                            dateFacetValues={tableState.dateFacetValues}
+                            onDateFacetChange={tableState.setDateFilterValue}
+                            locale={locale}
                             hasActiveFilters={hasActiveFilters}
                             onClearAll={clearAllFilters}
                             onRefresh={() => refetch()}

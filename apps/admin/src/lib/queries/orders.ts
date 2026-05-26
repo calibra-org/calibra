@@ -43,8 +43,8 @@ export interface OrdersListParams {
     payments?: string[];
     /** Multi-select billing-country filter (ISO-3166 alpha-2). */
     countries?: string[];
-    after?: string;
-    before?: string;
+    /** Unified date filter string (`<op>:<value>`); see `apps/api/.../date_filter_parser.ts`. */
+    created?: string;
     customerId?: number;
 }
 
@@ -61,8 +61,7 @@ export function useOrdersList(params: OrdersListParams = {}) {
     const search = params.search;
     const sort = params.sort;
     const createdVia = params.createdVia;
-    const after = params.after;
-    const before = params.before;
+    const created = params.created;
     const customerId = params.customerId;
     /** Serialise multi-select facets as CSV; absent / empty arrays drop out of the URL entirely. */
     const sources = csvOrUndefined(params.sources);
@@ -73,7 +72,7 @@ export function useOrdersList(params: OrdersListParams = {}) {
             "admin",
             "orders",
             "list",
-            { locale, page, perPage, status, search, sort, createdVia, sources, payments, countries, after, before, customerId },
+            { locale, page, perPage, status, search, sort, createdVia, sources, payments, countries, created, customerId },
         ],
         queryFn: () =>
             apiGet<OrderListEnvelope>("orders", {
@@ -88,8 +87,7 @@ export function useOrdersList(params: OrdersListParams = {}) {
                     source: sources,
                     payment: payments,
                     country: countries,
-                    after,
-                    before,
+                    created,
                     customer_id: customerId,
                 },
             }),

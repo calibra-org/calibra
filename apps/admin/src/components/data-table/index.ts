@@ -28,6 +28,7 @@ export type {
     CardRenderer,
     ColumnDef,
     DataTableDensity,
+    DateFacetDef,
     FacetedFilterDef,
     PaginationMeta,
     Row,

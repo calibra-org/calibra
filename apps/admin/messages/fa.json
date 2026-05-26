@@ -1812,7 +1812,8 @@
                 "payment": "روش پرداخت",
                 "source": "منبع",
                 "country": "کشور",
-                "needsAttention": "نیاز به اقدام"
+                "needsAttention": "نیاز به اقدام",
+                "created": "تاریخ ثبت"
             },
             "payment": {
                 "cod": "پرداخت در محل",
@@ -2912,5 +2913,38 @@
         "delivered": "تحویل‌شده",
         "refunded": "بازگشت‌شده",
         "cancelled": "لغوشده"
+    },
+    "DatePicker": {
+        "defaultFieldLabel": "تاریخ",
+        "operatorGroupLabel": "عملگر فیلتر",
+        "granularityGroupLabel": "بازه",
+        "changeOperator": "تغییر عملگر",
+        "clear": "پاک‌سازی فیلتر",
+        "pickADate": "انتخاب تاریخ",
+        "pickARange": "انتخاب بازه تاریخی",
+        "cancel": "انصراف",
+        "apply": "اعمال",
+        "placeholder": {
+            "gregorian": "مثال: May 2027، Q4، 05/20/2027",
+            "jalali": "مثال: اردیبهشت ۱۴۰۵، Q4، ۱۴۰۵/۰۲/۳۰"
+        },
+        "error": {
+            "empty": "لطفاً یک تاریخ وارد کنید",
+            "invalid": "نامعتبر است",
+            "ambiguous": "لطفاً یک سال ۳ یا ۴ رقمی وارد کنید"
+        },
+        "operator": {
+            "in": "در",
+            "before": "قبل از",
+            "after": "بعد از",
+            "within": "بین"
+        },
+        "granularity": {
+            "day": "روز",
+            "month": "ماه",
+            "quarter": "فصل",
+            "half_year": "نیم‌سال",
+            "year": "سال"
+        }
     }
 }

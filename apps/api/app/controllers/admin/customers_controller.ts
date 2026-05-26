@@ -8,6 +8,7 @@ import CustomerDownload from "#models/customer_download";
 import User from "#models/user";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { aggregateForCustomerIds, fetchCounts, forSingleCustomer } from "#services/customer_stats_service";
+import { parseDateFilter } from "#services/date_filter_parser";
 import phoneService from "#services/phone_service";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
 import CustomerTransformer from "#transformers/customer_transformer";
@@ -195,12 +196,14 @@ export default class AdminCustomersController {
                     .whereNotNull("national_id"),
             );
         }
-        if (payload.created_after) {
-            query.where("customers.created_at", ">=", payload.created_after);
+        const createdRange = parseDateFilter(payload.created);
+        if (createdRange?.after !== null && createdRange?.after !== undefined) {
+            query.where("customers.created_at", ">=", createdRange.after);
         }
-        if (payload.created_before) {
-            query.where("customers.created_at", "<=", payload.created_before);
+        if (createdRange?.before !== null && createdRange?.before !== undefined) {
+            query.where("customers.created_at", "<=", createdRange.before);
         }
+        const lastOrderRange = parseDateFilter(payload.last_order);
         const wantOrderFilter =
             payload.with_orders === true ||
             payload.order_count_min !== undefined ||
@@ -209,13 +212,16 @@ export default class AdminCustomersController {
             payload.lifetime_spend_max !== undefined ||
             payload.aov_min !== undefined ||
             payload.aov_max !== undefined ||
-            Boolean(payload.last_order_after) ||
-            Boolean(payload.last_order_before);
+            lastOrderRange !== null;
         if (wantOrderFilter) {
             query.whereExists((sub) => {
                 sub.from("orders").whereRaw("orders.customer_id = customers.id").whereIn("status", ORDER_COUNTED_STATUSES);
-                if (payload.last_order_after) sub.where("orders.created_at", ">=", payload.last_order_after);
-                if (payload.last_order_before) sub.where("orders.created_at", "<=", payload.last_order_before);
+                if (lastOrderRange?.after !== null && lastOrderRange?.after !== undefined) {
+                    sub.where("orders.created_at", ">=", lastOrderRange.after);
+                }
+                if (lastOrderRange?.before !== null && lastOrderRange?.before !== undefined) {
+                    sub.where("orders.created_at", "<=", lastOrderRange.before);
+                }
             });
         }
         if (payload.no_orders === true) {

@@ -1812,7 +1812,8 @@
                 "payment": "Payment method",
                 "source": "Source",
                 "country": "Country",
-                "needsAttention": "Needs attention"
+                "needsAttention": "Needs attention",
+                "created": "Created"
             },
             "payment": {
                 "cod": "Cash on delivery",
@@ -2912,5 +2913,38 @@
         "delivered": "Delivered",
         "refunded": "Refunded",
         "cancelled": "Cancelled"
+    },
+    "DatePicker": {
+        "defaultFieldLabel": "Date",
+        "operatorGroupLabel": "Filter operator",
+        "granularityGroupLabel": "Period",
+        "changeOperator": "Change operator",
+        "clear": "Clear filter",
+        "pickADate": "Pick a date",
+        "pickARange": "Pick a date range",
+        "cancel": "Cancel",
+        "apply": "Apply",
+        "placeholder": {
+            "gregorian": "Try: May 2027, Q4, 05/20/2027",
+            "jalali": "Try: Ordibehesht 1405, Q4, 1405-02-30"
+        },
+        "error": {
+            "empty": "Please enter a date",
+            "invalid": "Not recognized",
+            "ambiguous": "Please enter a 3 or 4-digit year"
+        },
+        "operator": {
+            "in": "in",
+            "before": "before",
+            "after": "after",
+            "within": "within"
+        },
+        "granularity": {
+            "day": "Day",
+            "month": "Month",
+            "quarter": "Quarter",
+            "half_year": "Half-year",
+            "year": "Year"
+        }
     }
 }
