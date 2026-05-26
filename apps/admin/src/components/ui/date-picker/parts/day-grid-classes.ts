@@ -102,15 +102,24 @@ export const DAY_GRID_CLASS_NAMES = {
 export const DAY_GRID_MODIFIER_CLASS_NAMES = {
     /**
      * Anchor (within-mode first click before the end is picked). Reads as a clean filled
-     * circle, matching what range_start will become once the second click lands. `!ring-0` on
-     * the button kills today's circular ring when the anchor lands on today.
+     * circle, matching what range_start will become once the second click lands. `!` on the
+     * shape + bg + text overrides the previewStart / previewEnd modifiers that may co-fire on
+     * the anchor day (the anchor is one end of the preview range). `!ring-0` on the button
+     * also kills today's circular ring when the anchor lands on today.
      */
-    anchor: "rounded-full bg-primary text-primary-foreground [&_button]:!ring-0",
+    anchor: "!rounded-full !bg-primary !text-primary-foreground [&_button]:!ring-0",
     /**
-     * Hover-preview band — same geometry as range_middle but at /30 opacity so it reads as a
-     * translucent extension of the anchor, not a committed range.
+     * Hover-preview band split into three so the pill is shaped correctly:
+     * - previewStart paints the EARLIER end of the preview with a `rounded-s-full` cap;
+     * - previewEnd paints the LATER end with a `rounded-e-full` cap;
+     * - previewMiddle stays square so adjacent middles join into one strip.
+     * `bg-primary/40` is translucent so the preview reads as a "ghost" of the eventual range,
+     * not a committed selection. `text-primary-foreground` (white on the typical shadcn dark
+     * theme where primary is a vivid colour) passes WCAG AA on a 40 %-opacity primary band.
      */
-    previewRange: "bg-primary/30 text-foreground",
+    previewStart: "rounded-s-full bg-primary/40 text-primary-foreground",
+    previewEnd: "rounded-e-full bg-primary/40 text-primary-foreground",
+    previewMiddle: "bg-primary/40 text-primary-foreground",
     /**
      * Today's circular ring. Painted on the INNER `<button>` (which is `rounded-full`) via
      * `ring-1` so the outline traces the day-number circle, not the square `<td>`. A border on

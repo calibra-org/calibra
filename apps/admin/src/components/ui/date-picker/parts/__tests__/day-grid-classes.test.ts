@@ -83,9 +83,19 @@ describe("DAY_GRID_CLASS_NAMES — selection states", () => {
 
 describe("DAY_GRID_MODIFIER_CLASS_NAMES — overlay modifiers", () => {
     it("anchor reads as a filled circle, same shape as selected", () => {
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/\brounded-full\b/);
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/\bbg-primary\b/);
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/\btext-primary-foreground\b/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/!rounded-full/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/!bg-primary\b/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/!text-primary-foreground/);
+    });
+
+    it("anchor uses `!` on shape + bg + text so it wins when it co-fires with previewStart / previewEnd", () => {
+        /** The anchor day IS one end of the preview range (it's where the user clicked first).
+         * Without `!important` the previewStart/previewEnd classes — which paint a translucent
+         * `bg-primary/40` half-cap — would override the solid `bg-primary` circle anchor
+         * deserves. Locking the `!` invariant prevents a future tweak from making the anchor
+         * accidentally translucent. */
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/!rounded-full/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/!bg-primary\b/);
     });
 
     it("anchor also suppresses today's ring on the inner button (it's a filled circle)", () => {
@@ -102,13 +112,29 @@ describe("DAY_GRID_MODIFIER_CLASS_NAMES — overlay modifiers", () => {
         expect(DAY_GRID_MODIFIER_CLASS_NAMES.today).not.toMatch(/\bbg-/);
     });
 
-    it("previewRange paints a translucent band, never a solid bg-primary — keeps the in-progress range visually distinct from a committed one", () => {
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewRange).toMatch(/\bbg-primary\/\d+/);
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewRange).not.toMatch(/\bbg-primary\b(?!\/)/);
+    it("preview is split into start/middle/end so the pill caps render at the chronological boundaries, not as flat row-spanning rectangles", () => {
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewStart).toMatch(/\brounded-s-full\b/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewEnd).toMatch(/\brounded-e-full\b/);
+        const middleClasses = classList(DAY_GRID_MODIFIER_CLASS_NAMES.previewMiddle);
+        expect(middleClasses.filter((c) => c.startsWith("rounded-"))).toEqual([]);
     });
 
-    it("previewRange uses `text-foreground` (light on dark theme) so the day numbers stay readable through the translucent band", () => {
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewRange).toMatch(/\btext-foreground\b/);
+    it("every preview slot paints a translucent band, never solid `bg-primary` — keeps preview visually distinct from committed", () => {
+        for (const slot of ["previewStart", "previewEnd", "previewMiddle"] as const) {
+            expect(DAY_GRID_MODIFIER_CLASS_NAMES[slot]).toMatch(/\bbg-primary\/\d+/);
+            expect(DAY_GRID_MODIFIER_CLASS_NAMES[slot]).not.toMatch(/\bbg-primary\b(?!\/)/);
+        }
+    });
+
+    it("preview cells use `text-primary-foreground` so day numbers read at WCAG-AA on the translucent primary band", () => {
+        for (const slot of ["previewStart", "previewEnd", "previewMiddle"] as const) {
+            expect(DAY_GRID_MODIFIER_CLASS_NAMES[slot]).toMatch(/\btext-primary-foreground\b/);
+        }
+    });
+
+    it("previewStart does NOT round the end side, and vice versa — caps go on the outer edge only", () => {
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewStart).not.toMatch(/\brounded-e-/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewEnd).not.toMatch(/\brounded-s-/);
     });
 });
 
@@ -126,13 +152,13 @@ describe("modifier composition — overlap invariants", () => {
         }
     });
 
-    it("previewRange + anchor (within-mode mid-pick): anchor wins because it's painted on top via the modifier order in DayGrid", () => {
-        /** Both modifiers can fire on the anchor cell. Anchor has `bg-primary` (solid),
-         * previewRange has `bg-primary/30` (translucent). The DayGrid component is responsible
-         * for ordering them in `modifiersClassNames`; this test pins the expected colour
-         * shapes so a future swap doesn't silently make the anchor look translucent. */
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toContain("bg-primary ");
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewRange).toContain("bg-primary/");
+    it("preview + anchor (within-mode mid-pick): anchor wins via `!` so the anchor cell stays a solid circle even when previewStart/End also matches it", () => {
+        /** The anchor day is one end of the preview range (matches previewStart OR
+         * previewEnd). The anchor class uses `!bg-primary` and `!rounded-full` so the solid
+         * circle wins over the translucent half-cap on the same cell. */
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/!bg-primary\b/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewStart).toMatch(/\bbg-primary\/\d+/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.previewEnd).toMatch(/\bbg-primary\/\d+/);
     });
 
     it("disabled never paints a bg — it's a non-interactive cell, not a styled state", () => {

@@ -112,12 +112,29 @@ export function DayGrid({
         return anchor <= hoveredDay ? { from: anchor, to: hoveredDay } : { from: hoveredDay, to: anchor };
     }, [dateLib, hoveredDay, operator, selection]);
 
+    /**
+     * Split the preview range into three matchers so the cells at each end can paint a
+     * `rounded-s-full` / `rounded-e-full` cap (the pill ends), while everything between
+     * stays square and joins into one continuous strip. Same geometry as the committed
+     * range — RDP already handles cross-row breaks for us by only matching cells
+     * chronologically in the range.
+     */
+    const previewStartDate = previewRange?.from;
+    const previewEndDate = previewRange?.to;
+    const previewMiddleRange = useMemo(() => {
+        if (previewRange === undefined) return undefined;
+        if (previewRange.from.getTime() === previewRange.to.getTime()) return undefined;
+        return { from: dateLib.addDays(previewRange.from, 1), to: dateLib.addDays(previewRange.to, -1) };
+    }, [dateLib, previewRange]);
+
     const modifiers = useMemo(
         () => ({
-            previewRange: previewRange !== undefined ? { from: previewRange.from, to: previewRange.to } : [],
+            previewStart: previewStartDate ?? [],
+            previewEnd: previewEndDate ?? [],
+            previewMiddle: previewMiddleRange ?? [],
             anchor: anchorDate ?? [],
         }),
-        [anchorDate, previewRange],
+        [anchorDate, previewEndDate, previewMiddleRange, previewStartDate],
     );
 
     /**
