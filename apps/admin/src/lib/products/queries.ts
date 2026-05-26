@@ -305,10 +305,12 @@ export function useProductVariations(productId: number | null) {
                     downloadable: Boolean(r.downloadable),
                     manageStockMode: ((r.manage_stock_mode as string) ?? "own") as "own" | "parent",
                     menuOrder: Number((r.menu_order as number | undefined) ?? 0),
-                    pins: ((r.attribute_pins as { attribute_id: number; term_id: number | null }[] | undefined) ?? []).map((p) => ({
-                        attribute_id: Number(p.attribute_id),
-                        term_id: p.term_id === null || p.term_id === undefined ? null : Number(p.term_id),
-                    })),
+                    pins: ((r.attribute_pins as { attribute_id: number; term_id: number | null }[] | undefined) ?? []).map(
+                        (p) => ({
+                            attribute_id: Number(p.attribute_id),
+                            term_id: p.term_id === null || p.term_id === undefined ? null : Number(p.term_id),
+                        }),
+                    ),
                     description: (r.description as string | null) ?? null,
                 };
             }),
@@ -325,8 +327,7 @@ export function useGlobalAttributes() {
     return useQuery<{ data: { id: number; name?: string; code?: string }[] }, Error, { id: number; name: string }[]>({
         queryKey: ["admin", "attributes", "global", locale],
         queryFn: async () => apiGet<{ data: { id: number; name?: string; code?: string }[] }>("attributes", { locale }),
-        select: (envelope) =>
-            envelope.data.map((row) => ({ id: Number(row.id), name: row.name ?? row.code ?? `#${row.id}` })),
+        select: (envelope) => envelope.data.map((row) => ({ id: Number(row.id), name: row.name ?? row.code ?? `#${row.id}` })),
         staleTime: 5 * 60 * 1000,
     });
 }
@@ -339,8 +340,7 @@ export function useGlobalAttributeTerms(attributeId: number | null) {
         enabled: attributeId !== null && attributeId !== undefined,
         queryFn: async () =>
             apiGet<{ data: { id: number; name?: string; slug?: string }[] }>(`attributes/${attributeId}/terms`, { locale }),
-        select: (envelope) =>
-            envelope.data.map((row) => ({ id: Number(row.id), name: row.name ?? row.slug ?? `#${row.id}` })),
+        select: (envelope) => envelope.data.map((row) => ({ id: Number(row.id), name: row.name ?? row.slug ?? `#${row.id}` })),
         staleTime: 60 * 1000,
     });
 }

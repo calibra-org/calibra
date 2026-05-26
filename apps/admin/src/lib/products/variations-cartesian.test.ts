@@ -57,15 +57,11 @@ describe("pinSetsEqual", () => {
     });
 
     it("treats null === null", () => {
-        expect(
-            pinSetsEqual([{ attribute_id: 1, term_id: null }], [{ attribute_id: 1, term_id: null }]),
-        ).toBe(true);
+        expect(pinSetsEqual([{ attribute_id: 1, term_id: null }], [{ attribute_id: 1, term_id: null }])).toBe(true);
     });
 
     it("returns false on differing term ids", () => {
-        expect(
-            pinSetsEqual([{ attribute_id: 1, term_id: 10 }], [{ attribute_id: 1, term_id: 11 }]),
-        ).toBe(false);
+        expect(pinSetsEqual([{ attribute_id: 1, term_id: 10 }], [{ attribute_id: 1, term_id: 11 }])).toBe(false);
     });
 
     it("returns false on mismatched length", () => {
@@ -127,8 +123,20 @@ describe("diffCartesian", () => {
 
     it("doesn't double-create when two existing variations share pins (deduped after first match)", () => {
         const existing = [
-            { id: 1, pins: [{ attribute_id: 1, term_id: 10 }, { attribute_id: 2, term_id: 20 }] },
-            { id: 2, pins: [{ attribute_id: 1, term_id: 10 }, { attribute_id: 2, term_id: 20 }] },
+            {
+                id: 1,
+                pins: [
+                    { attribute_id: 1, term_id: 10 },
+                    { attribute_id: 2, term_id: 20 },
+                ],
+            },
+            {
+                id: 2,
+                pins: [
+                    { attribute_id: 1, term_id: 10 },
+                    { attribute_id: 2, term_id: 20 },
+                ],
+            },
         ];
         const result = diffCartesian(axes, existing);
         expect(result.create).toHaveLength(3);

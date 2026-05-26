@@ -81,6 +81,14 @@ export interface AdminProductDetailView {
     crossSellIds: number[];
     groupedMemberIds: number[];
     downloads: ProductDownloadView[];
+    attributeLinks: {
+        attributeId: number;
+        position: number;
+        visible: boolean;
+        usedForVariation: boolean;
+        termIds: number[];
+    }[];
+    defaultVariationId: number | null;
     createdAt: string;
     updatedAt: string;
     deletedAt: string | null;
@@ -184,6 +192,30 @@ export function toAdminProductDetail(p: SdkAdminProductDetail): AdminProductDeta
         upsellIds: (p as { upsell_ids?: number[] }).upsell_ids ?? [],
         crossSellIds: (p as { cross_sell_ids?: number[] }).cross_sell_ids ?? [],
         groupedMemberIds: (p as { grouped_member_ids?: number[] }).grouped_member_ids ?? [],
+        attributeLinks: (
+            (
+                p as {
+                    attribute_links?: {
+                        attribute_id: number;
+                        position: number;
+                        visible: boolean;
+                        used_for_variation: boolean;
+                        term_ids: number[];
+                    }[];
+                }
+            ).attribute_links ?? []
+        ).map((row) => ({
+            attributeId: Number(row.attribute_id),
+            position: Number(row.position),
+            visible: Boolean(row.visible),
+            usedForVariation: Boolean(row.used_for_variation),
+            termIds: (row.term_ids ?? []).map((id) => Number(id)),
+        })),
+        defaultVariationId:
+            (p as { default_variation_id?: number | null }).default_variation_id === null ||
+            (p as { default_variation_id?: number | null }).default_variation_id === undefined
+                ? null
+                : Number((p as { default_variation_id: number }).default_variation_id),
         downloads: (
             (
                 p as {

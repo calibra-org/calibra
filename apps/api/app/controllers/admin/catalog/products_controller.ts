@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 
 import { BusinessRuleException } from "#exceptions/domain_exceptions";
 import Product from "#models/product";
+import ProductAttributeTerm from "#models/product_attribute_term";
 import { recordAudit } from "#services/admin_audit_log_service";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import {
@@ -15,7 +16,6 @@ import {
     upsertTranslations,
     withTransaction,
 } from "#services/catalog_writer";
-import ProductAttributeTerm from "#models/product_attribute_term";
 import SettingsService from "#services/settings_service";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductTransformer, { type ProductTransformerOptions } from "#transformers/product_transformer";

@@ -418,14 +418,15 @@ export function useCreateAttributeTerm(attributeId: number) {
 
 /** Compact slugifier — strips diacritics-free Persian/English to a lowercase a-z-0-9-dash. */
 function slugify(input: string): string {
-    return input
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9آ-ی-]/gi, "")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "")
-        || `attr-${Date.now()}`;
+    return (
+        input
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9آ-ی-]/gi, "")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "") || `attr-${Date.now()}`
+    );
 }
 
 /** Hard-delete one or more products. Server refuses if any selected product is referenced by

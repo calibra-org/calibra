@@ -191,10 +191,10 @@ export async function syncProductAttributeLinks(
 ): Promise<void> {
     if (links === undefined) return;
     const now = DateTime.utc().toSQL();
-    await trx.from("product_attribute_link_terms").whereIn(
-        "link_id",
-        trx.from("product_attribute_links").where("product_id", String(productId)).select("id"),
-    ).delete();
+    await trx
+        .from("product_attribute_link_terms")
+        .whereIn("link_id", trx.from("product_attribute_links").where("product_id", String(productId)).select("id"))
+        .delete();
     await trx.from("product_attribute_links").where("product_id", String(productId)).delete();
     if (links.length === 0) return;
     for (let i = 0; i < links.length; i += 1) {

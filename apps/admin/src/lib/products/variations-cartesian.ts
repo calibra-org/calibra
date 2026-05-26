@@ -92,9 +92,7 @@ export function diffCartesian<TExisting extends { pins: VariationPin[] }>(
             matchedTargetIndices.add(idx);
         }
     }
-    const outdated = existing.filter(
-        (variation) => !target.some((pins) => pinSetsEqual(pins, variation.pins)),
-    );
+    const outdated = existing.filter((variation) => !target.some((pins) => pinSetsEqual(pins, variation.pins)));
     const create = target.filter((_, idx) => !matchedTargetIndices.has(idx));
     return { create, unchanged, outdated };
 }

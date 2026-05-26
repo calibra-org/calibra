@@ -9,7 +9,11 @@ import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductVariationTransformer from "#transformers/product_variation_transformer";
-import { batchVariationsValidator, createVariationValidator, updateVariationValidator } from "#validators/catalog/variation_validator";
+import {
+    batchVariationsValidator,
+    createVariationValidator,
+    updateVariationValidator,
+} from "#validators/catalog/variation_validator";
 
 const VARIATION_FIELDS = ["description"] as const;
 

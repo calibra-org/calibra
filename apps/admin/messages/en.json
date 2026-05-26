@@ -994,6 +994,8 @@
                 "shipping": "Shipping",
                 "shippingClass": "Shipping class",
                 "linked": "Linked products",
+                "attributes": "Attributes",
+                "variations": "Variations",
                 "advanced": "Advanced",
                 "publish": "Publish",
                 "image": "Featured image",
@@ -1110,7 +1112,69 @@
             },
             "variations": {
                 "placeholderTitle": "Variations",
-                "placeholderBody": "Variation management ships in the next iteration."
+                "placeholderBody": "Variation management ships in the next iteration.",
+                "notVariableHint": "Switch the product type to Variable to enable variations.",
+                "count": "{count} variations",
+                "regenerate": "Regenerate from attributes",
+                "empty": {
+                    "noAttributesTitle": "Variations need attributes first",
+                    "noAttributesDescription": "Add at least one attribute above and turn on 'Use for variations' before generating.",
+                    "attributesReadyTitle": "Create your first variations",
+                    "attributesReadyDescription": "Calibra can generate {count} variation(s) from the current attributes.",
+                    "generate": "Generate from all attributes"
+                },
+                "generate": {
+                    "title": "Generate variations",
+                    "summaryNew": "{count} new",
+                    "summaryUnchanged": "{count} unchanged",
+                    "summaryOutdated": "{count} outdated",
+                    "deleteOutdatedLabel": "Delete {count} outdated variation(s)",
+                    "confirm": "Confirm + create",
+                    "cancel": "Cancel"
+                },
+                "row": {
+                    "any": "Any",
+                    "default": "Default",
+                    "deleteConfirm": "Delete this variation?"
+                },
+                "columns": {
+                    "sku": "SKU"
+                },
+                "toasts": {
+                    "generated": "Variations created",
+                    "generateFailed": "Generation failed",
+                    "deleted": "Variation deleted",
+                    "saveFailed": "Save failed"
+                }
+            },
+            "attributes": {
+                "empty": {
+                    "title": "Start by adding attributes",
+                    "description": "Attributes like 'Size' and 'Color' help customers pick the right version. For variable products they also define the variations you sell.",
+                    "addExisting": "Add existing attribute",
+                    "addCustom": "Custom attribute"
+                },
+                "row": {
+                    "showOnProductPage": "Show on product page",
+                    "useForVariations": "Use for variations",
+                    "terms": "Terms",
+                    "addTerms": "Add term...",
+                    "remove": "Remove"
+                },
+                "tooltips": {
+                    "showOnProductPage": "When on, this attribute shows up in the spec table on the storefront product page.",
+                    "useForVariations": "Turn on so this attribute drives the cartesian variation generator.",
+                    "useForVariationsDisabled": "Switch the product type to Variable to enable this."
+                },
+                "custom": {
+                    "title": "Custom attribute",
+                    "description": "Enter a name. After creating, you can add terms.",
+                    "namePlaceholder": "Attribute name",
+                    "create": "Create",
+                    "cancel": "Cancel",
+                    "failed": "Attribute creation failed"
+                },
+                "createTermFailed": "Term creation failed"
             },
             "dnd": {
                 "grabHandle": "Reorder section",

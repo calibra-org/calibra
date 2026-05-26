@@ -61,6 +61,16 @@ export const productDetailSchema = z
                 position: z.number().int().min(0),
             }),
         ),
+        attributeLinks: z.array(
+            z.object({
+                attributeId: z.number(),
+                position: z.number().int().min(0),
+                visible: z.boolean(),
+                usedForVariation: z.boolean(),
+                termIds: z.array(z.number()),
+            }),
+        ),
+        defaultVariationId: z.number().nullable(),
     })
     .refine(
         (data) => data.salePriceToman === null || data.regularPriceToman === null || data.salePriceToman < data.regularPriceToman,
@@ -113,6 +123,8 @@ export function emptyProductDetailValues(): ProductDetailFormValues {
         crossSellIds: [],
         groupedMemberIds: [],
         downloads: [],
+        attributeLinks: [],
+        defaultVariationId: null,
     };
 }
 
@@ -169,6 +181,8 @@ export function productToFormValues(p: AdminProductDetailView): ProductDetailFor
             downloadExpiryDays: d.downloadExpiryDays,
             position: d.position,
         })),
+        attributeLinks: p.attributeLinks,
+        defaultVariationId: p.defaultVariationId,
     };
 }
 
@@ -231,5 +245,13 @@ export function formValuesToPayload(values: ProductDetailFormValues): Record<str
             download_expiry_days: d.downloadExpiryDays,
             position: d.position,
         })),
+        attribute_links: values.attributeLinks.map((link, i) => ({
+            attribute_id: link.attributeId,
+            position: link.position === 0 ? i : link.position,
+            visible: link.visible,
+            used_for_variation: link.usedForVariation,
+            term_ids: link.termIds,
+        })),
+        default_variation_id: values.defaultVariationId,
     };
 }

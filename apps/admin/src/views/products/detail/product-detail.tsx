@@ -35,6 +35,8 @@ import {
     productDetailSchema,
     productToFormValues,
 } from "./schema";
+import { AttributesBody } from "./sections/attributes-card";
+import { VariationsBody } from "./sections/variations-card";
 
 export interface ProductDetailProps {
     /** SDK-shape payload from the server component. Adapted client-side. */
@@ -158,16 +160,23 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
         if (type === "simple" || type === "variable") {
             sections.push({ id: "shipping", title: t("sections.shipping"), body: <ShippingBody /> });
         }
-        sections.push({ id: "advanced", title: t("sections.advanced"), body: <AdvancedBody />, defaultCollapsed: true });
+        if (type !== "external") {
+            sections.push({
+                id: "attributes",
+                title: t("sections.attributes"),
+                body: <AttributesBody productType={type} />,
+            });
+        }
         if (type === "variable") {
             sections.push({
                 id: "variations",
-                title: t("variations.placeholderTitle"),
-                body: <p className="text-muted-foreground text-xs">{t("variations.placeholderBody")}</p>,
+                title: t("sections.variations"),
+                body: <VariationsBody productId={initial?.id ?? null} productType={type} />,
             });
         }
+        sections.push({ id: "advanced", title: t("sections.advanced"), body: <AdvancedBody />, defaultCollapsed: true });
         return sections;
-    }, [type, t, locale]);
+    }, [type, t, locale, initial?.id]);
 
     const sidebarSections: SectionSpec[] = useMemo(
         () => [

@@ -994,6 +994,8 @@
                 "shipping": "ارسال",
                 "shippingClass": "کلاس ارسال",
                 "linked": "محصولات مرتبط",
+                "attributes": "ویژگی‌ها",
+                "variations": "تنوعات",
                 "advanced": "پیشرفته",
                 "publish": "انتشار",
                 "image": "تصویر شاخص",
@@ -1110,7 +1112,69 @@
             },
             "variations": {
                 "placeholderTitle": "تنوعات",
-                "placeholderBody": "صفحهٔ مدیریت تنوعات در نسخهٔ بعدی فعال می‌شود."
+                "placeholderBody": "صفحهٔ مدیریت تنوعات در نسخهٔ بعدی فعال می‌شود.",
+                "notVariableHint": "برای فعال‌سازی تنوعات، نوع محصول را به «متغیر» تغییر دهید.",
+                "count": "{count} تنوع",
+                "regenerate": "بازتولید از ویژگی‌ها",
+                "empty": {
+                    "noAttributesTitle": "ابتدا ویژگی لازم است",
+                    "noAttributesDescription": "برای ساختن تنوعات، در کارت «ویژگی‌ها» حداقل یک ویژگی اضافه کنید و گزینهٔ «استفاده برای تنوعات» را روشن کنید.",
+                    "attributesReadyTitle": "ساخت تنوعات",
+                    "attributesReadyDescription": "می‌توان {count} تنوع از ترکیب ویژگی‌های فعلی ساخت.",
+                    "generate": "تولید از همه ویژگی‌ها"
+                },
+                "generate": {
+                    "title": "پیش‌نمایش تولید تنوعات",
+                    "summaryNew": "{count} تنوع جدید",
+                    "summaryUnchanged": "{count} تنوع بدون تغییر",
+                    "summaryOutdated": "{count} تنوع منسوخ",
+                    "deleteOutdatedLabel": "حذف {count} تنوع منسوخ",
+                    "confirm": "تأیید و ساخت",
+                    "cancel": "انصراف"
+                },
+                "row": {
+                    "any": "هر مقدار",
+                    "default": "پیش‌فرض",
+                    "deleteConfirm": "این تنوع حذف شود؟"
+                },
+                "columns": {
+                    "sku": "SKU"
+                },
+                "toasts": {
+                    "generated": "تنوعات ساخته شدند",
+                    "generateFailed": "ساخت تنوعات ناموفق بود",
+                    "deleted": "تنوع حذف شد",
+                    "saveFailed": "ذخیره ناموفق بود"
+                }
+            },
+            "attributes": {
+                "empty": {
+                    "title": "ابتدا یک ویژگی اضافه کنید",
+                    "description": "ویژگی‌هایی مانند «اندازه» و «رنگ» به مشتری کمک می‌کنند نسخهٔ مناسب محصول را انتخاب کند. در محصولات متغیر، ویژگی‌ها تعیین‌کنندهٔ تنوع‌ها هم هستند.",
+                    "addExisting": "افزودن ویژگی موجود",
+                    "addCustom": "ویژگی سفارشی"
+                },
+                "row": {
+                    "showOnProductPage": "نمایش در برگه محصول",
+                    "useForVariations": "استفاده برای تنوعات",
+                    "terms": "مقادیر",
+                    "addTerms": "افزودن مقدار...",
+                    "remove": "حذف"
+                },
+                "tooltips": {
+                    "showOnProductPage": "اگر روشن باشد، این ویژگی در جدول مشخصات محصول در فروشگاه نمایش داده می‌شود.",
+                    "useForVariations": "روشن کنید تا این ویژگی به ساخت تنوع‌های محصول کمک کند.",
+                    "useForVariationsDisabled": "برای فعال‌سازی این گزینه، نوع محصول باید «متغیر» باشد."
+                },
+                "custom": {
+                    "title": "ویژگی سفارشی",
+                    "description": "نامی برای ویژگی وارد کنید. بعد از ساخت می‌توانید مقدارها را اضافه کنید.",
+                    "namePlaceholder": "نام ویژگی",
+                    "create": "ایجاد",
+                    "cancel": "انصراف",
+                    "failed": "ایجاد ویژگی ناموفق بود"
+                },
+                "createTermFailed": "ایجاد مقدار ناموفق بود"
             },
             "dnd": {
                 "grabHandle": "جابه‌جایی بخش",

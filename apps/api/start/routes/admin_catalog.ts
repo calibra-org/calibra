@@ -28,9 +28,7 @@ router
 
         router.get("/products/:product_id/variations", [AdminVariationsController, "index"]).as("admin.variations.index");
         router.post("/products/:product_id/variations", [AdminVariationsController, "store"]).as("admin.variations.store");
-        router
-            .post("/products/:product_id/variations/batch", [AdminVariationsController, "batch"])
-            .as("admin.variations.batch");
+        router.post("/products/:product_id/variations/batch", [AdminVariationsController, "batch"]).as("admin.variations.batch");
         router.put("/products/:product_id/variations/:id", [AdminVariationsController, "update"]).as("admin.variations.update");
         router.patch("/products/:product_id/variations/:id", [AdminVariationsController, "update"]).as("admin.variations.patch");
         router
