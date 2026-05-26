@@ -1,0 +1,70 @@
+operationId: adminInsightsRegionalProvinces
+summary: Country-mode regional insights (admin)
+description: >
+    Aggregates orders and revenue for each ISO-3166-2:IR province inside a given window. Always
+    returns 31 rows (one per province) — provinces with no orders return zeros, not absence.
+    Used by the admin dashboard's Iran-map widget to drive the heatmap fill and the country-mode
+    summary tiles.
+
+    Cached server-side for ~2 minutes with grace; invalidated on order finalisation.
+tags: [Admin / Insights]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - name: from
+      in: query
+      required: false
+      description: Inclusive lower bound of the window as ISO-8601 (Gregorian UTC). Defaults to `to - 30 days`.
+      schema:
+          type: string
+          format: date-time
+    - name: to
+      in: query
+      required: false
+      description: Exclusive upper bound of the window as ISO-8601 (Gregorian UTC). Defaults to now.
+      schema:
+          type: string
+          format: date-time
+    - name: metric
+      in: query
+      required: false
+      description: Informational flag (response always carries both orders + revenue). Kept on the cache key so each mode gets its own slot.
+      schema:
+          type: string
+          enum: [orders, revenue]
+responses:
+    "200":
+        description: Country-wide regional insights snapshot.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            minItems: 31
+                            maxItems: 31
+                            items:
+                                $ref: "../../../common/components/schemas/RegionalProvinceRow.yaml"
+                        meta:
+                            type: object
+                            required: [range, totals, locale]
+                            properties:
+                                range:
+                                    $ref: "../../../common/components/schemas/RegionalRange.yaml"
+                                totals:
+                                    type: object
+                                    required: [orders_count, revenue_minor]
+                                    properties:
+                                        orders_count:
+                                            type: integer
+                                            minimum: 0
+                                        revenue_minor:
+                                            type: string
+                                            pattern: "^-?\\d+$"
+                                locale:
+                                    type: string
+                                    examples: ["fa", "en"]
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

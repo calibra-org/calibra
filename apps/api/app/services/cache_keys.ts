@@ -23,6 +23,8 @@ export const CacheTags = {
     adminReports: "admin:reports",
     adminCustomers: "admin:customers",
     adminCustomer: (customerId: number | string | bigint): `admin:customer:${string}` => `admin:customer:${String(customerId)}`,
+    regionalProvinces: "regional:provinces",
+    regionalProvince: (code: string): `regional:province:${string}` => `regional:province:${code}`,
 } as const;
 
 /**
@@ -127,5 +129,9 @@ export const CacheKeys = {
         customerInsights: (): string => "admin:insights:customers",
         customerStats: (customerId: number | string | bigint): string => `admin:customers:stats:${String(customerId)}`,
         customerAggregate: (customerId: number | string | bigint): string => `admin:customers:aggregate:${String(customerId)}`,
+        regionalProvinces: (filters: Record<string, unknown>, locale: string): string =>
+            `admin:insights:regional:provinces:${hashFilters(filters)}:${locale}`,
+        regionalProvinceDetail: (code: string, filters: Record<string, unknown>, locale: string): string =>
+            `admin:insights:regional:province:${code}:${hashFilters(filters)}:${locale}`,
     },
 } as const;

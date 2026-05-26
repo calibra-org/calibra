@@ -1,0 +1,52 @@
+title: RegionalProvinceDetail
+description: >
+    Province-mode regional insights detail for a single ISO-3166-2:IR province. Carries the
+    province totals, the operator-tunable top-X products list, and the top cities ranked by
+    order count. `cities` is capped at 12 entries (sorted desc by `orders_count`) regardless of
+    how many distinct city snapshot strings the shipping addresses carried.
+type: object
+required: [region_id, code, name, orders_count, revenue_minor, top_products, cities]
+properties:
+    region_id:
+        type: integer
+    code:
+        type: string
+        examples: ["IR-24"]
+    name:
+        type: object
+        required: [fa, en]
+        properties:
+            fa:
+                type: string
+            en:
+                type: string
+    orders_count:
+        type: integer
+        minimum: 0
+    revenue_minor:
+        type: string
+        pattern: "^-?\\d+$"
+    top_products:
+        type: array
+        description: Top-X products by revenue inside the window. `X` is the `top_products` query param (1..10, default 5).
+        items:
+            type: object
+            required: [product_id, name, sku, units, revenue_minor]
+            properties:
+                product_id:
+                    type: integer
+                name:
+                    type: string
+                sku:
+                    type: [string, "null"]
+                units:
+                    type: integer
+                    minimum: 0
+                revenue_minor:
+                    type: string
+                    pattern: "^-?\\d+$"
+    cities:
+        type: array
+        description: Top 12 cities by order count inside the window.
+        items:
+            $ref: "./RegionalCity.yaml"

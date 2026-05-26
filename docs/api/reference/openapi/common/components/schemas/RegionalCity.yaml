@@ -1,0 +1,40 @@
+title: RegionalCity
+description: >
+    One city row inside the province-mode regional insights report. Cities are aggregated by
+    bucketing the `order_addresses.city` text snapshot via the shared `normalizeIranText` rule
+    set and then matching to a seeded city `regions` row in the same province. Unmatched
+    buckets surface with `matched: false`, `region_id: null`, and the raw snapshot in `name.fa`
+    so operators can see junk-import patterns rather than having them hidden.
+type: object
+required: [region_id, region_code, name, orders_count, revenue_minor, matched]
+properties:
+    region_id:
+        type: [integer, "null"]
+        description: Stable region id of the matched seeded city, or `null` when no seeded city matched.
+    region_code:
+        type: [string, "null"]
+        description: Stable region code of the matched seeded city (e.g. `IR-24-001`), or `null` when unmatched.
+        examples: ["IR-24-001"]
+    name:
+        type: object
+        required: [fa, en]
+        description: Persian + English (when seeded) city name; for unmatched rows `fa` is the raw snapshot text and `en` is null.
+        properties:
+            fa:
+                type: string
+                examples: ["تهران"]
+            en:
+                type: [string, "null"]
+                examples: [null]
+    orders_count:
+        type: integer
+        minimum: 0
+        description: Order count contributing to the bucket within the window.
+    revenue_minor:
+        type: string
+        pattern: "^-?\\d+$"
+        description: Gross revenue in Rial minor units, encoded as a numeric string.
+        examples: ["7000000000"]
+    matched:
+        type: boolean
+        description: True when the snapshot text matched a seeded city `regions` row; false otherwise.
