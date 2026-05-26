@@ -8,6 +8,8 @@ export { DataTablePagination } from "./data-table-pagination";
 export { DataTableRowActions } from "./data-table-row-actions";
 export { DataTableSkeleton } from "./data-table-skeleton";
 export { ActiveFilterChips, DataTableToolbar } from "./data-table-toolbar";
+export { buildDataGridToolbarLabels, DataGridToolbar } from "./data-grid-toolbar";
+export type { ColumnVisibilityItem, DataGridToolbarLabels, DataGridToolbarProps } from "./data-grid-toolbar";
 export { DataTableViewOptions } from "./data-table-view-options";
 export { DENSITY_CLASSES } from "./types";
 export {

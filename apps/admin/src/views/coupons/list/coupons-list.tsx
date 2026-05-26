@@ -7,10 +7,9 @@ import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
 import {
-    ActiveFilterChips,
+    buildDataGridToolbarLabels,
+    DataGridToolbar,
     DataTable,
-    DataTableToolbar,
-    DataTableViewOptions,
     type FacetedFilterDef,
     type ToggleFilterDef,
 } from "#/components/data-table";
@@ -39,7 +38,6 @@ import { CouponStatusTabs } from "./status-tabs";
 export function CouponsListClient() {
     const locale = useLocale() as Locale;
     const t = useTranslations("Coupons");
-    const tCommon = useTranslations("Common");
 
     const [tab, setTab] = useQueryState("tab", parseAsStringEnum<CouponTabKey>(TAB_VALUES).withDefault("any"));
     const { data: counts } = useCouponCounts();
@@ -185,18 +183,8 @@ export function CouponsListClient() {
         [t],
     );
 
-    const activeChips = useMemo(() => {
-        const out: { key: string; value: string; label: React.ReactNode }[] = [];
-        for (const facet of facets) {
-            const values = tableState.facetValues[facet.paramKey] ?? [];
-            for (const v of values) {
-                const opt = facet.options.find((o) => o.value === v);
-                out.push({ key: facet.paramKey, value: v, label: opt?.label ?? v });
-            }
-        }
-        return out;
-    }, [facets, tableState.facetValues]);
-
+    /** `DataGridToolbar` computes hasActiveFilters + chips internally; we keep a local copy of the
+     * flag for the table's empty-state branch. */
     const hasActiveFilters =
         tableState.q.length > 0 ||
         Object.values(tableState.facetValues).some((arr) => Array.isArray(arr) && arr.length > 0) ||
@@ -304,54 +292,23 @@ export function CouponsListClient() {
                     </Link>
                 )}
                 toolbar={
-                    <div className="flex flex-col gap-2">
-                        <DataTableToolbar
-                            searchPlaceholder={t("search")}
-                            q={tableState.q}
-                            onQChange={tableState.setQ}
-                            facets={facets}
-                            facetValues={tableState.facetValues}
-                            onFacetValuesChange={tableState.setFacetValues}
-                            toggles={toggles}
-                            toggleValues={tableState.toggleValues}
-                            onToggleChange={tableState.setToggleValue}
-                            hasActiveFilters={hasActiveFilters}
-                            onClearAll={clearAllFilters}
-                            onRefresh={() => refetch()}
-                            labels={{
-                                clearAll: t("toolbar.clearAll"),
-                                refresh: tCommon("refresh"),
-                                selectedCount: (n: number) => t("bulk.selectedCount", { count: n }),
-                                clearFilter: t("toolbar.clearFilter"),
-                            }}
-                            rightSlot={
-                                <DataTableViewOptions
-                                    columns={columnVisibilityItems}
-                                    visibility={tableState.columnVisibility}
-                                    onVisibilityChange={tableState.setColumnVisibility}
-                                    density={tableState.density}
-                                    onDensityChange={tableState.setDensity}
-                                    labels={{
-                                        trigger: t("toolbar.viewOptions"),
-                                        densityHeading: t("toolbar.density"),
-                                        density: {
-                                            comfortable: t("toolbar.densityComfortable"),
-                                            cozy: t("toolbar.densityCozy"),
-                                            compact: t("toolbar.densityCompact"),
-                                        },
-                                        columnsHeading: t("toolbar.columns"),
-                                    }}
-                                />
-                            }
-                        />
-                        <ActiveFilterChips
-                            chips={activeChips}
-                            onRemove={(key, value) => {
-                                const next = (tableState.facetValues[key] ?? []).filter((v) => v !== value);
-                                tableState.setFacetValues(key, next);
-                            }}
-                        />
-                    </div>
+                    <DataGridToolbar
+                        q={tableState.q}
+                        onQChange={tableState.setQ}
+                        facets={facets}
+                        facetValues={tableState.facetValues}
+                        onFacetValuesChange={tableState.setFacetValues}
+                        toggles={toggles}
+                        toggleValues={tableState.toggleValues}
+                        onToggleChange={tableState.setToggleValue}
+                        columns={columnVisibilityItems}
+                        columnVisibility={tableState.columnVisibility}
+                        onColumnVisibilityChange={tableState.setColumnVisibility}
+                        density={tableState.density}
+                        onDensityChange={tableState.setDensity}
+                        onRefresh={() => refetch()}
+                        labels={buildDataGridToolbarLabels(t, t("search"))}
+                    />
                 }
                 labels={{
                     empty: { title: t("empty") },

@@ -1,12 +1,13 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { ArrowLeft, Copy, MoreHorizontal, RefreshCw, Save, Trash2 } from "lucide-react";
+import { Copy, MoreHorizontal, RefreshCw, Save, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { DraggableSectionGrid, type SectionSpec } from "#/components/sections/draggable-section-grid";
+import { DetailPageShell } from "#/components/sections/detail-page-shell";
+import { type SectionSpec } from "#/components/sections/draggable-section-grid";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
@@ -24,7 +25,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
 import { formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
-import { Link, useRouter } from "#/lib/i18n/navigation";
+import { useRouter } from "#/lib/i18n/navigation";
 import {
     type CouponWritePayload,
     useCoupon,
@@ -173,10 +174,11 @@ function serialize(form: FormState): CouponWritePayload {
 }
 
 /**
- * Coupon editor used by both `/coupons/new` and `/coupons/[id]`. Sections are rendered through
- * `DraggableSectionGrid` so an operator can reorder + collapse them to taste; order + collapsed
- * state persist per-user in `localStorage`. The dirty-state bar appears as a sticky footer when
- * ≥1 field diverges from the loaded coupon and disappears on save / cancel.
+ * Coupon editor wrapped in `DetailPageShell` so the layout matches the orders detail page —
+ * 2-column grid on desktop, sections drag + collapse to taste, header actions instead of a
+ * sticky bottom bar. The Save / Cancel pair lives in an `EditorActionsCard` pinned to the top
+ * of the sidebar, plus a primary Save button in the header that only shows when the form is
+ * dirty.
  */
 export function CouponEditor({ id }: CouponEditorProps) {
     const locale = useLocale() as Locale;
@@ -206,8 +208,6 @@ export function CouponEditor({ id }: CouponEditorProps) {
         setCommitted(next);
     }, [coupon, isNew]);
 
-    /** Dispatch URL-flag-driven panels (`?quickTest=1`, `?duplicate=1`, `?extendExpiry=1`) once the
-     * coupon is hydrated. The flags come from the list page's row actions. */
     useEffect(() => {
         if (coupon === undefined) return;
         if (searchParams.get("quickTest") === "1") setQuickTestOpen(true);
@@ -284,154 +284,20 @@ export function CouponEditor({ id }: CouponEditorProps) {
         codeCheck.data !== undefined && codeCheck.data.available === false && (isNew || form.code !== committed.code);
 
     const isTrashed = coupon?.deletedAt !== null && coupon?.deletedAt !== undefined;
+    const saving = isNew ? createMutation.isPending : updateMutation.isPending;
 
-    const sections = buildSections({
-        form,
-        update,
-        t,
-        tList,
-        locale,
-        coupon,
-        redemptions: redemptions?.data ?? [],
-        codeAvailable,
-        codeBlocking,
-        codeSuggestion: codeCheck.data?.suggestion ?? null,
-        generateCode,
-        copyCode,
-        isNew,
-    });
-
-    return (
-        <section className="flex flex-col gap-4 pb-24">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                    <Button asChild variant="ghost" size="sm" className="w-fit ps-0">
-                        <Link href="/coupons">
-                            <ArrowLeft className="me-2 size-4 rtl:-scale-x-100" aria-hidden="true" />
-                            {t("backToList")}
-                        </Link>
-                    </Button>
-                    <h1 className="font-semibold text-2xl tracking-tight">
-                        {isNew ? t("titleNew") : t("titleEdit", { code: form.code })}
-                    </h1>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Switch
-                        checked={form.status === "active"}
-                        onCheckedChange={(checked) => update("status", checked ? "active" : "disabled")}
-                        aria-label={t("toggleStatus")}
-                    />
-                    <span className="text-muted-foreground text-sm">
-                        {form.status === "active" ? t("statusActive") : t("statusDisabled")}
-                    </span>
-                    {!isNew && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={(props) => (
-                                    <Button {...props} type="button" variant="outline" size="icon" aria-label={t("moreActions")}>
-                                        <MoreHorizontal className="size-4" aria-hidden="true" />
-                                    </Button>
-                                )}
-                            />
-                            <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuItem onClick={() => setQuickTestOpen(true)}>{t("actions.quickTest")}</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setDuplicateOpen(true)}>{t("actions.duplicate")}</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setExpiryOpen(true)}>{t("actions.extendExpiry")}</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                                    <Trash2 className="me-2 size-4" aria-hidden="true" />
-                                    {t("actions.delete")}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
-                </div>
-            </div>
-
-            {isTrashed && (
-                <Card className="border-destructive/40">
-                    <CardContent className="flex items-center justify-between gap-3 py-4 text-sm">
-                        <span className="text-destructive">{t("trashedBanner")}</span>
-                        <Badge variant="outline">{tList("statusBadge.trashed")}</Badge>
-                    </CardContent>
-                </Card>
-            )}
-
-            <DraggableSectionGrid
-                storageKey={`admin.coupons.editor.${isNew ? "new" : "edit"}`}
-                sections={sections}
-                labels={{
-                    grabHandle: t("dnd.grabHandle"),
-                    collapse: t("dnd.collapse"),
-                    expand: t("dnd.expand"),
-                }}
-            />
-
-            {dirty && (
-                <DirtyBar
-                    count={dirtyCount}
-                    onSave={onSave}
-                    onCancel={onCancel}
-                    saveLabel={isNew ? t("dirtyBar.create") : t("dirtyBar.save")}
-                    cancelLabel={t("dirtyBar.cancel")}
-                    dirtyLabel={(n) => t("dirtyBar.dirty", { count: n })}
-                    saving={isNew ? createMutation.isPending : updateMutation.isPending}
-                    disabled={codeBlocking}
-                />
-            )}
-
-            {!isNew && coupon !== undefined && (
-                <>
-                    <DuplicateCouponDialog
-                        open={duplicateOpen}
-                        onOpenChange={setDuplicateOpen}
-                        sourceCoupon={coupon}
-                        sourcePayload={serialize(committed)}
-                    />
-                    <ExpirySheet
-                        open={expiryOpen}
-                        onOpenChange={setExpiryOpen}
-                        currentExpiresAt={committed.expiresAt}
-                        onApply={onExtendExpiry}
-                    />
-                    <QuickTestSheet open={quickTestOpen} onOpenChange={setQuickTestOpen} couponId={Number(coupon.id)} />
-                </>
-            )}
-        </section>
-    );
-}
-
-interface BuildSectionsArgs {
-    form: FormState;
-    update: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
-    t: (key: string, values?: Record<string, string | number>) => string;
-    tList: (key: string, values?: Record<string, string | number>) => string;
-    locale: Locale;
-    coupon: AdminCoupon | undefined;
-    redemptions: { id: number; email: string | null; customer_id: number | null; redeemed_at: string; discount_minor: number }[];
-    codeAvailable: boolean;
-    codeBlocking: boolean;
-    codeSuggestion: string | null;
-    generateCode: () => void;
-    copyCode: () => void;
-    isNew: boolean;
-}
-
-function buildSections(args: BuildSectionsArgs): SectionSpec[] {
-    const { form, update, t, tList, locale, coupon, redemptions, codeAvailable, codeBlocking, codeSuggestion, generateCode, copyCode, isNew } = args;
-
-    const sections: SectionSpec[] = [
+    const mainSections: SectionSpec[] = [
         {
             id: "general",
             title: t("sections.general"),
             isCollapsible: true,
-            body: <GeneralSection {...{ form, update, t, codeAvailable, codeBlocking, codeSuggestion, generateCode, copyCode }} />,
+            body: <GeneralSection {...{ form, update, t, codeAvailable, codeBlocking, codeSuggestion: codeCheck.data?.suggestion ?? null, generateCode, copyCode }} />,
         },
         {
             id: "discount",
             title: t("sections.discount"),
             isCollapsible: true,
-            body: <DiscountSection form={form} update={update} t={t} tList={tList} />,
+            body: <DiscountSection form={form} update={update} t={t} tList={(key) => tList(key)} />,
         },
         {
             id: "time",
@@ -520,8 +386,36 @@ function buildSections(args: BuildSectionsArgs): SectionSpec[] {
         },
     ];
 
+    const sidebarSections: SectionSpec[] = [
+        {
+            id: "editor-actions",
+            title: t("sections.actions"),
+            isCollapsible: false,
+            isDraggable: false,
+            body: (
+                <EditorActionsCard
+                    dirty={dirty}
+                    dirtyCount={dirtyCount}
+                    saving={saving}
+                    disabled={codeBlocking}
+                    isNew={isNew}
+                    onSave={onSave}
+                    onCancel={onCancel}
+                    onDelete={isNew ? undefined : onDelete}
+                    labels={{
+                        save: isNew ? t("dirtyBar.create") : t("dirtyBar.save"),
+                        cancel: t("dirtyBar.cancel"),
+                        dirty: (n) => t("dirtyBar.dirty", { count: n }),
+                        clean: t("dirtyBar.clean"),
+                        delete: t("actions.delete"),
+                    }}
+                />
+            ),
+        },
+    ];
+
     if (!isNew && coupon !== undefined) {
-        sections.push(
+        sidebarSections.push(
             {
                 id: "liveStats",
                 title: t("sections.liveStats"),
@@ -532,12 +426,173 @@ function buildSections(args: BuildSectionsArgs): SectionSpec[] {
                 id: "redemptions",
                 title: t("sections.redemptions"),
                 isCollapsible: true,
-                body: <RedemptionsSection redemptions={redemptions} locale={locale} t={t} />,
+                body: <RedemptionsSection redemptions={redemptions?.data ?? []} locale={locale} t={t} />,
             },
         );
     }
 
-    return sections;
+    return (
+        <>
+            <DetailPageShell
+                title={
+                    <span className="flex items-center gap-3">
+                        {isNew ? t("titleNew") : t("titleEdit", { code: form.code })}
+                        {!isNew && coupon !== undefined && <StatusChip coupon={coupon} t={(key) => tList(`statusBadge.${key}`)} />}
+                    </span>
+                }
+                subtitle={dirty ? t("dirtyBar.dirty", { count: dirtyCount }) : undefined}
+                headerActions={
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2 py-1">
+                            <Switch
+                                checked={form.status === "active"}
+                                onCheckedChange={(checked) => update("status", checked ? "active" : "disabled")}
+                                aria-label={t("toggleStatus")}
+                            />
+                            <span className="text-muted-foreground text-xs">
+                                {form.status === "active" ? t("statusActive") : t("statusDisabled")}
+                            </span>
+                        </div>
+                        {!isNew && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger
+                                    render={(props) => (
+                                        <Button {...props} type="button" variant="outline" size="sm" aria-label={t("moreActions")}>
+                                            <MoreHorizontal className="me-2 size-4" aria-hidden="true" />
+                                            {t("moreActions")}
+                                        </Button>
+                                    )}
+                                />
+                                <DropdownMenuContent align="end" className="w-56">
+                                    <DropdownMenuItem onClick={() => setQuickTestOpen(true)}>{t("actions.quickTest")}</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setDuplicateOpen(true)}>{t("actions.duplicate")}</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setExpiryOpen(true)}>{t("actions.extendExpiry")}</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={onDelete} className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600">
+                                        <Trash2 className="me-2 size-4" aria-hidden="true" />
+                                        {t("actions.delete")}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                        {dirty && (
+                            <Button type="button" onClick={onSave} disabled={saving || codeBlocking} size="sm">
+                                <Save className="me-2 size-4" aria-hidden="true" />
+                                {isNew ? t("dirtyBar.create") : t("dirtyBar.save")}
+                            </Button>
+                        )}
+                    </div>
+                }
+                banner={
+                    isTrashed ? (
+                        <Card className="border-destructive/40">
+                            <CardContent className="flex items-center justify-between gap-3 py-4 text-sm">
+                                <span className="text-destructive">{t("trashedBanner")}</span>
+                                <Badge variant="outline">{tList("statusBadge.trashed")}</Badge>
+                            </CardContent>
+                        </Card>
+                    ) : null
+                }
+                mainSections={mainSections}
+                sidebarSections={sidebarSections}
+                storageKeyPrefix={`admin.coupons.editor.${isNew ? "new" : "edit"}`}
+                labels={{
+                    grabHandle: t("dnd.grabHandle"),
+                    collapse: t("dnd.collapse"),
+                    expand: t("dnd.expand"),
+                }}
+            />
+
+            {!isNew && coupon !== undefined && (
+                <>
+                    <DuplicateCouponDialog
+                        open={duplicateOpen}
+                        onOpenChange={setDuplicateOpen}
+                        sourceCoupon={coupon}
+                        sourcePayload={serialize(committed)}
+                    />
+                    <ExpirySheet
+                        open={expiryOpen}
+                        onOpenChange={setExpiryOpen}
+                        currentExpiresAt={committed.expiresAt}
+                        onApply={onExtendExpiry}
+                    />
+                    <QuickTestSheet open={quickTestOpen} onOpenChange={setQuickTestOpen} couponId={Number(coupon.id)} />
+                </>
+            )}
+        </>
+    );
+}
+
+function StatusChip({ coupon, t }: { coupon: AdminCoupon; t: (key: string) => string }) {
+    if (coupon.deletedAt !== null) return <Badge variant="outline">{t("trashed")}</Badge>;
+    if (coupon.expiresAt !== null && new Date(coupon.expiresAt).getTime() < Date.now()) {
+        return <Badge variant="destructive">{t("expired")}</Badge>;
+    }
+    if (coupon.status === "disabled") return <Badge variant="outline">{t("disabled")}</Badge>;
+    if (coupon.startsAt !== null && new Date(coupon.startsAt).getTime() > Date.now()) {
+        return <Badge variant="secondary">{t("scheduled")}</Badge>;
+    }
+    return <Badge variant="secondary">{t("active")}</Badge>;
+}
+
+interface EditorActionsCardProps {
+    dirty: boolean;
+    dirtyCount: number;
+    saving: boolean;
+    disabled: boolean;
+    isNew: boolean;
+    onSave: () => void;
+    onCancel: () => void;
+    onDelete?: () => void;
+    labels: {
+        save: string;
+        cancel: string;
+        dirty: (count: number) => string;
+        clean: string;
+        delete: string;
+    };
+}
+
+/**
+ * Sidebar action card — equivalent of the orders detail's `ActionsCard`. Renders the dirty
+ * state (and unsaved-field count), the Save + Cancel buttons, and a divider followed by
+ * Delete (when editing). Lives at the top of the sidebar so an operator scrolled past the
+ * header still has Save in reach without scrolling back.
+ */
+function EditorActionsCard({ dirty, dirtyCount, saving, disabled, isNew, onSave, onCancel, onDelete, labels }: EditorActionsCardProps) {
+    return (
+        <div className="flex flex-col gap-3 text-sm">
+            <p className={dirty ? "text-foreground" : "text-muted-foreground"}>
+                {dirty ? labels.dirty(dirtyCount) : labels.clean}
+            </p>
+            <div className="flex flex-col gap-2">
+                <Button type="button" onClick={onSave} disabled={saving || disabled || (!dirty && !isNew)} className="w-full">
+                    <Save className="me-2 size-4" aria-hidden="true" />
+                    {labels.save}
+                </Button>
+                {dirty && (
+                    <Button type="button" variant="outline" onClick={onCancel} disabled={saving} className="w-full">
+                        {labels.cancel}
+                    </Button>
+                )}
+            </div>
+            {onDelete !== undefined && (
+                <>
+                    <div className="-mx-4 border-border border-t" />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={onDelete}
+                        className="w-full justify-start text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
+                    >
+                        <Trash2 className="me-2 size-4" aria-hidden="true" />
+                        {labels.delete}
+                    </Button>
+                </>
+            )}
+        </div>
+    );
 }
 
 interface GeneralSectionProps {
@@ -637,42 +692,44 @@ function DiscountSection({ form, update, t, tList }: SectionShellProps & { tList
                     </Button>
                 ))}
             </div>
-            {form.discountType === "percent" && (
-                <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="amount-percent">{t("fields.amountPercent")}</Label>
-                    <Input
-                        id="amount-percent"
-                        type="number"
-                        step="0.5"
-                        min="0"
-                        max="100"
-                        value={form.amountPercent}
-                        onChange={(e) => update("amountPercent", e.target.value)}
-                    />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {form.discountType === "percent" && (
+                    <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="amount-percent">{t("fields.amountPercent")}</Label>
+                        <Input
+                            id="amount-percent"
+                            type="number"
+                            step="0.5"
+                            min="0"
+                            max="100"
+                            value={form.amountPercent}
+                            onChange={(e) => update("amountPercent", e.target.value)}
+                        />
+                    </div>
+                )}
+                {(form.discountType === "fixed_cart" || form.discountType === "fixed_product") && (
+                    <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="amount-minor">{t("fields.amountMinor")}</Label>
+                        <Input
+                            id="amount-minor"
+                            type="number"
+                            step="1"
+                            min="0"
+                            value={form.amountMinor}
+                            onChange={(e) => update("amountMinor", e.target.value)}
+                        />
+                    </div>
+                )}
+                {form.discountType === "free_shipping" && (
+                    <p className="text-muted-foreground text-sm md:col-span-2">{t("fields.freeShippingOnly")}</p>
+                )}
+                <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 md:col-span-2">
+                    <div className="flex flex-col">
+                        <span className="font-medium text-sm">{t("fields.freeShipping")}</span>
+                        <span className="text-muted-foreground text-xs">{t("fields.freeShippingHint")}</span>
+                    </div>
+                    <Switch checked={form.freeShipping} onCheckedChange={(checked) => update("freeShipping", checked)} />
                 </div>
-            )}
-            {(form.discountType === "fixed_cart" || form.discountType === "fixed_product") && (
-                <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="amount-minor">{t("fields.amountMinor")}</Label>
-                    <Input
-                        id="amount-minor"
-                        type="number"
-                        step="1"
-                        min="0"
-                        value={form.amountMinor}
-                        onChange={(e) => update("amountMinor", e.target.value)}
-                    />
-                </div>
-            )}
-            {form.discountType === "free_shipping" && (
-                <p className="text-muted-foreground text-sm">{t("fields.freeShippingOnly")}</p>
-            )}
-            <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
-                <div className="flex flex-col">
-                    <span className="font-medium text-sm">{t("fields.freeShipping")}</span>
-                    <span className="text-muted-foreground text-xs">{t("fields.freeShippingHint")}</span>
-                </div>
-                <Switch checked={form.freeShipping} onCheckedChange={(checked) => update("freeShipping", checked)} />
             </div>
         </div>
     );
@@ -754,6 +811,17 @@ function CartSection({ form, update, t }: SectionShellProps) {
                     onChange={(e) => update("maximumAmount", e.target.value)}
                 />
             </div>
+            <div className="flex flex-col gap-1.5 md:col-span-2">
+                <Label htmlFor="limit-x">{t("fields.limitUsageToXItems")}</Label>
+                <Input
+                    id="limit-x"
+                    type="number"
+                    min="0"
+                    value={form.limitUsageToXItems}
+                    onChange={(e) => update("limitUsageToXItems", e.target.value)}
+                    placeholder={t("fields.allItems")}
+                />
+            </div>
             <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 md:col-span-2">
                 <div className="flex flex-col">
                     <span className="font-medium text-sm">{t("fields.individualUse")}</span>
@@ -767,17 +835,6 @@ function CartSection({ form, update, t }: SectionShellProps) {
                     <span className="text-muted-foreground text-xs">{t("fields.excludeSaleItemsHint")}</span>
                 </div>
                 <Switch checked={form.excludeSaleItems} onCheckedChange={(checked) => update("excludeSaleItems", checked)} />
-            </div>
-            <div className="flex flex-col gap-1.5 md:col-span-2">
-                <Label htmlFor="limit-x">{t("fields.limitUsageToXItems")}</Label>
-                <Input
-                    id="limit-x"
-                    type="number"
-                    min="0"
-                    value={form.limitUsageToXItems}
-                    onChange={(e) => update("limitUsageToXItems", e.target.value)}
-                    placeholder={t("fields.allItems")}
-                />
             </div>
         </div>
     );
@@ -869,31 +926,29 @@ function LiveStatsSection({
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
     return (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatTile label={t("stats.usageCount")} value={formatNumber(coupon.usageCount, locale)} />
-            <StatTile label={t("stats.recent7d")} value={formatNumber(coupon.recentRedemptions7d, locale)} />
-            <StatTile
+        <div className="flex flex-col gap-3">
+            <StatRow label={t("stats.usageCount")} value={formatNumber(coupon.usageCount, locale)} />
+            <StatRow label={t("stats.recent7d")} value={formatNumber(coupon.recentRedemptions7d, locale)} />
+            <StatRow
                 label={t("stats.limit")}
                 value={coupon.usageLimitGlobal === null ? "∞" : formatNumber(coupon.usageLimitGlobal, locale)}
             />
-            <StatTile
+            <StatRow
                 label={t("stats.perUser")}
                 value={coupon.usageLimitPerUser === null ? "∞" : formatNumber(coupon.usageLimitPerUser, locale)}
             />
-            {coupon.usageLimitGlobal !== null && (
-                <div className="col-span-2 lg:col-span-4">
-                    <Progress value={Math.min(100, (coupon.usageCount / coupon.usageLimitGlobal) * 100)} className="h-2" />
-                </div>
+            {coupon.usageLimitGlobal !== null && coupon.usageLimitGlobal > 0 && (
+                <Progress value={Math.min(100, (coupon.usageCount / coupon.usageLimitGlobal) * 100)} className="h-2" />
             )}
         </div>
     );
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatRow({ label, value }: { label: string; value: string }) {
     return (
-        <div className="flex flex-col gap-1 rounded-md border border-border bg-muted/30 px-3 py-3">
-            <span className="text-muted-foreground text-xs">{label}</span>
-            <span className="font-semibold text-lg tabular-nums">{value}</span>
+        <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{label}</span>
+            <span className="font-medium tabular-nums">{value}</span>
         </div>
     );
 }
@@ -921,36 +976,6 @@ function RedemptionsSection({
                     <span className="tabular-nums text-xs">{formatMoney(row.discount_minor, locale)}</span>
                 </div>
             ))}
-        </div>
-    );
-}
-
-interface DirtyBarProps {
-    count: number;
-    onSave: () => void;
-    onCancel: () => void;
-    saveLabel: string;
-    cancelLabel: string;
-    dirtyLabel: (count: number) => string;
-    saving: boolean;
-    disabled: boolean;
-}
-
-function DirtyBar({ count, onSave, onCancel, saveLabel, cancelLabel, dirtyLabel, saving, disabled }: DirtyBarProps) {
-    return (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-border border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-            <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-                <span className="text-muted-foreground text-sm">{dirtyLabel(count)}</span>
-                <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
-                        {cancelLabel}
-                    </Button>
-                    <Button type="button" onClick={onSave} disabled={saving || disabled}>
-                        <Save className="me-2 size-4" aria-hidden="true" />
-                        {saveLabel}
-                    </Button>
-                </div>
-            </div>
         </div>
     );
 }
