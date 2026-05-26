@@ -211,30 +211,18 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             id: "stock",
             header: sortableHeader("stock", ctx.t("columns.stock")),
             meta: { cellClassName: "text-start" },
-            cell: ({ row }) => {
-                const product = row.original;
-                const showLow =
-                    product.lowStock ||
-                    (product.stockQuantity !== null &&
-                        product.stockQuantity > 0 &&
-                        product.stockQuantity <= ctx.lowStockThreshold);
-                return (
-                    <span className="inline-flex items-center gap-2">
-                        {product.stockQuantity !== null && (
-                            <span className="text-muted-foreground text-xs tabular-nums">
-                                {formatNumber(product.stockQuantity, ctx.locale)}
-                            </span>
-                        )}
-                        <StatusBadge tone={stockTone[product.stockStatus]}>{ctx.stockT(product.stockStatus)}</StatusBadge>
-                        {showLow && (
-                            <span title={ctx.t("lowStock")} className="text-amber-500">
-                                <AlertTriangle className="size-3.5" aria-hidden="true" />
-                            </span>
-                        )}
-                    </span>
-                );
-            },
-            size: 160,
+            cell: ({ row }) => (
+                <StockCell
+                    quantity={row.original.stockQuantity}
+                    stockStatus={row.original.stockStatus}
+                    lowStock={row.original.lowStock}
+                    lowStockThreshold={ctx.lowStockThreshold}
+                    locale={ctx.locale}
+                    stockT={ctx.stockT}
+                    t={ctx.t}
+                />
+            ),
+            size: 168,
         },
         {
             id: "visibility",
@@ -431,6 +419,87 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
 
 function Separator() {
     return <span className="size-1 rounded-full bg-muted-foreground/40" aria-hidden="true" />;
+}
+
+interface StockCellProps {
+    quantity: number | null;
+    stockStatus: StockStatus;
+    lowStock: boolean;
+    lowStockThreshold: number;
+    locale: Locale;
+    stockT: TFunction;
+    t: TFunction;
+}
+
+/**
+ * Compact stock pill. Three visual states, chosen by *quantity* (the rollup is the source of
+ * truth — a stale `stock_status` column can't override what the inventory says):
+ *
+ *   In stock (≥ threshold)  — emerald pill,  ●  ۱۸۱  موجود
+ *   Low stock (1 .. thr)    — amber pill,    ●  ۳    کم‌موجود
+ *   Out of stock (== 0)     — rose pill,     ●  ۰    ناموجود
+ *
+ * For products with `manage_stock=false` (untracked) the cell renders only the status portion
+ * (no quantity), since the number would always be `0` and read as "out of stock" by mistake.
+ */
+function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale, stockT, t }: StockCellProps) {
+    const tracked = quantity !== null;
+    const isOut = tracked && quantity <= 0;
+    const isLow = !isOut && tracked && (lowStock || (quantity ?? 0) <= lowStockThreshold);
+
+    let tone: "emerald" | "amber" | "rose";
+    let labelKey: StockStatus;
+    if (isOut) {
+        tone = "rose";
+        labelKey = "outofstock";
+    } else if (isLow) {
+        tone = "amber";
+        labelKey = "onbackorder";
+    } else {
+        tone = stockStatus === "outofstock" ? "rose" : stockStatus === "onbackorder" ? "amber" : "emerald";
+        labelKey = stockStatus;
+    }
+
+    const toneClasses: Record<typeof tone, { wrap: string; dot: string; qty: string; label: string }> = {
+        emerald: {
+            wrap: "border-emerald-500/30 bg-emerald-500/10",
+            dot: "bg-emerald-500",
+            qty: "text-emerald-700 dark:text-emerald-300",
+            label: "text-emerald-700 dark:text-emerald-300",
+        },
+        amber: {
+            wrap: "border-amber-500/30 bg-amber-500/10",
+            dot: "bg-amber-500",
+            qty: "text-amber-700 dark:text-amber-300",
+            label: "text-amber-700 dark:text-amber-300",
+        },
+        rose: {
+            wrap: "border-rose-500/30 bg-rose-500/10",
+            dot: "bg-rose-500",
+            qty: "text-rose-700 dark:text-rose-300",
+            label: "text-rose-700 dark:text-rose-300",
+        },
+    };
+    const cls = toneClasses[tone];
+
+    /** Localized label for the low-stock visual state — falls back to the OOS / onbackorder keys. */
+    const label = isLow ? t("lowStock") : stockT(labelKey);
+
+    return (
+        <span
+            className={cn("inline-flex h-6 items-center gap-1.5 rounded-full border px-2 text-xs", cls.wrap)}
+            title={tracked ? `${formatNumber(quantity ?? 0, locale)} — ${label}` : label}
+        >
+            <span className={cn("size-1.5 shrink-0 rounded-full", cls.dot)} aria-hidden="true" />
+            {tracked && (
+                <span className={cn("min-w-[1.25rem] text-end font-medium tabular-nums", cls.qty)}>
+                    {formatNumber(quantity ?? 0, locale)}
+                </span>
+            )}
+            <span className={cn("font-medium", cls.label)}>{label}</span>
+            {isLow && <AlertTriangle className={cn("size-3 shrink-0", cls.label)} aria-hidden="true" />}
+        </span>
+    );
 }
 
 interface VisibilityCellProps {
