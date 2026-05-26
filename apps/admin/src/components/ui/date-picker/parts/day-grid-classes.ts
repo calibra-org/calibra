@@ -34,6 +34,34 @@
  */
 
 /**
+ * Pixel dimensions of the day grid, derived from the Tailwind class strings below. Exported
+ * so the picker body can compute the breakpoint between one-month and two-month layouts from
+ * the same numbers the grid is actually drawn with — no magic constants drifting from the
+ * real layout when someone tweaks the cell size or the gap.
+ */
+export const DAY_GRID_DIMENSIONS = {
+    /** Single day cell — both width and height in `<td>` (matches `h-9 w-9` = 36 px). */
+    cellPx: 36,
+    /** Seven cells per row in the day grid. */
+    columnsPerMonth: 7,
+    /** Horizontal gap between the two month panes (matches `gap-4` on `months` = 16 px). */
+    monthsGapPx: 16,
+    /** Total horizontal padding on the day-grid root (matches `p-2` = 8 px × 2). */
+    rootPaddingPx: 16,
+} as const;
+
+/**
+ * The narrowest container the day grid can comfortably render two months side-by-side in. Two
+ * 7-column grids + the inter-month gap + the root padding — everything that actually consumes
+ * horizontal space in the day-grid layout. Used by {@link useResponsiveMonthCount} so the
+ * picker drops to one month exactly when the math says it has to.
+ */
+export const TWO_MONTH_MIN_WIDTH_PX =
+    DAY_GRID_DIMENSIONS.columnsPerMonth * DAY_GRID_DIMENSIONS.cellPx * 2 +
+    DAY_GRID_DIMENSIONS.monthsGapPx +
+    DAY_GRID_DIMENSIONS.rootPaddingPx;
+
+/**
  * The full `classNames` config passed to `<DayPicker>` (everything you can override per slot).
  * Top-level slots (root, months, day, day_button, …) plus the per-state modifier slots
  * (selected, range_start, …). RDP only applies the modifier class when its matcher fires, so

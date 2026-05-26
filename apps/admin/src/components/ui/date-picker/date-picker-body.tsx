@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { cn } from "#/lib/utils";
 
 import { DayGrid } from "./parts/day-grid";
+import { TWO_MONTH_MIN_WIDTH_PX } from "./parts/day-grid-classes";
 import { DialogActions } from "./parts/dialog-actions";
 import { GranularityTabs } from "./parts/granularity-tabs";
 import { HalfYearGrid } from "./parts/half-year-grid";
@@ -165,13 +166,15 @@ function yearSelection(sel: UseDateFilterReturn["selection"]): number | null {
 }
 
 /**
- * Returns 1 or 2 based on the container's actual width via `ResizeObserver` — preferable to a
- * viewport media query because the picker mounts inside dialogs/popovers/sheets that may be
- * narrower than the window itself. Threshold is 500 px: each 7-column day grid is ≈ 252 px
- * (7 × 36 px cells), two side-by-side with a 16 px gap + 16 px root padding is ≈ 536 px, so
- * the picker body needs ≳ 500 px to comfortably render two months. Below that we drop to
- * one. Falls back to 2 during SSR so the desktop-first first paint matches the most common
- * case.
+ * Returns 1 or 2 based on the container's actual width via `ResizeObserver`. The threshold
+ * comes from {@link TWO_MONTH_MIN_WIDTH_PX} which is computed from the day-grid's actual cell
+ * size + gap + padding constants — so any future tweak to those numbers automatically
+ * re-tunes the breakpoint instead of falling out of sync with a hard-coded magic value.
+ *
+ * Reads container width (not viewport) because the picker mounts inside dialogs / popovers /
+ * sheets that may be much narrower than the window itself.
+ *
+ * Falls back to 2 during SSR so the desktop-first first paint matches the most common case.
  */
 function useResponsiveMonthCount(): [number, React.RefCallback<HTMLDivElement>] {
     const [count, setCount] = useState(2);
@@ -182,7 +185,7 @@ function useResponsiveMonthCount(): [number, React.RefCallback<HTMLDivElement>] 
         const observer = new ResizeObserver((entries) => {
             const entry = entries[0];
             if (entry === undefined) return;
-            setCount(entry.contentRect.width >= 500 ? 2 : 1);
+            setCount(entry.contentRect.width >= TWO_MONTH_MIN_WIDTH_PX ? 2 : 1);
         });
         observer.observe(element);
         return () => observer.disconnect();

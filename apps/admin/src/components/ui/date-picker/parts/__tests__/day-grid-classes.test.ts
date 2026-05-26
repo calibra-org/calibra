@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DAY_GRID_CLASS_NAMES, DAY_GRID_MODIFIER_CLASS_NAMES } from "../day-grid-classes";
+import { DAY_GRID_CLASS_NAMES, DAY_GRID_DIMENSIONS, DAY_GRID_MODIFIER_CLASS_NAMES, TWO_MONTH_MIN_WIDTH_PX } from "../day-grid-classes";
 
 /**
  * These tests don't verify visual output — they assert *invariants* of the class strings so a
@@ -14,6 +14,35 @@ const SELECTED_STATES = ["selected", "range_start", "range_end", "range_middle"]
 function classList(s: string): string[] {
     return s.split(/\s+/).filter((c) => c.length > 0);
 }
+
+describe("DAY_GRID_DIMENSIONS — derived layout constants", () => {
+    it("matches the day cell's Tailwind size (h-9 w-9 → 36 px)", () => {
+        expect(DAY_GRID_DIMENSIONS.cellPx).toBe(36);
+        expect(DAY_GRID_CLASS_NAMES.day).toMatch(/\bw-9\b/);
+        expect(DAY_GRID_CLASS_NAMES.day).toMatch(/\bh-9\b/);
+    });
+
+    it("matches the inter-month gap class (gap-4 → 16 px)", () => {
+        expect(DAY_GRID_DIMENSIONS.monthsGapPx).toBe(16);
+        expect(DAY_GRID_CLASS_NAMES.months).toMatch(/\bgap-4\b/);
+    });
+
+    it("matches the day-grid root horizontal padding (p-2 → 8 px × 2 sides = 16 px)", () => {
+        expect(DAY_GRID_DIMENSIONS.rootPaddingPx).toBe(16);
+        expect(DAY_GRID_CLASS_NAMES.root).toMatch(/\bp-2\b/);
+    });
+
+    it("TWO_MONTH_MIN_WIDTH_PX is computed from cellPx × columns × 2 + gap + padding (no magic constants)", () => {
+        const expected =
+            DAY_GRID_DIMENSIONS.columnsPerMonth * DAY_GRID_DIMENSIONS.cellPx * 2 +
+            DAY_GRID_DIMENSIONS.monthsGapPx +
+            DAY_GRID_DIMENSIONS.rootPaddingPx;
+        expect(TWO_MONTH_MIN_WIDTH_PX).toBe(expected);
+        /** Sanity-bound the value so a future cellPx tweak that triples the threshold gets noticed. */
+        expect(TWO_MONTH_MIN_WIDTH_PX).toBeGreaterThan(400);
+        expect(TWO_MONTH_MIN_WIDTH_PX).toBeLessThan(800);
+    });
+});
 
 describe("DAY_GRID_CLASS_NAMES — base layout", () => {
     it("does NOT paint a cell border — today's ring lives on the inner button so it traces a circle, not a square", () => {
