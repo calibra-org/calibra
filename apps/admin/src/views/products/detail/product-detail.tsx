@@ -1,12 +1,17 @@
 "use client";
 
+import { cn } from "@calibra/shared";
 import type { Locale } from "@calibra/shared/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Boxes, ExternalLink, Eye, Sparkles } from "lucide-react";
+import { Boxes, ExternalLink, Eye, Loader2, Save, Sparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, FormProvider, useForm, useFormContext } from "react-hook-form";
 
+import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
+import { DetailPageShell } from "#/components/sections/detail-page-shell";
+import type { SectionSpec } from "#/components/sections/draggable-section-grid";
+import { Button } from "#/components/ui/button";
 import { HelperTooltip } from "#/components/ui/helper-tooltip";
 import { Input } from "#/components/ui/input";
 import { JalaliDateRangeInput } from "#/components/ui/jalali-date-range-input";
@@ -22,7 +27,6 @@ import { useProduct, useSlugAvailability } from "#/lib/products/queries";
 
 import { ConflictDialog } from "./conflict-dialog";
 import { Field, ToggleRow } from "./form-primitives";
-import { DetailHeader } from "./header";
 import { NavigationGuard } from "./navigation-guard";
 import {
     emptyProductDetailValues,
@@ -40,14 +44,30 @@ export interface ProductDetailProps {
     shippingClassOptions: { id: number; slug: string; name: string }[];
 }
 
+const statusTone: Record<"draft" | "publish" | "pending" | "private", StatusTone> = {
+    publish: "success",
+    draft: "neutral",
+    pending: "warning",
+    private: "info",
+};
+
 /**
- * Client wrapper around the product detail form. Hosts the react-hook-form instance, renders the
- * sticky header + section grid, and threads the save mutation. Optimistic concurrency goes
- * through the `If-Match` header (carries the loaded product's `updated_at`); a 409 surfaces the
- * `ConflictDialog`.
+ * Client wrapper around the product detail form. Mounts the same `DetailPageShell` that
+ * `orders/detail` uses: shared `PageHeader`, draggable + collapsible sections in the main
+ * column, a 320px sidebar. Each card body is a leaf component below; the shell handles the
+ * grip handles, chevrons, per-user layout persistence, and the two-column responsive grid.
+ *
+ * Save / status / dirty state live in `headerActions` per the
+ * [`DETAIL_PAGE.md`](../../components/sections/DETAIL_PAGE.md) convention.
+ *
+ * Optimistic concurrency: the `If-Match` header carries the loaded product's `updated_at`;
+ * a 409 surfaces the `ConflictDialog`.
  */
 export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOptions, shippingClassOptions }: ProductDetailProps) {
     const t = useTranslations("Products.detail");
+    const tStatus = useTranslations("ProductStatus");
+    const tType = useTranslations("Products.detail.types");
+    const tDnd = useTranslations("Products.detail.dnd");
     const router = useRouter();
     const locale = useLocale() as Locale;
 
@@ -113,45 +133,116 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
     }, [onSubmit]);
 
     const type = form.watch("type");
+    const status = form.watch("status");
+    const sku = form.watch("sku");
+    const name = form.watch("name");
+    const isSubmitting = form.formState.isSubmitting || update.isPending || create.isPending;
+
+    const labels = { grabHandle: tDnd("grabHandle"), collapse: tDnd("collapse"), expand: tDnd("expand") };
+
+    const mainSections: SectionSpec[] = useMemo(() => {
+        const sections: SectionSpec[] = [
+            { id: "general", title: t("sections.general"), body: <GeneralBody locale={locale} /> },
+            { id: "description", title: t("sections.description"), body: <DescriptionBody /> },
+        ];
+        if (type !== "grouped") {
+            sections.push({
+                id: "pricing",
+                title: t("sections.pricing"),
+                body: <PricingBody externalUrlVariant={type === "external"} />,
+            });
+        }
+        if (type === "simple") {
+            sections.push({ id: "inventory", title: t("sections.inventory"), body: <InventoryBody /> });
+        }
+        if (type === "simple" || type === "variable") {
+            sections.push({ id: "shipping", title: t("sections.shipping"), body: <ShippingBody /> });
+        }
+        sections.push({ id: "advanced", title: t("sections.advanced"), body: <AdvancedBody />, defaultCollapsed: true });
+        if (type === "variable") {
+            sections.push({
+                id: "variations",
+                title: t("variations.placeholderTitle"),
+                body: <p className="text-muted-foreground text-xs">{t("variations.placeholderBody")}</p>,
+            });
+        }
+        return sections;
+    }, [type, t, locale]);
+
+    const sidebarSections: SectionSpec[] = useMemo(
+        () => [
+            { id: "publish", title: t("sections.publish"), body: <PublishBody /> },
+            { id: "categories", title: t("sections.categories"), body: <CategoriesBody />, defaultCollapsed: true },
+            { id: "tags", title: t("sections.tags"), body: <TagsBody />, defaultCollapsed: true },
+            { id: "brand", title: t("sections.brand"), body: <BrandBody />, defaultCollapsed: true },
+            { id: "tax", title: t("sections.tax"), body: <TaxBody options={taxClassOptions} />, defaultCollapsed: true },
+            {
+                id: "shippingClass",
+                title: t("sections.shippingClass"),
+                body: <ShippingClassBody options={shippingClassOptions} />,
+                defaultCollapsed: true,
+            },
+        ],
+        [t, taxClassOptions, shippingClassOptions],
+    );
+
+    const headerActions = (
+        <div className="flex items-center gap-2">
+            <Button
+                type="button"
+                onClick={() => void onSubmit()}
+                disabled={(!form.formState.isDirty && !isNew) || isSubmitting}
+                className="min-w-28"
+            >
+                {isSubmitting ? (
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                    <Save className="size-3.5" aria-hidden="true" />
+                )}
+                {isNew ? t("actions.create") : t("actions.save")}
+            </Button>
+        </div>
+    );
+
+    const titleNode = (
+        <span className="flex flex-wrap items-center gap-2">
+            <span className="truncate">{name || t("untitled")}</span>
+            {sku !== null && sku.length > 0 ? (
+                <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground text-xs">{sku}</span>
+            ) : null}
+            <span
+                className={cn(
+                    "rounded border border-border px-1.5 py-0.5 text-muted-foreground text-xs",
+                    type === "variable" && "border-violet-500/40 text-violet-600 dark:text-violet-300",
+                )}
+            >
+                {tType(type)}
+            </span>
+            <StatusBadge tone={statusTone[status]}>{tStatus(status)}</StatusBadge>
+        </span>
+    );
 
     return (
         <FormProvider {...form}>
             <NavigationGuard when={form.formState.isDirty} />
-            <DetailHeader
-                title={form.watch("name")}
-                sku={form.watch("sku")}
-                type={type}
-                status={form.watch("status")}
-                updatedAt={initial?.updatedAt ?? null}
-                isDirty={form.formState.isDirty}
-                isSubmitting={form.formState.isSubmitting || update.isPending || create.isPending}
-                onSave={() => void onSubmit()}
-                isNew={isNew}
-            />
-
-            <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <div className="space-y-4 lg:col-span-2">
-                    <GeneralCard locale={locale} />
-                    <DescriptionCard />
-                    {type !== "grouped" ? <PricingCard externalUrlVariant={type === "external"} /> : null}
-                    {type === "simple" ? <InventoryCard /> : null}
-                    {type === "simple" || type === "variable" ? <ShippingCard /> : null}
-                    <AdvancedCard />
-                    {type === "variable" ? (
-                        <div className="rounded-md border border-border bg-card p-4">
-                            <h2 className="font-semibold text-foreground text-sm">{t("variations.placeholderTitle")}</h2>
-                            <p className="mt-1 text-muted-foreground text-xs">{t("variations.placeholderBody")}</p>
-                        </div>
-                    ) : null}
-                </div>
-                <div className="space-y-4">
-                    <PublishCard />
-                    <CategoriesSidebar />
-                    <TagsSidebar />
-                    <BrandSidebar />
-                    <TaxClassSidebar options={taxClassOptions} />
-                    <ShippingClassSidebar options={shippingClassOptions} />
-                </div>
+            <form onSubmit={onSubmit}>
+                <DetailPageShell
+                    title={titleNode}
+                    subtitle={
+                        initial?.updatedAt ? (
+                            <span dir="ltr" className="text-muted-foreground text-xs">
+                                {t("lastEditedAt", {
+                                    at: new Date(initial.updatedAt).toLocaleString(locale === "fa" ? "fa-IR" : "en-US"),
+                                })}
+                            </span>
+                        ) : undefined
+                    }
+                    headerActions={headerActions}
+                    mainSections={mainSections}
+                    sidebarSections={sidebarSections}
+                    storageKeyPrefix="products.detail.sections"
+                    labels={labels}
+                />
             </form>
 
             <ConflictDialog
@@ -177,23 +268,11 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
     );
 }
 
-function SectionCard({ title, children, helper }: { title: string; helper?: React.ReactNode; children: React.ReactNode }) {
-    return (
-        <div className="rounded-md border border-border bg-card">
-            <div className="flex items-center gap-1 border-border border-b px-4 py-2">
-                <h2 className="font-semibold text-foreground text-sm">{title}</h2>
-                {helper}
-            </div>
-            <div className="p-4">{children}</div>
-        </div>
-    );
-}
-
 function useFormFromCtx() {
     return useFormContext<ProductDetailFormValues>();
 }
 
-function GeneralCard({ locale }: { locale: Locale }) {
+function GeneralBody({ locale }: { locale: Locale }) {
     const t = useTranslations("Products.detail");
     const tField = useTranslations("Products.detail.fields");
     const tTip = useTranslations("Products.detail.tooltips");
@@ -204,574 +283,417 @@ function GeneralCard({ locale }: { locale: Locale }) {
     const slugCheck = useSlugAvailability({ slug, locale });
 
     return (
-        <SectionCard title={t("sections.general")}>
-            <div className="grid grid-cols-12 gap-3">
-                <Controller
-                    control={control}
-                    name="type"
-                    render={({ field }) => (
-                        <Field
-                            id="type"
-                            label={tField("type")}
-                            span="col-span-12 md:col-span-3"
-                            helper={<HelperTooltip>{tTip("type")}</HelperTooltip>}
-                        >
-                            <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger id="type">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {(["simple", "variable", "grouped", "external"] as const).map((v) => (
-                                        <SelectItem key={v} value={v}>
-                                            <div className="flex flex-col">
-                                                <span>{tType(v)}</span>
-                                                <span className="text-muted-foreground text-xs">{tDesc(v)}</span>
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </Field>
-                    )}
-                />
-
-                <Field
-                    id="name"
-                    label={tField("name")}
-                    span="col-span-12 md:col-span-9"
-                    error={formState.errors.name?.message}
-                    helper={<HelperTooltip>{tTip("name")}</HelperTooltip>}
-                >
-                    <Input id="name" {...register("name")} />
-                </Field>
-
-                <Field
-                    id="slug"
-                    label={tField("slug")}
-                    span="col-span-12 md:col-span-6"
-                    error={formState.errors.slug?.message}
-                    helper={<HelperTooltip>{tTip("slug")}</HelperTooltip>}
-                    hint={slugCheck.data === false ? t("slugTaken") : undefined}
-                >
-                    <Input id="slug" dir="ltr" className="font-mono" {...register("slug")} />
-                </Field>
-
-                <Field
-                    id="sku"
-                    label={tField("sku")}
-                    span="col-span-12 md:col-span-3"
-                    helper={<HelperTooltip>{tTip("sku")}</HelperTooltip>}
-                >
-                    <Input
-                        id="sku"
-                        dir="ltr"
-                        className="font-mono"
-                        {...register("sku", { setValueAs: (v) => (v === "" ? null : v) })}
-                    />
-                </Field>
-
-                <Field
-                    id="gtin"
-                    label={tField("gtin")}
-                    span="col-span-12 md:col-span-3"
-                    helper={<HelperTooltip>{tTip("gtin")}</HelperTooltip>}
-                >
-                    <Input
-                        id="gtin"
-                        dir="ltr"
-                        className="font-mono"
-                        {...register("gtin", { setValueAs: (v) => (v === "" ? null : v) })}
-                    />
-                </Field>
-
-                <Field
-                    id="shortDescription"
-                    label={tField("shortDescription")}
-                    span="col-span-12"
-                    helper={<HelperTooltip>{tTip("shortDescription")}</HelperTooltip>}
-                >
-                    <Textarea id="shortDescription" rows={2} {...register("shortDescription")} />
-                </Field>
-            </div>
-        </SectionCard>
-    );
-}
-
-function DescriptionCard() {
-    const t = useTranslations("Products.detail");
-    const tField = useTranslations("Products.detail.fields");
-    const tTip = useTranslations("Products.detail.tooltips");
-    const { control } = useFormFromCtx();
-
-    return (
-        <SectionCard title={t("sections.description")} helper={<HelperTooltip>{tTip("description")}</HelperTooltip>}>
+        <div className="grid grid-cols-12 gap-3">
             <Controller
                 control={control}
-                name="description"
+                name="type"
                 render={({ field }) => (
-                    <Field id="description" label={tField("description")}>
-                        <Textarea
-                            id="description"
-                            rows={6}
-                            value={field.value ?? ""}
-                            onChange={(event) => field.onChange(event.target.value)}
-                        />
+                    <Field
+                        id="type"
+                        label={tField("type")}
+                        span="col-span-12 md:col-span-3"
+                        helper={<HelperTooltip>{tTip("type")}</HelperTooltip>}
+                    >
+                        <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger id="type">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {(["simple", "variable", "grouped", "external"] as const).map((v) => (
+                                    <SelectItem key={v} value={v}>
+                                        <div className="flex flex-col">
+                                            <span>{tType(v)}</span>
+                                            <span className="text-muted-foreground text-xs">{tDesc(v)}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </Field>
                 )}
             />
-        </SectionCard>
+
+            <Field
+                id="name"
+                label={tField("name")}
+                span="col-span-12 md:col-span-9"
+                error={formState.errors.name?.message}
+                helper={<HelperTooltip>{tTip("name")}</HelperTooltip>}
+            >
+                <Input id="name" {...register("name")} />
+            </Field>
+
+            <Field
+                id="slug"
+                label={tField("slug")}
+                span="col-span-12 md:col-span-6"
+                error={formState.errors.slug?.message}
+                helper={<HelperTooltip>{tTip("slug")}</HelperTooltip>}
+                hint={slugCheck.data === false ? t("slugTaken") : undefined}
+            >
+                <Input id="slug" dir="ltr" className="font-mono" {...register("slug")} />
+            </Field>
+
+            <Field
+                id="sku"
+                label={tField("sku")}
+                span="col-span-12 md:col-span-3"
+                helper={<HelperTooltip>{tTip("sku")}</HelperTooltip>}
+            >
+                <Input
+                    id="sku"
+                    dir="ltr"
+                    className="font-mono"
+                    {...register("sku", { setValueAs: (v) => (v === "" ? null : v) })}
+                />
+            </Field>
+
+            <Field
+                id="gtin"
+                label={tField("gtin")}
+                span="col-span-12 md:col-span-3"
+                helper={<HelperTooltip>{tTip("gtin")}</HelperTooltip>}
+            >
+                <Input
+                    id="gtin"
+                    dir="ltr"
+                    className="font-mono"
+                    {...register("gtin", { setValueAs: (v) => (v === "" ? null : v) })}
+                />
+            </Field>
+
+            <Field
+                id="shortDescription"
+                label={tField("shortDescription")}
+                span="col-span-12"
+                helper={<HelperTooltip>{tTip("shortDescription")}</HelperTooltip>}
+            >
+                <Textarea id="shortDescription" rows={2} {...register("shortDescription")} />
+            </Field>
+        </div>
     );
 }
 
-function PricingCard({ externalUrlVariant }: { externalUrlVariant: boolean }) {
-    const t = useTranslations("Products.detail");
+function DescriptionBody() {
+    const tField = useTranslations("Products.detail.fields");
+    const { control } = useFormFromCtx();
+
+    return (
+        <Controller
+            control={control}
+            name="description"
+            render={({ field }) => (
+                <Field id="description" label={tField("description")}>
+                    <Textarea
+                        id="description"
+                        rows={6}
+                        value={field.value ?? ""}
+                        onChange={(event) => field.onChange(event.target.value)}
+                    />
+                </Field>
+            )}
+        />
+    );
+}
+
+function PricingBody({ externalUrlVariant }: { externalUrlVariant: boolean }) {
     const tField = useTranslations("Products.detail.fields");
     const tTip = useTranslations("Products.detail.tooltips");
     const tTax = useTranslations("Products.detail.taxStatus");
     const { control, register } = useFormFromCtx();
 
     return (
-        <SectionCard title={t("sections.pricing")}>
-            <div className="grid grid-cols-12 gap-3">
-                <Controller
-                    control={control}
-                    name="regularPriceToman"
-                    render={({ field }) => (
-                        <Field
-                            id="regularPrice"
-                            label={tField("regularPrice")}
-                            span="col-span-12 md:col-span-6"
-                            helper={<HelperTooltip>{tTip("regularPrice")}</HelperTooltip>}
-                        >
-                            <MoneyInput
-                                id="regularPrice"
-                                valueMinor={field.value === null ? null : Math.round(field.value * 10)}
-                                onChangeMinor={(next) => field.onChange(next === null ? null : next / 10)}
-                                min={0}
-                                step={1000}
-                            />
-                        </Field>
-                    )}
-                />
-
-                <Controller
-                    control={control}
-                    name="salePriceToman"
-                    render={({ field }) => (
-                        <Field
-                            id="salePrice"
-                            label={tField("salePrice")}
-                            span="col-span-12 md:col-span-6"
-                            helper={<HelperTooltip>{tTip("salePrice")}</HelperTooltip>}
-                        >
-                            <MoneyInput
-                                id="salePrice"
-                                valueMinor={field.value === null ? null : Math.round(field.value * 10)}
-                                onChangeMinor={(next) => field.onChange(next === null ? null : next / 10)}
-                                nullable
-                                min={0}
-                                step={1000}
-                            />
-                        </Field>
-                    )}
-                />
-
-                {externalUrlVariant ? (
+        <div className="grid grid-cols-12 gap-3">
+            <Controller
+                control={control}
+                name="regularPriceToman"
+                render={({ field }) => (
                     <Field
-                        id="externalUrl"
-                        label={tField("externalUrl")}
-                        span="col-span-12"
-                        helper={<HelperTooltip>{tTip("externalUrl")}</HelperTooltip>}
+                        id="regularPrice"
+                        label={tField("regularPrice")}
+                        span="col-span-12 md:col-span-6"
+                        helper={<HelperTooltip>{tTip("regularPrice")}</HelperTooltip>}
                     >
-                        <Input
-                            id="externalUrl"
-                            dir="ltr"
-                            placeholder="https://"
-                            {...register("externalUrl", { setValueAs: (v) => (v === "" ? null : v) })}
+                        <MoneyInput
+                            id="regularPrice"
+                            valueMinor={field.value === null ? null : Math.round(field.value * 10)}
+                            onChangeMinor={(next) => field.onChange(next === null ? null : next / 10)}
+                            min={0}
+                            step={1000}
                         />
                     </Field>
-                ) : (
-                    <>
-                        <Controller
-                            control={control}
-                            name="saleStartsAt"
-                            render={({ field: starts }) => (
-                                <Controller
-                                    control={control}
-                                    name="saleEndsAt"
-                                    render={({ field: ends }) => (
-                                        <Field
-                                            id="saleWindow"
-                                            label={tField("saleWindow")}
-                                            span="col-span-12 md:col-span-6"
-                                            helper={<HelperTooltip>{tTip("saleWindow")}</HelperTooltip>}
-                                        >
-                                            <JalaliDateRangeInput
-                                                value={{ from: starts.value, to: ends.value }}
-                                                onChange={(next) => {
-                                                    starts.onChange(next.from ?? null);
-                                                    ends.onChange(next.to ?? null);
-                                                }}
-                                                direction="future"
-                                            />
-                                        </Field>
-                                    )}
-                                />
-                            )}
-                        />
-                        <Controller
-                            control={control}
-                            name="taxStatus"
-                            render={({ field }) => (
-                                <Field id="taxStatus" label={tField("taxStatus")} span="col-span-12 md:col-span-6">
-                                    <Select value={field.value} onValueChange={field.onChange}>
-                                        <SelectTrigger id="taxStatus">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {(["taxable", "shipping", "none"] as const).map((v) => (
-                                                <SelectItem key={v} value={v}>
-                                                    {tTax(v)}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </Field>
-                            )}
-                        />
-                    </>
                 )}
-            </div>
-        </SectionCard>
-    );
-}
+            />
 
-function InventoryCard() {
-    const t = useTranslations("Products.detail");
-    const tField = useTranslations("Products.detail.fields");
-    const { control, register } = useFormFromCtx();
+            <Controller
+                control={control}
+                name="salePriceToman"
+                render={({ field }) => (
+                    <Field
+                        id="salePrice"
+                        label={tField("salePrice")}
+                        span="col-span-12 md:col-span-6"
+                        helper={<HelperTooltip>{tTip("salePrice")}</HelperTooltip>}
+                    >
+                        <MoneyInput
+                            id="salePrice"
+                            valueMinor={field.value === null ? null : Math.round(field.value * 10)}
+                            onChangeMinor={(next) => field.onChange(next === null ? null : next / 10)}
+                            nullable
+                            min={0}
+                            step={1000}
+                        />
+                    </Field>
+                )}
+            />
 
-    return (
-        <SectionCard title={t("sections.inventory")}>
-            <div className="grid grid-cols-12 gap-3">
-                <Field id="sku-inv" label={tField("sku")} span="col-span-12 md:col-span-6">
+            {externalUrlVariant ? (
+                <Field
+                    id="externalUrl"
+                    label={tField("externalUrl")}
+                    span="col-span-12"
+                    helper={<HelperTooltip>{tTip("externalUrl")}</HelperTooltip>}
+                >
                     <Input
-                        id="sku-inv"
+                        id="externalUrl"
                         dir="ltr"
-                        className="font-mono"
-                        {...register("sku", { setValueAs: (v) => (v === "" ? null : v) })}
+                        placeholder="https://"
+                        {...register("externalUrl", { setValueAs: (v) => (v === "" ? null : v) })}
                     />
                 </Field>
-                <Field id="gtin-inv" label={tField("gtin")} span="col-span-12 md:col-span-6">
-                    <Input
-                        id="gtin-inv"
-                        dir="ltr"
-                        className="font-mono"
-                        {...register("gtin", { setValueAs: (v) => (v === "" ? null : v) })}
-                    />
-                </Field>
-                <Controller
-                    control={control}
-                    name="soldIndividually"
-                    render={({ field }) => (
-                        <ToggleRow
-                            id="soldIndividually"
-                            span="col-span-12 md:col-span-4"
-                            title={tField("soldIndividually")}
-                            icon={<Boxes className="size-4" aria-hidden="true" />}
-                            checked={field.value}
-                            onChange={field.onChange}
-                        />
-                    )}
-                />
-            </div>
-        </SectionCard>
-    );
-}
-
-function ShippingCard() {
-    const t = useTranslations("Products.detail");
-    const tField = useTranslations("Products.detail.fields");
-    const { control, register } = useFormFromCtx();
-
-    return (
-        <SectionCard title={t("sections.shipping")}>
-            <div className="grid grid-cols-12 gap-3">
-                <Field id="weight" label={tField("weight")} span="col-span-6 md:col-span-3">
-                    <Input
-                        id="weight"
-                        type="number"
-                        {...register("weightGrams", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
-                    />
-                </Field>
-                <Field id="length" label={tField("length")} span="col-span-6 md:col-span-3">
-                    <Input
-                        id="length"
-                        type="number"
-                        {...register("lengthMm", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
-                    />
-                </Field>
-                <Field id="width" label={tField("width")} span="col-span-6 md:col-span-3">
-                    <Input
-                        id="width"
-                        type="number"
-                        {...register("widthMm", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
-                    />
-                </Field>
-                <Field id="height" label={tField("height")} span="col-span-6 md:col-span-3">
-                    <Input
-                        id="height"
-                        type="number"
-                        {...register("heightMm", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
-                    />
-                </Field>
-                <Controller
-                    control={control}
-                    name="virtual"
-                    render={({ field }) => (
-                        <ToggleRow
-                            id="virtual"
-                            span="col-span-6 md:col-span-4"
-                            title={tField("virtual")}
-                            icon={<ExternalLink className="size-4" aria-hidden="true" />}
-                            checked={field.value}
-                            onChange={field.onChange}
-                        />
-                    )}
-                />
-                <Controller
-                    control={control}
-                    name="downloadable"
-                    render={({ field }) => (
-                        <ToggleRow
-                            id="downloadable"
-                            span="col-span-6 md:col-span-4"
-                            title={tField("downloadable")}
-                            icon={<ExternalLink className="size-4" aria-hidden="true" />}
-                            checked={field.value}
-                            onChange={field.onChange}
-                        />
-                    )}
-                />
-            </div>
-        </SectionCard>
-    );
-}
-
-function AdvancedCard() {
-    const t = useTranslations("Products.detail");
-    const tField = useTranslations("Products.detail.fields");
-    const { control, register } = useFormFromCtx();
-
-    return (
-        <SectionCard title={t("sections.advanced")}>
-            <div className="grid grid-cols-12 gap-3">
-                <Controller
-                    control={control}
-                    name="menuOrder"
-                    render={({ field }) => (
-                        <Field id="menuOrder" label={tField("menuOrder")} span="col-span-6 md:col-span-3">
-                            <NumberField
-                                id="menuOrder"
-                                value={field.value}
-                                onValueChange={(next) => field.onChange(typeof next === "number" ? next : 0)}
-                                min={0}
+            ) : (
+                <>
+                    <Controller
+                        control={control}
+                        name="saleStartsAt"
+                        render={({ field: starts }) => (
+                            <Controller
+                                control={control}
+                                name="saleEndsAt"
+                                render={({ field: ends }) => (
+                                    <Field
+                                        id="saleWindow"
+                                        label={tField("saleWindow")}
+                                        span="col-span-12 md:col-span-6"
+                                        helper={<HelperTooltip>{tTip("saleWindow")}</HelperTooltip>}
+                                    >
+                                        <JalaliDateRangeInput
+                                            value={{ from: starts.value, to: ends.value }}
+                                            onChange={(next) => {
+                                                starts.onChange(next.from ?? null);
+                                                ends.onChange(next.to ?? null);
+                                            }}
+                                            direction="future"
+                                        />
+                                    </Field>
+                                )}
                             />
-                        </Field>
-                    )}
-                />
-                <Field id="purchaseNote" label={tField("purchaseNote")} span="col-span-12">
-                    <Textarea id="purchaseNote" rows={2} {...register("purchaseNote")} />
-                </Field>
-                <Controller
-                    control={control}
-                    name="reviewsAllowed"
-                    render={({ field }) => (
-                        <ToggleRow
-                            id="reviewsAllowed"
-                            span="col-span-6 md:col-span-4"
-                            title={tField("enableReviews")}
-                            icon={<Sparkles className="size-4" aria-hidden="true" />}
-                            checked={field.value}
-                            onChange={field.onChange}
-                        />
-                    )}
-                />
-                <Controller
-                    control={control}
-                    name="posAvailable"
-                    render={({ field }) => (
-                        <ToggleRow
-                            id="posAvailable"
-                            span="col-span-6 md:col-span-4"
-                            title={tField("posAvailable")}
-                            icon={<Eye className="size-4" aria-hidden="true" />}
-                            checked={field.value}
-                            onChange={field.onChange}
-                        />
-                    )}
-                />
-            </div>
-        </SectionCard>
+                        )}
+                    />
+                    <Controller
+                        control={control}
+                        name="taxStatus"
+                        render={({ field }) => (
+                            <Field id="taxStatus" label={tField("taxStatus")} span="col-span-12 md:col-span-6">
+                                <Select value={field.value} onValueChange={field.onChange}>
+                                    <SelectTrigger id="taxStatus">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {(["taxable", "shipping", "none"] as const).map((v) => (
+                                            <SelectItem key={v} value={v}>
+                                                {tTax(v)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                        )}
+                    />
+                </>
+            )}
+        </div>
     );
 }
 
-function PublishCard() {
-    const t = useTranslations("Products.detail");
+function InventoryBody() {
+    const tField = useTranslations("Products.detail.fields");
+    const { control, register } = useFormFromCtx();
+
+    return (
+        <div className="grid grid-cols-12 gap-3">
+            <Field id="sku-inv" label={tField("sku")} span="col-span-12 md:col-span-6">
+                <Input
+                    id="sku-inv"
+                    dir="ltr"
+                    className="font-mono"
+                    {...register("sku", { setValueAs: (v) => (v === "" ? null : v) })}
+                />
+            </Field>
+            <Field id="gtin-inv" label={tField("gtin")} span="col-span-12 md:col-span-6">
+                <Input
+                    id="gtin-inv"
+                    dir="ltr"
+                    className="font-mono"
+                    {...register("gtin", { setValueAs: (v) => (v === "" ? null : v) })}
+                />
+            </Field>
+            <Controller
+                control={control}
+                name="soldIndividually"
+                render={({ field }) => (
+                    <ToggleRow
+                        id="soldIndividually"
+                        span="col-span-12 md:col-span-4"
+                        title={tField("soldIndividually")}
+                        icon={<Boxes className="size-4" aria-hidden="true" />}
+                        checked={field.value}
+                        onChange={field.onChange}
+                    />
+                )}
+            />
+        </div>
+    );
+}
+
+function ShippingBody() {
+    const tField = useTranslations("Products.detail.fields");
+    const { control, register } = useFormFromCtx();
+
+    return (
+        <div className="grid grid-cols-12 gap-3">
+            <Field id="weight" label={tField("weight")} span="col-span-6 md:col-span-3">
+                <Input
+                    id="weight"
+                    type="number"
+                    {...register("weightGrams", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
+                />
+            </Field>
+            <Field id="length" label={tField("length")} span="col-span-6 md:col-span-3">
+                <Input
+                    id="length"
+                    type="number"
+                    {...register("lengthMm", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
+                />
+            </Field>
+            <Field id="width" label={tField("width")} span="col-span-6 md:col-span-3">
+                <Input id="width" type="number" {...register("widthMm", { setValueAs: (v) => (v === "" ? null : Number(v)) })} />
+            </Field>
+            <Field id="height" label={tField("height")} span="col-span-6 md:col-span-3">
+                <Input
+                    id="height"
+                    type="number"
+                    {...register("heightMm", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
+                />
+            </Field>
+            <Controller
+                control={control}
+                name="virtual"
+                render={({ field }) => (
+                    <ToggleRow
+                        id="virtual"
+                        span="col-span-6 md:col-span-4"
+                        title={tField("virtual")}
+                        icon={<ExternalLink className="size-4" aria-hidden="true" />}
+                        checked={field.value}
+                        onChange={field.onChange}
+                    />
+                )}
+            />
+            <Controller
+                control={control}
+                name="downloadable"
+                render={({ field }) => (
+                    <ToggleRow
+                        id="downloadable"
+                        span="col-span-6 md:col-span-4"
+                        title={tField("downloadable")}
+                        icon={<ExternalLink className="size-4" aria-hidden="true" />}
+                        checked={field.value}
+                        onChange={field.onChange}
+                    />
+                )}
+            />
+        </div>
+    );
+}
+
+function AdvancedBody() {
+    const tField = useTranslations("Products.detail.fields");
+    const { control, register } = useFormFromCtx();
+
+    return (
+        <div className="grid grid-cols-12 gap-3">
+            <Controller
+                control={control}
+                name="menuOrder"
+                render={({ field }) => (
+                    <Field id="menuOrder" label={tField("menuOrder")} span="col-span-6 md:col-span-3">
+                        <NumberField
+                            id="menuOrder"
+                            value={field.value}
+                            onValueChange={(next) => field.onChange(typeof next === "number" ? next : 0)}
+                            min={0}
+                        />
+                    </Field>
+                )}
+            />
+            <Field id="purchaseNote" label={tField("purchaseNote")} span="col-span-12">
+                <Textarea id="purchaseNote" rows={2} {...register("purchaseNote")} />
+            </Field>
+            <Controller
+                control={control}
+                name="reviewsAllowed"
+                render={({ field }) => (
+                    <ToggleRow
+                        id="reviewsAllowed"
+                        span="col-span-6 md:col-span-4"
+                        title={tField("enableReviews")}
+                        icon={<Sparkles className="size-4" aria-hidden="true" />}
+                        checked={field.value}
+                        onChange={field.onChange}
+                    />
+                )}
+            />
+            <Controller
+                control={control}
+                name="posAvailable"
+                render={({ field }) => (
+                    <ToggleRow
+                        id="posAvailable"
+                        span="col-span-6 md:col-span-4"
+                        title={tField("posAvailable")}
+                        icon={<Eye className="size-4" aria-hidden="true" />}
+                        checked={field.value}
+                        onChange={field.onChange}
+                    />
+                )}
+            />
+        </div>
+    );
+}
+
+function PublishBody() {
     const tField = useTranslations("Products.detail.fields");
     const tStatus = useTranslations("ProductStatus");
     const tVisibility = useTranslations("Products.detail.visibility");
     const { control } = useFormFromCtx();
 
     return (
-        <SectionCard title={t("sections.publish")}>
-            <div className="grid grid-cols-1 gap-3">
-                <Controller
-                    control={control}
-                    name="status"
-                    render={({ field }) => (
-                        <Field id="status" label={tField("status")}>
-                            <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger id="status">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {(["draft", "publish", "pending", "private"] as const).map((v) => (
-                                        <SelectItem key={v} value={v}>
-                                            {tStatus(v)}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </Field>
-                    )}
-                />
-                <Controller
-                    control={control}
-                    name="catalogVisibility"
-                    render={({ field }) => (
-                        <Field id="visibility" label={tField("visibility")}>
-                            <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger id="visibility">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {(["visible", "catalog", "search", "hidden"] as const).map((v) => (
-                                        <SelectItem key={v} value={v}>
-                                            {tVisibility(v)}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </Field>
-                    )}
-                />
-                <Controller
-                    control={control}
-                    name="featured"
-                    render={({ field }) => (
-                        <ToggleRow
-                            id="featured"
-                            title={tField("featured")}
-                            icon={<Sparkles className="size-4" aria-hidden="true" />}
-                            checked={field.value}
-                            onChange={field.onChange}
-                        />
-                    )}
-                />
-            </div>
-        </SectionCard>
-    );
-}
-
-function CategoriesSidebar() {
-    const t = useTranslations("Products.detail");
-    const { register } = useFormFromCtx();
-    return (
-        <SectionCard title={t("sections.categories")}>
-            <Field id="categoryIds" label={t("sections.categories")} hint={t("idListHint")}>
-                <Input
-                    id="categoryIds"
-                    dir="ltr"
-                    placeholder="e.g. 1, 4, 7"
-                    {...register("categoryIds", {
-                        setValueAs: (v: unknown) =>
-                            String(v ?? "")
-                                .split(",")
-                                .map((s) => Number(s.trim()))
-                                .filter((n) => Number.isFinite(n) && n > 0),
-                    })}
-                />
-            </Field>
-        </SectionCard>
-    );
-}
-
-function TagsSidebar() {
-    const t = useTranslations("Products.detail");
-    const { register } = useFormFromCtx();
-    return (
-        <SectionCard title={t("sections.tags")}>
-            <Field id="tagIds" label={t("sections.tags")} hint={t("idListHint")}>
-                <Input
-                    id="tagIds"
-                    dir="ltr"
-                    placeholder="e.g. 2, 5"
-                    {...register("tagIds", {
-                        setValueAs: (v: unknown) =>
-                            String(v ?? "")
-                                .split(",")
-                                .map((s) => Number(s.trim()))
-                                .filter((n) => Number.isFinite(n) && n > 0),
-                    })}
-                />
-            </Field>
-        </SectionCard>
-    );
-}
-
-function BrandSidebar() {
-    const t = useTranslations("Products.detail");
-    const { register } = useFormFromCtx();
-    return (
-        <SectionCard title={t("sections.brand")}>
-            <Field id="brandId" label={t("sections.brand")} hint={t("idHint")}>
-                <Input
-                    id="brandId"
-                    dir="ltr"
-                    type="number"
-                    {...register("brandId", {
-                        setValueAs: (v) => (v === "" || v === null || v === undefined ? null : Number(v)),
-                    })}
-                />
-            </Field>
-        </SectionCard>
-    );
-}
-
-function TaxClassSidebar({ options }: { options: { id: number; slug: string; name: string }[] }) {
-    const t = useTranslations("Products.detail");
-    const tField = useTranslations("Products.detail.fields");
-    const { control } = useFormFromCtx();
-    return (
-        <SectionCard title={t("sections.tax")}>
+        <div className="flex flex-col gap-3">
             <Controller
                 control={control}
-                name="taxClassId"
+                name="status"
                 render={({ field }) => (
-                    <Field id="taxClassId" label={tField("taxClass")}>
-                        <Select
-                            value={field.value === null ? "_none" : String(field.value)}
-                            onValueChange={(v) => field.onChange(v === "_none" ? null : Number(v))}
-                        >
-                            <SelectTrigger id="taxClassId">
+                    <Field id="status" label={tField("status")}>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger id="status">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="_none">{t("noneSelected")}</SelectItem>
-                                {options.map((opt) => (
-                                    <SelectItem key={opt.id} value={String(opt.id)}>
-                                        {opt.name}
+                                {(["draft", "publish", "pending", "private"] as const).map((v) => (
+                                    <SelectItem key={v} value={v}>
+                                        {tStatus(v)}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -779,33 +701,19 @@ function TaxClassSidebar({ options }: { options: { id: number; slug: string; nam
                     </Field>
                 )}
             />
-        </SectionCard>
-    );
-}
-
-function ShippingClassSidebar({ options }: { options: { id: number; slug: string; name: string }[] }) {
-    const t = useTranslations("Products.detail");
-    const tField = useTranslations("Products.detail.fields");
-    const { control } = useFormFromCtx();
-    return (
-        <SectionCard title={t("sections.shippingClass")}>
             <Controller
                 control={control}
-                name="shippingClassId"
+                name="catalogVisibility"
                 render={({ field }) => (
-                    <Field id="shippingClassId" label={tField("shippingClass")}>
-                        <Select
-                            value={field.value === null ? "_none" : String(field.value)}
-                            onValueChange={(v) => field.onChange(v === "_none" ? null : Number(v))}
-                        >
-                            <SelectTrigger id="shippingClassId">
+                    <Field id="visibility" label={tField("visibility")}>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger id="visibility">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="_none">{t("noneSelected")}</SelectItem>
-                                {options.map((opt) => (
-                                    <SelectItem key={opt.id} value={String(opt.id)}>
-                                        {opt.name}
+                                {(["visible", "catalog", "search", "hidden"] as const).map((v) => (
+                                    <SelectItem key={v} value={v}>
+                                        {tVisibility(v)}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -813,6 +721,142 @@ function ShippingClassSidebar({ options }: { options: { id: number; slug: string
                     </Field>
                 )}
             />
-        </SectionCard>
+            <Controller
+                control={control}
+                name="featured"
+                render={({ field }) => (
+                    <ToggleRow
+                        id="featured"
+                        title={tField("featured")}
+                        icon={<Sparkles className="size-4" aria-hidden="true" />}
+                        checked={field.value}
+                        onChange={field.onChange}
+                    />
+                )}
+            />
+        </div>
+    );
+}
+
+function CategoriesBody() {
+    const t = useTranslations("Products.detail");
+    const { register } = useFormFromCtx();
+    return (
+        <Field id="categoryIds" label={t("sections.categories")} hint={t("idListHint")}>
+            <Input
+                id="categoryIds"
+                dir="ltr"
+                placeholder="1, 4, 7"
+                {...register("categoryIds", {
+                    setValueAs: (v: unknown) =>
+                        String(v ?? "")
+                            .split(",")
+                            .map((s) => Number(s.trim()))
+                            .filter((n) => Number.isFinite(n) && n > 0),
+                })}
+            />
+        </Field>
+    );
+}
+
+function TagsBody() {
+    const t = useTranslations("Products.detail");
+    const { register } = useFormFromCtx();
+    return (
+        <Field id="tagIds" label={t("sections.tags")} hint={t("idListHint")}>
+            <Input
+                id="tagIds"
+                dir="ltr"
+                placeholder="2, 5"
+                {...register("tagIds", {
+                    setValueAs: (v: unknown) =>
+                        String(v ?? "")
+                            .split(",")
+                            .map((s) => Number(s.trim()))
+                            .filter((n) => Number.isFinite(n) && n > 0),
+                })}
+            />
+        </Field>
+    );
+}
+
+function BrandBody() {
+    const t = useTranslations("Products.detail");
+    const { register } = useFormFromCtx();
+    return (
+        <Field id="brandId" label={t("sections.brand")} hint={t("idHint")}>
+            <Input
+                id="brandId"
+                dir="ltr"
+                type="number"
+                {...register("brandId", {
+                    setValueAs: (v) => (v === "" || v === null || v === undefined ? null : Number(v)),
+                })}
+            />
+        </Field>
+    );
+}
+
+function TaxBody({ options }: { options: { id: number; slug: string; name: string }[] }) {
+    const t = useTranslations("Products.detail");
+    const tField = useTranslations("Products.detail.fields");
+    const { control } = useFormFromCtx();
+    return (
+        <Controller
+            control={control}
+            name="taxClassId"
+            render={({ field }) => (
+                <Field id="taxClassId" label={tField("taxClass")}>
+                    <Select
+                        value={field.value === null ? "_none" : String(field.value)}
+                        onValueChange={(v) => field.onChange(v === "_none" ? null : Number(v))}
+                    >
+                        <SelectTrigger id="taxClassId">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="_none">{t("noneSelected")}</SelectItem>
+                            {options.map((opt) => (
+                                <SelectItem key={opt.id} value={String(opt.id)}>
+                                    {opt.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </Field>
+            )}
+        />
+    );
+}
+
+function ShippingClassBody({ options }: { options: { id: number; slug: string; name: string }[] }) {
+    const t = useTranslations("Products.detail");
+    const tField = useTranslations("Products.detail.fields");
+    const { control } = useFormFromCtx();
+    return (
+        <Controller
+            control={control}
+            name="shippingClassId"
+            render={({ field }) => (
+                <Field id="shippingClassId" label={tField("shippingClass")}>
+                    <Select
+                        value={field.value === null ? "_none" : String(field.value)}
+                        onValueChange={(v) => field.onChange(v === "_none" ? null : Number(v))}
+                    >
+                        <SelectTrigger id="shippingClassId">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="_none">{t("noneSelected")}</SelectItem>
+                            {options.map((opt) => (
+                                <SelectItem key={opt.id} value={String(opt.id)}>
+                                    {opt.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </Field>
+            )}
+        />
     );
 }

@@ -1111,6 +1111,11 @@
             "variations": {
                 "placeholderTitle": "Variations",
                 "placeholderBody": "Variation management ships in the next iteration."
+            },
+            "dnd": {
+                "grabHandle": "Reorder section",
+                "collapse": "Collapse",
+                "expand": "Expand"
             }
         }
     },

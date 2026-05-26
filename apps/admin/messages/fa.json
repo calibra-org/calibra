@@ -1111,6 +1111,11 @@
             "variations": {
                 "placeholderTitle": "تنوعات",
                 "placeholderBody": "صفحهٔ مدیریت تنوعات در نسخهٔ بعدی فعال می‌شود."
+            },
+            "dnd": {
+                "grabHandle": "جابه‌جایی بخش",
+                "collapse": "بستن",
+                "expand": "باز کردن"
             }
         }
     },
