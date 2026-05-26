@@ -84,10 +84,14 @@
         "dateRange": {
             "today": "امروز",
             "yesterday": "دیروز",
+            "tomorrow": "فردا",
             "last7": "۷ روز گذشته",
             "last30": "۳۰ روز گذشته",
             "thisMonth": "این ماه",
-            "lastMonth": "ماه گذشته"
+            "lastMonth": "ماه گذشته",
+            "next7": "۷ روز آینده",
+            "next30": "۳۰ روز آینده",
+            "nextMonth": "ماه آینده"
         },
         "shortcuts": {
             "title": "میانبرها",

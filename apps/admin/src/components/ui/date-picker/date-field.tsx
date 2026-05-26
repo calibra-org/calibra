@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { cn } from "#/lib/utils";
 
-import { DatePickerPopover } from "./date-picker-popover";
+import { DatePickerDialog } from "./date-picker-dialog";
 import { formatValueOnly } from "./format";
 import type { Calendar, DateFilterValue } from "./types";
 
@@ -24,10 +24,13 @@ interface DateFieldProps {
 }
 
 /**
- * Form-mode wrapper that exposes a single-date picker as a form field. Unlike {@link
- * DateFilterChip}, there's no operator switching here — the field is just a calendar-aware date
- * input. The underlying picker still supports the full grammar (operator chips, granularity
- * tabs); we collapse to `before <date>` on commit, then store the bare date string.
+ * Form-mode wrapper that exposes a single-date picker as a form field. Unlike
+ * {@link DateFilterChip}, there's no operator switching — the field is just a calendar-aware
+ * date input.
+ *
+ * Opens as a modal **dialog** (not a popover) so it can't be clipped by sticky headers, sidebar
+ * cards, or RTL viewport edges. Use the popover variant only for the data-table filter chip,
+ * where anchor-mounting is the right call.
  */
 export function DateField({
     label,
@@ -47,7 +50,22 @@ export function DateField({
     return (
         <div className="space-y-1">
             {label !== undefined && <span className="block font-medium text-foreground text-sm">{label}</span>}
-            <DatePickerPopover
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setOpen(true)}
+                className={cn(
+                    "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-start text-sm outline-none transition-colors",
+                    "hover:border-ring/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                    "disabled:pointer-events-none disabled:opacity-50",
+                )}
+            >
+                <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
+                <span className={cn(value === null && "text-muted-foreground/70")}>
+                    {value === null ? (placeholder ?? t("pickADate")) : formatValueOnly(wrapped!, { locale })}
+                </span>
+            </button>
+            <DatePickerDialog
                 open={open}
                 onOpenChange={setOpen}
                 value={wrapped}
@@ -64,23 +82,6 @@ export function DateField({
                 allowedGranularities={["day", "month", "year"]}
                 defaultGranularity="day"
                 fieldLabel={label}
-                renderTrigger={(triggerProps) => (
-                    <button
-                        type="button"
-                        disabled={disabled}
-                        {...triggerProps}
-                        className={cn(
-                            "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-start text-sm outline-none transition-colors",
-                            "hover:border-ring/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40",
-                            "disabled:pointer-events-none disabled:opacity-50",
-                        )}
-                    >
-                        <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
-                        <span className={cn(value === null && "text-muted-foreground/70")}>
-                            {value === null ? (placeholder ?? t("pickADate")) : formatValueOnly(wrapped!, { locale })}
-                        </span>
-                    </button>
-                )}
             />
             {description !== undefined && <p className="text-muted-foreground text-xs">{description}</p>}
         </div>
