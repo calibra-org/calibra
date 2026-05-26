@@ -123,9 +123,11 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
                     )}
                 </motion.div>
 
-                <div className="flex flex-col gap-3">
+                <div className="flex h-[500px] flex-col gap-3">
                     <MapLegend scale={scale} metric={metric} locale={locale} />
-                    <TopProvinceList data={data} metric={metric} locale={locale} onSelect={onSelect} />
+                    <div className="flex min-h-0 flex-1 flex-col">
+                        <TopProvinceList data={data} metric={metric} locale={locale} onSelect={onSelect} />
+                    </div>
                 </div>
             </div>
 
@@ -166,8 +168,8 @@ function TopProvinceList({
         metric === "revenue" ? Math.max(...rows.map((r) => r.revenueMinor), 1) : Math.max(...rows.map((r) => r.ordersCount), 1);
 
     return (
-        <div className="rounded-lg border bg-card">
-            <ScrollArea className="h-80">
+        <div className="flex h-full flex-1 flex-col overflow-hidden rounded-lg border bg-card">
+            <ScrollArea className="flex-1">
                 <motion.ul className="flex flex-col gap-2 p-3" variants={listVariants} initial="hidden" animate="show">
                     {rows.map((row) => {
                         const value = metric === "revenue" ? row.revenueMinor : row.ordersCount;
