@@ -69,7 +69,41 @@
         "yesterday": "Yesterday",
         "thisWeek": "This week",
         "comparison": "vs previous period",
-        "showing": "Showing {from} to {to} of {total}"
+        "showing": "Showing {from} to {to} of {total}",
+        "moreInfo": "More info",
+        "dismiss": "Dismiss",
+        "learnMore": "Learn more",
+        "select": "Select…",
+        "remove": "Remove",
+        "clearAll": "Clear all",
+        "create": "Create \"{name}\"",
+        "money": {
+            "tomanShort": "Toman",
+            "rialShort": "Rial"
+        },
+        "dateRange": {
+            "today": "Today",
+            "yesterday": "Yesterday",
+            "last7": "Last 7 days",
+            "last30": "Last 30 days",
+            "thisMonth": "This month",
+            "lastMonth": "Last month"
+        },
+        "shortcuts": {
+            "title": "Shortcuts",
+            "search": "Focus search",
+            "new": "New product",
+            "refresh": "Refresh",
+            "edit": "Edit",
+            "quickEdit": "Quick edit",
+            "duplicate": "Duplicate",
+            "trash": "Move to trash",
+            "deletePermanently": "Delete permanently",
+            "selectAll": "Select all",
+            "clearSelection": "Clear selection",
+            "open": "Open",
+            "navigation": "Navigate rows"
+        }
     },
     "Login": {
         "title": "Sign in to the admin",

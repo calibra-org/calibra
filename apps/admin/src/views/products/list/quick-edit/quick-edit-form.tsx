@@ -12,6 +12,7 @@ import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { MoneyInput } from "#/components/ui/money-input";
 import { NumberField } from "#/components/ui/number-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Switch } from "#/components/ui/switch";
@@ -442,14 +443,18 @@ interface CurrencyInputProps {
     nullable?: boolean;
 }
 
-/** Input with a `Toman` suffix chip. Empty value coerces to either 0 (required) or null. */
+/**
+ * Toman-major input. Schema is already in Toman; convert to/from minor at the edge so the
+ * shared MoneyInput stays the single source of truth for the Toman ↔ Rial conversion.
+ */
 function CurrencyInput({ id, value, onChange, nullable }: CurrencyInputProps) {
     const t = useTranslations("Products.list.quickEdit");
+    const valueMinor = value === null || value === undefined ? null : Math.round(value * 10);
     return (
-        <NumberField
+        <MoneyInput
             id={id}
-            value={value}
-            onValueChange={onChange}
+            valueMinor={valueMinor}
+            onChangeMinor={(next) => onChange(next === null ? null : next / 10)}
             nullable={nullable}
             min={0}
             step={1000}

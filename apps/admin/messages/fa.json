@@ -69,7 +69,41 @@
         "yesterday": "دیروز",
         "thisWeek": "این هفته",
         "comparison": "نسبت به دوره قبل",
-        "showing": "نمایش {from} تا {to} از {total}"
+        "showing": "نمایش {from} تا {to} از {total}",
+        "moreInfo": "اطلاعات بیشتر",
+        "dismiss": "بستن",
+        "learnMore": "بیشتر بدانید",
+        "select": "انتخاب کنید",
+        "remove": "حذف",
+        "clearAll": "پاک کردن همه",
+        "create": "ساخت «{name}»",
+        "money": {
+            "tomanShort": "تومان",
+            "rialShort": "ریال"
+        },
+        "dateRange": {
+            "today": "امروز",
+            "yesterday": "دیروز",
+            "last7": "۷ روز گذشته",
+            "last30": "۳۰ روز گذشته",
+            "thisMonth": "این ماه",
+            "lastMonth": "ماه گذشته"
+        },
+        "shortcuts": {
+            "title": "میانبرها",
+            "search": "تمرکز روی جستجو",
+            "new": "محصول جدید",
+            "refresh": "بازخوانی",
+            "edit": "ویرایش",
+            "quickEdit": "ویرایش سریع",
+            "duplicate": "تکثیر",
+            "trash": "انتقال به زباله‌دان",
+            "deletePermanently": "حذف کامل",
+            "selectAll": "انتخاب همه",
+            "clearSelection": "لغو انتخاب",
+            "open": "باز کردن",
+            "navigation": "ناوبری"
+        }
     },
     "Login": {
         "title": "ورود به پنل مدیریت",
