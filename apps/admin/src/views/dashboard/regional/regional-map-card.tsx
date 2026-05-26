@@ -37,22 +37,20 @@ export function RegionalMapCard() {
 
     return (
         <Card>
-            <CardHeader className="flex flex-col gap-4 border-b pb-4">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 space-y-0 border-b pb-4">
                 <div>
                     <CardTitle className="text-base">{t("title")}</CardTitle>
                     <CardDescription>{t("subtitle")}</CardDescription>
                 </div>
-                <div className="flex w-full justify-end">
-                    <RegionalMapHeader
-                        metric={metric}
-                        onMetricChange={setMetric}
-                        dateFilter={dateFilter}
-                        onDateFilterChange={setDateFilter}
-                        topX={topX}
-                        onTopXChange={setTopX}
-                        locale={locale}
-                    />
-                </div>
+                <RegionalMapHeader
+                    metric={metric}
+                    onMetricChange={setMetric}
+                    dateFilter={dateFilter}
+                    onDateFilterChange={setDateFilter}
+                    topX={topX}
+                    onTopXChange={setTopX}
+                    locale={locale}
+                />
             </CardHeader>
             <CardContent className="pt-5">
                 <LayoutGroup id="regional-map">
