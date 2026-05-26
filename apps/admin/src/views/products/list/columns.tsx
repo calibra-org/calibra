@@ -11,6 +11,7 @@ import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "#/components/ui/hover-card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "#/components/ui/tooltip";
 import { formatDate, formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
 import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
@@ -466,13 +467,23 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
                 <span className="font-medium">{label}</span>
             </span>
             {isLow && (
-                <span
-                    className="inline-flex h-5 items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 text-[11px] text-amber-700 leading-none dark:text-amber-300"
-                    title={t("lowStock")}
-                >
-                    <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />
-                    <span className="font-medium">{t("lowStock")}</span>
-                </span>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={(props) => (
+                                <button
+                                    type="button"
+                                    aria-label={t("lowStock")}
+                                    {...props}
+                                    className="inline-flex size-5 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                >
+                                    <AlertTriangle className="size-3" aria-hidden="true" />
+                                </button>
+                            )}
+                        />
+                        <TooltipContent>{t("lowStock")}</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             )}
         </span>
     );
