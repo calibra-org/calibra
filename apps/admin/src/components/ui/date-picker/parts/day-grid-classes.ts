@@ -83,7 +83,12 @@ export const DAY_GRID_CLASS_NAMES = {
      * viewports where the body width exceeds the month grid.
      */
     months: "relative flex flex-row justify-center gap-4 pt-1",
-    month: "space-y-3 flex-1",
+    /**
+     * No `flex-1` — when there's a single month we want it to size to its content (~252 px)
+     * and let the parent's `justify-center` do the centring. `flex-1` would stretch the month
+     * to fill the row, defeating `justify-center` and pinning the grid to the start edge.
+     */
+    month: "space-y-3",
     month_caption: "flex h-8 items-center justify-center text-sm font-semibold",
     caption_label: "text-sm",
     nav: "contents",
