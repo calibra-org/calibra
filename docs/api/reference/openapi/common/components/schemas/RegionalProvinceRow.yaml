@@ -1,0 +1,45 @@
+title: RegionalProvinceRow
+description: >
+    One ISO-3166-2:IR province row inside the country-mode regional insights report. The
+    response always carries 31 rows (one per province) even when a province has zero orders in
+    the window — the heatmap's "zero" category depends on the distinction between absence and
+    low data.
+type: object
+required: [region_id, code, name, orders_count, revenue_minor, customers_count]
+properties:
+    region_id:
+        type: integer
+        description: Stable region id (primary key in the `regions` table).
+    code:
+        type: string
+        description: ISO-3166-2:IR province code (`IR-01`..`IR-31`).
+        examples: ["IR-24"]
+    name:
+        type: object
+        required: [fa, en]
+        description: Persian + English province name resolved from `region_translations`.
+        properties:
+            fa:
+                type: string
+                examples: ["تهران"]
+            en:
+                type: string
+                examples: ["Tehran"]
+    orders_count:
+        type: integer
+        minimum: 0
+        description: Count of `processing` + `completed` orders whose shipping address pointed at this province within the window.
+    revenue_minor:
+        type: string
+        pattern: "^-?\\d+$"
+        description: >
+            Gross revenue across the same orders, in Rial minor units, encoded as a numeric string
+            for BIGINT safety on the wire.
+        examples: ["9876543210"]
+    customers_count:
+        type: integer
+        minimum: 0
+        description: >
+            Count of distinct customers (logged-in `customer_id`) whose shipping address pointed
+            at this province within the window. Guest orders (`customer_id IS NULL`) are not
+            counted — the metric semantically means "registered users who bought".

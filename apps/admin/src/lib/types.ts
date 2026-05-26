@@ -591,3 +591,59 @@ export interface Paginated<T> {
     data: T[];
     meta: { page: number; perPage: number; total: number; lastPage: number };
 }
+
+/**
+ * Regional insights — one country-mode row per ISO-3166-2:IR province. `revenueMinor` is a
+ * `number` (Rial minor units); the wire format ships a numeric string for BIGINT safety and
+ * the adapter converts via `Number()`. Iran's gross dashboard revenue fits comfortably below
+ * `2^53` so the precision tradeoff is fine for the heatmap.
+ */
+export interface AdminRegionalProvinceRow {
+    regionId: number;
+    code: string;
+    name: LocalizedString;
+    ordersCount: number;
+    revenueMinor: MoneyMinor;
+    customersCount: number;
+}
+
+/** Country-mode envelope: 31 province rows plus a totals + range summary. */
+export interface AdminRegionalCountry {
+    rows: AdminRegionalProvinceRow[];
+    totals: { ordersCount: number; revenueMinor: MoneyMinor; customersCount: number };
+    range: { from: string; to: string };
+}
+
+/**
+ * One county (شهرستان) row inside a province-mode response. Counties are rolled up from the
+ * order-address city snapshot via sajaddp's city→county lookup so this list aligns 1:1 with
+ * the polygons drawn on the province SVG. `matched: false` rows carry raw snapshot text that
+ * didn't resolve to any sajaddp county — kept visible for data-hygiene visibility.
+ */
+export interface AdminRegionalCounty {
+    name: { fa: string; en: string | null };
+    ordersCount: number;
+    revenueMinor: MoneyMinor;
+    customersCount: number;
+    matched: boolean;
+}
+
+/** Province-mode envelope with totals, top products, and top counties. */
+export interface AdminRegionalProvinceDetail {
+    regionId: number;
+    code: string;
+    name: LocalizedString;
+    ordersCount: number;
+    revenueMinor: MoneyMinor;
+    customersCount: number;
+    topProducts: Array<{
+        productId: number;
+        name: string;
+        sku: string | null;
+        units: number;
+        revenueMinor: MoneyMinor;
+        imageUrl: string | null;
+    }>;
+    counties: AdminRegionalCounty[];
+    range: { from: string; to: string };
+}

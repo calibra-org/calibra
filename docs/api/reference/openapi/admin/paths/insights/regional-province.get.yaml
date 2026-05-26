@@ -1,0 +1,60 @@
+operationId: adminInsightsRegionalProvince
+summary: Province-mode regional insights detail (admin)
+description: >
+    Per-province roll-up for the admin dashboard's drill-down view. Returns the province totals,
+    the operator-tunable top-X products, and up to 12 top cities (matched against seeded city
+    regions via `normalizeIranText`). Cached for ~2 minutes; invalidated on order finalisation
+    against both `regional:provinces` and `regional:province:<code>` tags.
+tags: [Admin / Insights]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - name: code
+      in: path
+      required: true
+      description: ISO-3166-2:IR province code (`IR-01`..`IR-31`).
+      schema:
+          type: string
+          pattern: "^IR-(0[1-9]|[12][0-9]|3[01])$"
+    - name: from
+      in: query
+      required: false
+      schema:
+          type: string
+          format: date-time
+    - name: to
+      in: query
+      required: false
+      schema:
+          type: string
+          format: date-time
+    - name: top_products
+      in: query
+      required: false
+      description: Number of top products to include (1..10; default 5).
+      schema:
+          type: integer
+          minimum: 1
+          maximum: 10
+responses:
+    "200":
+        description: Province-mode insights detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            $ref: "../../../common/components/schemas/RegionalProvinceDetail.yaml"
+                        meta:
+                            type: object
+                            required: [range, locale]
+                            properties:
+                                range:
+                                    $ref: "../../../common/components/schemas/RegionalRange.yaml"
+                                locale:
+                                    type: string
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

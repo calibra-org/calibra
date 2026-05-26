@@ -245,6 +245,18 @@ paths:
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
 
+    /api/v1/admin/insights/regional/provinces:
+        get:
+            $ref: "./admin/paths/insights/regional-provinces.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+
+    /api/v1/admin/insights/regional/provinces/{code}:
+        get:
+            $ref: "./admin/paths/insights/regional-province.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+
     /api/v1/admin/customers:
         get:
             $ref: "./admin/paths/customers/customers.get.yaml"

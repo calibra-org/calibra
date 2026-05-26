@@ -1,0 +1,63 @@
+title: RegionalProvinceDetail
+description: >
+    Province-mode regional insights detail for a single ISO-3166-2:IR province. Carries the
+    province totals, the operator-tunable top-X products list, and the top counties (شهرستان)
+    ranked by order count. `counties` is capped at 20 entries (sorted desc by `orders_count`)
+    and rolled up from `order_addresses.city` snapshots via sajaddp's city→county lookup, so
+    sidebar rows align 1:1 with the polygons drawn on the province map.
+type: object
+required: [region_id, code, name, orders_count, revenue_minor, customers_count, top_products, counties]
+properties:
+    region_id:
+        type: integer
+    code:
+        type: string
+        examples: ["IR-24"]
+    name:
+        type: object
+        required: [fa, en]
+        properties:
+            fa:
+                type: string
+            en:
+                type: string
+    orders_count:
+        type: integer
+        minimum: 0
+    revenue_minor:
+        type: string
+        pattern: "^-?\\d+$"
+    customers_count:
+        type: integer
+        minimum: 0
+        description: Distinct registered customers who shipped to this province within the window.
+    top_products:
+        type: array
+        description: Top-X products by revenue inside the window. `X` is the `top_products` query param (1..10, default 5).
+        items:
+            type: object
+            required: [product_id, name, sku, units, revenue_minor, image_url]
+            properties:
+                product_id:
+                    type: integer
+                name:
+                    type: string
+                sku:
+                    type: [string, "null"]
+                units:
+                    type: integer
+                    minimum: 0
+                revenue_minor:
+                    type: string
+                    pattern: "^-?\\d+$"
+                image_url:
+                    type: [string, "null"]
+                    description: Primary product image URL (position 0). Null when the product has no images.
+    counties:
+        type: array
+        description: >
+            Every county (شهرستان) in the province (zero-order counties included), sorted
+            non-zero first then alphabetically. Unrecognised `order_addresses.city` snapshot
+            text is appended as `matched: false` rows so junk imports stay visible.
+        items:
+            $ref: "./RegionalCounty.yaml"
