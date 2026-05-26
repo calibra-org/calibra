@@ -34,5 +34,7 @@ export default class MainSeeder extends BaseSeeder {
         await bulk.run();
 
         await this.runSeeder(await import("#database/seed_modules/0006_coupons_demo_seeder"));
+
+        await this.runSeeder(await import("#database/seed_modules/0011_iran_cities_seeder"));
     }
 }
