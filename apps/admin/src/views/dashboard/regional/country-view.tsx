@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
+import { ScrollArea } from "#/components/ui/scroll-area";
 import { Skeleton } from "#/components/ui/skeleton";
 import { formatMoney, formatNumber } from "#/lib/format";
 import type { AdminRegionalCountry } from "#/lib/types";
@@ -154,41 +155,45 @@ function TopProvinceList({
     onSelect: (code: string) => void;
 }) {
     if (!data) return null;
-    const rows = [...data.rows]
-        .sort((a, b) => (metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount))
-        .slice(0, 8);
+    const rows = [...data.rows].sort((a, b) =>
+        metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
+    );
     const max =
         metric === "revenue" ? Math.max(...rows.map((r) => r.revenueMinor), 1) : Math.max(...rows.map((r) => r.ordersCount), 1);
 
     return (
-        <motion.ul
-            className="flex flex-col gap-2 rounded-lg border bg-card p-3"
-            variants={listVariants}
-            initial="hidden"
-            animate="show"
-        >
-            {rows.map((row) => {
-                const value = metric === "revenue" ? row.revenueMinor : row.ordersCount;
-                const percent = (value / max) * 100;
-                const formatted =
-                    metric === "revenue" ? formatMoney(row.revenueMinor, locale) : formatNumber(row.ordersCount, locale);
-                return (
-                    <motion.li
-                        key={row.code}
-                        variants={itemVariants}
-                        className="flex cursor-pointer flex-col gap-1 rounded p-1.5 transition-colors hover:bg-accent"
-                        onClick={() => onSelect(row.code)}
-                    >
-                        <div className="flex items-center justify-between gap-2 text-xs">
-                            <span className="truncate font-medium">{row.name[locale]}</span>
-                            <span className="shrink-0 tabular-nums">{formatted}</span>
-                        </div>
-                        <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                            <div className="h-full bg-primary" style={{ width: `${percent}%` }} />
-                        </div>
-                    </motion.li>
-                );
-            })}
-        </motion.ul>
+        <div className="rounded-lg border bg-card">
+            <ScrollArea className="h-80">
+                <motion.ul
+                    className="flex flex-col gap-2 p-3"
+                    variants={listVariants}
+                    initial="hidden"
+                    animate="show"
+                >
+                    {rows.map((row) => {
+                        const value = metric === "revenue" ? row.revenueMinor : row.ordersCount;
+                        const percent = (value / max) * 100;
+                        const formatted =
+                            metric === "revenue" ? formatMoney(row.revenueMinor, locale) : formatNumber(row.ordersCount, locale);
+                        return (
+                            <motion.li
+                                key={row.code}
+                                variants={itemVariants}
+                                className="flex cursor-pointer flex-col gap-1 rounded p-1.5 transition-colors hover:bg-accent"
+                                onClick={() => onSelect(row.code)}
+                            >
+                                <div className="flex items-center justify-between gap-2 text-xs">
+                                    <span className="truncate font-medium">{row.name[locale]}</span>
+                                    <span className="shrink-0 tabular-nums">{formatted}</span>
+                                </div>
+                                <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                                    <div className="h-full bg-primary" style={{ width: `${percent}%` }} />
+                                </div>
+                            </motion.li>
+                        );
+                    })}
+                </motion.ul>
+            </ScrollArea>
+        </div>
     );
 }
