@@ -231,7 +231,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
             <span
                 className={cn(
                     "rounded border border-border px-1.5 py-0.5 text-muted-foreground text-xs",
-                    type === "variable" && "border-violet-500/40 text-violet-600 dark:text-violet-300",
+                    type === "variable" && "border-info/40 text-info",
                 )}
             >
                 {tType(type)}

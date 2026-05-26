@@ -129,6 +129,23 @@ export function emptyProductDetailValues(): ProductDetailFormValues {
 }
 
 /**
+ * Drops NaN / non-finite / duplicate ids. The adapter coerces every id through `Number(...)` so
+ * a missing field surfaces as `NaN`; we filter at the form boundary so React renders never see
+ * duplicate `NaN` keys and async resolvers don't loop on ids that can never be resolved.
+ */
+function sanitizeIds(values: number[]): number[] {
+    const seen = new Set<number>();
+    const out: number[] = [];
+    for (const value of values) {
+        if (!Number.isFinite(value)) continue;
+        if (seen.has(value)) continue;
+        seen.add(value);
+        out.push(value);
+    }
+    return out;
+}
+
+/**
  * Maps the loaded server-side product into form values. Picks the `fa` translation when present,
  * falls back to the first available row, then to empty strings. Rial-minor prices become Toman
  * major via /10.
@@ -166,13 +183,13 @@ export function productToFormValues(p: AdminProductDetailView): ProductDetailFor
         shortDescription: t?.shortDescription ?? null,
         purchaseNote: t?.purchaseNote ?? null,
         externalButtonText: t?.externalButtonText ?? null,
-        categoryIds: p.categoryIds,
-        tagIds: p.tagIds,
-        brandId: p.brandId,
-        imageMediaIds: p.images.map((img) => img.mediaId),
-        upsellIds: p.upsellIds,
-        crossSellIds: p.crossSellIds,
-        groupedMemberIds: p.groupedMemberIds,
+        categoryIds: sanitizeIds(p.categoryIds),
+        tagIds: sanitizeIds(p.tagIds),
+        brandId: p.brandId !== null && Number.isFinite(p.brandId) ? p.brandId : null,
+        imageMediaIds: sanitizeIds(p.images.map((img) => img.mediaId)),
+        upsellIds: sanitizeIds(p.upsellIds),
+        crossSellIds: sanitizeIds(p.crossSellIds),
+        groupedMemberIds: sanitizeIds(p.groupedMemberIds),
         downloads: p.downloads.map((d) => ({
             id: d.id,
             mediaId: d.mediaId,

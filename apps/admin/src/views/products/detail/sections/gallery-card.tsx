@@ -42,7 +42,12 @@ export function GalleryBody() {
     const [pickerOpen, setPickerOpen] = useState(false);
 
     const ids = watch("imageMediaIds");
-    const galleryIds = ids.slice(1);
+    /**
+     * Defensive filter: the schema's `sanitizeIds` already drops NaN at the form boundary, but
+     * the picker can hand back ids that are temporarily missing from the URL map; never let a
+     * `NaN` leak into a React `key` (it produces duplicate-key warnings on first paint).
+     */
+    const galleryIds = ids.slice(1).filter((id) => Number.isFinite(id));
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -173,7 +178,7 @@ function GalleryThumb({ id, url, alt, onRemove, onPromote, labels }: GalleryThum
                         onPromote();
                     }}
                     onPointerDown={(event) => event.stopPropagation()}
-                    className="grid size-5 place-items-center rounded bg-background/85 text-foreground/80 backdrop-blur hover:bg-background hover:text-amber-500"
+                    className="grid size-5 place-items-center rounded bg-background/85 text-foreground/80 backdrop-blur hover:bg-background hover:text-warning"
                 >
                     <Star className="size-3" aria-hidden="true" />
                 </button>
