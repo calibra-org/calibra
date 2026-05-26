@@ -8,6 +8,8 @@ import "react-day-picker/style.css";
 import { getDateLib, valueStringToDate } from "../date-lib";
 import type { Calendar, Operator } from "../types";
 
+import { DAY_GRID_CLASS_NAMES, DAY_GRID_MODIFIER_CLASS_NAMES } from "./day-grid-classes";
+
 /**
  * RDP chevron slot. Lives outside the parent so the lint rule against nested component
  * definitions stays happy and so React can stabilise the slot reference across renders.
@@ -119,28 +121,11 @@ export function DayGrid({
     );
 
     /**
-     * RDP applies modifier classes to the `<td>` cell, not the inner `<button>`. Linear's design
-     * wants the today ring and the selected fill to wrap the day number as a circle — that means
-     * styling the button, not the cell. We use Tailwind's `[&_button]:` descendant selector so
-     * each modifier class on the cell paints the button instead.
-     *
-     * The today indicator uses `border-2` (not `ring-inset`) so the visible circle hugs the same
-     * outer edge as the selected fill — `ring-inset` paints inside the box and visibly shrinks
-     * the circle, which reads as off-centre next to the selected day in the same row.
+     * Class orchestration lives in `day-grid-classes.ts` with paired unit tests so the
+     * modifier-overlap invariants (today + selected, previewRange + anchor, etc.) are encoded
+     * once and don't drift the next time someone tweaks the visual.
      */
-    const modifiersClassNames = useMemo(
-        () => ({
-            /** Hover-preview band paints the cell directly (matching range_middle's geometry)
-             * at half opacity so the in-progress range reads as a translucent extension of
-             * the anchor circle. */
-            previewRange:
-                "before:absolute before:inset-y-0.5 before:inset-x-0 before:bg-primary/40 [&_button]:!border-0 [&_button]:!bg-transparent [&_button]:!text-primary-foreground",
-            today: "[&_button]:border [&_button]:border-foreground/40",
-            /** Anchor (within-mode first click) reads as a filled circle, today-border off. */
-            anchor: "[&_button]:!border-0 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
-        }),
-        [],
-    );
+    const modifiersClassNames = useMemo(() => ({ ...DAY_GRID_MODIFIER_CLASS_NAMES }), []);
 
     /**
      * The DayPicker discriminated-union types refuse to narrow when `mode` is computed at render
@@ -178,75 +163,7 @@ export function DayGrid({
              */
             showOutsideDays={false}
             components={{ Chevron: PickerChevron }}
-            classNames={{
-                root: "p-2 text-foreground",
-                /**
-                 * `relative` on `months` is the positioning anchor for the absolutely-placed
-                 * nav buttons. Without it the buttons fall through to the Dialog's `fixed`
-                 * popup and end up colliding with the field-label / operator-chips header.
-                 */
-                months: "relative flex flex-col sm:flex-row gap-4 pt-1",
-                month: "space-y-3 flex-1",
-                month_caption: "flex h-8 items-center justify-center text-sm font-semibold",
-                caption_label: "text-sm",
-                nav: "contents",
-                button_previous:
-                    "absolute start-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                button_next:
-                    "absolute end-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                /**
-                 * `border-collapse` + `border-spacing-0` kill the default `<table>` cell gaps
-                 * (RDP's bundled stylesheet still leaves a hair-line spacing that breaks the
-                 * continuous range band when adjacent cells should join into a single strip).
-                 */
-                month_grid: "border-collapse border-spacing-0",
-                weekday: "text-muted-foreground text-xs font-normal pb-1 text-center",
-                /**
-                 * Day cell: zero padding so the `<td>` background — which paints the range
-                 * band — extends edge-to-edge and connects seamlessly with the next day in
-                 * the row. `relative` is the positioning context for the `before:` pseudo
-                 * that paints the half-cell band on range start / end cells.
-                 */
-                day: "relative h-9 w-9 p-0 align-middle text-center",
-                /**
-                 * Day-number button: `size-8` (32 px) sits inside the 36 px cell with a 2 px
-                 * gutter on every side, so the today border + selected fill never touch the
-                 * numerals in adjacent cells. `relative z-10` keeps the button above the
-                 * `before:` pseudo that paints the range half-band on start / end cells.
-                 */
-                day_button:
-                    "relative z-10 mx-auto inline-flex size-8 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
-                outside: "text-muted-foreground/30",
-                /**
-                 * Selected / start / end / middle all suppress the today border (`!border-0`)
-                 * — otherwise the today ring fires alongside the range modifier and outlines
-                 * the inner circle, which makes the circle read as a separate shape from the
-                 * band cap behind it. With the border off the circle and the cap blend into
-                 * one continuous pill.
-                 */
-                selected:
-                    "[&_button]:!border-0 [&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
-                /**
-                 * Range visualization (Linear-style):
-                 * - middle days paint their full `<td>` band with `bg-primary` so adjacent
-                 *   cells join into one continuous strip; the day number stays on
-                 *   `text-primary-foreground` so it passes WCAG AA on the band;
-                 * - start / end cells paint HALF of the cell via a `before:` pseudo, so the
-                 *   band visually starts at the selected circle's centre rather than the cell
-                 *   edge. `start-1/2` + `end-0` (logical Tailwind) auto-flips in RTL.
-                 * `inset-y-0.5` gives the band 32 px so its height matches the `size-8` button
-                 * exactly — same diameter means the `rounded-s-full` / `rounded-e-full` cap
-                 * traces the same circle as the start / end button, and the cap + circle read
-                 * as one continuous pill.
-                 */
-                range_start:
-                    "before:absolute before:inset-y-0.5 before:end-0 before:start-1/2 before:rounded-s-full before:bg-primary [&_button]:!border-0 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
-                range_end:
-                    "before:absolute before:inset-y-0.5 before:start-0 before:end-1/2 before:rounded-e-full before:bg-primary [&_button]:!border-0 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
-                range_middle:
-                    "before:absolute before:inset-y-0.5 before:inset-x-0 before:bg-primary [&_button]:!border-0 [&_button]:!bg-transparent [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
-                disabled: "text-muted-foreground/30 cursor-not-allowed before:!hidden [&_button]:!bg-transparent",
-            }}
+            classNames={{ ...DAY_GRID_CLASS_NAMES }}
         />
     );
 }
