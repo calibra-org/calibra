@@ -101,7 +101,7 @@ function useStickyEdgeShadows(scrollRef: RefObject<HTMLDivElement | null>) {
             el.toggleAttribute("data-x-scroll-start", hasStart);
             el.toggleAttribute("data-x-scroll-end", hasEnd);
             /**
-             * Viewport-width CSS var consumed by {@link VIEWPORT_CELL_CONTENT}. "Viewport-wide"
+             * Viewport-width CSS var consumed by {@link VIEWPORT_CELL_CONTENT_CLASS}. "Viewport-wide"
              * cells (Quick Edit sub-row, empty state, error banner, skeleton) live inside a
              * `<td colSpan={all}>` that stretches across the full scrollable table. The inner
              * wrapper uses this var as its explicit `width` + `position: sticky` to stay pinned
@@ -139,17 +139,19 @@ function useStickyEdgeShadows(scrollRef: RefObject<HTMLDivElement | null>) {
 }
 
 /**
- * Inner-cell wrapper class for "viewport-wide" content (Quick Edit sub-row, empty state, error
+ * Inner-cell wrapper for "viewport-wide" content (Quick Edit sub-row, empty state, error
  * banner, loading skeleton). The cell itself spans every column via `colSpan`, so its width is
  * the full scrollable table width. This inner wrapper pins to the inline-start edge of the
  * scroll container via `position: sticky` and reads `--dt-viewport-width` (written by
  * {@link useStickyEdgeShadows}) so the rendered content stays exactly the size of the visible
  * viewport — no horizontal scroll required to reach the buttons inside.
  *
- * The cell is the single source of viewport-aware layout; consumers don't have to know about
- * the CSS var.
+ * `width` is applied as an inline style (not a Tailwind arbitrary-value class) so the comma in
+ * the `var()` fallback doesn't trip up Tailwind's class-extractor. RTL flips for free because
+ * `start-0` maps to `inset-inline-start: 0`.
  */
-const VIEWPORT_CELL_CONTENT = "sticky inset-inline-start-0 w-[var(--dt-viewport-width,100%)]";
+const VIEWPORT_CELL_CONTENT_CLASS = "sticky start-0";
+const VIEWPORT_CELL_CONTENT_STYLE: CSSProperties = { width: "var(--dt-viewport-width, 100%)" };
 
 export interface DataTableProps<TData> {
     data: TData[];
@@ -585,9 +587,10 @@ export function DataTable<TData>({
                                                 >
                                                     <div
                                                         className={cn(
-                                                            VIEWPORT_CELL_CONTENT,
+                                                            VIEWPORT_CELL_CONTENT_CLASS,
                                                             "flex items-center gap-3 px-4 py-3 text-destructive",
                                                         )}
+                                                        style={VIEWPORT_CELL_CONTENT_STYLE}
                                                     >
                                                         <AlertTriangle className="size-4" aria-hidden="true" />
                                                         <span className="text-sm">{labels.errorTitle}</span>
@@ -607,7 +610,10 @@ export function DataTable<TData>({
                                                     colSpan={table.getVisibleLeafColumns().length}
                                                     className="p-0 [&]:px-0 [&]:py-0"
                                                 >
-                                                    <div className={VIEWPORT_CELL_CONTENT}>
+                                                    <div
+                                                        className={VIEWPORT_CELL_CONTENT_CLASS}
+                                                        style={VIEWPORT_CELL_CONTENT_STYLE}
+                                                    >
                                                         <DataTableSkeleton
                                                             columnWidths={
                                                                 skeletonColumnWidths ?? table.getVisibleLeafColumns().map(() => 1)
@@ -623,7 +629,10 @@ export function DataTable<TData>({
                                                     colSpan={table.getVisibleLeafColumns().length}
                                                     className="p-0 [&]:px-0 [&]:py-0"
                                                 >
-                                                    <div className={VIEWPORT_CELL_CONTENT}>
+                                                    <div
+                                                        className={VIEWPORT_CELL_CONTENT_CLASS}
+                                                        style={VIEWPORT_CELL_CONTENT_STYLE}
+                                                    >
                                                         <DataTableEmpty
                                                             variant={hasActiveFilters === true ? "filtered" : "empty"}
                                                             title={
@@ -833,7 +842,9 @@ function DataTableBodyRow<TData>({
         return (
             <TableRow className="border-border border-y bg-muted/40">
                 <TableCell colSpan={visibleCellCount} className="p-0">
-                    <div className={VIEWPORT_CELL_CONTENT}>{rowOverride}</div>
+                    <div className={VIEWPORT_CELL_CONTENT_CLASS} style={VIEWPORT_CELL_CONTENT_STYLE}>
+                        {rowOverride}
+                    </div>
                 </TableCell>
             </TableRow>
         );
@@ -842,7 +853,7 @@ function DataTableBodyRow<TData>({
     /**
      * Quick Edit takes over the entire row WordPress-style — when expanded, the row's regular
      * cells are replaced by a single full-width cell hosting the editor. The inner wrapper
-     * applies {@link VIEWPORT_CELL_CONTENT} so the form pins to the visible viewport width
+     * applies {@link VIEWPORT_CELL_CONTENT_CLASS} so the form pins to the visible viewport width
      * instead of stretching across the full scrollable table — every field + button reachable
      * without horizontal scroll.
      */
@@ -850,7 +861,9 @@ function DataTableBodyRow<TData>({
         return (
             <TableRow className="border-primary/30 border-y bg-muted/30">
                 <TableCell colSpan={visibleCellCount} className="p-0">
-                    <div className={VIEWPORT_CELL_CONTENT}>{renderSubComponent(row)}</div>
+                    <div className={VIEWPORT_CELL_CONTENT_CLASS} style={VIEWPORT_CELL_CONTENT_STYLE}>
+                        {renderSubComponent(row)}
+                    </div>
                 </TableCell>
             </TableRow>
         );
