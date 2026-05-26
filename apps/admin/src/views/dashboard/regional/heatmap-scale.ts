@@ -23,25 +23,9 @@ export type HeatmapMetric = "orders" | "revenue";
 
 export const ZERO_COLOR = "#94a3b8";
 
-const EMERALD: readonly string[] = [
-    "#6ee7b7",
-    "#34d399",
-    "#10b981",
-    "#059669",
-    "#047857",
-    "#065f46",
-    "#064e3b",
-];
+const EMERALD: readonly string[] = ["#6ee7b7", "#34d399", "#10b981", "#059669", "#047857", "#065f46", "#064e3b"];
 
-const ROSE: readonly string[] = [
-    "#fda4af",
-    "#fb7185",
-    "#f43f5e",
-    "#e11d48",
-    "#be123c",
-    "#9f1239",
-    "#881337",
-];
+const ROSE: readonly string[] = ["#fda4af", "#fb7185", "#f43f5e", "#e11d48", "#be123c", "#9f1239", "#881337"];
 
 const PALETTES: Record<HeatmapMetric, readonly string[]> = {
     orders: EMERALD,
