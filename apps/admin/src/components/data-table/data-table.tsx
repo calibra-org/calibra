@@ -101,6 +101,15 @@ function useStickyEdgeShadows(scrollRef: RefObject<HTMLDivElement | null>) {
             el.toggleAttribute("data-x-scroll-start", hasStart);
             el.toggleAttribute("data-x-scroll-end", hasEnd);
             /**
+             * Viewport-width CSS var consumed by {@link VIEWPORT_CELL_CONTENT}. "Viewport-wide"
+             * cells (Quick Edit sub-row, empty state, error banner, skeleton) live inside a
+             * `<td colSpan={all}>` that stretches across the full scrollable table. The inner
+             * wrapper uses this var as its explicit `width` + `position: sticky` to stay pinned
+             * inside the visible viewport regardless of horizontal scroll — so Quick Edit's
+             * buttons never fall off-screen behind the scroll band.
+             */
+            el.style.setProperty("--dt-viewport-width", `${el.clientWidth}px`);
+            /**
              * Paint `data-sticky-edge` on every sticky cell — the CSS shadow selector also requires
              * `data-sticky-edge-position='edge'`, so interior pinned cells stay flat. Setting the
              * attribute even on interior cells (when their cluster has scroll behind it) is fine —
@@ -128,6 +137,19 @@ function useStickyEdgeShadows(scrollRef: RefObject<HTMLDivElement | null>) {
         };
     }, [scrollRef]);
 }
+
+/**
+ * Inner-cell wrapper class for "viewport-wide" content (Quick Edit sub-row, empty state, error
+ * banner, loading skeleton). The cell itself spans every column via `colSpan`, so its width is
+ * the full scrollable table width. This inner wrapper pins to the inline-start edge of the
+ * scroll container via `position: sticky` and reads `--dt-viewport-width` (written by
+ * {@link useStickyEdgeShadows}) so the rendered content stays exactly the size of the visible
+ * viewport — no horizontal scroll required to reach the buttons inside.
+ *
+ * The cell is the single source of viewport-aware layout; consumers don't have to know about
+ * the CSS var.
+ */
+const VIEWPORT_CELL_CONTENT = "sticky inset-inline-start-0 w-[var(--dt-viewport-width,100%)]";
 
 export interface DataTableProps<TData> {
     data: TData[];
@@ -559,9 +581,14 @@ export function DataTable<TData>({
                                             <TableRow>
                                                 <TableCell
                                                     colSpan={table.getVisibleLeafColumns().length}
-                                                    className="bg-destructive/5 px-4 py-3"
+                                                    className="bg-destructive/5 p-0 [&]:px-0 [&]:py-0"
                                                 >
-                                                    <div className="flex items-center gap-3 text-destructive">
+                                                    <div
+                                                        className={cn(
+                                                            VIEWPORT_CELL_CONTENT,
+                                                            "flex items-center gap-3 px-4 py-3 text-destructive",
+                                                        )}
+                                                    >
                                                         <AlertTriangle className="size-4" aria-hidden="true" />
                                                         <span className="text-sm">{labels.errorTitle}</span>
                                                         {onRetry !== undefined && (
@@ -580,12 +607,14 @@ export function DataTable<TData>({
                                                     colSpan={table.getVisibleLeafColumns().length}
                                                     className="p-0 [&]:px-0 [&]:py-0"
                                                 >
-                                                    <DataTableSkeleton
-                                                        columnWidths={
-                                                            skeletonColumnWidths ?? table.getVisibleLeafColumns().map(() => 1)
-                                                        }
-                                                        rowHeightClass={rowHeightClass}
-                                                    />
+                                                    <div className={VIEWPORT_CELL_CONTENT}>
+                                                        <DataTableSkeleton
+                                                            columnWidths={
+                                                                skeletonColumnWidths ?? table.getVisibleLeafColumns().map(() => 1)
+                                                            }
+                                                            rowHeightClass={rowHeightClass}
+                                                        />
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ) : visibleRows.length === 0 ? (
@@ -594,25 +623,29 @@ export function DataTable<TData>({
                                                     colSpan={table.getVisibleLeafColumns().length}
                                                     className="p-0 [&]:px-0 [&]:py-0"
                                                 >
-                                                    <DataTableEmpty
-                                                        variant={hasActiveFilters === true ? "filtered" : "empty"}
-                                                        title={
-                                                            hasActiveFilters === true ? labels.filtered.title : labels.empty.title
-                                                        }
-                                                        description={
-                                                            hasActiveFilters === true
-                                                                ? labels.filtered.description
-                                                                : labels.empty.description
-                                                        }
-                                                        secondaryAction={
-                                                            hasActiveFilters === true && onClearFilters !== undefined
-                                                                ? {
-                                                                      label: labels.clearFiltersLabel ?? "Clear",
-                                                                      onClick: onClearFilters,
-                                                                  }
-                                                                : undefined
-                                                        }
-                                                    />
+                                                    <div className={VIEWPORT_CELL_CONTENT}>
+                                                        <DataTableEmpty
+                                                            variant={hasActiveFilters === true ? "filtered" : "empty"}
+                                                            title={
+                                                                hasActiveFilters === true
+                                                                    ? labels.filtered.title
+                                                                    : labels.empty.title
+                                                            }
+                                                            description={
+                                                                hasActiveFilters === true
+                                                                    ? labels.filtered.description
+                                                                    : labels.empty.description
+                                                            }
+                                                            secondaryAction={
+                                                                hasActiveFilters === true && onClearFilters !== undefined
+                                                                    ? {
+                                                                          label: labels.clearFiltersLabel ?? "Clear",
+                                                                          onClick: onClearFilters,
+                                                                      }
+                                                                    : undefined
+                                                            }
+                                                        />
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
@@ -800,7 +833,7 @@ function DataTableBodyRow<TData>({
         return (
             <TableRow className="border-border border-y bg-muted/40">
                 <TableCell colSpan={visibleCellCount} className="p-0">
-                    {rowOverride}
+                    <div className={VIEWPORT_CELL_CONTENT}>{rowOverride}</div>
                 </TableCell>
             </TableRow>
         );
@@ -808,14 +841,16 @@ function DataTableBodyRow<TData>({
 
     /**
      * Quick Edit takes over the entire row WordPress-style — when expanded, the row's regular
-     * cells are replaced by a single full-width cell hosting the editor. Saves us a stacked
-     * sub-row that competed with the original row for context.
+     * cells are replaced by a single full-width cell hosting the editor. The inner wrapper
+     * applies {@link VIEWPORT_CELL_CONTENT} so the form pins to the visible viewport width
+     * instead of stretching across the full scrollable table — every field + button reachable
+     * without horizontal scroll.
      */
     if (isExpanded && renderSubComponent !== undefined) {
         return (
             <TableRow className="border-primary/30 border-y bg-muted/30">
                 <TableCell colSpan={visibleCellCount} className="p-0">
-                    {renderSubComponent(row)}
+                    <div className={VIEWPORT_CELL_CONTENT}>{renderSubComponent(row)}</div>
                 </TableCell>
             </TableRow>
         );
