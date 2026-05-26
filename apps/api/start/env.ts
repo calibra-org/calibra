@@ -101,6 +101,18 @@ export default await Env.create(new URL("../", import.meta.url), {
     GLITCHTIP_DSN: Env.schema.string.optional(),
 
     /**
+     * Per-PSP webhook HMAC secrets. The `webhook_signature_middleware` reads these by the
+     * env-key name stored on the gateway row (`payment_gateways.webhook_secret_env_key`).
+     * Optional because most Iranian PSPs don't sign callbacks today; populated only when a
+     * gateway opts into HMAC verification by flipping `signed_callback = true`.
+     */
+    PAYMENT_WEBHOOK_SECRET_ZARINPAL: Env.schema.string.optional(),
+    PAYMENT_WEBHOOK_SECRET_IDPAY: Env.schema.string.optional(),
+    PAYMENT_WEBHOOK_SECRET_NEXTPAY: Env.schema.string.optional(),
+    PAYMENT_WEBHOOK_SECRET_PAYIR: Env.schema.string.optional(),
+    PAYMENT_WEBHOOK_SECRET_ZIBAL: Env.schema.string.optional(),
+
+    /**
      * Per-spin observability mode. When `true`, `config/logger.ts` adds a JSON-line
      * file target (`SPIN_API_LOG_PATH`) so Promtail can ship logs to Loki. When `false`
      * (production, tests, no-spin dev), only the default transport runs.

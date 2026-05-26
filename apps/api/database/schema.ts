@@ -1155,7 +1155,7 @@ export class PaymentAttemptSchema extends BaseModel {
 }
 
 export class PaymentGatewaySchema extends BaseModel {
-  static $columns = ['code', 'createdAt', 'enabled', 'id', 'ordering', 'settings', 'supports', 'updatedAt'] as const
+  static $columns = ['code', 'createdAt', 'enabled', 'id', 'ordering', 'settings', 'signedCallback', 'supports', 'updatedAt', 'webhookSecretEnvKey', 'webhookSignatureHeader'] as const
   $columns = PaymentGatewaySchema.$columns
   @column()
   declare code: string
@@ -1170,9 +1170,15 @@ export class PaymentGatewaySchema extends BaseModel {
   @column()
   declare settings: any
   @column()
+  declare signedCallback: boolean
+  @column()
   declare supports: any
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+  @column()
+  declare webhookSecretEnvKey: string | null
+  @column()
+  declare webhookSignatureHeader: string | null
 }
 
 export class PaymentLinkSchema extends BaseModel {
@@ -1208,6 +1214,35 @@ export class PaymentLinkSchema extends BaseModel {
   declare updatedAt: DateTime
   @column()
   declare usedCount: number
+}
+
+export class ProcessedWebhookEventSchema extends BaseModel {
+  static $columns = ['createdAt', 'eventId', 'eventKind', 'id', 'orderId', 'outcome', 'payloadHash', 'paymentAttemptId', 'processedAt', 'provider', 'receivedAt', 'updatedAt'] as const
+  $columns = ProcessedWebhookEventSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare eventId: string
+  @column()
+  declare eventKind: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare orderId: bigint | number | null
+  @column()
+  declare outcome: string
+  @column()
+  declare payloadHash: string
+  @column()
+  declare paymentAttemptId: bigint | number | null
+  @column.dateTime()
+  declare processedAt: DateTime | null
+  @column()
+  declare provider: string
+  @column.dateTime()
+  declare receivedAt: DateTime
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
 }
 
 export class ProductAttributeLinkTermSchema extends BaseModel {

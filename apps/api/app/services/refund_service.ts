@@ -1,10 +1,13 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import emitter from "@adonisjs/core/services/emitter";
+import lock from "@adonisjs/lock/services/main";
 import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
+import * as Sentry from "@sentry/node";
 import { DateTime } from "luxon";
 
 import { OrderStatus } from "#enums/order_status";
+import { ResourceConflictException } from "#exceptions/domain_exceptions";
 import Order from "#models/order";
 import OrderLineItem from "#models/order_line_item";
 import OrderNote from "#models/order_note";
@@ -59,7 +62,46 @@ export class RefundService {
             throw new Exception("Order not found", { status: 404, code: "E_NOT_FOUND" });
         }
 
-        const { refund, customerId } = await db.transaction(async (trx) => {
+        /**
+         * Order-scoped distributed lock. Serialises concurrent admin refunds AND any in-flight
+         * `payment_service.verifyCallback` on the same order. The DB-level `FOR UPDATE` row lock
+         * inside the transaction still applies (defence-in-depth); this lock gives a faster fail
+         * path with a 409 instead of blocking on a transaction queue.
+         */
+        const [acquired, value] = await lock
+            .createLock(`order:${numericOrderId}`, "30s")
+            .runImmediately(() => this.createInsideLock(numericOrderId, payload, opts));
+        if (!acquired) {
+            throw new ResourceConflictException("order is being processed concurrently", {
+                resource: "orders",
+                id: numericOrderId,
+                code: "E_CONCURRENT_PROCESSING",
+            });
+        }
+        const { refund, customerId } = value;
+
+        /** Fire after commit so listeners observe persisted state. */
+        await emitter.emit("order:refunded", {
+            orderId: Number(refund.orderId),
+            refundId: Number(refund.id),
+            amountMinor: Number(refund.amountMinor),
+            customerId,
+        });
+
+        return refund;
+    }
+
+    /**
+     * The inner half of `create`, run inside both the per-order `@adonisjs/lock` mutex and the
+     * Lucid transaction. Pulled out so the public `create` keeps the lock + post-commit emit
+     * shell readable.
+     */
+    private async createInsideLock(
+        numericOrderId: number,
+        payload: RefundInput,
+        opts: RefundCreateOptions,
+    ): Promise<{ refund: OrderRefund; customerId: number | null }> {
+        return db.transaction(async (trx) => {
             /** Row-lock the order — concurrent refunds on the same order serialize here. */
             const orderRow = await trx.from("orders").where("id", numericOrderId).forUpdate().first();
             if (!orderRow) {
@@ -171,16 +213,6 @@ export class RefundService {
                 customerId: order.customerId === null || order.customerId === undefined ? null : Number(order.customerId),
             };
         });
-
-        /** Fire after commit so listeners observe persisted state. */
-        await emitter.emit("order:refunded", {
-            orderId: Number(refund.orderId),
-            refundId: Number(refund.id),
-            amountMinor: Number(refund.amountMinor),
-            customerId,
-        });
-
-        return refund;
     }
 
     /**
@@ -331,6 +363,20 @@ export class RefundService {
                     ...((refund.attributes as Record<string, unknown>) ?? {}),
                     gateway_refund: { ok: false, error_code: result.error_code, error_message: result.error_message },
                 };
+                /**
+                 * PSP refund didn't throw but came back !ok. Booking still proceeds (manual
+                 * reconciliation later) so we surface the failure to error tracking — silent
+                 * `ok: false` rows pile up unnoticed otherwise.
+                 */
+                Sentry.captureMessage("refund_psp_returned_failure", {
+                    level: "warning",
+                    tags: {
+                        order_id: String(order.id),
+                        refund_id: String(refund.id),
+                        error_code: result.error_code ?? "unknown",
+                    },
+                    extra: { error_message: result.error_message },
+                });
             }
             await refund.save();
         } catch (error) {
@@ -340,6 +386,14 @@ export class RefundService {
                 gateway_refund: { ok: false, error_code: "exception", error_message: (error as Error).message ?? "unknown" },
             };
             await refund.save();
+            /**
+             * Caught here so the booking proceeds (and the refund row records the failure),
+             * which means the global exception handler never sees it. Explicit capture so the
+             * silent-failure path stays visible.
+             */
+            Sentry.captureException(error, {
+                tags: { order_id: String(order.id), refund_id: String(refund.id), phase: "gateway_refund" },
+            });
         }
     }
 

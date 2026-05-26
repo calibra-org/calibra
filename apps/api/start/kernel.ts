@@ -35,4 +35,5 @@ export const middleware = router.named({
     admin: () => import("#middleware/admin_middleware"),
     cart: () => import("#middleware/cart_middleware"),
     idempotency: () => import("#middleware/idempotency_middleware"),
+    webhookSignature: () => import("#middleware/webhook_signature_middleware"),
 });
