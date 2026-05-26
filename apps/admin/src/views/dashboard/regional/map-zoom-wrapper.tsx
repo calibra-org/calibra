@@ -45,14 +45,45 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const dragRef = useRef<DragState | null>(null);
 
-    const setBoundedZoom = useCallback((next: number) => {
+    /**
+     * Zoom from a specific cursor anchor (Figma / Google Maps semantics): the point under
+     * the cursor stays under the cursor before and after the zoom. Math (with `origin-top-left`
+     * on the inner container):
+     *
+     *   newPan = cursorContainer - (cursorContainer - pan) * (newZoom / oldZoom)
+     *
+     * `cursorContainer` is the cursor position relative to the wrapper's top-left.
+     */
+    const setZoomAt = useCallback((next: number, cursorContainerX: number, cursorContainerY: number) => {
         setZoom((current) => {
             const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
-            /** Snap pan back to centre when fully zoomed out — nothing left to pan to. */
-            if (clamped === 1) setPan({ x: 0, y: 0 });
+            if (clamped === current) return current;
+            if (clamped === 1) {
+                setPan({ x: 0, y: 0 });
+                return clamped;
+            }
+            const ratio = clamped / current;
+            setPan((prev) => ({
+                x: cursorContainerX - (cursorContainerX - prev.x) * ratio,
+                y: cursorContainerY - (cursorContainerY - prev.y) * ratio,
+            }));
             return clamped;
         });
     }, []);
+
+    /** Button-driven zoom anchors at the container centre (no cursor context). */
+    const setBoundedZoomFromCenter = useCallback(
+        (next: number) => {
+            const el = containerRef.current;
+            if (!el) {
+                setZoom((current) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next)));
+                return;
+            }
+            const rect = el.getBoundingClientRect();
+            setZoomAt(next, rect.width / 2, rect.height / 2);
+        },
+        [setZoomAt],
+    );
 
     const resetAll = useCallback(() => {
         setZoom(1);
@@ -90,11 +121,12 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
         const handler = (e: WheelEvent) => {
             e.preventDefault();
             const direction = e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
-            setBoundedZoom(zoom * direction);
+            const rect = el.getBoundingClientRect();
+            setZoomAt(zoom * direction, e.clientX - rect.left, e.clientY - rect.top);
         };
         el.addEventListener("wheel", handler, { passive: false });
         return () => el.removeEventListener("wheel", handler);
-    }, [zoom, setBoundedZoom]);
+    }, [zoom, setZoomAt]);
 
     const onPointerDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
@@ -151,7 +183,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
             onAuxClick={onAuxClick}
         >
             <div
-                className="origin-center transition-transform duration-150 ease-out"
+                className="origin-top-left transition-transform duration-150 ease-out"
                 style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
             >
                 {children}
@@ -164,7 +196,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
                     className="size-7"
                     aria-label="Zoom out"
                     title="Zoom out"
-                    onClick={() => setBoundedZoom(zoom / ZOOM_STEP)}
+                    onClick={() => setBoundedZoomFromCenter(zoom / ZOOM_STEP)}
                     disabled={zoom <= MIN_ZOOM + 0.001}
                 >
                     <Minus className="size-3.5" aria-hidden="true" />
@@ -187,7 +219,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
                     className="size-7"
                     aria-label="Zoom in"
                     title="Zoom in"
-                    onClick={() => setBoundedZoom(zoom * ZOOM_STEP)}
+                    onClick={() => setBoundedZoomFromCenter(zoom * ZOOM_STEP)}
                     disabled={zoom >= MAX_ZOOM - 0.001}
                 >
                     <Plus className="size-3.5" aria-hidden="true" />
