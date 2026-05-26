@@ -1,0 +1,16 @@
+operationId: adminTaxClassDelete
+summary: Delete a tax class
+description: >
+    Hard-deletes the tax-class row. Products referencing it have their `tax_class_id` set to NULL by
+    the foreign-key cascade (see migration `1747200120000_create_products_table.ts`).
+tags: [Admin / Catalog / Tax Classes]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

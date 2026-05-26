@@ -1938,7 +1938,7 @@ export class ProductVariationSchema extends BaseModel {
 }
 
 export class ProductSchema extends BaseModel {
-  static $columns = ['attributes', 'catalogVisibility', 'createdAt', 'deletedAt', 'downloadable', 'externalUrl', 'featured', 'globalUniqueId', 'gtin', 'heightMm', 'id', 'lengthMm', 'menuOrder', 'regularPrice', 'reviewsAllowed', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'shippingClassId', 'sku', 'soldIndividually', 'status', 'taxClassId', 'taxStatus', 'type', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
+  static $columns = ['attributes', 'catalogVisibility', 'createdAt', 'deletedAt', 'downloadable', 'externalUrl', 'featured', 'globalUniqueId', 'gtin', 'heightMm', 'id', 'lengthMm', 'menuOrder', 'posAvailable', 'regularPrice', 'reviewsAllowed', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'shippingClassId', 'sku', 'soldIndividually', 'status', 'taxClassId', 'taxStatus', 'type', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
   $columns = ProductSchema.$columns
   @column()
   declare attributes: any
@@ -1966,6 +1966,8 @@ export class ProductSchema extends BaseModel {
   declare lengthMm: number | null
   @column()
   declare menuOrder: number
+  @column()
+  declare posAvailable: boolean
   @column()
   declare regularPrice: bigint | number | null
   @column()

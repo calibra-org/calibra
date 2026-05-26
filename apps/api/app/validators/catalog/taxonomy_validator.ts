@@ -78,3 +78,17 @@ export const updateShippingClassValidator = vine.compile(
         translations: vine.array(SHIPPING_TRANSLATION_SCHEMA).optional(),
     }),
 );
+
+export const createTaxClassValidator = vine.compile(
+    vine.object({
+        slug: vine.string().trim().minLength(1).maxLength(64),
+        name: vine.string().trim().minLength(1).maxLength(120),
+    }),
+);
+
+export const updateTaxClassValidator = vine.compile(
+    vine.object({
+        slug: vine.string().trim().minLength(1).maxLength(64).optional(),
+        name: vine.string().trim().minLength(1).maxLength(120).optional(),
+    }),
+);

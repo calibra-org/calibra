@@ -8,6 +8,7 @@ import AdminProductsController from "#controllers/admin/catalog/products_control
 import AdminReviewsController from "#controllers/admin/catalog/reviews_controller";
 import AdminShippingClassesController from "#controllers/admin/catalog/shipping_classes_controller";
 import AdminTagsController from "#controllers/admin/catalog/tags_controller";
+import AdminTaxClassesController from "#controllers/admin/catalog/tax_classes_controller";
 import AdminVariationsController from "#controllers/admin/catalog/variations_controller";
 
 router
@@ -74,6 +75,13 @@ router
         router.put("/shipping-classes/:id", [AdminShippingClassesController, "update"]).as("admin.shippingClasses.update");
         router.patch("/shipping-classes/:id", [AdminShippingClassesController, "update"]).as("admin.shippingClasses.patch");
         router.delete("/shipping-classes/:id", [AdminShippingClassesController, "destroy"]).as("admin.shippingClasses.destroy");
+
+        router.get("/tax-classes", [AdminTaxClassesController, "index"]).as("admin.taxClasses.index");
+        router.post("/tax-classes", [AdminTaxClassesController, "store"]).as("admin.taxClasses.store");
+        router.get("/tax-classes/:id", [AdminTaxClassesController, "show"]).as("admin.taxClasses.show");
+        router.put("/tax-classes/:id", [AdminTaxClassesController, "update"]).as("admin.taxClasses.update");
+        router.patch("/tax-classes/:id", [AdminTaxClassesController, "update"]).as("admin.taxClasses.patch");
+        router.delete("/tax-classes/:id", [AdminTaxClassesController, "destroy"]).as("admin.taxClasses.destroy");
 
         router.get("/reviews", [AdminReviewsController, "index"]).as("admin.reviews.index");
         router.patch("/reviews/:id", [AdminReviewsController, "update"]).as("admin.reviews.update");

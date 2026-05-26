@@ -1,0 +1,30 @@
+operationId: adminTaxClassPatch
+summary: Partial-update a tax class
+description: Patch the included fields. Slug uniqueness is re-checked when it changes.
+tags: [Admin / Catalog / Tax Classes]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema: { type: object, additionalProperties: true }
+
+responses:
+    "200":
+        description: Updated tax class.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminTaxClass.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "409":
+        description: Slug already taken by another tax class.
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

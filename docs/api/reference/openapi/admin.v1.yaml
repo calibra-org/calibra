@@ -562,6 +562,25 @@ paths:
         delete:
             $ref: "./admin/paths/catalog/shipping-classes-id.delete.yaml"
 
+    /api/v1/admin/tax-classes:
+        get:
+            $ref: "./admin/paths/catalog/tax-classes.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/catalog/tax-classes.post.yaml"
+    /api/v1/admin/tax-classes/{id}:
+        get:
+            $ref: "./admin/paths/catalog/tax-classes-id.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        put:
+            $ref: "./admin/paths/catalog/tax-classes-id.put.yaml"
+        patch:
+            $ref: "./admin/paths/catalog/tax-classes-id.patch.yaml"
+        delete:
+            $ref: "./admin/paths/catalog/tax-classes-id.delete.yaml"
+
     /api/v1/admin/reviews:
         get:
             $ref: "./admin/paths/catalog/reviews.get.yaml"
