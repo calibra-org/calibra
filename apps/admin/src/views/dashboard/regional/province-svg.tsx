@@ -8,6 +8,7 @@ import { IRAN_COUNTRY_PROVINCES } from "#/vendor/iran-map";
 import { loadProvinceGeometry, type ProvinceGeometry } from "#/vendor/iran-map/provinces";
 
 import { type HeatmapMetric, ZERO_COLOR } from "./heatmap-scale";
+import { ProvinceSea } from "./sea-decorations";
 
 export interface CityMarker {
     regionCode: string | null;
@@ -108,6 +109,7 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
             className="h-auto w-full"
             onPointerMove={onPointerMove}
         >
+            <ProvinceSea code={code} />
             <g>
                 {geometry.counties.map((county) => {
                     const key = normalizeIranText(county.fa);

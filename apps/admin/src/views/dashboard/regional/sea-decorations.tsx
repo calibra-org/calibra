@@ -2,79 +2,51 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 
+import { COUNTRY_WATER_PATHS, PROVINCE_WATER_PATHS } from "#/vendor/iran-map/water";
+
 /**
- * Decorative sea bodies rendered BEHIND the province polygons in the country map. The shapes are
- * organic blobs (not geographic outlines) sized to sit alongside the relevant coasts inside the
- * `0 0 1080 1080` country viewBox:
- *
- *   - دریای خزر / Caspian Sea — north coast (above Gilan / Mazandaran / Golestan).
- *   - خلیج فارس / Persian Gulf — south-west coast (alongside Khuzestan / Bushehr).
- *   - دریای عمان / Sea of Oman — south-east coast (alongside Hormozgan / Sistan & Baluchestan).
+ * Decorative water bodies for the country and province maps. Geometry vendored from
+ * `react-iran-map` (country-level) and `react-iran-provinces-map` (per-province) — see
+ * `vendor/iran-map/water.ts`. We don't render text labels on top because the upstream paths
+ * include both the open-water area and the coastline detail, and labels collide with the
+ * heatmap chrome on smaller widths.
  */
-const SEA_FILL = "#dbeafe";
-const SEA_STROKE = "#93c5fd";
-const SEA_LABEL_FILL = "#1d4ed8";
 
-interface SeaBody {
-    key: string;
-    fa: string;
-    en: string;
-    path: string;
-    labelX: number;
-    labelY: number;
-    labelSize: number;
-}
-
-const SEAS: SeaBody[] = [
-    {
-        key: "caspian",
-        fa: "دریای خزر",
-        en: "Caspian Sea",
-        path: "M 200 60 Q 300 20 460 50 Q 600 80 640 160 Q 580 220 460 230 Q 320 240 220 200 Q 150 150 200 60 Z",
-        labelX: 410,
-        labelY: 140,
-        labelSize: 22,
-    },
-    {
-        key: "persianGulf",
-        fa: "خلیج فارس",
-        en: "Persian Gulf",
-        path: "M 120 880 Q 220 830 380 850 Q 520 870 620 930 Q 540 1010 360 1020 Q 200 1010 130 970 Q 80 930 120 880 Z",
-        labelX: 360,
-        labelY: 940,
-        labelSize: 20,
-    },
-    {
-        key: "omanSea",
-        fa: "دریای عمان",
-        en: "Sea of Oman",
-        path: "M 660 940 Q 760 910 920 930 Q 1040 950 1040 1020 Q 940 1060 800 1050 Q 700 1040 660 1010 Q 630 970 660 940 Z",
-        labelX: 830,
-        labelY: 1000,
-        labelSize: 20,
-    },
-];
+const SEA_FILL = "#a5cdf0";
+const SEA_STROKE = "#7eb3e0";
 
 interface SeaDecorationsProps {
     locale: Locale;
 }
 
-export function SeaDecorations({ locale }: SeaDecorationsProps) {
+export function SeaDecorations({ locale: _locale }: SeaDecorationsProps) {
     return (
         <g>
-            {SEAS.map((sea) => (
-                <g key={sea.key}>
-                    <path d={sea.path} fill={SEA_FILL} stroke={SEA_STROKE} strokeWidth={0.8} />
-                    <text
-                        x={sea.labelX}
-                        y={sea.labelY}
-                        textAnchor="middle"
-                        fill={SEA_LABEL_FILL}
-                        style={{ fontSize: sea.labelSize, fontWeight: 600, fontStyle: "italic", pointerEvents: "none" }}
-                    >
-                        {locale === "fa" ? sea.fa : sea.en}
-                    </text>
-                </g>
+            {COUNTRY_WATER_PATHS.map((d, i) => (
+                <path key={`country-water-${i.toString()}`} d={d} fill={SEA_FILL} stroke={SEA_STROKE} strokeWidth={0.6} />
+            ))}
+        </g>
+    );
+}
+
+interface ProvinceSeaProps {
+    code: string;
+}
+
+/** Renders the water polygon(s) for a single province if upstream ships one. */
+export function ProvinceSea({ code }: ProvinceSeaProps) {
+    const paths = PROVINCE_WATER_PATHS[code];
+    if (!paths || paths.length === 0) return null;
+    return (
+        <g>
+            {paths.map((d, i) => (
+                <path
+                    key={`province-water-${code}-${i.toString()}`}
+                    d={d}
+                    fill={SEA_FILL}
+                    stroke={SEA_STROKE}
+                    strokeWidth={0.6}
+                />
             ))}
         </g>
     );
