@@ -829,13 +829,16 @@ function DataTableBodyRow<TData>({
             className={cn(
                 rowHeightClass,
                 /**
-                 * The row owns the painted background. Sticky cells set `bg-inherit` so they
-                 * pick up whichever state-colour the row currently shows — hover, selected, and
-                 * focus-visible all stay coherent under the pinned columns.
+                 * Row owns the painted background; sticky cells set `bg-inherit` so the same
+                 * state colour shows under the pinned columns. Every state colour MUST be fully
+                 * opaque — sticky cells with an alpha background let the non-sticky body cells
+                 * (currently scrolled behind them) bleed through, which surfaced as ghost text
+                 * overlapping the product name on hover. Use solid muted / accent tones instead
+                 * of the previous `/40` alpha variants.
                  */
-                "bg-card outline-none transition-colors focus-visible:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring",
-                "group/row hover:bg-muted/40",
-                row.getIsSelected() && "bg-accent/40",
+                "bg-card outline-none transition-colors focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+                "group/row hover:bg-muted",
+                row.getIsSelected() && "bg-accent",
             )}
             onClick={(event) => {
                 if (onRowOpen === undefined) return;
