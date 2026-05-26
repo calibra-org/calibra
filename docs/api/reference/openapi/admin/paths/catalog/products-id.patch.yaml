@@ -7,6 +7,15 @@ tags: [Admin / Catalog / Products]
 
 parameters:
     - { name: id, in: path, required: true, schema: { type: integer } }
+    - name: If-Match
+      in: header
+      required: false
+      description: >
+          Optional optimistic-concurrency token — pass the `updated_at` ISO string from the row the
+          operator originally fetched. The server compares this against the current value and
+          returns 409 if the row has changed since, so two operators can't silently clobber each
+          other's edits. Callers that don't care can omit the header (last-write-wins).
+      schema: { type: string, format: date-time }
 
 requestBody:
     required: true
@@ -30,4 +39,23 @@ responses:
     "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
     "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
     "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "409":
+        description: Optimistic-concurrency mismatch — the row changed since the If-Match value was fetched.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    properties:
+                        errors:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    message: { type: string }
+                                    code: { type: string }
+                        data:
+                            type: object
+                            properties:
+                                id: { type: integer }
+                                updated_at: { type: string, format: date-time }
     "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

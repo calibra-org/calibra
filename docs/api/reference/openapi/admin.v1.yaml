@@ -415,6 +415,11 @@ paths:
             $ref: "./admin/paths/catalog/products-counts.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/products/check-slug:
+        get:
+            $ref: "./admin/paths/catalog/products-check-slug.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/products/batch:
         post:
             $ref: "./admin/paths/catalog/products-batch.post.yaml"

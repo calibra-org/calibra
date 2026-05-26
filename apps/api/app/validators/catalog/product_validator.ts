@@ -135,3 +135,12 @@ export const restoreProductsValidator = vine.compile(
         ids: vine.array(vine.number()).minLength(1),
     }),
 );
+
+/** Slug availability check — `GET /admin/products/check-slug?slug=…&locale=…&excludeId=…`. */
+export const checkSlugValidator = vine.compile(
+    vine.object({
+        slug: vine.string().trim().minLength(1).maxLength(320),
+        locale: vine.string().trim().minLength(2).maxLength(8),
+        excludeId: vine.number().optional(),
+    }),
+);

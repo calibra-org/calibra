@@ -1,0 +1,31 @@
+operationId: adminProductsCheckSlug
+summary: Check product slug availability
+description: >
+    Returns whether the supplied slug is free for the given locale. Powers the debounced async
+    blur-time uniqueness check on the product detail page. Pass `excludeId` when editing an
+    existing product so its own row is ignored.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - { name: slug, in: query, required: true, schema: { type: string, minLength: 1, maxLength: 320 } }
+    - { name: locale, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 8 } }
+    - { name: excludeId, in: query, required: false, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Slug availability result.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [available]
+                            properties:
+                                available: { type: boolean }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

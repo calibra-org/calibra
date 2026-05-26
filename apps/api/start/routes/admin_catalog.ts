@@ -15,6 +15,7 @@ router
     .group(() => {
         router.get("/products", [AdminProductsController, "index"]).as("admin.products.index");
         router.get("/products/counts", [AdminProductsController, "counts"]).as("admin.products.counts");
+        router.get("/products/check-slug", [AdminProductsController, "checkSlug"]).as("admin.products.checkSlug");
         router.post("/products", [AdminProductsController, "store"]).as("admin.products.store");
         router.post("/products/batch", [AdminProductsController, "batch"]).as("admin.products.batch");
         router.post("/products/restore", [AdminProductsController, "restoreBatch"]).as("admin.products.restoreBatch");

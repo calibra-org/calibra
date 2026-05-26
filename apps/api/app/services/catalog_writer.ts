@@ -83,6 +83,89 @@ export async function syncLinks(
     );
 }
 
+/**
+ * Drop and reinsert position-aware many-to-many rows (upsells / cross-sells / grouped members).
+ * Order in the `ids` array becomes the `position` value, so the storefront list/card grid renders
+ * in the operator's chosen sequence. No-ops when `ids` is undefined.
+ */
+export async function syncOrderedLinks(
+    trx: TransactionClientContract,
+    table: string,
+    parentColumn: string,
+    parentId: bigint | number,
+    childColumn: string,
+    ids: number[] | undefined,
+): Promise<void> {
+    if (ids === undefined) return;
+    await trx.from(table).where(parentColumn, String(parentId)).delete();
+    if (ids.length === 0) return;
+    const now = DateTime.utc().toSQL();
+    await trx.table(table).insert(
+        ids.map((id, position) => ({
+            [parentColumn]: parentId,
+            [childColumn]: id,
+            position,
+            created_at: now,
+            updated_at: now,
+        })),
+    );
+}
+
+export interface DownloadInput {
+    id?: number;
+    media_id: number;
+    file_label: string;
+    download_limit?: number | null;
+    download_expiry_days?: number | null;
+    position?: number;
+}
+
+/**
+ * Replace `product_downloads` rows for a product. Replace-all semantics: any row whose id is not
+ * in the inbound list is deleted; rows with no id are inserted; rows with an id are updated
+ * in-place. Position falls back to the array index when not provided.
+ */
+export async function syncProductDownloads(
+    trx: TransactionClientContract,
+    productId: bigint | number,
+    downloads: DownloadInput[] | undefined,
+): Promise<void> {
+    if (downloads === undefined) return;
+    const now = DateTime.utc().toSQL();
+    const keepIds = downloads.map((d) => d.id).filter((id): id is number => typeof id === "number" && Number.isFinite(id));
+    if (keepIds.length === 0) {
+        await trx.from("product_downloads").where("product_id", String(productId)).delete();
+    } else {
+        await trx.from("product_downloads").where("product_id", String(productId)).whereNotIn("id", keepIds).delete();
+    }
+    let index = 0;
+    for (const row of downloads) {
+        const position = row.position ?? index;
+        if (typeof row.id === "number" && Number.isFinite(row.id)) {
+            await trx.from("product_downloads").where("id", row.id).where("product_id", String(productId)).update({
+                media_id: row.media_id,
+                file_label: row.file_label,
+                download_limit: row.download_limit ?? null,
+                download_expiry_days: row.download_expiry_days ?? null,
+                position,
+                updated_at: now,
+            });
+        } else {
+            await trx.table("product_downloads").insert({
+                product_id: productId,
+                media_id: row.media_id,
+                file_label: row.file_label,
+                download_limit: row.download_limit ?? null,
+                download_expiry_days: row.download_expiry_days ?? null,
+                position,
+                created_at: now,
+                updated_at: now,
+            });
+        }
+        index += 1;
+    }
+}
+
 /** Replace `product_images` rows for a product with the given media ids, preserving order. */
 export async function syncProductImages(
     trx: TransactionClientContract,

@@ -2,15 +2,24 @@ import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
+import { BusinessRuleException } from "#exceptions/domain_exceptions";
 import Product from "#models/product";
 import { recordAudit } from "#services/admin_audit_log_service";
 import { CacheInvalidation } from "#services/cache_invalidation";
-import { syncLinks, syncProductImages, upsertTranslations, withTransaction } from "#services/catalog_writer";
+import {
+    syncLinks,
+    syncOrderedLinks,
+    syncProductDownloads,
+    syncProductImages,
+    upsertTranslations,
+    withTransaction,
+} from "#services/catalog_writer";
 import SettingsService from "#services/settings_service";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductTransformer, { type ProductTransformerOptions } from "#transformers/product_transformer";
 import {
     batchProductsValidator,
+    checkSlugValidator,
     createProductValidator,
     restoreProductsValidator,
     updateProductValidator,
@@ -316,17 +325,7 @@ export default class AdminProductsController {
     }
 
     async show(ctx: HttpContext) {
-        const product = await Product.query()
-            .where("id", ctx.params.id)
-            .preload("translations")
-            .preload("images", (q) => q.preload("media"))
-            .preload("variations", (q) => q.preload("translations").preload("attributePins"))
-            .preload("attributeLinks", (q) => q.preload("terms"))
-            .preload("categories", (q) => q.preload("translations"))
-            .preload("tags", (q) => q.preload("translations"))
-            .preload("brands", (q) => q.preload("translations"))
-            .preload("inventoryItems")
-            .first();
+        const product = await this.reload(ctx.params.id);
         if (!product) {
             return ctx.response.status(404).json({ error: "product_not_found" });
         }
@@ -335,8 +334,27 @@ export default class AdminProductsController {
         );
     }
 
+    /**
+     * `GET /admin/products/check-slug?slug=…&locale=…&excludeId=…` — debounced async uniqueness
+     * check the detail page hits on blur. The slug column lives on `product_translations`, so we
+     * scope by `locale`. `excludeId` lets the edit view skip its own row.
+     */
+    async checkSlug(ctx: HttpContext) {
+        const params = await checkSlugValidator.validate(ctx.request.qs());
+        const query = db
+            .from("product_translations")
+            .where("locale", params.locale)
+            .whereRaw("LOWER(slug) = ?", [params.slug.toLowerCase()]);
+        if (params.excludeId !== undefined) {
+            query.whereNot("product_id", params.excludeId);
+        }
+        const row = await query.select("product_id").first();
+        return { data: { available: !row } };
+    }
+
     async store(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(createProductValidator);
+        await this.assertLinkedProductsExist(payload.upsell_ids, payload.cross_sell_ids, payload.grouped_member_ids);
         const product = await withTransaction(async (trx) => {
             const row = new Product();
             row.useTransaction(trx);
@@ -354,6 +372,24 @@ export default class AdminProductsController {
             await syncLinks(trx, "product_tag_links", "product_id", row.id, "tag_id", payload.tag_ids);
             await syncLinks(trx, "product_brand_links", "product_id", row.id, "brand_id", payload.brand_ids);
             await syncProductImages(trx, row.id, payload.image_media_ids);
+            await syncOrderedLinks(trx, "product_upsells", "product_id", row.id, "related_product_id", payload.upsell_ids);
+            await syncOrderedLinks(
+                trx,
+                "product_cross_sells",
+                "product_id",
+                row.id,
+                "related_product_id",
+                payload.cross_sell_ids,
+            );
+            await syncOrderedLinks(
+                trx,
+                "product_group_members",
+                "group_product_id",
+                row.id,
+                "member_product_id",
+                payload.grouped_member_ids,
+            );
+            await syncProductDownloads(trx, row.id, payload.downloads);
             return row;
         });
         const reloaded = await this.reload(product.id);
@@ -369,7 +405,15 @@ export default class AdminProductsController {
         if (!product) {
             return ctx.response.status(404).json({ error: "product_not_found" });
         }
+        const conflict = this.assertIfMatch(ctx, product);
+        if (conflict) return conflict;
         const payload = await ctx.request.validateUsing(updateProductValidator);
+        await this.assertLinkedProductsExist(payload.upsell_ids, payload.cross_sell_ids, payload.grouped_member_ids);
+        const linkedTouched =
+            payload.upsell_ids !== undefined ||
+            payload.cross_sell_ids !== undefined ||
+            payload.grouped_member_ids !== undefined;
+        const downloadsTouched = payload.downloads !== undefined;
         await withTransaction(async (trx) => {
             product.useTransaction(trx);
             assignProductFields(product, payload);
@@ -388,12 +432,91 @@ export default class AdminProductsController {
             await syncLinks(trx, "product_tag_links", "product_id", product.id, "tag_id", payload.tag_ids);
             await syncLinks(trx, "product_brand_links", "product_id", product.id, "brand_id", payload.brand_ids);
             await syncProductImages(trx, product.id, payload.image_media_ids);
+            await syncOrderedLinks(trx, "product_upsells", "product_id", product.id, "related_product_id", payload.upsell_ids);
+            await syncOrderedLinks(
+                trx,
+                "product_cross_sells",
+                "product_id",
+                product.id,
+                "related_product_id",
+                payload.cross_sell_ids,
+            );
+            await syncOrderedLinks(
+                trx,
+                "product_group_members",
+                "group_product_id",
+                product.id,
+                "member_product_id",
+                payload.grouped_member_ids,
+            );
+            await syncProductDownloads(trx, product.id, payload.downloads);
         });
         const reloaded = await this.reload(product.id);
         await CacheInvalidation.productChanged(product.id);
+        if (linkedTouched) {
+            await recordAudit({
+                ctx,
+                action: "product.linked_products.update",
+                entityKind: "product",
+                entityId: Number(product.id),
+            });
+        }
+        if (downloadsTouched) {
+            await recordAudit({
+                ctx,
+                action: "product.downloads.update",
+                entityKind: "product",
+                entityId: Number(product.id),
+            });
+        }
         return resource(
             ProductTransformer.transform(reloaded!, ctx.i18n.locale, await this.transformerOptions()).useVariant("forAdmin"),
         );
+    }
+
+    /**
+     * Optimistic concurrency check: when the caller supplies an `If-Match` header containing the
+     * `updated_at` value they originally fetched, refuse the write with 409 if the row has
+     * changed since. Empty / missing header => no check (back-compat for callers that haven't
+     * adopted the contract yet). Returns the 409 response when the check fails, else null.
+     */
+    private assertIfMatch(ctx: HttpContext, product: Product): unknown {
+        const header = ctx.request.header("if-match");
+        if (!header) return null;
+        const current = product.updatedAt?.toISO();
+        if (!current) return null;
+        if (header === current) return null;
+        return ctx.response.status(409).json({
+            errors: [{ message: "product_changed_since_fetch", code: "product_concurrent_edit" }],
+            data: {
+                id: Number(product.id),
+                updated_at: current,
+            },
+        });
+    }
+
+    /**
+     * Linked-product ids must reference real, non-trashed products. The validator only checks
+     * shape (numbers); we check existence here so the error returns 422 instead of crashing on
+     * the FK constraint mid-transaction.
+     */
+    private async assertLinkedProductsExist(
+        upsellIds?: number[],
+        crossSellIds?: number[],
+        groupedMemberIds?: number[],
+    ): Promise<void> {
+        const all = [...(upsellIds ?? []), ...(crossSellIds ?? []), ...(groupedMemberIds ?? [])];
+        if (all.length === 0) return;
+        const unique = Array.from(new Set(all));
+        const rows = await Product.query().whereIn("id", unique).whereNull("deleted_at").select("id");
+        const found = new Set(rows.map((r) => Number(r.id)));
+        const missing = unique.filter((id) => !found.has(id));
+        if (missing.length > 0) {
+            throw new BusinessRuleException("linked_product_not_found", "linked_product_exists", {
+                field: "linked_products",
+                missing_ids: missing,
+            });
+        }
     }
 
     /**
@@ -657,7 +780,7 @@ export default class AdminProductsController {
         return { defaultLowStockThreshold };
     }
 
-    private async reload(id: bigint | number): Promise<Product | null> {
+    private async reload(id: bigint | number | string): Promise<Product | null> {
         return Product.query()
             .where("id", String(id))
             .preload("translations")
@@ -668,6 +791,10 @@ export default class AdminProductsController {
             .preload("tags", (q) => q.preload("translations"))
             .preload("brands", (q) => q.preload("translations"))
             .preload("inventoryItems")
+            .preload("downloads", (q) => q.preload("media").orderBy("position"))
+            .preload("upsells", (q) => q.pivotColumns(["position"]))
+            .preload("crossSells", (q) => q.pivotColumns(["position"]))
+            .preload("groupedMembers", (q) => q.pivotColumns(["position"]))
             .first();
     }
 }
@@ -711,4 +838,7 @@ function assignProductFields(row: Product, payload: Record<string, unknown>): vo
     if (payload.external_url !== undefined) row.externalUrl = (payload.external_url as string | null) ?? null;
     if (payload.menu_order !== undefined) row.menuOrder = payload.menu_order as number;
     if (payload.attributes !== undefined) row.attributes = payload.attributes ?? {};
+    if (payload.pos_available !== undefined) {
+        (row as unknown as { posAvailable: boolean }).posAvailable = !!payload.pos_available;
+    }
 }
