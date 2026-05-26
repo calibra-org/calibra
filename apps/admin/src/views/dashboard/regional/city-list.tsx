@@ -8,8 +8,8 @@ import { ScrollArea } from "#/components/ui/scroll-area";
 import { formatMoney, formatNumber } from "#/lib/format";
 import type { AdminRegionalCity } from "#/lib/types";
 
-import type { HeatmapMetric } from "./heatmap-scale";
 import { itemVariants, listVariants } from "./motion-variants";
+import type { HeatmapMetric } from "./heatmap-scale";
 
 interface CityListProps {
     cities: AdminRegionalCity[];
@@ -51,7 +51,9 @@ export function CityList({ cities, metric, locale }: CityListProps) {
                         const value = metric === "revenue" ? city.revenueMinor : city.ordersCount;
                         const percent = (value / max) * 100;
                         const formatted =
-                            metric === "revenue" ? formatMoney(city.revenueMinor, locale) : formatNumber(city.ordersCount, locale);
+                            metric === "revenue"
+                                ? formatMoney(city.revenueMinor, locale)
+                                : formatNumber(city.ordersCount, locale);
                         const key = city.regionCode ?? `unmatched-${index.toString()}-${city.name.fa}`;
                         return (
                             <motion.li
@@ -60,10 +62,16 @@ export function CityList({ cities, metric, locale }: CityListProps) {
                                 className="flex flex-col gap-1 rounded p-1.5 transition-colors hover:bg-accent"
                             >
                                 <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span className={city.matched ? "truncate font-medium" : "truncate font-medium italic text-muted-foreground"}>
+                                    <span
+                                        className={
+                                            city.matched
+                                                ? "truncate font-medium"
+                                                : "truncate font-medium text-muted-foreground italic"
+                                        }
+                                    >
                                         {city.name.fa}
                                         {!city.matched ? (
-                                            <span className="ms-1 text-muted-foreground text-[10px]">{t("unmatchedCity")}</span>
+                                            <span className="ms-1 text-[10px] text-muted-foreground">{t("unmatchedCity")}</span>
                                         ) : null}
                                     </span>
                                     <span className="shrink-0 tabular-nums">{formatted}</span>

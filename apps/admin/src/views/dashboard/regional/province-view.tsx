@@ -184,7 +184,7 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                             />
                         </MapZoomWrapper>
                     )}
-                    <div className="pointer-events-none absolute top-3 start-3 z-10 rounded-md bg-card/80 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm">
+                    <div className="pointer-events-none absolute start-3 top-3 z-10 rounded-md bg-card/80 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm">
                         <span className="font-semibold text-foreground">{data?.name[locale] ?? code}</span>
                     </div>
                     {hoveredCity !== null && pointer !== null ? (
