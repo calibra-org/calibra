@@ -68,6 +68,8 @@ export interface UseDateFilterReturn {
     isAwaitingRangeEnd: boolean;
     inputValue: string;
     isInputDirty: boolean;
+    /** True when the staged selection can be committed via Apply (input is dirty, OR a range is staged in within-mode). */
+    canApply: boolean;
     parseError: "empty" | "invalid" | "ambiguous" | null;
     hoveredDay: Date | null;
 
@@ -264,12 +266,23 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
     );
 
     /**
-     * Compute the next selection from the current closure rather than from `setSelection`'s
-     * updater fn — calling `commitFromSelection` inside an updater violates React's rule that
-     * state updaters be side-effect-free (it cascades into a parent `setState` via the
-     * `onChange` prop, which Strict Mode reports as "update during render"). Reading
-     * `selection` from the closure means the callback re-creates on selection change, which is
-     * cheap and keeps the side-effect outside the updater.
+     * Within-mode click flow (Linear-style — never auto-closes):
+     *   1. First click sets the range anchor; dialog stays open so the operator can use the
+     *      prev/next nav to walk to a different month before picking the end day. The
+     *      hover-preview band shows the in-progress range so the "awaiting end" state is
+     *      visible without an extra caption.
+     *   2. Second click completes the range — still no commit. The operator must explicitly
+     *      click Apply to confirm. This matters because they might have mis-clicked the end
+     *      day and want to redo it before locking in.
+     *   3. Subsequent clicks on an already-completed range reset the anchor — start a fresh
+     *      range. Same no-commit rule.
+     *
+     * Non-within operators (`before`, `after`, `in`) keep the original instant-commit shortcut
+     * because there's no second click to wait for.
+     *
+     * The callback reads `selection` from the closure (not from `setSelection`'s updater fn)
+     * because the commit-side-effect chain would otherwise fire from inside a state updater,
+     * which React Strict Mode reports as "update during render".
      */
     const handleDayClick = useCallback(
         (date: Date) => {
@@ -279,14 +292,12 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
                 commitFromSelection({ kind: "period", granularity: "day", value });
                 return;
             }
-            if (selection.kind === "range") {
-                commitFromSelection(orderRange({ kind: "range", start: selection.start, end: value }));
-                return;
-            }
+            /** Second click — close the range, but stage it for the operator to confirm. */
             if (selection.kind === "period" && selection.granularity === "day") {
-                commitFromSelection(orderRange({ kind: "range", start: selection.value, end: value }));
+                setSelection(orderRange({ kind: "range", start: selection.value, end: value }));
                 return;
             }
+            /** First click OR reset after a completed range — start a new anchor, stage only. */
             setSelection({ kind: "period", granularity: "day", value });
         },
         [calendar, commitFromSelection, operator, selection],
@@ -357,6 +368,21 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
 
     const isAwaitingRangeEnd = operator === "within" && selection.kind === "period" && selection.granularity === "day";
 
+    /**
+     * Apply is enabled when the staged state would produce a different commit than the
+     * currently-committed value. The two paths:
+     *   - operator `within` with a complete range staged → commit replaces the value;
+     *   - typed input that parsed cleanly → commit replaces the value;
+     * a single-day anchor in within mode is intentionally NOT applicable — without a second
+     * endpoint there's no range to commit.
+     */
+    const canApply = useMemo(() => {
+        if (parseError !== null && parseError !== "empty") return false;
+        if (operator === "within" && selection.kind === "range") return true;
+        if (isInputDirty && parseError === null) return true;
+        return false;
+    }, [isInputDirty, operator, parseError, selection]);
+
     return {
         locale,
         calendar,
@@ -368,6 +394,7 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
         isAwaitingRangeEnd,
         inputValue,
         isInputDirty,
+        canApply,
         parseError,
         hoveredDay,
         setOperator,

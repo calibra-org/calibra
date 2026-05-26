@@ -70,7 +70,7 @@ export function DatePickerBody({ state, fieldLabel }: DatePickerBodyProps) {
             <DialogActions
                 onCancel={state.cancel}
                 onApply={state.commit}
-                canApply={state.isInputDirty && state.parseError === null}
+                canApply={state.canApply}
                 labels={{ cancel: t("cancel"), apply: t("apply") }}
             />
         </div>

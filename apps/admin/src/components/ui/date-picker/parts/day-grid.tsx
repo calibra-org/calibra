@@ -65,18 +65,36 @@ export function DayGrid({
 }: DayGridProps) {
     const dateLib = getDateLib(calendar);
 
+    /**
+     * In within-mode we hand RDP a `{ from, to }` range (or `{ from: anchor, to: anchor }` while
+     * we're between clicks so the anchor day still reads as a one-day "range" via the
+     * range_start modifier). In single-mode we hand it a single `Date` — even if `selection` is
+     * still a range from a just-flipped operator, we collapse to the start so RDP's range
+     * modifiers don't leak into the new single-mode view.
+     */
     const selected = useMemo(() => {
+        if (operator === "within") {
+            if (selection.kind === "range") {
+                const start = valueStringToDate(selection.start, "day", dateLib);
+                const end = valueStringToDate(selection.end, "day", dateLib);
+                if (start === null || end === null) return undefined;
+                return { from: start, to: end };
+            }
+            if (selection.kind === "period" && selection.granularity === "day") {
+                const anchor = valueStringToDate(selection.value, "day", dateLib);
+                if (anchor === null) return undefined;
+                return { from: anchor, to: anchor };
+            }
+            return undefined;
+        }
         if (selection.kind === "period" && selection.granularity === "day") {
             return valueStringToDate(selection.value, "day", dateLib) ?? undefined;
         }
         if (selection.kind === "range") {
-            const start = valueStringToDate(selection.start, "day", dateLib);
-            const end = valueStringToDate(selection.end, "day", dateLib);
-            if (start === null || end === null) return undefined;
-            return { from: start, to: end };
+            return valueStringToDate(selection.start, "day", dateLib) ?? undefined;
         }
         return undefined;
-    }, [dateLib, selection]);
+    }, [dateLib, operator, selection]);
 
     const previewRange = useMemo(() => {
         if (operator !== "within") return undefined;
@@ -123,6 +141,13 @@ export function DayGrid({
 
     return (
         <DayPicker
+            /**
+             * Keying RDP on the mode forces a full remount when the operator flips between
+             * single and range — without this, RDP's internal modifier cache still paints
+             * `range_*` cells from the previous range even after `selected` becomes a single
+             * Date in single-mode.
+             */
+            key={operator === "within" ? "range" : "single"}
             {...dayPickerProps}
             onDayClick={onDayClick}
             onDayMouseEnter={(d) => onDayHover(d)}
@@ -132,7 +157,13 @@ export function DayGrid({
             dir={locale === "fa" ? "rtl" : "ltr"}
             modifiers={modifiers}
             modifiersClassNames={modifiersClassNames}
-            showOutsideDays
+            /**
+             * Hiding outside days keeps the range band from leaking into the visually-greyed
+             * leading / trailing cells of the next/previous month. With them on, a wide range
+             * paints muted text on a primary band — which fails WCAG contrast in dark theme
+             * and reads as "this entire month is in the range" when it isn't.
+             */
+            showOutsideDays={false}
             components={{ Chevron: PickerChevron }}
             classNames={{
                 root: "p-2 text-foreground",
@@ -172,24 +203,26 @@ export function DayGrid({
                  */
                 day_button:
                     "relative z-10 mx-auto inline-flex size-8 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
-                outside: "text-muted-foreground/40",
+                outside: "text-muted-foreground/30",
                 selected: "[&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
                 /**
                  * Range visualization (Linear-style):
-                 * - middle days paint their full `<td>` with `bg-primary/25` so adjacent
-                 *   cells join into one continuous band;
-                 * - start / end cells paint only HALF of the cell via a `before:` pseudo,
-                 *   so the band visually starts at the selected circle's centre rather than
-                 *   the cell edge. `start-1/2` + `end-0` (logical Tailwind) auto-flips in
-                 *   RTL, which we need because Persian timelines run right→left.
+                 * - middle days paint their full `<td>` with `bg-primary/30` so adjacent cells
+                 *   join into one continuous band; the day number stays on a WHITE-equivalent
+                 *   `text-foreground` so the band passes WCAG AA on the dark theme;
+                 * - start / end cells paint only HALF of the cell via a `before:` pseudo, so
+                 *   the band visually starts at the selected circle's centre rather than the
+                 *   cell edge. `start-1/2` + `end-0` (logical Tailwind) auto-flips in RTL,
+                 *   which we need because Persian timelines run right→left. `rounded-s-full`
+                 *   / `rounded-e-full` give the band a pill cap that hugs the selected circle.
                  */
                 range_start:
-                    "before:absolute before:inset-y-1 before:end-0 before:start-1/2 before:bg-primary/25 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                    "before:absolute before:inset-y-1 before:end-0 before:start-1/2 before:rounded-s-full before:bg-primary/30 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
                 range_end:
-                    "before:absolute before:inset-y-1 before:start-0 before:end-1/2 before:bg-primary/25 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                    "before:absolute before:inset-y-1 before:start-0 before:end-1/2 before:rounded-e-full before:bg-primary/30 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
                 range_middle:
-                    "before:absolute before:inset-y-1 before:inset-x-0 before:bg-primary/25 [&_button]:!bg-transparent [&_button]:!text-foreground [&_button]:hover:!bg-primary/15",
-                disabled: "text-muted-foreground/30 cursor-not-allowed",
+                    "before:absolute before:inset-y-1 before:inset-x-0 before:bg-primary/30 [&_button]:!bg-transparent [&_button]:!text-foreground [&_button]:hover:!bg-primary/20",
+                disabled: "text-muted-foreground/30 cursor-not-allowed before:!hidden [&_button]:!bg-transparent",
             }}
         />
     );
