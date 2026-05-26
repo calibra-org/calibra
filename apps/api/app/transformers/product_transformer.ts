@@ -162,10 +162,39 @@ export default class ProductTransformer extends BaseTransformer<Product> {
     forAdmin() {
         const p = this.resource;
         const detail = this.forDetail();
+        const upsellIds = ((p as unknown as { upsells?: Product[] }).upsells ?? [])
+            .slice()
+            .sort((a, b) => Number(a.$extras.pivot_position ?? 0) - Number(b.$extras.pivot_position ?? 0))
+            .map((row) => Number(row.id));
+        const crossSellIds = ((p as unknown as { crossSells?: Product[] }).crossSells ?? [])
+            .slice()
+            .sort((a, b) => Number(a.$extras.pivot_position ?? 0) - Number(b.$extras.pivot_position ?? 0))
+            .map((row) => Number(row.id));
+        const groupedMemberIds = ((p as unknown as { groupedMembers?: Product[] }).groupedMembers ?? [])
+            .slice()
+            .sort((a, b) => Number(a.$extras.pivot_position ?? 0) - Number(b.$extras.pivot_position ?? 0))
+            .map((row) => Number(row.id));
+        const downloads = (p.downloads ?? [])
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map((row) => ({
+                id: Number(row.id),
+                media_id: Number(row.mediaId),
+                file_label: row.fileLabel,
+                download_limit: row.downloadLimit,
+                download_expiry_days: row.downloadExpiryDays,
+                position: row.position,
+                url: row.media?.url ?? null,
+            }));
         return {
             ...detail,
             global_unique_id: p.globalUniqueId,
             attributes: p.attributes ?? {},
+            pos_available: (p as unknown as { posAvailable?: boolean }).posAvailable ?? true,
+            upsell_ids: upsellIds,
+            cross_sell_ids: crossSellIds,
+            grouped_member_ids: groupedMemberIds,
+            downloads,
             translations: (p.translations ?? []).map((t) => ({
                 locale: t.locale,
                 name: t.name,
