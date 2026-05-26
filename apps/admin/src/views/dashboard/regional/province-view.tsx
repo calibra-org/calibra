@@ -166,9 +166,18 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                             />
                         </MapZoomWrapper>
                     )}
-                    <div className="pointer-events-none absolute start-3 top-3 z-10 rounded-md bg-card/80 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm">
+                    <motion.button
+                        type="button"
+                        onClick={onBack}
+                        whileHover={reduce ? undefined : { scale: 1.03 }}
+                        whileTap={reduce ? undefined : { scale: 0.97 }}
+                        className="absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md border bg-card/90 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent"
+                        aria-label={t("backToCountry")}
+                        title={t("backToCountry")}
+                    >
+                        <ChevronRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
                         <span className="font-semibold text-foreground">{data?.name[locale] ?? code}</span>
-                    </div>
+                    </motion.button>
                     {hoveredCity !== null && pointer !== null ? (
                         <MapTooltip position={pointer}>
                             <div className="flex flex-col gap-0.5">
