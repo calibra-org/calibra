@@ -66,11 +66,13 @@ export function DayGrid({
     const dateLib = getDateLib(calendar);
 
     /**
-     * In within-mode we hand RDP a `{ from, to }` range (or `{ from: anchor, to: anchor }` while
-     * we're between clicks so the anchor day still reads as a one-day "range" via the
-     * range_start modifier). In single-mode we hand it a single `Date` — even if `selection` is
-     * still a range from a just-flipped operator, we collapse to the start so RDP's range
-     * modifiers don't leak into the new single-mode view.
+     * In within-mode with a complete range we hand RDP a `{ from, to }` range. With only the
+     * anchor staged (between the two clicks) we pass `undefined` so RDP doesn't try to render
+     * a 1-day range — applying both `range_start` AND `range_end` to the same cell makes the
+     * `before:` pseudos clash and the cell looks broken / unclickable. The anchor day is
+     * painted separately via the `anchor` modifier below.
+     * In single-mode we collapse any leftover range to its start so RDP gets a `Date` (the
+     * shape its single mode expects).
      */
     const selected = useMemo(() => {
         if (operator === "within") {
@@ -79,11 +81,6 @@ export function DayGrid({
                 const end = valueStringToDate(selection.end, "day", dateLib);
                 if (start === null || end === null) return undefined;
                 return { from: start, to: end };
-            }
-            if (selection.kind === "period" && selection.granularity === "day") {
-                const anchor = valueStringToDate(selection.value, "day", dateLib);
-                if (anchor === null) return undefined;
-                return { from: anchor, to: anchor };
             }
             return undefined;
         }
@@ -94,6 +91,15 @@ export function DayGrid({
             return valueStringToDate(selection.start, "day", dateLib) ?? undefined;
         }
         return undefined;
+    }, [dateLib, operator, selection]);
+
+    /** Anchor day in within-mode mid-selection — painted by a dedicated `anchor` modifier so it
+     * reads as a clean filled circle (same shape as the eventual range_start cap) without
+     * conflicting with the start/end pseudo-element layout. */
+    const anchorDate = useMemo(() => {
+        if (operator !== "within") return undefined;
+        if (selection.kind !== "period" || selection.granularity !== "day") return undefined;
+        return valueStringToDate(selection.value, "day", dateLib) ?? undefined;
     }, [dateLib, operator, selection]);
 
     const previewRange = useMemo(() => {
@@ -107,8 +113,9 @@ export function DayGrid({
     const modifiers = useMemo(
         () => ({
             previewRange: previewRange !== undefined ? { from: previewRange.from, to: previewRange.to } : [],
+            anchor: anchorDate ?? [],
         }),
-        [previewRange],
+        [anchorDate, previewRange],
     );
 
     /**
@@ -123,8 +130,9 @@ export function DayGrid({
      */
     const modifiersClassNames = useMemo(
         () => ({
-            previewRange: "[&_button]:bg-primary/10 [&_button]:text-foreground",
+            previewRange: "[&_button]:bg-primary/30 [&_button]:text-primary-foreground",
             today: "[&_button]:border [&_button]:border-foreground/40",
+            anchor: "[&_button]:!bg-primary [&_button]:!text-primary-foreground",
         }),
         [],
     );
