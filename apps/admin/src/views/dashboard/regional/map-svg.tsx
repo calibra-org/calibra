@@ -1,10 +1,12 @@
 "use client";
 
+import type { Locale } from "@calibra/shared/i18n";
 import { motion, useReducedMotion } from "motion/react";
 
 import { IRAN_COUNTRY_PROVINCES, IRAN_COUNTRY_VIEWBOX } from "#/vendor/iran-map";
 
 import { ZERO_COLOR } from "./heatmap-scale";
+import { SeaDecorations } from "./sea-decorations";
 
 interface MapSvgProps {
     fillForCode: (code: string) => string;
@@ -12,6 +14,7 @@ interface MapSvgProps {
     onHoverChange: (code: string | null) => void;
     onPointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;
     onSelect: (code: string) => void;
+    locale: Locale;
     /** Optional code to dim everything else and lift the matching path (province-mode silhouette). */
     isolatedCode?: string | null;
 }
@@ -26,7 +29,7 @@ interface MapSvgProps {
  * mounting a Tooltip portal on each path and avoids border-flicker as the cursor crosses
  * province boundaries.
  */
-export function MapSvg({ fillForCode, hoveredCode, onHoverChange, onPointerMove, onSelect, isolatedCode }: MapSvgProps) {
+export function MapSvg({ fillForCode, hoveredCode, onHoverChange, onPointerMove, onSelect, isolatedCode, locale }: MapSvgProps) {
     const reduce = useReducedMotion();
     return (
         <svg
@@ -37,6 +40,7 @@ export function MapSvg({ fillForCode, hoveredCode, onHoverChange, onPointerMove,
             onPointerMove={onPointerMove}
             onPointerLeave={() => onHoverChange(null)}
         >
+            <SeaDecorations locale={locale} />
             {IRAN_COUNTRY_PROVINCES.map((province) => {
                 const isHovered = hoveredCode === province.code;
                 const isIsolated = isolatedCode === province.code;

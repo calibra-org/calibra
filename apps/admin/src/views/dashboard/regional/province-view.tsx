@@ -4,16 +4,17 @@ import type { Locale } from "@calibra/shared/i18n";
 import { ChevronLeft } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { formatMoney, formatNumber } from "#/lib/format";
-import type { AdminRegionalProvinceDetail } from "#/lib/types";
-import { IRAN_COUNTRY_PROVINCES, IRAN_COUNTRY_VIEWBOX } from "#/vendor/iran-map";
+import type { AdminRegionalCity, AdminRegionalProvinceDetail } from "#/lib/types";
 
 import { CityList } from "./city-list";
 import { KpiTile } from "./kpi-tile";
+import { MapTooltip } from "./map-tooltip";
 import { FAST_SPRING, SVG_CROSSFADE_DURATION, svgVariants } from "./motion-variants";
+import { ProvinceSvg } from "./province-svg";
 import { TopProductsList } from "./top-products-list";
 import type { HeatmapMetric } from "./heatmap-scale";
 
@@ -47,13 +48,15 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
         return () => window.removeEventListener("keydown", onKey);
     }, [onBack]);
 
-    const province = IRAN_COUNTRY_PROVINCES.find((p) => p.code === code) ?? null;
     const topCity =
         data?.cities && data.cities.length > 0
             ? [...data.cities].sort((a, b) =>
                   metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
               )[0]
             : null;
+
+    const [hoveredCity, setHoveredCity] = useState<AdminRegionalCity | null>(null);
+    const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
 
     return (
         <motion.div
@@ -111,20 +114,44 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr]">
                 <div className="relative">
-                    <svg viewBox={IRAN_COUNTRY_VIEWBOX} className="h-auto w-full">
-                        {province ? (
-                            <motion.path
-                                layoutId={`region-${code}`}
-                                d={province.path}
-                                fill={metric === "revenue" ? "#ef4444" : "#3b82f6"}
-                                stroke="white"
-                                strokeWidth={1.2}
-                            />
-                        ) : null}
-                    </svg>
-                    <div className="pointer-events-none absolute inset-x-0 bottom-2 text-center">
-                        <span className="rounded bg-card/80 px-2 py-0.5 font-medium text-xs">{data?.name[locale] ?? code}</span>
-                    </div>
+                    <ProvinceSvg
+                        code={code}
+                        cities={(data?.cities ?? []).map((c) => ({
+                            regionCode: c.regionCode,
+                            name: c.name.fa,
+                            ordersCount: c.ordersCount,
+                            revenueMinor: c.revenueMinor,
+                            matched: c.matched,
+                        }))}
+                        metric={metric}
+                        onCityHover={(marker) => {
+                            if (marker === null) {
+                                setHoveredCity(null);
+                                return;
+                            }
+                            const original = data?.cities.find(
+                                (c) => c.regionCode === marker.regionCode && c.name.fa === marker.name,
+                            );
+                            setHoveredCity(original ?? null);
+                        }}
+                        onPointerMove={(event) => setPointer({ x: event.clientX, y: event.clientY })}
+                    />
+                    {hoveredCity !== null && pointer !== null ? (
+                        <MapTooltip position={pointer}>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="font-medium">{hoveredCity.name.fa}</span>
+                                <span className="text-muted-foreground">
+                                    {t("totalOrders")}: {formatNumber(hoveredCity.ordersCount, locale)}
+                                </span>
+                                <span className="text-muted-foreground">
+                                    {t("totalRevenue")}: {formatMoney(hoveredCity.revenueMinor, locale)}
+                                </span>
+                                {!hoveredCity.matched ? (
+                                    <span className="text-muted-foreground italic">{t("unmatchedCity")}</span>
+                                ) : null}
+                            </div>
+                        </MapTooltip>
+                    ) : null}
                 </div>
 
                 <div className="flex flex-col gap-4">
