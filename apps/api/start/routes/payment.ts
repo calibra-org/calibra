@@ -1,9 +1,9 @@
 import router from "@adonisjs/core/services/router";
 
+import { middleware } from "#start/kernel";
 import { paymentLimiter, webhookLimiter } from "#start/limiter";
 
 const PaymentController = () => import("#controllers/payment_controller");
-const webhookSignatureMiddleware = () => import("#middleware/webhook_signature_middleware");
 
 /**
  * Storefront payment surface.
@@ -28,10 +28,10 @@ router
         router
             .get("/callback/:gateway_code", [PaymentController, "callback"])
             .as("payment.callback.get")
-            .use([webhookLimiter, webhookSignatureMiddleware]);
+            .use([webhookLimiter, middleware.webhookSignature()]);
         router
             .post("/callback/:gateway_code", [PaymentController, "callback"])
             .as("payment.callback.post")
-            .use([webhookLimiter, webhookSignatureMiddleware]);
+            .use([webhookLimiter, middleware.webhookSignature()]);
     })
     .prefix("/api/v1/payment");
