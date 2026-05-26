@@ -263,6 +263,14 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
         [calendar, commitValue, operator],
     );
 
+    /**
+     * Compute the next selection from the current closure rather than from `setSelection`'s
+     * updater fn — calling `commitFromSelection` inside an updater violates React's rule that
+     * state updaters be side-effect-free (it cascades into a parent `setState` via the
+     * `onChange` prop, which Strict Mode reports as "update during render"). Reading
+     * `selection` from the closure means the callback re-creates on selection change, which is
+     * cheap and keeps the side-effect outside the updater.
+     */
     const handleDayClick = useCallback(
         (date: Date) => {
             const lib = getDateLib(calendar);
@@ -271,23 +279,17 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
                 commitFromSelection({ kind: "period", granularity: "day", value });
                 return;
             }
-            setSelection((current) => {
-                if (current.kind === "range") {
-                    const next: Selection = { kind: "range", start: current.start, end: value };
-                    const ordered = orderRange(next);
-                    commitFromSelection(ordered);
-                    return ordered;
-                }
-                if (current.kind === "period" && current.granularity === "day") {
-                    const next: Selection = { kind: "range", start: current.value, end: value };
-                    const ordered = orderRange(next);
-                    commitFromSelection(ordered);
-                    return ordered;
-                }
-                return { kind: "period", granularity: "day", value };
-            });
+            if (selection.kind === "range") {
+                commitFromSelection(orderRange({ kind: "range", start: selection.start, end: value }));
+                return;
+            }
+            if (selection.kind === "period" && selection.granularity === "day") {
+                commitFromSelection(orderRange({ kind: "range", start: selection.value, end: value }));
+                return;
+            }
+            setSelection({ kind: "period", granularity: "day", value });
         },
-        [calendar, commitFromSelection, operator],
+        [calendar, commitFromSelection, operator, selection],
     );
 
     const handleDayHover = useCallback((date: Date | null) => setHoveredDay(date), []);

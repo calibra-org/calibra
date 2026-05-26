@@ -152,12 +152,12 @@ export function DayGrid({
                     "absolute end-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 weekday: "text-muted-foreground text-xs font-normal pb-1 text-center",
                 /**
-                 * Day cell: `text-center` + zero padding lets the inline-flex button below sit
-                 * dead-centre inside whatever width RDP gives the `<td>`. `grid` on the cell
-                 * would override `display: table-cell` and collapse the whole month grid into
-                 * a single column.
+                 * Day cell: a tiny `p-0.5` gutter on each side prevents the day-number circles
+                 * from touching their neighbours. `text-center` keeps the inline-flex button
+                 * below centred horizontally inside the cell. `grid` on the cell would override
+                 * `display: table-cell` and collapse the whole month grid into a single column.
                  */
-                day: "p-0 text-center",
+                day: "p-0.5 text-center",
                 /**
                  * `rounded-full` gives Linear-style circular day cells; the today border + the
                  * selected fill (both applied via the descendant-button modifier classes above)
@@ -168,9 +168,15 @@ export function DayGrid({
                     "mx-auto inline-flex size-9 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                 outside: "text-muted-foreground/40",
                 selected: "[&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
-                range_start: "[&_button]:!bg-primary [&_button]:!text-primary-foreground",
-                range_end: "[&_button]:!bg-primary [&_button]:!text-primary-foreground",
-                range_middle: "[&_button]:!bg-primary/25 [&_button]:!text-foreground [&_button]:!rounded-none",
+                /**
+                 * Range visualization: the lighter band is painted on the `<td>` itself so the
+                 * `p-0.5` cell padding fills with colour and adjacent cells join into a
+                 * continuous strip. The button keeps its `rounded-full` circle on top so the
+                 * start / end days still read as Linear-style filled circles.
+                 */
+                range_start: "bg-primary/15 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                range_end: "bg-primary/15 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                range_middle: "bg-primary/15 [&_button]:!bg-transparent [&_button]:!text-foreground [&_button]:hover:!bg-primary/10",
                 disabled: "text-muted-foreground/30 cursor-not-allowed",
             }}
         />
