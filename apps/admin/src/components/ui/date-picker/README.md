@@ -52,7 +52,7 @@ form, you're almost certainly wrong — extend the dialog wrapper instead.
 ## Usage — filter chip in a data table
 
 ```tsx
-import { type DateFacetDef, DataTableToolbar } from "#/components/data-table";
+import { type DateFacetDef, DataTableToolbar } from "#/components/ui/data-grid";
 
 const dateFacets: DateFacetDef[] = [
     {

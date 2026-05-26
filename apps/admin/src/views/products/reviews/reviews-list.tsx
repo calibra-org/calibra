@@ -7,6 +7,7 @@ import { Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
+import { Button } from "#/components/ui/button";
 import {
     ActiveFilterChips,
     type ColumnDef,
@@ -14,9 +15,8 @@ import {
     DataTableToolbar,
     DataTableViewOptions,
     type FacetedFilterDef,
-} from "#/components/data-table";
-import { useDataTable } from "#/components/data-table/use-data-table";
-import { Button } from "#/components/ui/button";
+} from "#/components/ui/data-grid";
+import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { toast } from "#/components/ui/toast";
@@ -551,7 +551,7 @@ function ReviewCard({ row, onOpen }: ReviewCardProps) {
                 <button type="button" onClick={onOpen} className="text-start font-medium text-foreground hover:underline">
                     {row.reviewerName}
                 </button>
-                <span className="inline-flex items-center gap-0.5 text-amber-500">
+                <span className="inline-flex items-center gap-0.5 text-warning">
                     {Array.from({ length: 5 }).map((_, index) => (
                         <Star
                             // biome-ignore lint/suspicious/noArrayIndexKey: rating stars rendered in fixed order

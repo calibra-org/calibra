@@ -5,7 +5,7 @@ import { ImagePlus, Sparkles, Star, Tag } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
-import type { FacetedFilterDef, ToggleFilterDef } from "#/components/data-table";
+import type { FacetedFilterDef, ToggleFilterDef } from "#/components/ui/data-grid";
 import { useProductFacets } from "#/lib/products/queries";
 import type { ProductType, StockStatus } from "#/lib/types";
 

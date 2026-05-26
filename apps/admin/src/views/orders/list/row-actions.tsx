@@ -4,7 +4,6 @@ import { Copy, Eye, FileText, Hash, Mail, Pencil, Printer, Trash2, Truck } from 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { DataTableRowActions } from "#/components/data-table";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -14,6 +13,7 @@ import {
     AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Button } from "#/components/ui/button";
+import { DataTableRowActions } from "#/components/ui/data-grid";
 import { DropdownMenuItem, DropdownMenuSeparator } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";
 import { useDeleteOrder, useMarkShipped, useResendConfirmation } from "#/lib/queries/orders";
@@ -116,7 +116,7 @@ export function RowActions({ order, onOpenPreview, onOpenDetail }: RowActionsPro
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     onClick={() => setConfirmTrash(true)}
-                    className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
+                    className="text-danger hover:bg-danger/10 hover:text-danger"
                 >
                     <Trash2 className="size-3.5" aria-hidden="true" />
                     {t("actions.trash")}

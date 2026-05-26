@@ -218,8 +218,8 @@ function ResultCard({
     if (result.eligible) {
         const calc = result.calculation;
         return (
-            <div className="flex flex-col gap-2 rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm dark:border-emerald-900 dark:bg-emerald-950/40">
-                <Badge className="w-fit bg-emerald-600 text-white">{t("eligibleBadge")}</Badge>
+            <div className="flex flex-col gap-2 rounded-md border border-success bg-success p-3 text-sm">
+                <Badge className="w-fit bg-success text-white">{t("eligibleBadge")}</Badge>
                 {calc !== undefined && (
                     <div className="grid grid-cols-2 gap-2">
                         <ResultLine label={t("calc.subtotal")} value={formatMoney(calc.items_subtotal_minor, locale)} />

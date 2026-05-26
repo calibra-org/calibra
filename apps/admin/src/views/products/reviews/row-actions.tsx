@@ -3,7 +3,7 @@
 import { CheckCircle2, Copy, ExternalLink, FilePen, Hash, MessageSquareReply, Trash2, Undo2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { DataTableRowActions } from "#/components/data-table";
+import { DataTableRowActions } from "#/components/ui/data-grid";
 import { DropdownMenuItem, DropdownMenuSeparator } from "#/components/ui/dropdown-menu";
 import type { AdminReview } from "#/lib/types";
 
@@ -122,19 +122,13 @@ export function RowActions({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {!isTrashed && onTrash !== undefined && (
-                <DropdownMenuItem
-                    onClick={() => onTrash(review)}
-                    className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
-                >
+                <DropdownMenuItem onClick={() => onTrash(review)} className="text-danger hover:bg-danger/10 hover:text-danger">
                     <Trash2 className="size-3.5" aria-hidden="true" />
                     {t("actions.trash")}
                 </DropdownMenuItem>
             )}
             {isTrashed && onDelete !== undefined && (
-                <DropdownMenuItem
-                    onClick={() => onDelete(review)}
-                    className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
-                >
+                <DropdownMenuItem onClick={() => onDelete(review)} className="text-danger hover:bg-danger/10 hover:text-danger">
                     <Trash2 className="size-3.5" aria-hidden="true" />
                     {t("actions.delete")}
                 </DropdownMenuItem>

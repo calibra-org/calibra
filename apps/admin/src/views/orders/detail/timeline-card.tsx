@@ -139,9 +139,9 @@ function TimelineRow({ entry, locale, tStatus, t }: TimelineRowProps) {
             <span
                 className={cn(
                     "mt-1 grid size-7 shrink-0 place-items-center rounded-full",
-                    entry.kind === "status" && "bg-sky-500/15 text-sky-600",
+                    entry.kind === "status" && "bg-info/15 text-info",
                     entry.kind === "note" && "bg-muted text-foreground/70",
-                    entry.kind === "refund" && "bg-rose-500/15 text-rose-600",
+                    entry.kind === "refund" && "bg-danger/15 text-danger",
                 )}
                 aria-hidden="true"
             >

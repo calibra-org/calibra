@@ -35,11 +35,17 @@
     --color-brand-600: 232 60% 60%;
     --color-brand-700: 232 56% 52%;
 
-    /** Semantic accents (status). */
-    --color-success: 152 64% 38%;
-    --color-warning: 35 92% 50%;
-    --color-danger: 0 84% 60%;
-    --color-info: 210 95% 55%;
+    /**
+     * Semantic accents (status) — palette-layer raw HSL components. Named with a `-h` suffix to
+     * avoid colliding with the `--color-success` / `--color-warning` / … keys Tailwind v4 reads
+     * inside the `@theme inline` block below to generate utilities. Without the suffix Tailwind
+     * picks up the raw-component value (`152 64% 38%`) as the theme color and refuses to generate
+     * `.bg-success` / `.text-success` etc. because the value isn't a parseable color expression.
+     */
+    --success-h: 152 64% 38%;
+    --warning-h: 35 92% 50%;
+    --danger-h: 0 84% 60%;
+    --info-h: 210 95% 55%;
 }
 
 .dark {
@@ -69,10 +75,10 @@
     --color-brand-600: 232 65% 70%;
     --color-brand-700: 232 70% 80%;
 
-    --color-success: 152 60% 50%;
-    --color-warning: 35 92% 60%;
-    --color-danger: 0 72% 55%;
-    --color-info: 210 95% 65%;
+    --success-h: 152 60% 50%;
+    --warning-h: 35 92% 60%;
+    --danger-h: 0 72% 55%;
+    --info-h: 210 95% 65%;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -116,16 +122,28 @@
     --accent: var(--background-elevated);
     --accent-foreground: var(--foreground-base);
 
-    --destructive: var(--color-danger);
+    --destructive: var(--danger-h);
     --destructive-foreground: 0 0% 100%;
+
+    /** Status accents — expose every semantic tone with a paired foreground so callers can render
+     * tone backgrounds without re-deriving readable text colour. `--destructive` stays as a
+     * shadcn-compat alias; new code uses `--danger` / `text-danger`. */
+    --success: var(--success-h);
+    --success-foreground: 0 0% 100%;
+    --warning: var(--warning-h);
+    --warning-foreground: 240 16% 9%;
+    --danger: var(--danger-h);
+    --danger-foreground: 0 0% 100%;
+    --info: var(--info-h);
+    --info-foreground: 0 0% 100%;
 
     --border: var(--color-gray-200);
     --input: var(--color-gray-200);
     --ring: var(--color-brand-600);
 
     --chart-1: var(--color-brand-600);
-    --chart-2: var(--color-success);
-    --chart-3: var(--color-warning);
+    --chart-2: var(--success-h);
+    --chart-3: var(--warning-h);
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
@@ -170,16 +188,27 @@
     --accent: var(--background-elevated);
     --accent-foreground: var(--foreground-base);
 
-    --destructive: var(--color-danger);
+    --destructive: var(--danger-h);
     --destructive-foreground: 0 0% 100%;
+
+    /** Dark-mode tone foregrounds: success / warning / info are lighter in dark mode, so flip
+     * their foregrounds to dark text. Danger stays saturated enough to need white text. */
+    --success: var(--success-h);
+    --success-foreground: 240 12% 4.5%;
+    --warning: var(--warning-h);
+    --warning-foreground: 240 12% 4.5%;
+    --danger: var(--danger-h);
+    --danger-foreground: 0 0% 100%;
+    --info: var(--info-h);
+    --info-foreground: 240 12% 4.5%;
 
     --border: var(--color-gray-200);
     --input: var(--color-gray-200);
     --ring: var(--color-brand-500);
 
     --chart-1: var(--color-brand-500);
-    --chart-2: var(--color-success);
-    --chart-3: var(--color-warning);
+    --chart-2: var(--success-h);
+    --chart-3: var(--warning-h);
     --chart-4: 280 65% 65%;
     --chart-5: 340 75% 60%;
 
@@ -218,6 +247,14 @@
     --color-accent-foreground: hsl(var(--accent-foreground));
     --color-destructive: hsl(var(--destructive));
     --color-destructive-foreground: hsl(var(--destructive-foreground));
+    --color-success: hsl(var(--success));
+    --color-success-foreground: hsl(var(--success-foreground));
+    --color-warning: hsl(var(--warning));
+    --color-warning-foreground: hsl(var(--warning-foreground));
+    --color-danger: hsl(var(--danger));
+    --color-danger-foreground: hsl(var(--danger-foreground));
+    --color-info: hsl(var(--info));
+    --color-info-foreground: hsl(var(--info-foreground));
     --color-border: hsl(var(--border));
     --color-input: hsl(var(--input));
     --color-ring: hsl(var(--ring));

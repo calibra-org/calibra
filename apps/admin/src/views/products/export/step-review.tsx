@@ -280,7 +280,7 @@ function Stat({ label, value, tone }: StatProps): React.JSX.Element {
             className={cn(
                 "rounded-md border p-3",
                 tone === "primary" && "border-primary/30 bg-primary/5",
-                tone === "info" && "border-sky-500/30 bg-sky-500/5",
+                tone === "info" && "border-info/30 bg-info/5",
                 tone === "muted" && "bg-muted/30",
             )}
         >

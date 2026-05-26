@@ -4,7 +4,6 @@ import { Copy, ExternalLink, Eye, FilePen, Hash, Pencil, RotateCcw, Trash2 } fro
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { DataTableRowActions } from "#/components/data-table";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -14,6 +13,7 @@ import {
     AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Button } from "#/components/ui/button";
+import { DataTableRowActions } from "#/components/ui/data-grid";
 import { DropdownMenuItem, DropdownMenuSeparator } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";
 import { useDuplicateProduct, useForceDeleteProducts, useRestoreProducts, useTrashProducts } from "#/lib/products/mutations";
@@ -130,7 +130,7 @@ export function RowActions({ product, onQuickEdit, onOpenDetail }: RowActionsPro
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                             onClick={() => setTrashOpen(true)}
-                            className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
+                            className="text-danger hover:bg-danger/10 hover:text-danger"
                         >
                             <Trash2 className="size-3.5" aria-hidden="true" />
                             {t("actions.trash")}
@@ -146,7 +146,7 @@ export function RowActions({ product, onQuickEdit, onOpenDetail }: RowActionsPro
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                             onClick={() => setForceOpen(true)}
-                            className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
+                            className="text-danger hover:bg-danger/10 hover:text-danger"
                         >
                             <Trash2 className="size-3.5" aria-hidden="true" />
                             {t("rowActions.deletePermanently")}

@@ -1,9 +1,9 @@
 "use client";
 
-import { CalendarRange } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { CalendarRange } from "#/icons";
 import { cn } from "#/lib/utils";
 
 import { DatePickerDialog } from "./date-picker-dialog";
@@ -22,13 +22,9 @@ interface DateRangeFieldProps {
 }
 
 /**
- * Form-mode wrapper for picking a closed `[start, end]` day range. Mirrors {@link DateField} but
- * locks the operator to `within` so the operator chips can't drift mid-form.
- *
- * Opens as a modal **dialog** (not a popover) so it can't be clipped by sticky headers, sidebar
- * cards, or RTL viewport edges and so the picker has enough room for the calendar + quick-pick
- * row at every breakpoint. Use the popover variant only for the data-table filter chip, where
- * anchor-mounting is the right call. — see [`./README.md`](./README.md).
+ * Form-mode wrapper for picking a closed `[start, end]` day range. Mirrors {@link DateField} —
+ * Calendar opens inside a Dialog per DESIGN_SYSTEM.md §3.8. Locks the operator to `within` so
+ * the chips can't drift mid-form.
  */
 export function DateRangeField({
     label,
@@ -61,7 +57,11 @@ export function DateRangeField({
             >
                 <CalendarRange className="size-4 text-muted-foreground" aria-hidden="true" />
                 <span className={cn(value === null && "text-muted-foreground/70")}>
-                    {value === null ? (placeholder ?? t("pickARange")) : formatValueOnly(wrapped!, { locale })}
+                    {value === null
+                        ? (placeholder ?? t("pickARange"))
+                        : wrapped !== null
+                          ? formatValueOnly(wrapped, { locale })
+                          : ""}
                 </span>
             </button>
             <DatePickerDialog

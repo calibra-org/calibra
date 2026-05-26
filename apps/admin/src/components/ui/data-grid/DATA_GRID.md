@@ -25,7 +25,7 @@ Every list page in `apps/admin` shares the same skeleton — header + status tab
 
 ## Primitives (low-level)
 
-These already exist under `apps/admin/src/components/data-table/` and rarely need wiring directly:
+These already exist under `apps/admin/src/components/ui/data-grid/` and rarely need wiring directly:
 
 - `DataTable` — the table itself (sticky columns, drag-and-drop reorder, density, pagination).
 - `DataTableToolbar` — search input + facet chips + toggle chips + clear-all + refresh + a `rightSlot` for the view-options button.
@@ -42,7 +42,7 @@ These already exist under `apps/admin/src/components/data-table/` and rarely nee
 import {
     DataGridToolbar,
     buildDataGridToolbarLabels,
-} from "#/components/data-table";
+} from "#/components/ui/data-grid";
 
 <DataGridToolbar
     q={tableState.q}

@@ -154,8 +154,8 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
             </section>
 
             {showRollback ? (
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/5 p-4 text-sm">
-                    <p className="flex items-center gap-2 text-amber-900 dark:text-amber-100">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/40 bg-warning/5 p-4 text-sm">
+                    <p className="flex items-center gap-2 text-warning">
                         <Undo2 className="size-4" aria-hidden />
                         {t("rollback.banner")}
                     </p>
@@ -213,7 +213,7 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
                                         ) : null}
                                     </div>
                                     {err.retried_at !== null ? (
-                                        <Badge variant="outline" className="text-emerald-700 text-xs dark:text-emerald-300">
+                                        <Badge variant="outline" className="text-success text-xs">
                                             {t("errors.retried")}
                                         </Badge>
                                     ) : null}
@@ -269,8 +269,8 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
 }
 
 function statusToTone(status: ProductImportRow["status"]): { border: string; icon: string } {
-    if (status === "completed") return { border: "border-emerald-500/30", icon: "text-emerald-500" };
-    if (status === "completed_with_errors") return { border: "border-amber-500/30", icon: "text-amber-500" };
+    if (status === "completed") return { border: "border-success/30", icon: "text-success" };
+    if (status === "completed_with_errors") return { border: "border-warning/30", icon: "text-warning" };
     if (status === "failed") return { border: "border-destructive/30", icon: "text-destructive" };
     if (status === "cancelled") return { border: "border-muted-foreground/30", icon: "text-muted-foreground" };
     if (status === "rolled_back") return { border: "border-destructive/30", icon: "text-destructive" };
@@ -307,8 +307,8 @@ function Stat({ label, value, icon, tone }: StatProps): React.JSX.Element {
         <div
             className={cn(
                 "rounded-md border p-3",
-                tone === "success" && "border-emerald-500/30 bg-emerald-500/5",
-                tone === "info" && "border-sky-500/30 bg-sky-500/5",
+                tone === "success" && "border-success/30 bg-success/5",
+                tone === "info" && "border-info/30 bg-info/5",
                 tone === "danger" && "border-destructive/30 bg-destructive/5",
             )}
         >

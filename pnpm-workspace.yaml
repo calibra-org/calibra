@@ -61,9 +61,11 @@ catalogs:
         "@tiptap/extension-link": ^2.13.0
         "@tiptap/extension-placeholder": ^2.13.0
         "isomorphic-dompurify": ^2.30.0
+        shiki: ^1.29.0
         zod: ^4.4.3
         "start-server-and-test": ^2.0.13
         tailwind-merge: 3.5.0
+        "tailwind-variants": ^1.0.0
         tailwindcss: 4.2.2
         tsdown: ^0.21.2
         turbo: 2.9.3

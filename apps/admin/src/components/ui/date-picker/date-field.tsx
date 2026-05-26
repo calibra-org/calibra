@@ -1,9 +1,9 @@
 "use client";
 
-import { CalendarDays } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { CalendarDays } from "#/icons";
 import { cn } from "#/lib/utils";
 
 import { DatePickerDialog } from "./date-picker-dialog";
@@ -24,13 +24,12 @@ interface DateFieldProps {
 }
 
 /**
- * Form-mode wrapper that exposes a single-date picker as a form field. Unlike
- * {@link DateFilterChip}, there's no operator switching — the field is just a calendar-aware
- * date input.
+ * Form-mode wrapper that exposes a single-date picker as a form field. Per DESIGN_SYSTEM.md §3.8
+ * (Calendar-in-Dialog only) the Calendar opens inside a Dialog — the trigger is a plain button
+ * owned by this component rather than Base UI's Popover trigger.
  *
- * Opens as a modal **dialog** (not a popover) so it can't be clipped by sticky headers, sidebar
- * cards, or RTL viewport edges. Use the popover variant only for the data-table filter chip,
- * where anchor-mounting is the right call.
+ * The underlying picker still supports the full operator grammar; this field collapses every
+ * commit to `before <date>` and stores the bare day string.
  */
 export function DateField({
     label,
@@ -62,7 +61,11 @@ export function DateField({
             >
                 <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
                 <span className={cn(value === null && "text-muted-foreground/70")}>
-                    {value === null ? (placeholder ?? t("pickADate")) : formatValueOnly(wrapped!, { locale })}
+                    {value === null
+                        ? (placeholder ?? t("pickADate"))
+                        : wrapped !== null
+                          ? formatValueOnly(wrapped, { locale })
+                          : ""}
                 </span>
             </button>
             <DatePickerDialog

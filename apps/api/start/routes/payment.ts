@@ -1,5 +1,6 @@
 import router from "@adonisjs/core/services/router";
 
+import { middleware } from "#start/kernel";
 import { paymentLimiter, webhookLimiter } from "#start/limiter";
 
 const PaymentController = () => import("#controllers/payment_controller");
@@ -12,16 +13,25 @@ const PaymentController = () => import("#controllers/payment_controller");
  *   GET|POST /callback/:code — PSP-redirected user lands here. Always ends in a 302 to the
  *                              storefront success/failed URL — never returns JSON.
  *
- * Limiter targeting:
+ * Middleware targeting:
  *   - `/init` runs under the customer-scoped {@link paymentLimiter} (30/min/user) — guards
  *     against a runaway client retrying after a flaky network drop.
- *   - `/callback/*` runs under the IP-scoped {@link webhookLimiter} (60/min/ip) — the user
- *     isn't authenticated yet at that hop, so IP is the only available key.
+ *   - `/callback/*` runs under the IP-scoped {@link webhookLimiter} (60/min/ip) and the
+ *     gateway-aware `webhookSignatureMiddleware`: the latter loads the gateway by
+ *     `:gateway_code`, checks its `signed_callback` flag, and applies HMAC verification only
+ *     when the PSP signs callbacks. Unsigned PSPs (ZarinPal, IDPay, …) no-op the middleware
+ *     and rely on the idempotency ledger + amount guard + per-order lock for replay safety.
  */
 router
     .group(() => {
         router.post("/init", [PaymentController, "init"]).as("payment.init").use(paymentLimiter);
-        router.get("/callback/:gateway_code", [PaymentController, "callback"]).as("payment.callback.get").use(webhookLimiter);
-        router.post("/callback/:gateway_code", [PaymentController, "callback"]).as("payment.callback.post").use(webhookLimiter);
+        router
+            .get("/callback/:gateway_code", [PaymentController, "callback"])
+            .as("payment.callback.get")
+            .use([webhookLimiter, middleware.webhookSignature()]);
+        router
+            .post("/callback/:gateway_code", [PaymentController, "callback"])
+            .as("payment.callback.post")
+            .use([webhookLimiter, middleware.webhookSignature()]);
     })
     .prefix("/api/v1/payment");

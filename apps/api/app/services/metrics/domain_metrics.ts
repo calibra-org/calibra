@@ -230,6 +230,23 @@ export function recordPaymentPhase(gateway: string, phase: PaymentPhase, duratio
     paymentAttemptDurationSeconds.observe({ gateway, phase }, durationSeconds);
 }
 
+/**
+ * Stranded-order gauge: how many `pending` orders have a PSP attempt that never received its
+ * callback past the reconcile window. The `payments:reconcile` ace command refreshes this
+ * each run so a Grafana alert can fire when the count stays non-zero across multiple
+ * reconcile cycles (a single non-zero tick is healthy — webhooks land within seconds of the
+ * window; sustained non-zero means webhooks are dropping).
+ */
+const strandedOrdersGauge = metricsRegistry.gauge({
+    name: "calibra_payment_stranded_orders",
+    help: "Pending orders with an AwaitingCallback attempt older than the reconcile window, by gateway.",
+    labelNames: ["gateway"],
+});
+
+export function recordStrandedOrders(gateway: string, count: number): void {
+    strandedOrdersGauge.set({ gateway }, count);
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Inventory — movement counter + dedicated oversell-attempt counter.          */
 /* -------------------------------------------------------------------------- */

@@ -25,7 +25,7 @@ export interface StepReviewProps {
 
 /**
  * Step 3 — dedicated **review** workspace. This is the deliberate divergence from WooCommerce's
- * "scroll past the table to find the run button" pattern: the operator gets a clean page focused
+ *"scroll past the table to find the run button"pattern: the operator gets a clean page focused
  * on the run's scope.
  *
  * The left rail holds per-outcome toggles (`Skip new`, `Skip updates`, `Skip warning rows`,
@@ -241,9 +241,9 @@ function ControlRow({ id, checked, onCheckedChange, label, help, disabled, tone 
             className={cn(
                 "flex items-start gap-3 rounded-md border p-3 transition-colors",
                 checked && tone === "primary" && "border-primary/40 bg-primary/5",
-                checked && tone === "success" && "border-emerald-500/40 bg-emerald-500/5",
-                checked && tone === "info" && "border-sky-500/40 bg-sky-500/5",
-                checked && tone === "warning" && "border-amber-500/40 bg-amber-500/5",
+                checked && tone === "success" && "border-success/40 bg-success/5",
+                checked && tone === "info" && "border-info/40 bg-info/5",
+                checked && tone === "warning" && "border-warning/40 bg-warning/5",
                 disabled && "opacity-50",
             )}
         >
@@ -276,8 +276,8 @@ function EffectiveRow({ label, value, tone }: EffectiveRowProps): React.JSX.Elem
             <dd
                 className={cn(
                     "font-semibold",
-                    tone === "success" && "text-emerald-600 dark:text-emerald-400",
-                    tone === "info" && "text-sky-600 dark:text-sky-400",
+                    tone === "success" && "text-success",
+                    tone === "info" && "text-info",
                     tone === "danger" && "text-destructive",
                 )}
             >
@@ -295,7 +295,7 @@ interface EffectiveCounters {
 }
 
 /**
- * Compute the "what will actually happen" counters from the raw preview + control toggles.
+ * Compute the"what will actually happen"counters from the raw preview + control toggles.
  * Mirrors the runner's logic so the operator sees the same numbers the server will commit.
  */
 function applyControls(preview: ReviewState["preview"], controls: ReviewControls): EffectiveCounters {

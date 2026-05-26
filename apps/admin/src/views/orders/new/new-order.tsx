@@ -171,7 +171,7 @@ export function NewOrder({ paymentMethods }: NewOrderProps) {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="text-rose-600 hover:text-rose-700"
+                                        className="text-danger hover:text-danger"
                                         onClick={() => setLines((current) => current.filter((_, idx) => idx !== index))}
                                         aria-label={t("remove")}
                                         disabled={lines.length === 1}

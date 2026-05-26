@@ -105,7 +105,7 @@ export function ActionsCard({ order }: ActionsCardProps) {
             <Separator />
             <button
                 type="button"
-                className="inline-flex w-fit items-center gap-1 text-rose-600 text-xs hover:underline"
+                className="inline-flex w-fit items-center gap-1 text-danger text-xs hover:underline"
                 onClick={() => setConfirmTrash(true)}
             >
                 <Trash2 className="size-3.5" aria-hidden="true" />

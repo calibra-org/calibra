@@ -4,7 +4,6 @@ import { CheckCircle2, Trash2, Undo2, Wand2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { DataTableBulkBar } from "#/components/data-table";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -14,6 +13,7 @@ import {
     AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Button } from "#/components/ui/button";
+import { DataTableBulkBar } from "#/components/ui/data-grid";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";
 import { useBulkModerateReviews, useDeleteReviews, useRestoreReviews, useTrashReviews } from "#/lib/reviews/mutations";
@@ -155,7 +155,7 @@ export function BulkActions({ selectedIds, onClear, tabStatus }: BulkActionsProp
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 gap-1.5 px-2 text-rose-100 hover:bg-rose-500/30 hover:text-background"
+                        className="h-7 gap-1.5 px-2 text-danger hover:bg-danger/30 hover:text-background"
                         onClick={() => setConfirmOpen("trash")}
                     >
                         <Trash2 className="size-3.5" aria-hidden="true" />
@@ -166,7 +166,7 @@ export function BulkActions({ selectedIds, onClear, tabStatus }: BulkActionsProp
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 gap-1.5 px-2 text-rose-100 hover:bg-rose-500/30 hover:text-background"
+                        className="h-7 gap-1.5 px-2 text-danger hover:bg-danger/30 hover:text-background"
                         onClick={() => setConfirmOpen("delete")}
                     >
                         <Trash2 className="size-3.5" aria-hidden="true" />
