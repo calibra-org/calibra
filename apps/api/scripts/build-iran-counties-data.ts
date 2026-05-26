@@ -115,9 +115,7 @@ async function main() {
     writeFileSync(mapOutPath, `${JSON.stringify(cityToCounty, null, 2)}\n`, "utf8");
 
     const totalCounties = provinceBlocks.reduce((sum, b) => sum + b.counties.length, 0);
-    process.stdout.write(
-        `Wrote ${countiesOutPath}\n${provinceBlocks.length} provinces, ${totalCounties} counties total.\n`,
-    );
+    process.stdout.write(`Wrote ${countiesOutPath}\n${provinceBlocks.length} provinces, ${totalCounties} counties total.\n`);
     process.stdout.write(`Wrote ${mapOutPath}\n${Object.keys(cityToCounty).length} city→county mappings.\n`);
 }
 
