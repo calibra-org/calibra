@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
 
@@ -25,8 +26,6 @@ export interface WebhookEventInserted {
 
 export type RecordOutcome = WebhookEventInserted | WebhookEventReplay;
 
-const POSTGRES_UNIQUE_VIOLATION = "23505";
-
 /**
  * Idempotency ledger for inbound PSP callbacks. The webhook handler calls `record()` inside
  * the same transaction as the work it's about to do — a duplicate `(provider, event_id)`
@@ -42,33 +41,48 @@ const POSTGRES_UNIQUE_VIOLATION = "23505";
 export class WebhookIdempotencyService {
     async record(input: WebhookEventInput, trx?: TransactionClientContract): Promise<RecordOutcome> {
         const payloadHash = createHash("sha256").update(input.rawBody).digest("hex");
-        const row = new ProcessedWebhookEvent();
-        if (trx) row.useTransaction(trx);
-        row.provider = input.provider;
-        row.eventId = input.eventId;
-        row.eventKind = input.eventKind;
-        row.payloadHash = payloadHash;
-        row.outcome = "pending";
-        row.receivedAt = DateTime.utc();
-        if (input.paymentAttemptId !== undefined && input.paymentAttemptId !== null) {
-            row.paymentAttemptId = Number(input.paymentAttemptId);
+
+        /**
+         * `INSERT ... ON CONFLICT DO NOTHING RETURNING id`. When a row with the same
+         * (provider, event_id) already exists, Postgres skips the insert and returns zero
+         * rows — which is the signal that this is a replay. We can't use a try/catch on the
+         * model's save() inside a transaction because a unique-constraint violation aborts
+         * the entire transaction (subsequent queries fail with "current transaction is
+         * aborted"). ON CONFLICT DO NOTHING returns cleanly without poisoning the txn.
+         */
+        const client = trx ?? db.connection();
+        const paymentAttemptId =
+            input.paymentAttemptId !== undefined && input.paymentAttemptId !== null ? Number(input.paymentAttemptId) : null;
+        const orderId = input.orderId !== undefined && input.orderId !== null ? Number(input.orderId) : null;
+        const insert = await client.rawQuery<{ rows: Array<{ id: string | number }> }>(
+            `
+            INSERT INTO processed_webhook_events
+                (provider, event_id, event_kind, payment_attempt_id, order_id, payload_hash, outcome, received_at, created_at, updated_at)
+            VALUES (:provider, :event_id, :event_kind, :payment_attempt_id, :order_id, :payload_hash, 'pending', now(), now(), now())
+            ON CONFLICT (provider, event_id) DO NOTHING
+            RETURNING id
+            `,
+            {
+                provider: input.provider,
+                event_id: input.eventId,
+                event_kind: input.eventKind,
+                payment_attempt_id: paymentAttemptId as number,
+                order_id: orderId as number,
+                payload_hash: payloadHash,
+            },
+        );
+
+        const firstRow = insert.rows[0];
+        if (firstRow) {
+            const inserted = await ProcessedWebhookEvent.query({ client: trx }).where("id", String(firstRow.id)).firstOrFail();
+            return { replayed: false, inserted };
         }
-        if (input.orderId !== undefined && input.orderId !== null) {
-            row.orderId = Number(input.orderId);
-        }
-        try {
-            await row.save();
-            return { replayed: false, inserted: row };
-        } catch (error) {
-            if (this.isUniqueViolation(error)) {
-                const existing = await ProcessedWebhookEvent.query({ client: trx })
-                    .where("provider", input.provider)
-                    .where("event_id", input.eventId)
-                    .firstOrFail();
-                return { replayed: true, existing };
-            }
-            throw error;
-        }
+
+        const existing = await ProcessedWebhookEvent.query({ client: trx })
+            .where("provider", input.provider)
+            .where("event_id", input.eventId)
+            .firstOrFail();
+        return { replayed: true, existing };
     }
 
     /**
@@ -95,11 +109,6 @@ export class WebhookIdempotencyService {
             row.orderId = Number(opts.orderId);
         }
         await row.save();
-    }
-
-    private isUniqueViolation(error: unknown): boolean {
-        const code = (error as { code?: string } | null)?.code;
-        return code === POSTGRES_UNIQUE_VIOLATION;
     }
 }
 

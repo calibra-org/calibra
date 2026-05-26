@@ -23,7 +23,7 @@ test.group("gateway-aware webhook signature middleware", (group) => {
         await resetPhase08();
     });
 
-    test("unsigned gateway (default posture) lets the callback flow proceed", async ({ client }) => {
+    test("unsigned gateway (default posture) lets the callback flow proceed", async ({ client, assert }) => {
         const response = await client
             .get("/api/v1/payment/callback/zarinpal")
             .qs({ Authority: "AUNSIGNED0000000000000000000000001", Status: "OK" })
@@ -31,11 +31,14 @@ test.group("gateway-aware webhook signature middleware", (group) => {
 
         /**
          * The callback continues past the signature middleware. The attempt doesn't exist so
-         * the payment service throws E_PAYMENT_ATTEMPT_NOT_FOUND (404). What matters here is
-         * that the response is NOT a signature-rejected 401 — the middleware no-opped.
+         * the payment service throws E_PAYMENT_ATTEMPT_NOT_FOUND, which the controller
+         * catches and turns into a 302 → /checkout/failed redirect (PSP-initiated requests
+         * never see JSON). What matters here: the response is NOT a 401, which would mean the
+         * middleware blocked us.
          */
-        response.assertStatus(404);
-        response.assertBodyContains({ errors: [{ code: "E_PAYMENT_ATTEMPT_NOT_FOUND" }] });
+        assert.equal(response.response.status, 302);
+        const location = response.header("location") as string;
+        assert.match(location, /checkout\/failed/);
     });
 
     test("signed gateway with no signature header returns 401", async ({ client, assert }) => {
@@ -85,7 +88,7 @@ test.group("gateway-aware webhook signature middleware", (group) => {
         assert.equal(body.errors[0]?.code, "E_SIGNATURE_CONFIG_MISSING");
     });
 
-    test("signed gateway with correct HMAC passes the middleware (proceeds to attempt lookup)", async ({ client }) => {
+    test("signed gateway with correct HMAC passes the middleware (proceeds to attempt lookup)", async ({ client, assert }) => {
         await enableSignedCallback();
         const authority = "AGOODSIG000000000000000000000001";
         const query = `Authority=${authority}&Status=OK`;
@@ -97,10 +100,13 @@ test.group("gateway-aware webhook signature middleware", (group) => {
             .redirects(0);
 
         /**
-         * The middleware passes — the request reaches the payment service, which then 404s on
-         * the missing attempt. A 401 here would mean the middleware blocked us.
+         * The middleware passes — the request reaches the payment service, which then throws
+         * E_PAYMENT_ATTEMPT_NOT_FOUND (no attempt exists for this authority), and the
+         * controller redirects to /checkout/failed. A 401 here would mean the middleware
+         * blocked us; a 302 to /checkout/failed means the middleware let us through.
          */
-        response.assertStatus(404);
-        response.assertBodyContains({ errors: [{ code: "E_PAYMENT_ATTEMPT_NOT_FOUND" }] });
+        assert.equal(response.response.status, 302);
+        const location = response.header("location") as string;
+        assert.match(location, /checkout\/failed/);
     });
 });
