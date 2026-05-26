@@ -10,18 +10,18 @@ export type StatusTone = "neutral" | "info" | "success" | "warning" | "danger";
  */
 const surface: Record<StatusTone, string> = {
     neutral: "bg-muted/70 text-foreground/80 ring-border",
-    info: "bg-sky-500/12 text-sky-700 ring-sky-500/25 dark:text-sky-300 dark:bg-sky-500/15",
-    success: "bg-emerald-500/12 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300 dark:bg-emerald-500/15",
-    warning: "bg-amber-500/15 text-amber-800 ring-amber-500/30 dark:text-amber-300 dark:bg-amber-500/15",
-    danger: "bg-rose-500/12 text-rose-700 ring-rose-500/25 dark:text-rose-300 dark:bg-rose-500/15",
+    info: "bg-info/12 text-info ring-info/25",
+    success: "bg-success/12 text-success ring-success/25",
+    warning: "bg-warning/15 text-warning ring-warning/30",
+    danger: "bg-danger/12 text-danger ring-danger/25",
 };
 
 const dot: Record<StatusTone, string> = {
     neutral: "bg-muted-foreground",
-    info: "bg-sky-500",
-    success: "bg-emerald-500",
-    warning: "bg-amber-500",
-    danger: "bg-rose-500",
+    info: "bg-info",
+    success: "bg-success",
+    warning: "bg-warning",
+    danger: "bg-danger",
 };
 
 interface StatusBadgeProps {

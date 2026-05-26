@@ -6,10 +6,10 @@ import type { useTranslations } from "next-intl";
 
 type TFunction = ReturnType<typeof useTranslations>;
 
-import { type ColumnDef, DataTableColumnHeader, type SortState } from "#/components/data-table";
 import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { type ColumnDef, DataTableColumnHeader, type SortState } from "#/components/ui/data-grid";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "#/components/ui/hover-card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "#/components/ui/tooltip";
 import { formatDate, formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
@@ -424,13 +424,13 @@ interface StockCellProps {
 
 /**
  * Compact stock cell. Badge color is binary — green when there's stock, red when the rolled-up
- * total is 0. The "low stock" state lives *outside* the badge as a separate warning chip so the
+ * total is 0. The"low stock"state lives *outside* the badge as a separate warning chip so the
  * primary in-stock signal stays unambiguously green; the operator scans down the column and
- * spots "warning next to in-stock" without re-reading every chip.
+ * spots"warning next to in-stock"without re-reading every chip.
  *
- *   ۱۸۱ موجود                                ← plain green chip
- *   ۳ موجود   ⚠ کم‌موجود                       ← green chip + amber warning chip beside it
- *   ۰ ناموجود                                ← red chip
+ * ۱۸۱ موجود ← plain green chip
+ * ۳ موجود ⚠ کم‌موجود ← green chip + amber warning chip beside it
+ * ۰ ناموجود ← red chip
  *
  * For products without an inventory row (`manage_stock=false` / untracked) the cell renders the
  * status-only chip without a quantity, since the number would always be `0` and read as out of
@@ -442,9 +442,7 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
     const isLow = !isOut && tracked && (lowStock || (quantity ?? 0) <= lowStockThreshold);
     const isInStock = !isOut;
 
-    const wrapCls = isInStock
-        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-        : "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300";
+    const wrapCls = isInStock ? "border-success/30 bg-success/10 text-success" : "border-danger/30 bg-danger/10 text-danger";
     const label = stockT(isInStock ? "instock" : "outofstock");
 
     return (
@@ -465,7 +463,7 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
                                     type="button"
                                     aria-label={t("lowStock")}
                                     {...props}
-                                    className="inline-flex size-5 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                    className="inline-flex size-5 items-center justify-center rounded-full border border-warning/30 bg-warning/10 text-warning"
                                 >
                                     <AlertTriangle className="size-3" aria-hidden="true" />
                                 </button>
@@ -532,7 +530,7 @@ interface SalePeriodCellProps {
 
 function SalePeriodCell({ from, to, locale }: SalePeriodCellProps) {
     if (from === null && to === null) return <span className="text-muted-foreground">—</span>;
-    const display = [from, to].map((iso) => (iso === null ? "…" : formatDate(iso, locale))).join(" → ");
+    const display = [from, to].map((iso) => (iso === null ? "…" : formatDate(iso, locale))).join("→");
     return (
         <Badge variant="outline" className="font-normal text-xs">
             <TagIcon className="size-3" aria-hidden="true" />

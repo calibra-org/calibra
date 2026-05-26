@@ -208,10 +208,10 @@ export function PreviewPane({ preview }: PreviewPaneProps): React.JSX.Element {
                             {preview.warnings.map((finding) => (
                                 <li
                                     key={`${finding.code}-${finding.field ?? "row"}-${finding.rowNumbers.join("_")}`}
-                                    className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm"
+                                    className="rounded-md border border-warning/30 bg-warning/5 p-3 text-sm"
                                 >
                                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                                        <Badge variant="outline" className="text-amber-700 dark:text-amber-300">
+                                        <Badge variant="outline" className="text-warning">
                                             {t(`anomaly.${finding.code}`)}
                                         </Badge>
                                         <span className="text-muted-foreground text-xs">
@@ -248,9 +248,9 @@ function CounterCard({ tone, label, value, icon }: CounterCardProps): React.JSX.
         <div
             className={cn(
                 "flex flex-col gap-1 rounded-md border bg-muted/30 p-3",
-                tone === "success" && "border-emerald-500/30 bg-emerald-500/5",
-                tone === "info" && "border-sky-500/30 bg-sky-500/5",
-                tone === "warning" && "border-amber-500/30 bg-amber-500/5",
+                tone === "success" && "border-success/30 bg-success/5",
+                tone === "info" && "border-info/30 bg-info/5",
+                tone === "warning" && "border-warning/30 bg-warning/5",
                 tone === "danger" && "border-destructive/30 bg-destructive/5",
             )}
         >

@@ -237,7 +237,7 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
                     <div className="h-full bg-primary transition-all" style={{ width: `${percent}%` }} />
                 </div>
                 {slow ? (
-                    <p className="mt-2 flex items-center gap-2 text-amber-600 text-xs dark:text-amber-300">
+                    <p className="mt-2 flex items-center gap-2 text-warning text-xs">
                         <Loader2 className="size-3.5 animate-spin" aria-hidden />
                         {t("slowChunk", { row: fmt(row.processed_rows + 1) })}
                     </p>
@@ -298,8 +298,8 @@ function Counter({
         <div
             className={cn(
                 "rounded-md border p-3",
-                tone === "success" && "border-emerald-500/30 bg-emerald-500/5",
-                tone === "info" && "border-sky-500/30 bg-sky-500/5",
+                tone === "success" && "border-success/30 bg-success/5",
+                tone === "info" && "border-info/30 bg-info/5",
                 tone === "muted" && "bg-muted/30",
                 tone === "danger" && "border-destructive/30 bg-destructive/5",
             )}
@@ -313,7 +313,7 @@ function Counter({
 function ConnectionPill({ state }: { state: "sse" | "polling" | "connecting" }): React.JSX.Element {
     const t = useTranslations("ProductsImport.importing.connection");
     const label = t(state);
-    const color = state === "sse" ? "bg-emerald-500" : state === "polling" ? "bg-amber-500" : "bg-muted-foreground";
+    const color = state === "sse" ? "bg-success" : state === "polling" ? "bg-warning" : "bg-muted-foreground";
     return (
         <span className="flex items-center gap-1.5">
             <span className={cn("size-1.5 rounded-full", color)} aria-hidden />

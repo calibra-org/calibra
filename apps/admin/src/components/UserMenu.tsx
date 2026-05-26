@@ -59,7 +59,7 @@ export function UserMenu({ displayName, email }: UserMenuProps) {
                 <form action={logoutAction}>
                     <button
                         type="submit"
-                        className="flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2.5 py-1.5 text-start text-rose-600 outline-none hover:bg-accent hover:text-rose-600 focus-visible:bg-accent"
+                        className="flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2.5 py-1.5 text-start text-danger outline-none hover:bg-accent hover:text-danger focus-visible:bg-accent"
                     >
                         <LogOut className="size-4" aria-hidden="true" />
                         <span>{topbar("signOut")}</span>

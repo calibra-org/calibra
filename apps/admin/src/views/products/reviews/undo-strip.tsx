@@ -28,9 +28,9 @@ export function UndoStrip({ kind, reviewerName, onUndo, onDismiss }: UndoStripPr
         kind === "trash" ? t("pendingTrashMessage", { name: reviewerName }) : t("pendingSpamMessage", { name: reviewerName });
     const icon =
         kind === "trash" ? (
-            <Trash2 className="size-4 text-rose-500" aria-hidden="true" />
+            <Trash2 className="size-4 text-danger" aria-hidden="true" />
         ) : (
-            <XCircle className="size-4 text-amber-500" aria-hidden="true" />
+            <XCircle className="size-4 text-warning" aria-hidden="true" />
         );
 
     return (

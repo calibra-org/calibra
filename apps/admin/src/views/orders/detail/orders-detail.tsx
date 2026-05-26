@@ -234,10 +234,7 @@ export function OrdersDetail({ id }: OrdersDetailProps) {
                                 <DropdownMenuItem onClick={() => setHelpOpen(true)}>{tGrid("shortcuts")}</DropdownMenuItem>
                                 <DropdownMenuItem onClick={onResetLayout}>{tGrid("resetOrder")}</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                    onClick={onDelete}
-                                    className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
-                                >
+                                <DropdownMenuItem onClick={onDelete} className="text-danger hover:bg-danger/10 hover:text-danger">
                                     {tActions("delete")}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

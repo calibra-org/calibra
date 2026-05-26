@@ -7,6 +7,8 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { OrderStatusBadge } from "#/components/OrderStatusBadge";
+import { Button } from "#/components/ui/button";
 import {
     ActiveFilterChips,
     type ColumnDef,
@@ -15,10 +17,8 @@ import {
     DataTableViewOptions,
     type DateFacetDef,
     type FacetedFilterDef,
-} from "#/components/data-table";
-import { useDataTable } from "#/components/data-table/use-data-table";
-import { OrderStatusBadge } from "#/components/OrderStatusBadge";
-import { Button } from "#/components/ui/button";
+} from "#/components/ui/data-grid";
+import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { serializeDateFilter } from "#/components/ui/date-picker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";

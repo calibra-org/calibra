@@ -6,9 +6,9 @@ import type { useTranslations } from "next-intl";
 
 type TFunction = ReturnType<typeof useTranslations>;
 
-import { type ColumnDef, DataTableColumnHeader, type SortState } from "#/components/data-table";
 import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { type ColumnDef, DataTableColumnHeader, type SortState } from "#/components/ui/data-grid";
 import { formatDate, formatRelativeTime } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
 import type { AdminReview, ReviewStatus } from "#/lib/types";
@@ -102,10 +102,7 @@ export function buildReviewColumns(ctx: ColumnContext): ColumnDef<AdminReview>[]
                         <span className="flex items-center gap-1.5 font-medium">
                             <span className="truncate">{r.reviewerName}</span>
                             {r.verified && (
-                                <BadgeCheck
-                                    className="size-3.5 shrink-0 text-emerald-500"
-                                    aria-label={ctx.t("verifiedPurchase")}
-                                />
+                                <BadgeCheck className="size-3.5 shrink-0 text-success" aria-label={ctx.t("verifiedPurchase")} />
                             )}
                         </span>
                         {r.reviewerEmail.length > 0 && (
@@ -133,7 +130,7 @@ export function buildReviewColumns(ctx: ColumnContext): ColumnDef<AdminReview>[]
             cell: ({ row }) => {
                 const r = row.original;
                 return (
-                    <span role="img" className="inline-flex items-center gap-0.5 text-amber-500" aria-label={`${r.rating} / 5`}>
+                    <span role="img" className="inline-flex items-center gap-0.5 text-warning" aria-label={`${r.rating} / 5`}>
                         {Array.from({ length: 5 }).map((_, index) => (
                             <Star
                                 // biome-ignore lint/suspicious/noArrayIndexKey: rating stars rendered in fixed order
@@ -318,8 +315,8 @@ function InlineAction({ onClick, tone = "default", children }: InlineActionProps
             }}
             className={cn(
                 "shrink-0 rounded text-muted-foreground transition-colors hover:underline",
-                tone === "danger" && "hover:text-rose-600",
-                tone === "success" && "hover:text-emerald-600",
+                tone === "danger" && "hover:text-danger",
+                tone === "success" && "hover:text-success",
                 tone === "default" && "hover:text-foreground",
             )}
         >

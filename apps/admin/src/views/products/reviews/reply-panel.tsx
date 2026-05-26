@@ -110,9 +110,9 @@ export function ReplyPanel({ review, onClose, intent = "reply" }: ReplyPanelProp
                                     {EDITABLE_STATUSES.map((value) => (
                                         <SelectItem key={value} value={value}>
                                             <span className="flex items-center gap-2">
-                                                {value === "approved" && <CheckCircle2 className="size-3.5 text-emerald-500" />}
-                                                {value === "pending" && <Star className="size-3.5 text-amber-500" />}
-                                                {value === "spam" && <XCircle className="size-3.5 text-rose-500" />}
+                                                {value === "approved" && <CheckCircle2 className="size-3.5 text-success" />}
+                                                {value === "pending" && <Star className="size-3.5 text-warning" />}
+                                                {value === "spam" && <XCircle className="size-3.5 text-danger" />}
                                                 {statusT(value)}
                                             </span>
                                         </SelectItem>
@@ -214,8 +214,8 @@ function RatingPicker({ value, onChange, label }: RatingPickerProps) {
                 <label
                     key={index}
                     className={cn(
-                        "grid size-7 cursor-pointer place-items-center rounded-md text-amber-500 transition-colors hover:bg-amber-500/10",
-                        index === value && "bg-amber-500/15",
+                        "grid size-7 cursor-pointer place-items-center rounded-md text-warning transition-colors hover:bg-warning/10",
+                        index === value && "bg-warning/15",
                     )}
                 >
                     <input

@@ -133,7 +133,7 @@ function MetaRow({ initialKey, initialValue, onSave, onRemove }: MetaRowProps) {
             <Button
                 variant="ghost"
                 size="icon"
-                className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-700"
+                className="text-danger hover:bg-danger/10 hover:text-danger"
                 onClick={() => void onRemove(initialKey)}
                 aria-label={t("remove")}
             >

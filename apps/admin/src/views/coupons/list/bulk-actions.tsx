@@ -3,8 +3,8 @@
 import { Calendar, CircleSlash, CopyPlus, Power, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-import { DataTableBulkBar } from "#/components/data-table/data-table-bulk-bar";
 import { Button } from "#/components/ui/button";
+import { DataTableBulkBar } from "#/components/ui/data-grid/data-table-bulk-bar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
     DropdownMenu,
