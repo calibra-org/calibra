@@ -6,22 +6,16 @@ import { AnimatePresence, LayoutGroup } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "#/components/ui/card";
-import { type DateFilterValue } from "#/components/ui/date-picker";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
+import type { DateFilterValue } from "#/components/ui/date-picker";
 import { useRegionalProvinceDetail, useRegionalProvinces } from "#/lib/queries/regional";
 
 import { CountryView } from "./country-view";
 import { dateFilterToApi } from "./date-filter-to-api";
-import type { HeatmapMetric } from "./heatmap-scale";
 import { ProvinceView } from "./province-view";
 import { RegionalMapHeader } from "./regional-map-header";
 import { useTopX } from "./use-top-x";
+import type { HeatmapMetric } from "./heatmap-scale";
 
 /**
  * Regional insights — full Card hosting the country↔province state machine. Lives in the admin

@@ -90,12 +90,7 @@ export default class RegionalDemoSeeder extends BaseSeeder {
             .innerJoin("regions as c", "c.id", "t.region_id")
             .whereIn("c.parent_id", provinceIds)
             .where("t.locale", "fa")
-            .select([
-                "t.region_id",
-                "c.code",
-                "t.name",
-                "c.parent_id as province_id",
-            ])) as CityRow[];
+            .select(["t.region_id", "c.code", "t.name", "c.parent_id as province_id"])) as CityRow[];
 
         const citiesByProvince = new Map<string, CityRow[]>();
         for (const city of cityRows) {
@@ -149,7 +144,15 @@ export default class RegionalDemoSeeder extends BaseSeeder {
         const windowMs = 30 * 24 * 60 * 60 * 1000;
 
         const orderRows: Array<Record<string, unknown>> = [];
-        const lineSpecs: Array<{ orderIndex: number; productId: number; sku: string; name: string; quantity: number; price: number; subtotal: number }> = [];
+        const lineSpecs: Array<{
+            orderIndex: number;
+            productId: number;
+            sku: string;
+            name: string;
+            quantity: number;
+            price: number;
+            subtotal: number;
+        }> = [];
         const addressSpecs: Array<{ orderIndex: number; row: Record<string, unknown> }> = [];
 
         for (let i = 0; i < toInsert; i += 1) {

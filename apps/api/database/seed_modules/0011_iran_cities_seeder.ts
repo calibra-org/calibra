@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-
 import { BaseSeeder } from "@adonisjs/lucid/seeders";
 import { DateTime } from "luxon";
 
@@ -77,9 +76,7 @@ export default class IranCitiesSeeder extends BaseSeeder {
 
         await Region.updateOrCreateMany(["countryCode", "code"], cityRegionRows, { client: this.client });
 
-        const inserted = await Region.query({ client: this.client })
-            .where("country_code", "IR")
-            .whereNotNull("parent_id");
+        const inserted = await Region.query({ client: this.client }).where("country_code", "IR").whereNotNull("parent_id");
 
         const byCode = new Map<string, Region>();
         for (const region of inserted) byCode.set(region.code, region);
@@ -133,9 +130,7 @@ export default class IranCitiesSeeder extends BaseSeeder {
     }
 
     private async loadProvinceLookup(): Promise<Map<string, Region>> {
-        const provinces = await Region.query({ client: this.client })
-            .where("country_code", "IR")
-            .whereNull("parent_id");
+        const provinces = await Region.query({ client: this.client }).where("country_code", "IR").whereNull("parent_id");
 
         const byCode = new Map<string, Region>();
         for (const province of provinces) byCode.set(province.code, province);

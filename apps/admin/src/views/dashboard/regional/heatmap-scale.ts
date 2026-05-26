@@ -1,4 +1,4 @@
-import { scaleQuantile, type ScaleQuantile } from "d3-scale";
+import { type ScaleQuantile, scaleQuantile } from "d3-scale";
 import { schemeBlues, schemeReds } from "d3-scale-chromatic";
 
 /**

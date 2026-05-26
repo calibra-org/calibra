@@ -120,12 +120,7 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
 
                 <div className="flex flex-col gap-3">
                     <MapLegend scale={scale} metric={metric} locale={locale} />
-                    <TopProvinceList
-                        data={data}
-                        metric={metric}
-                        locale={locale}
-                        onSelect={onSelect}
-                    />
+                    <TopProvinceList data={data} metric={metric} locale={locale} onSelect={onSelect} />
                 </div>
             </div>
 
@@ -162,9 +157,8 @@ function TopProvinceList({
     const rows = [...data.rows]
         .sort((a, b) => (metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount))
         .slice(0, 8);
-    const max = metric === "revenue"
-        ? Math.max(...rows.map((r) => r.revenueMinor), 1)
-        : Math.max(...rows.map((r) => r.ordersCount), 1);
+    const max =
+        metric === "revenue" ? Math.max(...rows.map((r) => r.revenueMinor), 1) : Math.max(...rows.map((r) => r.ordersCount), 1);
 
     return (
         <motion.ul
@@ -176,7 +170,8 @@ function TopProvinceList({
             {rows.map((row) => {
                 const value = metric === "revenue" ? row.revenueMinor : row.ordersCount;
                 const percent = (value / max) * 100;
-                const formatted = metric === "revenue" ? formatMoney(row.revenueMinor, locale) : formatNumber(row.ordersCount, locale);
+                const formatted =
+                    metric === "revenue" ? formatMoney(row.revenueMinor, locale) : formatNumber(row.ordersCount, locale);
                 return (
                     <motion.li
                         key={row.code}

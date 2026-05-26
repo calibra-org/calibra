@@ -6,17 +6,13 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "#/components/ui/button";
-import {
-    DatePickerPopover,
-    type DateFilterValue,
-    formatDateFilterValue,
-} from "#/components/ui/date-picker";
+import { type DateFilterValue, DatePickerPopover, formatDateFilterValue } from "#/components/ui/date-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Slider } from "#/components/ui/slider";
 import { cn } from "#/lib/utils";
 
-import type { HeatmapMetric } from "./heatmap-scale";
 import { MetricPillToggle } from "./metric-pill-toggle";
+import type { HeatmapMetric } from "./heatmap-scale";
 
 interface RegionalMapHeaderProps {
     metric: HeatmapMetric;
@@ -48,9 +44,7 @@ export function RegionalMapHeader({
     const tCommon = useTranslations("Common");
     const [pickerOpen, setPickerOpen] = useState(false);
 
-    const dateLabel = dateFilter === null
-        ? tCommon("dateRange") || t("title")
-        : formatDateFilterValue(dateFilter, { locale });
+    const dateLabel = dateFilter === null ? tCommon("dateRange") || t("title") : formatDateFilterValue(dateFilter, { locale });
 
     return (
         <div className="flex flex-wrap items-center gap-2">

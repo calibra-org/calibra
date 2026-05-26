@@ -9,9 +9,7 @@ router
     .group(() => {
         router.get("/customers", [AdminInsightsController, "customers"]).as("admin.insights.customers");
 
-        router
-            .get("/regional/provinces", [AdminInsightsRegionalController, "provinces"])
-            .as("admin.insights.regional.provinces");
+        router.get("/regional/provinces", [AdminInsightsRegionalController, "provinces"]).as("admin.insights.regional.provinces");
         router
             .get("/regional/provinces/:code", [AdminInsightsRegionalController, "province"])
             .as("admin.insights.regional.province");

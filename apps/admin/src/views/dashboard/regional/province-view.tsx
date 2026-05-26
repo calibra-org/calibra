@@ -12,10 +12,10 @@ import type { AdminRegionalProvinceDetail } from "#/lib/types";
 import { IRAN_COUNTRY_PROVINCES, IRAN_COUNTRY_VIEWBOX } from "#/vendor/iran-map";
 
 import { CityList } from "./city-list";
-import { type HeatmapMetric } from "./heatmap-scale";
 import { KpiTile } from "./kpi-tile";
 import { FAST_SPRING, SVG_CROSSFADE_DURATION, svgVariants } from "./motion-variants";
 import { TopProductsList } from "./top-products-list";
+import type { HeatmapMetric } from "./heatmap-scale";
 
 interface ProvinceViewProps {
     code: string;
@@ -48,11 +48,12 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
     }, [onBack]);
 
     const province = IRAN_COUNTRY_PROVINCES.find((p) => p.code === code) ?? null;
-    const topCity = data?.cities && data.cities.length > 0
-        ? [...data.cities].sort((a, b) =>
-              metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
-          )[0]
-        : null;
+    const topCity =
+        data?.cities && data.cities.length > 0
+            ? [...data.cities].sort((a, b) =>
+                  metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
+              )[0]
+            : null;
 
     return (
         <motion.div
@@ -122,9 +123,7 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                         ) : null}
                     </svg>
                     <div className="pointer-events-none absolute inset-x-0 bottom-2 text-center">
-                        <span className="rounded bg-card/80 px-2 py-0.5 font-medium text-xs">
-                            {data?.name[locale] ?? code}
-                        </span>
+                        <span className="rounded bg-card/80 px-2 py-0.5 font-medium text-xs">{data?.name[locale] ?? code}</span>
                     </div>
                 </div>
 

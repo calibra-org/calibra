@@ -19,8 +19,7 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const SAJADDP_BASE =
-    "https://raw.githubusercontent.com/sajaddp/list-of-cities-in-Iran/main/dist/json";
+const SAJADDP_BASE = "https://raw.githubusercontent.com/sajaddp/list-of-cities-in-Iran/main/dist/json";
 
 interface SajaddpProvince {
     id: number;
@@ -99,9 +98,7 @@ async function main() {
     writeFileSync(outputPath, `${JSON.stringify(output, null, 2)}\n`, "utf8");
 
     const totalCities = output.reduce((sum, b) => sum + b.cities.length, 0);
-    process.stdout.write(
-        `Wrote ${outputPath}\n${output.length} provinces, ${totalCities} cities total.\n`,
-    );
+    process.stdout.write(`Wrote ${outputPath}\n${output.length} provinces, ${totalCities} cities total.\n`);
 }
 
 void main().catch((error) => {

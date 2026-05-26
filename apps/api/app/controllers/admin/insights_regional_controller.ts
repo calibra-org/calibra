@@ -4,8 +4,8 @@ import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import { ResourceNotFoundException } from "#exceptions/domain_exceptions";
-import { normalizeIranText } from "#services/iran_text_normalize";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
+import { normalizeIranText } from "#services/iran_text_normalize";
 import {
     adminRegionalProvinceCodeValidator,
     adminRegionalProvincesValidator,

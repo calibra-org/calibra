@@ -2,14 +2,14 @@ import db from "@adonisjs/lucid/services/db";
 import { test } from "@japa/runner";
 import { DateTime } from "luxon";
 
+import IranCitiesSeeder from "#database/seed_modules/0011_iran_cities_seeder";
+import { OrderStatus } from "#enums/order_status";
 import { UserFactory } from "#factories/user_factory";
 import Customer from "#models/customer";
 import Order from "#models/order";
 import OrderAddress from "#models/order_address";
 import OrderLineItem from "#models/order_line_item";
 import Region from "#models/region";
-import IranCitiesSeeder from "#database/seed_modules/0011_iran_cities_seeder";
-import { OrderStatus } from "#enums/order_status";
 import { createTaxableProduct } from "#tests/helpers/cart";
 import { resetPhase05 } from "#tests/helpers/orders";
 
@@ -127,19 +127,13 @@ test.group("GET /api/v1/admin/insights/regional/provinces", (group) => {
 
     test("rejects non-admin sessions with 403", async ({ client }) => {
         const user = await plainUser();
-        const response = await client
-            .get("/api/v1/admin/insights/regional/provinces")
-            .withGuard("api")
-            .loginAs(user);
+        const response = await client.get("/api/v1/admin/insights/regional/provinces").withGuard("api").loginAs(user);
         response.assertStatus(403);
     });
 
     test("returns 31 province rows even when there are zero orders", async ({ client, assert }) => {
         const admin = await adminUser();
-        const response = await client
-            .get("/api/v1/admin/insights/regional/provinces")
-            .withGuard("api")
-            .loginAs(admin);
+        const response = await client.get("/api/v1/admin/insights/regional/provinces").withGuard("api").loginAs(admin);
 
         response.assertStatus(200);
         response.assertAgainstApiSpec();
@@ -167,10 +161,7 @@ test.group("GET /api/v1/admin/insights/regional/provinces", (group) => {
         await seedOrder({ regionCode: "IR-08", grandTotal: 500_000 });
         await seedOrder({ regionCode: "IR-24", grandTotal: 250_000 });
 
-        const response = await client
-            .get("/api/v1/admin/insights/regional/provinces")
-            .withGuard("api")
-            .loginAs(admin);
+        const response = await client.get("/api/v1/admin/insights/regional/provinces").withGuard("api").loginAs(admin);
         response.assertStatus(200);
         response.assertAgainstApiSpec();
 
@@ -225,19 +216,13 @@ test.group("GET /api/v1/admin/insights/regional/provinces/:code", (group) => {
 
     test("rejects non-admin sessions with 403", async ({ client }) => {
         const user = await plainUser();
-        const response = await client
-            .get("/api/v1/admin/insights/regional/provinces/IR-24")
-            .withGuard("api")
-            .loginAs(user);
+        const response = await client.get("/api/v1/admin/insights/regional/provinces/IR-24").withGuard("api").loginAs(user);
         response.assertStatus(403);
     });
 
     test("returns 422 for a malformed code", async ({ client }) => {
         const admin = await adminUser();
-        const response = await client
-            .get("/api/v1/admin/insights/regional/provinces/IR-99")
-            .withGuard("api")
-            .loginAs(admin);
+        const response = await client.get("/api/v1/admin/insights/regional/provinces/IR-99").withGuard("api").loginAs(admin);
         response.assertStatus(422);
     });
 
@@ -280,7 +265,12 @@ test.group("GET /api/v1/admin/insights/regional/provinces/:code", (group) => {
                 orders_count: number;
                 revenue_minor: string;
                 top_products: Array<{ product_id: number }>;
-                cities: Array<{ region_code: string | null; name: { fa: string; en: string | null }; orders_count: number; matched: boolean }>;
+                cities: Array<{
+                    region_code: string | null;
+                    name: { fa: string; en: string | null };
+                    orders_count: number;
+                    matched: boolean;
+                }>;
             };
         };
 
@@ -297,20 +287,14 @@ test.group("GET /api/v1/admin/insights/regional/provinces/:code", (group) => {
         assert.exists(reyCity, "Rey city row should be matched against seeded city region");
     });
 
-    test("buckets snapshot text into seeded cities via normalizeIranText (yeh/kaf folding)", async ({
-        client,
-        assert,
-    }) => {
+    test("buckets snapshot text into seeded cities via normalizeIranText (yeh/kaf folding)", async ({ client, assert }) => {
         const admin = await adminUser();
 
         await seedOrder({ regionCode: "IR-31", grandTotal: 100, city: "كرج" });
         await seedOrder({ regionCode: "IR-31", grandTotal: 100, city: "کرج" });
         await seedOrder({ regionCode: "IR-31", grandTotal: 100, city: "شهر کرج" });
 
-        const response = await client
-            .get("/api/v1/admin/insights/regional/provinces/IR-31")
-            .withGuard("api")
-            .loginAs(admin);
+        const response = await client.get("/api/v1/admin/insights/regional/provinces/IR-31").withGuard("api").loginAs(admin);
 
         response.assertStatus(200);
         response.assertAgainstApiSpec();
@@ -323,17 +307,11 @@ test.group("GET /api/v1/admin/insights/regional/provinces/:code", (group) => {
         assert.equal(karaj?.orders_count, 3);
     });
 
-    test("surfaces unmatched city snapshot text with matched=false and a null region_code", async ({
-        client,
-        assert,
-    }) => {
+    test("surfaces unmatched city snapshot text with matched=false and a null region_code", async ({ client, assert }) => {
         const admin = await adminUser();
         await seedOrder({ regionCode: "IR-24", grandTotal: 100, city: "اسپانیا-آباد" });
 
-        const response = await client
-            .get("/api/v1/admin/insights/regional/provinces/IR-24")
-            .withGuard("api")
-            .loginAs(admin);
+        const response = await client.get("/api/v1/admin/insights/regional/provinces/IR-24").withGuard("api").loginAs(admin);
         response.assertStatus(200);
         response.assertAgainstApiSpec();
 

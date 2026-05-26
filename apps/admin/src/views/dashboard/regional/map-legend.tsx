@@ -34,7 +34,7 @@ export function MapLegend({ scale, metric, locale }: MapLegendProps) {
                     {scale.bands.map((band, i) => (
                         <li key={`band-${i.toString()}`} className="flex items-center gap-2 text-xs">
                             <span className="block size-4 rounded-sm" style={{ backgroundColor: band.color }} />
-                            <span className="tabular-nums text-muted-foreground">
+                            <span className="text-muted-foreground tabular-nums">
                                 {formatValue(band.from)} – {formatValue(band.to)}
                             </span>
                         </li>

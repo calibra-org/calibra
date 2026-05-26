@@ -1029,6 +1029,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/insights/regional/provinces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Country-mode regional insights (admin)
+         * @description Aggregates orders and revenue for each ISO-3166-2:IR province inside a given window. Always returns 31 rows (one per province) — provinces with no orders return zeros, not absence. Used by the admin dashboard's Iran-map widget to drive the heatmap fill and the country-mode summary tiles.
+         *     Cached server-side for ~2 minutes with grace; invalidated on order finalisation.
+         */
+        get: operations["adminInsightsRegionalProvinces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/insights/regional/provinces/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Province-mode regional insights detail (admin)
+         * @description Per-province roll-up for the admin dashboard's drill-down view. Returns the province totals, the operator-tunable top-X products, and up to 12 top cities (matched against seeded city regions via `normalizeIranText`). Cached for ~2 minutes; invalidated on order finalisation against both `regional:provinces` and `regional:province:<code>` tags.
+         */
+        get: operations["adminInsightsRegionalProvince"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/customers": {
         parameters: {
             query?: never;
@@ -3389,6 +3466,107 @@ export interface components {
              * @description ISO timestamp when the cache entry was computed.
              */
             generated_at: string;
+        };
+        /**
+         * RegionalProvinceRow
+         * @description One ISO-3166-2:IR province row inside the country-mode regional insights report. The response always carries 31 rows (one per province) even when a province has zero orders in the window — the heatmap's "zero" category depends on the distinction between absence and low data.
+         */
+        RegionalProvinceRow: {
+            /** @description Stable region id (primary key in the `regions` table). */
+            region_id: number;
+            /**
+             * @description ISO-3166-2:IR province code (`IR-01`..`IR-31`).
+             * @example IR-24
+             */
+            code: string;
+            /** @description Persian + English province name resolved from `region_translations`. */
+            name: {
+                /** @example تهران */
+                fa: string;
+                /** @example Tehran */
+                en: string;
+            };
+            /** @description Count of `processing` + `completed` orders whose shipping address pointed at this province within the window. */
+            orders_count: number;
+            /**
+             * @description Gross revenue across the same orders, in Rial minor units, encoded as a numeric string for BIGINT safety on the wire.
+             * @example 9876543210
+             */
+            revenue_minor: string;
+        };
+        /**
+         * RegionalRange
+         * @description Time window an admin regional-insights query was computed over. `from` and `to` are full ISO-8601 timestamps in UTC (Gregorian); the controller normalises any `Accept-Language` / Jalali input into Gregorian before serialising. The window is half-open `[from, to)` — orders with `created_at >= from AND created_at < to` are included.
+         * @example {
+         *       "from": "2026-04-26T00:00:00.000Z",
+         *       "to": "2026-05-26T00:00:00.000Z"
+         *     }
+         */
+        RegionalRange: {
+            /**
+             * Format: date-time
+             * @description Inclusive lower bound (Gregorian UTC ISO datetime).
+             */
+            from: string;
+            /**
+             * Format: date-time
+             * @description Exclusive upper bound (Gregorian UTC ISO datetime).
+             */
+            to: string;
+        };
+        /**
+         * RegionalCity
+         * @description One city row inside the province-mode regional insights report. Cities are aggregated by bucketing the `order_addresses.city` text snapshot via the shared `normalizeIranText` rule set and then matching to a seeded city `regions` row in the same province. Unmatched buckets surface with `matched: false`, `region_id: null`, and the raw snapshot in `name.fa` so operators can see junk-import patterns rather than having them hidden.
+         */
+        RegionalCity: {
+            /** @description Stable region id of the matched seeded city, or `null` when no seeded city matched. */
+            region_id: number | null;
+            /**
+             * @description Stable region code of the matched seeded city (e.g. `IR-24-001`), or `null` when unmatched.
+             * @example IR-24-001
+             */
+            region_code: string | null;
+            /** @description Persian + English (when seeded) city name; for unmatched rows `fa` is the raw snapshot text and `en` is null. */
+            name: {
+                /** @example تهران */
+                fa: string;
+                /** @example null */
+                en: string | null;
+            };
+            /** @description Order count contributing to the bucket within the window. */
+            orders_count: number;
+            /**
+             * @description Gross revenue in Rial minor units, encoded as a numeric string.
+             * @example 7000000000
+             */
+            revenue_minor: string;
+            /** @description True when the snapshot text matched a seeded city `regions` row; false otherwise. */
+            matched: boolean;
+        };
+        /**
+         * RegionalProvinceDetail
+         * @description Province-mode regional insights detail for a single ISO-3166-2:IR province. Carries the province totals, the operator-tunable top-X products list, and the top cities ranked by order count. `cities` is capped at 12 entries (sorted desc by `orders_count`) regardless of how many distinct city snapshot strings the shipping addresses carried.
+         */
+        RegionalProvinceDetail: {
+            region_id: number;
+            /** @example IR-24 */
+            code: string;
+            name: {
+                fa: string;
+                en: string;
+            };
+            orders_count: number;
+            revenue_minor: string;
+            /** @description Top-X products by revenue inside the window. `X` is the `top_products` query param (1..10, default 5). */
+            top_products: {
+                product_id: number;
+                name: string;
+                sku: string | null;
+                units: number;
+                revenue_minor: string;
+            }[];
+            /** @description Top 12 cities by order count inside the window. */
+            cities: components["schemas"]["RegionalCity"][];
         };
         /**
          * CustomerBase
@@ -5840,6 +6018,94 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+        };
+    };
+    adminInsightsRegionalProvinces: {
+        parameters: {
+            query?: {
+                /** @description Inclusive lower bound of the window as ISO-8601 (Gregorian UTC). Defaults to `to - 30 days`. */
+                from?: string;
+                /** @description Exclusive upper bound of the window as ISO-8601 (Gregorian UTC). Defaults to now. */
+                to?: string;
+                /** @description Informational flag (response always carries both orders + revenue). Kept on the cache key so each mode gets its own slot. */
+                metric?: "orders" | "revenue";
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Country-wide regional insights snapshot. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RegionalProvinceRow"][];
+                        meta: {
+                            range: components["schemas"]["RegionalRange"];
+                            totals: {
+                                orders_count: number;
+                                revenue_minor: string;
+                            };
+                            /**
+                             * @example fa
+                             * @example en
+                             */
+                            locale: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminInsightsRegionalProvince: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                /** @description Number of top products to include (1..10; default 5). */
+                top_products?: number;
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                /** @description ISO-3166-2:IR province code (`IR-01`..`IR-31`). */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Province-mode insights detail. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RegionalProvinceDetail"];
+                        meta: {
+                            range: components["schemas"]["RegionalRange"];
+                            locale: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
         };
     };
     adminCustomersIndex: {
