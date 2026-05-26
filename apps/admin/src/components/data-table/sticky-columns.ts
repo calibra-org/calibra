@@ -177,7 +177,15 @@ export function resolveStickyCell(placement: StickyPlacement | undefined): Stick
     if (placement === undefined) return undefined;
     const inset = `${placement.offsetPx}px`;
     return {
-        className: cn(STICKY_CELL_BASE, "relative", placement.side === "start" ? SHADOW_START_EDGE : SHADOW_END_EDGE),
+        /**
+         * Don't emit `relative` here. The data-table cell already adds `relative` from its base
+         * class string, and tailwind-merge collapses two position utilities to the LAST one —
+         * which used to be `relative`, silently overriding `sticky` and making the cell not
+         * actually pin. `position: sticky` *is* itself a positioned context, so the cell's
+         * `before:` pseudo-divider still anchors correctly when we drop `relative` from the
+         * sticky helper and apply `sticky` LAST in the merge.
+         */
+        className: cn(STICKY_CELL_BASE, placement.side === "start" ? SHADOW_START_EDGE : SHADOW_END_EDGE),
         style: {
             insetInlineStart: placement.side === "start" ? inset : undefined,
             insetInlineEnd: placement.side === "end" ? inset : undefined,
@@ -195,7 +203,7 @@ export function resolveStickyHeader(placement: StickyPlacement | undefined): Sti
     if (placement === undefined) return undefined;
     const inset = `${placement.offsetPx}px`;
     return {
-        className: cn(STICKY_HEADER_BASE, "relative", placement.side === "start" ? SHADOW_START_EDGE : SHADOW_END_EDGE),
+        className: cn(STICKY_HEADER_BASE, placement.side === "start" ? SHADOW_START_EDGE : SHADOW_END_EDGE),
         style: {
             insetInlineStart: placement.side === "start" ? inset : undefined,
             insetInlineEnd: placement.side === "end" ? inset : undefined,
