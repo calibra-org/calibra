@@ -71,9 +71,18 @@ export const DAY_GRID_CLASS_NAMES = {
     root: "p-2 text-foreground",
     /**
      * `relative` is the positioning anchor for the absolutely-placed nav buttons. `pt-1` lifts
-     * the captions slightly below the nav buttons so they share a clean baseline.
+     * the captions slightly below the nav buttons so they share a clean baseline. Layout is
+     * always `flex-row` — when the container is too narrow for two months
+     * `useResponsiveMonthCount` switches to a single month rather than stacking vertically.
+     * Using `sm:flex-row` here would create a second breakpoint that disagrees with the JS
+     * one (viewport vs container width), and the user ends up with two stacked months at
+     * exactly the dialog widths where the JS thinks one month is enough.
+     *
+     * `justify-center` keeps a single month centred inside the picker body instead of pinning
+     * it to the start edge (right side in RTL), which read as "off-centre dialog" on narrow
+     * viewports where the body width exceeds the month grid.
      */
-    months: "relative flex flex-col sm:flex-row gap-4 pt-1",
+    months: "relative flex flex-row justify-center gap-4 pt-1",
     month: "space-y-3 flex-1",
     month_caption: "flex h-8 items-center justify-center text-sm font-semibold",
     caption_label: "text-sm",
