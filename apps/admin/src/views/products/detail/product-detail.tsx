@@ -17,6 +17,7 @@ import { Input } from "#/components/ui/input";
 import { JalaliDateRangeInput } from "#/components/ui/jalali-date-range-input";
 import { MoneyInput } from "#/components/ui/money-input";
 import { NumberField } from "#/components/ui/number-field";
+import { RichTextEditor } from "#/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/toast";
@@ -36,6 +37,12 @@ import {
     productToFormValues,
 } from "./schema";
 import { AttributesBody } from "./sections/attributes-card";
+import { BrandsBody } from "./sections/brands-card";
+import { CategoriesBody } from "./sections/categories-card";
+import { FeaturedImageBody } from "./sections/featured-image-card";
+import { GalleryBody } from "./sections/gallery-card";
+import { MediaUrlMapProvider } from "./sections/media-url-map";
+import { TagsBody } from "./sections/tags-card";
 import { VariationsBody } from "./sections/variations-card";
 
 export interface ProductDetailProps {
@@ -181,9 +188,11 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
     const sidebarSections: SectionSpec[] = useMemo(
         () => [
             { id: "publish", title: t("sections.publish"), body: <PublishBody /> },
-            { id: "categories", title: t("sections.categories"), body: <CategoriesBody />, defaultCollapsed: true },
-            { id: "tags", title: t("sections.tags"), body: <TagsBody />, defaultCollapsed: true },
-            { id: "brand", title: t("sections.brand"), body: <BrandBody />, defaultCollapsed: true },
+            { id: "featuredImage", title: t("sections.image"), body: <FeaturedImageBody /> },
+            { id: "gallery", title: t("sections.gallery"), body: <GalleryBody /> },
+            { id: "categories", title: t("sections.categories"), body: <CategoriesBody /> },
+            { id: "tags", title: t("sections.tags"), body: <TagsBody /> },
+            { id: "brand", title: t("sections.brand"), body: <BrandsBody /> },
             { id: "tax", title: t("sections.tax"), body: <TaxBody options={taxClassOptions} />, defaultCollapsed: true },
             {
                 id: "shippingClass",
@@ -231,48 +240,55 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
         </span>
     );
 
+    const initialMediaSeeds = useMemo(
+        () => (initial?.images ?? []).map((img) => ({ id: img.mediaId, url: img.url })),
+        [initial?.images],
+    );
+
     return (
         <FormProvider {...form}>
             <NavigationGuard when={form.formState.isDirty} />
-            <form onSubmit={onSubmit}>
-                <DetailPageShell
-                    title={titleNode}
-                    subtitle={
-                        initial?.updatedAt ? (
-                            <span dir="ltr" className="text-muted-foreground text-xs">
-                                {t("lastEditedAt", {
-                                    at: new Date(initial.updatedAt).toLocaleString(locale === "fa" ? "fa-IR" : "en-US"),
-                                })}
-                            </span>
-                        ) : undefined
-                    }
-                    headerActions={headerActions}
-                    mainSections={mainSections}
-                    sidebarSections={sidebarSections}
-                    storageKeyPrefix="products.detail.sections"
-                    labels={labels}
-                />
-            </form>
+            <MediaUrlMapProvider initial={initialMediaSeeds}>
+                <form onSubmit={onSubmit}>
+                    <DetailPageShell
+                        title={titleNode}
+                        subtitle={
+                            initial?.updatedAt ? (
+                                <span dir="ltr" className="text-muted-foreground text-xs">
+                                    {t("lastEditedAt", {
+                                        at: new Date(initial.updatedAt).toLocaleString(locale === "fa" ? "fa-IR" : "en-US"),
+                                    })}
+                                </span>
+                            ) : undefined
+                        }
+                        headerActions={headerActions}
+                        mainSections={mainSections}
+                        sidebarSections={sidebarSections}
+                        storageKeyPrefix="products.detail.sections"
+                        labels={labels}
+                    />
+                </form>
 
-            <ConflictDialog
-                open={conflictOpen}
-                serverUpdatedAt={conflictUpdatedAt}
-                onReload={() => {
-                    setConflictOpen(false);
-                    void product.refetch();
-                }}
-                onOverwrite={async () => {
-                    setConflictOpen(false);
-                    try {
-                        await update.mutateAsync({ body: formValuesToPayload(form.getValues()) });
-                        toast.add({ title: t("toasts.saved"), data: { tone: "success" } });
-                        form.reset(form.getValues());
-                    } catch (error) {
-                        toast.add({ title: t("toasts.error"), description: String(error), data: { tone: "error" } });
-                    }
-                }}
-                onClose={() => setConflictOpen(false)}
-            />
+                <ConflictDialog
+                    open={conflictOpen}
+                    serverUpdatedAt={conflictUpdatedAt}
+                    onReload={() => {
+                        setConflictOpen(false);
+                        void product.refetch();
+                    }}
+                    onOverwrite={async () => {
+                        setConflictOpen(false);
+                        try {
+                            await update.mutateAsync({ body: formValuesToPayload(form.getValues()) });
+                            toast.add({ title: t("toasts.saved"), data: { tone: "success" } });
+                            form.reset(form.getValues());
+                        } catch (error) {
+                            toast.add({ title: t("toasts.error"), description: String(error), data: { tone: "error" } });
+                        }
+                    }}
+                    onClose={() => setConflictOpen(false)}
+                />
+            </MediaUrlMapProvider>
         </FormProvider>
     );
 }
@@ -393,12 +409,7 @@ function DescriptionBody() {
             name="description"
             render={({ field }) => (
                 <Field id="description" label={tField("description")}>
-                    <Textarea
-                        id="description"
-                        rows={6}
-                        value={field.value ?? ""}
-                        onChange={(event) => field.onChange(event.target.value)}
-                    />
+                    <RichTextEditor value={field.value ?? ""} onChange={field.onChange} dir="rtl" />
                 </Field>
             )}
         />
@@ -744,65 +755,6 @@ function PublishBody() {
                 )}
             />
         </div>
-    );
-}
-
-function CategoriesBody() {
-    const t = useTranslations("Products.detail");
-    const { register } = useFormFromCtx();
-    return (
-        <Field id="categoryIds" label={t("sections.categories")} hint={t("idListHint")}>
-            <Input
-                id="categoryIds"
-                dir="ltr"
-                placeholder="1, 4, 7"
-                {...register("categoryIds", {
-                    setValueAs: (v: unknown) =>
-                        String(v ?? "")
-                            .split(",")
-                            .map((s) => Number(s.trim()))
-                            .filter((n) => Number.isFinite(n) && n > 0),
-                })}
-            />
-        </Field>
-    );
-}
-
-function TagsBody() {
-    const t = useTranslations("Products.detail");
-    const { register } = useFormFromCtx();
-    return (
-        <Field id="tagIds" label={t("sections.tags")} hint={t("idListHint")}>
-            <Input
-                id="tagIds"
-                dir="ltr"
-                placeholder="2, 5"
-                {...register("tagIds", {
-                    setValueAs: (v: unknown) =>
-                        String(v ?? "")
-                            .split(",")
-                            .map((s) => Number(s.trim()))
-                            .filter((n) => Number.isFinite(n) && n > 0),
-                })}
-            />
-        </Field>
-    );
-}
-
-function BrandBody() {
-    const t = useTranslations("Products.detail");
-    const { register } = useFormFromCtx();
-    return (
-        <Field id="brandId" label={t("sections.brand")} hint={t("idHint")}>
-            <Input
-                id="brandId"
-                dir="ltr"
-                type="number"
-                {...register("brandId", {
-                    setValueAs: (v) => (v === "" || v === null || v === undefined ? null : Number(v)),
-                })}
-            />
-        </Field>
     );
 }
 

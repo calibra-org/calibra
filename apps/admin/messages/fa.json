@@ -77,6 +77,7 @@
         "remove": "حذف",
         "clearAll": "پاک کردن همه",
         "create": "ساخت «{name}»",
+        "add": "افزودن",
         "money": {
             "tomanShort": "تومان",
             "rialShort": "ریال"
@@ -1109,6 +1110,49 @@
                 "reload": "بارگذاری دوباره",
                 "overwrite": "اعمال تغییرات من",
                 "viewDiff": "نمایش تفاوت‌ها"
+            },
+            "featuredImage": {
+                "setProductImage": "تنظیم تصویر محصول",
+                "replace": "تغییر تصویر",
+                "remove": "حذف تصویر محصول",
+                "removeShiftsGalleryHint": "با حذف تصویر شاخص، نخستین تصویر گالری جایگزین آن می‌شود."
+            },
+            "gallery": {
+                "add": "افزودن",
+                "addImages": "افزودن تصاویر گالری محصول",
+                "remove": "حذف از گالری",
+                "setAsFeatured": "تنظیم به‌عنوان تصویر شاخص",
+                "thumbAlt": "تصویر گالری",
+                "emptyHint": "هنوز تصویری به گالری اضافه نشده است."
+            },
+            "categories": {
+                "tabs": { "all": "همه دسته‌ها", "mostUsed": "پر استفاده‌ها" },
+                "searchPlaceholder": "جستجو در دسته‌ها",
+                "treeLabel": "دسته‌بندی‌های محصول",
+                "addNew": "افزودن دسته جدید",
+                "addNewPlaceholder": "نام دسته",
+                "addNewParent": "زیرمجموعهٔ",
+                "createdToast": "دسته ساخته شد",
+                "createFailedToast": "ساخت دسته ناموفق بود",
+                "noMatches": "هیچ دسته‌ای پیدا نشد",
+                "empty": "هنوز دسته‌ای ساخته نشده است."
+            },
+            "brands": {
+                "tabs": { "all": "همه برندها", "mostUsed": "پر استفاده‌ها" },
+                "searchPlaceholder": "جستجو در برندها",
+                "treeLabel": "برندهای محصول",
+                "clearSelection": "حذف انتخاب",
+                "addNew": "افزودن برند جدید",
+                "addNewPlaceholder": "نام برند",
+                "createdToast": "برند ساخته شد",
+                "createFailedToast": "ساخت برند ناموفق بود",
+                "noMatches": "هیچ برندی پیدا نشد",
+                "empty": "هنوز برندی ساخته نشده است."
+            },
+            "tags": {
+                "addPlaceholder": "افزودن یا ساخت برچسب",
+                "mostUsedTitle": "از میان برچسب‌های بیشتر استفاده شده انتخاب کنید",
+                "mostUsedEmpty": "هنوز برچسب پر استفاده‌ای وجود ندارد."
             },
             "variations": {
                 "placeholderTitle": "تنوعات",

@@ -94,7 +94,9 @@ test.group("admin taxonomy index — sort=-used_count (categories)", (group) => 
             await db.table("product_category_links").insert({ product_id: Number(p.id), category_id: Number(popular.id) });
         }
         for (let i = 0; i < 2; i += 1) {
-            await db.table("product_category_links").insert({ product_id: Number(products[i]!.id), category_id: Number(middle.id) });
+            await db
+                .table("product_category_links")
+                .insert({ product_id: Number(products[i]!.id), category_id: Number(middle.id) });
         }
 
         const res = await client.get("/api/v1/admin/categories?sort=-used_count").withGuard("api").loginAs(admin);

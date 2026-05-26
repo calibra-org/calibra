@@ -77,6 +77,7 @@
         "remove": "Remove",
         "clearAll": "Clear all",
         "create": "Create \"{name}\"",
+        "add": "Add",
         "money": {
             "tomanShort": "Toman",
             "rialShort": "Rial"
@@ -1109,6 +1110,49 @@
                 "reload": "Reload",
                 "overwrite": "Overwrite",
                 "viewDiff": "View diff"
+            },
+            "featuredImage": {
+                "setProductImage": "Set product image",
+                "replace": "Replace",
+                "remove": "Remove product image",
+                "removeShiftsGalleryHint": "Removing the featured image promotes the next gallery image to featured."
+            },
+            "gallery": {
+                "add": "Add",
+                "addImages": "Add product gallery images",
+                "remove": "Remove from gallery",
+                "setAsFeatured": "Set as featured",
+                "thumbAlt": "Gallery image",
+                "emptyHint": "No gallery images yet."
+            },
+            "categories": {
+                "tabs": { "all": "All categories", "mostUsed": "Most used" },
+                "searchPlaceholder": "Search categories",
+                "treeLabel": "Product categories",
+                "addNew": "Add new category",
+                "addNewPlaceholder": "Category name",
+                "addNewParent": "Under",
+                "createdToast": "Category created",
+                "createFailedToast": "Failed to create category",
+                "noMatches": "No matching categories",
+                "empty": "No categories yet."
+            },
+            "brands": {
+                "tabs": { "all": "All brands", "mostUsed": "Most used" },
+                "searchPlaceholder": "Search brands",
+                "treeLabel": "Product brands",
+                "clearSelection": "Clear selection",
+                "addNew": "Add new brand",
+                "addNewPlaceholder": "Brand name",
+                "createdToast": "Brand created",
+                "createFailedToast": "Failed to create brand",
+                "noMatches": "No matching brands",
+                "empty": "No brands yet."
+            },
+            "tags": {
+                "addPlaceholder": "Add or create tag",
+                "mostUsedTitle": "Choose from the most used tags",
+                "mostUsedEmpty": "No popular tags yet."
             },
             "variations": {
                 "placeholderTitle": "Variations",

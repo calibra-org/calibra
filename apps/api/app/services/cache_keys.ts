@@ -131,8 +131,11 @@ export const CacheKeys = {
          * and `?sort=-used_count&perPage=10` collide. Locale-scoped because the resolved name /
          * slug fields differ per locale.
          */
-        taxonomyUsedCount: (resource: "categories" | "tags" | "brands", filters: Record<string, unknown>, locale: string): string =>
-            `admin:taxonomy:used-count:${resource}:${hashFilters(filters)}:${locale}`,
+        taxonomyUsedCount: (
+            resource: "categories" | "tags" | "brands",
+            filters: Record<string, unknown>,
+            locale: string,
+        ): string => `admin:taxonomy:used-count:${resource}:${hashFilters(filters)}:${locale}`,
         customerCounts: (): string => "admin:customers:counts",
         customerInsights: (): string => "admin:insights:customers",
         customerStats: (customerId: number | string | bigint): string => `admin:customers:stats:${String(customerId)}`,

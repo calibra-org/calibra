@@ -411,6 +411,67 @@ function slugify(input: string): string {
     );
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Inline taxonomy create — sidebar pickers on the product-detail form       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Posts the minimal `{translations: [{locale, name}]}` payload accepted by `POST /admin/categories`.
+ * The api auto-derives the slug via `slugify(name, "fa")`. Optional `parentId` lets the inline
+ * form drop a child under an existing branch in one round-trip. Invalidates the picker query so
+ * the new row shows up immediately and can be auto-checked by the card.
+ */
+export function useCreateCategoryInline() {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { name: string; parentId?: number | null }>({
+        mutationFn: ({ name, parentId }) =>
+            apiMutate<{ data: { id: number } }>("POST", "categories", {
+                locale,
+                body: {
+                    ...(parentId !== undefined && parentId !== null ? { parent_id: parentId } : {}),
+                    translations: [{ locale: "fa", name }],
+                },
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "categories", "picker"] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "categories", "list"] });
+        },
+    });
+}
+
+/** Inline-create a tag. Returns `{ id }` for the chip strip to adopt as the new selection. */
+export function useCreateTagInline() {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { name: string }>({
+        mutationFn: ({ name }) =>
+            apiMutate<{ data: { id: number } }>("POST", "tags", {
+                locale,
+                body: { translations: [{ locale: "fa", name }] },
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "tags"] });
+        },
+    });
+}
+
+/** Inline-create a brand. */
+export function useCreateBrandInline() {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { name: string }>({
+        mutationFn: ({ name }) =>
+            apiMutate<{ data: { id: number } }>("POST", "brands", {
+                locale,
+                body: { translations: [{ locale: "fa", name }] },
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "brands", "picker"] });
+        },
+    });
+}
+
 /** Hard-delete one or more products. Server refuses if any selected product is referenced by
  *  an active order — the bulk response surfaces `skipped_force` ids. */
 export function useForceDeleteProducts() {

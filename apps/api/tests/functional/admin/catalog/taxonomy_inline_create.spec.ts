@@ -25,7 +25,10 @@ test.group("admin taxonomy inline-create — minimal payload", (group) => {
         await resetState();
     });
 
-    test("POST /admin/categories accepts {translations:[{locale:'fa', name}]} and persists the row", async ({ client, assert }) => {
+    test("POST /admin/categories accepts {translations:[{locale:'fa', name}]} and persists the row", async ({
+        client,
+        assert,
+    }) => {
         const admin = await createAdmin();
         const create = await client
             .post("/api/v1/admin/categories")

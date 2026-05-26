@@ -345,6 +345,157 @@ export function useGlobalAttributeTerms(attributeId: number | null) {
     });
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Taxonomy pickers (categories / tags / brands sidebar cards)               */
+/* -------------------------------------------------------------------------- */
+
+type SdkAdminTaxonomy = Schemas["AdminTaxonomy"];
+
+function dupLocalized(value: string | null | undefined): { fa: string; en: string } {
+    const safe = typeof value === "string" ? value : "";
+    return { fa: safe, en: safe };
+}
+
+function toPickerCategory(row: SdkAdminTaxonomy): AdminCategory {
+    return {
+        id: Number(row.id),
+        parentId: row.parent_id ?? null,
+        name: dupLocalized(row.name),
+        slug: dupLocalized(row.slug),
+        productCount: row.used_count ?? 0,
+        imageMediaId: row.image_media_id ?? null,
+        imageUrl: row.image_url ?? null,
+    };
+}
+
+function toPickerTag(row: SdkAdminTaxonomy): AdminTag {
+    return {
+        id: Number(row.id),
+        name: dupLocalized(row.name),
+        slug: dupLocalized(row.slug),
+        productCount: row.used_count ?? 0,
+    };
+}
+
+function toPickerBrand(row: SdkAdminTaxonomy): AdminBrand {
+    return {
+        id: Number(row.id),
+        name: dupLocalized(row.name),
+        slug: dupLocalized(row.slug),
+        productCount: row.used_count ?? 0,
+        imageMediaId: row.image_media_id ?? null,
+        logoUrl: row.image_url ?? null,
+    };
+}
+
+interface TaxonomyEnvelopeAdmin<T> {
+    data: T[];
+}
+
+export type TaxonomySort = "-used_count" | "used_count" | "menu_order" | "-menu_order";
+
+/**
+ * Fetches the full categories tree for the product-detail picker. Caps at 500 rows by default —
+ * the bulk seeder ships 56 leaves, so this comfortably covers any store the admin is going to
+ * curate by hand. `sort` defaults to `menu_order`; pass `-used_count` to power the "Most used"
+ * tab without paying for a second query.
+ */
+export function useCategoriesTree(options?: { sort?: TaxonomySort; perPage?: number }) {
+    const locale = useLocale() as Locale;
+    const sort = options?.sort;
+    const perPage = options?.perPage ?? 500;
+    return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminCategory[]>({
+        queryKey: ["admin", "categories", "picker", { locale, sort: sort ?? "", perPage }],
+        queryFn: () =>
+            apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("categories", {
+                locale,
+                query: { perPage, ...(sort !== undefined ? { sort } : {}) },
+            }),
+        select: (envelope) => (envelope.data ?? []).map(toPickerCategory),
+        staleTime: 30 * 1000,
+    });
+}
+
+/** Top-N most-used categories for the "پر استفاده‌ها" tab. Cached server-side for 2m. */
+export function useMostUsedCategories(limit = 20) {
+    return useCategoriesTree({ sort: "-used_count", perPage: limit });
+}
+
+/** Flat brands list. `parent_id` is always null upstream; the picker renders them at depth 0. */
+export function useBrandsList(options?: { sort?: TaxonomySort; perPage?: number }) {
+    const locale = useLocale() as Locale;
+    const sort = options?.sort;
+    const perPage = options?.perPage ?? 500;
+    return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminBrand[]>({
+        queryKey: ["admin", "brands", "picker", { locale, sort: sort ?? "", perPage }],
+        queryFn: () =>
+            apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("brands", {
+                locale,
+                query: { perPage, ...(sort !== undefined ? { sort } : {}) },
+            }),
+        select: (envelope) => (envelope.data ?? []).map(toPickerBrand),
+        staleTime: 30 * 1000,
+    });
+}
+
+/** Top-N most-used brands for the brand sidebar's "Most used" tab. */
+export function useMostUsedBrands(limit = 20) {
+    return useBrandsList({ sort: "-used_count", perPage: limit });
+}
+
+/**
+ * Top-N most-used tags rendered as clickable chips below the tags chip-picker. Backed by the
+ * 2m server-side cache.
+ */
+export function useMostUsedTags(limit = 10) {
+    const locale = useLocale() as Locale;
+    return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminTag[]>({
+        queryKey: ["admin", "tags", "most-used", { locale, limit }],
+        queryFn: () =>
+            apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("tags", {
+                locale,
+                query: { perPage: limit, sort: "-used_count" },
+            }),
+        select: (envelope) => (envelope.data ?? []).map(toPickerTag),
+        staleTime: 30 * 1000,
+    });
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Tag chip-picker async helpers (ResourcePicker integration)                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Async search adapter that feeds the {@link ResourcePicker} multi-creatable picker on the tags
+ * card. The picker debounces internally; we just resolve a list of `{id, label}` options.
+ */
+export async function searchTags(query: string, locale: string): Promise<{ id: number; label: string }[]> {
+    const envelope = await apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("tags", {
+        locale,
+        query: { perPage: 25, ...(query.length > 0 ? { search: query } : {}) },
+    });
+    return (envelope.data ?? []).map((row) => ({ id: Number(row.id), label: row.name ?? `#${row.id}` }));
+}
+
+/**
+ * Resolves a list of tag ids back to `{id, label}` options on form mount, so existing chips
+ * render with their Persian names instead of `#42` placeholders.
+ */
+export async function resolveTags(ids: (number | string)[], locale: string): Promise<{ id: number; label: string }[]> {
+    const numericIds = ids
+        .map((value) => (typeof value === "number" ? value : Number(value)))
+        .filter((value) => Number.isFinite(value));
+    if (numericIds.length === 0) return [];
+    const envelope = await apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("tags", {
+        locale,
+        query: { perPage: Math.max(numericIds.length, 25) },
+    });
+    const idSet = new Set(numericIds);
+    return (envelope.data ?? [])
+        .filter((row) => idSet.has(Number(row.id)))
+        .map((row) => ({ id: Number(row.id), label: row.name ?? `#${row.id}` }));
+}
+
 /**
  * Debounced async slug availability check. The hook is intentionally NOT a `useMutation`; it's a
  * read-after-blur predicate the form treats as a hint, not a write. Callers pass the current slug
