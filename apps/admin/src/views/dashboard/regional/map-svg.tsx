@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import { IRAN_COUNTRY_PROVINCES, IRAN_COUNTRY_VIEWBOX } from "#/vendor/iran-map";
 
 import { contrastTextColor } from "./contrast";
-import { type HeatmapMetric, ZERO_COLOR } from "./heatmap-scale";
+import { ZERO_COLOR } from "./heatmap-scale";
 import { ProvinceLabels } from "./province-labels";
 import { SEA_FILL, SeaDecorations } from "./sea-decorations";
 
@@ -18,7 +18,6 @@ interface MapSvgProps {
     onPointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;
     onSelect: (code: string) => void;
     locale: Locale;
-    metric: HeatmapMetric;
     /** Optional code to dim everything else and lift the matching path (province-mode silhouette). */
     isolatedCode?: string | null;
 }
@@ -41,12 +40,16 @@ export function MapSvg({
     onSelect,
     isolatedCode,
     locale,
-    metric,
 }: MapSvgProps) {
     const reduce = useReducedMotion();
     const svgRef = useRef<SVGSVGElement | null>(null);
 
     useEffect(() => {
+        /**
+         * Re-run whenever the fill resolver changes (metric flip, isolation flip — both move
+         * through `fillForCode`'s closure). `metric` + `isolatedCode` are intentionally NOT in
+         * the dep list because the resolver identity already changes with them.
+         */
         const svg = svgRef.current;
         if (!svg) return;
         const labels = svg.querySelectorAll<SVGGraphicsElement>("[data-region-label]");
@@ -81,7 +84,7 @@ export function MapSvg({
                 label.setAttribute("fill", contrastTextColor(bg));
             }
         }
-    }, [fillForCode, metric, isolatedCode]);
+    }, [fillForCode]);
 
     return (
         <svg
