@@ -2,12 +2,14 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef } from "react";
 
 import { IRAN_COUNTRY_PROVINCES, IRAN_COUNTRY_VIEWBOX } from "#/vendor/iran-map";
 
-import { ZERO_COLOR } from "./heatmap-scale";
+import { contrastTextColor } from "./contrast";
+import { type HeatmapMetric, ZERO_COLOR } from "./heatmap-scale";
 import { ProvinceLabels } from "./province-labels";
-import { SeaDecorations } from "./sea-decorations";
+import { SEA_FILL, SeaDecorations } from "./sea-decorations";
 
 interface MapSvgProps {
     fillForCode: (code: string) => string;
@@ -16,6 +18,7 @@ interface MapSvgProps {
     onPointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;
     onSelect: (code: string) => void;
     locale: Locale;
+    metric: HeatmapMetric;
     /** Optional code to dim everything else and lift the matching path (province-mode silhouette). */
     isolatedCode?: string | null;
 }
@@ -25,15 +28,64 @@ interface MapSvgProps {
  * `layoutId` so the consumer can morph a clicked province into a side-panel silhouette via
  * shared layout.
  *
- * The whole `<svg>` listens to a single `onPointerMove` — the per-path tooltip events fire only
- * `onPointerEnter` / `onPointerLeave` to track which code is hovered. This is much cheaper than
- * mounting a Tooltip portal on each path and avoids border-flicker as the cursor crosses
- * province boundaries.
+ * After mount (and whenever the heatmap metric flips), a point-in-fill pass walks every
+ * `[data-region-label]` element, samples the polygon underneath via `isPointInFill`, and writes
+ * the WCAG-readable colour (black or white) into the label's `fill`. The seas use the same
+ * mechanism — labels that land on the dark-blue water flip to white automatically.
  */
-export function MapSvg({ fillForCode, hoveredCode, onHoverChange, onPointerMove, onSelect, isolatedCode, locale }: MapSvgProps) {
+export function MapSvg({
+    fillForCode,
+    hoveredCode,
+    onHoverChange,
+    onPointerMove,
+    onSelect,
+    isolatedCode,
+    locale,
+    metric,
+}: MapSvgProps) {
     const reduce = useReducedMotion();
+    const svgRef = useRef<SVGSVGElement | null>(null);
+
+    useEffect(() => {
+        const svg = svgRef.current;
+        if (!svg) return;
+        const labels = svg.querySelectorAll<SVGGraphicsElement>("[data-region-label]");
+        const provincePaths = svg.querySelectorAll<SVGPathElement>("[data-region-code]");
+        const seaPaths = svg.querySelectorAll<SVGPathElement>("[data-region-sea]");
+
+        for (const label of labels) {
+            const box = label.getBBox();
+            const point = svg.createSVGPoint();
+            point.x = box.x + box.width / 2;
+            point.y = box.y + box.height / 2;
+
+            let bg: string | null = null;
+
+            for (const sea of seaPaths) {
+                if (sea.isPointInFill(point)) {
+                    bg = SEA_FILL;
+                    break;
+                }
+            }
+            if (bg === null) {
+                for (const path of provincePaths) {
+                    if (path.isPointInFill(point)) {
+                        const code = path.getAttribute("data-region-code");
+                        bg = code ? fillForCode(code) : null;
+                        break;
+                    }
+                }
+            }
+
+            if (bg !== null) {
+                label.setAttribute("fill", contrastTextColor(bg));
+            }
+        }
+    }, [fillForCode, metric, isolatedCode]);
+
     return (
         <svg
+            ref={svgRef}
             viewBox={IRAN_COUNTRY_VIEWBOX}
             role="img"
             aria-label="Iran provinces"

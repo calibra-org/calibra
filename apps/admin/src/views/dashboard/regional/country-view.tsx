@@ -116,6 +116,7 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
                             onPointerMove={(event) => setPointer({ x: event.clientX, y: event.clientY })}
                             onSelect={onSelect}
                             locale={locale}
+                            metric={metric}
                         />
                     )}
                 </motion.div>

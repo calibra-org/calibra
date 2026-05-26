@@ -50,16 +50,3 @@ export function relativeLuminance(hex: string): number {
 export function contrastTextColor(bg: string): string {
     return relativeLuminance(bg) > 0.4 ? BLACK : WHITE;
 }
-
-/**
- * SVG style block for labels that sit on top of arbitrary backgrounds (e.g., province name
- * glyphs over the choropleth + seas). `paint-order: stroke` draws the white stroke first, then
- * the dark fill, producing a halo that keeps the text readable on any underlying colour.
- */
-export const OUTLINED_LABEL_STYLE: React.CSSProperties = {
-    fill: BLACK,
-    stroke: WHITE,
-    strokeWidth: 3,
-    strokeLinejoin: "round",
-    paintOrder: "stroke",
-};

@@ -23,11 +23,20 @@ export function SeaDecorations({ locale: _locale }: SeaDecorationsProps) {
     return (
         <g>
             {COUNTRY_WATER_PATHS.map((d, i) => (
-                <path key={`country-water-${i.toString()}`} d={d} fill={SEA_FILL} stroke={SEA_STROKE} strokeWidth={0.6} />
+                <path
+                    key={`country-water-${i.toString()}`}
+                    data-region-sea=""
+                    d={d}
+                    fill={SEA_FILL}
+                    stroke={SEA_STROKE}
+                    strokeWidth={0.6}
+                />
             ))}
         </g>
     );
 }
+
+export { SEA_FILL };
 
 interface ProvinceSeaProps {
     code: string;

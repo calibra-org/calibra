@@ -2,24 +2,18 @@
 
 import { LABEL_GROUPS, TEXT_LABELS } from "#/vendor/iran-map/labels";
 
-import { OUTLINED_LABEL_STYLE } from "./contrast";
-
 /**
  * Static province-name overlay for the country map. Renders the 32 upstream `<g>` glyph groups
- * + the single `<text>` label (Qom) verbatim from `react-iran-map`. The upstream glyphs include
- * province names AND sea names mixed together with no per-label tagging, so we can't compute a
- * per-glyph contrast colour. Instead, every label gets a white halo (paint-order stroke) under
- * a dark fill — readable on any colour underneath, including the dark-blue seas and the dark
- * choropleth bins.
- *
- * The whole group is shrunk by `transform="scale(0.85)"` so labels read at a comfortable size
- * without crowding small provinces.
+ * + the single `<text>` label (Qom) verbatim from `react-iran-map`. Each label is tagged with a
+ * `data-region-label` attribute so the parent SVG can run a point-in-fill pass after mount and
+ * flip each label's fill colour to whichever of black/white reads against the polygon
+ * underneath. Initial fill is dark; the pass overwrites the unreadable ones to white.
  */
 export function ProvinceLabels() {
     return (
-        <g style={{ pointerEvents: "none" }}>
+        <g style={{ pointerEvents: "none" }} data-region-labels="">
             {LABEL_GROUPS.map((paths, i) => (
-                <g key={`label-${i.toString()}`} style={OUTLINED_LABEL_STYLE}>
+                <g key={`label-${i.toString()}`} data-region-label="" fill="#0f172a">
                     {paths.map((d, j) => (
                         <path key={`label-${i.toString()}-${j.toString()}`} d={d} />
                     ))}
@@ -29,7 +23,9 @@ export function ProvinceLabels() {
                 <text
                     key={entry.label}
                     transform={`matrix(${entry.matrix})`}
-                    style={{ ...OUTLINED_LABEL_STYLE, fontSize: 14, fontWeight: 500 }}
+                    data-region-label=""
+                    fill="#0f172a"
+                    style={{ fontSize: 14, fontWeight: 500 }}
                 >
                     {entry.label}
                 </text>
