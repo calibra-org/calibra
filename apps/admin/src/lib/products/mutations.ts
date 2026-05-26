@@ -269,6 +269,43 @@ export function useRestoreProducts() {
     });
 }
 
+/**
+ * Persists a full product-detail submission via `PATCH /admin/products/{id}`. Accepts the
+ * already-built wire-shape payload (the form layer maps Toman→Rial, ISO dates, etc.). When
+ * `ifMatch` is supplied, the proxy forwards it as the `If-Match` header so the api can reject
+ * stale writes with a 409.
+ */
+export function useUpdateProduct(id: number) {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: unknown }, Error, { body: Record<string, unknown>; ifMatch?: string }>({
+        mutationFn: ({ body, ifMatch }) =>
+            apiMutate<{ data: unknown }>("PATCH", `products/${id}`, {
+                locale,
+                body,
+                ifMatch,
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product", id] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product-counts"] });
+        },
+    });
+}
+
+/** Creates a new product via `POST /admin/products`. Returns the newly minted id for routing. */
+export function useCreateProduct() {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { body: Record<string, unknown> }>({
+        mutationFn: ({ body }) => apiMutate<{ data: { id: number } }>("POST", "products", { locale, body }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product-counts"] });
+        },
+    });
+}
+
 /** Hard-delete one or more products. Server refuses if any selected product is referenced by
  *  an active order — the bulk response surfaces `skipped_force` ids. */
 export function useForceDeleteProducts() {

@@ -410,9 +410,7 @@ export default class AdminProductsController {
         const payload = await ctx.request.validateUsing(updateProductValidator);
         await this.assertLinkedProductsExist(payload.upsell_ids, payload.cross_sell_ids, payload.grouped_member_ids);
         const linkedTouched =
-            payload.upsell_ids !== undefined ||
-            payload.cross_sell_ids !== undefined ||
-            payload.grouped_member_ids !== undefined;
+            payload.upsell_ids !== undefined || payload.cross_sell_ids !== undefined || payload.grouped_member_ids !== undefined;
         const downloadsTouched = payload.downloads !== undefined;
         await withTransaction(async (trx) => {
             product.useTransaction(trx);

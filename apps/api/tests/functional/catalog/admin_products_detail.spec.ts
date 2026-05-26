@@ -1,11 +1,10 @@
 import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
+import { createProduct } from "./helpers.js";
 import Media from "#models/media";
 import Product from "#models/product";
 import ProductDownload from "#models/product_download";
-
-import { createProduct } from "./helpers.js";
 
 async function createMedia(label: string) {
     return await Media.create({
@@ -124,9 +123,7 @@ test.group("Admin product detail extensions", (group) => {
 
     test("check-slug excludeId ignores the edited row", async ({ client, assert }) => {
         const p = await createProduct({ fa: { name: "خ", slug: "mine-fa" }, en: { name: "Mine", slug: "mine-en" } });
-        const response = await client.get(
-            `/api/v1/admin/products/check-slug?slug=mine-en&locale=en&excludeId=${Number(p.id)}`,
-        );
+        const response = await client.get(`/api/v1/admin/products/check-slug?slug=mine-en&locale=en&excludeId=${Number(p.id)}`);
         response.assertStatus(200);
         response.assertAgainstApiSpec();
         assert.isTrue(response.body().data.available);

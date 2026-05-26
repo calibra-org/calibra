@@ -5,9 +5,12 @@ import type { Locale } from "@calibra/shared/i18n";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
+import { type AdminProductDetailView, toAdminProductDetail } from "#/lib/adapters/product-detail";
 import { toAdminProduct } from "#/lib/adapters/products";
 import { apiGet } from "#/lib/queries/api-client";
 import type { AdminBrand, AdminCategory, AdminProduct, AdminTag, ProductStatus, ProductType, StockStatus } from "#/lib/types";
+
+type DetailEnvelope = { data: AdminSchemas["schemas"]["AdminProductDetail"] };
 
 type Schemas = AdminSchemas["schemas"];
 
@@ -227,5 +230,57 @@ export function useProductCountsByStatus() {
             }
         },
         staleTime: 30 * 1000,
+    });
+}
+
+/**
+ * Fetches a single product's full detail payload, normalised into the view shape. The cache key
+ * scopes by id; consumers passing `initialData` from the server-rendered shell skip the
+ * first-paint round-trip.
+ */
+export function useProduct(
+    id: number | null,
+    options?: { initialData?: AdminProductDetailView },
+): ReturnType<typeof useQuery<DetailEnvelope, Error, AdminProductDetailView>> {
+    const locale = useLocale() as Locale;
+    return useQuery<DetailEnvelope, Error, AdminProductDetailView>({
+        queryKey: ["admin", "product", id, locale],
+        enabled: id !== null && id !== undefined,
+        queryFn: async () => apiGet<DetailEnvelope>(`products/${id}`, { locale }),
+        select: (envelope) => toAdminProductDetail(envelope.data),
+        initialData: options?.initialData
+            ? ({
+                  data: options.initialData as unknown as AdminSchemas["schemas"]["AdminProductDetail"],
+              } as DetailEnvelope)
+            : undefined,
+        staleTime: 5 * 1000,
+    });
+}
+
+/**
+ * Debounced async slug availability check. The hook is intentionally NOT a `useMutation`; it's a
+ * read-after-blur predicate the form treats as a hint, not a write. Callers pass the current slug
+ * + locale and (when editing) the row's own id to exclude.
+ */
+export function useSlugAvailability(args: {
+    slug: string | null;
+    locale: Locale;
+    excludeId?: number;
+}): ReturnType<typeof useQuery<{ data: { available: boolean } }, Error, boolean>> {
+    const trimmed = args.slug?.trim() ?? "";
+    return useQuery<{ data: { available: boolean } }, Error, boolean>({
+        queryKey: ["admin", "products", "check-slug", args.locale, trimmed, args.excludeId ?? null],
+        enabled: trimmed.length > 0,
+        queryFn: async () =>
+            apiGet<{ data: { available: boolean } }>("products/check-slug", {
+                locale: args.locale,
+                query: {
+                    slug: trimmed,
+                    locale: args.locale,
+                    ...(args.excludeId !== undefined ? { excludeId: args.excludeId } : {}),
+                },
+            }),
+        select: (envelope) => envelope.data.available,
+        staleTime: 5 * 1000,
     });
 }

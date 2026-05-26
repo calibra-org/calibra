@@ -59,7 +59,13 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
 
     const init: RequestInit & { duplex?: "half" } = {
         method,
-        headers: buildUpstreamHeaders(session.token, locale, request.headers.get("content-type"), method),
+        headers: buildUpstreamHeaders(
+            session.token,
+            locale,
+            request.headers.get("content-type"),
+            request.headers.get("if-match"),
+            method,
+        ),
         cache: "no-store",
     };
 
@@ -100,7 +106,13 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
     return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
 }
 
-function buildUpstreamHeaders(token: string, locale: string, contentType: string | null, method: string): Record<string, string> {
+function buildUpstreamHeaders(
+    token: string,
+    locale: string,
+    contentType: string | null,
+    ifMatch: string | null,
+    method: string,
+): Record<string, string> {
     const headers: Record<string, string> = {
         authorization: `Bearer ${token}`,
         "accept-language": locale,
@@ -108,6 +120,9 @@ function buildUpstreamHeaders(token: string, locale: string, contentType: string
     };
     if (MUTATION_METHODS.has(method) && typeof contentType === "string" && contentType.length > 0) {
         headers["content-type"] = contentType;
+    }
+    if (typeof ifMatch === "string" && ifMatch.length > 0) {
+        headers["if-match"] = ifMatch;
     }
     return headers;
 }

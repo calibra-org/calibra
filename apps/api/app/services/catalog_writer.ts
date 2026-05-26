@@ -142,14 +142,18 @@ export async function syncProductDownloads(
     for (const row of downloads) {
         const position = row.position ?? index;
         if (typeof row.id === "number" && Number.isFinite(row.id)) {
-            await trx.from("product_downloads").where("id", row.id).where("product_id", String(productId)).update({
-                media_id: row.media_id,
-                file_label: row.file_label,
-                download_limit: row.download_limit ?? null,
-                download_expiry_days: row.download_expiry_days ?? null,
-                position,
-                updated_at: now,
-            });
+            await trx
+                .from("product_downloads")
+                .where("id", row.id)
+                .where("product_id", String(productId))
+                .update({
+                    media_id: row.media_id,
+                    file_label: row.file_label,
+                    download_limit: row.download_limit ?? null,
+                    download_expiry_days: row.download_expiry_days ?? null,
+                    position,
+                    updated_at: now,
+                });
         } else {
             await trx.table("product_downloads").insert({
                 product_id: productId,
