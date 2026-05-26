@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { parseDateFilter, serializeDateFilter } from "../url";
 import type { DateFilterValue } from "../types";
+import { parseDateFilter, serializeDateFilter } from "../url";
 
 describe("serializeDateFilter", () => {
     it("encodes `in` quarter as op:value", () => {

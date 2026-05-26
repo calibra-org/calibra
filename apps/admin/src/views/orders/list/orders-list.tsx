@@ -11,15 +11,15 @@ import {
     ActiveFilterChips,
     type ColumnDef,
     DataTable,
-    type DateFacetDef,
     DataTableToolbar,
     DataTableViewOptions,
+    type DateFacetDef,
     type FacetedFilterDef,
 } from "#/components/data-table";
 import { useDataTable } from "#/components/data-table/use-data-table";
-import { toLegacyDateRange } from "#/components/ui/date-picker";
 import { OrderStatusBadge } from "#/components/OrderStatusBadge";
 import { Button } from "#/components/ui/button";
+import { serializeDateFilter } from "#/components/ui/date-picker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";
 import { formatDateTime, formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
@@ -63,7 +63,6 @@ export function OrdersList() {
                 paramKey: "created",
                 label: t("filters.created"),
                 calendar: "auto",
-                legacyParamKeys: { after: "after", before: "before" },
             },
         ],
         [t],
@@ -79,7 +78,10 @@ export function OrdersList() {
     });
 
     const createdValue = tableState.dateFacetValues.created;
-    const createdLegacy = useMemo(() => (createdValue === null ? {} : toLegacyDateRange(createdValue)), [createdValue]);
+    const createdParam = useMemo(
+        () => (createdValue === null ? undefined : serializeDateFilter(createdValue).main),
+        [createdValue],
+    );
 
     const status: StatusTabKey = useMemo(() => {
         const value = tableState.facetValues.status?.[0];
@@ -123,8 +125,7 @@ export function OrdersList() {
         sources: tableState.facetValues.source,
         payments: tableState.facetValues.payment,
         countries: tableState.facetValues.country,
-        after: createdLegacy.after,
-        before: createdLegacy.before,
+        created: createdParam,
         customerId: customerIdFilter !== undefined && Number.isFinite(customerIdFilter) ? customerIdFilter : undefined,
     });
 

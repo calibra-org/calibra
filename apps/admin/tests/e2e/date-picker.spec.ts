@@ -71,7 +71,10 @@ test.describe("date filter chip — Gregorian flow", () => {
 
     test("clear button removes the filter", async ({ page }) => {
         await page.goto("/en/orders?created=before%3A2026-05-15");
-        await page.getByRole("button", { name: /clear filter/i }).first().click();
+        await page
+            .getByRole("button", { name: /clear filter/i })
+            .first()
+            .click();
         await expect(page).toHaveURL(/^[^?]*\/en\/orders\/?(\?(?!created=))?[^?]*$/);
     });
 });

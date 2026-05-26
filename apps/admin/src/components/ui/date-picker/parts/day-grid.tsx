@@ -2,11 +2,27 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo } from "react";
-import { DayPicker, type DayPickerProps } from "react-day-picker";
+import { type ChevronProps, DayPicker, type DayPickerProps } from "react-day-picker";
 import "react-day-picker/style.css";
 
 import { getDateLib, valueStringToDate } from "../date-lib";
 import type { Calendar, Operator } from "../types";
+
+/**
+ * RDP chevron slot. Lives outside the parent so the lint rule against nested component
+ * definitions stays happy and so React can stabilise the slot reference across renders.
+ *
+ * RDP v9 already accounts for `dir="rtl"` by flipping the `orientation` it passes — `previous`
+ * arrives as `orientation: "right"` in RTL, `"left"` in LTR. We honour that signal verbatim;
+ * any extra locale-aware flipping here would double-invert.
+ */
+function PickerChevron({ orientation }: ChevronProps) {
+    return orientation === "left" ? (
+        <ChevronLeft className="size-4" aria-hidden="true" />
+    ) : (
+        <ChevronRight className="size-4" aria-hidden="true" />
+    );
+}
 
 interface DayGridProps {
     calendar: Calendar;
@@ -103,25 +119,19 @@ export function DayGrid({
             modifiers={modifiers}
             modifiersClassNames={modifiersClassNames}
             showOutsideDays
-            components={{
-                Chevron: ({ orientation }) =>
-                    orientation === "left" ? (
-                        <ChevronLeft className="size-4" aria-hidden="true" />
-                    ) : (
-                        <ChevronRight className="size-4" aria-hidden="true" />
-                    ),
-            }}
+            components={{ Chevron: PickerChevron }}
             classNames={{
                 root: "p-2 text-foreground",
-                month: "space-y-2",
-                month_caption: "flex items-center justify-center pt-1 text-sm font-semibold",
+                months: "flex flex-col sm:flex-row gap-4",
+                month: "space-y-3 flex-1",
+                month_caption: "relative flex h-8 items-center justify-center text-sm font-semibold",
                 caption_label: "text-sm",
-                nav: "absolute end-2 top-2 flex items-center gap-1",
+                nav: "contents",
                 button_previous:
-                    "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "absolute start-1 top-0 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 button_next:
-                    "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                weekday: "text-muted-foreground text-xs font-normal",
+                    "absolute end-1 top-0 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                weekday: "text-muted-foreground text-xs font-normal pb-1",
                 day_button:
                     "inline-flex size-9 items-center justify-center rounded-md text-sm outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                 outside: "text-muted-foreground/40",

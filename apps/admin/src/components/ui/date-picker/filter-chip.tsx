@@ -86,15 +86,16 @@ export function DateFilterChip({
                     value={value}
                     onChange={onChange}
                     allowed={allowedOperators}
-                    trigger={
+                    renderTrigger={(triggerProps) => (
                         <button
                             type="button"
-                            className="h-7 px-2 text-muted-foreground outline-none transition-colors hover:bg-muted/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                             aria-label={t("changeOperator")}
+                            {...triggerProps}
+                            className="h-7 px-2 text-muted-foreground outline-none transition-colors hover:bg-muted/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             {formatOperator(value.operator, locale)}
                         </button>
-                    }
+                    )}
                 />
                 <button
                     type="button"

@@ -88,7 +88,7 @@ describe("formatDateFilterValue — Jalali / Persian display", () => {
             value: "1405-Q4",
         };
         const formatted = formatDateFilterValue(value, { locale: "fa" });
-        expect(formatted).toContain("Q۴");
+        expect(formatted).toContain("فصل ۴");
         expect(formatted).toContain("۱۴۰۵");
     });
 
@@ -100,7 +100,7 @@ describe("formatDateFilterValue — Jalali / Persian display", () => {
             value: "1405-H1",
         };
         const formatted = formatDateFilterValue(value, { locale: "fa" });
-        expect(formatted).toContain("H۱");
+        expect(formatted).toContain("نیم‌سال ۱");
         expect(formatted).toContain("۱۴۰۵");
     });
 });

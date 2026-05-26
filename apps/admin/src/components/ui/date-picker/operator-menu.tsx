@@ -1,14 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { type ReactNode } from "react";
+import type { ComponentProps, ReactElement } from "react";
 
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 
 import { ALLOWED_OPERATORS_BY_GRANULARITY, type DateFilterValue, type Operator } from "./types";
 
@@ -17,7 +12,12 @@ interface OperatorMenuProps {
     onChange: (next: DateFilterValue) => void;
     /** Optional override of the allowed operators (defaults to the granularity's full set). */
     allowed?: Operator[];
-    trigger: ReactNode;
+    /**
+     * Render-prop for the trigger button — Base UI requires a real `<button>` for proper
+     * semantics. The function receives the props the menu needs to wire on and must spread them
+     * onto a native `<button>`.
+     */
+    renderTrigger: (props: ComponentProps<"button">) => ReactElement;
 }
 
 /**
@@ -25,7 +25,7 @@ interface OperatorMenuProps {
  * value stays put when possible; switching `within` → single-point operators collapses the range
  * to its start.
  */
-export function OperatorMenu({ value, onChange, allowed, trigger }: OperatorMenuProps) {
+export function OperatorMenu({ value, onChange, allowed, renderTrigger }: OperatorMenuProps) {
     const t = useTranslations("DatePicker.operator");
     const options = (allowed ?? ALLOWED_OPERATORS_BY_GRANULARITY[value.granularity]) as Operator[];
 
@@ -36,7 +36,7 @@ export function OperatorMenu({ value, onChange, allowed, trigger }: OperatorMenu
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger render={<div />}>{trigger}</DropdownMenuTrigger>
+            <DropdownMenuTrigger render={(props) => renderTrigger(props as ComponentProps<"button">)} />
             <DropdownMenuContent align="start" className="min-w-32">
                 {options.map((op) => (
                     <DropdownMenuItem key={op} onClick={() => handlePick(op)}>

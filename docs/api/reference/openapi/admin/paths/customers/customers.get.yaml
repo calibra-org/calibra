@@ -36,12 +36,8 @@ parameters:
     - { name: email_verified, in: query, schema: { type: boolean } }
     - { name: opt_in_email, in: query, schema: { type: boolean } }
     - { name: opt_in_sms, in: query, schema: { type: boolean } }
-    - { name: created_after, in: query, schema: { type: string, format: date-time } }
-    - { name: created_before, in: query, schema: { type: string, format: date-time } }
-    - { name: created_from, in: query, schema: { type: string, format: date-time }, deprecated: true, description: Use `created_after`. }
-    - { name: created_to, in: query, schema: { type: string, format: date-time }, deprecated: true, description: Use `created_before`. }
-    - { name: last_order_after, in: query, schema: { type: string, format: date-time } }
-    - { name: last_order_before, in: query, schema: { type: string, format: date-time } }
+    - { name: created, in: query, schema: { type: string, maxLength: 60 }, description: "Unified date filter — `<op>:<value>` where op ∈ `in|before|after|within`; value ∈ `YYYY-MM-DD`, `YYYY-MM`, `YYYY-Q1..Q4`, `YYYY-H1|H2`, `YYYY`. Use `within:YYYY-MM-DD..YYYY-MM-DD` for closed ranges. Year < 1700 parses as Jalali and converts to Gregorian server-side." }
+    - { name: last_order, in: query, schema: { type: string, maxLength: 60 }, description: "Same shape as `created`, filters by the customer's last counted order date." }
     - { name: order_count_min, in: query, schema: { type: integer, minimum: 0 } }
     - { name: order_count_max, in: query, schema: { type: integer, minimum: 0 } }
     - { name: lifetime_spend_min, in: query, schema: { type: integer, minimum: 0 } }

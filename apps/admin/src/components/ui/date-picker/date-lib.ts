@@ -1,17 +1,19 @@
 import * as JalaliDateFns from "date-fns-jalali";
+import { faIR } from "date-fns-jalali/locale";
 import { DateLib, defaultDateLib } from "react-day-picker";
 
-import type { Calendar, Granularity, LegacyDateRange, PeriodString } from "./types";
+import type { Calendar, Granularity, PeriodString } from "./types";
 
 /**
  * react-day-picker's `DateLib` exposes the date-fns surface the picker needs internally. For Jalali
- * we hand it the `date-fns-jalali` namespace as the `overrides` argument — every internal call
- * (addDays, getMonth, format, …) then runs through the Jalali implementation, so the same `Date`
- * object renders as its Jalali year/month/day.
+ * we hand it the `date-fns-jalali` namespace as the `overrides` argument and the `faIR` locale so
+ * `format(date, "MMMM yyyy")` emits Persian month names (`فروردین ۱۴۰۵`) and Saturday-first
+ * weekday abbreviations — without the locale the lib defaults to enUS month names with a Jalali
+ * year, which reads as bilingual nonsense.
  *
  * @see {@link https://daypicker.dev/docs/localization#use-jalali-calendar}
  */
-const jalaliDateLib = new DateLib({ weekStartsOn: 6 }, JalaliDateFns as unknown as Partial<DateLib>);
+const jalaliDateLib = new DateLib({ weekStartsOn: 6, locale: faIR }, JalaliDateFns as unknown as Partial<DateLib>);
 
 /**
  * Returns the active dateLib for a given calendar. The returned object obeys the date-fns API
@@ -93,13 +95,7 @@ export function getHalfYear(date: Date, lib: DateLib): 1 | 2 {
  * the user clicks a period cell — we anchor on the period start so subsequent math (range
  * endpoints, day-grid scrolling) is deterministic.
  */
-export function buildDateForPeriod(
-    granularity: Granularity,
-    year: number,
-    month: number,
-    day: number,
-    lib: DateLib,
-): Date {
+export function buildDateForPeriod(granularity: Granularity, year: number, month: number, day: number, lib: DateLib): Date {
     const base = lib.startOfDay(lib.setYear(lib.setMonth(lib.today(), month), year));
     if (granularity === "day") {
         return lib.addDays(lib.startOfMonth(base), day - 1);
@@ -152,11 +148,7 @@ export function getDayInMonth(date: Date, lib: DateLib): number {
  * Parse a stored value string back into a `Date` in the given calendar. The returned date anchors
  * on the period's first day; pair with {@link periodEnd} to derive the closing instant.
  */
-export function valueStringToDate(
-    value: PeriodString,
-    granularity: Granularity,
-    lib: DateLib,
-): Date | null {
+export function valueStringToDate(value: PeriodString, granularity: Granularity, lib: DateLib): Date | null {
     if (granularity === "day") {
         const match = /^(\d{3,4})-(\d{1,2})-(\d{1,2})$/.exec(value);
         if (match === null) return null;
@@ -193,11 +185,7 @@ export function valueStringToDate(
 function safeDate(year: number, monthZero: number, day: number, lib: DateLib): Date | null {
     const base = lib.startOfDay(lib.setYear(lib.setMonth(lib.today(), monthZero), year));
     const candidate = lib.addDays(lib.startOfMonth(base), day - 1);
-    if (
-        lib.getYear(candidate) !== year ||
-        lib.getMonth(candidate) !== monthZero ||
-        getDayInMonth(candidate, lib) !== day
-    ) {
+    if (lib.getYear(candidate) !== year || lib.getMonth(candidate) !== monthZero || getDayInMonth(candidate, lib) !== day) {
         return null;
     }
     return candidate;
@@ -213,36 +201,6 @@ export function periodEnd(start: Date, granularity: Granularity, lib: DateLib): 
     if (granularity === "quarter") return endOfQuarter(start, lib);
     if (granularity === "half_year") return endOfHalfYear(start, lib);
     return lib.endOfYear(start);
-}
-
-/**
- * Convert a stored {@link DateFilterValue} into the legacy `after=` / `before=` shape used by API
- * endpoints that haven't migrated to the unified payload. Always emits Gregorian ISO `YYYY-MM-DD`
- * because the API is calendar-agnostic and works in UTC.
- */
-export function toLegacyParams(value: {
-    operator: "in" | "before" | "after" | "within";
-    granularity: Granularity;
-    calendar: Calendar;
-    value?: PeriodString;
-    start?: PeriodString;
-    end?: PeriodString;
-}): LegacyDateRange {
-    const lib = getDateLib(value.calendar);
-    if (value.operator === "within" && value.start !== undefined && value.end !== undefined) {
-        const start = valueStringToDate(value.start, "day", lib);
-        const end = valueStringToDate(value.end, "day", lib);
-        if (start === null || end === null) return {};
-        return { after: toGregorianISO(start), before: toGregorianISO(end) };
-    }
-    if (value.value === undefined) return {};
-    const anchor = valueStringToDate(value.value, value.granularity, lib);
-    if (anchor === null) return {};
-    const startDate = anchor;
-    const endDate = value.granularity === "day" ? anchor : periodEnd(anchor, value.granularity, lib);
-    if (value.operator === "before") return { before: toGregorianISO(startDate) };
-    if (value.operator === "after") return { after: toGregorianISO(endDate) };
-    return { after: toGregorianISO(startDate), before: toGregorianISO(endDate) };
 }
 
 /**

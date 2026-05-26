@@ -1,5 +1,4 @@
-import { toLegacyParams } from "./date-lib";
-import type { Calendar, DateFilterValue, Granularity, LegacyDateRange, Operator } from "./types";
+import type { Calendar, DateFilterValue, Granularity, Operator } from "./types";
 
 /**
  * Serialise a {@link DateFilterValue} into its single-URL-parameter form. Examples:
@@ -65,12 +64,4 @@ function detectGranularity(s: string): Granularity | null {
     if (/^\d{3,4}-\d{1,2}$/.test(s)) return "month";
     if (/^\d{3,4}$/.test(s)) return "year";
     return null;
-}
-
-/**
- * Re-export of the canonical legacy bridge so list-page filters can stay backwards-compatible
- * while the API endpoints catch up to the unified shape.
- */
-export function toLegacyDateRange(value: DateFilterValue): LegacyDateRange {
-    return toLegacyParams(value);
 }

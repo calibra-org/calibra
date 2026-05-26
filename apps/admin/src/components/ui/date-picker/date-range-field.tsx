@@ -39,9 +39,7 @@ export function DateRangeField({
     const [open, setOpen] = useState(false);
 
     const wrapped: DateFilterValue | null =
-        value === null
-            ? null
-            : { operator: "within", granularity: "day", calendar, start: value.start, end: value.end };
+        value === null ? null : { operator: "within", granularity: "day", calendar, start: value.start, end: value.end };
 
     return (
         <div className="space-y-1">
@@ -65,10 +63,11 @@ export function DateRangeField({
                 defaultOperator="within"
                 defaultGranularity="day"
                 fieldLabel={label}
-                trigger={
+                renderTrigger={(triggerProps) => (
                     <button
                         type="button"
                         disabled={disabled}
+                        {...triggerProps}
                         className={cn(
                             "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-start text-sm outline-none transition-colors",
                             "hover:border-ring/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40",
@@ -77,12 +76,10 @@ export function DateRangeField({
                     >
                         <CalendarRange className="size-4 text-muted-foreground" aria-hidden="true" />
                         <span className={cn(value === null && "text-muted-foreground/70")}>
-                            {value === null
-                                ? placeholder ?? t("pickARange")
-                                : formatValueOnly(wrapped!, { locale })}
+                            {value === null ? (placeholder ?? t("pickARange")) : formatValueOnly(wrapped!, { locale })}
                         </span>
                     </button>
-                }
+                )}
             />
             {description !== undefined && <p className="text-muted-foreground text-xs">{description}</p>}
         </div>

@@ -40,10 +40,7 @@ export function formatValueOnly(value: DateFilterValue, ctx: FormatContext): str
         const end = valueStringToDate(value.end, "day", lib);
         if (start === null || end === null) return "";
         return toDisplayDigits(
-            `${lib.format(start, withinDateFormat(value.calendar))} – ${lib.format(
-                end,
-                withinDateFormat(value.calendar),
-            )}`,
+            `${lib.format(start, withinDateFormat(value.calendar))} – ${lib.format(end, withinDateFormat(value.calendar))}`,
             ctx.locale,
         );
     }
@@ -58,12 +55,14 @@ export function formatValueOnly(value: DateFilterValue, ctx: FormatContext): str
     if (value.granularity === "quarter") {
         const q = value.value.match(/Q([1-4])/i)?.[1] ?? "?";
         const year = String(lib.getYear(anchor));
-        return toDisplayDigits(`Q${q} ${year}`, ctx.locale);
+        const head = ctx.locale === "fa" ? `فصل ${q}` : `Q${q}`;
+        return toDisplayDigits(`${head} ${year}`, ctx.locale);
     }
     if (value.granularity === "half_year") {
         const h = value.value.match(/H([12])/i)?.[1] ?? "?";
         const year = String(lib.getYear(anchor));
-        return toDisplayDigits(`H${h} ${year}`, ctx.locale);
+        const head = ctx.locale === "fa" ? `نیم‌سال ${h}` : `H${h}`;
+        return toDisplayDigits(`${head} ${year}`, ctx.locale);
     }
     return toDisplayDigits(String(lib.getYear(anchor)), ctx.locale);
 }

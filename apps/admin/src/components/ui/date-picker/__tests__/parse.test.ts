@@ -158,9 +158,7 @@ describe("parser — Quarter", () => {
     });
 
     it("parses bare Q1 with Jalali current year", () => {
-        expect(
-            parseDateFilterInput("Q1", { locale: "fa", calendar: "jalali", now: FROZEN_NOW }),
-        ).toEqual({
+        expect(parseDateFilterInput("Q1", { locale: "fa", calendar: "jalali", now: FROZEN_NOW })).toEqual({
             selection: { kind: "period", granularity: "quarter", value: "1405-Q1" },
             granularityHint: "quarter",
         });
@@ -634,9 +632,7 @@ describe("parser — surrounding whitespace + capitalisation", () => {
     });
 
     it("is fully case-insensitive on relative keywords", () => {
-        expect(
-            parseDateFilterInput("TODAY", { locale: "en", calendar: "gregorian", now: FROZEN_NOW }),
-        ).toEqual({
+        expect(parseDateFilterInput("TODAY", { locale: "en", calendar: "gregorian", now: FROZEN_NOW })).toEqual({
             selection: { kind: "period", granularity: "day", value: "2026-05-26" },
             granularityHint: "day",
         });

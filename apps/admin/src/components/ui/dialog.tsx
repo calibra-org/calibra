@@ -20,7 +20,16 @@ function DialogClose(props: React.ComponentProps<typeof BaseDialog.Close>) {
     return <BaseDialog.Close {...props} />;
 }
 
-function DialogContent({ className, children, ...props }: React.ComponentProps<typeof BaseDialog.Popup>) {
+interface DialogContentProps extends React.ComponentProps<typeof BaseDialog.Popup> {
+    /**
+     * Hide the built-in × close affordance. Use when the dialog body has its own
+     * cancel/apply bar so the icon doesn't visually collide with header content. The Escape key
+     * and backdrop click still close the dialog regardless.
+     */
+    hideClose?: boolean;
+}
+
+function DialogContent({ className, children, hideClose = false, ...props }: DialogContentProps) {
     return (
         <DialogPortal>
             <BaseDialog.Backdrop
@@ -40,12 +49,14 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
                 {...props}
             >
                 {children}
-                <BaseDialog.Close
-                    className="absolute end-4 top-4 rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    aria-label="Close"
-                >
-                    <X className="size-4" aria-hidden="true" />
-                </BaseDialog.Close>
+                {!hideClose && (
+                    <BaseDialog.Close
+                        className="absolute end-4 top-4 rounded-sm opacity-70 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        aria-label="Close"
+                    >
+                        <X className="size-4" aria-hidden="true" />
+                    </BaseDialog.Close>
+                )}
             </BaseDialog.Popup>
         </DialogPortal>
     );

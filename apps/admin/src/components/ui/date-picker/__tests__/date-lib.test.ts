@@ -13,11 +13,9 @@ import {
     startOfHalfYear,
     startOfQuarter,
     toGregorianISO,
-    toLegacyParams,
     valueStringToDate,
     weekStartsOnFor,
 } from "../date-lib";
-import type { DateFilterValue } from "../types";
 
 describe("calendarForLocale", () => {
     it("maps fa → jalali, en → gregorian", () => {
@@ -187,57 +185,8 @@ describe("periodEnd", () => {
     });
 });
 
-describe("toGregorianISO + toLegacyParams", () => {
+describe("toGregorianISO", () => {
     it("formats a Date as ISO Gregorian date string", () => {
         expect(toGregorianISO(new Date(2026, 4, 26))).toBe("2026-05-26");
-    });
-
-    it("converts an `in` quarter value to after + before", () => {
-        const value: DateFilterValue = {
-            operator: "in",
-            granularity: "quarter",
-            calendar: "gregorian",
-            value: "2026-Q2",
-        };
-        const params = toLegacyParams(value);
-        expect(params.after).toBeDefined();
-        expect(params.before).toBeDefined();
-    });
-
-    it("converts a `within` day range to after + before", () => {
-        const value: DateFilterValue = {
-            operator: "within",
-            granularity: "day",
-            calendar: "gregorian",
-            start: "2026-05-01",
-            end: "2026-05-07",
-        };
-        const params = toLegacyParams(value);
-        expect(params.after).toBe("2026-05-01");
-        expect(params.before).toBe("2026-05-07");
-    });
-
-    it("converts a `before` month value to before only", () => {
-        const value: DateFilterValue = {
-            operator: "before",
-            granularity: "month",
-            calendar: "gregorian",
-            value: "2026-05",
-        };
-        const params = toLegacyParams(value);
-        expect(params.before).toBe("2026-05-01");
-        expect(params.after).toBeUndefined();
-    });
-
-    it("converts an `after` year value to after only", () => {
-        const value: DateFilterValue = {
-            operator: "after",
-            granularity: "year",
-            calendar: "gregorian",
-            value: "2024",
-        };
-        const params = toLegacyParams(value);
-        expect(params.after).toBe("2024-12-31");
-        expect(params.before).toBeUndefined();
     });
 });

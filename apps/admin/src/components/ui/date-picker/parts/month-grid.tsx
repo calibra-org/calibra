@@ -24,16 +24,7 @@ interface MonthGridProps {
  * Year-sectioned 4×3 month grid. Localised month names come from the active dateLib's `format`
  * (which honours the Jalali locale's Persian names when calendar=jalali).
  */
-export function MonthGrid({
-    calendar,
-    locale,
-    selected,
-    onPick,
-    minYear,
-    maxYear,
-    initialSpan,
-    ariaLabel,
-}: MonthGridProps) {
+export function MonthGrid({ calendar, locale, selected, onPick, minYear, maxYear, initialSpan, ariaLabel }: MonthGridProps) {
     const lib = getDateLib(calendar);
     const today = lib.today();
     const todayYear = lib.getYear(today);
@@ -56,9 +47,10 @@ export function MonthGrid({
                     {monthNames.map((name, monthZero) => {
                         const isSel = selected?.year === year && selected.monthZero === monthZero;
                         const isCur = year === todayYear && monthZero === todayMonth;
+                        const cellKey = `${year}-${monthZero}-${name}`;
                         return (
                             <PeriodButton
-                                key={monthZero}
+                                key={cellKey}
                                 onClick={() => onPick(year, monthZero)}
                                 selected={isSel}
                                 isCurrent={isCur}

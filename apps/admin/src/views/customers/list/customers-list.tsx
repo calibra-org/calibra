@@ -9,15 +9,15 @@ import { useMemo, useState } from "react";
 import {
     ActiveFilterChips,
     DataTable,
-    type DateFacetDef,
     DataTableToolbar,
     DataTableViewOptions,
+    type DateFacetDef,
     type FacetedFilterDef,
 } from "#/components/data-table";
 import { useDataTable } from "#/components/data-table/use-data-table";
-import { toLegacyDateRange } from "#/components/ui/date-picker";
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
+import { serializeDateFilter } from "#/components/ui/date-picker";
 import { formatNumber } from "#/lib/format";
 import {
     type CustomerTabKey,
@@ -85,18 +85,8 @@ export function CustomersListClient() {
 
     const dateFacets = useMemo<DateFacetDef[]>(
         () => [
-            {
-                paramKey: "created",
-                label: t("table.createdAt"),
-                calendar: "auto",
-                legacyParamKeys: { after: "created_after", before: "created_before" },
-            },
-            {
-                paramKey: "lastOrder",
-                label: t("table.lastOrder"),
-                calendar: "auto",
-                legacyParamKeys: { after: "last_order_after", before: "last_order_before" },
-            },
+            { paramKey: "created", label: t("table.createdAt"), calendar: "auto" },
+            { paramKey: "lastOrder", label: t("table.lastOrder"), calendar: "auto" },
         ],
         [t],
     );
@@ -116,8 +106,14 @@ export function CustomersListClient() {
 
     const createdValue = tableState.dateFacetValues.created;
     const lastOrderValue = tableState.dateFacetValues.lastOrder;
-    const createdLegacy = useMemo(() => (createdValue === null ? {} : toLegacyDateRange(createdValue)), [createdValue]);
-    const lastOrderLegacy = useMemo(() => (lastOrderValue === null ? {} : toLegacyDateRange(lastOrderValue)), [lastOrderValue]);
+    const createdParam = useMemo(
+        () => (createdValue === null ? undefined : serializeDateFilter(createdValue).main),
+        [createdValue],
+    );
+    const lastOrderParam = useMemo(
+        () => (lastOrderValue === null ? undefined : serializeDateFilter(lastOrderValue).main),
+        [lastOrderValue],
+    );
 
     const {
         data: result,
@@ -136,10 +132,8 @@ export function CustomersListClient() {
         includeStats: true,
         countries: tableState.facetValues.country,
         statuses: (tableState.facetValues.status ?? []) as ("active" | "suspended")[],
-        createdAfter: createdLegacy.after,
-        createdBefore: createdLegacy.before,
-        lastOrderAfter: lastOrderLegacy.after,
-        lastOrderBefore: lastOrderLegacy.before,
+        created: createdParam,
+        lastOrder: lastOrderParam,
     });
 
     const deleteMutation = useDeleteCustomer();

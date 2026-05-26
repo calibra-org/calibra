@@ -150,22 +150,19 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
      * Operator switch. Within → before/after collapses any pending range to its earlier
      * endpoint; before/after → within seeds the range from the current point.
      */
-    const setOperator = useCallback(
-        (op: Operator) => {
-            setOperatorState(op);
-            setSelection((current) => {
-                if (op === "within" && current.kind === "period" && current.granularity === "day") {
-                    return current;
-                }
-                if (op !== "within" && current.kind === "range") {
-                    return { kind: "period", granularity: "day", value: current.start };
-                }
+    const setOperator = useCallback((op: Operator) => {
+        setOperatorState(op);
+        setSelection((current) => {
+            if (op === "within" && current.kind === "period" && current.granularity === "day") {
                 return current;
-            });
-            setAriaLiveAnnouncement(`Operator changed to ${op}`);
-        },
-        [],
-    );
+            }
+            if (op !== "within" && current.kind === "range") {
+                return { kind: "period", granularity: "day", value: current.start };
+            }
+            return current;
+        });
+        setAriaLiveAnnouncement(`Operator changed to ${op}`);
+    }, []);
 
     /**
      * Granularity switch. Preserves the selected period when there's a meaningful mapping
@@ -216,9 +213,12 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
         [calendar, granularity, locale],
     );
 
-    useEffect(() => () => {
-        if (inputDebounceRef.current !== null) window.clearTimeout(inputDebounceRef.current);
-    }, []);
+    useEffect(
+        () => () => {
+            if (inputDebounceRef.current !== null) window.clearTimeout(inputDebounceRef.current);
+        },
+        [],
+    );
 
     const commitValue = useCallback(
         (next: DateFilterValue | null) => {
@@ -235,13 +235,13 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
     const commitFromSelection = useCallback(
         (sel: Selection) => {
             if (sel.kind === "none") return;
-            const built = buildValueFromSelection(sel, operator, calendar, granularity);
+            const built = buildValueFromSelection(sel, operator, calendar);
             if (built !== null) {
                 commitValue(built);
                 setSelection(sel);
             }
         },
-        [calendar, commitValue, granularity, operator],
+        [calendar, commitValue, operator],
     );
 
     const handleDayClick = useCallback(
@@ -312,11 +312,11 @@ export function useDateFilter(options: UseDateFilterOptions): UseDateFilterRetur
      */
     const commit = useCallback(() => {
         if (selection.kind === "none") return;
-        const built = buildValueFromSelection(selection, operator, calendar, granularity);
+        const built = buildValueFromSelection(selection, operator, calendar);
         if (built === null) return;
         commitValue(built);
         setIsInputDirty(false);
-    }, [calendar, commitValue, granularity, operator, selection]);
+    }, [calendar, commitValue, operator, selection]);
 
     const cancel = useCallback(() => {
         setSelection(selectionFromValue(options.value));
@@ -373,16 +373,13 @@ function selectionFromValue(value: DateFilterValue | null): Selection {
     return { kind: "period", granularity: value.granularity, value: value.value };
 }
 
-function selectionFromParsed(parsed: { kind: "period"; granularity: Granularity; value: string } | { kind: "range"; start: string; end: string }): Selection {
+function selectionFromParsed(
+    parsed: { kind: "period"; granularity: Granularity; value: string } | { kind: "range"; start: string; end: string },
+): Selection {
     return parsed;
 }
 
-function buildValueFromSelection(
-    selection: Selection,
-    operator: Operator,
-    calendar: Calendar,
-    granularity: Granularity,
-): DateFilterValue | null {
+function buildValueFromSelection(selection: Selection, operator: Operator, calendar: Calendar): DateFilterValue | null {
     if (selection.kind === "none") return null;
     if (selection.kind === "range") {
         return {
@@ -410,11 +407,7 @@ function buildValueFromSelection(
  * intent — switching day→month keeps the month containing the selected day, year→day takes Jan 1
  * of that year, and so on. Returns `{ kind: "none" }` when no meaningful mapping exists.
  */
-function mapSelectionToGranularity(
-    current: Selection,
-    next: Granularity,
-    calendar: Calendar,
-): Selection {
+function mapSelectionToGranularity(current: Selection, next: Granularity, calendar: Calendar): Selection {
     if (current.kind === "none") return current;
     if (current.kind === "range") {
         if (next === "day") return current;

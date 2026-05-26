@@ -62,13 +62,3 @@ export const DEFAULT_OPERATOR_BY_GRANULARITY: Record<Granularity, Operator> = {
     half_year: "in",
     year: "in",
 };
-
-/**
- * Returns the closed [start, end] day-range a period covers, normalised to ISO `YYYY-MM-DD`
- * strings. Useful for `toLegacyParams()` adapters that talk to endpoints still using
- * `after=&before=` rather than the unified shape.
- */
-export interface LegacyDateRange {
-    after?: string;
-    before?: string;
-}

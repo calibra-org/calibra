@@ -25,16 +25,7 @@ const QUARTERS: readonly (1 | 2 | 3 | 4)[] = [1, 2, 3, 4];
  * Year-sectioned quarter grid. Each row is `Q1 Q2 Q3 Q4` under its year header — the cell label
  * is just the quarter number, the year context comes from the sticky header above it.
  */
-export function QuarterGrid({
-    calendar,
-    locale,
-    selected,
-    onPick,
-    minYear,
-    maxYear,
-    initialSpan,
-    ariaLabel,
-}: QuarterGridProps) {
+export function QuarterGrid({ calendar, locale, selected, onPick, minYear, maxYear, initialSpan, ariaLabel }: QuarterGridProps) {
     const lib = getDateLib(calendar);
     const today = lib.today();
     const todayYear = lib.getYear(today);
@@ -55,7 +46,7 @@ export function QuarterGrid({
                     {QUARTERS.map((q) => {
                         const isSel = selected?.year === year && selected.quarter === q;
                         const isCur = year === todayYear && q === todayQuarter;
-                        const label = locale === "fa" ? `Q${toPersianDigits(String(q))}` : `Q${q}`;
+                        const label = locale === "fa" ? `فصل ${toPersianDigits(String(q))}` : `Q${q}`;
                         return (
                             <PeriodButton
                                 key={q}

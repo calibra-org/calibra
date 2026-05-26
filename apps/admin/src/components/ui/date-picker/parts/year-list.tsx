@@ -24,16 +24,7 @@ interface YearListProps {
  * Flat list of year rows. Each row is full-width and behaves like a single oversized cell —
  * matches the Linear reference where year picking feels like a vertical timeline.
  */
-export function YearList({
-    calendar,
-    locale,
-    selectedYear,
-    onPick,
-    minYear,
-    maxYear,
-    initialSpan,
-    ariaLabel,
-}: YearListProps) {
+export function YearList({ calendar, locale, selectedYear, onPick, minYear, maxYear, initialSpan, ariaLabel }: YearListProps) {
     const lib = getDateLib(calendar);
     const todayYear = lib.getYear(lib.today());
     const initialYear = selectedYear ?? todayYear;

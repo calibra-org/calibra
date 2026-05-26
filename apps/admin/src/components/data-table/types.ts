@@ -59,8 +59,8 @@ export interface ToggleFilterDef {
 /**
  * Configuration for a date filter facet — the date-picker counterpart to {@link FacetedFilterDef}.
  * Renders as a {@link DateFilterChip} in the toolbar; URL-syncs the picked value under
- * `paramKey`, and (when {@link legacyParamKeys} is set) also writes legacy `<after>` / `<before>`
- * keys so backends that haven't migrated to the unified shape still receive what they expect.
+ * `paramKey` as a single unified `<op>:<value>` (or `within:<start>..<end>`) entry. The matching
+ * API endpoint parses the same grammar — there is no parallel legacy shape.
  */
 export interface DateFacetDef {
     paramKey: string;
@@ -70,12 +70,6 @@ export interface DateFacetDef {
     defaultGranularity?: Granularity;
     /** Override the auto-derived calendar (default: pick from active locale). */
     calendar?: Calendar | "auto";
-    /**
-     * Legacy URL keys for back-compat. When set, the table writes the resolved `after` / `before`
-     * Gregorian ISO date strings into these keys alongside the unified `paramKey`. Server-repos
-     * that haven't migrated keep working untouched.
-     */
-    legacyParamKeys?: { after?: string; before?: string };
 }
 
 /** Card renderer used when the table collapses to a stacked mobile list. */

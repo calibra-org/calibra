@@ -20,12 +20,10 @@ parameters:
     - name: search
       in: query
       schema: { type: string }
-    - name: created_from
+    - name: created
       in: query
-      schema: { type: string, format: date-time }
-    - name: created_to
-      in: query
-      schema: { type: string, format: date-time }
+      description: "Unified date filter — `<op>:<value>` where op ∈ `in|before|after|within`; value ∈ `YYYY-MM-DD`, `YYYY-MM`, `YYYY-Q1..Q4`, `YYYY-H1|H2`, `YYYY`. Use `within:YYYY-MM-DD..YYYY-MM-DD` for closed ranges. Year < 1700 parses as Jalali and converts to Gregorian server-side."
+      schema: { type: string, maxLength: 60 }
     - name: include_drafts
       in: query
       schema: { type: boolean, default: true }

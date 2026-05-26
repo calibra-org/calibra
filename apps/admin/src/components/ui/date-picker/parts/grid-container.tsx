@@ -1,8 +1,7 @@
 "use client";
 
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-
 import { toPersianDigits } from "@calibra/shared/digits";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getDateLib } from "../date-lib";
 import type { Calendar } from "../types";
@@ -101,12 +100,7 @@ export function GridContainer({
     const canExpandDown = windowEnd < ceiling;
 
     return (
-        <div
-            ref={scrollRef}
-            role="region"
-            aria-label={ariaLabel}
-            className="relative h-80 overflow-y-auto rounded-md border bg-card"
-        >
+        <section ref={scrollRef} aria-label={ariaLabel} className="relative h-80 overflow-y-auto rounded-md border bg-card">
             <div ref={topSentinel} aria-hidden="true" className="h-px" />
             {canExpandUp && (
                 <button
@@ -143,6 +137,6 @@ export function GridContainer({
                 </button>
             )}
             <div ref={bottomSentinel} aria-hidden="true" className="h-px" />
-        </div>
+        </section>
     );
 }

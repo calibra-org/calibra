@@ -55,7 +55,7 @@ export function HalfYearGrid({
                     {HALVES.map((h) => {
                         const isSel = selected?.year === year && selected.half === h;
                         const isCur = year === todayYear && h === todayHalf;
-                        const label = locale === "fa" ? `H${toPersianDigits(String(h))}` : `H${h}`;
+                        const label = locale === "fa" ? `نیم‌سال ${toPersianDigits(String(h))}` : `H${h}`;
                         return (
                             <PeriodButton
                                 key={h}

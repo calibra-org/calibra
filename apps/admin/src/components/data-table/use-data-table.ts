@@ -3,21 +3,10 @@
 import { parseAsArrayOf, parseAsBoolean, parseAsInteger, parseAsString, useQueryState, useQueryStates } from "nuqs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-    type DateFilterValue,
-    parseDateFilter,
-    serializeDateFilter,
-    toLegacyDateRange,
-} from "#/components/ui/date-picker";
+import type { DateFilterValue } from "#/components/ui/date-picker/types";
+import { parseDateFilter, serializeDateFilter } from "#/components/ui/date-picker/url";
 
-import type {
-    DataTableDensity,
-    DateFacetDef,
-    FacetedFilterDef,
-    PaginationMeta,
-    SortState,
-    ToggleFilterDef,
-} from "./types";
+import type { DataTableDensity, DateFacetDef, FacetedFilterDef, PaginationMeta, SortState, ToggleFilterDef } from "./types";
 
 /**
  * Default per-page selectable steps shown in the pagination footer. Callers may override via
@@ -128,12 +117,6 @@ export function useDataTable(options: UseDataTableOptions) {
         const entries: Record<string, ReturnType<typeof parseAsString.withDefault>> = {};
         for (const facet of options.dateFacets ?? []) {
             entries[facet.paramKey] = parseAsString.withDefault("");
-            if (facet.legacyParamKeys?.after !== undefined) {
-                entries[facet.legacyParamKeys.after] = parseAsString.withDefault("");
-            }
-            if (facet.legacyParamKeys?.before !== undefined) {
-                entries[facet.legacyParamKeys.before] = parseAsString.withDefault("");
-            }
         }
         return entries;
     }, [options.dateFacets]);
@@ -174,29 +157,11 @@ export function useDataTable(options: UseDataTableOptions) {
 
     const setDateFilterValue = useCallback(
         (key: string, value: DateFilterValue | null) => {
-            const facet = options.dateFacets?.find((f) => f.paramKey === key);
-            const updates: Record<string, string | null> = {};
-            if (value === null) {
-                updates[key] = null;
-                if (facet?.legacyParamKeys?.after !== undefined) updates[facet.legacyParamKeys.after] = null;
-                if (facet?.legacyParamKeys?.before !== undefined) updates[facet.legacyParamKeys.before] = null;
-            } else {
-                const { main } = serializeDateFilter(value);
-                updates[key] = main;
-                if (facet?.legacyParamKeys !== undefined) {
-                    const legacy = toLegacyDateRange(value);
-                    if (facet.legacyParamKeys.after !== undefined) {
-                        updates[facet.legacyParamKeys.after] = legacy.after ?? null;
-                    }
-                    if (facet.legacyParamKeys.before !== undefined) {
-                        updates[facet.legacyParamKeys.before] = legacy.before ?? null;
-                    }
-                }
-            }
-            void setDateFacetValuesRaw(updates);
+            const main = value === null ? null : serializeDateFilter(value).main;
+            void setDateFacetValuesRaw({ [key]: main });
             void setPage(1);
         },
-        [options.dateFacets, setDateFacetValuesRaw, setPage],
+        [setDateFacetValuesRaw, setPage],
     );
 
     const clearAllFilters = useCallback(() => {
@@ -207,14 +172,20 @@ export function useDataTable(options: UseDataTableOptions) {
             void setToggleValuesRaw({ [toggle.paramKey]: null });
         }
         for (const facet of options.dateFacets ?? []) {
-            const updates: Record<string, null> = { [facet.paramKey]: null };
-            if (facet.legacyParamKeys?.after !== undefined) updates[facet.legacyParamKeys.after] = null;
-            if (facet.legacyParamKeys?.before !== undefined) updates[facet.legacyParamKeys.before] = null;
-            void setDateFacetValuesRaw(updates);
+            void setDateFacetValuesRaw({ [facet.paramKey]: null });
         }
         void setQ("");
         void setPage(1);
-    }, [options.dateFacets, options.facets, options.toggles, setDateFacetValuesRaw, setFacetValuesRaw, setToggleValuesRaw, setQ, setPage]);
+    }, [
+        options.dateFacets,
+        options.facets,
+        options.toggles,
+        setDateFacetValuesRaw,
+        setFacetValuesRaw,
+        setToggleValuesRaw,
+        setQ,
+        setPage,
+    ]);
 
     const hasActiveFilters =
         Object.values(facetValues).some((v) => Array.isArray(v) && v.length > 0) ||

@@ -71,10 +71,9 @@ export const adminCustomerListValidator = vine.compile(
         email_verified: vine.boolean().optional(),
         opt_in_email: vine.boolean().optional(),
         opt_in_sms: vine.boolean().optional(),
-        created_after: vine.string().trim().optional(),
-        created_before: vine.string().trim().optional(),
-        last_order_after: vine.string().trim().optional(),
-        last_order_before: vine.string().trim().optional(),
+        /** Unified date filter, parsed by `parseDateFilter` — replaces the prior pair shape. */
+        created: vine.string().trim().maxLength(60).optional(),
+        last_order: vine.string().trim().maxLength(60).optional(),
         order_count_min: vine.number().min(0).optional(),
         order_count_max: vine.number().min(0).optional(),
         lifetime_spend_min: vine.number().min(0).optional(),
