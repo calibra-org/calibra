@@ -101,9 +101,9 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
         [citiesByNormalized, metric, scale],
     );
 
+    /** Measure county bbox centers ONCE per geometry change (not per parent re-render). */
     useEffect(() => {
-        if (!geometry || !svgRef.current) return;
-        const svg = svgRef.current;
+        if (!geometry) return;
         const next: CountyCenter[] = [];
         for (const county of geometry.counties) {
             const el = pathRefs.current.get(county.fa);
@@ -118,12 +118,16 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
             });
         }
         setCenters(next);
+    }, [geometry]);
 
-        /**
-         * Same point-in-fill contrast pass as `MapSvg`. After geometry mounts (and on metric
-         * flip via the changing `fillForName` identity), each county label flips to the
-         * readable side against its polygon's fill.
-         */
+    /**
+     * DOM-only contrast pass — runs whenever the fill resolver changes (metric flip, data
+     * update). Mutates label `fill` attributes in place; never calls setState, so no render
+     * cascade from parent pointer-move re-renders.
+     */
+    useEffect(() => {
+        const svg = svgRef.current;
+        if (!svg || centers.length === 0) return;
         const labels = svg.querySelectorAll<SVGGraphicsElement>("[data-county-label]");
         const countyPaths = svg.querySelectorAll<SVGPathElement>("[data-county-name]");
         const seaPaths = svg.querySelectorAll<SVGPathElement>("[data-region-sea]");
@@ -154,7 +158,7 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
                 label.setAttribute("fill", contrastTextColor(bg));
             }
         }
-    }, [geometry, fillForName]);
+    }, [fillForName, centers]);
 
     const setPathRef = useCallback((fa: string) => {
         return (el: SVGPathElement | null) => {

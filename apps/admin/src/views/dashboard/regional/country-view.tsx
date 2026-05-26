@@ -15,6 +15,7 @@ import { KpiTile } from "./kpi-tile";
 import { MapLegend } from "./map-legend";
 import { MapSvg } from "./map-svg";
 import { MapTooltip } from "./map-tooltip";
+import { MapZoomWrapper } from "./map-zoom-wrapper";
 import { itemVariants, listVariants, SVG_CROSSFADE_DURATION, svgVariants } from "./motion-variants";
 
 interface CountryViewProps {
@@ -109,14 +110,16 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
                     {isPending ? (
                         <Skeleton className="aspect-square w-full" />
                     ) : (
-                        <MapSvg
-                            fillForCode={fillForCode}
-                            hoveredCode={hoveredCode}
-                            onHoverChange={setHoveredCode}
-                            onPointerMove={(event) => setPointer({ x: event.clientX, y: event.clientY })}
-                            onSelect={onSelect}
-                            locale={locale}
-                        />
+                        <MapZoomWrapper>
+                            <MapSvg
+                                fillForCode={fillForCode}
+                                hoveredCode={hoveredCode}
+                                onHoverChange={setHoveredCode}
+                                onPointerMove={(event) => setPointer({ x: event.clientX, y: event.clientY })}
+                                onSelect={onSelect}
+                                locale={locale}
+                            />
+                        </MapZoomWrapper>
                     )}
                 </motion.div>
 

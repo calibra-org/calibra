@@ -4,7 +4,7 @@ import type { Locale } from "@calibra/shared/i18n";
 import { ChevronLeft } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { formatMoney, formatNumber } from "#/lib/format";
@@ -13,6 +13,7 @@ import type { AdminRegionalCity, AdminRegionalProvinceDetail } from "#/lib/types
 import { CityList } from "./city-list";
 import { KpiTile } from "./kpi-tile";
 import { MapTooltip } from "./map-tooltip";
+import { MapZoomWrapper } from "./map-zoom-wrapper";
 import { FAST_SPRING, SVG_CROSSFADE_DURATION, svgVariants } from "./motion-variants";
 import { ProvinceSvg } from "./province-svg";
 import { TopProductsList } from "./top-products-list";
@@ -57,6 +58,46 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
 
     const [hoveredCity, setHoveredCity] = useState<AdminRegionalCity | null>(null);
     const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
+
+    /**
+     * Stable cities array — derived from `data.cities` and ONLY changes when that input
+     * changes. Without this, every parent re-render (e.g. from `setPointer`) creates a new
+     * cities reference, which cascades through `ProvinceSvg`'s `useMemo`s and triggers a render
+     * loop with the contrast-pass `useEffect`.
+     */
+    const childCities = useMemo(
+        () =>
+            (data?.cities ?? []).map((c) => ({
+                regionCode: c.regionCode,
+                name: c.name.fa,
+                ordersCount: c.ordersCount,
+                revenueMinor: c.revenueMinor,
+                matched: c.matched,
+            })),
+        [data?.cities],
+    );
+
+    /**
+     * rAF-throttle the pointer setter so high-frequency `pointermove` (60-120 Hz on trackpads)
+     * collapses to at most one render per frame.
+     */
+    const rafRef = useRef<number | null>(null);
+    const pendingRef = useRef<{ x: number; y: number } | null>(null);
+    const setPointerThrottled = useCallback((x: number, y: number) => {
+        pendingRef.current = { x, y };
+        if (rafRef.current !== null) return;
+        rafRef.current = window.requestAnimationFrame(() => {
+            rafRef.current = null;
+            if (pendingRef.current !== null) setPointer(pendingRef.current);
+        });
+    }, []);
+
+    useEffect(
+        () => () => {
+            if (rafRef.current !== null) window.cancelAnimationFrame(rafRef.current);
+        },
+        [],
+    );
 
     return (
         <motion.div
@@ -115,28 +156,24 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr]">
                 <div className="relative flex flex-col gap-2">
                     <h3 className="font-semibold text-foreground text-lg">{data?.name[locale] ?? code}</h3>
-                    <ProvinceSvg
-                        code={code}
-                        cities={(data?.cities ?? []).map((c) => ({
-                            regionCode: c.regionCode,
-                            name: c.name.fa,
-                            ordersCount: c.ordersCount,
-                            revenueMinor: c.revenueMinor,
-                            matched: c.matched,
-                        }))}
-                        metric={metric}
-                        onCityHover={(marker) => {
-                            if (marker === null) {
-                                setHoveredCity(null);
-                                return;
-                            }
-                            const original = data?.cities.find(
-                                (c) => c.regionCode === marker.regionCode && c.name.fa === marker.name,
-                            );
-                            setHoveredCity(original ?? null);
-                        }}
-                        onPointerMove={(event) => setPointer({ x: event.clientX, y: event.clientY })}
-                    />
+                    <MapZoomWrapper>
+                        <ProvinceSvg
+                            code={code}
+                            cities={childCities}
+                            metric={metric}
+                            onCityHover={(marker) => {
+                                if (marker === null) {
+                                    setHoveredCity(null);
+                                    return;
+                                }
+                                const original = data?.cities.find(
+                                    (c) => c.regionCode === marker.regionCode && c.name.fa === marker.name,
+                                );
+                                setHoveredCity(original ?? null);
+                            }}
+                            onPointerMove={(event) => setPointerThrottled(event.clientX, event.clientY)}
+                        />
+                    </MapZoomWrapper>
                     {hoveredCity !== null && pointer !== null ? (
                         <MapTooltip position={pointer}>
                             <div className="flex flex-col gap-0.5">
