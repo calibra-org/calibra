@@ -217,11 +217,11 @@ export function DayGrid({
                  *   / `rounded-e-full` give the band a pill cap that hugs the selected circle.
                  */
                 range_start:
-                    "before:absolute before:inset-y-1 before:end-0 before:start-1/2 before:rounded-s-full before:bg-primary/30 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                    "before:absolute before:inset-y-1 before:end-0 before:start-1/2 before:rounded-s-full before:bg-primary/60 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
                 range_end:
-                    "before:absolute before:inset-y-1 before:start-0 before:end-1/2 before:rounded-e-full before:bg-primary/30 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
+                    "before:absolute before:inset-y-1 before:start-0 before:end-1/2 before:rounded-e-full before:bg-primary/60 [&_button]:!bg-primary [&_button]:!text-primary-foreground",
                 range_middle:
-                    "before:absolute before:inset-y-1 before:inset-x-0 before:bg-primary/30 [&_button]:!bg-transparent [&_button]:!text-foreground [&_button]:hover:!bg-primary/20",
+                    "before:absolute before:inset-y-1 before:inset-x-0 before:bg-primary/60 [&_button]:!bg-transparent [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary/40",
                 disabled: "text-muted-foreground/30 cursor-not-allowed before:!hidden [&_button]:!bg-transparent",
             }}
         />
