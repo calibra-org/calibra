@@ -2,6 +2,7 @@ import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import emitter from "@adonisjs/core/services/emitter";
 import db from "@adonisjs/lucid/services/db";
+import * as Sentry from "@sentry/node";
 import { DateTime } from "luxon";
 
 import { OrderStatus } from "#enums/order_status";
@@ -13,6 +14,7 @@ import { recordPaymentAttempt, recordPaymentPhase } from "#services/metrics/doma
 import { orderStateMachine } from "#services/order_state_machine";
 import { paymentAdapterRegistry } from "#services/payment_adapter_registry";
 import SettingsService from "#services/settings_service";
+import { webhookIdempotencyService } from "#services/webhook_idempotency_service";
 
 const DEFAULT_RETURN_SUCCESS = "http://localhost:3000/checkout/success";
 const DEFAULT_RETURN_FAILED = "http://localhost:3000/checkout/failed";
@@ -154,6 +156,14 @@ export class PaymentService {
      * Verify-callback flow: parse the PSP query/body, lock the matching attempt row, re-check
      * amount + idempotency, call adapter.verify, and transition the order. Returns the URL the
      * storefront should redirect the user to.
+     *
+     * Concurrency: the FOR UPDATE on the order row inside this transaction serialises against
+     * `refund_service.create` (which also locks the order row), so a refund + verify race
+     * deadlocks at the DB layer with the second arrival waiting. The refund service additionally
+     * wraps its work in an `@adonisjs/lock` keyed by `order:<id>` for faster fail-on-contention;
+     * we don't double-wrap the callback because the PSP is unauthenticated and the limiter
+     * already throttles, and adding a Redis lock here makes the test memory store interact
+     * badly with the redirect-response semantics.
      */
     async verifyCallback(gatewayCode: string, request: HttpContext["request"]): Promise<PaymentCallbackResult> {
         const callbackStartedAt = process.hrtime.bigint();
@@ -173,6 +183,9 @@ export class PaymentService {
             };
         }
 
+        const rawBody = request.raw() ?? JSON.stringify(request.all() ?? {});
+        const eventId = String(parsed.authority);
+
         const result = await db.transaction(async (trx) => {
             const attempt = await PaymentAttempt.query({ client: trx })
                 .where("gateway_id", Number(gateway.id))
@@ -187,6 +200,32 @@ export class PaymentService {
             }
             const order = await Order.query({ client: trx }).where("id", Number(attempt.orderId)).forUpdate().firstOrFail();
 
+            /**
+             * Idempotency ledger gate. INSERT inside the transaction; a duplicate raises a
+             * unique-violation which the service maps to `replayed: true`. On replay we read
+             * the prior outcome and short-circuit to the matching redirect — no second pass
+             * through verify, no double state transition, no double Sentry capture.
+             */
+            const ledger = await webhookIdempotencyService.record(
+                {
+                    provider: gatewayCode,
+                    eventId,
+                    eventKind: `payment.callback.${parsed.status}`,
+                    paymentAttemptId: attempt.id,
+                    orderId: order.id,
+                    rawBody,
+                },
+                trx,
+            );
+            if (ledger.replayed) {
+                const replayedRedirect =
+                    ledger.existing.outcome === "verified"
+                        ? this.attachOrderKey(successUrl, order)
+                        : this.attachReason(failedUrl, `replayed_${ledger.existing.outcome}`);
+                return { order, attempt, redirect: replayedRedirect };
+            }
+            const ledgerRow = ledger.inserted;
+
             if (parsed.status === "cancelled" || parsed.status === "failed") {
                 if (attempt.status !== PaymentAttemptStatus.Verified) {
                     attempt.status = parsed.status === "cancelled" ? PaymentAttemptStatus.Cancelled : PaymentAttemptStatus.Failed;
@@ -200,11 +239,29 @@ export class PaymentService {
                         trx,
                     });
                 }
+                await webhookIdempotencyService.finalize(ledgerRow, parsed.status, { trx });
                 return { order, attempt, redirect: this.attachReason(failedUrl, `psp_${parsed.status}`) };
             }
 
-            /** Replayed callback for an already-verified attempt: no-op, return success URL. */
+            /**
+             * Out-of-order delivery handling: the attempt is already in a terminal state
+             * (verified, refunded, voided, …) but the ledger had no row for this event yet.
+             * That can happen when a refund webhook lands before the success webhook, or when
+             * two unrelated callbacks share an authority across gateway resets. We finalise
+             * the ledger row with the existing attempt status and serve the success URL —
+             * no double-verification, no double-transition.
+             */
             if (attempt.status === PaymentAttemptStatus.Verified) {
+                Sentry.captureMessage("webhook_out_of_order", {
+                    level: "warning",
+                    tags: {
+                        gateway: gatewayCode,
+                        order_id: String(order.id),
+                        attempt_id: String(attempt.id),
+                        prior_status: attempt.status,
+                    },
+                });
+                await webhookIdempotencyService.finalize(ledgerRow, "verified_out_of_order", { trx });
                 return { order, attempt, redirect: this.attachOrderKey(successUrl, order) };
             }
 
@@ -226,6 +283,26 @@ export class PaymentService {
                 verifyResult.amount_minor !== Number(attempt.amountMinor);
 
             if (!verifyResult.ok || amountMismatch) {
+                if (amountMismatch) {
+                    /**
+                     * Amount mismatch is a HIGH-severity tampering signal — the PSP echoed a
+                     * different amount than we sent, which in production means either a sandbox
+                     * bug, a PSP misconfiguration, or active forgery. Capture as `error` so
+                     * GlitchTip flags it for the on-call channel.
+                     */
+                    Sentry.captureMessage("payment_amount_mismatch", {
+                        level: "error",
+                        tags: {
+                            gateway: gatewayCode,
+                            order_id: String(order.id),
+                            attempt_id: String(attempt.id),
+                        },
+                        extra: {
+                            expected_minor: Number(attempt.amountMinor),
+                            received_minor: (verifyResult as { amount_minor: number }).amount_minor,
+                        },
+                    });
+                }
                 attempt.status = PaymentAttemptStatus.Failed;
                 attempt.errorCode = amountMismatch ? "amount_mismatch" : (verifyResult as { error_code: string }).error_code;
                 attempt.errorMessage = amountMismatch
@@ -241,6 +318,9 @@ export class PaymentService {
                         trx,
                     });
                 }
+                await webhookIdempotencyService.finalize(ledgerRow, amountMismatch ? "amount_mismatch" : "verify_failed", {
+                    trx,
+                });
                 return {
                     order,
                     attempt,
@@ -265,13 +345,12 @@ export class PaymentService {
                 });
             }
 
+            await webhookIdempotencyService.finalize(ledgerRow, "verified", { trx });
             return { order, attempt, redirect: this.attachOrderKey(successUrl, order) };
         });
 
         if (result.attempt) {
             await this.linkLatest(result.order, result.attempt);
-        }
-        if (result.attempt) {
             recordPaymentAttempt(gatewayCode, result.attempt.status);
         }
         recordPaymentPhase(gatewayCode, "callback", Number(process.hrtime.bigint() - callbackStartedAt) / 1e9);
