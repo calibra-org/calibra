@@ -4,7 +4,8 @@ import { setRequestLocale } from "next-intl/server";
 import { Badge } from "#/components/ui/badge";
 import { Card } from "#/components/ui/card";
 import { CodeBlock } from "#/components/ui/code-block";
-import { hasDemo, PrimitiveDemo } from "#/design-system/showcase/demos";
+import { PrimitiveDemo } from "#/design-system/showcase/demos";
+import { hasDemo } from "#/design-system/showcase/has-demo";
 import { getByName, PRIMITIVES } from "#/design-system/showcase/registry";
 import { Link } from "#/lib/i18n/navigation";
 

@@ -1,36 +1,18 @@
 "use client";
 
 /**
- * Showcase demo registry. Each entry maps a primitive's registry name to a lazy-loaded demo
- * component from the primitive's own `<name>.demo.tsx` file. Adding a demo for a new primitive
- * is a single-line append here + the demo file itself.
- *
- * Lazy loading keeps the showcase shell light — each demo's bundle only ships when the operator
- * navigates to that primitive's page.
+ * Showcase demo renderer. Lazy-loads the primitive's `<name>.demo.tsx` so each demo's bundle
+ * only ships when its page is visited. Pair with `hasDemo()` from `./has-demo.ts` (a server-safe
+ * helper) when a server component needs to know whether a demo exists.
  */
 import { type ComponentType, lazy, Suspense } from "react";
 
 import { Spinner } from "#/components/ui/spinner";
 
-const DEMO_LOADERS: Record<string, () => Promise<{ default: ComponentType }>> = {
-    button: () => import("#/components/ui/button/button.demo").then((mod) => ({ default: mod.ButtonDemo })),
-    badge: () => import("#/components/ui/badge/badge.demo").then((mod) => ({ default: mod.BadgeDemo })),
-    spinner: () => import("#/components/ui/spinner/spinner.demo").then((mod) => ({ default: mod.SpinnerDemo })),
-    skeleton: () => import("#/components/ui/skeleton/skeleton.demo").then((mod) => ({ default: mod.SkeletonDemo })),
-    card: () => import("#/components/ui/card/card.demo").then((mod) => ({ default: mod.CardDemo })),
-    dialog: () => import("#/components/ui/dialog/dialog.demo").then((mod) => ({ default: mod.DialogDemo })),
-    toast: () => import("#/components/ui/toast/toast.demo").then((mod) => ({ default: mod.ToastDemo })),
-    input: () => import("#/components/ui/input/input.demo").then((mod) => ({ default: mod.InputDemo })),
-    checkbox: () => import("#/components/ui/checkbox/checkbox.demo").then((mod) => ({ default: mod.CheckboxDemo })),
-    switch: () => import("#/components/ui/switch/switch.demo").then((mod) => ({ default: mod.SwitchDemo })),
-};
-
-export function hasDemo(name: string): boolean {
-    return name in DEMO_LOADERS;
-}
+import { DEMO_LOADERS } from "./demo-loaders";
 
 export function PrimitiveDemo({ name }: { name: string }) {
-    const loader = DEMO_LOADERS[name];
+    const loader = (DEMO_LOADERS as Record<string, () => Promise<{ default: ComponentType }>>)[name];
     if (loader === undefined) {
         return (
             <p className="text-muted-foreground text-sm">
