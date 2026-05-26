@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { normalizeIranText } from "#/lib/iran-text-normalize";
 import { IRAN_COUNTRY_PROVINCES } from "#/vendor/iran-map";
@@ -26,21 +26,29 @@ interface ProvinceSvgProps {
     onPointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;
 }
 
-const COUNTY_FILL_BASE_ORDERS = ["#eff6ff", "#bfdbfe", "#93c5fd", "#60a5fa", "#3b82f6", "#2563eb", "#1d4ed8"] as const;
+const COUNTY_FILL_BASE_ORDERS = ["#f5f3ff", "#ede9fe", "#ddd6fe", "#c4b5fd", "#a78bfa", "#8b5cf6", "#7c3aed"] as const;
 const COUNTY_FILL_BASE_REVENUE = ["#fef2f2", "#fee2e2", "#fecaca", "#fca5a5", "#f87171", "#ef4444", "#dc2626"] as const;
 
+interface CountyCenter {
+    name: string;
+    cx: number;
+    cy: number;
+    fontSize: number;
+}
+
 /**
- * Province-mode SVG. Loads the per-province county (شهرستان) geometry from
+ * Province-mode SVG. Loads per-province county (شهرستان) geometry from
  * `vendor/iran-map/provinces/IR-XX.ts` (dynamic import, one bundle per province) and renders
- * each polygon as a `<motion.path>`. Each county is matched to a seeded city by
- * `normalizeIranText` so the operator sees real city order counts on the map.
- *
- * Counties whose name doesn't match a seeded city render in the empty / zero tone — they exist
- * geographically but have no recorded orders in the window.
+ * each polygon as a `<motion.path>`. After mount, the component measures every county's
+ * `getBBox()` and overlays a `<text>` label at the polygon's geometric center sized to the
+ * polygon's height. Each county is matched to a seeded city by `normalizeIranText` and the
+ * polygon fill reflects the city's order / revenue count.
  */
 export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }: ProvinceSvgProps) {
     const reduce = useReducedMotion();
     const [geometry, setGeometry] = useState<ProvinceGeometry | null>(null);
+    const pathRefs = useRef(new Map<string, SVGPathElement | null>());
+    const [centers, setCenters] = useState<CountyCenter[]>([]);
 
     useEffect(() => {
         let cancelled = false;
@@ -51,6 +59,33 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
             cancelled = true;
         };
     }, [code]);
+
+    useEffect(() => {
+        if (!geometry) return;
+        const next: CountyCenter[] = [];
+        for (const county of geometry.counties) {
+            const el = pathRefs.current.get(county.fa);
+            if (!el) continue;
+            const box = el.getBBox();
+            next.push({
+                name: county.fa,
+                cx: box.x + box.width / 2,
+                cy: box.y + box.height / 2,
+                fontSize: Math.max(8, Math.min(box.width, box.height) * 0.18),
+            });
+        }
+        setCenters(next);
+    }, [geometry]);
+
+    const setPathRef = useCallback((fa: string) => {
+        return (el: SVGPathElement | null) => {
+            if (el) {
+                pathRefs.current.set(fa, el);
+            } else {
+                pathRefs.current.delete(fa);
+            }
+        };
+    }, []);
 
     const citiesByNormalized = useMemo(() => {
         const map = new Map<string, CityMarker>();
@@ -116,6 +151,7 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
                     const matched = citiesByNormalized.get(key) ?? null;
                     return (
                         <motion.path
+                            ref={setPathRef(county.fa)}
                             key={county.fa}
                             d={county.path}
                             stroke="white"
@@ -142,6 +178,20 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
                         />
                     );
                 })}
+            </g>
+            <g style={{ pointerEvents: "none" }}>
+                {centers.map((c) => (
+                    <text
+                        key={`label-${c.name}`}
+                        x={c.cx}
+                        y={c.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        style={{ fontSize: c.fontSize, fontWeight: 600, fill: "#0f172a" }}
+                    >
+                        {c.name}
+                    </text>
+                ))}
             </g>
         </svg>
     );

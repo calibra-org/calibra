@@ -113,7 +113,8 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
             </div>
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr]">
-                <div className="relative">
+                <div className="relative flex flex-col gap-2">
+                    <h3 className="font-semibold text-lg text-foreground">{data?.name[locale] ?? code}</h3>
                     <ProvinceSvg
                         code={code}
                         cities={(data?.cities ?? []).map((c) => ({

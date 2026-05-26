@@ -1,5 +1,5 @@
 import { type ScaleQuantile, scaleQuantile } from "d3-scale";
-import { schemeBlues, schemeReds } from "d3-scale-chromatic";
+import { schemePurples, schemeReds } from "d3-scale-chromatic";
 
 /**
  * ColorBrewer-style six-bin sequential single-hue choropleth scale, driven by `d3-scale`'s
@@ -8,7 +8,8 @@ import { schemeBlues, schemeReds } from "d3-scale-chromatic";
  * 31 provinces into the lightest bin and leave the map unreadable.
  *
  * Zero is a distinct category (gray-100), so absent-data provinces never collide with the
- * palette floor.
+ * palette floor. Orders use Purples + Revenue uses Reds — both stay distinct from the dark-blue
+ * sea fill so a quick glance never confuses water for a heat-map bin.
  */
 
 export type HeatmapMetric = "orders" | "revenue";
@@ -16,7 +17,7 @@ export type HeatmapMetric = "orders" | "revenue";
 export const ZERO_COLOR = "#f3f4f6";
 
 const PALETTES: Record<HeatmapMetric, readonly string[]> = {
-    orders: schemeBlues[6],
+    orders: schemePurples[6],
     revenue: schemeReds[6],
 };
 
