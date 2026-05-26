@@ -86,6 +86,23 @@
 
     "overrides": [
         {
+            "includes": ["apps/admin/src/**", "!apps/admin/src/icons/**"],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "noRestrictedImports": {
+                            "level": "warn",
+                            "options": {
+                                "paths": {
+                                    "lucide-react": "Import icons from `#/icons` — never directly from `lucide-react`. See apps/admin/src/icons/README.md. Prompts 02–05 sweep call sites; this rule flips to `error` after the sweep lands."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
             "includes": ["packages/sdk/**"],
             "linter": {
                 "domains": {
