@@ -34,9 +34,14 @@ catalogs:
         class-variance-authority: 0.7.1
         clsx: 2.1.1
         "@mohammadxali/jalaali-js": 2.0.0-preview.0
+        "@types/d3-scale": ^4.0.8
+        "@types/d3-scale-chromatic": ^3.1.0
+        "d3-scale": ^4.0.2
+        "d3-scale-chromatic": ^3.1.0
         date-fns-jalali: 4.1.0-0
         jsdom: ^29.0.2
         lucide-react: ^0.469.0
+        motion: ^12.0.0
         msw: ^2.13.6
         next: 16.2.3
         next-intl: ^4.4.0
