@@ -146,14 +146,23 @@ export function DayGrid({
                     "absolute start-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 button_next:
                     "absolute end-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                weekday: "text-muted-foreground text-xs font-normal pb-1",
+                weekday: "text-muted-foreground text-xs font-normal pb-1 text-center",
+                /**
+                 * Day cell: zero padding + grid place-items-center is the surest way to keep the
+                 * inner button dead-centred inside whatever width RDP gives the `<td>` (week-
+                 * column widths fluctuate when the month has 5 vs 6 rows). `mx-auto` alone
+                 * doesn't help inside a table cell, and inline-flex doesn't honour `text-center`
+                 * on its parent in every browser the same way.
+                 */
+                day: "p-0 grid place-items-center",
                 /**
                  * `rounded-full` gives Linear-style circular day cells; the today ring + selected
                  * fill (both applied via the descendant-button modifier classes above) inherit
-                 * the circle shape.
+                 * the circle shape. `leading-none` defuses any latent line-height drift so the
+                 * numeral lines up with the geometric centre of the circle.
                  */
                 day_button:
-                    "inline-flex size-9 items-center justify-center rounded-full text-sm outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                    "inline-flex size-9 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                 outside: "text-muted-foreground/40",
                 selected: "[&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
                 range_start: "[&_button]:!bg-primary [&_button]:!text-primary-foreground",
