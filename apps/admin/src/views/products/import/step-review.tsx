@@ -25,7 +25,7 @@ export interface StepReviewProps {
 
 /**
  * Step 3 — dedicated **review** workspace. This is the deliberate divergence from WooCommerce's
- * "scroll past the table to find the run button" pattern: the operator gets a clean page focused
+ *"scroll past the table to find the run button"pattern: the operator gets a clean page focused
  * on the run's scope.
  *
  * The left rail holds per-outcome toggles (`Skip new`, `Skip updates`, `Skip warning rows`,
@@ -276,8 +276,8 @@ function EffectiveRow({ label, value, tone }: EffectiveRowProps): React.JSX.Elem
             <dd
                 className={cn(
                     "font-semibold",
-                    tone === "success" && "text-success dark:text-success",
-                    tone === "info" && "text-info dark:text-info",
+                    tone === "success" && "text-success",
+                    tone === "info" && "text-info",
                     tone === "danger" && "text-destructive",
                 )}
             >
@@ -295,7 +295,7 @@ interface EffectiveCounters {
 }
 
 /**
- * Compute the "what will actually happen" counters from the raw preview + control toggles.
+ * Compute the"what will actually happen"counters from the raw preview + control toggles.
  * Mirrors the runner's logic so the operator sees the same numbers the server will commit.
  */
 function applyControls(preview: ReviewState["preview"], controls: ReviewControls): EffectiveCounters {

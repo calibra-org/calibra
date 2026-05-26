@@ -4,11 +4,11 @@ import type { Locale } from "@calibra/shared/i18n";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Copy, MoreHorizontal, Percent, TrendingUp, X } from "lucide-react";
 
-import { DataTableColumnHeader } from "#/components/ui/data-grid/data-table-column-header";
-import type { SortState } from "#/components/ui/data-grid/types";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
+import { DataTableColumnHeader } from "#/components/ui/data-grid/data-table-column-header";
+import type { SortState } from "#/components/ui/data-grid/types";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -161,7 +161,7 @@ export function buildCouponColumns(ctx: ColumnContext): ColumnDef<AdminCoupon>[]
             header: t("table.freeShipping"),
             cell: ({ row }) =>
                 row.original.freeShipping ? (
-                    <Check className="size-4 text-success dark:text-success" aria-hidden="true" />
+                    <Check className="size-4 text-success" aria-hidden="true" />
                 ) : (
                     <X className="size-4 text-muted-foreground" aria-hidden="true" />
                 ),
@@ -171,7 +171,7 @@ export function buildCouponColumns(ctx: ColumnContext): ColumnDef<AdminCoupon>[]
             header: t("table.individualUse"),
             cell: ({ row }) =>
                 row.original.individualUse ? (
-                    <Check className="size-4 text-success dark:text-success" aria-hidden="true" />
+                    <Check className="size-4 text-success" aria-hidden="true" />
                 ) : (
                     <X className="size-4 text-muted-foreground" aria-hidden="true" />
                 ),
@@ -253,10 +253,10 @@ export function buildCouponColumns(ctx: ColumnContext): ColumnDef<AdminCoupon>[]
 function DiscountTypeChip({ type, t }: { type: AdminCoupon["discountType"]; t: (key: string) => string }) {
     const tone =
         type === "percent"
-            ? "bg-info text-info dark:bg-info/30 dark:text-info"
+            ? "bg-info text-info"
             : type === "free_shipping"
-              ? "bg-success text-success dark:bg-success/30 dark:text-success"
-              : "bg-warning text-warning dark:bg-warning/30 dark:text-warning";
+              ? "bg-success text-success"
+              : "bg-warning text-warning";
     return (
         <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs ${tone}`}>
             {type === "percent" && <Percent className="size-3" aria-hidden="true" />}

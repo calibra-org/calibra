@@ -237,7 +237,7 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
                     <div className="h-full bg-primary transition-all" style={{ width: `${percent}%` }} />
                 </div>
                 {slow ? (
-                    <p className="mt-2 flex items-center gap-2 text-warning text-xs dark:text-warning">
+                    <p className="mt-2 flex items-center gap-2 text-warning text-xs">
                         <Loader2 className="size-3.5 animate-spin" aria-hidden />
                         {t("slowChunk", { row: fmt(row.processed_rows + 1) })}
                     </p>

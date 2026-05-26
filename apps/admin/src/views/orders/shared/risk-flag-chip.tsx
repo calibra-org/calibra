@@ -14,9 +14,9 @@ const ICONS: Record<string, typeof AlertTriangle> = {
 };
 
 const TONES: Record<string, string> = {
-    high_value: "bg-warning/15 text-warning ring-warning/30 dark:text-warning",
-    shipping_mismatch: "bg-danger/12 text-danger ring-danger/25 dark:text-danger",
-    failed_payment: "bg-danger/12 text-danger ring-danger/25 dark:text-danger",
+    high_value: "bg-warning/15 text-warning ring-warning/30",
+    shipping_mismatch: "bg-danger/12 text-danger ring-danger/25",
+    failed_payment: "bg-danger/12 text-danger ring-danger/25",
 };
 
 interface RiskFlagChipProps {

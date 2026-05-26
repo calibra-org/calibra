@@ -10,10 +10,10 @@ export type StatusTone = "neutral" | "info" | "success" | "warning" | "danger";
  */
 const surface: Record<StatusTone, string> = {
     neutral: "bg-muted/70 text-foreground/80 ring-border",
-    info: "bg-info/12 text-info ring-info/25 dark:text-info dark:bg-info/15",
-    success: "bg-success/12 text-success ring-success/25 dark:text-success dark:bg-success/15",
-    warning: "bg-warning/15 text-warning ring-warning/30 dark:text-warning dark:bg-warning/15",
-    danger: "bg-danger/12 text-danger ring-danger/25 dark:text-danger dark:bg-danger/15",
+    info: "bg-info/12 text-info ring-info/25",
+    success: "bg-success/12 text-success ring-success/25",
+    warning: "bg-warning/15 text-warning ring-warning/30",
+    danger: "bg-danger/12 text-danger ring-danger/25",
 };
 
 const dot: Record<StatusTone, string> = {

@@ -6,11 +6,11 @@ import type { useTranslations } from "next-intl";
 
 type TFunction = ReturnType<typeof useTranslations>;
 
-import { type ColumnDef, DataTableColumnHeader, type SortState } from "#/components/ui/data-grid";
 import { OrderStatusBadge } from "#/components/OrderStatusBadge";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
+import { type ColumnDef, DataTableColumnHeader, type SortState } from "#/components/ui/data-grid";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "#/components/ui/hover-card";
 import { formatDate, formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
@@ -251,7 +251,7 @@ export function buildOrderColumns(ctx: ColumnContext): ColumnDef<AdminOrder>[] {
                             </span>
                         )}
                         {order.status === "refunded" && (
-                            <span className="text-danger dark:text-danger">
+                            <span className="text-danger">
                                 <ArrowDownRight className="me-1 inline size-3" aria-hidden="true" />
                                 {ctx.t("refundedShort")}
                             </span>

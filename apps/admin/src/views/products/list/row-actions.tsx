@@ -4,7 +4,6 @@ import { Copy, ExternalLink, Eye, FilePen, Hash, Pencil, RotateCcw, Trash2 } fro
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { DataTableRowActions } from "#/components/ui/data-grid";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -14,6 +13,7 @@ import {
     AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Button } from "#/components/ui/button";
+import { DataTableRowActions } from "#/components/ui/data-grid";
 import { DropdownMenuItem, DropdownMenuSeparator } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";
 import { useDuplicateProduct, useForceDeleteProducts, useRestoreProducts, useTrashProducts } from "#/lib/products/mutations";

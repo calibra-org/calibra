@@ -30,10 +30,10 @@ interface ItemsCardProps {
 /**
  * Editable line item table — quantity stepper, price input, remove with undo. The table also
  * hosts the add-item / add-fee / add-shipping / apply-coupon toolbar. Dirty rows track local
- * changes; the sticky footer surfaces "Save all" + "Cancel all" so admins can batch flush.
+ * changes; the sticky footer surfaces"Save all"+"Cancel all"so admins can batch flush.
  *
  * Locked orders fall through to a read-only render with an explanatory tooltip — the user has to
- * "Edit anyway" from the LockedBanner before edits become possible.
+ *"Edit anyway"from the LockedBanner before edits become possible.
  */
 export function ItemsCard({ order, locale }: ItemsCardProps) {
     const t = useTranslations("Orders.detail");
@@ -187,7 +187,7 @@ function LineRow({ line, locale, readOnly, dirty, onPatch, onRemove }: LineRowPr
     const lineTotal = quantity * priceMinor;
     const isDirty = dirty !== undefined;
     return (
-        <TableRow className={`border-border/40 ${isDirty ? "bg-warning/40 dark:bg-warning/15" : ""}`}>
+        <TableRow className={`border-border/40 ${isDirty ? "bg-warning/40" : ""}`}>
             <TableCell className="px-2 py-3">
                 <div className="flex items-center gap-3">
                     {line.imageUrl !== null ? (

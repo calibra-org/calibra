@@ -155,7 +155,7 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
 
             {showRollback ? (
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/40 bg-warning/5 p-4 text-sm">
-                    <p className="flex items-center gap-2 text-warning dark:text-warning">
+                    <p className="flex items-center gap-2 text-warning">
                         <Undo2 className="size-4" aria-hidden />
                         {t("rollback.banner")}
                     </p>
@@ -213,7 +213,7 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
                                         ) : null}
                                     </div>
                                     {err.retried_at !== null ? (
-                                        <Badge variant="outline" className="text-success text-xs dark:text-success">
+                                        <Badge variant="outline" className="text-success text-xs">
                                             {t("errors.retried")}
                                         </Badge>
                                     ) : null}

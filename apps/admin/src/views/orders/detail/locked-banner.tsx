@@ -23,8 +23,8 @@ interface LockedBannerProps {
 }
 
 /**
- * Yellow warning strip rendered above the section grid when an order is auto-locked. The "Edit
- * anyway" affordance type-to-confirms with the literal text "UNLOCK" so the operator can't
+ * Yellow warning strip rendered above the section grid when an order is auto-locked. The"Edit
+ * anyway"affordance type-to-confirms with the literal text"UNLOCK"so the operator can't
  * fat-finger past it.
  */
 export function LockedBanner({ order }: LockedBannerProps) {
@@ -51,7 +51,7 @@ export function LockedBanner({ order }: LockedBannerProps) {
 
     return (
         <>
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning dark:text-warning">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
                 <div className="flex items-center gap-2">
                     <Lock className="size-4" aria-hidden="true" />
                     <p>{t("title")}</p>
@@ -59,7 +59,7 @@ export function LockedBanner({ order }: LockedBannerProps) {
                 <Button
                     size="sm"
                     variant="outline"
-                    className="border-warning/50 bg-warning/0 text-warning hover:bg-warning/15 dark:text-warning"
+                    className="border-warning/50 bg-warning/0 text-warning hover:bg-warning/15"
                     onClick={() => setOpen(true)}
                 >
                     <Unlock className="size-3.5" aria-hidden="true" />

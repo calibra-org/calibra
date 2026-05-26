@@ -22,7 +22,7 @@ export interface StepDoneProps {
 /**
  * Step 3 — summary card + download / copy-link / save-as-preset / re-run actions. The download
  * link is the signed URL the runner minted; valid for 24h, then the file is purged and the link
- * 410s (the summary shows a "no longer available" banner with a "re-run" CTA in that case).
+ * 410s (the summary shows a"no longer available"banner with a"re-run"CTA in that case).
  */
 export function StepDone({ exportRow, token, onAnother, onBackToList }: StepDoneProps): React.JSX.Element {
     const t = useTranslations("ProductsExport.done");
@@ -59,7 +59,7 @@ export function StepDone({ exportRow, token, onAnother, onBackToList }: StepDone
                         <p className="mt-1 text-muted-foreground text-sm">{exportRow.original_filename}</p>
                     </div>
                     {exportRow.compressed ? (
-                        <Badge variant="outline" className="text-success text-xs dark:text-success">
+                        <Badge variant="outline" className="text-success text-xs">
                             gzip
                         </Badge>
                     ) : null}
@@ -93,7 +93,7 @@ export function StepDone({ exportRow, token, onAnother, onBackToList }: StepDone
                         </Button>
                     </div>
                 ) : exportRow.status === "completed" ? (
-                    <div className="mt-6 rounded-md border border-warning/30 bg-warning/5 p-3 text-sm text-warning dark:text-warning">
+                    <div className="mt-6 rounded-md border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
                         {t("noLongerAvailable")}
                     </div>
                 ) : null}

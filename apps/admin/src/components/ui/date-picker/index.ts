@@ -3,7 +3,6 @@
 export { DateField } from "./date-field";
 export { dateToValueString, getDateLib, periodEnd, toGregorianISO, valueStringToDate } from "./date-lib";
 export { DatePickerDialog } from "./date-picker-dialog";
-export { DatePickerPopover } from "./date-picker-popover";
 export { DateRangeField } from "./date-range-field";
 export { DateFilterChip } from "./filter-chip";
 export { formatDateFilterValue, formatOperator, formatValueOnly } from "./format";

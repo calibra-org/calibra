@@ -211,7 +211,7 @@ export function PreviewPane({ preview }: PreviewPaneProps): React.JSX.Element {
                                     className="rounded-md border border-warning/30 bg-warning/5 p-3 text-sm"
                                 >
                                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                                        <Badge variant="outline" className="text-warning dark:text-warning">
+                                        <Badge variant="outline" className="text-warning">
                                             {t(`anomaly.${finding.code}`)}
                                         </Badge>
                                         <span className="text-muted-foreground text-xs">

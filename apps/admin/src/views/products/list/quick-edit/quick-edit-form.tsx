@@ -161,7 +161,7 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                 <StatusBadge tone={productStatusTone[watchedStatus]}>{statusT(watchedStatus)}</StatusBadge>
                 {isDirty && (
                     <span
-                        className="inline-flex items-center gap-1 rounded-md bg-warning/15 px-1.5 py-0.5 text-warning text-xs dark:text-warning"
+                        className="inline-flex items-center gap-1 rounded-md bg-warning/15 px-1.5 py-0.5 text-warning text-xs"
                         title={t("dirty")}
                     >
                         <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
@@ -615,7 +615,7 @@ function TokenInput({ id, value, onChange, placeholder, icon }: TokenInputProps)
         .filter((s) => s.length > 0);
 
     const removeAt = (index: number) => {
-        const next = ids.filter((_, i) => i !== index).join(", ");
+        const next = ids.filter((_, i) => i !== index).join(",");
         onChange(next);
     };
 

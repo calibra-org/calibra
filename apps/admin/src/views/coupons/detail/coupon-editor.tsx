@@ -679,7 +679,7 @@ function GeneralSection({
                             codeBlocking
                                 ? "text-destructive text-xs"
                                 : codeAvailable
-                                  ? "text-success text-xs dark:text-success"
+                                  ? "text-success text-xs"
                                   : "text-muted-foreground text-xs"
                         }
                     >

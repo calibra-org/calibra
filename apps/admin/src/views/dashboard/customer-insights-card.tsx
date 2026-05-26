@@ -15,7 +15,7 @@ import { useCustomerInsights } from "#/lib/queries/insights";
 import type { AdminCustomerInsights } from "#/lib/types";
 
 /**
- * Dashboard "Customer summary" tile. Replaces the inconsistent footer that used to live on the
+ * Dashboard"Customer summary"tile. Replaces the inconsistent footer that used to live on the
  * customers list page. Renders four KPI cells (total customers, mean order count, mean lifetime
  * spend, mean order value) each with a 30-day delta arrow, plus a horizontal progress bar for
  * the percent of customers that have an account. Sparklines are intentionally omitted until a
@@ -162,11 +162,7 @@ function Kpi({
             <span className="text-muted-foreground text-xs">{label}</span>
             <span className="font-semibold text-lg tabular-nums">{value}</span>
             <span
-                className={
-                    isUp
-                        ? "flex items-center gap-1 text-success text-xs dark:text-success"
-                        : "flex items-center gap-1 text-danger text-xs dark:text-danger"
-                }
+                className={isUp ? "flex items-center gap-1 text-success text-xs" : "flex items-center gap-1 text-danger text-xs"}
             >
                 <TrendIcon className="size-3" aria-hidden="true" />
                 <span className="tabular-nums">{formatted}</span>

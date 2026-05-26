@@ -33,20 +33,12 @@ export function SummaryCard({ order, locale }: SummaryCardProps) {
 function Row({ label, value, muted, emphasis }: { label: string; value: string; muted?: boolean; emphasis?: boolean }) {
     return (
         <div className="flex justify-between">
-            <span
-                className={
-                    emphasis ? "font-semibold text-base" : muted ? "text-success dark:text-success" : "text-muted-foreground"
-                }
-            >
+            <span className={emphasis ? "font-semibold text-base" : muted ? "text-success" : "text-muted-foreground"}>
                 {label}
             </span>
             <span
                 className={
-                    emphasis
-                        ? "font-semibold text-base tabular-nums"
-                        : muted
-                          ? "text-success tabular-nums dark:text-success"
-                          : "tabular-nums"
+                    emphasis ? "font-semibold text-base tabular-nums" : muted ? "text-success tabular-nums" : "tabular-nums"
                 }
             >
                 {value}

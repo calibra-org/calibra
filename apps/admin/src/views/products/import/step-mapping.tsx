@@ -26,7 +26,7 @@ export interface StepMappingProps {
 
 /**
  * Step 2 — column mapping table + toolbar bulk actions + preset banner. Hands off to the
- * dedicated review step on "Continue to review" — preview now lives on its own page rather than
+ * dedicated review step on"Continue to review"— preview now lives on its own page rather than
  * inline below the mapping table, so the operator has a clean workspace for the actual decision.
  */
 export function StepMapping({ state, onChange, onReview }: StepMappingProps): React.JSX.Element {
@@ -104,8 +104,8 @@ export function StepMapping({ state, onChange, onReview }: StepMappingProps): Re
 
                 {state.presetMatch !== null ? (
                     <div className="mt-4 flex items-start gap-3 rounded-md border border-warning/40 bg-warning/5 p-3 text-sm">
-                        <Wand2 className="size-4 shrink-0 text-warning dark:text-warning" aria-hidden />
-                        <p className="text-warning dark:text-warning">{t("presetApplied", { name: state.presetMatch.name })}</p>
+                        <Wand2 className="size-4 shrink-0 text-warning" aria-hidden />
+                        <p className="text-warning">{t("presetApplied", { name: state.presetMatch.name })}</p>
                     </div>
                 ) : null}
 
@@ -127,10 +127,7 @@ export function StepMapping({ state, onChange, onReview }: StepMappingProps): Re
                 {inlineWarnings.length > 0 ? (
                     <ul className="mt-4 space-y-2 text-sm">
                         {inlineWarnings.map((warning) => (
-                            <li
-                                key={warning}
-                                className="rounded-md border border-warning/30 bg-warning/5 p-3 text-warning dark:text-warning"
-                            >
+                            <li key={warning} className="rounded-md border border-warning/30 bg-warning/5 p-3 text-warning">
                                 {warning}
                             </li>
                         ))}
@@ -194,7 +191,7 @@ function SamplesLine({ values }: { values: string[] }): React.JSX.Element {
     }
     return (
         <span className="text-muted-foreground text-xs">
-            {t("samplesLabel")}: {values.join("، ")}
+            {t("samplesLabel")}: {values.join("،")}
         </span>
     );
 }

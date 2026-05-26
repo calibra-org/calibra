@@ -135,7 +135,7 @@ export function DataTableToolbar({
                         className={cn(
                             "inline-flex h-8 items-center gap-2 rounded-md border border-input border-dashed bg-background px-2.5 text-sm outline-none transition-colors",
                             "hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring",
-                            active && "border-warning/60 bg-warning/60 text-warning dark:bg-warning/10 dark:text-warning",
+                            active && "border-warning/60 bg-warning/60 text-warning",
                         )}
                         aria-pressed={active}
                     >

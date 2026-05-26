@@ -7,6 +7,8 @@ import { PackagePlus, Plus, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
+import { ShortcutsDialog } from "#/components/shortcuts-dialog";
+import { Button } from "#/components/ui/button";
 import {
     ActiveFilterChips,
     type ColumnDef,
@@ -16,8 +18,6 @@ import {
     type FacetedFilterDef,
 } from "#/components/ui/data-grid";
 import { useDataTable } from "#/components/ui/data-grid/use-data-table";
-import { ShortcutsDialog } from "#/components/shortcuts-dialog";
-import { Button } from "#/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";

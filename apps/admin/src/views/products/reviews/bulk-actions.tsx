@@ -4,7 +4,6 @@ import { CheckCircle2, Trash2, Undo2, Wand2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { DataTableBulkBar } from "#/components/ui/data-grid";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -14,6 +13,7 @@ import {
     AlertDialogTitle,
 } from "#/components/ui/alert-dialog";
 import { Button } from "#/components/ui/button";
+import { DataTableBulkBar } from "#/components/ui/data-grid";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";
 import { useBulkModerateReviews, useDeleteReviews, useRestoreReviews, useTrashReviews } from "#/lib/reviews/mutations";

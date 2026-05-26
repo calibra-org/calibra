@@ -218,7 +218,7 @@ function ResultCard({
     if (result.eligible) {
         const calc = result.calculation;
         return (
-            <div className="flex flex-col gap-2 rounded-md border border-success bg-success p-3 text-sm dark:border-success dark:bg-success/40">
+            <div className="flex flex-col gap-2 rounded-md border border-success bg-success p-3 text-sm">
                 <Badge className="w-fit bg-success text-white">{t("eligibleBadge")}</Badge>
                 {calc !== undefined && (
                     <div className="grid grid-cols-2 gap-2">
