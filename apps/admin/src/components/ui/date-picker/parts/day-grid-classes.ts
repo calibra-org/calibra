@@ -67,12 +67,14 @@ export const DAY_GRID_CLASS_NAMES = {
      */
     day: "h-9 w-9 p-0 align-middle text-center",
     /**
-     * Day-number button: 32 px circle inside the 36 px cell. No explicit text colour so it
-     * inherits from the cell — whichever modifier paints the cell also dictates the readable
-     * day-number colour.
+     * Day-number button. With RDP's bundled CSS no longer imported, we have to do the usual
+     * `<button>` UA reset ourselves: `bg-transparent`, `p-0`, `cursor-pointer`. Sizing &
+     * shape are explicit (`size-8 rounded-full`) so the cell's background — which paints the
+     * range band — shows around the transparent button and joins with neighbours into one
+     * continuous strip.
      */
     day_button:
-        "mx-auto inline-flex size-8 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+        "mx-auto inline-flex size-8 items-center justify-center rounded-full bg-transparent p-0 cursor-pointer text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
     outside: "text-muted-foreground/30",
     /**
      * Single-day selected (operator !== "within") — the whole cell becomes a filled circle.

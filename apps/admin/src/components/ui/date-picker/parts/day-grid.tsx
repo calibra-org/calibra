@@ -3,12 +3,19 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo } from "react";
 import { type ChevronProps, DayPicker, type DayPickerProps } from "react-day-picker";
-import "react-day-picker/style.css";
 
 import { getDateLib, valueStringToDate } from "../date-lib";
 import type { Calendar, Operator } from "../types";
 
 import { DAY_GRID_CLASS_NAMES, DAY_GRID_MODIFIER_CLASS_NAMES } from "./day-grid-classes";
+
+/**
+ * NOTE: We deliberately do NOT import `react-day-picker/style.css`. Its default styles paint
+ * `.rdp-range_start .rdp-day_button { background-color: var(--accent) }`, which gives every
+ * range day a solid inner circle and breaks the continuous-pill visual that
+ * {@link DAY_GRID_CLASS_NAMES} produces. With the CSS off the only source of truth is our
+ * Tailwind class config.
+ */
 
 /**
  * RDP chevron slot. Lives outside the parent so the lint rule against nested component
