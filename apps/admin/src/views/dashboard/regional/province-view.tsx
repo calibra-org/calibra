@@ -1,8 +1,8 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { ChevronLeft } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { ChevronRight } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -16,7 +16,7 @@ import { KpiTile } from "./kpi-tile";
 import { MapLegend } from "./map-legend";
 import { MapTooltip } from "./map-tooltip";
 import { MapZoomWrapper } from "./map-zoom-wrapper";
-import { FAST_SPRING, SVG_CROSSFADE_DURATION, svgVariants } from "./motion-variants";
+import { SVG_CROSSFADE_DURATION, svgVariants } from "./motion-variants";
 import { ProvinceSvg } from "./province-svg";
 import { TopProductsList } from "./top-products-list";
 
@@ -39,8 +39,6 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
     const t = useTranslations("Dashboard.regional");
     const tCommon = useTranslations("Common");
     const reduce = useReducedMotion();
-    const dir = locale === "fa" ? -1 : 1;
-    const slideOffset = (reduce ? 0 : 16) * dir;
 
     useEffect(() => {
         function onKey(e: KeyboardEvent) {
@@ -116,22 +114,6 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
             transition={{ duration: SVG_CROSSFADE_DURATION }}
             className="flex flex-col gap-4"
         >
-            <AnimatePresence>
-                <motion.button
-                    type="button"
-                    onClick={onBack}
-                    initial={{ opacity: 0, x: slideOffset }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={reduce ? { duration: 0 } : FAST_SPRING}
-                    whileHover={reduce ? undefined : { scale: 1.04 }}
-                    whileTap={reduce ? undefined : { scale: 0.96 }}
-                    className="inline-flex w-fit items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-xs hover:bg-accent"
-                >
-                    <ChevronLeft className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
-                    <span>{t("backToCountry")}</span>
-                </motion.button>
-            </AnimatePresence>
-
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiTile
                     label={t("totalOrders")}
