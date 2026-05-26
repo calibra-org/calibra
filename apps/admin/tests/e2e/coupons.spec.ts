@@ -46,7 +46,8 @@ test.describe("Coupons admin", () => {
         await page.waitForTimeout(500);
 
         /** Discount type defaults to `percent`; set value to 15. */
-        await page.getByLabel(/مقدار تخفیف|discount amount/i)
+        await page
+            .getByLabel(/مقدار تخفیف|discount amount/i)
             .first()
             .fill("15");
 
@@ -65,7 +66,7 @@ test.describe("Coupons admin", () => {
         await page.goto("/coupons");
         /** Click the first row's code link to land on the editor. */
         const firstCodeLink = page.locator("table tbody tr a.font-mono").first();
-        if (await firstCodeLink.count() === 0) test.skip(true, "No coupons in dataset to open");
+        if ((await firstCodeLink.count()) === 0) test.skip(true, "No coupons in dataset to open");
         await firstCodeLink.click();
         await page.waitForURL(/\/coupons\/\d+/);
 

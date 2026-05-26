@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { PageHeader } from "#/components/PageHeader";
 import { DraggableSectionGrid, type SectionSpec } from "#/components/sections/draggable-section-grid";
@@ -73,18 +73,8 @@ export function DetailPageShell({
         <section className="flex flex-col gap-6">
             <PageHeader title={title} subtitle={subtitle} actions={headerActions} />
             {banner}
-            <div
-                className={
-                    hasSidebar
-                        ? "grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]"
-                        : "grid grid-cols-1 gap-6"
-                }
-            >
-                <DraggableSectionGrid
-                    storageKey={`${storageKeyPrefix}.main`}
-                    sections={mainSections}
-                    labels={labels}
-                />
+            <div className={hasSidebar ? "grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]" : "grid grid-cols-1 gap-6"}>
+                <DraggableSectionGrid storageKey={`${storageKeyPrefix}.main`} sections={mainSections} labels={labels} />
                 {hasSidebar && (
                     <DraggableSectionGrid
                         storageKey={`${storageKeyPrefix}.sidebar`}

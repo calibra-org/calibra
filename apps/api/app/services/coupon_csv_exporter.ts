@@ -1,5 +1,5 @@
 import db from "@adonisjs/lucid/services/db";
-import { DateTime } from "luxon";
+import type { DateTime } from "luxon";
 
 import Coupon from "#models/coupon";
 

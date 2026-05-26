@@ -172,8 +172,8 @@ export function MultiCombobox({
                         const remove = () => toggle(opt.id);
                         if (renderChip !== undefined) return renderChip(opt, remove);
                         return (
-                            <Badge key={String(opt.id)} variant="secondary" className="ps-2 pe-1 gap-1">
-                                <span className="truncate max-w-[12rem]">{opt.label}</span>
+                            <Badge key={String(opt.id)} variant="secondary" className="gap-1 ps-2 pe-1">
+                                <span className="max-w-[12rem] truncate">{opt.label}</span>
                                 {!disabled && (
                                     <button
                                         type="button"
@@ -188,13 +188,7 @@ export function MultiCombobox({
                         );
                     })}
                     {!disabled && selectedChips.length > 1 && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-xs"
-                            onClick={removeAll}
-                        >
+                        <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={removeAll}>
                             {labels.clearAll}
                         </Button>
                     )}
@@ -202,146 +196,150 @@ export function MultiCombobox({
             )}
             {!disabled && (
                 <div className="flex flex-wrap items-center gap-2">
-                <BaseCombobox.Root
-                    open={open}
-                    onOpenChange={setOpen}
-                    /**
-                     * **Do not pass `items`** here. When `items` is supplied, Base UI runs its own
-                     * local filter against `inputValue` using `itemToStringLabel`, and that filter
-                     * runs *on top of* the parent's `onSearch` results — typing in the input then
-                     * looks like "all rows still showing" because Base UI doesn't know our results
-                     * came back pre-filtered from the server. Render `Combobox.Item` children
-                     * directly from the resolved list and skip the items prop entirely.
-                     */
-                    multiple
-                    inputValue={query}
-                    onInputValueChange={(next) => setQuery(next)}
-                    /** Selection is owned externally — Combobox just emits highlights + Enter intent. */
-                    value={[]}
-                    onValueChange={() => undefined}
-                >
-                    <BaseCombobox.Trigger
-                        render={(props) => (
-                            <Button
-                                {...props}
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="w-fit justify-start gap-2 text-muted-foreground"
+                    <BaseCombobox.Root
+                        open={open}
+                        onOpenChange={setOpen}
+                        /**
+                         * **Do not pass `items`** here. When `items` is supplied, Base UI runs its own
+                         * local filter against `inputValue` using `itemToStringLabel`, and that filter
+                         * runs *on top of* the parent's `onSearch` results — typing in the input then
+                         * looks like "all rows still showing" because Base UI doesn't know our results
+                         * came back pre-filtered from the server. Render `Combobox.Item` children
+                         * directly from the resolved list and skip the items prop entirely.
+                         */
+                        multiple
+                        inputValue={query}
+                        onInputValueChange={(next) => setQuery(next)}
+                        /** Selection is owned externally — Combobox just emits highlights + Enter intent. */
+                        value={[]}
+                        onValueChange={() => undefined}
+                    >
+                        <BaseCombobox.Trigger
+                            render={(props) => (
+                                <Button
+                                    {...props}
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-fit justify-start gap-2 text-muted-foreground"
+                                >
+                                    <Search className="size-3.5" aria-hidden="true" />
+                                    <span>{labels.placeholder}</span>
+                                    <ChevronsUpDown className="ms-auto size-3.5 opacity-60" aria-hidden="true" />
+                                </Button>
+                            )}
+                        />
+                        <BaseCombobox.Portal>
+                            <BaseCombobox.Positioner
+                                sideOffset={4}
+                                align="start"
+                                side="bottom"
+                                collisionPadding={16}
+                                className="z-50"
                             >
-                                <Search className="size-3.5" aria-hidden="true" />
-                                <span>{labels.placeholder}</span>
-                                <ChevronsUpDown className="ms-auto size-3.5 opacity-60" aria-hidden="true" />
-                            </Button>
-                        )}
-                    />
-                    <BaseCombobox.Portal>
-                        <BaseCombobox.Positioner
-                            sideOffset={4}
-                            align="start"
-                            side="bottom"
-                            collisionPadding={16}
-                            className="z-50"
-                        >
-                            <BaseCombobox.Popup
-                                className={cn(
-                                    "w-[min(20rem,calc(100vw-2rem))] origin-[var(--transform-origin)]",
-                                    "overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md outline-none",
-                                    "data-[ending-style]:scale-95 data-[starting-style]:scale-95",
-                                    "data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
-                                    "transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none",
-                                )}
-                            >
-                                <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-                                    <Search className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                                    <BaseCombobox.Input
-                                        placeholder={labels.search}
-                                        className="h-7 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                                        autoFocus
-                                    />
-                                    {isSearching && (
-                                        <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
+                                <BaseCombobox.Popup
+                                    className={cn(
+                                        "w-[min(20rem,calc(100vw-2rem))] origin-[var(--transform-origin)]",
+                                        "overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md outline-none",
+                                        "data-[ending-style]:scale-95 data-[starting-style]:scale-95",
+                                        "data-[ending-style]:opacity-0 data-[starting-style]:opacity-0",
+                                        "transition-[opacity,scale] duration-150 ease-out motion-reduce:transition-none",
                                     )}
-                                </div>
-                                <ScrollArea className="max-h-[min(15rem,60vh)]">
-                                    <BaseCombobox.List className="flex flex-col py-1">
-                                        {options.length === 0 && !isSearching ? (
-                                            <BaseCombobox.Empty className="px-3 py-4 text-center text-muted-foreground text-sm">
-                                                {labels.empty}
-                                            </BaseCombobox.Empty>
-                                        ) : (
-                                            options.map((opt) => {
-                                                const isSelected = selectedIds.includes(opt.id);
-                                                return (
-                                                    <BaseCombobox.Item
-                                                        key={String(opt.id)}
-                                                        value={opt}
-                                                        disabled={opt.disabled}
-                                                        className={cn(
-                                                            "flex w-full cursor-default items-center gap-2 px-3 py-1.5 text-start text-sm outline-none",
-                                                            "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
-                                                            "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
-                                                            isSelected && "bg-accent/40",
-                                                        )}
-                                                        onPointerDown={(event) => {
-                                                            /** Prevent Base UI's default single-select behavior — we own selection. */
-                                                            event.preventDefault();
-                                                            toggle(opt.id);
-                                                        }}
-                                                        onKeyDown={(event) => {
-                                                            if (event.key === "Enter" || event.key === " ") {
+                                >
+                                    <div className="flex items-center gap-2 border-border border-b px-3 py-2">
+                                        <Search className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                        <BaseCombobox.Input
+                                            placeholder={labels.search}
+                                            className="h-7 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                            autoFocus
+                                        />
+                                        {isSearching && (
+                                            <Loader2
+                                                className="size-3.5 shrink-0 animate-spin text-muted-foreground"
+                                                aria-hidden="true"
+                                            />
+                                        )}
+                                    </div>
+                                    <ScrollArea className="max-h-[min(15rem,60vh)]">
+                                        <BaseCombobox.List className="flex flex-col py-1">
+                                            {options.length === 0 && !isSearching ? (
+                                                <BaseCombobox.Empty className="px-3 py-4 text-center text-muted-foreground text-sm">
+                                                    {labels.empty}
+                                                </BaseCombobox.Empty>
+                                            ) : (
+                                                options.map((opt) => {
+                                                    const isSelected = selectedIds.includes(opt.id);
+                                                    return (
+                                                        <BaseCombobox.Item
+                                                            key={String(opt.id)}
+                                                            value={opt}
+                                                            disabled={opt.disabled}
+                                                            className={cn(
+                                                                "flex w-full cursor-default items-center gap-2 px-3 py-1.5 text-start text-sm outline-none",
+                                                                "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+                                                                "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+                                                                isSelected && "bg-accent/40",
+                                                            )}
+                                                            onPointerDown={(event) => {
+                                                                /** Prevent Base UI's default single-select behavior — we own selection. */
                                                                 event.preventDefault();
                                                                 toggle(opt.id);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <span
-                                                            className={cn(
-                                                                "grid size-4 shrink-0 place-items-center rounded border border-border",
-                                                                isSelected && "border-primary bg-primary text-primary-foreground",
-                                                            )}
-                                                            aria-hidden="true"
+                                                            }}
+                                                            onKeyDown={(event) => {
+                                                                if (event.key === "Enter" || event.key === " ") {
+                                                                    event.preventDefault();
+                                                                    toggle(opt.id);
+                                                                }
+                                                            }}
                                                         >
-                                                            {isSelected && <Check className="size-3" aria-hidden="true" />}
-                                                        </span>
-                                                        {opt.imageUrl !== undefined && opt.imageUrl !== null && (
-                                                            // eslint-disable-next-line @next/next/no-img-element
-                                                            <img
-                                                                src={opt.imageUrl}
-                                                                alt=""
-                                                                className="size-8 shrink-0 rounded border border-border bg-muted object-cover"
-                                                                loading="lazy"
-                                                            />
-                                                        )}
-                                                        <span className="flex min-w-0 flex-col">
-                                                            <span className="truncate">{opt.label}</span>
-                                                            {opt.sublabel !== undefined && (
-                                                                <span className="truncate text-muted-foreground text-xs">
-                                                                    {opt.sublabel}
-                                                                </span>
+                                                            <span
+                                                                className={cn(
+                                                                    "grid size-4 shrink-0 place-items-center rounded border border-border",
+                                                                    isSelected &&
+                                                                        "border-primary bg-primary text-primary-foreground",
+                                                                )}
+                                                                aria-hidden="true"
+                                                            >
+                                                                {isSelected && <Check className="size-3" aria-hidden="true" />}
+                                                            </span>
+                                                            {opt.imageUrl !== undefined && opt.imageUrl !== null && (
+                                                                // eslint-disable-next-line @next/next/no-img-element
+                                                                <img
+                                                                    src={opt.imageUrl}
+                                                                    alt=""
+                                                                    className="size-8 shrink-0 rounded border border-border bg-muted object-cover"
+                                                                    loading="lazy"
+                                                                />
                                                             )}
-                                                        </span>
-                                                    </BaseCombobox.Item>
-                                                );
-                                            })
-                                        )}
-                                    </BaseCombobox.List>
-                                </ScrollArea>
-                            </BaseCombobox.Popup>
-                        </BaseCombobox.Positioner>
-                    </BaseCombobox.Portal>
-                </BaseCombobox.Root>
-                {hideChips && selectedIds.length > 0 && (
-                    /**
-                     * When chips are suppressed the operator still needs an obvious affordance to
-                     * wipe the whole selection — surface it as a compact ghost button right after
-                     * the picker trigger, so the "two controls / one row" rhythm reads as one
-                     * pair instead of a floating link.
-                     */
-                    <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={removeAll}>
-                        {labels.clearAll}
-                    </Button>
-                )}
+                                                            <span className="flex min-w-0 flex-col">
+                                                                <span className="truncate">{opt.label}</span>
+                                                                {opt.sublabel !== undefined && (
+                                                                    <span className="truncate text-muted-foreground text-xs">
+                                                                        {opt.sublabel}
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                        </BaseCombobox.Item>
+                                                    );
+                                                })
+                                            )}
+                                        </BaseCombobox.List>
+                                    </ScrollArea>
+                                </BaseCombobox.Popup>
+                            </BaseCombobox.Positioner>
+                        </BaseCombobox.Portal>
+                    </BaseCombobox.Root>
+                    {hideChips && selectedIds.length > 0 && (
+                        /**
+                         * When chips are suppressed the operator still needs an obvious affordance to
+                         * wipe the whole selection — surface it as a compact ghost button right after
+                         * the picker trigger, so the "two controls / one row" rhythm reads as one
+                         * pair instead of a floating link.
+                         */
+                        <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={removeAll}>
+                            {labels.clearAll}
+                        </Button>
+                    )}
                 </div>
             )}
         </div>

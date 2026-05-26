@@ -39,7 +39,9 @@ async function createPlain() {
 
 async function resetCoupons() {
     await resetPhase05();
-    await db.rawQuery("TRUNCATE TABLE coupon_redemptions, coupon_brand_constraints, coupon_category_constraints, coupon_product_constraints, coupon_email_restrictions, coupon_translations, coupons RESTART IDENTITY CASCADE");
+    await db.rawQuery(
+        "TRUNCATE TABLE coupon_redemptions, coupon_brand_constraints, coupon_category_constraints, coupon_product_constraints, coupon_email_restrictions, coupon_translations, coupons RESTART IDENTITY CASCADE",
+    );
     await truncatePhase03Tables();
 }
 
@@ -131,11 +133,7 @@ test.group("GET /api/v1/admin/coupons/code-check", (group) => {
 
     test("returns invalid_length when below the 2-char floor", async ({ client, assert }) => {
         const admin = await createAdmin();
-        const response = await client
-            .get("/api/v1/admin/coupons/code-check")
-            .qs({ code: "A" })
-            .withGuard("api")
-            .loginAs(admin);
+        const response = await client.get("/api/v1/admin/coupons/code-check").qs({ code: "A" }).withGuard("api").loginAs(admin);
         response.assertStatus(200);
         const body = response.body() as { data: { available: boolean; reason?: string } };
         assert.equal(body.data.available, false);
@@ -147,9 +145,7 @@ test.group("POST /api/v1/admin/coupons/:id/test", (group) => {
     group.each.setup(resetCoupons);
 
     test("rejects unauthenticated requests with 401", async ({ client }) => {
-        const response = await client
-            .post("/api/v1/admin/coupons/1/test")
-            .json({ line_items: [{ product_id: 1, quantity: 1 }] });
+        const response = await client.post("/api/v1/admin/coupons/1/test").json({ line_items: [{ product_id: 1, quantity: 1 }] });
         response.assertStatus(401);
     });
 
@@ -235,10 +231,7 @@ test.group("POST /api/v1/admin/coupons/:id/test", (group) => {
             .withGuard("api")
             .loginAs(admin);
 
-        const rows = await Coupon.query()
-            .where("id", Number(coupon.id))
-            .withCount("redemptions")
-            .firstOrFail();
+        const rows = await Coupon.query().where("id", Number(coupon.id)).withCount("redemptions").firstOrFail();
         const count = Number((rows as unknown as { $extras: { redemptions_count: string | number } }).$extras.redemptions_count);
         assert.equal(count, 0);
     });
@@ -255,7 +248,12 @@ test.group("GET /api/v1/admin/coupons/export", (group) => {
     test("returns CSV with one header row + one data row per coupon", async ({ client, assert }) => {
         const admin = await createAdmin();
         await CouponFactory.merge({ code: "ALPHA", discountType: "percent", amountPercent: "10" }).create();
-        await CouponFactory.merge({ code: "BETA", discountType: "fixed_cart", amountMinor: 50_000, amountPercent: null }).create();
+        await CouponFactory.merge({
+            code: "BETA",
+            discountType: "fixed_cart",
+            amountMinor: 50_000,
+            amountPercent: null,
+        }).create();
 
         const response = await client.get("/api/v1/admin/coupons/export").withGuard("api").loginAs(admin);
         response.assertStatus(200);

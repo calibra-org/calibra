@@ -7,13 +7,7 @@ export default class extends BaseSchema {
         this.schema.createTable(this.tableName, (table) => {
             table.bigIncrements("id").notNullable();
             table.bigInteger("coupon_id").unsigned().notNullable().references("id").inTable("coupons").onDelete("CASCADE");
-            table
-                .bigInteger("brand_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("product_brands")
-                .onDelete("CASCADE");
+            table.bigInteger("brand_id").unsigned().notNullable().references("id").inTable("product_brands").onDelete("CASCADE");
             table.string("mode", 16).notNullable();
 
             table.timestamp("created_at", { useTz: true }).notNullable().defaultTo(this.now());

@@ -32,11 +32,7 @@ export interface CouponTestResult {
  * constraints are folded into the same `productConstraints` set so the existing item-eligibility
  * logic enforces them without a parallel code path.
  */
-export async function runCouponTest(
-    coupon: Coupon,
-    payload: CouponTestPayload,
-    i18n: I18n,
-): Promise<CouponTestResult> {
+export async function runCouponTest(coupon: Coupon, payload: CouponTestPayload, i18n: I18n): Promise<CouponTestResult> {
     const productIds = payload.line_items.map((i) => i.product_id);
     const products = await Product.query().whereIn("id", productIds).preload("categories");
     const productById = new Map<number, Product>();
@@ -48,7 +44,9 @@ export async function runCouponTest(
         const lineSubtotal = price * row.quantity;
         const categoryIds = (product?.categories ?? []).map((c) => Number(c.id));
         const onSale =
-            product?.salePrice !== undefined && product?.salePrice !== null && Number(product.salePrice) < Number(product.regularPrice ?? 0);
+            product?.salePrice !== undefined &&
+            product?.salePrice !== null &&
+            Number(product.salePrice) < Number(product.regularPrice ?? 0);
         return {
             lineKey: `synthetic-${index}`,
             productId: row.product_id,
@@ -108,7 +106,10 @@ export async function runCouponTest(
         items,
         itemsTotal,
         otherAppliedCouponIds: [],
-        customer: payload.customer_id || payload.email ? { customerId: payload.customer_id ?? null, email: payload.email ?? null } : null,
+        customer:
+            payload.customer_id || payload.email
+                ? { customerId: payload.customer_id ?? null, email: payload.email ?? null }
+                : null,
         globalRedemptionCount: globalCount,
         perUserRedemptionCount: perUserCount,
     });

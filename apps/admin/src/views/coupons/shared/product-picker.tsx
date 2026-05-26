@@ -4,7 +4,7 @@ import type { Locale } from "@calibra/shared/i18n";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback } from "react";
 
-import { EntityPicker, type EntityOption } from "#/components/shared/entity-picker";
+import { type EntityOption, EntityPicker } from "#/components/shared/entity-picker";
 import { apiGet } from "#/lib/queries/api-client";
 
 interface ProductPickerProps {
@@ -48,14 +48,7 @@ function labelFor(product: ProductListItem, locale: Locale): string {
  * chip labels for ids that were never in the search-result list (initial hydration of a saved
  * coupon).
  */
-export function ProductPicker({
-    selectedIds,
-    onSelectionChange,
-    onAdd,
-    onRemove,
-    placeholder,
-    hideChips,
-}: ProductPickerProps) {
+export function ProductPicker({ selectedIds, onSelectionChange, onAdd, onRemove, placeholder, hideChips }: ProductPickerProps) {
     const locale = useLocale() as Locale;
     const t = useTranslations("Coupons.editor.pickers");
 

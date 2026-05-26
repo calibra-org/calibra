@@ -18,14 +18,8 @@ import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
 import { formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
-import {
-    useBulkUpdateCoupons,
-    useCouponCounts,
-    useCouponsList,
-    useDeleteCoupon,
-} from "#/lib/queries/coupons";
+import { useBulkUpdateCoupons, useCouponCounts, useCouponsList, useDeleteCoupon } from "#/lib/queries/coupons";
 import type { AdminCoupon, CouponTabKey } from "#/lib/types";
-
 import { DuplicateCouponDialog } from "#/views/coupons/dialogs/duplicate-dialog";
 import { ExpirySheet } from "#/views/coupons/dialogs/expiry-sheet";
 import { QuickTestSheet } from "#/views/coupons/dialogs/quick-test-sheet";
@@ -102,7 +96,15 @@ export function CouponsListClient() {
             facets: tableState.facetValues,
             booleans: tableState.toggleValues,
         }),
-        [tableState.page, tableState.perPage, tableState.q, tableState.sort, tableState.facetValues, tableState.toggleValues, tab],
+        [
+            tableState.page,
+            tableState.perPage,
+            tableState.q,
+            tableState.sort,
+            tableState.facetValues,
+            tableState.toggleValues,
+            tab,
+        ],
     );
 
     const { data: result, isPending, isError, refetch } = useCouponsList(params);
@@ -131,8 +133,7 @@ export function CouponsListClient() {
                 locale,
                 sort: tableState.sort,
                 onSort: tableState.setSort,
-                onHideColumn: (columnId) =>
-                    tableState.setColumnVisibility({ ...tableState.columnVisibility, [columnId]: false }),
+                onHideColumn: (columnId) => tableState.setColumnVisibility({ ...tableState.columnVisibility, [columnId]: false }),
                 sortLabels: { asc: t("sort.asc"), desc: t("sort.desc"), hide: t("sort.hide") },
                 t: (key, values) => t(key, values),
                 onCopyCode: copyCode,
@@ -155,7 +156,17 @@ export function CouponsListClient() {
                     });
                 },
             }),
-        [locale, t, tableState.sort, tableState.setSort, tableState.columnVisibility, tableState.setColumnVisibility, copyCode, deleteMutation, bulkMutation],
+        [
+            locale,
+            t,
+            tableState.sort,
+            tableState.setSort,
+            tableState.columnVisibility,
+            tableState.setColumnVisibility,
+            copyCode,
+            deleteMutation,
+            bulkMutation,
+        ],
     );
 
     const meta = result?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
@@ -258,7 +269,12 @@ export function CouponsListClient() {
                     window.location.href = `/coupons/${row.id}`;
                 }}
                 bulkActions={({ selectedIds, clearSelection }) => (
-                    <CouponBulkActions selectedIds={selectedIds} onClear={clearSelection} tab={tab} t={(key, values) => t(key, values)} />
+                    <CouponBulkActions
+                        selectedIds={selectedIds}
+                        onClear={clearSelection}
+                        tab={tab}
+                        t={(key, values) => t(key, values)}
+                    />
                 )}
                 renderCard={(row) => (
                     <Link href={`/coupons/${row.original.id}` as never} className="flex flex-col gap-1">
@@ -278,10 +294,14 @@ export function CouponsListClient() {
                         <div className="flex items-center justify-between text-xs">
                             <span className="tabular-nums">
                                 {formatNumber(row.original.usageCount, locale)}
-                                {row.original.usageLimitGlobal !== null ? ` / ${formatNumber(row.original.usageLimitGlobal, locale)}` : " / ∞"}
+                                {row.original.usageLimitGlobal !== null
+                                    ? ` / ${formatNumber(row.original.usageLimitGlobal, locale)}`
+                                    : " / ∞"}
                             </span>
                             <span className="text-muted-foreground">
-                                {row.original.expiresAt === null ? t("neverExpires") : t("daysToExpiry", { n: relativeDays(row.original.expiresAt) })}
+                                {row.original.expiresAt === null
+                                    ? t("neverExpires")
+                                    : t("daysToExpiry", { n: relativeDays(row.original.expiresAt) })}
                             </span>
                         </div>
                     </Link>

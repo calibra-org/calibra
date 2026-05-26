@@ -3328,17 +3328,17 @@ export interface components {
                 /** @enum {string} */
                 mode: "include" | "exclude";
             }[];
-            /** @description Sidecar count */
+            /** @description Sidecar count, list view only. */
             product_constraints_count?: number;
-            /** @description Sidecar count */
+            /** @description Sidecar count, list view only. */
             category_constraints_count?: number;
-            /** @description Sidecar count */
+            /** @description Sidecar count, list view only. */
             brand_constraints_count?: number;
-            /** @description Sidecar count */
+            /** @description Sidecar count, list view only. */
             email_restrictions_count?: number;
-            /** @description Sidecar count */
+            /** @description Sidecar count, list view only. */
             redemptions_count?: number;
-            /** @description Sidecar count */
+            /** @description Sidecar count, list view only. */
             recent_redemptions_7d?: number;
             /** @description Locale-fa description for list rendering. */
             description_fa?: string | null;
@@ -3368,11 +3368,11 @@ export interface components {
             avg_order_count: number;
             /** @description Mean lifetime order count 30 days ago, subtracted from today's value. */
             avg_order_count_delta_30d: number;
-            /** @description Mean lifetime spend per customer */
+            /** @description Mean lifetime spend per customer, minor units. */
             avg_lifetime_spend_minor: number;
             /** @description Percentage delta vs the same metric 30 days ago. Positive = growth. */
             avg_lifetime_spend_delta_30d_pct: number;
-            /** @description Mean order value across paid orders */
+            /** @description Mean order value across paid orders, minor units. */
             avg_order_value_minor: number;
             /** @description Percentage delta vs the same metric 30 days ago. */
             avg_order_value_delta_30d_pct: number;
@@ -5358,7 +5358,7 @@ export interface operations {
                 search?: string;
                 tab?: "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
                 status?: "active" | "disabled";
-                /** @description Comma-separated list (`?discount_type=fixed_cart */
+                /** @description Comma-separated list (`?discount_type=fixed_cart,percent`). */
                 discount_type?: ("fixed_cart" | "fixed_product" | "percent" | "free_shipping")[];
                 free_shipping?: boolean;
                 individual_use?: boolean;

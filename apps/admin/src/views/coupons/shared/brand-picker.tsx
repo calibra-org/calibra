@@ -4,7 +4,7 @@ import type { Locale } from "@calibra/shared/i18n";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback } from "react";
 
-import { EntityPicker, type EntityOption } from "#/components/shared/entity-picker";
+import { type EntityOption, EntityPicker } from "#/components/shared/entity-picker";
 import { apiGet } from "#/lib/queries/api-client";
 
 interface BrandPickerProps {

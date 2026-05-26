@@ -62,12 +62,14 @@ test.describe("DataTable sticky columns", () => {
         await login(page);
         await page.goto("/customers");
 
-        const checkbox = page.locator('[data-sticky="start"] [role="checkbox"], [data-sticky="start"] [data-slot="checkbox"]').first();
+        const checkbox = page
+            .locator('[data-sticky="start"] [role="checkbox"], [data-sticky="start"] [data-slot="checkbox"]')
+            .first();
         await expect(checkbox).toBeVisible();
         const initialBox = await checkbox.boundingBox();
         expect(initialBox).not.toBeNull();
         /** A 16px checkbox + 3px ring + 2px breathing room ≈ 16px+ at minimum. */
-        expect((initialBox?.height ?? 0)).toBeGreaterThanOrEqual(14);
+        expect(initialBox?.height ?? 0).toBeGreaterThanOrEqual(14);
 
         /** Scroll to far end and confirm the checkbox is still painted at the same height. */
         const scroller = page.locator("[role='grid'] >> div.custom-scrollbar").first();

@@ -61,23 +61,24 @@ export function toAdminCoupon(c: SdkAdminCoupon): AdminCoupon {
         recentRedemptions7d: Number((c as unknown as { recent_redemptions_7d?: number }).recent_redemptions_7d ?? 0),
         productConstraints: bucket(c.product_constraints, "product_id" as never),
         categoryConstraints: bucket(c.category_constraints, "category_id" as never),
-        brandConstraints: bucket((c as unknown as { brand_constraints?: { brand_id: number; mode: "include" | "exclude" }[] }).brand_constraints, "brand_id" as never),
+        brandConstraints: bucket(
+            (c as unknown as { brand_constraints?: { brand_id: number; mode: "include" | "exclude" }[] }).brand_constraints,
+            "brand_id" as never,
+        ),
         emailRestrictions: c.email_restrictions ?? [],
         productConstraintsCount: Number(
-            (c as unknown as { product_constraints_count?: number }).product_constraints_count ?? c.product_constraints?.length ?? 0,
+            (c as unknown as { product_constraints_count?: number }).product_constraints_count ??
+                c.product_constraints?.length ??
+                0,
         ),
         categoryConstraintsCount: Number(
             (c as unknown as { category_constraints_count?: number }).category_constraints_count ??
                 c.category_constraints?.length ??
                 0,
         ),
-        brandConstraintsCount: Number(
-            (c as unknown as { brand_constraints_count?: number }).brand_constraints_count ?? 0,
-        ),
+        brandConstraintsCount: Number((c as unknown as { brand_constraints_count?: number }).brand_constraints_count ?? 0),
         emailRestrictionsCount: Number(
-            (c as unknown as { email_restrictions_count?: number }).email_restrictions_count ??
-                c.email_restrictions?.length ??
-                0,
+            (c as unknown as { email_restrictions_count?: number }).email_restrictions_count ?? c.email_restrictions?.length ?? 0,
         ),
         deletedAt: c.deleted_at ?? null,
     };

@@ -2,12 +2,12 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { Copy, MoreHorizontal, RefreshCw, Save, Trash2 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DetailPageShell } from "#/components/sections/detail-page-shell";
-import { type SectionSpec } from "#/components/sections/draggable-section-grid";
+import type { SectionSpec } from "#/components/sections/draggable-section-grid";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
@@ -139,9 +139,7 @@ function serialize(form: FormState): CouponWritePayload {
         discount_type: form.discountType,
         amount_percent: form.discountType === "percent" ? nullableNumber(form.amountPercent) : null,
         amount_minor:
-            form.discountType === "fixed_cart" || form.discountType === "fixed_product"
-                ? nullableNumber(form.amountMinor)
-                : null,
+            form.discountType === "fixed_cart" || form.discountType === "fixed_product" ? nullableNumber(form.amountMinor) : null,
         starts_at: nullableDate(form.startsAt),
         expires_at: nullableDate(form.expiresAt),
         minimum_amount: nullableNumber(form.minimumAmount),
@@ -278,8 +276,9 @@ export function CouponEditor({ id }: CouponEditorProps) {
         return <Skeleton className="h-96 w-full" />;
     }
 
-    const codeAvailable =
-        isNew ? codeCheck.data?.available !== false : codeCheck.data?.available !== false || form.code === committed.code;
+    const codeAvailable = isNew
+        ? codeCheck.data?.available !== false
+        : codeCheck.data?.available !== false || form.code === committed.code;
     const codeBlocking =
         codeCheck.data !== undefined && codeCheck.data.available === false && (isNew || form.code !== committed.code);
 
@@ -291,7 +290,20 @@ export function CouponEditor({ id }: CouponEditorProps) {
             id: "general",
             title: t("sections.general"),
             isCollapsible: true,
-            body: <GeneralSection {...{ form, update, t, codeAvailable, codeBlocking, codeSuggestion: codeCheck.data?.suggestion ?? null, generateCode, copyCode }} />,
+            body: (
+                <GeneralSection
+                    {...{
+                        form,
+                        update,
+                        t,
+                        codeAvailable,
+                        codeBlocking,
+                        codeSuggestion: codeCheck.data?.suggestion ?? null,
+                        generateCode,
+                        copyCode,
+                    }}
+                />
+            ),
         },
         {
             id: "discount",
@@ -437,7 +449,9 @@ export function CouponEditor({ id }: CouponEditorProps) {
                 title={
                     <span className="flex items-center gap-3">
                         {isNew ? t("titleNew") : t("titleEdit", { code: form.code })}
-                        {!isNew && coupon !== undefined && <StatusChip coupon={coupon} t={(key) => tList(`statusBadge.${key}`)} />}
+                        {!isNew && coupon !== undefined && (
+                            <StatusChip coupon={coupon} t={(key) => tList(`statusBadge.${key}`)} />
+                        )}
                     </span>
                 }
                 subtitle={dirty ? t("dirtyBar.dirty", { count: dirtyCount }) : undefined}
@@ -457,18 +471,33 @@ export function CouponEditor({ id }: CouponEditorProps) {
                             <DropdownMenu>
                                 <DropdownMenuTrigger
                                     render={(props) => (
-                                        <Button {...props} type="button" variant="outline" size="sm" aria-label={t("moreActions")}>
+                                        <Button
+                                            {...props}
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            aria-label={t("moreActions")}
+                                        >
                                             <MoreHorizontal className="me-2 size-4" aria-hidden="true" />
                                             {t("moreActions")}
                                         </Button>
                                     )}
                                 />
                                 <DropdownMenuContent align="end" className="w-56">
-                                    <DropdownMenuItem onClick={() => setQuickTestOpen(true)}>{t("actions.quickTest")}</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setDuplicateOpen(true)}>{t("actions.duplicate")}</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setExpiryOpen(true)}>{t("actions.extendExpiry")}</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setQuickTestOpen(true)}>
+                                        {t("actions.quickTest")}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setDuplicateOpen(true)}>
+                                        {t("actions.duplicate")}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setExpiryOpen(true)}>
+                                        {t("actions.extendExpiry")}
+                                    </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={onDelete} className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600">
+                                    <DropdownMenuItem
+                                        onClick={onDelete}
+                                        className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
+                                    >
                                         <Trash2 className="me-2 size-4" aria-hidden="true" />
                                         {t("actions.delete")}
                                     </DropdownMenuItem>
@@ -560,7 +589,17 @@ interface EditorActionsCardProps {
  * Delete (when editing). Lives at the top of the sidebar so an operator scrolled past the
  * header still has Save in reach without scrolling back.
  */
-function EditorActionsCard({ dirty, dirtyCount, saving, disabled, isNew, onSave, onCancel, onDelete, labels }: EditorActionsCardProps) {
+function EditorActionsCard({
+    dirty,
+    dirtyCount,
+    saving,
+    disabled,
+    isNew,
+    onSave,
+    onCancel,
+    onDelete,
+    labels,
+}: EditorActionsCardProps) {
     return (
         <div className="flex flex-col gap-3 text-sm">
             <p className={dirty ? "text-foreground" : "text-muted-foreground"}>
@@ -606,7 +645,16 @@ interface GeneralSectionProps {
     copyCode: () => void;
 }
 
-function GeneralSection({ form, update, t, codeAvailable, codeBlocking, codeSuggestion, generateCode, copyCode }: GeneralSectionProps) {
+function GeneralSection({
+    form,
+    update,
+    t,
+    codeAvailable,
+    codeBlocking,
+    codeSuggestion,
+    generateCode,
+    copyCode,
+}: GeneralSectionProps) {
     return (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-1.5 md:col-span-2">
@@ -745,21 +793,11 @@ function TimeSection({ form, update, t }: SectionShellProps) {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-1.5">
                 <Label htmlFor="starts-at">{t("fields.startsAt")}</Label>
-                <Input
-                    id="starts-at"
-                    type="date"
-                    value={form.startsAt}
-                    onChange={(e) => update("startsAt", e.target.value)}
-                />
+                <Input id="starts-at" type="date" value={form.startsAt} onChange={(e) => update("startsAt", e.target.value)} />
             </div>
             <div className="flex flex-col gap-1.5">
                 <Label htmlFor="expires-at">{t("fields.expiresAt")}</Label>
-                <Input
-                    id="expires-at"
-                    type="date"
-                    value={form.expiresAt}
-                    onChange={(e) => update("expiresAt", e.target.value)}
-                />
+                <Input id="expires-at" type="date" value={form.expiresAt} onChange={(e) => update("expiresAt", e.target.value)} />
             </div>
             <div className="flex flex-wrap gap-2 md:col-span-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => setExpiryRelative(1)}>
@@ -858,7 +896,12 @@ function EmailsSection({ form, update, t }: SectionShellProps) {
                         <button
                             type="button"
                             aria-label={t("fields.emailsRemove")}
-                            onClick={() => update("emailRestrictions", form.emailRestrictions.filter((e) => e !== email))}
+                            onClick={() =>
+                                update(
+                                    "emailRestrictions",
+                                    form.emailRestrictions.filter((e) => e !== email),
+                                )
+                            }
                             className="ms-1 text-muted-foreground hover:text-foreground"
                         >
                             ×
@@ -968,12 +1011,12 @@ function RedemptionsSection({
     return (
         <div className="flex flex-col gap-2 text-sm">
             {redemptions.map((row) => (
-                <div key={row.id} className="flex items-center justify-between gap-3 border-b border-border pb-2 last:border-b-0">
+                <div key={row.id} className="flex items-center justify-between gap-3 border-border border-b pb-2 last:border-b-0">
                     <div className="flex min-w-0 flex-col">
                         <span className="truncate text-xs">{row.email ?? `#${row.customer_id ?? "—"}`}</span>
                         <span className="text-muted-foreground text-xs">{formatRelativeTime(row.redeemed_at, locale)}</span>
                     </div>
-                    <span className="tabular-nums text-xs">{formatMoney(row.discount_minor, locale)}</span>
+                    <span className="text-xs tabular-nums">{formatMoney(row.discount_minor, locale)}</span>
                 </div>
             ))}
         </div>

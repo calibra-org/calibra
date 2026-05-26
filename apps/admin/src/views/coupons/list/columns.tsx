@@ -102,7 +102,9 @@ export function buildCouponColumns(ctx: ColumnContext): ColumnDef<AdminCoupon>[]
             cell: ({ row }) => {
                 if (row.original.discountType === "free_shipping") return <span className="text-muted-foreground">—</span>;
                 if (row.original.discountType === "percent") {
-                    return <span className="font-medium tabular-nums">{formatPercent(row.original.amountPercent ?? 0, locale)}</span>;
+                    return (
+                        <span className="font-medium tabular-nums">{formatPercent(row.original.amountPercent ?? 0, locale)}</span>
+                    );
                 }
                 return <span className="font-medium tabular-nums">{formatMoney(row.original.amountMinor ?? 0, locale)}</span>;
             },
@@ -222,9 +224,7 @@ export function buildCouponColumns(ctx: ColumnContext): ColumnDef<AdminCoupon>[]
                             {row.original.deletedAt === null ? (
                                 <>
                                     <DropdownMenuItem onClick={() => onToggleStatus(row.original)}>
-                                        {row.original.status === "active"
-                                            ? t("rowActions.disable")
-                                            : t("rowActions.activate")}
+                                        {row.original.status === "active" ? t("rowActions.disable") : t("rowActions.activate")}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => onExtendExpiry(row.original)}>
                                         {t("rowActions.extendExpiry")}
@@ -250,13 +250,7 @@ export function buildCouponColumns(ctx: ColumnContext): ColumnDef<AdminCoupon>[]
     ];
 }
 
-function DiscountTypeChip({
-    type,
-    t,
-}: {
-    type: AdminCoupon["discountType"];
-    t: (key: string) => string;
-}) {
+function DiscountTypeChip({ type, t }: { type: AdminCoupon["discountType"]; t: (key: string) => string }) {
     const tone =
         type === "percent"
             ? "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-200"
@@ -281,11 +275,14 @@ function ConstraintChips({
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
     const chips: string[] = [];
-    if (coupon.productConstraintsCount > 0) chips.push(t("table.productChip", { n: formatNumber(coupon.productConstraintsCount, locale) }));
+    if (coupon.productConstraintsCount > 0)
+        chips.push(t("table.productChip", { n: formatNumber(coupon.productConstraintsCount, locale) }));
     if (coupon.categoryConstraintsCount > 0)
         chips.push(t("table.categoryChip", { n: formatNumber(coupon.categoryConstraintsCount, locale) }));
-    if (coupon.brandConstraintsCount > 0) chips.push(t("table.brandChip", { n: formatNumber(coupon.brandConstraintsCount, locale) }));
-    if (coupon.emailRestrictionsCount > 0) chips.push(t("table.emailChip", { n: formatNumber(coupon.emailRestrictionsCount, locale) }));
+    if (coupon.brandConstraintsCount > 0)
+        chips.push(t("table.brandChip", { n: formatNumber(coupon.brandConstraintsCount, locale) }));
+    if (coupon.emailRestrictionsCount > 0)
+        chips.push(t("table.emailChip", { n: formatNumber(coupon.emailRestrictionsCount, locale) }));
     if (chips.length === 0) return <span className="text-muted-foreground">—</span>;
     return (
         <div className="flex flex-wrap gap-1">
@@ -314,9 +311,7 @@ function UsageCell({
         <div className="flex min-w-[7rem] flex-col gap-1">
             <div className="flex items-center justify-between text-xs tabular-nums">
                 <span className="font-medium">{formatNumber(used, locale)}</span>
-                <span className="text-muted-foreground">
-                    /&nbsp;{limit === null ? "∞" : formatNumber(limit, locale)}
-                </span>
+                <span className="text-muted-foreground">/&nbsp;{limit === null ? "∞" : formatNumber(limit, locale)}</span>
             </div>
             {percent !== null ? <Progress value={percent} className="h-1" /> : null}
             {coupon.recentRedemptions7d > 0 ? (
@@ -352,9 +347,7 @@ function ExpiresCell({
         <div className="flex flex-col">
             <span className="text-xs">{formatDate(expiresAt, locale)}</span>
             {diffDays <= 30 && (
-                <span className="text-muted-foreground text-xs">
-                    {t("daysToExpiry", { n: formatNumber(diffDays, locale) })}
-                </span>
+                <span className="text-muted-foreground text-xs">{t("daysToExpiry", { n: formatNumber(diffDays, locale) })}</span>
             )}
         </div>
     );

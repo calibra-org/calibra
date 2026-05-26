@@ -1,4 +1,6 @@
 /** Public entry point for the generic data-table abstraction. */
+
+export { buildDataGridToolbarLabels, DataGridToolbar } from "./data-grid-toolbar";
 export { DataTable } from "./data-table";
 export { DataTableBulkBar } from "./data-table-bulk-bar";
 export { DataTableColumnHeader } from "./data-table-column-header";
@@ -8,8 +10,6 @@ export { DataTablePagination } from "./data-table-pagination";
 export { DataTableRowActions } from "./data-table-row-actions";
 export { DataTableSkeleton } from "./data-table-skeleton";
 export { ActiveFilterChips, DataTableToolbar } from "./data-table-toolbar";
-export { buildDataGridToolbarLabels, DataGridToolbar } from "./data-grid-toolbar";
-export type { ColumnVisibilityItem, DataGridToolbarLabels, DataGridToolbarProps } from "./data-grid-toolbar";
 export { DataTableViewOptions } from "./data-table-view-options";
 export { DENSITY_CLASSES } from "./types";
 export {
@@ -20,6 +20,7 @@ export {
     serializeSort,
     useDataTable,
 } from "./use-data-table";
+export type { ColumnVisibilityItem, DataGridToolbarLabels, DataGridToolbarProps } from "./data-grid-toolbar";
 export type { DataTableProps } from "./data-table";
 export type {
     BulkActionContext,

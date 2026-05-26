@@ -59,8 +59,12 @@ export function useCouponsList(params: CouponsListParams = {}) {
         queryFn: () => apiGet<CouponListEnvelope>("coupons", { locale, query: buildQuery(params) }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminCoupon),
-            meta:
-                payload.meta ?? { page: params.page ?? 1, perPage: params.perPage ?? 25, total: payload.data?.length ?? 0, lastPage: 1 },
+            meta: payload.meta ?? {
+                page: params.page ?? 1,
+                perPage: params.perPage ?? 25,
+                total: payload.data?.length ?? 0,
+                lastPage: 1,
+            },
         }),
     });
 }

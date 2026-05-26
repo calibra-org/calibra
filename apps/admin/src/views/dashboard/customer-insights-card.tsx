@@ -117,9 +117,7 @@ function InsightsBody({
             <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t("pctWithAccount")}</span>
-                    <span className="font-medium tabular-nums">
-                        {formatNumber(Math.round(data.pctWithAccount), locale)}%
-                    </span>
+                    <span className="font-medium tabular-nums">{formatNumber(Math.round(data.pctWithAccount), locale)}%</span>
                 </div>
                 <Progress value={Math.min(100, Math.max(0, data.pctWithAccount))} />
             </div>
@@ -141,7 +139,17 @@ interface KpiProps {
     sparklineLabel?: string;
 }
 
-function Kpi({ label, value, delta, deltaUnit, comparison, locale, sparkline, sparklineTone = "neutral", sparklineLabel }: KpiProps) {
+function Kpi({
+    label,
+    value,
+    delta,
+    deltaUnit,
+    comparison,
+    locale,
+    sparkline,
+    sparklineTone = "neutral",
+    sparklineLabel,
+}: KpiProps) {
     const isUp = delta >= 0;
     const TrendIcon = isUp ? TrendingUp : TrendingDown;
     const absDelta = Math.abs(delta);
@@ -196,15 +204,7 @@ function InsightsSkeleton() {
     );
 }
 
-function ErrorBlock({
-    onRetry,
-    retryLabel,
-    errorLabel,
-}: {
-    onRetry: () => void;
-    retryLabel: string;
-    errorLabel: string;
-}) {
+function ErrorBlock({ onRetry, retryLabel, errorLabel }: { onRetry: () => void; retryLabel: string; errorLabel: string }) {
     return (
         <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground text-sm">
             <span>{errorLabel}</span>

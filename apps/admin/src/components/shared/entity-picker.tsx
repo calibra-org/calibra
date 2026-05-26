@@ -59,10 +59,7 @@ export function EntityPicker({
      * The legacy `renderChip` signature didn't pass the `remove` callback through. Bridge it
      * by remembering the current `selectedIds` closure and re-deriving the toggle inside.
      */
-    const wrappedRenderChip = useCallback(
-        (opt: ComboboxOption, _remove: () => void) => renderChip?.(opt) ?? null,
-        [renderChip],
-    );
+    const wrappedRenderChip = useCallback((opt: ComboboxOption, _remove: () => void) => renderChip?.(opt) ?? null, [renderChip]);
 
     return (
         <MultiCombobox

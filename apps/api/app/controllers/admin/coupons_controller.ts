@@ -126,7 +126,9 @@ export default class AdminCouponsController {
                 sub.from("coupon_email_restrictions").whereColumn("coupon_email_restrictions.coupon_id", "coupons.id"),
             );
         }
-        const brandIds = parseList(ctx.request.input("brand")).map((s) => Number(s)).filter(Number.isFinite);
+        const brandIds = parseList(ctx.request.input("brand"))
+            .map((s) => Number(s))
+            .filter(Number.isFinite);
         if (brandIds.length > 0) {
             query.whereExists((sub) =>
                 sub
@@ -275,7 +277,9 @@ export default class AdminCouponsController {
             status: ctx.request.input("status"),
             search: String(ctx.request.input("search", "")).trim() || undefined,
             discountTypes: parseList(ctx.request.input("discount_type")),
-            brandIds: parseList(ctx.request.input("brand")).map((s) => Number(s)).filter(Number.isFinite),
+            brandIds: parseList(ctx.request.input("brand"))
+                .map((s) => Number(s))
+                .filter(Number.isFinite),
         };
         const { csv, count } = await exportCouponsToCsv(filters);
         const filename = `coupons-${DateTime.utc().toFormat("yyyyLLdd-HHmm")}.csv`;
@@ -521,12 +525,23 @@ export default class AdminCouponsController {
     }
 }
 
-const SORTABLE_COLUMNS = new Set(["code", "discount_type", "amount_minor", "amount_percent", "starts_at", "expires_at", "created_at"]);
+const SORTABLE_COLUMNS = new Set([
+    "code",
+    "discount_type",
+    "amount_minor",
+    "amount_percent",
+    "starts_at",
+    "expires_at",
+    "created_at",
+]);
 
 function parseList(input: unknown): string[] {
     if (Array.isArray(input)) return input.map(String).filter((s) => s.length > 0);
     if (typeof input === "string" && input.length > 0) {
-        return input.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+        return input
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
     }
     return [];
 }
@@ -539,11 +554,7 @@ function falsy(input: unknown): boolean {
     return input === false || input === "false" || input === "0" || input === 0;
 }
 
-function applyBoolFilter(
-    query: ReturnType<typeof Coupon.query>,
-    column: string,
-    input: unknown,
-): void {
+function applyBoolFilter(query: ReturnType<typeof Coupon.query>, column: string, input: unknown): void {
     if (truthy(input)) query.where(column, true);
     else if (falsy(input)) query.where(column, false);
 }

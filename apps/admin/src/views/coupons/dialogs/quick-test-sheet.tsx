@@ -223,11 +223,7 @@ function ResultCard({
                 {calc !== undefined && (
                     <div className="grid grid-cols-2 gap-2">
                         <ResultLine label={t("calc.subtotal")} value={formatMoney(calc.items_subtotal_minor, locale)} />
-                        <ResultLine
-                            label={t("calc.discount")}
-                            value={`− ${formatMoney(calc.discount_minor, locale)}`}
-                            emphasis
-                        />
+                        <ResultLine label={t("calc.discount")} value={`− ${formatMoney(calc.discount_minor, locale)}`} emphasis />
                         <ResultLine label={t("calc.shipping")} value={formatMoney(calc.shipping_minor, locale)} />
                         <ResultLine label={t("calc.total")} value={formatMoney(calc.grand_total_minor, locale)} emphasis />
                     </div>
@@ -249,7 +245,7 @@ function ResultLine({ label, value, emphasis = false }: { label: string; value: 
     return (
         <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-xs">{label}</span>
-            <span className={emphasis ? "font-medium tabular-nums text-sm" : "tabular-nums text-xs"}>{value}</span>
+            <span className={emphasis ? "font-medium text-sm tabular-nums" : "text-xs tabular-nums"}>{value}</span>
         </div>
     );
 }
