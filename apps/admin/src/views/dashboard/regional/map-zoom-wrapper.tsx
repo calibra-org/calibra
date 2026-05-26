@@ -10,6 +10,8 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 1.25;
 const WHEEL_STEP = 1.1;
+/** How long after the last wheel tick the anchor + transition-suppression stay locked. */
+const WHEEL_SESSION_MS = 280;
 
 interface MapZoomWrapperProps {
     children: ReactNode;
@@ -44,6 +46,13 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
     const [dragging, setDragging] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const dragRef = useRef<DragState | null>(null);
+    const wheelSessionRef = useRef<{ x: number; y: number; expires: number; timer: number | null }>({
+        x: 0,
+        y: 0,
+        expires: 0,
+        timer: null,
+    });
+    const [animateTransition, setAnimateTransition] = useState(true);
 
     /**
      * Zoom from a specific cursor anchor (Figma / Google Maps semantics): the point under
@@ -114,19 +123,49 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
         };
     }, []);
 
-    /** Wheel zoom — bound natively so `passive: false` works under React 19. */
+    /**
+     * Wheel zoom — bound natively so `passive: false` works under React 19. The first wheel
+     * tick captures the cursor as the session anchor; every subsequent tick within
+     * `WHEEL_SESSION_MS` reuses that anchor, so rapid scrolling zooms into the user's original
+     * intent point instead of drifting along with the animated cursor-relative drift. CSS
+     * transitions are suppressed during a wheel session so individual ticks read as immediate
+     * — the transition re-engages once the session expires (for the next button click etc).
+     */
     useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
         const handler = (e: WheelEvent) => {
             e.preventDefault();
-            const direction = e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
             const rect = el.getBoundingClientRect();
-            setZoomAt(zoom * direction, e.clientX - rect.left, e.clientY - rect.top);
+            const now = performance.now();
+            const session = wheelSessionRef.current;
+
+            if (now > session.expires) {
+                /** New session — capture the cursor as the anchor for the burst. */
+                session.x = e.clientX - rect.left;
+                session.y = e.clientY - rect.top;
+                setAnimateTransition(false);
+            }
+            session.expires = now + WHEEL_SESSION_MS;
+            if (session.timer !== null) window.clearTimeout(session.timer);
+            session.timer = window.setTimeout(() => {
+                session.timer = null;
+                setAnimateTransition(true);
+            }, WHEEL_SESSION_MS);
+
+            const direction = e.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP;
+            setZoomAt(zoom * direction, session.x, session.y);
         };
         el.addEventListener("wheel", handler, { passive: false });
         return () => el.removeEventListener("wheel", handler);
     }, [zoom, setZoomAt]);
+
+    useEffect(
+        () => () => {
+            if (wheelSessionRef.current.timer !== null) window.clearTimeout(wheelSessionRef.current.timer);
+        },
+        [],
+    );
 
     const onPointerDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
@@ -183,7 +222,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
             onAuxClick={onAuxClick}
         >
             <div
-                className="origin-top-left transition-transform duration-150 ease-out"
+                className={cn("origin-top-left", animateTransition && "transition-transform duration-150 ease-out")}
                 style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
             >
                 {children}
