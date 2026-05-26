@@ -59,11 +59,13 @@ export const DAY_GRID_CLASS_NAMES = {
     month_grid: "border-collapse border-spacing-0",
     weekday: "text-muted-foreground text-xs font-normal pb-1 text-center",
     /**
-     * Day cell is a 36×36 square. `border border-transparent` reserves the today-border slot
-     * so it can be filled in by the `today` modifier without shifting layout. `align-middle`
-     * + the button's inline-flex centring keep the numeral on the geometric centre.
+     * Day cell is a 36×36 square. `align-middle` + the button's inline-flex centring keep the
+     * numeral on the geometric centre. The today indicator is painted on the inner button as
+     * a `ring-` utility (see modifiers below) — NOT on the cell — because a square cell with
+     * a 1 px border draws a SQUARE outline, which read as a vertical hairline next to the day
+     * number, not the circular "today" ring users expect.
      */
-    day: "h-9 w-9 p-0 align-middle text-center border border-transparent",
+    day: "h-9 w-9 p-0 align-middle text-center",
     /**
      * Day-number button: 32 px circle inside the 36 px cell. No explicit text colour so it
      * inherits from the cell — whichever modifier paints the cell also dictates the readable
@@ -74,9 +76,9 @@ export const DAY_GRID_CLASS_NAMES = {
     outside: "text-muted-foreground/30",
     /**
      * Single-day selected (operator !== "within") — the whole cell becomes a filled circle.
-     * `border-transparent` suppresses the today ring if both modifiers fire.
+     * `!ring-0` on the button suppresses today's circular ring when both modifiers overlap.
      */
-    selected: "rounded-full bg-primary text-primary-foreground !border-transparent",
+    selected: "rounded-full bg-primary text-primary-foreground [&_button]:!ring-0",
     /**
      * Range cap: the cell becomes a pill with one rounded end. `rounded-s-full` rounds the
      * start side (LTR=left, RTL=right) so it caps the cell on the side that DOESN'T continue
@@ -86,10 +88,10 @@ export const DAY_GRID_CLASS_NAMES = {
      * cell), so the two start-side corners meet at the start-edge midpoint and form a
      * geometrically-perfect semicircle.
      */
-    range_start: "rounded-s-full bg-primary text-primary-foreground !border-transparent",
-    range_end: "rounded-e-full bg-primary text-primary-foreground !border-transparent",
+    range_start: "rounded-s-full bg-primary text-primary-foreground [&_button]:!ring-0",
+    range_end: "rounded-e-full bg-primary text-primary-foreground [&_button]:!ring-0",
     /** Middle: square `<td>` filled edge-to-edge so adjacent cells form one continuous strip. */
-    range_middle: "bg-primary text-primary-foreground !border-transparent",
+    range_middle: "bg-primary text-primary-foreground [&_button]:!ring-0",
     disabled: "text-muted-foreground/30 cursor-not-allowed",
 } as const;
 
@@ -100,19 +102,23 @@ export const DAY_GRID_CLASS_NAMES = {
 export const DAY_GRID_MODIFIER_CLASS_NAMES = {
     /**
      * Anchor (within-mode first click before the end is picked). Reads as a clean filled
-     * circle, matching what range_start will become once the second click lands.
+     * circle, matching what range_start will become once the second click lands. `!ring-0` on
+     * the button kills today's circular ring when the anchor lands on today.
      */
-    anchor: "rounded-full bg-primary text-primary-foreground !border-transparent",
+    anchor: "rounded-full bg-primary text-primary-foreground [&_button]:!ring-0",
     /**
      * Hover-preview band — same geometry as range_middle but at /30 opacity so it reads as a
      * translucent extension of the anchor, not a committed range.
      */
     previewRange: "bg-primary/30 text-foreground",
     /**
-     * Today's outline. `border-foreground/40` is a thin ring; it's applied to the cell's
-     * reserved `border border-transparent` slot so it doesn't shift layout. Every selected
-     * state above also includes `!border-transparent` to suppress this ring when the cell
-     * already paints a band.
+     * Today's circular ring. Painted on the INNER `<button>` (which is `rounded-full`) via
+     * `ring-1` so the outline traces the day-number circle, not the square `<td>`. A border on
+     * the cell would draw a square outline, which previously read as a stray vertical line
+     * next to the day number — clearly not a "today" indicator.
+     *
+     * Every selected state above (`selected`, `range_*`, `anchor`) includes
+     * `[&_button]:!ring-0` so this ring drops out when the cell already paints a band.
      */
-    today: "!border-foreground/40",
+    today: "[&_button]:ring-1 [&_button]:ring-foreground/40",
 } as const;

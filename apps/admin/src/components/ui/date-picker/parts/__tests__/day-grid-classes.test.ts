@@ -16,9 +16,8 @@ function classList(s: string): string[] {
 }
 
 describe("DAY_GRID_CLASS_NAMES — base layout", () => {
-    it("paints the day cell with a transparent border slot so today's ring can fill it without shifting layout", () => {
-        expect(DAY_GRID_CLASS_NAMES.day).toMatch(/\bborder\b/);
-        expect(DAY_GRID_CLASS_NAMES.day).toMatch(/\bborder-transparent\b/);
+    it("does NOT paint a cell border — today's ring lives on the inner button so it traces a circle, not a square", () => {
+        expect(DAY_GRID_CLASS_NAMES.day).not.toMatch(/\bborder\b/);
     });
 
     it("sets a deterministic cell size (36×36) so the rounded-full caps form a perfect semicircle", () => {
@@ -58,9 +57,9 @@ describe("DAY_GRID_CLASS_NAMES — selection states", () => {
         }
     });
 
-    it("every selected state suppresses today's border so the inner circle doesn't get outlined", () => {
+    it("every selected state suppresses today's ring on the inner button so the circle reads as one filled shape", () => {
         for (const state of SELECTED_STATES) {
-            expect(DAY_GRID_CLASS_NAMES[state]).toMatch(/!border-transparent/);
+            expect(DAY_GRID_CLASS_NAMES[state]).toMatch(/\[&_button\]:!ring-0/);
         }
     });
 
@@ -89,14 +88,18 @@ describe("DAY_GRID_MODIFIER_CLASS_NAMES — overlay modifiers", () => {
         expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/\btext-primary-foreground\b/);
     });
 
-    it("anchor also suppresses the today border (it's a filled cell)", () => {
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/!border-transparent/);
+    it("anchor also suppresses today's ring on the inner button (it's a filled circle)", () => {
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.anchor).toMatch(/\[&_button\]:!ring-0/);
     });
 
-    it("today's modifier ONLY paints a border colour — no bg, no text-color override", () => {
-        const classes = classList(DAY_GRID_MODIFIER_CLASS_NAMES.today);
-        const offenders = classes.filter((c) => c.startsWith("bg-") || (c.startsWith("text-") && !c.startsWith("text-[")));
-        expect(offenders).toEqual([]);
+    it("today's modifier paints a CIRCULAR ring on the inner `<button>`, never a square border on the cell", () => {
+        /** A border on a `<td>` paints a 36×36 square outline — visually a vertical hairline,
+         * not the circular ring users associate with "today". The ring must live on the
+         * inner `rounded-full` button so its shape follows the circle. */
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.today).toMatch(/\[&_button\]:ring-\d/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.today).toMatch(/\[&_button\]:ring-foreground\/\d+/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.today).not.toMatch(/\bborder\b/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.today).not.toMatch(/\bbg-/);
     });
 
     it("previewRange paints a translucent band, never a solid bg-primary — keeps the in-progress range visually distinct from a committed one", () => {
@@ -110,18 +113,16 @@ describe("DAY_GRID_MODIFIER_CLASS_NAMES — overlay modifiers", () => {
 });
 
 describe("modifier composition — overlap invariants", () => {
-    it("selected + today: !border-transparent wins → no outline on the inner circle", () => {
-        /** When the selected day is also today, both classes apply to the cell. The selected
-         * class includes `!border-transparent`; today's class sets `!border-foreground/40`.
-         * Both have `!important`, so source order in the stylesheet decides — Tailwind emits
-         * the explicit border-color value alongside the keyword, but the keyword `transparent`
-         * is the one we want to win. We verify this indirectly: the modifier class for today
-         * does NOT include `!border` (only the colour), so the cell's reserved
-         * `border border-transparent` from `day` plus selected's `!border-transparent` are
-         * the only border declarations and the cell stays without a visible outline. */
-        expect(DAY_GRID_MODIFIER_CLASS_NAMES.today).not.toMatch(/!border(?!-)/);
+    it("selected + today: `!ring-0` on the button wins → no ring on the inner filled circle", () => {
+        /** When the selected day is also today, both modifiers fire on the same cell. Today
+         * paints `[&_button]:ring-1 ring-foreground/40`; every selected state paints
+         * `[&_button]:!ring-0`. The `!important` on the selected side outranks the
+         * non-important ring-1, so the ring drops out and the cell reads as a solid filled
+         * circle (or band cap) with no stray outline. */
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.today).toMatch(/\[&_button\]:ring-\d/);
+        expect(DAY_GRID_MODIFIER_CLASS_NAMES.today).not.toMatch(/!ring-/);
         for (const state of SELECTED_STATES) {
-            expect(DAY_GRID_CLASS_NAMES[state]).toMatch(/!border-transparent/);
+            expect(DAY_GRID_CLASS_NAMES[state]).toMatch(/\[&_button\]:!ring-0/);
         }
     });
 
