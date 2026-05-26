@@ -23,9 +23,12 @@ import {
     useCouponCounts,
     useCouponsList,
     useDeleteCoupon,
-    useUpdateCoupon,
 } from "#/lib/queries/coupons";
 import type { AdminCoupon, CouponTabKey } from "#/lib/types";
+
+import { DuplicateCouponDialog } from "#/views/coupons/dialogs/duplicate-dialog";
+import { ExpirySheet } from "#/views/coupons/dialogs/expiry-sheet";
+import { QuickTestSheet } from "#/views/coupons/dialogs/quick-test-sheet";
 
 import { CouponBulkActions } from "./bulk-actions";
 import { buildCouponColumns } from "./columns";
@@ -105,8 +108,14 @@ export function CouponsListClient() {
     const { data: result, isPending, isError, refetch } = useCouponsList(params);
 
     const deleteMutation = useDeleteCoupon();
-    const updateMutation = useUpdateCoupon(0);
+    /** Per-row updates piggyback the bulk endpoint so a single mutation hook can serve every
+     * row (`useUpdateCoupon` bakes the id into the hook at creation time and can't be re-keyed). */
     const bulkMutation = useBulkUpdateCoupons();
+
+    /** Row-action panels are hosted at the list level so they open inline without navigating. */
+    const [quickTestRow, setQuickTestRow] = useState<AdminCoupon | null>(null);
+    const [duplicateRow, setDuplicateRow] = useState<AdminCoupon | null>(null);
+    const [expiryRow, setExpiryRow] = useState<AdminCoupon | null>(null);
 
     const copyCode = useCallback(async (code: string) => {
         try {
@@ -127,22 +136,14 @@ export function CouponsListClient() {
                 sortLabels: { asc: t("sort.asc"), desc: t("sort.desc"), hide: t("sort.hide") },
                 t: (key, values) => t(key, values),
                 onCopyCode: copyCode,
-                onDuplicate: (row) => {
-                    /** Lightweight inline duplicate — for the full dialog see editor page. */
-                    bulkMutation.mutate({
-                        update: [{ id: row.id }],
-                    });
-                    window.location.href = `/coupons/${row.id}?duplicate=1`;
-                },
-                onQuickTest: (row) => {
-                    window.location.href = `/coupons/${row.id}?quickTest=1`;
-                },
+                onDuplicate: (row) => setDuplicateRow(row),
+                onQuickTest: (row) => setQuickTestRow(row),
                 onToggleStatus: async (row) => {
-                    await updateMutationForId(row.id).mutateAsync({ status: row.status === "active" ? "disabled" : "active" });
+                    await bulkMutation.mutateAsync({
+                        update: [{ id: row.id, status: row.status === "active" ? "disabled" : "active" }],
+                    });
                 },
-                onExtendExpiry: (row) => {
-                    window.location.href = `/coupons/${row.id}?extendExpiry=1`;
-                },
+                onExtendExpiry: (row) => setExpiryRow(row),
                 onSoftDelete: async (row) => {
                     if (!confirm(t("rowActions.deleteConfirm"))) return;
                     await deleteMutation.mutateAsync(row.id);
@@ -154,14 +155,8 @@ export function CouponsListClient() {
                     });
                 },
             }),
-        [locale, t, tableState.sort, tableState.setSort, tableState.columnVisibility, tableState.setColumnVisibility, copyCode, deleteMutation, bulkMutation, updateMutation],
+        [locale, t, tableState.sort, tableState.setSort, tableState.columnVisibility, tableState.setColumnVisibility, copyCode, deleteMutation, bulkMutation],
     );
-
-    /** Per-row mutation hook factory — keeps the controlled mutation hook stable while letting each
-     * row write to a different coupon id. */
-    function updateMutationForId(_id: number) {
-        return updateMutation;
-    }
 
     const meta = result?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
 
@@ -329,12 +324,83 @@ export function CouponsListClient() {
                 }}
                 formatNumber={(value: number) => formatNumber(value, locale)}
             />
+
+            {quickTestRow !== null && (
+                <QuickTestSheet
+                    open={quickTestRow !== null}
+                    onOpenChange={(open) => !open && setQuickTestRow(null)}
+                    couponId={quickTestRow.id}
+                />
+            )}
+            {duplicateRow !== null && (
+                <DuplicateCouponDialog
+                    open={duplicateRow !== null}
+                    onOpenChange={(open) => !open && setDuplicateRow(null)}
+                    sourceCoupon={duplicateRow}
+                    sourcePayload={buildDuplicatePayload(duplicateRow)}
+                />
+            )}
+            {expiryRow !== null && (
+                <ExpirySheet
+                    open={expiryRow !== null}
+                    onOpenChange={(open) => !open && setExpiryRow(null)}
+                    currentExpiresAt={expiryRow.expiresAt ? expiryRow.expiresAt.slice(0, 10) : ""}
+                    onApply={async (nextDate) => {
+                        await bulkMutation.mutateAsync({ update: [{ id: expiryRow.id, expires_at: nextDate }] });
+                        setExpiryRow(null);
+                    }}
+                />
+            )}
         </section>
     );
 }
 
 function relativeDays(iso: string): number {
     return Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
+}
+
+/**
+ * Project a list-row `AdminCoupon` into the `CouponWritePayload` shape the duplicate dialog
+ * expects. The list payload already carries every field the backend coupon validator accepts
+ * (constraints, email restrictions, etc.) thanks to the forAdmin transformer running on
+ * `/coupons/:id`, but on the list we only have the `forList` projection — so this helper
+ * fills in the basics and the editor will full-load the duplicate after redirect.
+ */
+function buildDuplicatePayload(coupon: AdminCoupon): import("#/lib/queries/coupons").CouponWritePayload {
+    return {
+        code: coupon.code,
+        discount_type: coupon.discountType,
+        amount_percent: coupon.amountPercent,
+        amount_minor: coupon.amountMinor,
+        starts_at: coupon.startsAt,
+        expires_at: coupon.expiresAt,
+        individual_use: coupon.individualUse,
+        exclude_sale_items: coupon.excludeSaleItems,
+        minimum_amount: coupon.minimumAmount,
+        maximum_amount: coupon.maximumAmount,
+        usage_limit_global: coupon.usageLimitGlobal,
+        usage_limit_per_user: coupon.usageLimitPerUser,
+        limit_usage_to_x_items: coupon.limitUsageToXItems,
+        free_shipping: coupon.freeShipping,
+        status: coupon.status,
+        translations: [
+            { locale: "fa", description: coupon.description.fa || null },
+            { locale: "en", description: coupon.description.en || null },
+        ],
+        email_restrictions: coupon.emailRestrictions,
+        product_constraints: [
+            ...coupon.productConstraints.include.map((id) => ({ product_id: id, mode: "include" as const })),
+            ...coupon.productConstraints.exclude.map((id) => ({ product_id: id, mode: "exclude" as const })),
+        ],
+        category_constraints: [
+            ...coupon.categoryConstraints.include.map((id) => ({ category_id: id, mode: "include" as const })),
+            ...coupon.categoryConstraints.exclude.map((id) => ({ category_id: id, mode: "exclude" as const })),
+        ],
+        brand_constraints: [
+            ...coupon.brandConstraints.include.map((id) => ({ brand_id: id, mode: "include" as const })),
+            ...coupon.brandConstraints.exclude.map((id) => ({ brand_id: id, mode: "exclude" as const })),
+        ],
+    };
 }
 
 /**

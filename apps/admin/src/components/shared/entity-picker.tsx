@@ -178,7 +178,12 @@ export function EntityPicker({
                             </Button>
                         )}
                     />
-                    <PopoverContent align="start" className="w-80 p-0">
+                    <PopoverContent
+                        align="start"
+                        sideOffset={4}
+                        collisionPadding={16}
+                        className="w-[min(20rem,calc(100vw-2rem))] p-0"
+                    >
                         <div className="flex items-center gap-2 border-b border-border px-3 py-2">
                             <Search className="size-3.5 text-muted-foreground" aria-hidden="true" />
                             <Input
@@ -190,7 +195,7 @@ export function EntityPicker({
                             />
                             {isSearching && <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-hidden="true" />}
                         </div>
-                        <ScrollArea className="max-h-60">
+                        <ScrollArea className="max-h-[min(15rem,60vh)]">
                             {options.length === 0 && !isSearching ? (
                                 <p className="px-3 py-4 text-center text-muted-foreground text-sm">{labels.empty}</p>
                             ) : (
