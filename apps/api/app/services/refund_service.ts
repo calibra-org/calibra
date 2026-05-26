@@ -6,9 +6,8 @@ import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import * as Sentry from "@sentry/node";
 import { DateTime } from "luxon";
 
-import { ResourceConflictException } from "#exceptions/domain_exceptions";
-
 import { OrderStatus } from "#enums/order_status";
+import { ResourceConflictException } from "#exceptions/domain_exceptions";
 import Order from "#models/order";
 import OrderLineItem from "#models/order_line_item";
 import OrderNote from "#models/order_note";

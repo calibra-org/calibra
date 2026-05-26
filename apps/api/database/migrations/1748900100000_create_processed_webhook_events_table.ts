@@ -30,13 +30,7 @@ export default class extends BaseSchema {
                 .references("id")
                 .inTable("payment_attempts")
                 .onDelete("SET NULL");
-            table
-                .bigInteger("order_id")
-                .unsigned()
-                .nullable()
-                .references("id")
-                .inTable("orders")
-                .onDelete("SET NULL");
+            table.bigInteger("order_id").unsigned().nullable().references("id").inTable("orders").onDelete("SET NULL");
             table.specificType("payload_hash", "char(64)").notNullable();
             table.string("outcome", 32).notNullable().defaultTo("processed");
             table.timestamp("received_at", { useTz: true }).notNullable().defaultTo(this.now());

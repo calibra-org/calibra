@@ -4,12 +4,12 @@ import { DateTime } from "luxon";
 import { OrderStatus } from "#enums/order_status";
 import { PaymentAttemptStatus } from "#enums/payment_attempt_status";
 import PaymentAttempt from "#models/payment_attempt";
+import PaymentGateway from "#models/payment_gateway";
 import ProcessedWebhookEvent from "#models/processed_webhook_event";
 import { createTaxableProduct } from "#tests/helpers/cart";
 import { mockFetch, unmockFetch } from "#tests/helpers/mock_fetch";
 import { iranRegionId } from "#tests/helpers/orders";
 import { resetPhase08 } from "#tests/helpers/payments";
-import PaymentGateway from "#models/payment_gateway";
 
 const REQUEST_URL = "https://payment.zarinpal.com/pg/v4/payment/request.json";
 const VERIFY_URL = "https://payment.zarinpal.com/pg/v4/payment/verify.json";
@@ -150,10 +150,7 @@ test.group("callback idempotency ledger + out-of-order", (group) => {
             [VERIFY_URL]: { status: 200, body: { data: { code: 100, ref_id: 555 } } },
         });
 
-        await client
-            .get("/api/v1/payment/callback/zarinpal")
-            .qs({ Authority: authority, Status: "OK" })
-            .redirects(0);
+        await client.get("/api/v1/payment/callback/zarinpal").qs({ Authority: authority, Status: "OK" }).redirects(0);
 
         const { default: Order } = await import("#models/order");
         const order = await Order.findOrFail(orderId);

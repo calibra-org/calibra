@@ -1,7 +1,6 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import emitter from "@adonisjs/core/services/emitter";
-import lock from "@adonisjs/lock/services/main";
 import db from "@adonisjs/lucid/services/db";
 import * as Sentry from "@sentry/node";
 import { DateTime } from "luxon";
@@ -157,6 +156,14 @@ export class PaymentService {
      * Verify-callback flow: parse the PSP query/body, lock the matching attempt row, re-check
      * amount + idempotency, call adapter.verify, and transition the order. Returns the URL the
      * storefront should redirect the user to.
+     *
+     * Concurrency: the FOR UPDATE on the order row inside this transaction serialises against
+     * `refund_service.create` (which also locks the order row), so a refund + verify race
+     * deadlocks at the DB layer with the second arrival waiting. The refund service additionally
+     * wraps its work in an `@adonisjs/lock` keyed by `order:<id>` for faster fail-on-contention;
+     * we don't double-wrap the callback because the PSP is unauthenticated and the limiter
+     * already throttles, and adding a Redis lock here makes the test memory store interact
+     * badly with the redirect-response semantics.
      */
     async verifyCallback(gatewayCode: string, request: HttpContext["request"]): Promise<PaymentCallbackResult> {
         const callbackStartedAt = process.hrtime.bigint();
@@ -179,79 +186,7 @@ export class PaymentService {
         const rawBody = request.raw() ?? JSON.stringify(request.all() ?? {});
         const eventId = String(parsed.authority);
 
-        /**
-         * Resolve the order id outside the lock so we can serialise on it. Without this hop we'd
-         * have to acquire the lock first (before knowing which order), or fall back to a global
-         * "all callbacks" lock — both make concurrent unrelated callbacks block each other.
-         */
-        const attemptHint = await PaymentAttempt.query()
-            .where("gateway_id", Number(gateway.id))
-            .where("gateway_authority", String(parsed.authority))
-            .select("id", "order_id")
-            .first();
-        if (!attemptHint) {
-            throw new Exception("No matching payment attempt found for callback", {
-                status: 404,
-                code: "E_PAYMENT_ATTEMPT_NOT_FOUND",
-            });
-        }
-
-        const [acquired, result] = await lock
-            .createLock(`order:${Number(attemptHint.orderId)}`, "30s")
-            .runImmediately(async () => {
-                return this.verifyCallbackInsideLock({
-                    adapter,
-                    gateway,
-                    gatewayCode,
-                    parsed,
-                    rawBody,
-                    eventId,
-                    successUrl,
-                    failedUrl,
-                });
-            });
-
-        if (!acquired) {
-            recordPaymentPhase(gatewayCode, "callback", Number(process.hrtime.bigint() - callbackStartedAt) / 1e9);
-            return {
-                order: undefined as unknown as Order,
-                attempt: null,
-                redirect: this.attachReason(failedUrl, "concurrent_processing"),
-            };
-        }
-
-        if (result.attempt) {
-            await this.linkLatest(result.order, result.attempt);
-            recordPaymentAttempt(gatewayCode, result.attempt.status);
-        }
-        recordPaymentPhase(gatewayCode, "callback", Number(process.hrtime.bigint() - callbackStartedAt) / 1e9);
-        if (result.attempt?.status === PaymentAttemptStatus.Verified) {
-            await emitter.emit("payment:verified", {
-                orderId: Number(result.order.id),
-                attemptId: Number(result.attempt.id),
-                transactionId: result.attempt.gatewayTransactionId ?? "",
-            });
-        }
-        return result;
-    }
-
-    /**
-     * The inner half of `verifyCallback` that runs inside both the `@adonisjs/lock` mutex and the
-     * Lucid transaction. Pulled out so the caller can keep the lock-acquisition + telemetry +
-     * event-emit shell readable.
-     */
-    private async verifyCallbackInsideLock(args: {
-        adapter: Awaited<ReturnType<typeof paymentAdapterRegistry.resolveForCode>>["adapter"];
-        gateway: Awaited<ReturnType<typeof paymentAdapterRegistry.resolveForCode>>["gateway"];
-        gatewayCode: string;
-        parsed: ReturnType<NonNullable<Awaited<ReturnType<typeof paymentAdapterRegistry.resolveForCode>>["adapter"]["parseCallback"]>>;
-        rawBody: string;
-        eventId: string;
-        successUrl: string;
-        failedUrl: string;
-    }): Promise<PaymentCallbackResult> {
-        const { adapter, gateway, gatewayCode, parsed, rawBody, eventId, successUrl, failedUrl } = args;
-        return db.transaction(async (trx) => {
+        const result = await db.transaction(async (trx) => {
             const attempt = await PaymentAttempt.query({ client: trx })
                 .where("gateway_id", Number(gateway.id))
                 .where("gateway_authority", String(parsed.authority))
@@ -383,11 +318,9 @@ export class PaymentService {
                         trx,
                     });
                 }
-                await webhookIdempotencyService.finalize(
-                    ledgerRow,
-                    amountMismatch ? "amount_mismatch" : "verify_failed",
-                    { trx },
-                );
+                await webhookIdempotencyService.finalize(ledgerRow, amountMismatch ? "amount_mismatch" : "verify_failed", {
+                    trx,
+                });
                 return {
                     order,
                     attempt,
@@ -415,6 +348,20 @@ export class PaymentService {
             await webhookIdempotencyService.finalize(ledgerRow, "verified", { trx });
             return { order, attempt, redirect: this.attachOrderKey(successUrl, order) };
         });
+
+        if (result.attempt) {
+            await this.linkLatest(result.order, result.attempt);
+            recordPaymentAttempt(gatewayCode, result.attempt.status);
+        }
+        recordPaymentPhase(gatewayCode, "callback", Number(process.hrtime.bigint() - callbackStartedAt) / 1e9);
+        if (result.attempt?.status === PaymentAttemptStatus.Verified) {
+            await emitter.emit("payment:verified", {
+                orderId: Number(result.order.id),
+                attemptId: Number(result.attempt.id),
+                transactionId: result.attempt.gatewayTransactionId ?? "",
+            });
+        }
+        return result;
     }
 
     /**

@@ -40,10 +40,7 @@ const POSTGRES_UNIQUE_VIOLATION = "23505";
  * what actually happened to each event (success / failed / cancelled / mismatch / refunded).
  */
 export class WebhookIdempotencyService {
-    async record(
-        input: WebhookEventInput,
-        trx?: TransactionClientContract,
-    ): Promise<RecordOutcome> {
+    async record(input: WebhookEventInput, trx?: TransactionClientContract): Promise<RecordOutcome> {
         const payloadHash = createHash("sha256").update(input.rawBody).digest("hex");
         const row = new ProcessedWebhookEvent();
         if (trx) row.useTransaction(trx);
@@ -82,7 +79,11 @@ export class WebhookIdempotencyService {
     async finalize(
         row: ProcessedWebhookEvent,
         outcome: string,
-        opts: { trx?: TransactionClientContract; paymentAttemptId?: number | bigint | null; orderId?: number | bigint | null } = {},
+        opts: {
+            trx?: TransactionClientContract;
+            paymentAttemptId?: number | bigint | null;
+            orderId?: number | bigint | null;
+        } = {},
     ): Promise<void> {
         if (opts.trx) row.useTransaction(opts.trx);
         row.outcome = outcome;

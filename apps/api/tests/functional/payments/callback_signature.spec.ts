@@ -65,7 +65,10 @@ test.group("gateway-aware webhook signature middleware", (group) => {
         assert.equal(body.errors[0]?.code, "E_BAD_SIGNATURE");
     });
 
-    test("signed gateway with missing env secret returns config-error 401 (fail-loud, never fail-open)", async ({ client, assert }) => {
+    test("signed gateway with missing env secret returns config-error 401 (fail-loud, never fail-open)", async ({
+        client,
+        assert,
+    }) => {
         const gateway = await PaymentGateway.findByOrFail("code", "zarinpal");
         gateway.signedCallback = true;
         gateway.webhookSecretEnvKey = "PAYMENT_WEBHOOK_SECRET_ZARINPAL";

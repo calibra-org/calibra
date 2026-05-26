@@ -50,10 +50,7 @@ export default class WebhookSignatureMiddleware {
         const secret = env.get(envKey as never) as string | undefined;
 
         if (signature === undefined || secret === undefined) {
-            ctx.logger.warn(
-                { gateway: code, header, hasSecret: secret !== undefined },
-                "webhook_signature_missing",
-            );
+            ctx.logger.warn({ gateway: code, header, hasSecret: secret !== undefined }, "webhook_signature_missing");
             return ctx.response.status(401).json({
                 errors: [{ message: "missing signature", code: "E_UNSIGNED" }],
             });
