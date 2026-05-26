@@ -205,39 +205,34 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                     ) : null}
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <div className="flex h-[500px] flex-col gap-3">
                     <MapLegend scale={scale} metric={metric} locale={locale} />
-                    <section className="flex flex-col gap-2 rounded-lg border bg-card p-3">
-                        <h4 className="font-medium text-sm">{t("topProductsLabel")}</h4>
-                        {isPending ? (
-                            <div className="flex flex-col gap-2">
-                                {Array.from({ length: 3 }).map((_, i) => (
-                                    <Skeleton key={`tp-skel-${i.toString()}`} className="h-8 w-full" />
-                                ))}
-                            </div>
-                        ) : isError ? (
+                    {isPending ? (
+                        <Skeleton className="flex min-h-0 flex-1 rounded-lg" />
+                    ) : isError ? (
+                        <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border bg-card">
                             <p className="text-muted-foreground text-xs">{tCommon("errorLoading")}</p>
-                        ) : (
-                            <TopProductsList products={data?.topProducts ?? []} locale={locale} />
-                        )}
-                    </section>
-
-                    <section className="flex flex-col gap-2 rounded-lg border bg-card p-3">
-                        <h4 className="font-medium text-sm">{t("citiesHeading")}</h4>
-                        {isPending ? (
-                            <div className="flex flex-col gap-2">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                    <Skeleton key={`ci-skel-${i.toString()}`} className="h-6 w-full" />
-                                ))}
-                            </div>
-                        ) : isError ? (
-                            <p className="text-muted-foreground text-xs">{tCommon("errorLoading")}</p>
-                        ) : (
-                            <CityList cities={data?.cities ?? []} metric={metric} locale={locale} />
-                        )}
-                    </section>
+                        </div>
+                    ) : (
+                        <CityList cities={data?.cities ?? []} metric={metric} locale={locale} />
+                    )}
                 </div>
             </div>
+
+            <section className="flex flex-col gap-2 rounded-lg border bg-card p-3">
+                <h4 className="font-medium text-sm">{t("topProductsLabel")}</h4>
+                {isPending ? (
+                    <div className="flex flex-col gap-2">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                            <Skeleton key={`tp-skel-${i.toString()}`} className="h-8 w-full" />
+                        ))}
+                    </div>
+                ) : isError ? (
+                    <p className="text-muted-foreground text-xs">{tCommon("errorLoading")}</p>
+                ) : (
+                    <TopProductsList products={data?.topProducts ?? []} locale={locale} />
+                )}
+            </section>
         </motion.div>
     );
 }
