@@ -1,2 +1,5 @@
-/** Tier-4 CategoryPicker. Re-exports the existing view-local picker. */
-export { CategoryPicker } from "#/views/coupons/shared/category-picker";
+/**
+ * Tier-4 CategoryPicker. Composes EntityPicker + queries `apiGet("categories", ...)`. Same shape
+ * as ProductPicker / BrandPicker.
+ */
+export { CategoryPicker } from "./picker";

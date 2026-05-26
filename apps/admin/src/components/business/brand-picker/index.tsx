@@ -1,2 +1,5 @@
-/** Tier-4 BrandPicker. Re-exports the existing view-local picker. */
-export { BrandPicker } from "#/views/coupons/shared/brand-picker";
+/**
+ * Tier-4 BrandPicker. Composes EntityPicker + queries `apiGet("brands", ...)`. Same shape as
+ * {@link ProductPicker} — domain knowledge in the label resolver; selection owned externally.
+ */
+export { BrandPicker } from "./picker";
