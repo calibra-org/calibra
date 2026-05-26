@@ -4,7 +4,7 @@ import { Copy, Eye, FileText, Hash, Mail, Pencil, Printer, Trash2, Truck } from 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { DataTableRowActions } from "#/components/data-table";
+import { DataTableRowActions } from "#/components/ui/data-grid";
 import {
     AlertDialog,
     AlertDialogContent,

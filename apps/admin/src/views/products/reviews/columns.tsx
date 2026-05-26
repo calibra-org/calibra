@@ -6,7 +6,7 @@ import type { useTranslations } from "next-intl";
 
 type TFunction = ReturnType<typeof useTranslations>;
 
-import { type ColumnDef, DataTableColumnHeader, type SortState } from "#/components/data-table";
+import { type ColumnDef, DataTableColumnHeader, type SortState } from "#/components/ui/data-grid";
 import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { formatDate, formatRelativeTime } from "#/lib/format";

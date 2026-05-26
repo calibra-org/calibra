@@ -4,7 +4,7 @@ import { Mail, Printer, Trash2, Wand2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { DataTableBulkBar } from "#/components/data-table";
+import { DataTableBulkBar } from "#/components/ui/data-grid";
 import {
     AlertDialog,
     AlertDialogContent,

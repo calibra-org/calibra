@@ -2,9 +2,9 @@
 
 import { type ReactNode, useMemo } from "react";
 
-import { ActiveFilterChips, DataTableToolbar } from "#/components/data-table/data-table-toolbar";
-import { DataTableViewOptions } from "#/components/data-table/data-table-view-options";
-import type { DataTableDensity, FacetedFilterDef, ToggleFilterDef } from "#/components/data-table/types";
+import { ActiveFilterChips, DataTableToolbar } from "#/components/ui/data-grid/data-table-toolbar";
+import { DataTableViewOptions } from "#/components/ui/data-grid/data-table-view-options";
+import type { DataTableDensity, FacetedFilterDef, ToggleFilterDef } from "#/components/ui/data-grid/types";
 
 export interface ColumnVisibilityItem {
     id: string;

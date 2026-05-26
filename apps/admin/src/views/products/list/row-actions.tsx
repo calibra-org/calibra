@@ -4,7 +4,7 @@ import { Copy, ExternalLink, Eye, FilePen, Hash, Pencil, RotateCcw, Trash2 } fro
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { DataTableRowActions } from "#/components/data-table";
+import { DataTableRowActions } from "#/components/ui/data-grid";
 import {
     AlertDialog,
     AlertDialogContent,

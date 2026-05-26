@@ -14,8 +14,8 @@ import {
     DataTableToolbar,
     DataTableViewOptions,
     type FacetedFilterDef,
-} from "#/components/data-table";
-import { useDataTable } from "#/components/data-table/use-data-table";
+} from "#/components/ui/data-grid";
+import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { Button } from "#/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";

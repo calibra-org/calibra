@@ -4,8 +4,8 @@ import type { Locale } from "@calibra/shared/i18n";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Copy, MoreHorizontal, Percent, TrendingUp, X } from "lucide-react";
 
-import { DataTableColumnHeader } from "#/components/data-table/data-table-column-header";
-import type { SortState } from "#/components/data-table/types";
+import { DataTableColumnHeader } from "#/components/ui/data-grid/data-table-column-header";
+import type { SortState } from "#/components/ui/data-grid/types";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";

@@ -3,7 +3,7 @@
 import { CheckCircle2, Copy, ExternalLink, FilePen, Hash, MessageSquareReply, Trash2, Undo2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { DataTableRowActions } from "#/components/data-table";
+import { DataTableRowActions } from "#/components/ui/data-grid";
 import { DropdownMenuItem, DropdownMenuSeparator } from "#/components/ui/dropdown-menu";
 import type { AdminReview } from "#/lib/types";
 

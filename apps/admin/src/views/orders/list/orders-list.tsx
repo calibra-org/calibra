@@ -15,8 +15,8 @@ import {
     DataTableViewOptions,
     type DateFacetDef,
     type FacetedFilterDef,
-} from "#/components/data-table";
-import { useDataTable } from "#/components/data-table/use-data-table";
+} from "#/components/ui/data-grid";
+import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { OrderStatusBadge } from "#/components/OrderStatusBadge";
 import { Button } from "#/components/ui/button";
 import { serializeDateFilter } from "#/components/ui/date-picker";

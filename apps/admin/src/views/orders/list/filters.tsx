@@ -4,7 +4,7 @@ import { AlertOctagon, Banknote, Globe, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
-import type { FacetedFilterDef, ToggleFilterDef } from "#/components/data-table";
+import type { FacetedFilterDef, ToggleFilterDef } from "#/components/ui/data-grid";
 
 const PAYMENT_METHODS = ["cod", "bank_transfer", "zarinpal", "idpay", "nextpay", "payir", "zibal"] as const;
 const SOURCES = ["checkout", "admin", "api", "import"] as const;

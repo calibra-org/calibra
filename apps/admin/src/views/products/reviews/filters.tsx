@@ -4,7 +4,7 @@ import { BadgeCheck, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
-import type { FacetedFilterDef, ToggleFilterDef } from "#/components/data-table";
+import type { FacetedFilterDef, ToggleFilterDef } from "#/components/ui/data-grid";
 import { useReviewFacets } from "#/lib/reviews/queries";
 
 /**
