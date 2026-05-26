@@ -1,21 +1,23 @@
 # apps/admin/src/vendor/iran-map — attribution
 
-The SVG path data in this directory (`country.ts`) is vendored from the
-**simamojtahedi/react-iran-map** project:
+The SVG path data in this directory is vendored from two upstream projects:
 
-- Upstream: https://github.com/simamojtahedi/react-iran-map
-- License: **MIT** (Copyright © 2023 Sima Mojtahedi)
+1. **simamojtahedi/react-iran-map** (MIT, © 2023 Sima Mojtahedi)
+   - https://github.com/simamojtahedi/react-iran-map
+   - Source for `country.ts` (31-province outlines) and `labels.ts`
+     (Persian province-name glyph paths).
+
+2. **simamojtahedi/react-iran-provinces-map** (MIT, © 2023 Sima Mojtahedi)
+   - https://github.com/simamojtahedi/react-iran-provinces-map
+   - Source for `provinces/IR-XX.ts` (per-province county / شهرستان polygons
+     used by the dashboard's drill-down view).
 
 The Persian polygon names map one-for-one onto the ISO-3166-2:IR province
 codes we use elsewhere; the upstream React components and CSS are not
-vendored — only the path strings and `viewBox`. We render the SVG with our
-own `motion`-driven components so the drill-down animation, heatmap fill,
-tooltip, and reduced-motion fallback can be controlled directly.
-
-Province-level city geometries are NOT vendored — upstream only ships the
-country-level outline. Province-mode drill-down therefore degrades to the
-side-panel city list (sourced from `/api/v1/admin/insights/regional/provinces/:code`)
-rather than a city polygon SVG.
+vendored — only the path strings, `viewBox`, and label glyph data. We
+render the SVG with our own `motion`-driven components so the drill-down
+animation, heatmap fill, tooltip, and reduced-motion fallback can be
+controlled directly.
 
 ## Full upstream MIT license
 

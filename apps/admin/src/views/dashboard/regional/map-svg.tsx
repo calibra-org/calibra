@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { IRAN_COUNTRY_PROVINCES, IRAN_COUNTRY_VIEWBOX } from "#/vendor/iran-map";
 
 import { ZERO_COLOR } from "./heatmap-scale";
+import { ProvinceLabels } from "./province-labels";
 import { SeaDecorations } from "./sea-decorations";
 
 interface MapSvgProps {
@@ -77,6 +78,7 @@ export function MapSvg({ fillForCode, hoveredCode, onHoverChange, onPointerMove,
                     />
                 );
             })}
+            <ProvinceLabels />
         </svg>
     );
 }

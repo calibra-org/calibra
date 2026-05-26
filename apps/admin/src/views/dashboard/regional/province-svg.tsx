@@ -1,13 +1,15 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { IRAN_COUNTRY_PROVINCES, IRAN_COUNTRY_VIEWBOX } from "#/vendor/iran-map";
+import { normalizeIranText } from "#/lib/iran-text-normalize";
+import { IRAN_COUNTRY_PROVINCES } from "#/vendor/iran-map";
+import { loadProvinceGeometry, type ProvinceGeometry } from "#/vendor/iran-map/provinces";
 
 import { type HeatmapMetric, ZERO_COLOR } from "./heatmap-scale";
 
-interface CityMarker {
+export interface CityMarker {
     regionCode: string | null;
     name: string;
     ordersCount: number;
@@ -23,126 +25,122 @@ interface ProvinceSvgProps {
     onPointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;
 }
 
-const PROVINCE_FILL_ORDERS = "#3b82f6";
-const PROVINCE_FILL_REVENUE = "#ef4444";
-
-const VIEWBOX_PADDING = 10;
-const COUNTRY_VIEWBOX = (() => {
-    const [x, y, w, h] = IRAN_COUNTRY_VIEWBOX.split(/\s+/).map(Number);
-    return { x: x ?? 0, y: y ?? 0, w: w ?? 1080, h: h ?? 1080 };
-})();
+const COUNTY_FILL_BASE_ORDERS = ["#eff6ff", "#bfdbfe", "#93c5fd", "#60a5fa", "#3b82f6", "#2563eb", "#1d4ed8"] as const;
+const COUNTY_FILL_BASE_REVENUE = ["#fef2f2", "#fee2e2", "#fecaca", "#fca5a5", "#f87171", "#ef4444", "#dc2626"] as const;
 
 /**
- * Deterministic 32-bit hash so the same city name always lands at the same relative position
- * within its province bbox across re-renders. Avoids the visual jitter that pure `Math.random()`
- * placement would introduce on every refresh.
- */
-function hashString(s: string): number {
-    let h = 2166136261 >>> 0;
-    for (let i = 0; i < s.length; i += 1) {
-        h ^= s.charCodeAt(i);
-        h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
-}
-
-/**
- * Province-mode SVG with a viewBox zoom into the selected province + city markers overlaid as
- * circles sized by order count. Markers don't carry real lat/lon — sajaddp ships none and
- * react-iran-map doesn't either — so each city's position is a deterministic hash-based offset
- * inside the province's bbox. The relative size/colour communicates the where-orders-cluster
- * story even without real coordinates.
+ * Province-mode SVG. Loads the per-province county (شهرستان) geometry from
+ * `vendor/iran-map/provinces/IR-XX.ts` (dynamic import, one bundle per province) and renders
+ * each polygon as a `<motion.path>`. Each county is matched to a seeded city by
+ * `normalizeIranText` so the operator sees real city order counts on the map.
+ *
+ * Counties whose name doesn't match a seeded city render in the empty / zero tone — they exist
+ * geographically but have no recorded orders in the window.
  */
 export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }: ProvinceSvgProps) {
     const reduce = useReducedMotion();
-    const pathRef = useRef<SVGPathElement | null>(null);
-    const [bbox, setBbox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+    const [geometry, setGeometry] = useState<ProvinceGeometry | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        loadProvinceGeometry(code).then((g) => {
+            if (!cancelled) setGeometry(g);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [code]);
+
+    const citiesByNormalized = useMemo(() => {
+        const map = new Map<string, CityMarker>();
+        for (const c of cities) {
+            const key = normalizeIranText(c.name);
+            if (key) map.set(key, c);
+        }
+        return map;
+    }, [cities]);
 
     const province = useMemo(() => IRAN_COUNTRY_PROVINCES.find((p) => p.code === code) ?? null, [code]);
 
-    useEffect(() => {
-        if (pathRef.current === null) return;
-        const box = pathRef.current.getBBox();
-        setBbox({ x: box.x, y: box.y, w: box.width, h: box.height });
-    }, []);
+    const palette = metric === "revenue" ? COUNTY_FILL_BASE_REVENUE : COUNTY_FILL_BASE_ORDERS;
 
-    const viewBox = bbox
-        ? `${bbox.x - VIEWBOX_PADDING} ${bbox.y - VIEWBOX_PADDING} ${bbox.w + VIEWBOX_PADDING * 2} ${bbox.h + VIEWBOX_PADDING * 2}`
-        : `${COUNTRY_VIEWBOX.x} ${COUNTRY_VIEWBOX.y} ${COUNTRY_VIEWBOX.w} ${COUNTRY_VIEWBOX.h}`;
+    const ranges = useMemo(() => {
+        if (!geometry) return { max: 0, ladder: [] as Array<{ threshold: number; color: string }> };
+        const values: number[] = [];
+        for (const county of geometry.counties) {
+            const key = normalizeIranText(county.fa);
+            const matched = citiesByNormalized.get(key);
+            if (matched) {
+                values.push(metric === "revenue" ? matched.revenueMinor : matched.ordersCount);
+            }
+        }
+        const nonZero = values.filter((v) => v > 0).sort((a, b) => a - b);
+        if (nonZero.length === 0) return { max: 0, ladder: [] };
+        const max = nonZero[nonZero.length - 1] ?? 0;
+        const ladder = palette.map((color, i) => ({
+            threshold: nonZero[Math.floor((nonZero.length - 1) * (i / (palette.length - 1)))] ?? max,
+            color,
+        }));
+        return { max, ladder };
+    }, [geometry, citiesByNormalized, metric, palette]);
 
-    const fill = metric === "revenue" ? PROVINCE_FILL_REVENUE : PROVINCE_FILL_ORDERS;
+    const fillFor = (countyName: string) => {
+        const key = normalizeIranText(countyName);
+        const matched = citiesByNormalized.get(key);
+        if (!matched) return ZERO_COLOR;
+        const value = metric === "revenue" ? matched.revenueMinor : matched.ordersCount;
+        if (value <= 0) return ZERO_COLOR;
+        for (const stop of ranges.ladder) {
+            if (value <= stop.threshold) return stop.color;
+        }
+        return ranges.ladder[ranges.ladder.length - 1]?.color ?? ZERO_COLOR;
+    };
 
-    const maxValue = Math.max(...cities.map((c) => (metric === "revenue" ? c.revenueMinor : c.ordersCount)), 1);
-
-    const markers = useMemo(() => {
-        if (!bbox) return [];
-        return cities.map((city) => {
-            const h1 = hashString(`${city.name}-x`);
-            const h2 = hashString(`${city.name}-y`);
-            const insetX = bbox.w * 0.08;
-            const insetY = bbox.h * 0.08;
-            const cx = bbox.x + insetX + ((h1 % 1000) / 1000) * (bbox.w - insetX * 2);
-            const cy = bbox.y + insetY + ((h2 % 1000) / 1000) * (bbox.h - insetY * 2);
-            const value = metric === "revenue" ? city.revenueMinor : city.ordersCount;
-            const minR = Math.max(2, Math.min(bbox.w, bbox.h) * 0.012);
-            const maxR = Math.max(6, Math.min(bbox.w, bbox.h) * 0.05);
-            const ratio = value / maxValue;
-            const r = minR + ratio * (maxR - minR);
-            return { city, cx, cy, r };
-        });
-    }, [bbox, cities, metric, maxValue]);
-
-    if (province === null) return null;
+    if (!geometry || !province) {
+        return <div className="aspect-square w-full animate-pulse rounded bg-muted" />;
+    }
 
     return (
         <svg
-            viewBox={viewBox}
+            viewBox={geometry.viewBox}
             role="img"
             aria-label={`Province ${province.fa}`}
             className="h-auto w-full"
             onPointerMove={onPointerMove}
         >
-            <motion.path
-                ref={pathRef}
-                layoutId={`region-${code}`}
-                d={province.path}
-                fill={fill}
-                fillOpacity={0.35}
-                stroke={fill}
-                strokeWidth={0.8}
-                transition={reduce ? { duration: 0 } : { layout: { type: "spring", stiffness: 240, damping: 28 } }}
-            />
-            {markers.map(({ city, cx, cy, r }) => {
-                const key = city.regionCode ?? `unmatched-${city.name}`;
-                return (
-                    <motion.circle
-                        key={key}
-                        cx={cx}
-                        cy={cy}
-                        r={r}
-                        fill={fill}
-                        stroke="white"
-                        strokeWidth={0.6}
-                        fillOpacity={city.matched ? 0.9 : 0.5}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 22, delay: 0.08 }}
-                        style={{ cursor: "pointer", transformOrigin: `${cx}px ${cy}px` }}
-                        whileHover={reduce ? undefined : { scale: 1.15 }}
-                        onPointerEnter={() => onCityHover(city)}
-                        onPointerLeave={() => onCityHover(null)}
-                    />
-                );
-            })}
-            <text
-                x={bbox ? bbox.x + bbox.w / 2 : 0}
-                y={bbox ? bbox.y - 4 : 0}
-                textAnchor="middle"
-                style={{ fontSize: Math.max(8, (bbox?.h ?? 100) * 0.04), fontWeight: 600 }}
-                fill={ZERO_COLOR}
-            >
-                {province.fa}
-            </text>
+            <g>
+                {geometry.counties.map((county) => {
+                    const key = normalizeIranText(county.fa);
+                    const matched = citiesByNormalized.get(key) ?? null;
+                    return (
+                        <motion.path
+                            key={county.fa}
+                            d={county.path}
+                            stroke="white"
+                            strokeWidth={0.8}
+                            initial={{ fill: ZERO_COLOR, opacity: 0 }}
+                            animate={{ fill: fillFor(county.fa), opacity: 1 }}
+                            transition={reduce ? { duration: 0 } : { duration: 0.4, ease: "easeInOut" }}
+                            whileHover={reduce ? undefined : { filter: "brightness(1.12)" }}
+                            style={{ cursor: matched ? "pointer" : "default" }}
+                            onPointerEnter={() => {
+                                if (matched) {
+                                    onCityHover(matched);
+                                } else {
+                                    onCityHover({
+                                        regionCode: null,
+                                        name: county.fa,
+                                        ordersCount: 0,
+                                        revenueMinor: 0,
+                                        matched: false,
+                                    });
+                                }
+                            }}
+                            onPointerLeave={() => onCityHover(null)}
+                        />
+                    );
+                })}
+            </g>
         </svg>
     );
 }
