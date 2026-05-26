@@ -123,3 +123,15 @@ The wrapper is intentionally narrow. Drop to `DataTableToolbar` / `DataTableView
 - A facet that takes a custom popover content instead of the standard option list.
 
 In every other case use `DataGridToolbar`.
+
+## Async multi-selects: use `MultiCombobox`
+
+Anywhere a form needs "pick one or more entities from a remote search" — product / category / brand pickers, customer search on the test-runner, email allow-list with autocomplete, future tag pickers — reach for `MultiCombobox` from `components/ui/combobox.tsx`. It's built on Base UI's `Combobox` parts, so the popup:
+
+- Floats above any Sheet / Dialog the trigger sits in (via `Combobox.Portal`).
+- Runs collision detection with 16px viewport padding (the popup flips / shifts to stay on-screen even when the trigger sits at the inline edge of a sheet).
+- Truncates long item text via `min-w-0 truncate` so a 200-char product name doesn't blow the popup out horizontally.
+- Caps the scroll list at `min(15rem, 60vh)` so it doesn't run off the bottom on short viewports.
+
+The thin `EntityPicker` under `components/shared/` is a back-compat shim for the legacy coupons pickers. New consumers should target `MultiCombobox` directly.
+
