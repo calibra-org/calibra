@@ -11,13 +11,14 @@ import { formatMoney, formatNumber } from "#/lib/format";
 import type { AdminRegionalCity, AdminRegionalProvinceDetail } from "#/lib/types";
 
 import { CityList } from "./city-list";
+import { buildHeatmapScale, type HeatmapMetric } from "./heatmap-scale";
 import { KpiTile } from "./kpi-tile";
+import { MapLegend } from "./map-legend";
 import { MapTooltip } from "./map-tooltip";
 import { MapZoomWrapper } from "./map-zoom-wrapper";
 import { FAST_SPRING, SVG_CROSSFADE_DURATION, svgVariants } from "./motion-variants";
 import { ProvinceSvg } from "./province-svg";
 import { TopProductsList } from "./top-products-list";
-import type { HeatmapMetric } from "./heatmap-scale";
 
 interface ProvinceViewProps {
     code: string;
@@ -55,6 +56,12 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                   metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
               )[0]
             : null;
+
+    const scale = useMemo(() => {
+        if (!data) return buildHeatmapScale([], metric);
+        const values = data.cities.map((c) => (metric === "revenue" ? c.revenueMinor : c.ordersCount));
+        return buildHeatmapScale(values, metric);
+    }, [data, metric]);
 
     const [hoveredCity, setHoveredCity] = useState<AdminRegionalCity | null>(null);
     const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
@@ -153,27 +160,31 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr]">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[3fr_2fr]">
                 <div className="relative flex flex-col gap-2">
                     <h3 className="font-semibold text-foreground text-lg">{data?.name[locale] ?? code}</h3>
-                    <MapZoomWrapper>
-                        <ProvinceSvg
-                            code={code}
-                            cities={childCities}
-                            metric={metric}
-                            onCityHover={(marker) => {
-                                if (marker === null) {
-                                    setHoveredCity(null);
-                                    return;
-                                }
-                                const original = data?.cities.find(
-                                    (c) => c.regionCode === marker.regionCode && c.name.fa === marker.name,
-                                );
-                                setHoveredCity(original ?? null);
-                            }}
-                            onPointerMove={(event) => setPointerThrottled(event.clientX, event.clientY)}
-                        />
-                    </MapZoomWrapper>
+                    {isPending ? (
+                        <Skeleton className="h-[420px] w-full" />
+                    ) : (
+                        <MapZoomWrapper className="h-[420px]">
+                            <ProvinceSvg
+                                code={code}
+                                cities={childCities}
+                                metric={metric}
+                                onCityHover={(marker) => {
+                                    if (marker === null) {
+                                        setHoveredCity(null);
+                                        return;
+                                    }
+                                    const original = data?.cities.find(
+                                        (c) => c.regionCode === marker.regionCode && c.name.fa === marker.name,
+                                    );
+                                    setHoveredCity(original ?? null);
+                                }}
+                                onPointerMove={(event) => setPointerThrottled(event.clientX, event.clientY)}
+                            />
+                        </MapZoomWrapper>
+                    )}
                     {hoveredCity !== null && pointer !== null ? (
                         <MapTooltip position={pointer}>
                             <div className="flex flex-col gap-0.5">
@@ -192,7 +203,8 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                     ) : null}
                 </div>
 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
+                    <MapLegend scale={scale} metric={metric} locale={locale} />
                     <section className="flex flex-col gap-2 rounded-lg border bg-card p-3">
                         <h4 className="font-medium text-sm">{t("topProductsLabel")}</h4>
                         {isPending ? (
@@ -222,12 +234,6 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                             <CityList cities={data?.cities ?? []} metric={metric} locale={locale} />
                         )}
                     </section>
-
-                    {!isPending && !isError && data ? (
-                        <p className="text-muted-foreground text-xs">
-                            {formatNumber(data.cities.length, locale)} · {formatMoney(data.revenueMinor, locale)}
-                        </p>
-                    ) : null}
                 </div>
             </div>
         </motion.div>

@@ -97,7 +97,7 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[3fr_2fr]">
                 <motion.div
                     key="country"
                     variants={svgVariants}
@@ -108,9 +108,9 @@ export function CountryView({ data, isPending, isError, metric, onSelect, locale
                     className="relative"
                 >
                     {isPending ? (
-                        <Skeleton className="aspect-square w-full" />
+                        <Skeleton className="h-[420px] w-full" />
                     ) : (
-                        <MapZoomWrapper>
+                        <MapZoomWrapper className="h-[420px]">
                             <MapSvg
                                 fillForCode={fillForCode}
                                 hoveredCode={hoveredCode}

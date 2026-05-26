@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Plus, RotateCcw } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "#/components/ui/button";
@@ -153,7 +153,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
             onAuxClick={onAuxClick}
         >
             <div
-                className="origin-center transition-transform duration-150 ease-out"
+                className="flex h-full w-full origin-center items-center justify-center transition-transform duration-150 ease-out [&>svg]:max-h-full [&>svg]:w-auto"
                 style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
             >
                 {children}
@@ -194,19 +194,6 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
                 >
                     <Plus className="size-3.5" aria-hidden="true" />
                 </Button>
-                {pct !== 100 || pan.x !== 0 || pan.y !== 0 ? (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        aria-label="Reset zoom + pan"
-                        title="Reset zoom + pan"
-                        onClick={resetAll}
-                    >
-                        <RotateCcw className="size-3.5" aria-hidden="true" />
-                    </Button>
-                ) : null}
             </div>
         </div>
     );
