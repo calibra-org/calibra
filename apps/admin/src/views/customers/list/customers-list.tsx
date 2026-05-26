@@ -33,7 +33,6 @@ import type { AdminCustomer } from "#/lib/types";
 import { CustomerBulkActions } from "./bulk-actions";
 import { buildCustomerColumns } from "./columns";
 import { NewCustomerSheet } from "./new-customer-sheet";
-import { CustomerStatsFooter } from "./stats-footer";
 import { CustomerStatusTabs } from "./status-tabs";
 
 const TABLE_ID = "admin.customers.list";
@@ -366,8 +365,6 @@ export function CustomersListClient() {
                 }}
                 formatNumber={(value: number) => formatNumber(value, locale)}
             />
-
-            <CustomerStatsFooter counts={counts} locale={locale} t={(key, values) => t(key, values)} />
 
             <NewCustomerSheet open={newSheetOpen} onOpenChange={setNewSheetOpen} t={(key, values) => t(key, values)} />
         </section>

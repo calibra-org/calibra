@@ -29,6 +29,7 @@ import {
     useSalesSeries,
     useTopProducts,
 } from "#/lib/queries/dashboard";
+import { CustomerInsightsCard } from "#/views/dashboard/customer-insights-card";
 
 /**
  * The dashboard renders its full shell on first paint and each widget streams in independently
@@ -90,6 +91,8 @@ export function DashboardClient() {
                     </CardContent>
                 </Card>
             </div>
+
+            <CustomerInsightsCard />
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Card className="xl:col-span-2">

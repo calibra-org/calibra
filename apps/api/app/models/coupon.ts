@@ -3,6 +3,7 @@ import type { HasMany } from "@adonisjs/lucid/types/relations";
 import { DateTime } from "luxon";
 
 import { CouponSchema } from "#database/schema";
+import CouponBrandConstraint from "#models/coupon_brand_constraint";
 import CouponCategoryConstraint from "#models/coupon_category_constraint";
 import CouponEmailRestriction from "#models/coupon_email_restriction";
 import CouponProductConstraint from "#models/coupon_product_constraint";
@@ -36,6 +37,9 @@ export default class Coupon extends CouponSchema {
 
     @hasMany(() => CouponCategoryConstraint, { foreignKey: "couponId" })
     declare categoryConstraints: HasMany<typeof CouponCategoryConstraint>;
+
+    @hasMany(() => CouponBrandConstraint, { foreignKey: "couponId" })
+    declare brandConstraints: HasMany<typeof CouponBrandConstraint>;
 
     @hasMany(() => CouponEmailRestriction, { foreignKey: "couponId" })
     declare emailRestrictions: HasMany<typeof CouponEmailRestriction>;

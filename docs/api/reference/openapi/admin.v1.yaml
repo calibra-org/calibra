@@ -66,6 +66,11 @@ tags:
       description: Media library — list, upload, edit metadata, delete.
     - name: Admin / Reports
       description: Dashboard-shaped aggregations (top sellers, …). Narrow surface, not a BI replacement.
+    - name: Admin / Insights
+      description: >
+          Cross-cutting dashboard summaries (customer summary, …). Pairs a current snapshot with a
+          30-day delta and a daily sparkline so the dashboard tiles can render without further
+          rollup math on the client.
 
 components:
     securitySchemes:
@@ -196,6 +201,21 @@ paths:
             $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
             $ref: "./admin/paths/coupons/coupons.post.yaml"
+    /api/v1/admin/coupons/counts:
+        get:
+            $ref: "./admin/paths/coupons/coupons-counts.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/coupons/code-check:
+        get:
+            $ref: "./admin/paths/coupons/coupons-code-check.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/coupons/export:
+        get:
+            $ref: "./admin/paths/coupons/coupons-export.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
     /api/v1/admin/coupons/batch:
         post:
             $ref: "./admin/paths/coupons/coupons-batch.post.yaml"
@@ -213,6 +233,15 @@ paths:
     /api/v1/admin/coupons/{id}/redemptions:
         get:
             $ref: "./admin/paths/coupons/coupons-id-redemptions.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/coupons/{id}/test:
+        post:
+            $ref: "./admin/paths/coupons/coupons-id-test.post.yaml"
+
+    /api/v1/admin/insights/customers:
+        get:
+            $ref: "./admin/paths/insights/customers-insights.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
 

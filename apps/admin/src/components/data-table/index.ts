@@ -1,4 +1,6 @@
 /** Public entry point for the generic data-table abstraction. */
+
+export { buildDataGridToolbarLabels, DataGridToolbar } from "./data-grid-toolbar";
 export { DataTable } from "./data-table";
 export { DataTableBulkBar } from "./data-table-bulk-bar";
 export { DataTableColumnHeader } from "./data-table-column-header";
@@ -18,6 +20,7 @@ export {
     serializeSort,
     useDataTable,
 } from "./use-data-table";
+export type { ColumnVisibilityItem, DataGridToolbarLabels, DataGridToolbarProps } from "./data-grid-toolbar";
 export type { DataTableProps } from "./data-table";
 export type {
     BulkActionContext,

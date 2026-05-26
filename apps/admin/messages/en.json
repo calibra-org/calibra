@@ -105,7 +105,22 @@
         "topProductsSubtitle": "Best sellers this month",
         "recentOrders": "Recent orders",
         "viewAll": "View all",
-        "comparedTo": "vs previous period"
+        "comparedTo": "vs previous period",
+        "customerInsights": {
+            "title": "Customer summary",
+            "subtitle": "Customer base health and the last 30 days",
+            "viewAll": "View all customers",
+            "total": "Total customers",
+            "avgOrderCount": "Avg orders",
+            "avgLifetimeSpend": "Avg lifetime spend",
+            "avgOrderValue": "Avg order value",
+            "pctWithAccount": "With account",
+            "delta30d": "vs 30 days ago",
+            "sparklines": {
+                "total": "30-day daily new customer count",
+                "spend": "30-day daily revenue"
+            }
+        }
     },
     "ProductsExport": {
         "title": "Export products to CSV",
@@ -2243,17 +2258,50 @@
     },
     "Coupons": {
         "title": "Coupons",
-        "subtitle": "Discounts you can offer in the store.",
+        "subtitle": "Create, manage, and monitor the store's discount codes.",
+        "newCoupon": "Add coupon",
         "addCoupon": "Add coupon",
-        "filterStatus": "Status",
+        "exportCsv": "Export CSV",
+        "search": "Search by code or description…",
+        "refresh": "Refresh view",
+        "empty": "No coupons yet.",
+        "emptyFiltered": "No results match the current filters.",
+        "emptyFilteredHint": "Adjust or clear filters.",
+        "errorTitle": "Failed to load",
+        "errorRetry": "Retry",
+        "selectAll": "Select all",
+        "selectRow": "Select row",
+        "neverExpires": "Never expires",
+        "expiredBadge": "Expired",
+        "daysToExpiry": "{n} days to expiry",
+        "tabs": {
+            "any": "All",
+            "active": "Active",
+            "scheduled": "Scheduled",
+            "used": "Used",
+            "disabled": "Disabled",
+            "expired": "Expired",
+            "trashed": "Trashed"
+        },
         "table": {
             "code": "Code",
             "type": "Type",
             "value": "Value",
+            "description": "Description",
+            "constraints": "Constraints",
             "usage": "Usage",
+            "startsAt": "Starts",
             "expiresAt": "Expires",
+            "minimumAmount": "Minimum",
+            "freeShipping": "Free shipping",
+            "individualUse": "Individual use",
             "status": "Status",
-            "actions": "Actions"
+            "actions": "Actions",
+            "productChip": "{n} product",
+            "categoryChip": "{n} category",
+            "brandChip": "{n} brand",
+            "emailChip": "{n} email",
+            "recent7d": "{n} uses in last 7 days"
         },
         "discountType": {
             "percent": "Percentage",
@@ -2265,7 +2313,221 @@
             "active": "Active",
             "disabled": "Disabled"
         },
-        "neverExpires": "Never expires",
+        "statusBadge": {
+            "active": "Active",
+            "disabled": "Disabled",
+            "scheduled": "Scheduled",
+            "expired": "Expired",
+            "trashed": "Trashed"
+        },
+        "filters": {
+            "discountType": "Discount type",
+            "freeShipping": "Free shipping",
+            "individualUse": "Individual use",
+            "excludeSaleItems": "Includes sale items",
+            "expiringSoon": "Expiring soon",
+            "hasProductConstraints": "Product constraint",
+            "hasCategoryConstraints": "Category constraint",
+            "hasEmailRestrictions": "Email restriction"
+        },
+        "toolbar": {
+            "clearAll": "Clear all",
+            "clearFilter": "Remove",
+            "viewOptions": "View",
+            "columns": "Columns",
+            "density": "Density",
+            "densityComfortable": "Comfortable",
+            "densityCozy": "Cozy",
+            "densityCompact": "Compact"
+        },
+        "rowActions": {
+            "edit": "Edit",
+            "duplicate": "Duplicate",
+            "copyCode": "Copy code",
+            "quickTest": "Quick test",
+            "viewHistory": "View usage history",
+            "activate": "Activate",
+            "disable": "Disable",
+            "extendExpiry": "Extend expiry",
+            "delete": "Move to trash",
+            "restore": "Restore",
+            "deleteConfirm": "This coupon will be moved to trash. Continue?"
+        },
+        "bulk": {
+            "selectedCount": "{count} selected",
+            "clear": "Clear selection",
+            "activate": "Activate",
+            "disable": "Disable",
+            "setExpiry": "Set expiry",
+            "setExpiryHint": "Set the expiry date for the {count} selected coupons.",
+            "expiryDate": "Expiry date",
+            "apply": "Apply",
+            "cancel": "Cancel",
+            "delete": "Move to trash",
+            "duplicateHint": "Bulk duplicate coming soon",
+            "restore": "Restore",
+            "finalDelete": "Final delete",
+            "confirmFinalDeleteTitle": "Permanently delete coupons",
+            "confirmFinalDeleteBody": "{count} coupons will be permanently deleted. Type \"{keyword}\" to confirm.",
+            "confirmDeleteKeyword": "delete"
+        },
+        "sort": {
+            "asc": "Ascending",
+            "desc": "Descending",
+            "hide": "Hide column"
+        },
+        "pagination": {
+            "rowsPerPage": "Rows per page",
+            "showing": "Showing {from}–{to} of {total}",
+            "selectedOf": "{selected} of {total} selected",
+            "first": "First",
+            "previous": "Previous",
+            "next": "Next",
+            "last": "Last",
+            "pageOf": "Page {page} of {lastPage}"
+        },
+        "editor": {
+            "backToList": "Back to list",
+            "titleNew": "Add new coupon",
+            "titleEdit": "Edit coupon \"{code}\"",
+            "toggleStatus": "Toggle status",
+            "moreActions": "More actions",
+            "statusActive": "Active",
+            "statusDisabled": "Disabled",
+            "trashedBanner": "This coupon is in the trash and cannot be edited.",
+            "codeAvailable": "Code is available",
+            "codeTaken": "This code is already in use",
+            "codeTakenWithSuggestion": "This code is already in use — try: {suggestion}",
+            "actions": {
+                "quickTest": "Quick test",
+                "duplicate": "Duplicate",
+                "extendExpiry": "Extend expiry",
+                "delete": "Move to trash"
+            },
+            "dnd": {
+                "grabHandle": "Reorder section",
+                "collapse": "Collapse section",
+                "expand": "Expand section"
+            },
+            "sections": {
+                "actions": "Actions",
+                "general": "General",
+                "discount": "Discount type and value",
+                "time": "Time window",
+                "cart": "Cart limits",
+                "products": "Included & excluded products",
+                "categories": "Included & excluded categories",
+                "brands": "Included & excluded brands",
+                "emails": "Email allow-list",
+                "usageLimits": "Usage limits",
+                "liveStats": "Usage stats",
+                "redemptions": "Redemption history"
+            },
+            "pickers": {
+                "includeTab": "Include",
+                "excludeTab": "Exclude",
+                "productHint": "Restrict the coupon to specific products.",
+                "categoryHint": "Pick target or excluded categories.",
+                "brandHint": "Pick target or excluded brands.",
+                "addProduct": "Add product",
+                "addCategory": "Add category",
+                "addBrand": "Add brand",
+                "searchProducts": "Search products…",
+                "searchCategories": "Search categories…",
+                "searchBrands": "Search brands…",
+                "noResults": "Nothing found",
+                "loading": "Loading…",
+                "clearAll": "Clear all",
+                "remove": "Remove"
+            },
+            "fields": {
+                "code": "Code",
+                "generate": "Generate code",
+                "copy": "Copy code",
+                "descriptionFa": "Description (Persian)",
+                "descriptionEn": "Description (English)",
+                "amountPercent": "Discount amount (%)",
+                "amountMinor": "Discount amount (Toman)",
+                "freeShippingOnly": "This coupon only makes shipping free. Leave the discount empty.",
+                "startsAt": "Starts at",
+                "expiresAt": "Expires at",
+                "preset24h": "24 hours",
+                "preset7d": "7 days",
+                "preset30d": "30 days",
+                "presetEndOfMonth": "End of month",
+                "minimumAmount": "Minimum cart amount",
+                "maximumAmount": "Maximum cart amount",
+                "individualUse": "Individual use",
+                "individualUseHint": "When on, this code can't be combined with other coupons.",
+                "excludeSaleItems": "No sale items",
+                "excludeSaleItemsHint": "When on, items already on sale don't benefit from this coupon.",
+                "freeShipping": "Free shipping",
+                "freeShippingHint": "Adds free shipping on top of any monetary discount.",
+                "limitUsageToXItems": "Limit discount to first N items",
+                "allItems": "All items",
+                "usageLimitGlobal": "Total usage limit",
+                "usageLimitPerUser": "Per-user limit",
+                "unlimited": "Unlimited",
+                "emailsHint": "This code only works for the emails below. Empty means no restriction.",
+                "emailsAdd": "Add email",
+                "emailsRemove": "Remove email"
+            },
+            "stats": {
+                "usageCount": "Total recorded uses",
+                "recent7d": "Last 7 days",
+                "limit": "Global limit",
+                "perUser": "Per-user limit"
+            },
+            "redemptionsEmpty": "No redemptions recorded yet.",
+            "dirtyBar": {
+                "save": "Save changes",
+                "create": "Create and save",
+                "cancel": "Cancel",
+                "dirty": "{count} unsaved changes",
+                "clean": "All changes saved"
+            }
+        },
+        "duplicateDialog": {
+            "title": "Duplicate coupon",
+            "description": "Creates a copy of \"{code}\" with a new code. The duplicate is disabled by default so you can review before going live.",
+            "fields": {
+                "code": "New code"
+            },
+            "codeTaken": "This code is already in use",
+            "codeTakenWithSuggestion": "This code is already in use — try: {suggestion}",
+            "cancel": "Cancel",
+            "duplicate": "Create copy"
+        },
+        "expirySheet": {
+            "title": "Set expiry date",
+            "description": "Change when this coupon expires or set it to never expire.",
+            "neverExpires": "Never expires",
+            "neverExpiresHint": "When on, this coupon won't expire.",
+            "date": "Expiry date",
+            "cancel": "Cancel",
+            "apply": "Apply"
+        },
+        "quickTest": {
+            "title": "Quick test coupon",
+            "description": "Test this code against a synthetic cart — no data is written.",
+            "products": "Cart products",
+            "addProduct": "Add product",
+            "removeItem": "Remove item",
+            "quantity": "Quantity",
+            "email": "Buyer email",
+            "country": "Country",
+            "runTest": "Run test",
+            "close": "Close",
+            "eligibleBadge": "This coupon is eligible",
+            "ineligibleBadge": "This coupon is not eligible",
+            "unknownReason": "Reason unknown",
+            "calc": {
+                "subtotal": "Items subtotal",
+                "discount": "Discount",
+                "shipping": "Shipping",
+                "total": "Grand total"
+            }
+        },
         "detail": {
             "title": "Coupon \"{code}\"",
             "subtitle": "Discount configuration and usage limits.",
@@ -2388,14 +2650,6 @@
             "successBody": "Open the profile or add another customer.",
             "openProfile": "Open profile",
             "addAnother": "Add another"
-        },
-        "footer": {
-            "loading": "Loading customer stats…",
-            "customers": "Customers",
-            "avgOrderCount": "Avg orders",
-            "avgLifetimeSpend": "Avg lifetime spend",
-            "avgAov": "Avg AOV",
-            "pctWithAccount": "With account"
         },
         "pagination": {
             "rowsPerPage": "Rows per page",

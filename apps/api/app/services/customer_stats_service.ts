@@ -358,3 +358,161 @@ async function computeCounts(): Promise<CustomerCounts> {
         },
     };
 }
+
+export interface CustomerInsights {
+    total: number;
+    total_delta_30d: number;
+    avg_order_count: number;
+    avg_order_count_delta_30d: number;
+    avg_lifetime_spend_minor: number;
+    avg_lifetime_spend_delta_30d_pct: number;
+    avg_order_value_minor: number;
+    avg_order_value_delta_30d_pct: number;
+    pct_with_account: number;
+    sparklines: {
+        total: number[];
+        spend_minor: number[];
+    };
+    generated_at: string;
+}
+
+interface CountByDayRow {
+    bucket: string | Date;
+    value: string | number;
+}
+
+/**
+ * Dashboard "Customer summary" payload. Recomputes the same lifetime + summary aggregates the
+ * list footer used to surface, but also returns a 30-day delta for each KPI and a daily
+ * sparkline series covering customers created per day and revenue captured per day.
+ *
+ * The deltas are computed by re-running the same aggregate filtered to `created_at < now() - 30d`
+ * (for the customers + lifetime-spend story) so the snapshot is consistent with what an operator
+ * would have seen on the dashboard a month ago. AOV delta uses the same approach. The percent
+ * with account is reported as a level rather than a delta — it moves slowly and the
+ * comparison-to-prior-month framing reads as noise.
+ *
+ * Cached 5 minutes with a 24h grace under `admin:insights:customers`. Invalidated through the
+ * same `admin:customers` tag every customer write already touches.
+ */
+export async function fetchCustomerInsights(): Promise<CustomerInsights> {
+    return cache.getOrSet({
+        key: CacheKeys.admin.customerInsights(),
+        ttl: "5m",
+        grace: "24h",
+        tags: [CacheTags.adminCustomers],
+        factory: () => computeCustomerInsights(),
+    });
+}
+
+async function computeCustomerInsights(): Promise<CustomerInsights> {
+    const countedPlaceholders = ORDER_COUNTED_STATUSES.map(() => "?").join(",");
+    const paidPlaceholders = ORDER_PAID_STATUSES.map(() => "?").join(",");
+
+    const [now, prior, totalSeries, spendSeries] = await Promise.all([
+        db.rawQuery<{ rows: SummaryRow[] & { total: string | number }[] }>(
+            `WITH stats AS (
+                 SELECT c.id, c.user_id,
+                        COALESCE(o.order_count, 0) AS order_count,
+                        COALESCE(o.spend_minor, 0) AS spend_minor
+                 FROM customers c
+                 LEFT JOIN (
+                     SELECT customer_id,
+                            COUNT(*) FILTER (WHERE status IN (${countedPlaceholders})) AS order_count,
+                            COALESCE(SUM(grand_total) FILTER (WHERE status IN (${paidPlaceholders})), 0) AS spend_minor
+                     FROM orders
+                     GROUP BY customer_id
+                 ) o ON o.customer_id = c.id
+                 WHERE c.deleted_at IS NULL
+             )
+             SELECT COUNT(*)::numeric AS total,
+                    COALESCE(AVG(order_count), 0)::numeric AS avg_order_count,
+                    COALESCE(AVG(spend_minor), 0)::numeric AS avg_lifetime_spend_minor,
+                    CASE WHEN SUM(order_count) > 0
+                         THEN SUM(spend_minor)::numeric / SUM(order_count)
+                         ELSE 0 END AS avg_aov_minor,
+                    CASE WHEN COUNT(*) > 0
+                         THEN (COUNT(*) FILTER (WHERE user_id IS NOT NULL))::numeric / COUNT(*)
+                         ELSE 0 END AS pct_with_account
+             FROM stats`,
+            [...ORDER_COUNTED_STATUSES, ...ORDER_PAID_STATUSES],
+        ),
+        db.rawQuery<{ rows: SummaryRow[] & { total: string | number }[] }>(
+            `WITH stats AS (
+                 SELECT c.id,
+                        COALESCE(o.order_count, 0) AS order_count,
+                        COALESCE(o.spend_minor, 0) AS spend_minor
+                 FROM customers c
+                 LEFT JOIN (
+                     SELECT customer_id,
+                            COUNT(*) FILTER (WHERE status IN (${countedPlaceholders}) AND created_at < now() - interval '30 days') AS order_count,
+                            COALESCE(SUM(grand_total) FILTER (WHERE status IN (${paidPlaceholders}) AND created_at < now() - interval '30 days'), 0) AS spend_minor
+                     FROM orders
+                     GROUP BY customer_id
+                 ) o ON o.customer_id = c.id
+                 WHERE c.deleted_at IS NULL AND c.created_at < now() - interval '30 days'
+             )
+             SELECT COUNT(*)::numeric AS total,
+                    COALESCE(AVG(order_count), 0)::numeric AS avg_order_count,
+                    COALESCE(AVG(spend_minor), 0)::numeric AS avg_lifetime_spend_minor,
+                    CASE WHEN SUM(order_count) > 0
+                         THEN SUM(spend_minor)::numeric / SUM(order_count)
+                         ELSE 0 END AS avg_aov_minor
+             FROM stats`,
+            [...ORDER_COUNTED_STATUSES, ...ORDER_PAID_STATUSES],
+        ),
+        db.rawQuery<{ rows: CountByDayRow[] }>(
+            `SELECT day::date AS bucket,
+                    COUNT(c.id) AS value
+             FROM generate_series(now() - interval '29 days', now(), interval '1 day') day
+             LEFT JOIN customers c ON c.deleted_at IS NULL
+                                   AND date_trunc('day', c.created_at) = date_trunc('day', day)
+             GROUP BY day
+             ORDER BY day`,
+        ),
+        db.rawQuery<{ rows: CountByDayRow[] }>(
+            `SELECT day::date AS bucket,
+                    COALESCE(SUM(o.grand_total), 0) AS value
+             FROM generate_series(now() - interval '29 days', now(), interval '1 day') day
+             LEFT JOIN orders o ON o.status IN (${paidPlaceholders})
+                                AND date_trunc('day', o.created_at) = date_trunc('day', day)
+             GROUP BY day
+             ORDER BY day`,
+            [...ORDER_PAID_STATUSES],
+        ),
+    ]);
+
+    const nowRow = now.rows[0];
+    const priorRow = prior.rows[0];
+
+    const total = Number(nowRow?.total ?? 0);
+    const priorTotal = Number(priorRow?.total ?? 0);
+    const avgOrderCount = Number(nowRow?.avg_order_count ?? 0);
+    const priorAvgOrderCount = Number(priorRow?.avg_order_count ?? 0);
+    const avgLifetimeSpend = Math.round(Number(nowRow?.avg_lifetime_spend_minor ?? 0));
+    const priorAvgLifetimeSpend = Math.round(Number(priorRow?.avg_lifetime_spend_minor ?? 0));
+    const avgAov = Math.round(Number(nowRow?.avg_aov_minor ?? 0));
+    const priorAvgAov = Math.round(Number(priorRow?.avg_aov_minor ?? 0));
+
+    return {
+        total,
+        total_delta_30d: total - priorTotal,
+        avg_order_count: Math.round(avgOrderCount * 100) / 100,
+        avg_order_count_delta_30d: Math.round((avgOrderCount - priorAvgOrderCount) * 100) / 100,
+        avg_lifetime_spend_minor: avgLifetimeSpend,
+        avg_lifetime_spend_delta_30d_pct: deltaPct(avgLifetimeSpend, priorAvgLifetimeSpend),
+        avg_order_value_minor: avgAov,
+        avg_order_value_delta_30d_pct: deltaPct(avgAov, priorAvgAov),
+        pct_with_account: Math.round(Number(nowRow?.pct_with_account ?? 0) * 1000) / 10,
+        sparklines: {
+            total: totalSeries.rows.map((r) => Number(r.value ?? 0)),
+            spend_minor: spendSeries.rows.map((r) => Number(r.value ?? 0)),
+        },
+        generated_at: DateTime.utc().toISO() ?? new Date().toISOString(),
+    };
+}
+
+function deltaPct(current: number, prior: number): number {
+    if (prior === 0) return current === 0 ? 0 : 100;
+    return Math.round(((current - prior) / prior) * 1000) / 10;
+}

@@ -53,6 +53,22 @@ properties:
             properties:
                 category_id: { type: integer }
                 mode: { type: string, enum: [include, exclude] }
+    brand_constraints:
+        type: array
+        items:
+            type: object
+            required: [brand_id, mode]
+            properties:
+                brand_id: { type: integer }
+                mode: { type: string, enum: [include, exclude] }
+    product_constraints_count: { type: integer, description: "Sidecar count, list view only." }
+    category_constraints_count: { type: integer, description: "Sidecar count, list view only." }
+    brand_constraints_count: { type: integer, description: "Sidecar count, list view only." }
+    email_restrictions_count: { type: integer, description: "Sidecar count, list view only." }
+    redemptions_count: { type: integer, description: "Sidecar count, list view only." }
+    recent_redemptions_7d: { type: integer, description: "Sidecar count, list view only." }
+    description_fa: { type: [string, "null"], description: "Locale-fa description for list rendering." }
+    description_en: { type: [string, "null"], description: "Locale-en description for list rendering." }
     email_restrictions:
         type: array
         items: { type: string, description: "Email or glob pattern (e.g. `*@example.com`)." }

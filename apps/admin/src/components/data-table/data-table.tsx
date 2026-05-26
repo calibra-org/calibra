@@ -33,7 +33,17 @@ import {
     type VisibilityState,
 } from "@tanstack/react-table";
 import { AlertTriangle, type LucideIcon } from "lucide-react";
-import { type CSSProperties, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    type CSSProperties,
+    type KeyboardEvent,
+    type ReactNode,
+    type RefObject,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 
 import { Button } from "#/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
@@ -52,6 +62,82 @@ import {
     type SortState,
     type SubRowRenderer,
 } from "./types";
+
+/**
+ * Stickiness for the start-side pinned cluster (`select` / `favorite`) and the end-side cluster
+ * (`actions`). Anchored via CSS logical properties so RTL flips for free — `inset-inline-start`
+ * resolves to `right: 0` under `dir="rtl"`. The `bg-inherit` lets the cell pick up whatever
+ * background the row currently paints (hover, selected, focus-visible), which is critical for
+ * making non-sticky cells slide *under* the pinned cell without visual leakage.
+ */
+const STICKY_START_CELL = "sticky inset-inline-start-0 z-10 bg-inherit";
+const STICKY_END_CELL = "sticky inset-inline-end-0 z-10 bg-inherit";
+const STICKY_START_HEADER = "sticky inset-inline-start-0 z-20 bg-muted/95 supports-[backdrop-filter]:bg-muted/70";
+const STICKY_END_HEADER = "sticky inset-inline-end-0 z-20 bg-muted/95 supports-[backdrop-filter]:bg-muted/70";
+
+/**
+ * Edge-shadow utilities applied to a sticky cell when more scrollable content remains under it.
+ * The shadow is drawn as an inset `box-shadow` on the side facing the hidden content so it
+ * stays anchored to the sticky cell regardless of row state. RTL-aware via container data attrs.
+ *  - `data-x-scroll-start` is present on the scroll container when `scrollLeft > 0` from the
+ *    inline-start edge (i.e., content is hidden behind the start-pinned column).
+ *  - `data-x-scroll-end` is present when the container has not yet reached its end edge.
+ */
+const STICKY_START_SHADOW =
+    "after:pointer-events-none after:absolute after:inset-y-0 after:end-0 after:w-2 after:bg-gradient-to-l after:from-foreground/8 after:to-transparent after:opacity-0 after:transition-opacity after:rtl:bg-gradient-to-r [&[data-sticky-edge='start-shadow']]:after:opacity-100";
+const STICKY_END_SHADOW =
+    "after:pointer-events-none after:absolute after:inset-y-0 after:start-0 after:w-2 after:bg-gradient-to-r after:from-foreground/8 after:to-transparent after:opacity-0 after:transition-opacity after:rtl:bg-gradient-to-l [&[data-sticky-edge='end-shadow']]:after:opacity-100";
+
+/** Column-id check honoring both the canonical pinned ids and the `meta.sticky` opt-in. */
+function getColumnStickiness(columnId: string, meta: unknown): "start" | "end" | undefined {
+    if (columnId === "select" || columnId === "favorite") return "start";
+    if (columnId === "actions") return "end";
+    const m = meta as { sticky?: "start" | "end" } | undefined;
+    return m?.sticky;
+}
+
+/**
+ * Watches a scroll container's `scrollLeft` (or its RTL equivalent) and writes `data-x-scroll-
+ * start` / `data-x-scroll-end` attributes that the sticky cells read to toggle their edge
+ * shadows. Browsers disagree on what `scrollLeft` means under `dir="rtl"` — Firefox / WebKit
+ * use negative values, Chromium uses positive starting from 0 at the start edge. We normalize
+ * by reading `Math.abs(scrollLeft)` and comparing against `scrollWidth - clientWidth`.
+ */
+function useStickyEdgeShadows(scrollRef: RefObject<HTMLDivElement | null>) {
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (el === null) return;
+        let frame = 0;
+        const update = () => {
+            frame = 0;
+            const maxScroll = el.scrollWidth - el.clientWidth;
+            const offset = Math.abs(el.scrollLeft);
+            const hasStart = offset > 1;
+            const hasEnd = maxScroll - offset > 1;
+            el.toggleAttribute("data-x-scroll-start", hasStart);
+            el.toggleAttribute("data-x-scroll-end", hasEnd);
+            for (const cell of el.querySelectorAll<HTMLElement>("[data-sticky='start']")) {
+                cell.dataset.stickyEdge = hasStart ? "start-shadow" : "";
+            }
+            for (const cell of el.querySelectorAll<HTMLElement>("[data-sticky='end']")) {
+                cell.dataset.stickyEdge = hasEnd ? "end-shadow" : "";
+            }
+        };
+        const schedule = () => {
+            if (frame !== 0) return;
+            frame = requestAnimationFrame(update);
+        };
+        update();
+        el.addEventListener("scroll", schedule, { passive: true });
+        const observer = new ResizeObserver(schedule);
+        observer.observe(el);
+        return () => {
+            el.removeEventListener("scroll", schedule);
+            observer.disconnect();
+            if (frame !== 0) cancelAnimationFrame(frame);
+        };
+    }, [scrollRef]);
+}
 
 export interface DataTableProps<TData> {
     data: TData[];
@@ -326,6 +412,8 @@ export function DataTable<TData>({
     const rowHeightClass = DENSITY_CLASSES[density].row;
 
     const lastFocusedIndex = useRef<number>(0);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    useStickyEdgeShadows(scrollRef);
 
     const onTableKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         if (visibleRows.length === 0) return;
@@ -403,7 +491,10 @@ export function DataTable<TData>({
                      * page-level horizontal scrolling. The `custom-scrollbar` utility in
                      * `globals.css` repaints both bars to the slim aesthetic of `<ScrollArea>`.
                      */}
-                    <div className="custom-scrollbar max-h-[calc(100dvh-22rem)] overflow-auto [&_[data-slot=table-container]]:overflow-visible">
+                    <div
+                        ref={scrollRef}
+                        className="custom-scrollbar max-h-[calc(100dvh-22rem)] overflow-auto [&_[data-slot=table-container]]:overflow-visible"
+                    >
                         <DndContext
                             /**
                              * Stable id prevents the hydration mismatch coming from dnd-kit's
@@ -575,6 +666,7 @@ const SORTABLE_HEADER_NO_LEADING_DIVIDER = new Set(["select", "favorite"]);
 
 function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>) {
     const isPinned = SORTABLE_HEADER_PINNED.has(header.column.id);
+    const stickiness = getColumnStickiness(header.column.id, header.column.columnDef.meta);
     const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
         id: header.column.id,
         disabled: isPinned,
@@ -598,19 +690,22 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
         <ColumnDragHandleProvider attributes={attributes} listeners={listeners} isDragging={isDragging} isDraggable={!isPinned}>
             <TableHead
                 ref={setNodeRef}
+                data-sticky={stickiness}
                 /**
                  * Sticky on each `<th>` (not the `<thead>`) — `<thead>` sticky breaks when there's
                  * an inner `overflow-x-auto` ancestor. Cell-level sticky anchors directly to the
-                 * outer scroll viewport every time.
-                 *
-                 * The `[&+th]:border-s` selector adds a 1px leading separator to every header cell
-                 * *after* the first, drawing a thin divider between header columns without needing
-                 * to track the index here.
+                 * outer scroll viewport every time. Pinned start/end cells additionally stick on
+                 * the inline axis so they survive horizontal scroll; the z-index is bumped above
+                 * the top-only stickies so the intersection corner cell wins all stacking ties.
                  */
                 className={cn(
                     cellClass,
                     "relative sticky top-0 z-10 bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
                     "group/header",
+                    stickiness === "start" && STICKY_START_HEADER,
+                    stickiness === "end" && STICKY_END_HEADER,
+                    stickiness === "start" && STICKY_START_SHADOW,
+                    stickiness === "end" && STICKY_END_SHADOW,
                     /**
                      * Full-height vertical separator drawn as an absolutely positioned pseudo-
                      * element. `<th>` + `border-collapse: collapse` + logical-property borders are
@@ -623,6 +718,14 @@ function SortableHeader<TData>({ header, cellClass }: SortableHeaderProps<TData>
                     "first:before:hidden",
                     /** Start-side pinned cells (select / favorite) sit flush with the row gutter — actions keeps its leading divider. */
                     SORTABLE_HEADER_NO_LEADING_DIVIDER.has(header.column.id) && "before:hidden",
+                    /**
+                     * Select column overrides:
+                     *  - `!px-2` collapses the density's wide horizontal padding so the 16px
+                     *    checkbox actually fits inside the 44px column without visual cropping.
+                     *  - `min-w-12` reserves room for the focus ring; `overflow-visible` lets the
+                     *    3px ring extend past the cell box without being clipped.
+                     */
+                    header.column.id === "select" && "!px-2 min-w-12 overflow-visible",
                     headerMeta?.headerClassName,
                 )}
                 style={{ ...widthStyle, ...dragStyle }}
@@ -692,7 +795,12 @@ function DataTableBodyRow<TData>({
             data-state={row.getIsSelected() ? "selected" : undefined}
             className={cn(
                 rowHeightClass,
-                "outline-none transition-colors focus-visible:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring",
+                /**
+                 * The row owns the painted background. Sticky cells set `bg-inherit` so they
+                 * pick up whichever state-colour the row currently shows — hover, selected, and
+                 * focus-visible all stay coherent under the pinned columns.
+                 */
+                "bg-card outline-none transition-colors focus-visible:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring",
                 "group/row hover:bg-muted/40",
                 row.getIsSelected() && "bg-accent/40",
             )}
@@ -705,15 +813,29 @@ function DataTableBodyRow<TData>({
         >
             {row.getVisibleCells().map((cell) => {
                 const explicitWidth = cell.column.columnDef.size;
+                const stickiness = getColumnStickiness(cell.column.id, cell.column.columnDef.meta);
                 return (
                     <TableCell
                         key={cell.id}
+                        data-sticky={stickiness}
                         className={cn(
                             cellClass,
                             /** Mirror of the header pseudo-divider — same opacity so header + body grid read as one. */
                             "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
                             "first:before:hidden",
                             SORTABLE_HEADER_NO_LEADING_DIVIDER.has(cell.column.id) && "before:hidden",
+                            stickiness === "start" && STICKY_START_CELL,
+                            stickiness === "end" && STICKY_END_CELL,
+                            stickiness === "start" && STICKY_START_SHADOW,
+                            stickiness === "end" && STICKY_END_SHADOW,
+                            /**
+                             * Select column overrides (mirror the header):
+                             *  - `!px-2` overrides the density's `px-4` so the checkbox is
+                             *    centered in the 44px column instead of being squeezed.
+                             *  - `min-w-12 overflow-visible` keeps the 3px focus ring + the
+                             *    indeterminate dash painted in full.
+                             */
+                            cell.column.id === "select" && "!px-2 min-w-12 overflow-visible",
                             (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
                         )}
                         style={

@@ -1,0 +1,21 @@
+operationId: adminInsightsCustomers
+summary: Customer summary insights (admin)
+description: >
+    Dashboard "Customer summary" snapshot — current KPIs with a 30-day delta and a daily sparkline.
+    Cached for ~5 minutes server-side; clients refetch on focus or via the dashboard's Refresh
+    button.
+tags: [Admin / Insights]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+responses:
+    "200":
+        description: Customer summary snapshot.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminCustomerInsights.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

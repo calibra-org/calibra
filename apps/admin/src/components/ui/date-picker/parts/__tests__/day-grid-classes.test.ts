@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { DAY_GRID_CLASS_NAMES, DAY_GRID_DIMENSIONS, DAY_GRID_MODIFIER_CLASS_NAMES, TWO_MONTH_MIN_WIDTH_PX } from "../day-grid-classes";
+import {
+    DAY_GRID_CLASS_NAMES,
+    DAY_GRID_DIMENSIONS,
+    DAY_GRID_MODIFIER_CLASS_NAMES,
+    TWO_MONTH_MIN_WIDTH_PX,
+} from "../day-grid-classes";
 
 /**
  * These tests don't verify visual output — they assert *invariants* of the class strings so a

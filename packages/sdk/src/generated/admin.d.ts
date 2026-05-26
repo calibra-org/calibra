@@ -749,6 +749,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/coupons/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Coupon status counts (admin)
+         * @description Status tab buckets for the list page (`all`, `active`, `disabled`, `expired`, `scheduled`, `used`, `trashed`, `expiring_soon`). Cache the response for ~30s client-side.
+         */
+        get: operations["adminCouponsCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/coupons/code-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check coupon code availability (admin)
+         * @description Live uniqueness probe used by the editor's code input. Returns `available: true` when no other coupon (live or trashed) uses the same code, and a suggested alternative (`<code>-2`) when taken. Codes are case-insensitive at the DB level (citext).
+         */
+        get: operations["adminCouponsCodeCheck"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/coupons/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export coupons as CSV (admin)
+         * @description Sync CSV export. Mirrors the list endpoint's filter set (`tab`, `status`, `search`, `discount_type`, `brand`) so the caller can "export current view." Returns `text/csv; charset=utf-8` with a filename hint via `content-disposition`. The number of rows emitted is repeated in the `X-Coupon-Export-Count` response header so the client can show a confirmation toast without re-parsing the body.
+         */
+        get: operations["adminCouponsExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/coupons/batch": {
         parameters: {
             query?: never;
@@ -831,6 +945,64 @@ export interface paths {
          * @description Paginated list of every `coupon_redemptions` row for the coupon. Each row carries the order id, the customer (or null + email snapshot for guest redemptions), and the redemption timestamp. Sorted newest first.
          */
         get: operations["adminCouponRedemptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/coupons/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quick-test a coupon against a synthetic cart (admin)
+         * @description Runs the same eligibility + discount logic the cart-apply endpoint uses against an in-memory synthetic cart, with no DB writes and no redemption side-effects. Used by the editor's "Quick test" panel before flipping a coupon live.
+         */
+        post: operations["adminCouponsTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/insights/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Customer summary insights (admin)
+         * @description Dashboard "Customer summary" snapshot — current KPIs with a 30-day delta and a daily sparkline. Cached for ~5 minutes server-side; clients refetch on focus or via the dashboard's Refresh button.
+         */
+        get: operations["adminInsightsCustomers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3151,6 +3323,27 @@ export interface components {
                 /** @enum {string} */
                 mode: "include" | "exclude";
             }[];
+            brand_constraints?: {
+                brand_id: number;
+                /** @enum {string} */
+                mode: "include" | "exclude";
+            }[];
+            /** @description Sidecar count, list view only. */
+            product_constraints_count?: number;
+            /** @description Sidecar count, list view only. */
+            category_constraints_count?: number;
+            /** @description Sidecar count, list view only. */
+            brand_constraints_count?: number;
+            /** @description Sidecar count, list view only. */
+            email_restrictions_count?: number;
+            /** @description Sidecar count, list view only. */
+            redemptions_count?: number;
+            /** @description Sidecar count, list view only. */
+            recent_redemptions_7d?: number;
+            /** @description Locale-fa description for list rendering. */
+            description_fa?: string | null;
+            /** @description Locale-en description for list rendering. */
+            description_en?: string | null;
             email_restrictions?: string[];
             attributes?: {
                 [key: string]: unknown;
@@ -3161,6 +3354,41 @@ export interface components {
             created_at?: string | null;
             /** Format: date-time */
             updated_at?: string | null;
+        };
+        /**
+         * AdminCustomerInsights
+         * @description Dashboard "Customer summary" snapshot returned by `GET /api/v1/admin/insights/customers`. Combines current-period KPIs with a 30-day-prior comparison snapshot, plus a 30-day daily sparkline for total customers and revenue captured. Money fields are Rial minor units.
+         */
+        AdminCustomerInsights: {
+            /** @description Live count of non-deleted customers. */
+            total: number;
+            /** @description Difference between today's count and the count 30 days ago. May be negative. */
+            total_delta_30d: number;
+            /** @description Mean lifetime order count across non-deleted customers. */
+            avg_order_count: number;
+            /** @description Mean lifetime order count 30 days ago, subtracted from today's value. */
+            avg_order_count_delta_30d: number;
+            /** @description Mean lifetime spend per customer, minor units. */
+            avg_lifetime_spend_minor: number;
+            /** @description Percentage delta vs the same metric 30 days ago. Positive = growth. */
+            avg_lifetime_spend_delta_30d_pct: number;
+            /** @description Mean order value across paid orders, minor units. */
+            avg_order_value_minor: number;
+            /** @description Percentage delta vs the same metric 30 days ago. */
+            avg_order_value_delta_30d_pct: number;
+            /** @description Percentage (0–100) of customers with an `auth.users` row attached. */
+            pct_with_account: number;
+            sparklines: {
+                /** @description Daily count of new customers created over the last 30 days, oldest → newest. */
+                total: number[];
+                /** @description Daily revenue captured (paid statuses), minor units, oldest → newest. */
+                spend_minor: number[];
+            };
+            /**
+             * Format: date-time
+             * @description ISO timestamp when the cache entry was computed.
+             */
+            generated_at: string;
         };
         /**
          * CustomerBase
@@ -5126,12 +5354,33 @@ export interface operations {
                 page?: components["parameters"]["PageQuery"];
                 /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
                 perPage?: components["parameters"]["PerPageQuery"];
-                /** @description Matches against the coupon code. */
+                /** @description Matches across coupon code and translated description. */
                 search?: string;
+                tab?: "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
                 status?: "active" | "disabled";
-                discount_type?: "fixed_cart" | "fixed_product" | "percent" | "free_shipping";
+                /** @description Comma-separated list (`?discount_type=fixed_cart,percent`). */
+                discount_type?: ("fixed_cart" | "fixed_product" | "percent" | "free_shipping")[];
                 free_shipping?: boolean;
                 individual_use?: boolean;
+                exclude_sale_items?: boolean;
+                min_amount_min?: number;
+                min_amount_max?: number;
+                max_amount_min?: number;
+                max_amount_max?: number;
+                starts_after?: string;
+                starts_before?: string;
+                expires_after?: string;
+                expires_before?: string;
+                redemptions_min?: number;
+                redemptions_max?: number;
+                has_product_constraints?: boolean;
+                has_category_constraints?: boolean;
+                has_email_restrictions?: boolean;
+                expiring_soon?: boolean;
+                /** @description Comma-separated brand ids. */
+                brand?: number[];
+                /** @description `column` for asc, `-column` for desc. Allowed: `code`, `discount_type`, `amount_minor`, `amount_percent`, `starts_at`, `expires_at`, `created_at`. */
+                sort?: string;
             };
             header?: never;
             path?: never;
@@ -5219,6 +5468,109 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    adminCouponsCounts: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Coupon counts. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            all: number;
+                            active: number;
+                            disabled: number;
+                            expired: number;
+                            scheduled: number;
+                            used: number;
+                            trashed: number;
+                            expiring_soon: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminCouponsCodeCheck: {
+        parameters: {
+            query: {
+                code: string;
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Code availability + optional suggestion. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            available: boolean;
+                            suggestion?: string | null;
+                            /** @description Reason when `available` is `false` (e.g. `invalid_length`). */
+                            reason?: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminCouponsExport: {
+        parameters: {
+            query?: {
+                tab?: "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
+                status?: "active" | "disabled";
+                search?: string;
+                discount_type?: ("fixed_cart" | "fixed_product" | "percent" | "free_shipping")[];
+                brand?: number[];
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV body. Header row first, then one row per matching coupon. */
+            200: {
+                headers: {
+                    /** @description Total rows emitted (excluding the header row). */
+                    "X-Coupon-Export-Count"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     adminCouponsBatch: {
@@ -5405,6 +5757,89 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    adminCouponsTest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    customer_id?: number | null;
+                    /** Format: email */
+                    email?: string | null;
+                    line_items: {
+                        product_id: number;
+                        quantity: number;
+                        price_minor?: number;
+                    }[];
+                    shipping_method_id?: number | null;
+                    country?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Eligibility verdict plus an optional calculation block when eligible. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            eligible: boolean;
+                            reason?: string;
+                            reason_message?: string;
+                            calculation?: {
+                                items_subtotal_minor: number;
+                                discount_minor: number;
+                                shipping_minor: number;
+                                grand_total_minor: number;
+                            };
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminInsightsCustomers: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer summary snapshot. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCustomerInsights"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     adminCustomersIndex: {

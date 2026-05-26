@@ -1,0 +1,28 @@
+operationId: adminCouponsCodeCheck
+summary: Check coupon code availability (admin)
+description: >
+    Live uniqueness probe used by the editor's code input. Returns `available: true` when no other
+    coupon (live or trashed) uses the same code, and a suggested alternative (`<code>-2`) when
+    taken. Codes are case-insensitive at the DB level (citext).
+tags: [Admin / Coupons]
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: code, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 64 } }
+responses:
+    "200":
+        description: Code availability + optional suggestion.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [available]
+                            properties:
+                                available: { type: boolean }
+                                suggestion: { type: [string, "null"] }
+                                reason: { type: string, description: Reason when `available` is `false` (e.g. `invalid_length`). }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
