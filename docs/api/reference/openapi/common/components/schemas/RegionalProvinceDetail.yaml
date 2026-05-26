@@ -32,7 +32,7 @@ properties:
         description: Top-X products by revenue inside the window. `X` is the `top_products` query param (1..10, default 5).
         items:
             type: object
-            required: [product_id, name, sku, units, revenue_minor]
+            required: [product_id, name, sku, units, revenue_minor, image_url]
             properties:
                 product_id:
                     type: integer
@@ -46,6 +46,9 @@ properties:
                 revenue_minor:
                     type: string
                     pattern: "^-?\\d+$"
+                image_url:
+                    type: [string, "null"]
+                    description: Primary product image URL (position 0). Null when the product has no images.
     counties:
         type: array
         description: >

@@ -37,6 +37,16 @@ export function TopProductsList({ products, locale }: TopProductsListProps) {
                                 <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted font-semibold text-muted-foreground text-xs tabular-nums">
                                     {formatNumber(index + 1, locale)}
                                 </span>
+                                {product.imageUrl ? (
+                                    <img
+                                        src={product.imageUrl}
+                                        alt=""
+                                        className="size-8 shrink-0 rounded border bg-muted object-cover"
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <div className="size-8 shrink-0 rounded border bg-muted" aria-hidden="true" />
+                                )}
                                 <Link
                                     href={`/products/${product.productId}` as never}
                                     className="truncate font-medium text-sm hover:underline"

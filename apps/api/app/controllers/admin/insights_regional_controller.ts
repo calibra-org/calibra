@@ -38,6 +38,7 @@ interface TopProductRow {
     sku: string | null;
     units: string | number;
     revenue_minor: string | number;
+    image_url: string | null;
 }
 
 interface NormalizedRange {
@@ -256,7 +257,16 @@ export default class AdminInsightsRegionalController {
         range: NormalizedRange,
         locale: string,
         limit: number,
-    ): Promise<Array<{ product_id: number; name: string; sku: string | null; units: number; revenue_minor: string }>> {
+    ): Promise<
+        Array<{
+            product_id: number;
+            name: string;
+            sku: string | null;
+            units: number;
+            revenue_minor: string;
+            image_url: string | null;
+        }>
+    > {
         const { rows } = await db.rawQuery<{ rows: TopProductRow[] }>(
             `
             WITH agg AS (
@@ -275,16 +285,27 @@ export default class AdminInsightsRegionalController {
                     AND oa.region_id = :provinceId
                     AND li.product_id IS NOT NULL
                 GROUP BY li.product_id
+            ),
+            primary_image AS (
+                SELECT DISTINCT ON (pi.product_id)
+                    pi.product_id,
+                    m.url AS image_url
+                FROM product_images pi
+                INNER JOIN media m ON m.id = pi.media_id
+                ORDER BY pi.product_id, pi.position ASC, pi.id ASC
             )
             SELECT
                 agg.product_id,
                 COALESCE(pt.name, agg.snapshot_name) AS name,
                 agg.sku,
                 agg.units,
-                agg.revenue_minor
+                agg.revenue_minor,
+                pi.image_url
             FROM agg
             LEFT JOIN product_translations pt
                 ON pt.product_id = agg.product_id AND pt.locale = :locale
+            LEFT JOIN primary_image pi
+                ON pi.product_id = agg.product_id
             ORDER BY agg.revenue_minor DESC, agg.product_id ASC
             LIMIT :limit
             `,
@@ -303,6 +324,7 @@ export default class AdminInsightsRegionalController {
             sku: row.sku,
             units: Number(row.units),
             revenue_minor: BigInt(row.revenue_minor).toString(),
+            image_url: row.image_url,
         }));
     }
 

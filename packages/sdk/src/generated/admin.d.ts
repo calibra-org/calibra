@@ -3515,37 +3515,30 @@ export interface components {
             to: string;
         };
         /**
-         * RegionalCity
-         * @description One city row inside the province-mode regional insights report. Cities are aggregated by bucketing the `order_addresses.city` text snapshot via the shared `normalizeIranText` rule set and then matching to a seeded city `regions` row in the same province. Unmatched buckets surface with `matched: false`, `region_id: null`, and the raw snapshot in `name.fa` so operators can see junk-import patterns rather than having them hidden.
+         * RegionalCounty
+         * @description One county (شهرستان) row inside the province-mode regional insights report. Counties are produced by rolling `order_addresses.city` snapshot text up to its parent county via the sajaddp/list-of-cities-in-Iran lookup. Cities whose name doesn't resolve to a sajaddp county surface with `matched: false` carrying the raw snapshot text — they stay visible so junk-import patterns remain obvious instead of silently hidden.
          */
-        RegionalCity: {
-            /** @description Stable region id of the matched seeded city, or `null` when no seeded city matched. */
-            region_id: number | null;
-            /**
-             * @description Stable region code of the matched seeded city (e.g. `IR-24-001`), or `null` when unmatched.
-             * @example IR-24-001
-             */
-            region_code: string | null;
-            /** @description Persian + English (when seeded) city name; for unmatched rows `fa` is the raw snapshot text and `en` is null. */
+        RegionalCounty: {
+            /** @description Persian county name (and English transliteration when sajaddp ships one; null otherwise). */
             name: {
-                /** @example تهران */
+                /** @example درمیان */
                 fa: string;
                 /** @example null */
                 en: string | null;
             };
-            /** @description Order count contributing to the bucket within the window. */
+            /** @description Total order count for all cities rolled up to this county within the window. */
             orders_count: number;
             /**
-             * @description Gross revenue in Rial minor units, encoded as a numeric string.
+             * @description Total revenue in Rial minor units, encoded as a numeric string.
              * @example 7000000000
              */
             revenue_minor: string;
-            /** @description True when the snapshot text matched a seeded city `regions` row; false otherwise. */
+            /** @description True when the raw snapshot resolved to a sajaddp county; false for unrecognised snapshot text passed through as-is. */
             matched: boolean;
         };
         /**
          * RegionalProvinceDetail
-         * @description Province-mode regional insights detail for a single ISO-3166-2:IR province. Carries the province totals, the operator-tunable top-X products list, and the top cities ranked by order count. `cities` is capped at 12 entries (sorted desc by `orders_count`) regardless of how many distinct city snapshot strings the shipping addresses carried.
+         * @description Province-mode regional insights detail for a single ISO-3166-2:IR province. Carries the province totals, the operator-tunable top-X products list, and the top counties (شهرستان) ranked by order count. `counties` is capped at 20 entries (sorted desc by `orders_count`) and rolled up from `order_addresses.city` snapshots via sajaddp's city→county lookup, so sidebar rows align 1:1 with the polygons drawn on the province map.
          */
         RegionalProvinceDetail: {
             region_id: number;
@@ -3564,9 +3557,11 @@ export interface components {
                 sku: string | null;
                 units: number;
                 revenue_minor: string;
+                /** @description Primary product image URL (position 0). Null when the product has no images. */
+                image_url: string | null;
             }[];
-            /** @description Top 12 cities by order count inside the window. */
-            cities: components["schemas"]["RegionalCity"][];
+            /** @description Every county (شهرستان) in the province (zero-order counties included), sorted non-zero first then alphabetically. Unrecognised `order_addresses.city` snapshot text is appended as `matched: false` rows so junk imports stay visible. */
+            counties: components["schemas"]["RegionalCounty"][];
         };
         /**
          * CustomerBase

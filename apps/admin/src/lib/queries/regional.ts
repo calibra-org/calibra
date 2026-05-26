@@ -46,6 +46,7 @@ interface SdkProvinceDetailEnvelope {
             sku: string | null;
             units: number;
             revenue_minor: string;
+            image_url: string | null;
         }>;
         counties: SdkRegionalCounty[];
     };
@@ -85,6 +86,7 @@ function adaptProvince(payload: SdkProvinceDetailEnvelope): AdminRegionalProvinc
             sku: p.sku,
             units: p.units,
             revenueMinor: Number(p.revenue_minor),
+            imageUrl: p.image_url,
         })),
         counties: payload.data.counties.map((c) => ({
             name: c.name,

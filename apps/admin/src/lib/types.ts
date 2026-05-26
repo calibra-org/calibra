@@ -639,6 +639,7 @@ export interface AdminRegionalProvinceDetail {
         sku: string | null;
         units: number;
         revenueMinor: MoneyMinor;
+        imageUrl: string | null;
     }>;
     counties: AdminRegionalCounty[];
     range: { from: string; to: string };
