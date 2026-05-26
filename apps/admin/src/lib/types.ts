@@ -614,20 +614,19 @@ export interface AdminRegionalCountry {
 }
 
 /**
- * One city row inside a province-mode response. `matched` reflects whether the snapshot text
- * collapsed onto a seeded city Region row via `normalizeIranText`. Unmatched rows surface with
- * `regionId`/`regionCode` set to `null` and the raw snapshot in `name.fa`.
+ * One county (شهرستان) row inside a province-mode response. Counties are rolled up from the
+ * order-address city snapshot via sajaddp's city→county lookup so this list aligns 1:1 with
+ * the polygons drawn on the province SVG. `matched: false` rows carry raw snapshot text that
+ * didn't resolve to any sajaddp county — kept visible for data-hygiene visibility.
  */
-export interface AdminRegionalCity {
-    regionId: number | null;
-    regionCode: string | null;
+export interface AdminRegionalCounty {
     name: { fa: string; en: string | null };
     ordersCount: number;
     revenueMinor: MoneyMinor;
     matched: boolean;
 }
 
-/** Province-mode envelope with totals, top products, and top cities. */
+/** Province-mode envelope with totals, top products, and top counties. */
 export interface AdminRegionalProvinceDetail {
     regionId: number;
     code: string;
@@ -641,6 +640,6 @@ export interface AdminRegionalProvinceDetail {
         units: number;
         revenueMinor: MoneyMinor;
     }>;
-    cities: AdminRegionalCity[];
+    counties: AdminRegionalCounty[];
     range: { from: string; to: string };
 }

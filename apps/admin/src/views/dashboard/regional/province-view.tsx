@@ -8,9 +8,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Skeleton } from "#/components/ui/skeleton";
 import { formatMoney, formatNumber } from "#/lib/format";
-import type { AdminRegionalCity, AdminRegionalProvinceDetail } from "#/lib/types";
+import type { AdminRegionalCounty, AdminRegionalProvinceDetail } from "#/lib/types";
 
-import { CityList } from "./city-list";
+import { CountyList } from "./county-list";
 import { buildHeatmapScale, type HeatmapMetric } from "./heatmap-scale";
 import { KpiTile } from "./kpi-tile";
 import { MapLegend } from "./map-legend";
@@ -48,39 +48,38 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
         return () => window.removeEventListener("keydown", onKey);
     }, [onBack]);
 
-    const topCity =
-        data?.cities && data.cities.length > 0
-            ? [...data.cities].sort((a, b) =>
+    const topCounty =
+        data?.counties && data.counties.length > 0
+            ? [...data.counties].sort((a, b) =>
                   metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
               )[0]
             : null;
 
     const scale = useMemo(() => {
         if (!data) return buildHeatmapScale([], metric);
-        const values = data.cities.map((c) => (metric === "revenue" ? c.revenueMinor : c.ordersCount));
+        const values = data.counties.map((c) => (metric === "revenue" ? c.revenueMinor : c.ordersCount));
         return buildHeatmapScale(values, metric);
     }, [data, metric]);
 
-    const [hoveredCity, setHoveredCity] = useState<AdminRegionalCity | null>(null);
+    const [hoveredCounty, setHoveredCounty] = useState<AdminRegionalCounty | null>(null);
     const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
     const [backHovered, setBackHovered] = useState(false);
 
     /**
-     * Stable cities array — derived from `data.cities` and ONLY changes when that input
-     * changes. Without this, every parent re-render (e.g. from `setPointer`) creates a new
-     * cities reference, which cascades through `ProvinceSvg`'s `useMemo`s and triggers a render
-     * loop with the contrast-pass `useEffect`.
+     * Stable counties array for `ProvinceSvg` — only changes when `data.counties` does.
+     * Without this, every parent re-render (e.g. from `setPointer`) creates a new array
+     * reference, which cascades through `ProvinceSvg`'s `useMemo`s and triggers a render loop
+     * with the contrast-pass `useEffect`.
      */
-    const childCities = useMemo(
+    const childCounties = useMemo(
         () =>
-            (data?.cities ?? []).map((c) => ({
-                regionCode: c.regionCode,
+            (data?.counties ?? []).map((c) => ({
                 name: c.name.fa,
                 ordersCount: c.ordersCount,
                 revenueMinor: c.revenueMinor,
                 matched: c.matched,
             })),
-        [data?.cities],
+        [data?.counties],
     );
 
     /**
@@ -133,13 +132,13 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                     isError={isError}
                 />
                 <KpiTile
-                    label={t("topCity")}
-                    value={topCity ? (metric === "revenue" ? topCity.revenueMinor : topCity.ordersCount) : 0}
+                    label={t("topCounty")}
+                    value={topCounty ? (metric === "revenue" ? topCounty.revenueMinor : topCounty.ordersCount) : 0}
                     formatAs={metric === "revenue" ? "money" : "number"}
                     locale={locale}
                     isPending={isPending}
                     isError={isError}
-                    sublabel={topCity?.name.fa}
+                    sublabel={topCounty?.name.fa}
                 />
             </div>
 
@@ -151,17 +150,15 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                         <MapZoomWrapper className="h-[500px]">
                             <ProvinceSvg
                                 code={code}
-                                cities={childCities}
+                                counties={childCounties}
                                 metric={metric}
-                                onCityHover={(marker) => {
+                                onCountyHover={(marker) => {
                                     if (marker === null) {
-                                        setHoveredCity(null);
+                                        setHoveredCounty(null);
                                         return;
                                     }
-                                    const original = data?.cities.find(
-                                        (c) => c.regionCode === marker.regionCode && c.name.fa === marker.name,
-                                    );
-                                    setHoveredCity(original ?? null);
+                                    const original = data?.counties.find((c) => c.name.fa === marker.name);
+                                    setHoveredCounty(original ?? null);
                                 }}
                                 onPointerMove={(event) => setPointerThrottled(event.clientX, event.clientY)}
                             />
@@ -207,18 +204,18 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                             </motion.button>
                         );
                     })()}
-                    {hoveredCity !== null && pointer !== null ? (
+                    {hoveredCounty !== null && pointer !== null ? (
                         <MapTooltip position={pointer}>
                             <div className="flex flex-col gap-0.5">
-                                <span className="font-medium">{hoveredCity.name.fa}</span>
+                                <span className="font-medium">{hoveredCounty.name.fa}</span>
                                 <span className="text-muted-foreground">
-                                    {t("totalOrders")}: {formatNumber(hoveredCity.ordersCount, locale)}
+                                    {t("totalOrders")}: {formatNumber(hoveredCounty.ordersCount, locale)}
                                 </span>
                                 <span className="text-muted-foreground">
-                                    {t("totalRevenue")}: {formatMoney(hoveredCity.revenueMinor, locale)}
+                                    {t("totalRevenue")}: {formatMoney(hoveredCounty.revenueMinor, locale)}
                                 </span>
-                                {!hoveredCity.matched ? (
-                                    <span className="text-muted-foreground italic">{t("unmatchedCity")}</span>
+                                {!hoveredCounty.matched ? (
+                                    <span className="text-muted-foreground italic">{t("unmatchedCounty")}</span>
                                 ) : null}
                             </div>
                         </MapTooltip>
@@ -234,7 +231,7 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                             <p className="text-muted-foreground text-xs">{tCommon("errorLoading")}</p>
                         </div>
                     ) : (
-                        <CityList cities={data?.cities ?? []} metric={metric} locale={locale} />
+                        <CountyList counties={data?.counties ?? []} metric={metric} locale={locale} />
                     )}
                 </div>
             </div>

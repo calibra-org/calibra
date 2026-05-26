@@ -6,27 +6,27 @@ import { useTranslations } from "next-intl";
 
 import { ScrollArea } from "#/components/ui/scroll-area";
 import { formatMoney, formatNumber } from "#/lib/format";
-import type { AdminRegionalCity } from "#/lib/types";
+import type { AdminRegionalCounty } from "#/lib/types";
 
 import { itemVariants, listVariants } from "./motion-variants";
 import type { HeatmapMetric } from "./heatmap-scale";
 
-interface CityListProps {
-    cities: AdminRegionalCity[];
+interface CountyListProps {
+    counties: AdminRegionalCounty[];
     metric: HeatmapMetric;
     locale: Locale;
 }
 
 /**
- * Cities list rendered inside the province sidebar — mirrors the country view's
+ * Counties (شهرستان) list rendered inside the province sidebar — mirrors the country view's
  * `TopProvinceList` shape (flex-1 card + `ScrollArea h-full`) so when the operator toggles
  * between modes the sidebar measures the same height and there's zero layout shift.
  */
-export function CityList({ cities, metric, locale }: CityListProps) {
+export function CountyList({ counties, metric, locale }: CountyListProps) {
     const t = useTranslations("Dashboard.regional");
     const tCommon = useTranslations("Common");
 
-    const ranked = [...cities].sort((a, b) =>
+    const ranked = [...counties].sort((a, b) =>
         metric === "revenue" ? b.revenueMinor - a.revenueMinor : b.ordersCount - a.ordersCount,
     );
 
@@ -47,14 +47,14 @@ export function CityList({ cities, metric, locale }: CityListProps) {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card">
             <ScrollArea className="h-full">
                 <motion.ul className="flex flex-col gap-2 p-3" variants={listVariants} initial="hidden" animate="show">
-                    {ranked.map((city, index) => {
-                        const value = metric === "revenue" ? city.revenueMinor : city.ordersCount;
+                    {ranked.map((county, index) => {
+                        const value = metric === "revenue" ? county.revenueMinor : county.ordersCount;
                         const percent = (value / max) * 100;
                         const formatted =
                             metric === "revenue"
-                                ? formatMoney(city.revenueMinor, locale)
-                                : formatNumber(city.ordersCount, locale);
-                        const key = city.regionCode ?? `unmatched-${index.toString()}-${city.name.fa}`;
+                                ? formatMoney(county.revenueMinor, locale)
+                                : formatNumber(county.ordersCount, locale);
+                        const key = `${county.matched ? "c" : "u"}-${index.toString()}-${county.name.fa}`;
                         return (
                             <motion.li
                                 key={key}
@@ -64,14 +64,14 @@ export function CityList({ cities, metric, locale }: CityListProps) {
                                 <div className="flex items-center justify-between gap-2 text-xs">
                                     <span
                                         className={
-                                            city.matched
+                                            county.matched
                                                 ? "truncate font-medium"
                                                 : "truncate font-medium text-muted-foreground italic"
                                         }
                                     >
-                                        {city.name.fa}
-                                        {!city.matched ? (
-                                            <span className="ms-1 text-[10px] text-muted-foreground">{t("unmatchedCity")}</span>
+                                        {county.name.fa}
+                                        {!county.matched ? (
+                                            <span className="ms-1 text-[10px] text-muted-foreground">{t("unmatchedCounty")}</span>
                                         ) : null}
                                     </span>
                                     <span className="shrink-0 tabular-nums">{formatted}</span>

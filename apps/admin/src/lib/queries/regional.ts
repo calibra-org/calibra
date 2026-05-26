@@ -26,9 +26,7 @@ interface SdkCountryEnvelope {
     };
 }
 
-interface SdkRegionalCity {
-    region_id: number | null;
-    region_code: string | null;
+interface SdkRegionalCounty {
     name: { fa: string; en: string | null };
     orders_count: number;
     revenue_minor: string;
@@ -49,7 +47,7 @@ interface SdkProvinceDetailEnvelope {
             units: number;
             revenue_minor: string;
         }>;
-        cities: SdkRegionalCity[];
+        counties: SdkRegionalCounty[];
     };
     meta: {
         range: { from: string; to: string };
@@ -88,9 +86,7 @@ function adaptProvince(payload: SdkProvinceDetailEnvelope): AdminRegionalProvinc
             units: p.units,
             revenueMinor: Number(p.revenue_minor),
         })),
-        cities: payload.data.cities.map((c) => ({
-            regionId: c.region_id,
-            regionCode: c.region_code,
+        counties: payload.data.counties.map((c) => ({
             name: c.name,
             ordersCount: c.orders_count,
             revenueMinor: Number(c.revenue_minor),

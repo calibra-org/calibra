@@ -226,7 +226,7 @@ test.group("GET /api/v1/admin/insights/regional/provinces/:code", (group) => {
         response.assertStatus(422);
     });
 
-    test("returns the province detail payload, capped top_products + cities", async ({ client, assert }) => {
+    test("returns the province detail payload, capped top_products + counties", async ({ client, assert }) => {
         const admin = await adminUser();
         const productA = await createTaxableProduct({ regularPrice: 500_000 });
         const productB = await createTaxableProduct({ regularPrice: 500_000 });
@@ -265,8 +265,7 @@ test.group("GET /api/v1/admin/insights/regional/provinces/:code", (group) => {
                 orders_count: number;
                 revenue_minor: string;
                 top_products: Array<{ product_id: number }>;
-                cities: Array<{
-                    region_code: string | null;
+                counties: Array<{
                     name: { fa: string; en: string | null };
                     orders_count: number;
                     matched: boolean;
@@ -277,17 +276,16 @@ test.group("GET /api/v1/admin/insights/regional/provinces/:code", (group) => {
         assert.equal(body.data.code, "IR-24");
         assert.equal(body.data.orders_count, 3);
         assert.lengthOf(body.data.top_products, 1);
-        assert.isAtLeast(body.data.cities.length, 1);
+        assert.isAtLeast(body.data.counties.length, 1);
 
-        const tehranCity = body.data.cities.find((c) => c.matched && c.name.fa === "تهران");
-        assert.exists(tehranCity, "Tehran city row should be matched against seeded city region");
-        assert.match(tehranCity!.region_code!, /^IR-24-\d{3}$/);
+        const tehranCounty = body.data.counties.find((c) => c.matched && c.name.fa === "تهران");
+        assert.exists(tehranCounty, "Tehran county should appear (city 'تهران' rolls up to Tehran county)");
 
-        const reyCity = body.data.cities.find((c) => c.matched && c.name.fa === "ری");
-        assert.exists(reyCity, "Rey city row should be matched against seeded city region");
+        const reyCounty = body.data.counties.find((c) => c.matched && c.name.fa === "ری");
+        assert.exists(reyCounty, "Rey county should appear (city 'ری' rolls up to Rey county)");
     });
 
-    test("buckets snapshot text into seeded cities via normalizeIranText (yeh/kaf folding)", async ({ client, assert }) => {
+    test("buckets snapshot text into the same county via normalizeIranText (yeh/kaf folding)", async ({ client, assert }) => {
         const admin = await adminUser();
 
         await seedOrder({ regionCode: "IR-31", grandTotal: 100, city: "كرج" });
@@ -300,14 +298,14 @@ test.group("GET /api/v1/admin/insights/regional/provinces/:code", (group) => {
         response.assertAgainstApiSpec();
 
         const body = response.body() as {
-            data: { cities: Array<{ region_code: string | null; name: { fa: string }; orders_count: number; matched: boolean }> };
+            data: { counties: Array<{ name: { fa: string }; orders_count: number; matched: boolean }> };
         };
-        const karaj = body.data.cities.find((c) => c.matched && c.name.fa === "کرج");
-        assert.exists(karaj, "All three snapshot variants should collapse into the seeded Karaj row");
+        const karaj = body.data.counties.find((c) => c.matched && c.name.fa === "کرج");
+        assert.exists(karaj, "All three snapshot variants should collapse into the Karaj county row");
         assert.equal(karaj?.orders_count, 3);
     });
 
-    test("surfaces unmatched city snapshot text with matched=false and a null region_code", async ({ client, assert }) => {
+    test("surfaces unrecognised city snapshot text as a matched=false county row", async ({ client, assert }) => {
         const admin = await adminUser();
         await seedOrder({ regionCode: "IR-24", grandTotal: 100, city: "اسپانیا-آباد" });
 
@@ -316,10 +314,10 @@ test.group("GET /api/v1/admin/insights/regional/provinces/:code", (group) => {
         response.assertAgainstApiSpec();
 
         const body = response.body() as {
-            data: { cities: Array<{ region_code: string | null; matched: boolean; name: { fa: string } }> };
+            data: { counties: Array<{ matched: boolean; name: { fa: string } }> };
         };
-        const fallback = body.data.cities.find((c) => !c.matched);
-        assert.exists(fallback, "Unmatched city should appear with matched=false");
-        assert.isNull(fallback!.region_code);
+        const fallback = body.data.counties.find((c) => !c.matched);
+        assert.exists(fallback, "Unmatched snapshot should appear with matched=false");
+        assert.equal(fallback?.name.fa, "اسپانیا-آباد");
     });
 });

@@ -1,0 +1,33 @@
+title: RegionalCounty
+description: >
+    One county (شهرستان) row inside the province-mode regional insights report. Counties are
+    produced by rolling `order_addresses.city` snapshot text up to its parent county via the
+    sajaddp/list-of-cities-in-Iran lookup. Cities whose name doesn't resolve to a sajaddp
+    county surface with `matched: false` carrying the raw snapshot text — they stay visible so
+    junk-import patterns remain obvious instead of silently hidden.
+type: object
+required: [name, orders_count, revenue_minor, matched]
+properties:
+    name:
+        type: object
+        required: [fa, en]
+        description: Persian county name (and English transliteration when sajaddp ships one; null otherwise).
+        properties:
+            fa:
+                type: string
+                examples: ["درمیان"]
+            en:
+                type: [string, "null"]
+                examples: [null]
+    orders_count:
+        type: integer
+        minimum: 0
+        description: Total order count for all cities rolled up to this county within the window.
+    revenue_minor:
+        type: string
+        pattern: "^-?\\d+$"
+        description: Total revenue in Rial minor units, encoded as a numeric string.
+        examples: ["7000000000"]
+    matched:
+        type: boolean
+        description: True when the raw snapshot resolved to a sajaddp county; false for unrecognised snapshot text passed through as-is.

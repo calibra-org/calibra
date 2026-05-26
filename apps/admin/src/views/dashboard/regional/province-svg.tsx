@@ -11,8 +11,7 @@ import { contrastTextColor } from "./contrast";
 import { buildHeatmapScale, type HeatmapMetric } from "./heatmap-scale";
 import { ProvinceSea, SEA_FILL } from "./sea-decorations";
 
-export interface CityMarker {
-    regionCode: string | null;
+export interface CountyMarker {
     name: string;
     ordersCount: number;
     revenueMinor: number;
@@ -21,9 +20,9 @@ export interface CityMarker {
 
 interface ProvinceSvgProps {
     code: string;
-    cities: CityMarker[];
+    counties: CountyMarker[];
     metric: HeatmapMetric;
-    onCityHover: (city: CityMarker | null) => void;
+    onCountyHover: (county: CountyMarker | null) => void;
     onPointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;
 }
 
@@ -48,7 +47,7 @@ const LABEL_MAX_FONT = 14;
  * already-light bins go white). Labels run through the same point-in-fill contrast pass so each
  * county name flips to black or white depending on its polygon underneath.
  */
-export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }: ProvinceSvgProps) {
+export function ProvinceSvg({ code, counties, metric, onCountyHover, onPointerMove }: ProvinceSvgProps) {
     const reduce = useReducedMotion();
     const svgRef = useRef<SVGSVGElement | null>(null);
     const pathRefs = useRef(new Map<string, SVGPathElement | null>());
@@ -68,14 +67,14 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
 
     const province = useMemo(() => IRAN_COUNTRY_PROVINCES.find((p) => p.code === code) ?? null, [code]);
 
-    const citiesByNormalized = useMemo(() => {
-        const map = new Map<string, CityMarker>();
-        for (const c of cities) {
+    const countiesByNormalized = useMemo(() => {
+        const map = new Map<string, CountyMarker>();
+        for (const c of counties) {
             const key = normalizeIranText(c.name);
             if (key) map.set(key, c);
         }
         return map;
-    }, [cities]);
+    }, [counties]);
 
     /**
      * Build the same quantile scale the country view uses, but over THIS province's counties.
@@ -85,20 +84,20 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
     const scale = useMemo(() => {
         if (!geometry) return buildHeatmapScale([], metric);
         const values = geometry.counties.map((county) => {
-            const matched = citiesByNormalized.get(normalizeIranText(county.fa));
+            const matched = countiesByNormalized.get(normalizeIranText(county.fa));
             if (!matched) return 0;
             return metric === "revenue" ? matched.revenueMinor : matched.ordersCount;
         });
         return buildHeatmapScale(values, metric);
-    }, [geometry, citiesByNormalized, metric]);
+    }, [geometry, countiesByNormalized, metric]);
 
     const fillForName = useCallback(
         (countyName: string) => {
-            const matched = citiesByNormalized.get(normalizeIranText(countyName));
+            const matched = countiesByNormalized.get(normalizeIranText(countyName));
             if (!matched) return scale.fillFor(0);
             return scale.fillFor(metric === "revenue" ? matched.revenueMinor : matched.ordersCount);
         },
-        [citiesByNormalized, metric, scale],
+        [countiesByNormalized, metric, scale],
     );
 
     /** Measure county bbox centers ONCE per geometry change (not per parent re-render). */
@@ -184,13 +183,13 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
             onPointerMove={onPointerMove}
             onPointerLeave={() => {
                 setHoveredName(null);
-                onCityHover(null);
+                onCountyHover(null);
             }}
         >
             <ProvinceSea code={code} />
             <g>
                 {geometry.counties.map((county) => {
-                    const matched = citiesByNormalized.get(normalizeIranText(county.fa)) ?? null;
+                    const matched = countiesByNormalized.get(normalizeIranText(county.fa)) ?? null;
                     const isHovered = hoveredName === county.fa;
                     return (
                         <motion.path
@@ -207,10 +206,9 @@ export function ProvinceSvg({ code, cities, metric, onCityHover, onPointerMove }
                             onPointerEnter={() => {
                                 setHoveredName(county.fa);
                                 if (matched) {
-                                    onCityHover(matched);
+                                    onCountyHover(matched);
                                 } else {
-                                    onCityHover({
-                                        regionCode: null,
+                                    onCountyHover({
                                         name: county.fa,
                                         ordersCount: 0,
                                         revenueMinor: 0,

@@ -132,14 +132,13 @@
             "totalOrders": "Total orders",
             "totalRevenue": "Total revenue",
             "topProvince": "Top province",
-            "topCity": "Top city",
+            "topCounty": "Top county",
             "empty": "No orders in the selected range",
             "emptyProvince": "Empty province",
             "tooltipHint": "Click for details",
             "legendTitle": "Legend",
-            "citiesHeading": "Cities",
-            "unmappedCitiesHeading": "Cities not on the map",
-            "unmatchedCity": "Unrecognised city",
+            "countiesHeading": "Counties",
+            "unmatchedCounty": "Unrecognised county",
             "dateRangeLabel": "Date range",
             "dateRangeAddLabel": "Add date range"
         }

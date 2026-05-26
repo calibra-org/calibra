@@ -132,14 +132,13 @@
             "totalOrders": "کل سفارش‌ها",
             "totalRevenue": "کل فروش",
             "topProvince": "استان برتر",
-            "topCity": "شهر برتر",
+            "topCounty": "شهرستان برتر",
             "empty": "سفارشی در بازهٔ انتخاب‌شده ثبت نشده است",
             "emptyProvince": "بدون سفارش",
             "tooltipHint": "برای جزئیات کلیک کنید",
             "legendTitle": "راهنمای رنگ‌ها",
-            "citiesHeading": "شهرها",
-            "unmappedCitiesHeading": "شهرهای بدون نقشه",
-            "unmatchedCity": "شهر شناسایی‌نشده",
+            "countiesHeading": "شهرستان‌ها",
+            "unmatchedCounty": "شهرستان شناسایی‌نشده",
             "dateRangeLabel": "بازهٔ زمانی",
             "dateRangeAddLabel": "افزودن بازهٔ زمانی"
         }

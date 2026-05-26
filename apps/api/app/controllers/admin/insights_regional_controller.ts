@@ -5,6 +5,7 @@ import { DateTime } from "luxon";
 
 import { ResourceNotFoundException } from "#exceptions/domain_exceptions";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
+import { listCountiesForProvince, resolveCounty } from "#services/iran_county_resolver";
 import { normalizeIranText } from "#services/iran_text_normalize";
 import {
     adminRegionalProvinceCodeValidator,
@@ -14,7 +15,6 @@ import {
 
 const DEFAULT_TRAILING_DAYS = 30;
 const DEFAULT_TOP_PRODUCTS = 5;
-const MAX_CITY_ROWS = 12;
 const MAX_TOP_PRODUCT_ROWS = 10;
 
 interface ProvinceAggregateRow {
@@ -30,14 +30,6 @@ interface CityAggregateRow {
     city_raw: string;
     orders_count: string | number;
     revenue_minor: string | number | null;
-}
-
-interface SeededCityRow {
-    id: string | number;
-    code: string;
-    fa_name: string | null;
-    en_name: string | null;
-    normalized_name: string | null;
 }
 
 interface TopProductRow {
@@ -203,7 +195,7 @@ export default class AdminInsightsRegionalController {
     ) {
         const provinceRow = await this.fetchProvinceRow(province, range);
         const topProducts = await this.fetchTopProductsForProvince(province, range, locale, topProductsLimit);
-        const cities = await this.fetchCitiesForProvince(province, range);
+        const counties = await this.fetchCountiesForProvince(province, range);
 
         return {
             data: {
@@ -213,7 +205,7 @@ export default class AdminInsightsRegionalController {
                 orders_count: Number(BigInt(provinceRow.orders_count)),
                 revenue_minor: BigInt(provinceRow.revenue_minor ?? 0).toString(),
                 top_products: topProducts,
-                cities,
+                counties,
             },
             meta: {
                 range: this.serializeRange(range),
@@ -314,66 +306,65 @@ export default class AdminInsightsRegionalController {
         }));
     }
 
-    private async fetchCitiesForProvince(
+    /**
+     * Emits one row per sajaddp county in the province plus any unrecognised snapshot rows.
+     * Each known county gets its order/revenue totals (zero when no orders fell into it) so
+     * the sidebar can render the full scrollable list — same shape as the country view's
+     * "always 31 rows" guarantee. Unknown snapshot text appended at the end as
+     * `matched: false` for data-hygiene visibility.
+     *
+     * `MAX_COUNTY_ROWS` is intentionally NOT applied — the operator scrolls the whole list.
+     */
+    private async fetchCountiesForProvince(
         province: { id: bigint | number; code: string },
         range: NormalizedRange,
     ): Promise<
         Array<{
-            region_id: number | null;
-            region_code: string | null;
             name: { fa: string; en: string | null };
             orders_count: number;
             revenue_minor: string;
             matched: boolean;
         }>
     > {
-        const [rawCities, seededCities] = await Promise.all([
-            this.fetchRawCityAggregates(province, range),
-            this.fetchSeededCities(province),
-        ]);
+        const rawCities = await this.fetchRawCityAggregates(province, range);
 
-        const seededByNormalizedName = new Map<string, SeededCityRow>();
-        for (const seeded of seededCities) {
-            const key = seeded.normalized_name ?? normalizeIranText(seeded.fa_name);
-            if (key) seededByNormalizedName.set(key, seeded);
-        }
-
-        type MergedCity = {
-            region_id: number | null;
-            region_code: string | null;
+        type MergedCounty = {
             name: { fa: string; en: string | null };
             orders_count: number;
             revenue_minor: bigint;
             matched: boolean;
         };
-        const merged = new Map<string, MergedCity>();
+        /** Pre-seed every county with zeroed totals so the response always lists every county. */
+        const merged = new Map<string, MergedCounty>();
+        for (const county of listCountiesForProvince(province.code)) {
+            merged.set(`county:${county.fa}`, {
+                name: { fa: county.fa, en: null },
+                orders_count: 0,
+                revenue_minor: 0n,
+                matched: true,
+            });
+        }
 
         for (const row of rawCities) {
             const orders = Number(row.orders_count);
             const revenue = BigInt(row.revenue_minor ?? 0);
-            const key = normalizeIranText(row.city_raw);
-            const seeded = key ? seededByNormalizedName.get(key) : undefined;
-
-            const slot = seeded ? `seeded:${seeded.code}` : `raw:${key}`;
+            const resolved = resolveCounty(row.city_raw);
+            const slot = resolved ? `county:${resolved.countyFa}` : `raw:${normalizeIranText(row.city_raw) || row.city_raw}`;
             const existing = merged.get(slot);
             if (existing) {
                 existing.orders_count += orders;
                 existing.revenue_minor += revenue;
                 continue;
             }
-            if (seeded) {
+            if (resolved) {
                 merged.set(slot, {
-                    region_id: Number(seeded.id),
-                    region_code: seeded.code,
-                    name: { fa: seeded.fa_name ?? row.city_raw, en: seeded.en_name },
+                    name: { fa: resolved.countyFa, en: null },
                     orders_count: orders,
                     revenue_minor: revenue,
                     matched: true,
                 });
             } else {
                 merged.set(slot, {
-                    region_id: null,
-                    region_code: null,
                     name: { fa: row.city_raw, en: null },
                     orders_count: orders,
                     revenue_minor: revenue,
@@ -383,11 +374,15 @@ export default class AdminInsightsRegionalController {
         }
 
         return [...merged.values()]
-            .sort((a, b) => b.orders_count - a.orders_count)
-            .slice(0, MAX_CITY_ROWS)
+            .sort((a, b) => {
+                /** Non-zero rows first, then matched zeros, then unmatched fallbacks. */
+                const aValue = a.orders_count;
+                const bValue = b.orders_count;
+                if (aValue !== bValue) return bValue - aValue;
+                if (a.matched !== b.matched) return a.matched ? -1 : 1;
+                return a.name.fa.localeCompare(b.name.fa, "fa");
+            })
             .map((row) => ({
-                region_id: row.region_id,
-                region_code: row.region_code,
                 name: row.name,
                 orders_count: row.orders_count,
                 revenue_minor: row.revenue_minor.toString(),
@@ -420,26 +415,6 @@ export default class AdminInsightsRegionalController {
             { from: range.from, to: range.to, provinceId: province.id.toString() },
         );
 
-        return rows;
-    }
-
-    private async fetchSeededCities(province: { id: bigint | number; code: string }): Promise<SeededCityRow[]> {
-        const { rows } = await db.rawQuery<{ rows: SeededCityRow[] }>(
-            `
-            SELECT
-                r.id,
-                r.code,
-                t_fa.name AS fa_name,
-                t_en.name AS en_name,
-                r.attributes->>'normalizedName' AS normalized_name
-            FROM regions r
-            LEFT JOIN region_translations t_fa ON t_fa.region_id = r.id AND t_fa.locale = 'fa'
-            LEFT JOIN region_translations t_en ON t_en.region_id = r.id AND t_en.locale = 'en'
-            WHERE r.parent_id = :provinceId
-            ORDER BY r.code ASC
-            `,
-            { provinceId: province.id.toString() },
-        );
         return rows;
     }
 
