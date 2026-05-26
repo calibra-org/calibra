@@ -47,7 +47,7 @@ export function DetailHeader({
     isNew,
 }: DetailHeaderProps) {
     const t = useTranslations("Products.detail");
-    const tStatus = useTranslations("Products.list.statuses");
+    const tStatus = useTranslations("ProductStatus");
     const tType = useTranslations("Products.detail.types");
     const locale = useLocale();
     const isRtl = locale === "fa";

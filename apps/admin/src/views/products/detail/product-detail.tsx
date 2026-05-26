@@ -627,7 +627,7 @@ function AdvancedCard() {
 function PublishCard() {
     const t = useTranslations("Products.detail");
     const tField = useTranslations("Products.detail.fields");
-    const tStatus = useTranslations("Products.list.statuses");
+    const tStatus = useTranslations("ProductStatus");
     const tVisibility = useTranslations("Products.detail.visibility");
     const { control } = useFormFromCtx();
 
