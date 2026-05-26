@@ -458,6 +458,13 @@ export function ProductsList() {
                     },
                 }}
                 formatNumber={(value) => formatNumber(value, locale)}
+                /**
+                 * Pin select / favorite / image / name to the inline-start edge so the operator's
+                 * primary anchors (selection + the product itself) stay visible while the row
+                 * scrolls horizontally. Only `name` — the last column in the cluster — paints the
+                 * scroll shadow; interior pinned columns sit flat behind it.
+                 */
+                stickyColumns={{ start: ["select", "favorite", "image", "name"], end: ["actions"] }}
                 skeletonColumnWidths={[2, 1, 2, 6, 3, 3, 3, 3, 2, 3, 1]}
                 bulkActions={(bulk) => (
                     <BulkActions selectedIds={bulk.selectedIds} onClear={bulk.clearSelection} onTrashTab={onlyTrashed} />
