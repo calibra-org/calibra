@@ -591,3 +591,56 @@ export interface Paginated<T> {
     data: T[];
     meta: { page: number; perPage: number; total: number; lastPage: number };
 }
+
+/**
+ * Regional insights — one country-mode row per ISO-3166-2:IR province. `revenueMinor` is a
+ * `number` (Rial minor units); the wire format ships a numeric string for BIGINT safety and
+ * the adapter converts via `Number()`. Iran's gross dashboard revenue fits comfortably below
+ * `2^53` so the precision tradeoff is fine for the heatmap.
+ */
+export interface AdminRegionalProvinceRow {
+    regionId: number;
+    code: string;
+    name: LocalizedString;
+    ordersCount: number;
+    revenueMinor: MoneyMinor;
+}
+
+/** Country-mode envelope: 31 province rows plus a totals + range summary. */
+export interface AdminRegionalCountry {
+    rows: AdminRegionalProvinceRow[];
+    totals: { ordersCount: number; revenueMinor: MoneyMinor };
+    range: { from: string; to: string };
+}
+
+/**
+ * One city row inside a province-mode response. `matched` reflects whether the snapshot text
+ * collapsed onto a seeded city Region row via `normalizeIranText`. Unmatched rows surface with
+ * `regionId`/`regionCode` set to `null` and the raw snapshot in `name.fa`.
+ */
+export interface AdminRegionalCity {
+    regionId: number | null;
+    regionCode: string | null;
+    name: { fa: string; en: string | null };
+    ordersCount: number;
+    revenueMinor: MoneyMinor;
+    matched: boolean;
+}
+
+/** Province-mode envelope with totals, top products, and top cities. */
+export interface AdminRegionalProvinceDetail {
+    regionId: number;
+    code: string;
+    name: LocalizedString;
+    ordersCount: number;
+    revenueMinor: MoneyMinor;
+    topProducts: Array<{
+        productId: number;
+        name: string;
+        sku: string | null;
+        units: number;
+        revenueMinor: MoneyMinor;
+    }>;
+    cities: AdminRegionalCity[];
+    range: { from: string; to: string };
+}
