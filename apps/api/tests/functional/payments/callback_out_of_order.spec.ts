@@ -122,7 +122,7 @@ test.group("callback idempotency ledger + out-of-order", (group) => {
         assert.equal(attemptAfter.gatewayTransactionId, "preverified-tx", "must not re-verify");
     });
 
-    test("failed status callback finalises ledger with 'failed' outcome", async ({ client, assert }) => {
+    test("NOK status callback finalises ledger with 'cancelled' outcome", async ({ client, assert }) => {
         const product = await createTaxableProduct({ regularPrice: 500_000 });
         const authority = "AFAIL000000000000000000000000001";
         await submitOrder(client, Number(product.id), authority);
@@ -133,12 +133,18 @@ test.group("callback idempotency ledger + out-of-order", (group) => {
             .redirects(0);
         assert.equal(response.response.status, 302);
 
+        /**
+         * ZarinPal's adapter maps `Status=NOK` → ParsedCallback.status="cancelled" (the user
+         * cancelled at the PSP), which translates to PaymentAttemptStatus.Cancelled and an
+         * outcome ledger row of "cancelled". `failed` is reserved for verify-step failures
+         * (network error, code != 100, amount mismatch).
+         */
         const order = await PaymentAttempt.findByOrFail("gateway_authority", authority);
-        assert.equal(order.status, PaymentAttemptStatus.Failed);
+        assert.equal(order.status, PaymentAttemptStatus.Cancelled);
 
         const ledger = await ProcessedWebhookEvent.query().where("provider", "zarinpal").where("event_id", authority);
         assert.equal(ledger.length, 1);
-        assert.equal(ledger[0]?.outcome, "failed");
+        assert.equal(ledger[0]?.outcome, "cancelled");
     });
 
     test("orders progress through Pending → Processing on success", async ({ client, assert }) => {
