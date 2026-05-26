@@ -3,10 +3,9 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { RotateCw, Sliders } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 import { Button } from "#/components/ui/button";
-import { type DateFilterValue, DatePickerPopover, formatDateFilterValue } from "#/components/ui/date-picker";
+import { DateFilterChip, type DateFilterValue } from "#/components/ui/date-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Slider } from "#/components/ui/slider";
 import { cn } from "#/lib/utils";
@@ -42,34 +41,18 @@ export function RegionalMapHeader({
 }: RegionalMapHeaderProps) {
     const t = useTranslations("Dashboard.regional");
     const tCommon = useTranslations("Common");
-    const [pickerOpen, setPickerOpen] = useState(false);
-
-    const dateLabel = dateFilter === null ? tCommon("dateRange") || t("title") : formatDateFilterValue(dateFilter, { locale });
 
     return (
         <div className="flex flex-wrap items-center gap-2">
             <MetricPillToggle value={metric} onChange={onMetricChange} />
-            <DatePickerPopover
-                open={pickerOpen}
-                onOpenChange={setPickerOpen}
+            <DateFilterChip
+                fieldLabel={t("dateRangeLabel")}
+                addLabel={t("dateRangeAddLabel")}
                 value={dateFilter}
                 onChange={onDateFilterChange}
                 locale={locale}
                 allowedOperators={["within", "in", "before", "after"]}
                 allowedGranularities={["day", "month", "quarter", "half_year", "year"]}
-                defaultGranularity="month"
-                renderTrigger={(props) => (
-                    <button
-                        {...props}
-                        type="button"
-                        className={cn(
-                            "inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs",
-                            "transition-colors hover:bg-accent hover:text-accent-foreground",
-                        )}
-                    >
-                        <span className="truncate">{dateLabel}</span>
-                    </button>
-                )}
             />
             <Popover>
                 <PopoverTrigger

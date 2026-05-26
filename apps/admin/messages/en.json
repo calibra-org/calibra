@@ -139,7 +139,9 @@
             "legendTitle": "Legend",
             "citiesHeading": "Cities",
             "unmappedCitiesHeading": "Cities not on the map",
-            "unmatchedCity": "Unrecognised city"
+            "unmatchedCity": "Unrecognised city",
+            "dateRangeLabel": "Date range",
+            "dateRangeAddLabel": "Add date range"
         }
     },
     "ProductsExport": {

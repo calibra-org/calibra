@@ -139,7 +139,9 @@
             "legendTitle": "راهنمای رنگ‌ها",
             "citiesHeading": "شهرها",
             "unmappedCitiesHeading": "شهرهای بدون نقشه",
-            "unmatchedCity": "شهر شناسایی‌نشده"
+            "unmatchedCity": "شهر شناسایی‌نشده",
+            "dateRangeLabel": "بازهٔ زمانی",
+            "dateRangeAddLabel": "افزودن بازهٔ زمانی"
         }
     },
     "ProductsExport": {
