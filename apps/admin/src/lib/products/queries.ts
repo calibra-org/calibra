@@ -143,10 +143,13 @@ export function useProductsList(
         placeholderData: keepPreviousData,
         select: (payload): ProductsListResult => {
             const data = (payload.data ?? []).map(toAdminProduct);
+            /**
+             * Favorites is client-side until the API ships it. When `favoriteIds` is provided
+             * (toggle is ON), filter every time — including the empty-set case so the operator
+             * sees "no favorites yet" instead of the full list silently ignoring the toggle.
+             */
             const filtered =
-                params.favoriteIds !== undefined && params.favoriteIds.length > 0
-                    ? data.filter((row) => params.favoriteIds?.includes(row.id) === true)
-                    : data;
+                params.favoriteIds === undefined ? data : data.filter((row) => params.favoriteIds?.includes(row.id) === true);
             const meta = payload.meta ?? { page, perPage, total: filtered.length, lastPage: 1 };
             return { data: filtered, meta, facets: payload.facets };
         },

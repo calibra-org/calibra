@@ -56,7 +56,8 @@ export default class AdminProductsController {
 
         const query = Product.query()
             .preload("translations")
-            .preload("images", (q) => q.preload("media"));
+            .preload("images", (q) => q.preload("media"))
+            .preload("inventoryItems");
         this.applyListFilters(query, request);
         this.applyListSort(query, request);
 
@@ -83,8 +84,8 @@ export default class AdminProductsController {
         request: HttpContext["request"],
         skipFacet?: (typeof FACET_COUNT_KEYS)[number],
     ) {
-        const withTrashed = String(request.input("with_trashed", "")) === "1";
-        const onlyTrashed = String(request.input("only_trashed", "")) === "1";
+        const withTrashed = truthy(request.input("with_trashed"));
+        const onlyTrashed = truthy(request.input("only_trashed"));
         if (onlyTrashed) {
             query.whereNotNull("deleted_at");
         } else if (!withTrashed) {
@@ -643,6 +644,18 @@ export default class AdminProductsController {
             .preload("inventoryItems")
             .first();
     }
+}
+
+/**
+ * Truthy check for boolean-shaped query params. Accepts `1`, `"1"`, `"true"`, `true`, etc.
+ * The SDK serializes booleans as the string `"true"`, but curl + form-encoded clients tend to
+ * send `"1"` — coerce both forms to a real boolean.
+ */
+function truthy(value: unknown): boolean {
+    if (value === true) return true;
+    if (value === false || value === null || value === undefined) return false;
+    const s = String(value).toLowerCase();
+    return s === "1" || s === "true" || s === "yes" || s === "on";
 }
 
 function assignProductFields(row: Product, payload: Record<string, unknown>): void {

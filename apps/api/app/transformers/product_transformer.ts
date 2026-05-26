@@ -168,9 +168,16 @@ export default class ProductTransformer extends BaseTransformer<Product> {
         };
     }
 
+    /**
+     * Rolls up inventory across both product-level rows and variation-level rows. The list cell
+     * needs the *operator-meaningful* total — for a variable product that's the sum across every
+     * variation's stock; for a simple product it's the per-product row. The `locations` slot
+     * still surfaces only the product-level rows so the per-warehouse editor (Prompt 2) doesn't
+     * accidentally try to edit a variation row as if it were a warehouse.
+     */
     private buildInventoryAggregate(items: InventoryItem[]) {
         const productLevel = items.filter((i) => i.variationId === null || i.variationId === undefined);
-        const total = productLevel.reduce((sum, i) => sum + Number(i.stockQuantity ?? 0), 0);
+        const total = items.reduce((sum, i) => sum + Number(i.stockQuantity ?? 0), 0);
         const locations = productLevel.map((i) => ({
             id: Number(i.id),
             location_id: i.locationId === null || i.locationId === undefined ? null : Number(i.locationId),
@@ -180,7 +187,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             backorders: i.backorders ?? "no",
             stock_status: i.stockStatus ?? "instock",
         }));
-        const lowStockHit = productLevel.some(
+        const lowStockHit = items.some(
             (i) =>
                 i.manageStock &&
                 i.lowStockThreshold !== null &&
