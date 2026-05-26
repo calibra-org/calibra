@@ -98,11 +98,15 @@ export function DayGrid({
      * wants the today ring and the selected fill to wrap the day number as a circle — that means
      * styling the button, not the cell. We use Tailwind's `[&_button]:` descendant selector so
      * each modifier class on the cell paints the button instead.
+     *
+     * The today indicator uses `border-2` (not `ring-inset`) so the visible circle hugs the same
+     * outer edge as the selected fill — `ring-inset` paints inside the box and visibly shrinks
+     * the circle, which reads as off-centre next to the selected day in the same row.
      */
     const modifiersClassNames = useMemo(
         () => ({
             previewRange: "[&_button]:bg-primary/10 [&_button]:text-foreground",
-            today: "[&_button]:ring-1 [&_button]:ring-foreground/40 [&_button]:ring-inset",
+            today: "[&_button]:border [&_button]:border-foreground/40",
         }),
         [],
     );
@@ -148,21 +152,20 @@ export function DayGrid({
                     "absolute end-1 top-1 z-10 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 weekday: "text-muted-foreground text-xs font-normal pb-1 text-center",
                 /**
-                 * Day cell: zero padding + grid place-items-center is the surest way to keep the
-                 * inner button dead-centred inside whatever width RDP gives the `<td>` (week-
-                 * column widths fluctuate when the month has 5 vs 6 rows). `mx-auto` alone
-                 * doesn't help inside a table cell, and inline-flex doesn't honour `text-center`
-                 * on its parent in every browser the same way.
+                 * Day cell: `text-center` + zero padding lets the inline-flex button below sit
+                 * dead-centre inside whatever width RDP gives the `<td>`. `grid` on the cell
+                 * would override `display: table-cell` and collapse the whole month grid into
+                 * a single column.
                  */
-                day: "p-0 grid place-items-center",
+                day: "p-0 text-center",
                 /**
-                 * `rounded-full` gives Linear-style circular day cells; the today ring + selected
-                 * fill (both applied via the descendant-button modifier classes above) inherit
-                 * the circle shape. `leading-none` defuses any latent line-height drift so the
-                 * numeral lines up with the geometric centre of the circle.
+                 * `rounded-full` gives Linear-style circular day cells; the today border + the
+                 * selected fill (both applied via the descendant-button modifier classes above)
+                 * paint the same outer circle so the two indicators sit concentric across the
+                 * same week row.
                  */
                 day_button:
-                    "inline-flex size-9 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                    "mx-auto inline-flex size-9 items-center justify-center rounded-full text-sm leading-none outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                 outside: "text-muted-foreground/40",
                 selected: "[&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:hover:!bg-primary",
                 range_start: "[&_button]:!bg-primary [&_button]:!text-primary-foreground",
