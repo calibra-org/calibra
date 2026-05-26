@@ -246,6 +246,66 @@ A vertical side nav in `layout.tsx`:
 - Active route highlighted via `usePathname()` + `cn()`.
 - A theme toggle (light/dark) and a direction toggle (LTR/RTL) at the top — these only affect the showcase content, not the wider admin shell.
 
+## Async + loading state is a first-class concern
+
+The admin is mostly an async surface — forms post mutations, lists fetch pages, comboboxes filter against the server, dialogs open against data that hasn't arrived yet. Loading state is not a checkbox you tick once; **every primitive that can sit on top of an async operation must expose a loading-state contract** and the showcase must demonstrate it.
+
+### The contract per primitive
+
+| Primitive | Loading-state contract |
+|---|---|
+| `Button`, `IconButton`, `ToggleButton` | `isLoading` prop. While true, the button keeps its width, replaces children with a centered `Spinner`, sets `aria-busy`, and disables pointer events. |
+| `Combobox`, `MultiCombobox` | While the parent's `onSearch` promise is in-flight, the popup shows a top-right `Spinner` next to the search input and an aria-live "loading" hint. The `Empty` slot only renders after the promise resolves with zero rows — never mid-flight. |
+| `Select` | `loading` prop on the trigger renders the placeholder + inline `Spinner`; the popup, when opened during load, shows a skeleton row list. |
+| `Dialog`, `Sheet`, `Drawer` | Accept an `isLoading` prop. When true, the body renders a `Skeleton` block + the action buttons in their loading state — header and footer chrome still render so the open animation isn't visually replaced by a flash of empty content. |
+| `Card` | `isLoading` prop swaps the body for a `Skeleton` block sized to the card's typical content. Header + footer keep rendering. |
+| `Table` (when DS-built; today owned by `data-table`) | `isLoading` prop swaps the body for `N` skeleton rows that match the column widths. |
+| `Avatar` | While the image is loading, shows the fallback (initials or icon) — never a flash of nothing. |
+| `Form` / `Field` | The `Form` provider exposes `isPending` for the active submit; `Field` renders an inline `Spinner` next to the label of any control with a pending controlled async validator. |
+| `Tabs`, `Accordion` | Per-panel `isLoading` so the panel body shows a `Skeleton` block while its data is fetching, instead of collapsing the panel height. |
+| `Toast` | A `toast.promise(promise, { loading, success, error })` API. The loading toast renders a `Spinner` and an aria-live "polite" status; auto-replaces with success / error on settle. |
+| `Pagination` | While the page is fetching, the prev/next buttons disable and show inline `Spinner`s; the page number text dims to `text-muted-foreground`. |
+
+### Loading vs empty vs error — three different states
+
+Every async-aware primitive distinguishes three terminal states. The showcase must demo all three side by side:
+
+- **Loading**: the promise hasn't settled. Show `Spinner` / `Skeleton`. Never show `Empty` here — that's a common bug where the user types one character and sees "no results" because the empty state rendered before the search resolved.
+- **Empty**: the promise settled successfully but returned zero rows / nothing to display. Show `EmptyState` with a friendly message and a clear next action.
+- **Error**: the promise rejected. Show an inline error block with a Retry affordance. For dialogs / sheets, render the error inside the body — never block the close action.
+
+A primitive that ships with only one of these states is incomplete.
+
+### Showcase mock data — required, realistic, configurable
+
+Every showcase page for an async-aware primitive **must** include a mock-data demo. Build a tiny mock toolkit under `apps/admin/src/design-system/lab/mock/` with:
+
+- `delay(ms)` — a `Promise<void>` that resolves after `ms`. Default to `400ms` so the loader is visible without being annoying.
+- `withLatency<T>(value: T, ms?: number)` — wraps any value in a promise that resolves after `ms`. Default `400ms`.
+- `withRandomLatency<T>(value: T, [min, max])` — randomized so the operator feels real network jitter.
+- `withFailure<T>(value: T, rate: number)` — Promise that rejects `rate * 100%` of the time. Used by the error-state demo.
+- `mockProducts`, `mockCategories`, `mockBrands`, `mockCustomers`, `mockOrders` — realistic fixture lists (~50 rows each) with believable Persian + English names, SKUs, and money values. Pulled into Combobox / Select demos.
+- Per-primitive demo controls (a small panel above each demo) to toggle: `loading` / `error` / `empty` / `latency=fast|slow|jitter`. Wired via local `useState` so the showcase operator can flip between states without reloading.
+
+Concretely, the Combobox showcase page must render at least these demos:
+
+1. **Idle** — popup closed, no data loaded.
+2. **Loading on first open** — `onSearch` returns `withLatency(mockProducts.slice(0, 10), 800)`. The popup opens, shows a skeleton list with a spinner; after 800ms the rows render in.
+3. **Mid-search loading** — typing in the input shows the spinner next to the search field while the per-keystroke promise resolves.
+4. **Empty after settle** — search query is "zzzz". `onSearch` returns `withLatency([], 400)`. After resolve, the `Empty` slot renders.
+5. **Error then retry** — search query that triggers `withFailure(mockProducts, 1)`. The popup shows an inline error with a Retry button that re-runs the search.
+6. **Slow network jitter** — `withRandomLatency(mockProducts, [200, 1800])` so the operator can feel what real network variance looks like.
+
+Same shape for the Sheet / Dialog showcase ("opened with no data → renders skeleton → data arrives"), the Card showcase, the Table-equivalent if any, etc.
+
+### Why this matters
+
+Loaders are routinely the first thing AI agents skip when building a primitive. The fastest, cheapest path is "happy-path data is always present" — and the result ships as soon as a real backend request takes 200ms. Every primitive that omits loading state becomes a future bug. We're paying down that debt up-front by:
+
+1. Making the loading-state contract part of the primitive API (not a wrapper concern).
+2. Forcing every showcase page to demonstrate the loading / empty / error trio with realistic mock data.
+3. Documenting the three states explicitly in `DESIGN_SYSTEM.md` so future agents reach for them before re-rolling another bespoke spinner.
+
 ## Engineering principles (the quality bar)
 
 Mirror the quality of `apps/admin/src/components/ui/sheet.tsx`. Specifically:
@@ -387,6 +447,8 @@ A reviewer pasting this prompt into a fresh session and walking through the chec
 - [ ] `pnpm --filter @calibra/admin lint` passes.
 - [ ] `/dev/ds` renders in dev with side nav of every primitive.
 - [ ] Each primitive page shows: variants, states, code samples (Shiki-rendered), props table, a11y notes, edge-case gallery.
+- [ ] Every async-aware primitive (per the table in the "Async + loading state" section) has a showcase entry demonstrating Idle / Loading / Empty / Error / Slow-network states with realistic mock data, plus a toggle panel above the demo for the operator to flip between them.
+- [ ] `apps/admin/src/design-system/lab/mock/` exists with `delay`, `withLatency`, `withRandomLatency`, `withFailure`, and fixture lists for products / categories / brands / customers / orders.
 - [ ] RTL/LTR toggle on the showcase actually flips the demo, leaving the surrounding admin chrome unchanged.
 - [ ] Theme toggle on the showcase actually flips light/dark, scoped the same way.
 - [ ] Existing app code is **untouched** — `git diff --stat -- apps/admin/src/app apps/admin/src/views apps/admin/src/lib` returns zero changes.

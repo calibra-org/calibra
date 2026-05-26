@@ -14,8 +14,9 @@ import type { AdminCoupon } from "#/lib/types";
 interface DuplicateCouponDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    sourceCoupon: AdminCoupon;
-    sourcePayload: CouponWritePayload;
+    /** `null` while the dialog is closed-and-idle — the dialog stays mounted so its entry transition plays. */
+    sourceCoupon: AdminCoupon | null;
+    sourcePayload: CouponWritePayload | null;
 }
 
 /**
@@ -31,13 +32,15 @@ export function DuplicateCouponDialog({ open, onOpenChange, sourceCoupon, source
     const [code, setCode] = useState("");
 
     useEffect(() => {
-        if (open) setCode(`${sourceCoupon.code}-COPY`);
-    }, [open, sourceCoupon.code]);
+        if (open && sourceCoupon !== null) setCode(`${sourceCoupon.code}-COPY`);
+        if (!open) setCode("");
+    }, [open, sourceCoupon]);
 
     const codeCheck = useCouponCodeCheck(code, open && code.length >= 2);
     const blocked = codeCheck.data?.available === false;
 
     const submit = async () => {
+        if (sourcePayload === null) return;
         const payload: CouponWritePayload = {
             ...sourcePayload,
             code: code.trim().toUpperCase(),
@@ -54,7 +57,7 @@ export function DuplicateCouponDialog({ open, onOpenChange, sourceCoupon, source
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{t("title")}</DialogTitle>
-                    <DialogDescription>{t("description", { code: sourceCoupon.code })}</DialogDescription>
+                    <DialogDescription>{t("description", { code: sourceCoupon?.code ?? "" })}</DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-1.5">
                     <Label htmlFor="duplicate-code">{t("fields.code")}</Label>

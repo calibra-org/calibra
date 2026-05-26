@@ -326,29 +326,27 @@ export function CouponsListClient() {
             />
 
             {/**
-             * Sheets / dialogs are kept mounted across opens so Base UI's `data-starting-style`
-             * transition fires every time `open` flips true. Conditional remounting on every row
-             * change skips the open animation because the popup hasn't existed long enough for
-             * the starting style to take effect before the transition starts. We `key` each one
-             * by the row id so React rebuilds the internal state cleanly when the operator
-             * jumps from one coupon to the next without closing in between.
+             * Sheets / dialogs stay mounted across opens so Base UI's `data-starting-style`
+             * transition fires every time `open` flips true. Each Sheet wraps a Base UI Dialog
+             * primitive that internally toggles `data-open` / `data-closed` on the popup — if the
+             * React tree remounts the wrapper (conditional render OR a changing `key`) the
+             * primitive resets and skips the entry transition.
+             *
+             * Internal state (form, mutation cache) is reset by the sheets themselves when `open`
+             * flips false → true; see their `useEffect` blocks.
              */}
             <QuickTestSheet
-                key={`qt-${quickTestRow?.id ?? "idle"}`}
                 open={quickTestRow !== null}
                 onOpenChange={(open) => !open && setQuickTestRow(null)}
                 couponId={quickTestRow?.id ?? 0}
             />
-            {duplicateRow !== null && (
-                <DuplicateCouponDialog
-                    open={duplicateRow !== null}
-                    onOpenChange={(open) => !open && setDuplicateRow(null)}
-                    sourceCoupon={duplicateRow}
-                    sourcePayload={buildDuplicatePayload(duplicateRow)}
-                />
-            )}
+            <DuplicateCouponDialog
+                open={duplicateRow !== null}
+                onOpenChange={(open) => !open && setDuplicateRow(null)}
+                sourceCoupon={duplicateRow}
+                sourcePayload={duplicateRow !== null ? buildDuplicatePayload(duplicateRow) : null}
+            />
             <ExpirySheet
-                key={`ex-${expiryRow?.id ?? "idle"}`}
                 open={expiryRow !== null}
                 onOpenChange={(open) => !open && setExpiryRow(null)}
                 currentExpiresAt={expiryRow?.expiresAt ? expiryRow.expiresAt.slice(0, 10) : ""}

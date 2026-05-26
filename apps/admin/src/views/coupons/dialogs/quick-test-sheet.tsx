@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -39,6 +39,20 @@ export function QuickTestSheet({ open, onOpenChange, couponId }: QuickTestSheetP
     const [country, setCountry] = useState("IR");
     const [items, setItems] = useState<LineItem[]>([]);
     const [result, setResult] = useState<TestResult | null>(null);
+
+    /**
+     * Reset the form whenever the sheet transitions from closed → open. The sheet stays mounted
+     * across opens so Base UI's entry transition plays every time; this effect makes sure stale
+     * state from a previous coupon's session doesn't leak into the next operator's test.
+     */
+    useEffect(() => {
+        if (open) {
+            setEmail("");
+            setCountry("IR");
+            setItems([]);
+            setResult(null);
+        }
+    }, [open]);
 
     const test = useTestCoupon(couponId);
 
