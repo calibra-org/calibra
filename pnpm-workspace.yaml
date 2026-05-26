@@ -54,6 +54,12 @@ catalogs:
         react-day-picker: ^9.14.0
         react-dropzone: ^14.3.8
         "react-hook-form": ^7.76.0
+        "@tiptap/react": ^2.13.0
+        "@tiptap/pm": ^2.13.0
+        "@tiptap/starter-kit": ^2.13.0
+        "@tiptap/extension-link": ^2.13.0
+        "@tiptap/extension-placeholder": ^2.13.0
+        "isomorphic-dompurify": ^2.30.0
         zod: ^4.4.3
         "start-server-and-test": ^2.0.13
         tailwind-merge: 3.5.0
