@@ -761,6 +761,8 @@
                 "views": "Views",
                 "actions": "Actions",
                 "visibility": "Visibility",
+                "visibilityShown": "Shown",
+                "visibilityHidden": "Hidden",
                 "salePeriod": "Sale window",
                 "lowStock": "Low stock",
                 "inventory": "Inventory",

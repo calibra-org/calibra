@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { AlertTriangle, Eye, EyeOff, ImageOff, Search, ShoppingBag, Tag as TagIcon } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, ImageOff, Tag as TagIcon } from "lucide-react";
 import type { useTranslations } from "next-intl";
 
 type TFunction = ReturnType<typeof useTranslations>;
@@ -14,6 +14,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "#/components/ui/h
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "#/components/ui/tooltip";
 import { formatDate, formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
+import { useBulkUpdateProducts } from "#/lib/products/mutations";
 import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
@@ -227,9 +228,9 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                     labels={ctx.sortLabels}
                 />
             ),
-            cell: ({ row }) => <VisibilityCell value={row.original.catalogVisibility} t={ctx.t} />,
+            cell: ({ row }) => <VisibilityCell productId={row.original.id} value={row.original.catalogVisibility} t={ctx.t} />,
             enableSorting: false,
-            size: 64,
+            size: 132,
         },
         {
             id: "salePeriod",
@@ -479,23 +480,47 @@ function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale,
 }
 
 interface VisibilityCellProps {
+    productId: number;
     value: AdminProduct["catalogVisibility"];
     t: TFunction;
 }
 
-function VisibilityCell({ value, t }: VisibilityCellProps) {
-    const config: Record<AdminProduct["catalogVisibility"], { icon: typeof Eye; tone: string }> = {
-        visible: { icon: Eye, tone: "text-emerald-500" },
-        catalog: { icon: ShoppingBag, tone: "text-sky-500" },
-        search: { icon: Search, tone: "text-indigo-500" },
-        hidden: { icon: EyeOff, tone: "text-muted-foreground" },
+/**
+ * Inline visibility toggle. Clicking flips between `hidden` and the previous shown state
+ * (default `visible`); intermediate states `catalog` / `search` collapse to `hidden` on toggle.
+ * Wire through `useBulkUpdateProducts({ ids: [id], catalogVisibility: … })` so the same
+ * server-side audit + cache invalidation as the bulk action runs for free.
+ */
+function VisibilityCell({ productId, value, t }: VisibilityCellProps) {
+    const mutation = useBulkUpdateProducts();
+    const isHidden = value === "hidden";
+    const Icon = isHidden ? EyeOff : Eye;
+    const label = t(isHidden ? "columns.visibilityHidden" : "columns.visibilityShown");
+
+    const onToggle = () => {
+        if (mutation.isPending) return;
+        mutation.mutate({
+            ids: [productId],
+            catalogVisibility: isHidden ? "visible" : "hidden",
+        });
     };
-    const entry = config[value] ?? config.visible;
-    const Icon = entry.icon;
+
     return (
-        <span title={t(`filters.visibilityOption.${value}` as never)} className={cn("inline-flex", entry.tone)}>
-            <Icon className="size-4" aria-hidden="true" />
-        </span>
+        <button
+            type="button"
+            onClick={onToggle}
+            disabled={mutation.isPending}
+            aria-pressed={!isHidden}
+            title={label}
+            className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-foreground text-xs transition-colors hover:bg-accent hover:text-foreground",
+                isHidden && "text-muted-foreground",
+                mutation.isPending && "opacity-60",
+            )}
+        >
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
+            <span>{label}</span>
+        </button>
     );
 }
 

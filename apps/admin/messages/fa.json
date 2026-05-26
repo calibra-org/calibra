@@ -761,6 +761,8 @@
                 "views": "بازدید",
                 "actions": "عملیات",
                 "visibility": "قابلیت دیدن",
+                "visibilityShown": "نمایش",
+                "visibilityHidden": "مخفی",
                 "salePeriod": "بازه فروش ویژه",
                 "lowStock": "کم‌موجود",
                 "inventory": "کل موجودی",
