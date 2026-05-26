@@ -1,24 +1,41 @@
 import { type ScaleQuantile, scaleQuantile } from "d3-scale";
-import { schemeGreens, schemeReds } from "d3-scale-chromatic";
+import { interpolateInferno, interpolateViridis } from "d3-scale-chromatic";
+
+/** Local `quantize` so we don't pull `d3-interpolate` into the catalog just for this. */
+function quantize(interpolator: (t: number) => string, n: number): string[] {
+    if (n < 1) return [];
+    if (n === 1) return [interpolator(0.5)];
+    const out: string[] = [];
+    for (let i = 0; i < n; i += 1) out.push(interpolator(i / (n - 1)));
+    return out;
+}
 
 /**
- * ColorBrewer-style six-bin sequential single-hue choropleth scale, driven by `d3-scale`'s
- * quantile partition. Quantile binning suits Iranian order distributions because they're
- * heavy-tailed (Tehran absorbs ~30% of any dataset) — equal-interval would collapse 30 of the
- * 31 provinces into the lightest bin and leave the map unreadable.
+ * Perceptually-uniform multi-hue choropleth palettes, sampled at 7 stops and partitioned via
+ * `scaleQuantile` so heavy-tailed order distributions still read cleanly (Tehran absorbs ~30%
+ * of any dataset; equal-interval bins would collapse 30 of 31 provinces into the lightest stop).
  *
- * Zero is a distinct category (gray-100), so absent-data provinces never collide with the
- * palette floor. Orders use Greens + Revenue uses Reds — both stay distinct from the dark-blue
- * sea fill so a quick glance never confuses water for a heat-map bin.
+ * Both palettes are scientific colour maps in the spirit of the GMT / Fabio Crameri Scientific
+ * Colour Maps reference (`https://docs.generic-mapping-tools.org/dev/reference/cpts.html`):
+ *
+ *   - **Orders → Viridis** — purple → teal → green → yellow. Perceptually uniform, colour-blind
+ *     safe, monotonic in luminance. No blue overlap with the dark-blue sea.
+ *   - **Revenue → Inferno** — black → purple → red → orange → yellow. Heat-style, intuitive
+ *     for "more = hotter", monotonic in luminance, colour-blind safe.
+ *
+ * Zero is a distinct category (`#f3f4f6`) so absent-data provinces never collide with the
+ * palette floor.
  */
 
 export type HeatmapMetric = "orders" | "revenue";
 
 export const ZERO_COLOR = "#f3f4f6";
 
+const STOPS = 7;
+
 const PALETTES: Record<HeatmapMetric, readonly string[]> = {
-    orders: schemeGreens[6],
-    revenue: schemeReds[6],
+    orders: quantize(interpolateViridis, STOPS),
+    revenue: quantize(interpolateInferno, STOPS),
 };
 
 export interface HeatmapScale {
