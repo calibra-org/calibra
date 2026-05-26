@@ -1,8 +1,8 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { ChevronRight } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { ChevronLeft } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -63,6 +63,7 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
 
     const [hoveredCity, setHoveredCity] = useState<AdminRegionalCity | null>(null);
     const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
+    const [backHovered, setBackHovered] = useState(false);
 
     /**
      * Stable cities array — derived from `data.cities` and ONLY changes when that input
@@ -169,14 +170,30 @@ export function ProvinceView({ code, data, isPending, isError, metric, onBack, l
                     <motion.button
                         type="button"
                         onClick={onBack}
-                        whileHover={reduce ? undefined : { scale: 1.03 }}
+                        onPointerEnter={() => setBackHovered(true)}
+                        onPointerLeave={() => setBackHovered(false)}
+                        onFocus={() => setBackHovered(true)}
+                        onBlur={() => setBackHovered(false)}
+                        layout={reduce ? false : "size"}
+                        transition={reduce ? { duration: 0 } : { layout: { type: "spring", stiffness: 320, damping: 30 } }}
                         whileTap={reduce ? undefined : { scale: 0.97 }}
-                        className="absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md border bg-card/90 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent"
+                        className="absolute start-3 top-3 z-10 inline-flex items-center gap-1.5 overflow-hidden rounded-md border bg-card/90 px-2.5 py-1 text-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent"
                         aria-label={t("backToCountry")}
                         title={t("backToCountry")}
                     >
-                        <ChevronRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
-                        <span className="font-semibold text-foreground">{data?.name[locale] ?? code}</span>
+                        <ChevronLeft className="size-3.5 shrink-0 rtl:-scale-x-100" aria-hidden="true" />
+                        <AnimatePresence mode="wait" initial={false}>
+                            <motion.span
+                                key={backHovered ? "back" : "name"}
+                                initial={reduce ? false : { opacity: 0, x: backHovered ? 4 : -4 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={reduce ? { opacity: 0 } : { opacity: 0, x: backHovered ? -4 : 4 }}
+                                transition={reduce ? { duration: 0 } : { duration: 0.14 }}
+                                className="whitespace-nowrap font-semibold text-foreground"
+                            >
+                                {backHovered ? t("backToCountry") : (data?.name[locale] ?? code)}
+                            </motion.span>
+                        </AnimatePresence>
                     </motion.button>
                     {hoveredCity !== null && pointer !== null ? (
                         <MapTooltip position={pointer}>
