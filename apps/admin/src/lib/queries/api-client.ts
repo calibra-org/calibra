@@ -57,6 +57,8 @@ export async function apiGet<T>(path: string, options: ApiFetchOptions): Promise
 
 export interface ApiMutationOptions extends ApiFetchOptions {
     body?: unknown;
+    /** Optional `If-Match` header value — forwarded to the api for optimistic concurrency checks. */
+    ifMatch?: string;
 }
 
 export type MutationMethod = "POST" | "PUT" | "PATCH" | "DELETE";
@@ -75,6 +77,9 @@ export async function apiMutate<T>(method: MutationMethod, path: string, options
         accept: "application/json",
         "x-csrf-token": csrf,
     };
+    if (typeof options.ifMatch === "string" && options.ifMatch.length > 0) {
+        headers["if-match"] = options.ifMatch;
+    }
     let body: BodyInit | undefined;
     if (options.body !== undefined && options.body !== null) {
         headers["content-type"] = "application/json";

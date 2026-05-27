@@ -37,6 +37,8 @@ export interface ResourcePickerMultiProps {
     creatable?: { onCreate: (name: string) => Promise<ComboboxOption> };
     disabled?: boolean;
     className?: string;
+    /** Render the chip strip below the trigger button instead of above (default). */
+    chipsBelow?: boolean;
 }
 
 export type ResourcePickerProps = ResourcePickerSingleProps | ResourcePickerMultiProps;
@@ -68,6 +70,7 @@ function MultiResourcePicker({
     creatable,
     disabled,
     className,
+    chipsBelow,
 }: ResourcePickerMultiProps) {
     const t = useTranslations("Common");
     const [pending, setPending] = useState(false);
@@ -107,6 +110,7 @@ function MultiResourcePicker({
                 onSearch={wrappedSearch}
                 onResolve={onResolve}
                 disabled={disabled || pending}
+                chipsBelow={chipsBelow}
                 labels={{
                     placeholder: placeholder ?? t("select"),
                     search: t("search"),
@@ -281,6 +285,7 @@ function SingleResourcePicker({
                                                 </span>
                                                 {opt.imageUrl !== null && opt.imageUrl !== undefined && (
                                                     // eslint-disable-next-line @next/next/no-img-element
+                                                    // biome-ignore lint/performance/noImgElement: combobox thumbs are user-uploaded URLs of unknown size; next/image's optimizer is overkill here
                                                     <img
                                                         src={opt.imageUrl}
                                                         alt=""

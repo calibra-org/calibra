@@ -1,0 +1,15 @@
+title: AdminTaxClass
+description: >
+    Tax class — groups products that share VAT/sales-tax behaviour. The class id is referenced from
+    `products.tax_class_id` and from the tax-rates table.
+type: object
+properties:
+    id: { type: integer }
+    slug: { type: string }
+    name: { type: string }
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
+required:
+    - id
+    - slug
+    - name

@@ -14,6 +14,19 @@ export interface JalaliDateRangeValue {
     to: string | null;
 }
 
+/**
+ * Which way the quick-pick presets reach from today.
+ *
+ * - `"past"` (default) — used by filter-style "Created between" fields: Today, Yesterday,
+ *   Last 7 / 30 days, This / Last month.
+ * - `"future"` — used by scheduling fields (sale window, publish-on, expiry): Today, Tomorrow,
+ *   Next 7 / 30 days, This / Next month.
+ *
+ * Default exists for back-compat; pass `"future"` whenever the field is asking the operator
+ * "when will X start / end" rather than "show me rows created when".
+ */
+export type JalaliDateRangeDirection = "past" | "future";
+
 export interface JalaliDateRangeInputProps {
     value: JalaliDateRangeValue;
     onChange: (next: JalaliDateRangeValue) => void;
@@ -24,11 +37,23 @@ export interface JalaliDateRangeInputProps {
     className?: string;
     /** Hide the quick-pick row (Today / Last 7 days / …). Defaults to showing it. */
     hideQuickPicks?: boolean;
+    /** Whether presets reach into the past (filters) or the future (schedules). */
+    direction?: JalaliDateRangeDirection;
 }
 
 interface QuickPick {
     id: string;
-    labelKey: "today" | "yesterday" | "last7" | "last30" | "thisMonth" | "lastMonth";
+    labelKey:
+        | "today"
+        | "yesterday"
+        | "tomorrow"
+        | "last7"
+        | "last30"
+        | "thisMonth"
+        | "lastMonth"
+        | "next7"
+        | "next30"
+        | "nextMonth";
     range: () => JalaliDateRangeValue;
 }
 
@@ -49,7 +74,7 @@ function addDays(d: Date, n: number): Date {
     return next;
 }
 
-function quickPicks(): QuickPick[] {
+function pastQuickPicks(): QuickPick[] {
     const today = startOfDay(new Date());
     return [
         { id: "today", labelKey: "today", range: () => ({ from: toIsoDate(today), to: toIsoDate(today) }) },
@@ -58,16 +83,8 @@ function quickPicks(): QuickPick[] {
             labelKey: "yesterday",
             range: () => ({ from: toIsoDate(addDays(today, -1)), to: toIsoDate(addDays(today, -1)) }),
         },
-        {
-            id: "last7",
-            labelKey: "last7",
-            range: () => ({ from: toIsoDate(addDays(today, -6)), to: toIsoDate(today) }),
-        },
-        {
-            id: "last30",
-            labelKey: "last30",
-            range: () => ({ from: toIsoDate(addDays(today, -29)), to: toIsoDate(today) }),
-        },
+        { id: "last7", labelKey: "last7", range: () => ({ from: toIsoDate(addDays(today, -6)), to: toIsoDate(today) }) },
+        { id: "last30", labelKey: "last30", range: () => ({ from: toIsoDate(addDays(today, -29)), to: toIsoDate(today) }) },
         {
             id: "thisMonth",
             labelKey: "thisMonth",
@@ -88,10 +105,52 @@ function quickPicks(): QuickPick[] {
     ];
 }
 
+function futureQuickPicks(): QuickPick[] {
+    const today = startOfDay(new Date());
+    return [
+        { id: "today", labelKey: "today", range: () => ({ from: toIsoDate(today), to: toIsoDate(today) }) },
+        {
+            id: "tomorrow",
+            labelKey: "tomorrow",
+            range: () => ({ from: toIsoDate(addDays(today, 1)), to: toIsoDate(addDays(today, 1)) }),
+        },
+        {
+            id: "next7",
+            labelKey: "next7",
+            range: () => ({ from: toIsoDate(today), to: toIsoDate(addDays(today, 6)) }),
+        },
+        {
+            id: "next30",
+            labelKey: "next30",
+            range: () => ({ from: toIsoDate(today), to: toIsoDate(addDays(today, 29)) }),
+        },
+        {
+            id: "thisMonth",
+            labelKey: "thisMonth",
+            range: () => ({
+                from: toIsoDate(today),
+                to: toIsoDate(new Date(today.getFullYear(), today.getMonth() + 1, 0)),
+            }),
+        },
+        {
+            id: "nextMonth",
+            labelKey: "nextMonth",
+            range: () => {
+                const nmStart = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+                const nmEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+                return { from: toIsoDate(nmStart), to: toIsoDate(nmEnd) };
+            },
+        },
+    ];
+}
+
 /**
  * Date range input with a Quick-pick strip beneath the picker. Speaks ISO date-only strings
  * regardless of the active calendar (Jalali / Gregorian) — the underlying {@link DateRangeField}
  * handles the display conversion automatically.
+ *
+ * The picker opens as a **modal dialog** (not a popover) by default for form fields; see
+ * [`./date-picker/README.md`](./date-picker/README.md#dialog-vs-popover).
  */
 export function JalaliDateRangeInput({
     value,
@@ -102,10 +161,11 @@ export function JalaliDateRangeInput({
     description,
     className,
     hideQuickPicks,
+    direction = "past",
 }: JalaliDateRangeInputProps) {
     const locale = useLocale() as Locale;
     const t = useTranslations("Common.dateRange");
-    const picks = useMemo(quickPicks, []);
+    const picks = useMemo(() => (direction === "future" ? futureQuickPicks() : pastQuickPicks()), [direction]);
 
     const wrapped = value.from === null || value.to === null ? null : { start: value.from, end: value.to };
 

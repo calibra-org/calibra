@@ -126,6 +126,7 @@ export function QuickTestSheet({ open, onOpenChange, couponId }: QuickTestSheetP
                                     <div key={row.productId} className="flex items-center gap-3 text-sm">
                                         {row.imageUrl !== undefined && row.imageUrl !== null ? (
                                             // eslint-disable-next-line @next/next/no-img-element
+                                            // biome-ignore lint/performance/noImgElement: dialog list thumb of a remote URL; next/image's optimizer adds no value at 40px
                                             <img
                                                 src={row.imageUrl}
                                                 alt=""

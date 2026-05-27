@@ -48,7 +48,7 @@ export function MapZoomWrapper({ children, className }: MapZoomWrapperProps) {
     const dragRef = useRef<DragState | null>(null);
 
     const setBoundedZoom = useCallback((next: number) => {
-        setZoom((current) => {
+        setZoom((_current) => {
             const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
             /** Snap pan back to centre when fully zoomed out — nothing left to pan to. */
             if (clamped === 1) setPan({ x: 0, y: 0 });

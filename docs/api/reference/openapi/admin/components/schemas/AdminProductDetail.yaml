@@ -30,7 +30,7 @@ allOf:
               description: Present only when `type=variable`.
               items:
                   type: object
-                  required: [id, on_sale, manage_stock_mode, attribute_pins]
+                  required: [id, on_sale, manage_stock_mode, status, attribute_pins]
                   properties:
                       id: { type: integer }
                       sku: { type: [string, "null"] }
@@ -39,6 +39,9 @@ allOf:
                       effective_price: { type: [integer, "null"] }
                       on_sale: { type: boolean }
                       manage_stock_mode: { type: string }
+                      status:
+                          type: string
+                          enum: [draft, active, inactive, archived]
                       attribute_pins:
                           type: array
                           items:
@@ -51,16 +54,28 @@ allOf:
               type: array
               items:
                   type: object
-                  required: [id, attribute_id, position, visible, used_for_variation, term_ids]
+                  required: [id, attribute_id, position, visible, used_for_variation, display_type, term_ids]
                   properties:
                       id: { type: integer }
                       attribute_id: { type: integer }
                       position: { type: integer }
                       visible: { type: boolean }
                       used_for_variation: { type: boolean }
+                      display_type:
+                          type: string
+                          enum: [dropdown, pills, color_swatch, image_swatch]
+                          description: >
+                              Customer-facing display style on the storefront product page.
+                              Defaults to `dropdown`.
                       term_ids:
                           type: array
                           items: { type: integer }
+          custom_attributes:
+              type: array
+              description: >
+                  Per-product attributes (name + chip values) that have no global taxonomy
+                  counterpart and never feed variation generation.
+              items: { $ref: "./AdminCustomAttribute.yaml" }
           categories:
               type: array
               items:
@@ -100,6 +115,42 @@ allOf:
                       short_description: { type: [string, "null"] }
                       purchase_note: { type: [string, "null"] }
                       external_button_text: { type: [string, "null"] }
+          default_variation_id:
+              type: [integer, "null"]
+              description: >
+                  Variation pre-selected on the storefront product page. Set to null to let the
+                  storefront pick the first available variation.
+          pos_available:
+              type: boolean
+              description: >
+                  Whether this product can be sold via the in-store POS app. Decoupled from the
+                  storefront `status` / `catalog_visibility` axes — a product can be Published online
+                  but hidden from POS, or vice versa.
+          upsell_ids:
+              type: array
+              description: Recommended-next-step product ids, ordered by `position`.
+              items: { type: integer }
+          cross_sell_ids:
+              type: array
+              description: Cart upsell product ids, ordered by `position`.
+              items: { type: integer }
+          grouped_member_ids:
+              type: array
+              description: Member-product ids for `type=grouped` bundles, ordered by `position`.
+              items: { type: integer }
+          downloads:
+              type: array
+              items:
+                  type: object
+                  required: [id, media_id, file_label, position]
+                  properties:
+                      id: { type: integer }
+                      media_id: { type: integer }
+                      file_label: { type: string }
+                      download_limit: { type: [integer, "null"] }
+                      download_expiry_days: { type: [integer, "null"] }
+                      position: { type: integer }
+                      url: { type: [string, "null"] }
           created_at: { type: [string, "null"], format: date-time }
           updated_at: { type: [string, "null"], format: date-time }
           deleted_at: { type: [string, "null"], format: date-time }

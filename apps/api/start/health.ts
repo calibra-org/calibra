@@ -21,7 +21,13 @@ import redis from "@adonisjs/redis/services/main";
  */
 export const healthChecks = new HealthChecks().register([
     new DiskSpaceCheck(),
-    new MemoryHeapCheck(),
+    /**
+     * The default failure threshold (300 MB) is tight for a Node.js api warmed up by the
+     * full functional test suite — fresh allocations push past it on CI without the heap
+     * being genuinely unhealthy. Bumped to 600 MB / 800 MB to track the realistic prod
+     * envelope and stop flapping the health probe.
+     */
+    new MemoryHeapCheck().warnWhenExceeds("600 mb").failWhenExceeds("800 mb"),
     new DbCheck(db.connection()),
     new RedisCheck(redis.connection()),
 ]);

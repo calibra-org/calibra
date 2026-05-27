@@ -60,6 +60,12 @@ export interface OnboardingHintProps {
     variant?: "inline" | "card";
     /** Override the localised "Dismiss" aria-label. */
     dismissLabel?: string;
+    /**
+     * When `false`, hides the dismiss button and keeps the hint visible forever. Use for
+     * persistent guidance that ought to always render (e.g. empty-state explainers that fade
+     * out only when the operator fills the section). Defaults to `true`.
+     */
+    dismissible?: boolean;
     className?: string;
 }
 
@@ -77,23 +83,26 @@ export function OnboardingHint({
     learnMore,
     variant = "inline",
     dismissLabel,
+    dismissible = true,
     className,
 }: OnboardingHintProps) {
     const t = useTranslations("Common");
     const [dismissed, dismiss] = useHintDismissed(id);
-    if (dismissed) return null;
+    if (dismissible && dismissed) return null;
 
     if (variant === "card") {
         return (
             <Card className={cn("relative border-primary/30 bg-primary/[0.04]", className)}>
-                <button
-                    type="button"
-                    aria-label={dismissLabel ?? t("dismiss")}
-                    onClick={dismiss}
-                    className="absolute end-3 top-3 grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                    <X className="size-3.5" aria-hidden="true" />
-                </button>
+                {dismissible ? (
+                    <button
+                        type="button"
+                        aria-label={dismissLabel ?? t("dismiss")}
+                        onClick={dismiss}
+                        className="absolute end-3 top-3 grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                    >
+                        <X className="size-3.5" aria-hidden="true" />
+                    </button>
+                ) : null}
                 <CardContent className="flex flex-col items-start gap-4 pt-6 sm:flex-row sm:items-center">
                     <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
                         <Icon className="size-6" aria-hidden="true" />
@@ -152,14 +161,16 @@ export function OnboardingHint({
                     </div>
                 )}
             </div>
-            <button
-                type="button"
-                aria-label={dismissLabel ?? t("dismiss")}
-                onClick={dismiss}
-                className="ms-1 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-                <X className="size-3.5" aria-hidden="true" />
-            </button>
+            {dismissible ? (
+                <button
+                    type="button"
+                    aria-label={dismissLabel ?? t("dismiss")}
+                    onClick={dismiss}
+                    className="ms-1 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                    <X className="size-3.5" aria-hidden="true" />
+                </button>
+            ) : null}
         </div>
     );
 }

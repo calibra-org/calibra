@@ -83,6 +83,237 @@ export async function syncLinks(
     );
 }
 
+/**
+ * Drop and reinsert position-aware many-to-many rows (upsells / cross-sells / grouped members).
+ * Order in the `ids` array becomes the `position` value, so the storefront list/card grid renders
+ * in the operator's chosen sequence. No-ops when `ids` is undefined.
+ */
+export async function syncOrderedLinks(
+    trx: TransactionClientContract,
+    table: string,
+    parentColumn: string,
+    parentId: bigint | number,
+    childColumn: string,
+    ids: number[] | undefined,
+): Promise<void> {
+    if (ids === undefined) return;
+    await trx.from(table).where(parentColumn, String(parentId)).delete();
+    if (ids.length === 0) return;
+    const now = DateTime.utc().toSQL();
+    await trx.table(table).insert(
+        ids.map((id, position) => ({
+            [parentColumn]: parentId,
+            [childColumn]: id,
+            position,
+            created_at: now,
+            updated_at: now,
+        })),
+    );
+}
+
+export interface DownloadInput {
+    id?: number;
+    media_id: number;
+    file_label: string;
+    download_limit?: number | null;
+    download_expiry_days?: number | null;
+    position?: number;
+}
+
+/**
+ * Replace `product_downloads` rows for a product. Replace-all semantics: any row whose id is not
+ * in the inbound list is deleted; rows with no id are inserted; rows with an id are updated
+ * in-place. Position falls back to the array index when not provided.
+ */
+export async function syncProductDownloads(
+    trx: TransactionClientContract,
+    productId: bigint | number,
+    downloads: DownloadInput[] | undefined,
+): Promise<void> {
+    if (downloads === undefined) return;
+    const now = DateTime.utc().toSQL();
+    const keepIds = downloads.map((d) => d.id).filter((id): id is number => typeof id === "number" && Number.isFinite(id));
+    if (keepIds.length === 0) {
+        await trx.from("product_downloads").where("product_id", String(productId)).delete();
+    } else {
+        await trx.from("product_downloads").where("product_id", String(productId)).whereNotIn("id", keepIds).delete();
+    }
+    let index = 0;
+    for (const row of downloads) {
+        const position = row.position ?? index;
+        if (typeof row.id === "number" && Number.isFinite(row.id)) {
+            await trx
+                .from("product_downloads")
+                .where("id", row.id)
+                .where("product_id", String(productId))
+                .update({
+                    media_id: row.media_id,
+                    file_label: row.file_label,
+                    download_limit: row.download_limit ?? null,
+                    download_expiry_days: row.download_expiry_days ?? null,
+                    position,
+                    updated_at: now,
+                });
+        } else {
+            await trx.table("product_downloads").insert({
+                product_id: productId,
+                media_id: row.media_id,
+                file_label: row.file_label,
+                download_limit: row.download_limit ?? null,
+                download_expiry_days: row.download_expiry_days ?? null,
+                position,
+                created_at: now,
+                updated_at: now,
+            });
+        }
+        index += 1;
+    }
+}
+
+export interface AttributeLinkInput {
+    attribute_id: number;
+    position?: number;
+    visible?: boolean;
+    used_for_variation?: boolean;
+    /**
+     * Customer-facing display type for the choice. Defaults to `dropdown` so unmigrated payloads
+     * keep working. The four enum values match the DB CHECK and the OpenAPI schema.
+     */
+    display_type?: "dropdown" | "pills" | "color_swatch" | "image_swatch";
+    term_ids: number[];
+}
+
+/**
+ * Replace-all sync for the `product_attribute_links` table + its `product_attribute_link_terms`
+ * children. Inbound `term_ids` must already belong to the linked attribute — the caller is
+ * responsible for that check (validator-side). Order in the array becomes `position`. No-ops
+ * when `links` is undefined.
+ */
+export async function syncProductAttributeLinks(
+    trx: TransactionClientContract,
+    productId: bigint | number,
+    links: AttributeLinkInput[] | undefined,
+): Promise<void> {
+    if (links === undefined) return;
+    /**
+     * Dedupe by `attribute_id` before insert so the unique `(product_id, attribute_id)`
+     * constraint can't surface as a 500. Last-write-wins on metadata; term_ids unioned across
+     * dupes so values the operator picked under either entry survive the merge. The admin
+     * already collapses dupes in `formValuesToPayload`, but other clients (or a third-party
+     * integration POSTing directly) shouldn't be able to crash the save either.
+     */
+    const dedupedMap = new Map<number, AttributeLinkInput>();
+    for (const link of links) {
+        const prior = dedupedMap.get(link.attribute_id);
+        if (prior === undefined) {
+            dedupedMap.set(link.attribute_id, { ...link, term_ids: [...link.term_ids] });
+            continue;
+        }
+        const merged: number[] = [];
+        const seen = new Set<number>();
+        for (const id of [...prior.term_ids, ...link.term_ids]) {
+            if (seen.has(id)) continue;
+            seen.add(id);
+            merged.push(id);
+        }
+        dedupedMap.set(link.attribute_id, { ...link, term_ids: merged });
+    }
+    const deduped = Array.from(dedupedMap.values());
+    const now = DateTime.utc().toSQL();
+    await trx
+        .from("product_attribute_link_terms")
+        .whereIn("link_id", trx.from("product_attribute_links").where("product_id", String(productId)).select("id"))
+        .delete();
+    await trx.from("product_attribute_links").where("product_id", String(productId)).delete();
+    if (deduped.length === 0) return;
+    for (let i = 0; i < deduped.length; i += 1) {
+        const link = deduped[i]!;
+        const [{ id }] = await trx
+            .table("product_attribute_links")
+            .returning("id")
+            .insert({
+                product_id: productId,
+                attribute_id: link.attribute_id,
+                position: link.position ?? i,
+                visible: link.visible ?? true,
+                used_for_variation: link.used_for_variation ?? false,
+                display_type: link.display_type ?? "dropdown",
+                created_at: now,
+                updated_at: now,
+            });
+        if (link.term_ids.length > 0) {
+            await trx.table("product_attribute_link_terms").insert(
+                link.term_ids.map((termId, termPos) => ({
+                    link_id: id,
+                    term_id: termId,
+                    position: termPos,
+                    created_at: now,
+                    updated_at: now,
+                })),
+            );
+        }
+    }
+}
+
+export interface CustomAttributeInput {
+    id?: number;
+    name: string;
+    values: string[];
+    position?: number;
+    visible?: boolean;
+}
+
+/**
+ * Replace `product_custom_attributes` rows for a product. Same diff-by-id shape as
+ * {@link syncProductDownloads}: rows whose `id` is not in the inbound list are deleted,
+ * rows with no id are inserted, rows with an id are updated in-place. Position falls back
+ * to array index. Values are stored as a JSONB string[] inline — they have no shared term
+ * table by design, and they never feed the variations cartesian builder.
+ */
+export async function syncProductCustomAttributes(
+    trx: TransactionClientContract,
+    productId: bigint | number,
+    rows: CustomAttributeInput[] | undefined,
+): Promise<void> {
+    if (rows === undefined) return;
+    const now = DateTime.utc().toSQL();
+    const keepIds = rows.map((r) => r.id).filter((id): id is number => typeof id === "number" && Number.isFinite(id));
+    if (keepIds.length === 0) {
+        await trx.from("product_custom_attributes").where("product_id", String(productId)).delete();
+    } else {
+        await trx.from("product_custom_attributes").where("product_id", String(productId)).whereNotIn("id", keepIds).delete();
+    }
+    let index = 0;
+    for (const row of rows) {
+        const position = row.position ?? index;
+        const valuesJson = JSON.stringify(row.values ?? []);
+        if (typeof row.id === "number" && Number.isFinite(row.id)) {
+            await trx
+                .from("product_custom_attributes")
+                .where("id", row.id)
+                .where("product_id", String(productId))
+                .update({
+                    name: row.name,
+                    values: valuesJson,
+                    position,
+                    visible: row.visible ?? true,
+                    updated_at: now,
+                });
+        } else {
+            await trx.table("product_custom_attributes").insert({
+                product_id: productId,
+                name: row.name,
+                values: valuesJson,
+                position,
+                visible: row.visible ?? true,
+                created_at: now,
+                updated_at: now,
+            });
+        }
+        index += 1;
+    }
+}
+
 /** Replace `product_images` rows for a product with the given media ids, preserving order. */
 export async function syncProductImages(
     trx: TransactionClientContract,

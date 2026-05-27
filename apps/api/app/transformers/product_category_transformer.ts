@@ -14,6 +14,8 @@ export default class ProductCategoryTransformer extends BaseTransformer<ProductC
     toObject() {
         const c = this.resource;
         const translation = pickTranslation(c.translations, this.locale);
+        const extras = (c as unknown as { $extras?: { used_count?: number | string } }).$extras;
+        const usedCount = extras?.used_count;
         return {
             id: Number(c.id),
             parent_id: c.parentId === null ? null : Number(c.parentId),
@@ -21,6 +23,7 @@ export default class ProductCategoryTransformer extends BaseTransformer<ProductC
             image_media_id: c.imageMediaId === null ? null : Number(c.imageMediaId),
             image_url: c.image?.url ?? null,
             menu_order: c.menuOrder,
+            used_count: usedCount === undefined || usedCount === null ? null : Number(usedCount),
             name: translation?.name ?? null,
             slug: translation?.slug ?? null,
             description: translation?.description ?? null,

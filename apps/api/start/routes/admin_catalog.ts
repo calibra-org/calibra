@@ -8,12 +8,14 @@ import AdminProductsController from "#controllers/admin/catalog/products_control
 import AdminReviewsController from "#controllers/admin/catalog/reviews_controller";
 import AdminShippingClassesController from "#controllers/admin/catalog/shipping_classes_controller";
 import AdminTagsController from "#controllers/admin/catalog/tags_controller";
+import AdminTaxClassesController from "#controllers/admin/catalog/tax_classes_controller";
 import AdminVariationsController from "#controllers/admin/catalog/variations_controller";
 
 router
     .group(() => {
         router.get("/products", [AdminProductsController, "index"]).as("admin.products.index");
         router.get("/products/counts", [AdminProductsController, "counts"]).as("admin.products.counts");
+        router.get("/products/check-slug", [AdminProductsController, "checkSlug"]).as("admin.products.checkSlug");
         router.post("/products", [AdminProductsController, "store"]).as("admin.products.store");
         router.post("/products/batch", [AdminProductsController, "batch"]).as("admin.products.batch");
         router.post("/products/restore", [AdminProductsController, "restoreBatch"]).as("admin.products.restoreBatch");
@@ -26,6 +28,7 @@ router
 
         router.get("/products/:product_id/variations", [AdminVariationsController, "index"]).as("admin.variations.index");
         router.post("/products/:product_id/variations", [AdminVariationsController, "store"]).as("admin.variations.store");
+        router.post("/products/:product_id/variations/batch", [AdminVariationsController, "batch"]).as("admin.variations.batch");
         router.put("/products/:product_id/variations/:id", [AdminVariationsController, "update"]).as("admin.variations.update");
         router.patch("/products/:product_id/variations/:id", [AdminVariationsController, "update"]).as("admin.variations.patch");
         router
@@ -74,6 +77,13 @@ router
         router.put("/shipping-classes/:id", [AdminShippingClassesController, "update"]).as("admin.shippingClasses.update");
         router.patch("/shipping-classes/:id", [AdminShippingClassesController, "update"]).as("admin.shippingClasses.patch");
         router.delete("/shipping-classes/:id", [AdminShippingClassesController, "destroy"]).as("admin.shippingClasses.destroy");
+
+        router.get("/tax-classes", [AdminTaxClassesController, "index"]).as("admin.taxClasses.index");
+        router.post("/tax-classes", [AdminTaxClassesController, "store"]).as("admin.taxClasses.store");
+        router.get("/tax-classes/:id", [AdminTaxClassesController, "show"]).as("admin.taxClasses.show");
+        router.put("/tax-classes/:id", [AdminTaxClassesController, "update"]).as("admin.taxClasses.update");
+        router.patch("/tax-classes/:id", [AdminTaxClassesController, "update"]).as("admin.taxClasses.patch");
+        router.delete("/tax-classes/:id", [AdminTaxClassesController, "destroy"]).as("admin.taxClasses.destroy");
 
         router.get("/reviews", [AdminReviewsController, "index"]).as("admin.reviews.index");
         router.patch("/reviews/:id", [AdminReviewsController, "update"]).as("admin.reviews.update");

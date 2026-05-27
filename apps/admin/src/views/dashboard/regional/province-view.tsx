@@ -2,7 +2,7 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { ChevronLeft } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

@@ -1,7 +1,9 @@
+import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
 
 import ProductTag from "#models/product_tag";
 import { CacheInvalidation } from "#services/cache_invalidation";
+import { CacheKeys, CacheTags } from "#services/cache_keys";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductTagTransformer from "#transformers/product_tag_transformer";
@@ -9,10 +11,48 @@ import { createTagValidator, updateTagValidator } from "#validators/catalog/taxo
 
 const TAXONOMY_FIELDS = ["name", "slug", "description"] as const;
 
+type TaxonomySort = "-used_count" | "used_count" | "menu_order" | "-menu_order" | undefined;
+
+function parseSort(input: unknown): TaxonomySort {
+    const value = typeof input === "string" ? input : "";
+    if (value === "-used_count" || value === "used_count" || value === "menu_order" || value === "-menu_order") {
+        return value;
+    }
+    return undefined;
+}
+
 export default class AdminTagsController {
     async index(ctx: HttpContext) {
-        const rows = await ProductTag.query().preload("translations").orderBy("menu_order").orderBy("id");
-        return collection(ProductTagTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"));
+        const sort = parseSort(ctx.request.input("sort"));
+        const locale = ctx.i18n.locale;
+
+        if (sort === "-used_count" || sort === "used_count") {
+            const direction = sort === "-used_count" ? "desc" : "asc";
+            const perPageRaw = Number(ctx.request.input("perPage", 0)) || 0;
+            const perPage = perPageRaw > 0 && perPageRaw <= 500 ? perPageRaw : 0;
+            return cache.getOrSet({
+                key: CacheKeys.admin.taxonomyUsedCount("tags", { sort, perPage }, locale),
+                ttl: "2m",
+                tags: [CacheTags.catalogTaxonomy],
+                factory: async () => {
+                    let query = ProductTag.query()
+                        .preload("translations")
+                        .withCount("products", (q) => q.as("used_count"))
+                        .orderBy("used_count", direction)
+                        .orderBy("id");
+                    if (perPage > 0) query = query.limit(perPage);
+                    const rows = await query;
+                    return collection(ProductTagTransformer.transform(rows, locale).useVariant("forAdmin"));
+                },
+            });
+        }
+
+        const rows = await ProductTag.query()
+            .preload("translations")
+            .withCount("products", (q) => q.as("used_count"))
+            .orderBy("menu_order")
+            .orderBy("id");
+        return collection(ProductTagTransformer.transform(rows, locale).useVariant("forAdmin"));
     }
 
     async show(ctx: HttpContext) {

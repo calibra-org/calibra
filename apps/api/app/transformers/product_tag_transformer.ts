@@ -14,9 +14,12 @@ export default class ProductTagTransformer extends BaseTransformer<ProductTag> {
     toObject() {
         const t = this.resource;
         const translation = pickTranslation(t.translations, this.locale);
+        const extras = (t as unknown as { $extras?: { used_count?: number | string } }).$extras;
+        const usedCount = extras?.used_count;
         return {
             id: Number(t.id),
             menu_order: t.menuOrder,
+            used_count: usedCount === undefined || usedCount === null ? null : Number(usedCount),
             name: translation?.name ?? null,
             slug: translation?.slug ?? null,
             description: translation?.description ?? null,

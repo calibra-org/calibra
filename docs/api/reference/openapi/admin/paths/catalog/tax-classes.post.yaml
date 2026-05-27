@@ -1,0 +1,31 @@
+operationId: adminTaxClassCreate
+summary: Create a tax class
+description: Creates a tax-class row. Slug must be globally unique.
+tags: [Admin / Catalog / Tax Classes]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [slug, name]
+                properties:
+                    slug: { type: string, minLength: 1, maxLength: 64 }
+                    name: { type: string, minLength: 1, maxLength: 120 }
+
+responses:
+    "201":
+        description: Tax class created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AdminTaxClass.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "409":
+        description: Slug already taken by another tax class.
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

@@ -14,11 +14,14 @@ export default class ProductBrandTransformer extends BaseTransformer<ProductBran
     toObject() {
         const b = this.resource;
         const translation = pickTranslation(b.translations, this.locale);
+        const extras = (b as unknown as { $extras?: { used_count?: number | string } }).$extras;
+        const usedCount = extras?.used_count;
         return {
             id: Number(b.id),
             image_media_id: b.imageMediaId === null ? null : Number(b.imageMediaId),
             image_url: b.image?.url ?? null,
             menu_order: b.menuOrder,
+            used_count: usedCount === undefined || usedCount === null ? null : Number(usedCount),
             name: translation?.name ?? null,
             slug: translation?.slug ?? null,
             description: translation?.description ?? null,

@@ -1248,12 +1248,14 @@ export class ProcessedWebhookEventSchema extends BaseModel {
 }
 
 export class ProductAttributeLinkTermSchema extends BaseModel {
-  static $columns = ['createdAt', 'linkId', 'termId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'linkId', 'position', 'termId', 'updatedAt'] as const
   $columns = ProductAttributeLinkTermSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column({ isPrimary: true })
   declare linkId: bigint | number
+  @column()
+  declare position: number
   @column()
   declare termId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -1261,12 +1263,14 @@ export class ProductAttributeLinkTermSchema extends BaseModel {
 }
 
 export class ProductAttributeLinkSchema extends BaseModel {
-  static $columns = ['attributeId', 'createdAt', 'id', 'position', 'productId', 'updatedAt', 'usedForVariation', 'visible'] as const
+  static $columns = ['attributeId', 'createdAt', 'displayType', 'id', 'position', 'productId', 'updatedAt', 'usedForVariation', 'visible'] as const
   $columns = ProductAttributeLinkSchema.$columns
   @column()
   declare attributeId: bigint | number
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare displayType: string
   @column({ isPrimary: true })
   declare id: bigint | number
   @column()
@@ -1466,6 +1470,27 @@ export class ProductCrossSellSchema extends BaseModel {
   declare relatedProductId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+}
+
+export class ProductCustomAttributeSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'name', 'position', 'productId', 'updatedAt', 'values', 'visible'] as const
+  $columns = ProductCustomAttributeSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare name: string
+  @column()
+  declare position: number
+  @column()
+  declare productId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare values: any
+  @column()
+  declare visible: boolean
 }
 
 export class ProductDownloadSchema extends BaseModel {
@@ -1903,7 +1928,7 @@ export class ProductVariationAttributeSchema extends BaseModel {
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
-  declare termId: bigint | number
+  declare termId: bigint | number | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column({ isPrimary: true })
@@ -1926,7 +1951,7 @@ export class ProductVariationTranslationSchema extends BaseModel {
 }
 
 export class ProductVariationSchema extends BaseModel {
-  static $columns = ['attributes', 'createdAt', 'deletedAt', 'downloadable', 'gtin', 'heightMm', 'id', 'imageMediaId', 'lengthMm', 'manageStockMode', 'menuOrder', 'productId', 'regularPrice', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'sku', 'taxClassId', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
+  static $columns = ['attributes', 'createdAt', 'deletedAt', 'downloadable', 'gtin', 'heightMm', 'id', 'imageMediaId', 'lengthMm', 'manageStockMode', 'menuOrder', 'productId', 'regularPrice', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'sku', 'status', 'taxClassId', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
   $columns = ProductVariationSchema.$columns
   @column()
   declare attributes: any
@@ -1963,6 +1988,8 @@ export class ProductVariationSchema extends BaseModel {
   @column()
   declare sku: string | null
   @column()
+  declare status: string
+  @column()
   declare taxClassId: bigint | number | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
@@ -1975,7 +2002,7 @@ export class ProductVariationSchema extends BaseModel {
 }
 
 export class ProductSchema extends BaseModel {
-  static $columns = ['attributes', 'catalogVisibility', 'createdAt', 'deletedAt', 'downloadable', 'externalUrl', 'featured', 'globalUniqueId', 'gtin', 'heightMm', 'id', 'lengthMm', 'menuOrder', 'regularPrice', 'reviewsAllowed', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'shippingClassId', 'sku', 'soldIndividually', 'status', 'taxClassId', 'taxStatus', 'type', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
+  static $columns = ['attributes', 'catalogVisibility', 'createdAt', 'defaultVariationId', 'deletedAt', 'downloadable', 'externalUrl', 'featured', 'globalUniqueId', 'gtin', 'heightMm', 'id', 'lengthMm', 'menuOrder', 'posAvailable', 'regularPrice', 'reviewsAllowed', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'shippingClassId', 'sku', 'soldIndividually', 'status', 'taxClassId', 'taxStatus', 'type', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
   $columns = ProductSchema.$columns
   @column()
   declare attributes: any
@@ -1983,6 +2010,8 @@ export class ProductSchema extends BaseModel {
   declare catalogVisibility: string
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare defaultVariationId: bigint | number | null
   @column.dateTime()
   declare deletedAt: DateTime | null
   @column()
@@ -2003,6 +2032,8 @@ export class ProductSchema extends BaseModel {
   declare lengthMm: number | null
   @column()
   declare menuOrder: number
+  @column()
+  declare posAvailable: boolean
   @column()
   declare regularPrice: bigint | number | null
   @column()

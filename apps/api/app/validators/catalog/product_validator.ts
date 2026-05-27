@@ -10,6 +10,32 @@ const TRANSLATION_SCHEMA = vine.object({
     external_button_text: vine.string().trim().maxLength(120).nullable().optional(),
 });
 
+const ATTRIBUTE_LINK_SCHEMA = vine.object({
+    attribute_id: vine.number(),
+    position: vine.number().min(0).optional(),
+    visible: vine.boolean().optional(),
+    used_for_variation: vine.boolean().optional(),
+    display_type: vine.enum(["dropdown", "pills", "color_swatch", "image_swatch"]).optional(),
+    term_ids: vine.array(vine.number()),
+});
+
+const DOWNLOAD_SCHEMA = vine.object({
+    id: vine.number().optional(),
+    media_id: vine.number(),
+    file_label: vine.string().trim().minLength(1).maxLength(200),
+    download_limit: vine.number().min(0).nullable().optional(),
+    download_expiry_days: vine.number().min(0).nullable().optional(),
+    position: vine.number().min(0).optional(),
+});
+
+const CUSTOM_ATTRIBUTE_SCHEMA = vine.object({
+    id: vine.number().optional(),
+    name: vine.string().trim().minLength(1).maxLength(200),
+    values: vine.array(vine.string().trim().minLength(1).maxLength(200)).maxLength(200),
+    position: vine.number().min(0).optional(),
+    visible: vine.boolean().optional(),
+});
+
 export const createProductValidator = vine.compile(
     vine.object({
         type: vine.enum(["simple", "variable", "grouped", "external"]).optional(),
@@ -47,6 +73,14 @@ export const createProductValidator = vine.compile(
         tag_ids: vine.array(vine.number()).optional(),
         brand_ids: vine.array(vine.number()).optional(),
         image_media_ids: vine.array(vine.number()).optional(),
+        upsell_ids: vine.array(vine.number()).optional(),
+        cross_sell_ids: vine.array(vine.number()).optional(),
+        grouped_member_ids: vine.array(vine.number()).optional(),
+        downloads: vine.array(DOWNLOAD_SCHEMA).optional(),
+        pos_available: vine.boolean().optional(),
+        attribute_links: vine.array(ATTRIBUTE_LINK_SCHEMA).optional(),
+        custom_attributes: vine.array(CUSTOM_ATTRIBUTE_SCHEMA).maxLength(50).optional(),
+        default_variation_id: vine.number().nullable().optional(),
     }),
 );
 
@@ -87,6 +121,14 @@ export const updateProductValidator = vine.compile(
         tag_ids: vine.array(vine.number()).optional(),
         brand_ids: vine.array(vine.number()).optional(),
         image_media_ids: vine.array(vine.number()).optional(),
+        upsell_ids: vine.array(vine.number()).optional(),
+        cross_sell_ids: vine.array(vine.number()).optional(),
+        grouped_member_ids: vine.array(vine.number()).optional(),
+        downloads: vine.array(DOWNLOAD_SCHEMA).optional(),
+        pos_available: vine.boolean().optional(),
+        attribute_links: vine.array(ATTRIBUTE_LINK_SCHEMA).optional(),
+        custom_attributes: vine.array(CUSTOM_ATTRIBUTE_SCHEMA).maxLength(50).optional(),
+        default_variation_id: vine.number().nullable().optional(),
     }),
 );
 
@@ -114,5 +156,14 @@ export const batchProductsValidator = vine.compile(
 export const restoreProductsValidator = vine.compile(
     vine.object({
         ids: vine.array(vine.number()).minLength(1),
+    }),
+);
+
+/** Slug availability check — `GET /admin/products/check-slug?slug=…&locale=…&excludeId=…`. */
+export const checkSlugValidator = vine.compile(
+    vine.object({
+        slug: vine.string().trim().minLength(1).maxLength(320),
+        locale: vine.string().trim().minLength(2).maxLength(8),
+        excludeId: vine.number().optional(),
     }),
 );

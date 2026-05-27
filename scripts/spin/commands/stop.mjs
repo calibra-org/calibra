@@ -3,7 +3,7 @@
 import { downContainers } from "../compose.mjs";
 import { parseFlags, requireSlug } from "../flags.mjs";
 import { cyan, green, log } from "../log.mjs";
-import { readMetaOrFail } from "../meta.mjs";
+import { readMetaOrFail, writeMeta } from "../meta.mjs";
 import { killTrackedProcesses } from "../processes.mjs";
 import { removeWorktree } from "../worktree.mjs";
 
@@ -24,6 +24,16 @@ export async function stop(args) {
 
     await killTrackedProcesses(meta);
     await downContainers(meta, { purge: flags.purge });
+
+    /**
+     * `--purge` removed the db volume, so any state inside it (migrations + seeded rows) is gone.
+     * Clear the `seeded` gate so the next `spin <slug>` re-runs `MainSeeder` instead of skipping
+     * with "already seeded" against an empty database.
+     */
+    if (flags.purge && meta.seeded === true) {
+        meta.seeded = false;
+        await writeMeta(meta);
+    }
 
     if (flags.remove) {
         await removeWorktree(meta, { force: flags.force });

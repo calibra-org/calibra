@@ -15,12 +15,21 @@ export default class ProductAttributeLink extends ProductAttributeLinkSchema {
     @belongsTo(() => ProductAttribute, { foreignKey: "attributeId" })
     declare attribute: BelongsTo<typeof ProductAttribute>;
 
+    /**
+     * Carries the operator's chosen ordering of values via the pivot's `position` column.
+     * Without `pivotColumns + orderBy`, the storefront and admin both render terms in
+     * implementation-defined PostgreSQL row order, so drag-reorders silently revert on reload.
+     */
     @manyToMany(() => ProductAttributeTerm, {
         pivotTable: "product_attribute_link_terms",
         localKey: "id",
         pivotForeignKey: "link_id",
         relatedKey: "id",
         pivotRelatedForeignKey: "term_id",
+        pivotColumns: ["position"],
+        onQuery: (query) => {
+            query.orderBy("product_attribute_link_terms.position", "asc");
+        },
     })
     declare terms: ManyToMany<typeof ProductAttributeTerm>;
 }

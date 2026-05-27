@@ -21,6 +21,15 @@ export interface NumberFieldProps {
     inputClassName?: string;
     disabled?: boolean;
     "aria-invalid"?: boolean;
+    /**
+     * `Intl.NumberFormatOptions` forwarded to Base UI so the input re-formats live as the
+     * operator types (thousand separators, decimal cap). Without it Base UI only re-formats on
+     * blur, so money fields render their raw digits mid-edit ("835617000000000") and look
+     * broken.
+     */
+    format?: Intl.NumberFormatOptions;
+    /** Locale forwarded to Base UI for `format` consistency — defaults to `en-US` for stable grouping. */
+    locale?: string;
 }
 
 /**
@@ -47,6 +56,8 @@ export function NumberField({
     inputClassName,
     disabled,
     "aria-invalid": ariaInvalid,
+    format,
+    locale = "en-US",
 }: NumberFieldProps) {
     return (
         <BaseNumberField.Root
@@ -60,6 +71,8 @@ export function NumberField({
             max={max}
             step={step}
             disabled={disabled}
+            format={format}
+            locale={locale}
             className={cn("w-full", className)}
         >
             <BaseNumberField.Group

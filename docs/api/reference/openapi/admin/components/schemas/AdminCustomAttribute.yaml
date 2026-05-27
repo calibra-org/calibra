@@ -1,0 +1,25 @@
+title: AdminCustomAttribute
+description: >
+    Per-product custom attribute row. Unlike global attribute links, custom rows carry the
+    name + values inline (no shared taxonomy) and never feed variation generation — they're
+    a freeform display-only slot for operator-typed metadata like "Material" or "Origin".
+type: object
+required: [id, name, position, values, visible]
+properties:
+    id:
+        type: integer
+        description: Stable row id; survives renames and reorders.
+    position:
+        type: integer
+        description: Display order within the product's attribute card.
+    name:
+        type: string
+        maxLength: 200
+    values:
+        type: array
+        items: { type: string, maxLength: 200 }
+        maxItems: 200
+        description: Chip-style values entered by the operator. Order is preserved.
+    visible:
+        type: boolean
+        description: Surface on the storefront product page (specs table).

@@ -134,6 +134,60 @@ export async function getProduct(id: number): Promise<AdminProduct | null> {
     return toAdminProductFromDetail(data.data);
 }
 
+/**
+ * Returns the full product-detail SDK payload (not the list-shape adapter). The detail page's
+ * Server Component renders this as initial paint while the client React Query takes over.
+ * Returns null on 404 / network error so the page can redirect cleanly.
+ */
+export async function getProductDetail(id: number): Promise<unknown | null> {
+    const api = await apiServer();
+    const { data, error } = await api.admin.GET("/api/v1/admin/products/{id}", { params: { path: { id } } });
+    if (error !== undefined || !data?.data) return null;
+    return data.data;
+}
+
+export interface ShippingClassOption {
+    id: number;
+    slug: string;
+    name: string;
+}
+
+export interface TaxClassOption {
+    id: number;
+    slug: string;
+    name: string;
+}
+
+/**
+ * Lightweight shipping-class list for the product-detail's shipping-class select. Returns
+ * locale-resolved names suitable for direct rendering.
+ */
+export async function listShippingClassOptions(): Promise<ShippingClassOption[]> {
+    const api = await apiServer();
+    const { data, error } = await api.admin.GET("/api/v1/admin/shipping-classes", {});
+    if (error !== undefined || !data?.data) return [];
+    return data.data.map((row) => ({
+        id: Number(row.id),
+        slug: row.slug ?? "",
+        name: (row as { name?: string }).name ?? row.slug ?? "",
+    }));
+}
+
+/**
+ * Lightweight tax-class list for the product-detail's tax-class select. The backend admin
+ * endpoint (added alongside this prompt) returns simple `{id, slug, name}` rows.
+ */
+export async function listTaxClassOptions(): Promise<TaxClassOption[]> {
+    const api = await apiServer();
+    const { data, error } = await api.admin.GET("/api/v1/admin/tax-classes", {});
+    if (error !== undefined || !data?.data) return [];
+    return data.data.map((row) => ({
+        id: Number(row.id),
+        slug: row.slug ?? "",
+        name: (row as { name?: string }).name ?? row.slug ?? "",
+    }));
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Catalog: taxonomy                                                          */
 /* -------------------------------------------------------------------------- */

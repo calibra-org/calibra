@@ -77,6 +77,7 @@
         "remove": "Remove",
         "clearAll": "Clear all",
         "create": "Create \"{name}\"",
+        "add": "Add",
         "money": {
             "tomanShort": "Toman",
             "rialShort": "Rial"
@@ -84,10 +85,14 @@
         "dateRange": {
             "today": "Today",
             "yesterday": "Yesterday",
+            "tomorrow": "Tomorrow",
             "last7": "Last 7 days",
             "last30": "Last 30 days",
             "thisMonth": "This month",
-            "lastMonth": "Last month"
+            "lastMonth": "Last month",
+            "next7": "Next 7 days",
+            "next30": "Next 30 days",
+            "nextMonth": "Next month"
         },
         "shortcuts": {
             "title": "Shortcuts",
@@ -757,8 +762,8 @@
                 }
             },
             "type": {
-                "simple": "Simple",
-                "variable": "Variable",
+                "simple": "One version",
+                "variable": "Multiple versions",
                 "grouped": "Grouped",
                 "external": "External"
             },
@@ -969,6 +974,527 @@
                 "nameRequired": "Product name is required",
                 "slugRequired": "Slug is required",
                 "numberRequired": "Enter a valid number"
+            }
+        },
+        "detail": {
+            "backToList": "Back to products",
+            "untitled": "Untitled product",
+            "newProductTitle": "New product",
+            "lastEditedAt": "Last edited: {at}",
+            "slugTaken": "This slug is already taken",
+            "unsavedConfirm": "You have unsaved changes. Continue?",
+            "trashBanner": "This product is in trash.",
+            "idListHint": "Comma-separated ids",
+            "idHint": "Numeric id",
+            "noneSelected": "None",
+            "sections": {
+                "howItSells": "How this product sells & its structure",
+                "productInfo": "Product info",
+                "commerce": "Pricing, inventory & shipping",
+                "sellingMode": "How it sells",
+                "general": "General",
+                "description": "Description",
+                "pricing": "Pricing",
+                "inventory": "Inventory",
+                "shipping": "Shipping",
+                "shippingClass": "Shipping class",
+                "linked": "Linked products",
+                "specs": "Specs",
+                "choices": "Customer choices",
+                "versions": "Sellable versions",
+                "advanced": "Advanced",
+                "publish": "Publish",
+                "image": "Featured image",
+                "gallery": "Gallery",
+                "categories": "Categories",
+                "brand": "Brand",
+                "tags": "Tags",
+                "tax": "Tax",
+                "reviews": "Reviews"
+            },
+            "fields": {
+                "type": "Product type",
+                "name": "Name",
+                "slug": "Slug",
+                "shortDescription": "Short description",
+                "description": "Full description",
+                "regularPrice": "Regular price",
+                "salePrice": "Sale price",
+                "saleWindow": "Sale window",
+                "taxStatus": "Tax status",
+                "taxClass": "Tax class",
+                "externalUrl": "External URL",
+                "buttonText": "Button text",
+                "sku": "SKU",
+                "gtin": "GTIN/EAN",
+                "manageStock": "Manage stock",
+                "stockQuantity": "Stock quantity",
+                "lowStockThreshold": "Low-stock threshold",
+                "backorders": "Backorders",
+                "stockStatus": "Stock status",
+                "soldIndividually": "Limit to 1 per order",
+                "weight": "Weight (g)",
+                "length": "Length (mm)",
+                "width": "Width (mm)",
+                "height": "Height (mm)",
+                "shippingClass": "Shipping class",
+                "isDigital": "Digital / Downloadable",
+                "upsells": "Up-sells",
+                "crossSells": "Cross-sells",
+                "groupedMembers": "Member products",
+                "purchaseNote": "Purchase note",
+                "menuOrder": "Menu order",
+                "enableReviews": "Enable reviews",
+                "posAvailable": "Available at POS",
+                "visibility": "Visibility",
+                "publishOn": "Publish on",
+                "status": "Status",
+                "featured": "Featured"
+            },
+            "tooltips": {
+                "type": "Simple = standalone. Variable = has variations. Grouped = a bundle. External = link to another site.",
+                "name": "Shown in the storefront, search, cart, and order emails.",
+                "slug": "URL identifier. Auto-generated from the name when left blank.",
+                "shortDescription": "Excerpt shown above the storefront fold.",
+                "description": "Full body of the product page.",
+                "regularPrice": "Base price in Toman before discount.",
+                "salePrice": "Discounted price; replaces the regular price when set.",
+                "saleWindow": "Sale price only applies between these dates.",
+                "sku": "Internal id for inventory and reports.",
+                "gtin": "Global Trade Item Number; useful for marketplaces.",
+                "externalUrl": "URL of the partner page."
+            },
+            "types": {
+                "simple": "One version",
+                "variable": "Multiple versions",
+                "grouped": "Grouped",
+                "external": "External",
+                "descriptions": {
+                    "simple": "No options — one price, one SKU.",
+                    "variable": "Shopper picks between options (color, size, ...) before checkout.",
+                    "grouped": "A bundle of related products.",
+                    "external": "Links to another website."
+                }
+            },
+            "taxStatus": {
+                "taxable": "Taxable",
+                "shipping": "Shipping only",
+                "none": "None"
+            },
+            "visibility": {
+                "visible": "Shop and search",
+                "catalog": "Shop only",
+                "search": "Search only",
+                "hidden": "Hidden"
+            },
+            "actions": {
+                "save": "Save",
+                "saving": "Saving…",
+                "saved": "Saved",
+                "create": "Create product",
+                "creating": "Creating…",
+                "duplicate": "Duplicate",
+                "trash": "Move to trash",
+                "restore": "Restore",
+                "deletePermanently": "Delete permanently",
+                "viewOnStorefront": "View on storefront",
+                "copyLink": "Copy link",
+                "openShortcuts": "Keyboard shortcuts",
+                "addDownload": "Add download",
+                "removeDownload": "Remove"
+            },
+            "toasts": {
+                "saved": "Product saved",
+                "created": "Product created",
+                "error": "Save failed"
+            },
+            "conflictDialog": {
+                "title": "Concurrent edits",
+                "message": "This product changed since you loaded it. Reload or overwrite with your changes.",
+                "reload": "Reload",
+                "overwrite": "Overwrite",
+                "viewDiff": "View diff"
+            },
+            "featuredImage": {
+                "setProductImage": "Set product image",
+                "replace": "Replace",
+                "remove": "Remove product image",
+                "removeShiftsGalleryHint": "Removing the featured image promotes the next gallery image to featured."
+            },
+            "gallery": {
+                "add": "Add",
+                "addImages": "Add product gallery images",
+                "remove": "Remove from gallery",
+                "setAsFeatured": "Set as featured",
+                "thumbAlt": "Gallery image",
+                "emptyHint": "No gallery images yet."
+            },
+            "categories": {
+                "tabs": { "all": "All categories", "mostUsed": "Most used" },
+                "searchPlaceholder": "Search categories",
+                "treeLabel": "Product categories",
+                "expandAll": "Expand all",
+                "collapseAll": "Collapse all",
+                "addNew": "Add new category",
+                "addNewPlaceholder": "Category name",
+                "addNewParent": "Under",
+                "createdToast": "Category created",
+                "createFailedToast": "Failed to create category",
+                "noMatches": "No matching categories",
+                "empty": "No categories yet."
+            },
+            "brands": {
+                "tabs": { "all": "All brands", "mostUsed": "Most used" },
+                "searchPlaceholder": "Search brands",
+                "treeLabel": "Product brands",
+                "clearSelection": "Clear selection",
+                "addNew": "Add new brand",
+                "addNewPlaceholder": "Brand name",
+                "createdToast": "Brand created",
+                "createFailedToast": "Failed to create brand",
+                "noMatches": "No matching brands",
+                "empty": "No brands yet."
+            },
+            "tags": {
+                "tabs": { "all": "All tags", "mostUsed": "Most used" },
+                "searchPlaceholder": "Search tags",
+                "treeLabel": "Product tags",
+                "addNew": "Add new tag",
+                "addNewPlaceholder": "Tag name",
+                "createdToast": "Tag created",
+                "createFailedToast": "Failed to create tag",
+                "noMatches": "No matching tags",
+                "empty": "No tags yet."
+            },
+            "variations": {
+                "placeholderTitle": "Variations",
+                "placeholderBody": "Variation management ships in the next iteration.",
+                "notVariableHint": "Switch the product type to Variable to enable variations.",
+                "count": "{count} variations",
+                "regenerate": "Regenerate from attributes",
+                "empty": {
+                    "noAttributesTitle": "Variations need attributes first",
+                    "noAttributesDescription": "Add at least one attribute above and turn on 'Use for variations' before generating.",
+                    "attributesReadyTitle": "Create your first variations",
+                    "attributesReadyDescription": "Calibra can generate {count} variation(s) from the current attributes.",
+                    "generate": "Generate from all attributes"
+                },
+                "generate": {
+                    "title": "Generate variations",
+                    "summaryNew": "{count} new",
+                    "summaryUnchanged": "{count} unchanged",
+                    "summaryOutdated": "{count} outdated",
+                    "deleteOutdatedLabel": "Delete {count} outdated variation(s)",
+                    "confirm": "Confirm + create",
+                    "cancel": "Cancel"
+                },
+                "row": {
+                    "any": "Any",
+                    "default": "Default",
+                    "deleteConfirm": "Delete this variation?"
+                },
+                "columns": {
+                    "sku": "SKU"
+                },
+                "toasts": {
+                    "generated": "Variations created",
+                    "generateFailed": "Generation failed",
+                    "deleted": "Variation deleted",
+                    "saveFailed": "Save failed"
+                }
+            },
+            "sellingMode": {
+                "title": "How does this product sell?",
+                "subtitle": "The selling mode controls what the shopper has to pick before they can buy.",
+                "oneVersion": {
+                    "title": "One version",
+                    "description": "When the shopper doesn't need to choose a color, size, capacity, or any other option.",
+                    "example": "Example: iPhone 15 Pro, 256 GB, Silver",
+                    "result": "One price, one SKU, one stock pool."
+                },
+                "multipleVersions": {
+                    "title": "Multiple versions",
+                    "description": "When the shopper picks between options like color, size, capacity, or storage before buying.",
+                    "example": "Example: iPhone 15 Pro — shopper picks color and storage",
+                    "result": "Each version can have its own price, stock, SKU, and image."
+                },
+                "customizable": {
+                    "title": "Customizable by the customer",
+                    "description": "When the shopper personalises the product: engraving, gift wrap, custom text, uploaded file.",
+                    "comingSoon": "Coming soon"
+                },
+                "advancedDisclosure": "Advanced selling modes",
+                "grouped": {
+                    "title": "Grouped",
+                    "description": "A bundle of related products displayed together."
+                },
+                "external": {
+                    "title": "External",
+                    "description": "A link to an external site for checkout."
+                },
+                "switchToVariableNotice": "Your current price and SKU become the defaults for newly generated versions.",
+                "convertToOneVersion": {
+                    "title": "Convert to 'One version'",
+                    "body": "This product currently has {count} sellable versions. Switching to 'One version' removes choices from the storefront.",
+                    "keepOne": "Keep one version as the main product",
+                    "archiveAll": "Archive every version",
+                    "ordersPreserved": "Past orders stay intact.",
+                    "selectKeeper": "Version to keep",
+                    "confirm": "Convert",
+                    "cancel": "Cancel"
+                }
+            },
+            "specs": {
+                "title": "Specs",
+                "subtitle": "Specs describe the product — they inform the shopper, but they don't create choosable options.",
+                "empty": "Add specs like material, color, size, capacity, or compatibility. Specs help shoppers understand the product but don't create sellable versions.",
+                "emptyWantChoicesHint": "Want the shopper to pick between options (color, size, …)? Switch the selling mode to 'Multiple versions'.",
+                "switchToMultipleCta": "Switch to 'Multiple versions'",
+                "addFromTaxonomy": "Add from global specs",
+                "addFreeForm": "Add a free-form spec",
+                "expandAll": "Expand all",
+                "collapseAll": "Collapse all",
+                "row": {
+                    "name": "Name",
+                    "values": "Values",
+                    "valuesPlaceholder": "Type a value and press Enter",
+                    "namePlaceholder": "e.g. Material or Origin",
+                    "showOnProductPage": "Show on product page",
+                    "showOnProductPageTooltip": "When on, this spec is listed in the specifications table on the product page.",
+                    "clear": "Remove",
+                    "valueCount": "{count} values",
+                    "untitled": "Untitled spec"
+                },
+                "multiValueWarning": "You've added multiple values. Should the shopper pick between them?",
+                "multiValueWarningKeep": "Keep as a spec",
+                "multiValueWarningPromote": "Turn into a customer choice",
+                "freeFormCannotBeChoice": "Free-form specs can't become customer choices. Create a global spec first."
+            },
+            "choices": {
+                "title": "Customer choices",
+                "subtitle": "Options the shopper picks before adding to cart — like color, size, or storage.",
+                "empty": "No choices yet. For example, an iPhone might have 'Color' and 'Storage' choices. Each combination becomes a sellable version.",
+                "addChoice": "Add a choice from global specs",
+                "displayType": {
+                    "label": "Show to shopper as",
+                    "dropdown": "Dropdown",
+                    "pills": "Buttons",
+                    "color_swatch": "Color swatch",
+                    "image_swatch": "Image swatch"
+                },
+                "row": {
+                    "values": "Values",
+                    "selectAll": "Select all",
+                    "selectNone": "Select none",
+                    "createValue": "Create a value",
+                    "combinationCount": "This choice combined with the others makes {count} versions.",
+                    "singleValueWarning": "This choice has only one value. If the shopper can't pick anything else, move it to Specs.",
+                    "demoteToSpec": "Move to Specs"
+                },
+                "totalCount": "These choices produce {count} sellable versions.",
+                "warnLarge": "That's a lot of versions. Use bulk editing so you don't get them wrong.",
+                "warnVeryLarge": "I understand I'm generating 200+ versions.",
+                "blockTooMany": "Reduce the number of choices or values.",
+                "generateButton": "Generate sellable versions",
+                "ifVariableRequired": "To add a choice, the selling mode switches to 'Multiple versions'.",
+                "explainer": {
+                    "title": "How does this work? (Example)",
+                    "exampleProduct": "Example: iPhone 15 Pro",
+                    "exampleChoicesHeader": "Customer choices:",
+                    "exampleVersionsHeader": "Sellable versions:",
+                    "footer": "Each version can have its own price, stock, SKU, and image.",
+                    "dismiss": "Got it"
+                },
+                "migrationNotice": "Previous 'variations' have been renamed to 'sellable versions'. The data hasn't changed — only the labels for clarity.",
+                "migrationDismiss": "Got it"
+            },
+            "versions": {
+                "title": "Sellable versions",
+                "subtitle": "Every combination of choices becomes a sellable version. Edit price, stock, SKU, and image per version here.",
+                "notVariableHint": "Switch the selling mode to 'Multiple versions' to enable sellable versions.",
+                "needChoicesTitle": "Add a customer choice first",
+                "needChoicesDescription": "Add at least one customer choice with multiple values in the Customer choices card to generate sellable versions.",
+                "checklist": {
+                    "title": "Setup checklist",
+                    "prices": "Price every version",
+                    "skus": "Give every version a SKU",
+                    "stock": "Track stock for every version",
+                    "images": "Add an image for every active version",
+                    "drafts": "Review draft versions"
+                },
+                "search": "Search by version or SKU…",
+                "filter": {
+                    "status": "Status",
+                    "missingPrice": "Missing price",
+                    "missingSku": "Missing SKU",
+                    "outOfStock": "Out of stock",
+                    "missingImage": "Missing image",
+                    "clearAll": "Clear filters"
+                },
+                "status": {
+                    "draft": "Draft",
+                    "active": "Active",
+                    "inactive": "Inactive",
+                    "archived": "Archived"
+                },
+                "columns": {
+                    "version": "Version",
+                    "image": "Image",
+                    "sku": "SKU",
+                    "price": "Price",
+                    "stock": "Stock",
+                    "status": "Status",
+                    "compareAt": "Compare-at",
+                    "cost": "Cost",
+                    "barcode": "Barcode",
+                    "weight": "Weight (g)",
+                    "lowStockThreshold": "Low-stock threshold",
+                    "backorder": "Backorder",
+                    "actions": "Actions"
+                },
+                "rowActions": {
+                    "edit": "Open full edit",
+                    "duplicate": "Duplicate",
+                    "archive": "Archive",
+                    "delete": "Delete"
+                },
+                "selection": {
+                    "selectAll": "Select all",
+                    "selectRow": "Select this version",
+                    "selectedCount": "{count} versions selected"
+                },
+                "bulk": {
+                    "setPrice": "Set price",
+                    "setStock": "Set stock",
+                    "generateSku": "Generate SKUs",
+                    "markActive": "Activate",
+                    "markInactive": "Deactivate",
+                    "markArchived": "Archive",
+                    "delete": "Delete",
+                    "clear": "Clear selection"
+                },
+                "regenerate": "Rebuild from choices",
+                "bulkDeleteDialog": {
+                    "title": "Delete selected versions",
+                    "body": "{count} versions will be permanently deleted.",
+                    "ordersPreserved": "Versions referenced by existing orders are archived instead of deleted.",
+                    "cancel": "Cancel",
+                    "confirm": "Delete {count} versions"
+                },
+                "regenerateDialog": {
+                    "title": "Generate sellable versions",
+                    "summaryNew": "{count} new versions will be created",
+                    "summaryUnchanged": "{count} versions stay unchanged",
+                    "summaryOutdated": "{count} versions no longer match any combination",
+                    "archiveOutdated": "Archive the outdated versions.",
+                    "draftNote": "New versions are created as drafts so you can review before publishing.",
+                    "cancel": "Cancel",
+                    "confirm": "Generate"
+                },
+                "setPriceDialog": {
+                    "title": "Bulk price update",
+                    "mode": "Mode",
+                    "modeAbsolute": "Fixed price",
+                    "modePercent": "Percent change",
+                    "absoluteLabel": "Price (Toman)",
+                    "percentLabel": "Percent change",
+                    "percentHint": "Positive = increase, negative = decrease.",
+                    "preview": "Preview on the first three versions:",
+                    "previewEmpty": "Nothing to change — none of the selected versions have a base price.",
+                    "skippedNoBasePrice": "{count} versions have no base price and are skipped by percent change.",
+                    "apply": "Apply to {count} versions",
+                    "cancel": "Cancel"
+                },
+                "setStockDialog": {
+                    "title": "Bulk stock update",
+                    "mode": "Mode",
+                    "modeReplace": "Replace",
+                    "modeIncrease": "Increase by",
+                    "modeDecrease": "Decrease by",
+                    "quantity": "Quantity",
+                    "apply": "Apply to {count} versions",
+                    "cancel": "Cancel"
+                },
+                "skuGenerator": {
+                    "title": "Generate SKUs",
+                    "subtitle": "Build SKUs from the product code and each choice value.",
+                    "patternLabel": "Pattern",
+                    "patternHint": "Write `product` for the product code and each choice by its name, wrapped in braces.",
+                    "abbrevLabel": "Abbreviations per value",
+                    "previewLabel": "Preview (first three rows)",
+                    "collisionWarning": "{count} duplicates detected. Adjust the pattern or shortened values.",
+                    "apply": "Apply to {count} versions",
+                    "cancel": "Cancel"
+                },
+                "toasts": {
+                    "generated": "New versions saved as drafts",
+                    "generateFailed": "Could not generate versions",
+                    "deleted": "Version deleted",
+                    "deleteRefused": "This version is referenced by orders — archived instead of deleted",
+                    "saveFailed": "Save failed",
+                    "bulkUpdated": "{count} versions updated",
+                    "bulkDeleted": "{count} versions deleted",
+                    "bulkUpdateFailed": "Bulk update failed",
+                    "skusApplied": "{count} SKUs saved"
+                },
+                "deletedWithOrdersFallback": "This version is referenced by orders — archived instead of deleted.",
+                "rowSummaryFallback": "No values",
+                "noResults": "No version matches this filter.",
+                "noResultsDescription": "Clear the filters to see every version again.",
+                "emptyTitle": "No sellable versions yet",
+                "emptyDescription": "Click 'Rebuild from choices' to generate the first versions from the customer choices."
+            },
+            "attributes": {
+                "empty": {
+                    "title": "Start by adding attributes",
+                    "description": "Attributes like 'Size' and 'Color' help customers pick the right version. For variable products they also define the variations you sell. Create attributes themselves on the Products › Attributes page.",
+                    "addExisting": "Add attribute"
+                },
+                "row": {
+                    "showOnProductPage": "Show on product page",
+                    "useForVariations": "Use for variations",
+                    "terms": "Terms",
+                    "addTerms": "Add term...",
+                    "remove": "Remove",
+                    "clear": "Clear",
+                    "selectAll": "Select all",
+                    "selectNone": "Select none",
+                    "createValue": "Create value",
+                    "termCount": "{count} values",
+                    "dragHandle": "Reorder attribute",
+                    "dragTooltip": "Drag to reorder attributes",
+                    "expand": "Expand this row",
+                    "collapse": "Collapse this row",
+                    "nameLabel": "Name"
+                },
+                "toolbar": {
+                    "addExisting": "Add existing",
+                    "addNew": "Add new",
+                    "expandAll": "Expand all",
+                    "collapseAll": "Collapse all"
+                },
+                "newAttribute": {
+                    "untitled": "New attribute",
+                    "placeholderName": "e.g. length or weight",
+                    "valuesHelp": "Enter the options customers can choose from — e.g. 'Blue' or 'Large'. Press Enter after each value.",
+                    "valuesPlaceholder": "Type a value and press Enter"
+                },
+                "saveButton": "Save attributes",
+                "savedToast": "Attributes saved",
+                "saveFailedToast": "Saving attributes failed",
+                "customNotSavedWarning": "{count} custom attributes are not saved yet — click 'Save attributes' to persist them.",
+                "tooltips": {
+                    "showOnProductPage": "When on, this attribute shows up in the spec table on the storefront product page.",
+                    "useForVariations": "Turn on so this attribute drives the cartesian variation generator.",
+                    "useForVariationsDisabled": "Switch the product type to Variable to enable this.",
+                    "useForVariationsCustom": "Custom attributes can't drive variation generation yet."
+                },
+                "createTermFailed": "Term creation failed"
+            },
+            "dnd": {
+                "grabHandle": "Reorder section",
+                "collapse": "Collapse",
+                "expand": "Expand"
             }
         }
     },

@@ -113,6 +113,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
                 effective_price: variationPrice.effectivePrice === null ? null : Number(variationPrice.effectivePrice),
                 on_sale: variationPrice.onSale,
                 manage_stock_mode: v.manageStockMode,
+                status: v.status,
                 attribute_pins: (v.attributePins ?? []).map((pin) => ({
                     attribute_id: Number(pin.attributeId),
                     term_id: Number(pin.termId),
@@ -120,14 +121,41 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             };
         });
 
-        const attributeLinks = (p.attributeLinks ?? []).map((link) => ({
-            id: Number(link.id),
-            attribute_id: Number(link.attributeId),
-            position: link.position,
-            visible: link.visible,
-            used_for_variation: link.usedForVariation,
-            term_ids: (link.terms ?? []).map((t) => Number(t.id)),
-        }));
+        const attributeLinks = (p.attributeLinks ?? [])
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map((link) => ({
+                id: Number(link.id),
+                attribute_id: Number(link.attributeId),
+                position: link.position,
+                visible: link.visible,
+                used_for_variation: link.usedForVariation,
+                display_type: link.displayType ?? "dropdown",
+                term_ids: (link.terms ?? []).map((t) => Number(t.id)),
+            }));
+
+        const customAttributes = (
+            (
+                p as unknown as {
+                    customAttributes?: {
+                        id: bigint | number;
+                        position: number;
+                        name: string;
+                        values: unknown;
+                        visible: boolean;
+                    }[];
+                }
+            ).customAttributes ?? []
+        )
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map((row) => ({
+                id: Number(row.id),
+                position: row.position,
+                name: row.name,
+                values: Array.isArray(row.values) ? (row.values as string[]) : [],
+                visible: Boolean(row.visible),
+            }));
 
         const categories = (p.categories ?? []).map((c) => ({
             id: Number(c.id),
@@ -152,6 +180,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             images,
             variations,
             attribute_links: attributeLinks,
+            custom_attributes: customAttributes,
             categories,
             tags,
             brands,
@@ -162,10 +191,44 @@ export default class ProductTransformer extends BaseTransformer<Product> {
     forAdmin() {
         const p = this.resource;
         const detail = this.forDetail();
+        const upsellIds = ((p as unknown as { upsells?: Product[] }).upsells ?? [])
+            .slice()
+            .sort((a, b) => Number(a.$extras.pivot_position ?? 0) - Number(b.$extras.pivot_position ?? 0))
+            .map((row) => Number(row.id));
+        const crossSellIds = ((p as unknown as { crossSells?: Product[] }).crossSells ?? [])
+            .slice()
+            .sort((a, b) => Number(a.$extras.pivot_position ?? 0) - Number(b.$extras.pivot_position ?? 0))
+            .map((row) => Number(row.id));
+        const groupedMemberIds = ((p as unknown as { groupedMembers?: Product[] }).groupedMembers ?? [])
+            .slice()
+            .sort((a, b) => Number(a.$extras.pivot_position ?? 0) - Number(b.$extras.pivot_position ?? 0))
+            .map((row) => Number(row.id));
+        const downloads = (p.downloads ?? [])
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map((row) => ({
+                id: Number(row.id),
+                media_id: Number(row.mediaId),
+                file_label: row.fileLabel,
+                download_limit: row.downloadLimit,
+                download_expiry_days: row.downloadExpiryDays,
+                position: row.position,
+                url: row.media?.url ?? null,
+            }));
         return {
             ...detail,
             global_unique_id: p.globalUniqueId,
             attributes: p.attributes ?? {},
+            pos_available: (p as unknown as { posAvailable?: boolean }).posAvailable ?? true,
+            default_variation_id:
+                (p as unknown as { defaultVariationId?: number | null }).defaultVariationId === null ||
+                (p as unknown as { defaultVariationId?: number | null }).defaultVariationId === undefined
+                    ? null
+                    : Number((p as unknown as { defaultVariationId: number }).defaultVariationId),
+            upsell_ids: upsellIds,
+            cross_sell_ids: crossSellIds,
+            grouped_member_ids: groupedMemberIds,
+            downloads,
             translations: (p.translations ?? []).map((t) => ({
                 locale: t.locale,
                 name: t.name,

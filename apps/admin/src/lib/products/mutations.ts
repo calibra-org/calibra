@@ -269,6 +269,209 @@ export function useRestoreProducts() {
     });
 }
 
+/**
+ * Persists a full product-detail submission via `PATCH /admin/products/{id}`. Accepts the
+ * already-built wire-shape payload (the form layer maps Toman→Rial, ISO dates, etc.). When
+ * `ifMatch` is supplied, the proxy forwards it as the `If-Match` header so the api can reject
+ * stale writes with a 409.
+ */
+export function useUpdateProduct(id: number) {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: unknown }, Error, { body: Record<string, unknown>; ifMatch?: string }>({
+        mutationFn: ({ body, ifMatch }) =>
+            apiMutate<{ data: unknown }>("PATCH", `products/${id}`, {
+                locale,
+                body,
+                ifMatch,
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product", id] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product-counts"] });
+        },
+    });
+}
+
+/** Creates a new product via `POST /admin/products`. Returns the newly minted id for routing. */
+export function useCreateProduct() {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { body: Record<string, unknown> }>({
+        mutationFn: ({ body }) => apiMutate<{ data: { id: number } }>("POST", "products", { locale, body }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product-counts"] });
+        },
+    });
+}
+
+/** Variations CRUD — single-row endpoints + batch. All cache invalidations key off the parent product. */
+export function useCreateVariation(productId: number) {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { body: Record<string, unknown> }>({
+        mutationFn: ({ body }) =>
+            apiMutate<{ data: { id: number } }>("POST", `products/${productId}/variations`, { locale, body }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product", productId] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product-variations", productId] });
+        },
+    });
+}
+
+export function useUpdateVariation(productId: number) {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: unknown }, Error, { variationId: number; body: Record<string, unknown> }>({
+        mutationFn: ({ variationId, body }) =>
+            apiMutate<{ data: unknown }>("PATCH", `products/${productId}/variations/${variationId}`, { locale, body }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product", productId] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product-variations", productId] });
+        },
+    });
+}
+
+export function useDeleteVariation(productId: number) {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<unknown, Error, { variationId: number }>({
+        mutationFn: ({ variationId }) =>
+            apiMutate<unknown>("DELETE", `products/${productId}/variations/${variationId}`, { locale }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product", productId] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product-variations", productId] });
+        },
+    });
+}
+
+/**
+ * Atomic `{create, update, delete}` batch over a variable product's variations. Powers the
+ * cartesian "Generate from all attributes" flow and the grid's bulk-action menu.
+ */
+export function useBatchVariations(productId: number) {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<
+        { data: { created: number[]; updated: number[]; deleted: number[] } },
+        Error,
+        {
+            create?: Record<string, unknown>[];
+            update?: (Record<string, unknown> & { id: number })[];
+            delete?: number[];
+        }
+    >({
+        mutationFn: (body) =>
+            apiMutate<{ data: { created: number[]; updated: number[]; deleted: number[] } }>(
+                "POST",
+                `products/${productId}/variations/batch`,
+                { locale, body },
+            ),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product", productId] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "product-variations", productId] });
+        },
+    });
+}
+
+/**
+ * Inline term creation — the chip bar on an attribute-link row lets operators type a new term
+ * and press Enter. Attribute creation itself stays on the global /products/attributes page so
+ * there's only one place that owns the taxonomy.
+ */
+export function useCreateAttributeTerm(attributeId: number) {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { name: string }>({
+        mutationFn: ({ name }) =>
+            apiMutate<{ data: { id: number } }>("POST", `attributes/${attributeId}/terms`, {
+                locale,
+                body: {
+                    slug: slugify(name),
+                    translations: [{ locale: "fa", name }],
+                },
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "attributes", attributeId, "terms"] });
+        },
+    });
+}
+
+/** Compact slugifier — strips diacritics-free Persian/English to a lowercase a-z-0-9-dash. */
+function slugify(input: string): string {
+    return (
+        input
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9آ-ی-]/gi, "")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "") || `attr-${Date.now()}`
+    );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Inline taxonomy create — sidebar pickers on the product-detail form       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Posts the minimal `{translations: [{locale, name}]}` payload accepted by `POST /admin/categories`.
+ * The api auto-derives the slug via `slugify(name, "fa")`. Optional `parentId` lets the inline
+ * form drop a child under an existing branch in one round-trip. Invalidates the picker query so
+ * the new row shows up immediately and can be auto-checked by the card.
+ */
+export function useCreateCategoryInline() {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { name: string; parentId?: number | null }>({
+        mutationFn: ({ name, parentId }) =>
+            apiMutate<{ data: { id: number } }>("POST", "categories", {
+                locale,
+                body: {
+                    ...(parentId !== undefined && parentId !== null ? { parent_id: parentId } : {}),
+                    translations: [{ locale: "fa", name }],
+                },
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "categories", "picker"] });
+            void queryClient.invalidateQueries({ queryKey: ["admin", "categories", "list"] });
+        },
+    });
+}
+
+/** Inline-create a tag. Returns `{ id }` for the chip strip to adopt as the new selection. */
+export function useCreateTagInline() {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { name: string }>({
+        mutationFn: ({ name }) =>
+            apiMutate<{ data: { id: number } }>("POST", "tags", {
+                locale,
+                body: { translations: [{ locale: "fa", name }] },
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "tags"] });
+        },
+    });
+}
+
+/** Inline-create a brand. */
+export function useCreateBrandInline() {
+    const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
+    return useMutation<{ data: { id: number } }, Error, { name: string }>({
+        mutationFn: ({ name }) =>
+            apiMutate<{ data: { id: number } }>("POST", "brands", {
+                locale,
+                body: { translations: [{ locale: "fa", name }] },
+            }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "brands", "picker"] });
+        },
+    });
+}
+
 /** Hard-delete one or more products. Server refuses if any selected product is referenced by
  *  an active order — the bulk response surfaces `skipped_force` ids. */
 export function useForceDeleteProducts() {

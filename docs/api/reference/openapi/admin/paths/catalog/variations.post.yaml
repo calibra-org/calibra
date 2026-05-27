@@ -18,7 +18,10 @@ requestBody:
                 required: [attribute_terms]
                 properties:
                     sku: { type: [string, "null"] }
-                    status: { type: string, enum: [draft, published, archived], default: published }
+                    status:
+                        type: string
+                        enum: [draft, active, inactive, archived]
+                        default: active
                     regular_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
                     sale_price: { anyOf: [{ $ref: "../../../common/components/schemas/Money.yaml" }, { type: "null" }] }
                     sale_starts_at: { type: [string, "null"], format: date-time }

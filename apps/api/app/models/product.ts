@@ -7,6 +7,7 @@ import InventoryItem from "#models/inventory_item";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductBrand from "#models/product_brand";
 import ProductCategory from "#models/product_category";
+import ProductCustomAttribute from "#models/product_custom_attribute";
 import ProductDownload from "#models/product_download";
 import ProductImage from "#models/product_image";
 import ProductReview from "#models/product_review";
@@ -36,6 +37,9 @@ export default class Product extends ProductSchema {
 
     @hasMany(() => ProductAttributeLink, { foreignKey: "productId" })
     declare attributeLinks: HasMany<typeof ProductAttributeLink>;
+
+    @hasMany(() => ProductCustomAttribute, { foreignKey: "productId" })
+    declare customAttributes: HasMany<typeof ProductCustomAttribute>;
 
     @hasMany(() => ProductReview, { foreignKey: "productId" })
     declare reviews: HasMany<typeof ProductReview>;

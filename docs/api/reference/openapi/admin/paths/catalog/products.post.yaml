@@ -59,6 +59,24 @@ requestBody:
                                 term_ids:
                                     type: array
                                     items: { type: integer }
+                    custom_attributes:
+                        type: array
+                        description: >
+                            Per-product attributes (name + chip values). Persisted to the
+                            `product_custom_attributes` sibling table; never feed variation
+                            generation. Max 50 rows.
+                        items:
+                            type: object
+                            required: [name, values]
+                            properties:
+                                id: { type: integer }
+                                name: { type: string, maxLength: 200 }
+                                position: { type: integer, minimum: 0 }
+                                visible: { type: boolean, default: true }
+                                values:
+                                    type: array
+                                    items: { type: string, maxLength: 200 }
+                                    maxItems: 200
                     translations:
                         type: array
                         minItems: 1

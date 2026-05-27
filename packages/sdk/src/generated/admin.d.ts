@@ -2090,6 +2090,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/products/check-slug": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check product slug availability
+         * @description Returns whether the supplied slug is free for the given locale. Powers the debounced async blur-time uniqueness check on the product detail page. Pass `excludeId` when editing an existing product so its own row is ignored.
+         */
+        get: operations["adminProductsCheckSlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products/batch": {
         parameters: {
             query?: never;
@@ -2229,7 +2267,7 @@ export interface paths {
         };
         /**
          * List a product's variations
-         * @description Paginated list of every variation row for the parent product. 404s if the product doesn't exist or `type != variable`.
+         * @description Flat list of every variation row for the parent product. Not paginated — the variations table is small enough (tens to a few hundred rows for SKU-heavy products) that pagination would just add noise to the editor's inline data-grid. 404s if the product doesn't exist.
          */
         get: operations["adminVariationsIndex"];
         put?: never;
@@ -2259,6 +2297,26 @@ export interface paths {
                 };
             };
         };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{product_id}/variations/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Batch create / update / delete variations
+         * @description Atomic `{create, update, delete}` operation over a variable product's variations. The cartesian "Generate from all attributes" flow on the detail page uses this to land all rows in one transaction. Refuses with 422 when the parent product isn't `variable`.
+         */
+        post: operations["adminProductVariationsBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -2818,6 +2876,98 @@ export interface paths {
          * @description Patch the included fields; translations are upserted per locale.
          */
         patch: operations["adminShippingClassPatch"];
+        trace?: never;
+    };
+    "/api/v1/admin/tax-classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List tax classes
+         * @description Returns every tax class. Not paginated — the dataset is small (typically <20 rows).
+         */
+        get: operations["adminTaxClassesIndex"];
+        put?: never;
+        /**
+         * Create a tax class
+         * @description Creates a tax-class row. Slug must be globally unique.
+         */
+        post: operations["adminTaxClassCreate"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tax-classes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a tax class
+         * @description Returns the tax-class row by id.
+         */
+        get: operations["adminTaxClassShow"];
+        /**
+         * Replace a tax class
+         * @description Replaces the slug and name on a tax class.
+         */
+        put: operations["adminTaxClassReplace"];
+        post?: never;
+        /**
+         * Delete a tax class
+         * @description Hard-deletes the tax-class row. Products referencing it have their `tax_class_id` set to NULL by the foreign-key cascade (see migration `1747200120000_create_products_table.ts`).
+         */
+        delete: operations["adminTaxClassDelete"];
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Partial-update a tax class
+         * @description Patch the included fields. Slug uniqueness is re-checked when it changes.
+         */
+        patch: operations["adminTaxClassPatch"];
         trace?: never;
     };
     "/api/v1/admin/reviews": {
@@ -4059,6 +4209,21 @@ export interface components {
             description?: string | null;
         };
         /**
+         * AdminCustomAttribute
+         * @description Per-product custom attribute row. Unlike global attribute links, custom rows carry the name + values inline (no shared taxonomy) and never feed variation generation — they're a freeform display-only slot for operator-typed metadata like "Material" or "Origin".
+         */
+        AdminCustomAttribute: {
+            /** @description Stable row id; survives renames and reorders. */
+            id: number;
+            /** @description Display order within the product's attribute card. */
+            position: number;
+            name: string;
+            /** @description Chip-style values entered by the operator. Order is preserved. */
+            values: string[];
+            /** @description Surface on the storefront product page (specs table). */
+            visible: boolean;
+        };
+        /**
          * AdminProductDetail
          * @description Admin detail-page payload for a single product. Matches `ProductTransformer.forAdmin()` exactly — the storefront detail shape extended with every translation row, the `global_unique_id`, the free-form `attributes` map, and the audit timestamps.
          */
@@ -4086,6 +4251,8 @@ export interface components {
                 effective_price?: number | null;
                 on_sale: boolean;
                 manage_stock_mode: string;
+                /** @enum {string} */
+                status: "draft" | "active" | "inactive" | "archived";
                 attribute_pins: {
                     attribute_id: number;
                     term_id: number;
@@ -4097,8 +4264,15 @@ export interface components {
                 position: number;
                 visible: boolean;
                 used_for_variation: boolean;
+                /**
+                 * @description Customer-facing display style on the storefront product page. Defaults to `dropdown`.
+                 * @enum {string}
+                 */
+                display_type: "dropdown" | "pills" | "color_swatch" | "image_swatch";
                 term_ids: number[];
             }[];
+            /** @description Per-product attributes (name + chip values) that have no global taxonomy counterpart and never feed variation generation. */
+            custom_attributes?: components["schemas"]["AdminCustomAttribute"][];
             categories?: {
                 id: number;
                 name?: string | null;
@@ -4122,6 +4296,25 @@ export interface components {
                 short_description?: string | null;
                 purchase_note?: string | null;
                 external_button_text?: string | null;
+            }[];
+            /** @description Variation pre-selected on the storefront product page. Set to null to let the storefront pick the first available variation. */
+            default_variation_id?: number | null;
+            /** @description Whether this product can be sold via the in-store POS app. Decoupled from the storefront `status` / `catalog_visibility` axes — a product can be Published online but hidden from POS, or vice versa. */
+            pos_available?: boolean;
+            /** @description Recommended-next-step product ids, ordered by `position`. */
+            upsell_ids?: number[];
+            /** @description Cart upsell product ids, ordered by `position`. */
+            cross_sell_ids?: number[];
+            /** @description Member-product ids for `type=grouped` bundles, ordered by `position`. */
+            grouped_member_ids?: number[];
+            downloads?: {
+                id: number;
+                media_id: number;
+                file_label: string;
+                download_limit?: number | null;
+                download_expiry_days?: number | null;
+                position: number;
+                url?: string | null;
             }[];
             /** Format: date-time */
             created_at?: string | null;
@@ -4156,6 +4349,11 @@ export interface components {
             tax_class_id?: number | null;
             manage_stock_mode: string;
             menu_order: number;
+            /**
+             * @description Sellable-version lifecycle. New variations generated from the cartesian land as `draft` so they don't go live with empty SKU/stock; the operator promotes to `active` after review. `archived` preserves order history while removing the row from the storefront catalog.
+             * @enum {string}
+             */
+            status: "draft" | "active" | "inactive" | "archived";
             description?: string | null;
             attribute_pins: {
                 attribute_id: number;
@@ -4203,6 +4401,8 @@ export interface components {
             /** @description Convenience read-only URL resolved from the linked media row; `null` when no asset is attached. */
             image_url?: string | null;
             menu_order?: number;
+            /** @description Number of products linked to this taxonomy row. Always populated on the admin index endpoints (a `withCount` subquery runs alongside the row fetch). `null` on reads that don't carry the count (e.g. `show` or storefront list endpoints). */
+            used_count?: number | null;
             translations?: {
                 locale?: string;
                 name?: string;
@@ -4225,6 +4425,19 @@ export interface components {
                 name?: string;
                 description?: string | null;
             }[];
+        };
+        /**
+         * AdminTaxClass
+         * @description Tax class — groups products that share VAT/sales-tax behaviour. The class id is referenced from `products.tax_class_id` and from the tax-rates table.
+         */
+        AdminTaxClass: {
+            id: number;
+            slug: string;
+            name: string;
+            /** Format: date-time */
+            created_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
         };
         /**
          * AdminReview
@@ -7779,6 +7992,15 @@ export interface operations {
                         variation?: boolean;
                         term_ids?: number[];
                     }[];
+                    /** @description Per-product attributes (name + chip values). Persisted to the `product_custom_attributes` sibling table; never feed variation generation. Max 50 rows. */
+                    custom_attributes?: {
+                        id?: number;
+                        name: string;
+                        position?: number;
+                        /** @default true */
+                        visible?: boolean;
+                        values: string[];
+                    }[];
                     translations: components["schemas"]["AdminTranslationInput"][];
                 };
             };
@@ -7842,6 +8064,40 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+        };
+    };
+    adminProductsCheckSlug: {
+        parameters: {
+            query: {
+                slug: string;
+                locale: string;
+                excludeId?: number;
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Slug availability result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            available: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
         };
     };
     adminProductsBatch: {
@@ -7940,7 +8196,10 @@ export interface operations {
     adminProductReplace: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Optional optimistic-concurrency token — pass the `updated_at` ISO string from the row the operator originally fetched. Returns 409 if the row has changed since. */
+                "If-Match"?: string;
+            };
             path: {
                 id: number;
             };
@@ -7968,6 +8227,25 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            /** @description Optimistic-concurrency mismatch. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: {
+                            message?: string;
+                            code?: string;
+                        }[];
+                        data?: {
+                            id?: number;
+                            /** Format: date-time */
+                            updated_at?: string;
+                        };
+                    };
+                };
+            };
             422: components["responses"]["ValidationError"];
         };
     };
@@ -7998,7 +8276,10 @@ export interface operations {
     adminProductPatch: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Optional optimistic-concurrency token — pass the `updated_at` ISO string from the row the operator originally fetched. The server compares this against the current value and returns 409 if the row has changed since, so two operators can't silently clobber each other's edits. Callers that don't care can omit the header (last-write-wins). */
+                "If-Match"?: string;
+            };
             path: {
                 id: number;
             };
@@ -8026,6 +8307,25 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            /** @description Optimistic-concurrency mismatch — the row changed since the If-Match value was fetched. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: {
+                            message?: string;
+                            code?: string;
+                        }[];
+                        data?: {
+                            id?: number;
+                            /** Format: date-time */
+                            updated_at?: string;
+                        };
+                    };
+                };
+            };
             422: components["responses"]["ValidationError"];
         };
     };
@@ -8088,12 +8388,7 @@ export interface operations {
     };
     adminVariationsIndex: {
         parameters: {
-            query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-            };
+            query?: never;
             header?: never;
             path: {
                 product_id: number;
@@ -8102,7 +8397,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Paginated variation list. */
+            /** @description Variation list. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -8110,7 +8405,6 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminProductVariation"][];
-                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -8133,10 +8427,10 @@ export interface operations {
                 "application/json": {
                     sku?: string | null;
                     /**
-                     * @default published
+                     * @default active
                      * @enum {string}
                      */
-                    status?: "draft" | "published" | "archived";
+                    status?: "draft" | "active" | "inactive" | "archived";
                     regular_price?: components["schemas"]["Money"] | null;
                     sale_price?: components["schemas"]["Money"] | null;
                     /** Format: date-time */
@@ -8165,6 +8459,52 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminProductVariation"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminProductVariationsBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    create?: {
+                        [key: string]: unknown;
+                    }[];
+                    update?: ({
+                        id: number;
+                    } & {
+                        [key: string]: unknown;
+                    })[];
+                    delete?: number[];
+                };
+            };
+        };
+        responses: {
+            /** @description Batch result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created: number[];
+                            updated: number[];
+                            deleted: number[];
+                        };
                     };
                 };
             };
@@ -8647,6 +8987,8 @@ export interface operations {
                 /** @description Filter children of a parent. Pass `0` for top-level rows. */
                 parent_id?: number;
                 search?: string;
+                /** @description Optional ordering. `-used_count` ranks the rows most-used-first (categories with the most attached products), `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
+                sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -8665,7 +9007,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxonomy"][];
-                        meta: components["schemas"]["PaginationMeta"];
+                        meta?: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -8837,6 +9179,8 @@ export interface operations {
                 /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
                 perPage?: components["parameters"]["PerPageQuery"];
                 search?: string;
+                /** @description Optional ordering. `-used_count` ranks tags most-used-first; `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
+                sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -8855,7 +9199,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxonomy"][];
-                        meta: components["schemas"]["PaginationMeta"];
+                        meta?: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -9023,6 +9367,8 @@ export interface operations {
                 /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
                 perPage?: components["parameters"]["PerPageQuery"];
                 search?: string;
+                /** @description Optional ordering. `-used_count` ranks brands most-used-first; `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
+                sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -9041,7 +9387,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxonomy"][];
-                        meta: components["schemas"]["PaginationMeta"];
+                        meta?: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -9385,6 +9731,207 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTaxClassesIndex: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tax-class list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminTaxClassCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    slug: string;
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Tax class created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Slug already taken by another tax class. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTaxClassShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tax class detail. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminTaxClassReplace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated tax class. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Slug already taken by another tax class. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTaxClassDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminTaxClassPatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated tax class. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminTaxClass"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Slug already taken by another tax class. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             422: components["responses"]["ValidationError"];
         };
     };

@@ -2,7 +2,7 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Boxes, ExternalLink, FolderTree, ImageOff, Info, Sparkles, Tag, X } from "lucide-react";
+import { Boxes, ExternalLink, FolderTree, ImageOff, Sparkles, Tag, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -13,16 +13,15 @@ import { Button } from "#/components/ui/button";
 import { HelperTooltip } from "#/components/ui/helper-tooltip";
 import { Input } from "#/components/ui/input";
 import { JalaliDateRangeInput } from "#/components/ui/jalali-date-range-input";
-import { Label } from "#/components/ui/label";
 import { MoneyInput } from "#/components/ui/money-input";
 import { NumberField } from "#/components/ui/number-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { Switch } from "#/components/ui/switch";
 import { toast } from "#/components/ui/toast";
 import { Link } from "#/lib/i18n/navigation";
 import { type CatalogVisibility, useQuickEditProduct } from "#/lib/products/mutations";
 import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
 import { cn } from "#/lib/utils";
+import { Field, ToggleRow } from "#/views/products/detail/form-primitives";
 
 import { formatIdList, parseIdList, type QuickEditValues, quickEditSchema } from "./quick-edit-schema";
 
@@ -503,68 +502,6 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                 />
             </div>
         </form>
-    );
-}
-
-interface FieldProps {
-    id: string;
-    label: string;
-    error?: string;
-    hint?: string;
-    span?: string;
-    /** Inline helper slot rendered next to the label (typically a HelperTooltip). */
-    helper?: React.ReactNode;
-    children: React.ReactNode;
-}
-
-function Field({ id, label, error, hint, span, helper, children }: FieldProps) {
-    return (
-        <div className={cn("flex min-w-0 flex-col gap-1", span)}>
-            <Label htmlFor={id} className="flex items-center font-medium text-foreground text-xs">
-                {label}
-                {helper}
-            </Label>
-            {children}
-            {error !== undefined ? (
-                <p className="inline-flex items-center gap-1 text-destructive text-xs">
-                    <Info className="size-3" aria-hidden="true" />
-                    {error}
-                </p>
-            ) : hint !== undefined ? (
-                <p className="truncate text-muted-foreground text-xs" dir="ltr">
-                    {hint}
-                </p>
-            ) : null}
-        </div>
-    );
-}
-
-interface ToggleRowProps {
-    id: string;
-    title: string;
-    description: string;
-    icon: React.ReactNode;
-    checked: boolean;
-    onChange: (next: boolean) => void;
-    compact?: boolean;
-    span?: string;
-}
-
-function ToggleRow({ id, title, icon, checked, onChange, compact, span }: ToggleRowProps) {
-    return (
-        <label
-            htmlFor={id}
-            className={cn(
-                "flex h-9 cursor-pointer items-center gap-2 self-end rounded-md border border-border bg-background px-2.5 transition-colors hover:border-ring/40",
-                compact ? "py-1" : "py-1.5",
-                span,
-                checked && "border-primary/40 bg-primary/5",
-            )}
-        >
-            <span className={cn("shrink-0 text-muted-foreground", checked && "text-primary")}>{icon}</span>
-            <span className="min-w-0 flex-1 truncate font-medium text-foreground text-xs">{title}</span>
-            <Switch id={id} checked={checked} onCheckedChange={onChange} />
-        </label>
     );
 }
 

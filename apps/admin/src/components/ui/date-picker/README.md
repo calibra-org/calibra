@@ -26,9 +26,9 @@ ships behind a single, accessible component that:
 import {
     DateFilterChip,     // toolbar pill ([label | op | value | ×])
     DatePickerDialog,   // modal wrapper around the body
-    DatePickerPopover,  // non-modal wrapper for form mode
-    DateField,          // single-date form input
-    DateRangeField,     // [start, end] form input
+    DatePickerPopover,  // anchor-mounted wrapper — for chips/toolbars only
+    DateField,          // single-date form input (opens as Dialog)
+    DateRangeField,     // [start, end] form input (opens as Dialog)
     OperatorMenu,       // small dropdown for switching operator from a chip
     useDateFilter,      // headless hook — own the dialog yourself
     parseDateFilterInput, // pure parser; same grammar the input field uses
@@ -36,6 +36,18 @@ import {
     serializeDateFilter, parseDateFilter, toLegacyDateRange, // URL + back-compat
 } from "#/components/ui/date-picker";
 ```
+
+## Dialog vs Popover — which to use
+
+**Default in form pages: Dialog.** `DateField` and `DateRangeField` open as a modal dialog by
+design. The picker needs ~28rem of horizontal room plus the quick-pick row beneath it; an
+anchor-mounted popover gets clipped by sticky page headers, sidebar cards, dialog panels, and
+RTL viewport edges. The modal removes every alignment + z-index concern at once.
+
+**Use the popover variant only for the data-table filter chip** (`DateFilterChip`), where the
+chip is the anchor and operators expect the picker to attach to it. Anything that lives inside a
+form card should open as a dialog. If you're tempted to reach for `DatePickerPopover` from a
+form, you're almost certainly wrong — extend the dialog wrapper instead.
 
 ## Usage — filter chip in a data table
 

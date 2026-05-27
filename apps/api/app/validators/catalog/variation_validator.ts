@@ -7,7 +7,8 @@ const VARIATION_TRANSLATION_SCHEMA = vine.object({
 
 const ATTRIBUTE_PIN_SCHEMA = vine.object({
     attribute_id: vine.number(),
-    term_id: vine.number(),
+    /** `null` represents "Any term" for the attribute. */
+    term_id: vine.number().nullable(),
 });
 
 export const createVariationValidator = vine.compile(
@@ -33,6 +34,7 @@ export const createVariationValidator = vine.compile(
         tax_class_id: vine.number().nullable().optional(),
         manage_stock_mode: vine.enum(["own", "parent"]).optional(),
         menu_order: vine.number().optional(),
+        status: vine.enum(["draft", "active", "inactive", "archived"]).optional(),
         attributes: vine.record(vine.any()).optional(),
         translations: vine.array(VARIATION_TRANSLATION_SCHEMA).optional(),
         attribute_pins: vine.array(ATTRIBUTE_PIN_SCHEMA).optional(),
@@ -40,3 +42,17 @@ export const createVariationValidator = vine.compile(
 );
 
 export const updateVariationValidator = createVariationValidator;
+
+/**
+ * Batch variations payload — `POST /admin/products/:product_id/variations/batch`. The outer
+ * validator only checks shape; each create/update entry is re-validated by the per-row
+ * validators inside the controller (same pattern as the products batch). Bare-numbers in
+ * `delete` are variation ids.
+ */
+export const batchVariationsValidator = vine.compile(
+    vine.object({
+        create: vine.array(vine.any()).optional(),
+        update: vine.array(vine.any()).optional(),
+        delete: vine.array(vine.number()).optional(),
+    }),
+);

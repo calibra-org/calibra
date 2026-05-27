@@ -24,6 +24,14 @@ properties:
     tax_class_id: { type: [integer, "null"] }
     manage_stock_mode: { type: string }
     menu_order: { type: integer }
+    status:
+        type: string
+        enum: [draft, active, inactive, archived]
+        description: >
+            Sellable-version lifecycle. New variations generated from the cartesian land as
+            `draft` so they don't go live with empty SKU/stock; the operator promotes to
+            `active` after review. `archived` preserves order history while removing the row
+            from the storefront catalog.
     description: { type: [string, "null"] }
     attribute_pins:
         type: array
@@ -41,4 +49,5 @@ required:
     - downloadable
     - manage_stock_mode
     - menu_order
+    - status
     - attribute_pins
