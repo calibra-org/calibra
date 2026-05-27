@@ -2,7 +2,7 @@
 
 import type { AdminSchemas } from "@calibra/sdk";
 import type { Locale } from "@calibra/shared/i18n";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
 import { type AdminProductDetailView, toAdminProductDetail } from "#/lib/adapters/product-detail";
@@ -345,6 +345,33 @@ export function useGlobalAttributeTerms(attributeId: number | null) {
         select: (envelope) => envelope.data.map((row) => ({ id: Number(row.id), name: row.name ?? row.slug ?? `#${row.id}` })),
         staleTime: 60 * 1000,
     });
+}
+
+/**
+ * Bulk variant of {@link useGlobalAttributeTerms} for a dynamic list of attribute ids — uses
+ * `useQueries` under the hood so the hook count stays stable across the same render even as the
+ * id list grows or shrinks. Returns a flat `{termId → name}` map across every loaded attribute.
+ */
+export function useAttributeTermsMap(attributeIds: number[]): Record<number, string> {
+    const locale = useLocale() as Locale;
+    const queries = useQueries({
+        queries: attributeIds.map((attributeId) => ({
+            queryKey: ["admin", "attributes", attributeId, "terms", locale] as const,
+            queryFn: async () =>
+                apiGet<{ data: { id: number; name?: string; slug?: string }[] }>(`attributes/${attributeId}/terms`, { locale }),
+            staleTime: 60 * 1000,
+        })),
+    });
+    const map: Record<number, string> = {};
+    for (const result of queries) {
+        const rows = result.data?.data ?? [];
+        for (const row of rows) {
+            const id = Number(row.id);
+            if (Number.isNaN(id)) continue;
+            map[id] = row.name ?? row.slug ?? `#${id}`;
+        }
+    }
+    return map;
 }
 
 /* -------------------------------------------------------------------------- */

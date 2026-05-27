@@ -19,7 +19,12 @@ import { toast } from "#/components/ui/toast";
 import { CircleDashed, Filter, Plus, Sparkles, Trash2 } from "#/icons";
 import { formatNumber } from "#/lib/format";
 import { useBatchVariations, useDeleteVariation, useUpdateProduct, useUpdateVariation } from "#/lib/products/mutations";
-import { useGlobalAttributes, useProductVariations, type VariationView } from "#/lib/products/queries";
+import {
+    useAttributeTermsMap,
+    useGlobalAttributes,
+    useProductVariations,
+    type VariationView,
+} from "#/lib/products/queries";
 import { applyPattern, defaultAbbrev, type SkuTokenSpec } from "#/lib/products/sku-generator";
 import { type AttributeAxis, diffCartesian } from "#/lib/products/variations-cartesian";
 import type { VersionStatus } from "#/lib/products/versions-format";
@@ -856,16 +861,25 @@ function SkuGeneratorDialog({
         abbreviations: { ...tk.abbreviations, ...abbrevByTermId },
     }));
     /**
-     * Term names are pulled from the variation `pins` directly — every selected variation will
-     * carry the same axis term ids in its pin set, so we have a deterministic id → name view.
+     * Term names for the abbrev table + preview. Loaded once per attribute via `useQueries` so
+     * the row labels read as the operator's actual values (Silver / 256GB / …) instead of the
+     * raw term ids, and `defaultAbbrev` runs against names so its 3-letter fallback (NT / 256)
+     * matches what the operator typed.
      */
-    const termNameById: Record<number, string> = {};
-    for (const row of selected) {
-        for (const pin of row.pins) {
-            if (pin.term_id === null) continue;
-            if (termNameById[pin.term_id] === undefined) termNameById[pin.term_id] = "";
+    const axisIds = useMemo(() => axes.map((a) => a.attribute_id), [axes]);
+    const termNameById = useAttributeTermsMap(axisIds);
+
+    /** Distinct term ids actually used across the selection — drives the abbrev-table rows. */
+    const usedTermIds = useMemo(() => {
+        const seen = new Set<number>();
+        for (const row of selected) {
+            for (const pin of row.pins) {
+                if (pin.term_id === null) continue;
+                seen.add(pin.term_id);
+            }
         }
-    }
+        return Array.from(seen);
+    }, [selected]);
 
     const result = applyPattern(pattern, productSku, selected, liveTokens, termNameById);
 
@@ -892,13 +906,13 @@ function SkuGeneratorDialog({
                     <div className="rounded border border-border bg-muted/30 p-2 text-xs">
                         <p className="mb-1 text-muted-foreground">{t("abbrevLabel")}</p>
                         <ul className="flex flex-col gap-1">
-                            {Object.keys(termNameById).map((id) => {
-                                const termId = Number(id);
+                            {usedTermIds.map((termId) => {
+                                const name = termNameById[termId] ?? `#${termId}`;
                                 return (
-                                    <li key={id} className="flex items-center gap-2">
-                                        <span className="w-24 truncate text-foreground">#{termId}</span>
+                                    <li key={termId} className="flex items-center gap-2">
+                                        <span className="min-w-0 flex-1 truncate text-foreground">{name}</span>
                                         <Input
-                                            value={abbrevByTermId[termId] ?? defaultAbbrev(String(termId))}
+                                            value={abbrevByTermId[termId] ?? defaultAbbrev(name)}
                                             onChange={(e) => setAbbrevByTermId({ ...abbrevByTermId, [termId]: e.target.value })}
                                             className="h-7 w-24 font-mono text-xs"
                                             dir="ltr"
