@@ -169,6 +169,18 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
     const mainSections: SectionSpec[] = useMemo(() => {
         const sections: SectionSpec[] = [
             {
+                id: "productInfo",
+                title: t("sections.productInfo"),
+                body: (
+                    <div className="flex flex-col gap-6">
+                        <GeneralBody locale={locale} />
+                        <InnerSection title={t("sections.description")}>
+                            <DescriptionBody />
+                        </InnerSection>
+                    </div>
+                ),
+            },
+            {
                 id: "howItSells",
                 title: t("sections.howItSells"),
                 body: (
@@ -189,18 +201,6 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
                                 </InnerSection>
                             </>
                         ) : null}
-                    </div>
-                ),
-            },
-            {
-                id: "productInfo",
-                title: t("sections.productInfo"),
-                body: (
-                    <div className="flex flex-col gap-6">
-                        <GeneralBody locale={locale} />
-                        <InnerSection title={t("sections.description")}>
-                            <DescriptionBody />
-                        </InnerSection>
                     </div>
                 ),
             },
