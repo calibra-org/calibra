@@ -30,7 +30,7 @@ allOf:
               description: Present only when `type=variable`.
               items:
                   type: object
-                  required: [id, on_sale, manage_stock_mode, attribute_pins]
+                  required: [id, on_sale, manage_stock_mode, status, attribute_pins]
                   properties:
                       id: { type: integer }
                       sku: { type: [string, "null"] }
@@ -39,6 +39,9 @@ allOf:
                       effective_price: { type: [integer, "null"] }
                       on_sale: { type: boolean }
                       manage_stock_mode: { type: string }
+                      status:
+                          type: string
+                          enum: [draft, active, inactive, archived]
                       attribute_pins:
                           type: array
                           items:
@@ -51,13 +54,19 @@ allOf:
               type: array
               items:
                   type: object
-                  required: [id, attribute_id, position, visible, used_for_variation, term_ids]
+                  required: [id, attribute_id, position, visible, used_for_variation, display_type, term_ids]
                   properties:
                       id: { type: integer }
                       attribute_id: { type: integer }
                       position: { type: integer }
                       visible: { type: boolean }
                       used_for_variation: { type: boolean }
+                      display_type:
+                          type: string
+                          enum: [dropdown, pills, color_swatch, image_swatch]
+                          description: >
+                              Customer-facing display style on the storefront product page.
+                              Defaults to `dropdown`.
                       term_ids:
                           type: array
                           items: { type: integer }

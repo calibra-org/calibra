@@ -4251,6 +4251,8 @@ export interface components {
                 effective_price?: number | null;
                 on_sale: boolean;
                 manage_stock_mode: string;
+                /** @enum {string} */
+                status: "draft" | "active" | "inactive" | "archived";
                 attribute_pins: {
                     attribute_id: number;
                     term_id: number;
@@ -4262,6 +4264,11 @@ export interface components {
                 position: number;
                 visible: boolean;
                 used_for_variation: boolean;
+                /**
+                 * @description Customer-facing display style on the storefront product page. Defaults to `dropdown`.
+                 * @enum {string}
+                 */
+                display_type: "dropdown" | "pills" | "color_swatch" | "image_swatch";
                 term_ids: number[];
             }[];
             /** @description Per-product attributes (name + chip values) that have no global taxonomy counterpart and never feed variation generation. */
@@ -4342,6 +4349,11 @@ export interface components {
             tax_class_id?: number | null;
             manage_stock_mode: string;
             menu_order: number;
+            /**
+             * @description Sellable-version lifecycle. New variations generated from the cartesian land as `draft` so they don't go live with empty SKU/stock; the operator promotes to `active` after review. `archived` preserves order history while removing the row from the storefront catalog.
+             * @enum {string}
+             */
+            status: "draft" | "active" | "inactive" | "archived";
             description?: string | null;
             attribute_pins: {
                 attribute_id: number;
@@ -8421,10 +8433,10 @@ export interface operations {
                 "application/json": {
                     sku?: string | null;
                     /**
-                     * @default published
+                     * @default active
                      * @enum {string}
                      */
-                    status?: "draft" | "published" | "archived";
+                    status?: "draft" | "active" | "inactive" | "archived";
                     regular_price?: components["schemas"]["Money"] | null;
                     sale_price?: components["schemas"]["Money"] | null;
                     /** Format: date-time */

@@ -86,6 +86,7 @@ export interface AdminProductDetailView {
         position: number;
         visible: boolean;
         usedForVariation: boolean;
+        displayType: "dropdown" | "pills" | "color_swatch" | "image_swatch";
         termIds: number[];
     }[];
     customAttributes: {
@@ -207,6 +208,7 @@ export function toAdminProductDetail(p: SdkAdminProductDetail): AdminProductDeta
                         position: number;
                         visible: boolean;
                         used_for_variation: boolean;
+                        display_type?: "dropdown" | "pills" | "color_swatch" | "image_swatch";
                         term_ids: number[];
                     }[];
                 }
@@ -216,6 +218,7 @@ export function toAdminProductDetail(p: SdkAdminProductDetail): AdminProductDeta
             position: Number(row.position),
             visible: Boolean(row.visible),
             usedForVariation: Boolean(row.used_for_variation),
+            displayType: row.display_type ?? "dropdown",
             termIds: (row.term_ids ?? []).map((id) => Number(id)),
         })),
         customAttributes: (

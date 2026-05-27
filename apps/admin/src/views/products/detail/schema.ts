@@ -67,6 +67,7 @@ export const productDetailSchema = z
                 position: z.number().int().min(0),
                 visible: z.boolean(),
                 usedForVariation: z.boolean(),
+                displayType: z.enum(["dropdown", "pills", "color_swatch", "image_swatch"]),
                 termIds: z.array(z.number()),
             }),
         ),
@@ -284,6 +285,7 @@ export function formValuesToPayload(values: ProductDetailFormValues): Record<str
             position: link.position === 0 ? i : link.position,
             visible: link.visible,
             used_for_variation: link.usedForVariation,
+            display_type: link.displayType,
             term_ids: link.termIds,
         })),
         custom_attributes: values.customAttributes.map((row, i) => ({

@@ -274,6 +274,7 @@ export interface VariationView {
     downloadable: boolean;
     manageStockMode: "own" | "parent";
     menuOrder: number;
+    status: "draft" | "active" | "inactive" | "archived";
     pins: { attribute_id: number; term_id: number | null }[];
     description: string | null;
 }
@@ -305,6 +306,7 @@ export function useProductVariations(productId: number | null) {
                     downloadable: Boolean(r.downloadable),
                     manageStockMode: ((r.manage_stock_mode as string) ?? "own") as "own" | "parent",
                     menuOrder: Number((r.menu_order as number | undefined) ?? 0),
+                    status: ((r.status as string | undefined) ?? "active") as VariationView["status"],
                     pins: ((r.attribute_pins as { attribute_id: number; term_id: number | null }[] | undefined) ?? []).map(
                         (p) => ({
                             attribute_id: Number(p.attribute_id),

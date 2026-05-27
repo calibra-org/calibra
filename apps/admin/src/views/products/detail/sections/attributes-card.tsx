@@ -136,6 +136,7 @@ export function AttributesBody({ productType, productId, ifMatch }: AttributesBo
             position: globals.fields.length,
             visible: true,
             usedForVariation: productType === "variable",
+            displayType: "dropdown",
             termIds: [],
         });
         setExpanded((prev) => new Set(prev).add(`global:${attributeId}` as RowId));
