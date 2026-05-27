@@ -76,17 +76,17 @@ export function buildFieldIndex<Model extends LucidModel>(
 }
 
 /**
- * Execute the parsed query against a pre-scoped Lucid builder. The builder is the controller's
- * authorisation surface (soft-delete, tenant id, preloads); the runtime only layers the
- * operator-supplied predicates on top.
+ * Layer the operator-supplied predicates + sort onto a pre-scoped Lucid builder without
+ * paginating. Exposed separately from `runTableView` so unit tests can `.toSQL()` the result
+ * to assert the shape of each clause; production callers always go through `runTableView`.
  */
-export async function runTableView<Model extends LucidModel, TRow = InstanceType<Model>>(
+export function applyTableView<Model extends LucidModel>(
     config: TableViewConfig<Model, Record<string, TableViewColumn>>,
     fieldIndex: ReturnType<typeof buildFieldIndex<Model>>,
     builder: ModelQueryBuilderContract<Model, InstanceType<Model>>,
     parsed: ParsedTableViewQuery<string, string>,
     options?: TableViewRunOptions,
-): Promise<TableViewRunResult<TRow>> {
+): ModelQueryBuilderContract<Model, InstanceType<Model>> {
     const { fields, relationMeta } = fieldIndex;
     const addedJoins = new Set<string>();
 
@@ -145,7 +145,23 @@ export async function runTableView<Model extends LucidModel, TRow = InstanceType
         }
     }
 
-    const paginator = await builder.paginate(parsed.page, parsed.limit);
+    return builder;
+}
+
+/**
+ * Execute the parsed query against a pre-scoped Lucid builder. The builder is the controller's
+ * authorisation surface (soft-delete, tenant id, preloads); the runtime only layers the
+ * operator-supplied predicates on top.
+ */
+export async function runTableView<Model extends LucidModel, TRow = InstanceType<Model>>(
+    config: TableViewConfig<Model, Record<string, TableViewColumn>>,
+    fieldIndex: ReturnType<typeof buildFieldIndex<Model>>,
+    builder: ModelQueryBuilderContract<Model, InstanceType<Model>>,
+    parsed: ParsedTableViewQuery<string, string>,
+    options?: TableViewRunOptions,
+): Promise<TableViewRunResult<TRow>> {
+    const ready = applyTableView(config, fieldIndex, builder, parsed, options);
+    const paginator = await ready.paginate(parsed.page, parsed.limit);
     const meta: PaginationMeta = {
         page: paginator.currentPage,
         perPage: paginator.perPage,
@@ -254,28 +270,28 @@ function applyFilterClause<Builder extends BasicQueryBuilder>(
             asOr ? builder.orWhere(sqlColumn, "<=", v as TableViewPrimitive) : builder.where(sqlColumn, "<=", v as TableViewPrimitive);
             break;
         case "like":
-            applyLikeOp(builder, sqlColumn, "LIKE", String(v), asOr);
+            applyLikeOp(builder, sqlColumn, "like", String(v), asOr, false);
             break;
         case "ilike":
-            applyLikeOp(builder, sqlColumn, "ILIKE", String(v), asOr);
+            applyLikeOp(builder, sqlColumn, "ilike", String(v), asOr, false);
             break;
         case "nlike":
-            applyLikeOp(builder, sqlColumn, "NOT LIKE", String(v), asOr);
+            applyLikeOp(builder, sqlColumn, "like", String(v), asOr, true);
             break;
         case "nilike":
-            applyLikeOp(builder, sqlColumn, "NOT ILIKE", String(v), asOr);
+            applyLikeOp(builder, sqlColumn, "ilike", String(v), asOr, true);
             break;
         case "inc":
-            applyLikeOp(builder, sqlColumn, "LIKE", `%${String(v)}%`, asOr);
+            applyLikeOp(builder, sqlColumn, "like", `%${String(v)}%`, asOr, false);
             break;
         case "iinc":
-            applyLikeOp(builder, sqlColumn, "ILIKE", `%${String(v)}%`, asOr);
+            applyLikeOp(builder, sqlColumn, "ilike", `%${String(v)}%`, asOr, false);
             break;
         case "ninc":
-            applyLikeOp(builder, sqlColumn, "NOT LIKE", `%${String(v)}%`, asOr);
+            applyLikeOp(builder, sqlColumn, "like", `%${String(v)}%`, asOr, true);
             break;
         case "niinc":
-            applyLikeOp(builder, sqlColumn, "NOT ILIKE", `%${String(v)}%`, asOr);
+            applyLikeOp(builder, sqlColumn, "ilike", `%${String(v)}%`, asOr, true);
             break;
         case "in":
             asOr
@@ -303,7 +319,12 @@ function applyFilterClause<Builder extends BasicQueryBuilder>(
     }
 }
 
-function applyLikeOp(builder: BasicQueryBuilder, col: string, op: string, value: string, asOr: boolean): void {
+function applyLikeOp(builder: BasicQueryBuilder, col: string, op: string, value: string, asOr: boolean, negated: boolean): void {
+    if (negated) {
+        if (asOr) builder.orWhereNot(col, op, value);
+        else builder.whereNot(col, op, value);
+        return;
+    }
     if (asOr) builder.orWhere(col, op, value);
     else builder.where(col, op, value);
 }
@@ -352,6 +373,8 @@ function assertExhaustive(op: TableViewOperator): never {
 interface BasicQueryBuilder {
     where(column: string, op: string, value: unknown): BasicQueryBuilder;
     orWhere(column: string, op: string, value: unknown): BasicQueryBuilder;
+    whereNot(column: string, op: string, value: unknown): BasicQueryBuilder;
+    orWhereNot(column: string, op: string, value: unknown): BasicQueryBuilder;
     whereIn(column: string, values: ReadonlyArray<unknown>): BasicQueryBuilder;
     orWhereIn(column: string, values: ReadonlyArray<unknown>): BasicQueryBuilder;
     whereNotIn(column: string, values: ReadonlyArray<unknown>): BasicQueryBuilder;
