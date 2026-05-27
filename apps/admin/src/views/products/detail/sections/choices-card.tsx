@@ -435,6 +435,7 @@ function ChoiceRow({ rowId, index, expanded, onToggleExpand, onDemoteToSpec, sib
                     ) : null}
                     {singleValue ? (
                         <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/30 p-2 text-xs">
+                            <span className="min-w-0 flex-1 text-muted-foreground">{labels.singleValueWarning}</span>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -444,7 +445,6 @@ function ChoiceRow({ rowId, index, expanded, onToggleExpand, onDemoteToSpec, sib
                             >
                                 {labels.demoteToSpec}
                             </Button>
-                            <span className="min-w-0 flex-1 text-muted-foreground">{labels.singleValueWarning}</span>
                         </div>
                     ) : null}
                 </div>

@@ -461,10 +461,10 @@ function SpecLinkRow({ rowId, index, expanded, onToggleExpand, onRemove, onPromo
                     />
                     {showPromote ? (
                         <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/30 p-2 text-xs">
+                            <span className="min-w-0 flex-1 text-muted-foreground">{labels.multiValueWarning}</span>
                             <Button type="button" variant="outline" size="sm" className="h-7 shrink-0 text-xs" onClick={onPromote}>
                                 {labels.multiValuePromote}
                             </Button>
-                            <span className="min-w-0 flex-1 text-muted-foreground">{labels.multiValueWarning}</span>
                         </div>
                     ) : null}
                 </div>
