@@ -34,6 +34,7 @@ export const createVariationValidator = vine.compile(
         tax_class_id: vine.number().nullable().optional(),
         manage_stock_mode: vine.enum(["own", "parent"]).optional(),
         menu_order: vine.number().optional(),
+        status: vine.enum(["draft", "active", "inactive", "archived"]).optional(),
         attributes: vine.record(vine.any()).optional(),
         translations: vine.array(VARIATION_TRANSLATION_SCHEMA).optional(),
         attribute_pins: vine.array(ATTRIBUTE_PIN_SCHEMA).optional(),

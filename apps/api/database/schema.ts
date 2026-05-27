@@ -1261,12 +1261,14 @@ export class ProductAttributeLinkTermSchema extends BaseModel {
 }
 
 export class ProductAttributeLinkSchema extends BaseModel {
-  static $columns = ['attributeId', 'createdAt', 'id', 'position', 'productId', 'updatedAt', 'usedForVariation', 'visible'] as const
+  static $columns = ['attributeId', 'createdAt', 'displayType', 'id', 'position', 'productId', 'updatedAt', 'usedForVariation', 'visible'] as const
   $columns = ProductAttributeLinkSchema.$columns
   @column()
   declare attributeId: bigint | number
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare displayType: string
   @column({ isPrimary: true })
   declare id: bigint | number
   @column()
@@ -1947,7 +1949,7 @@ export class ProductVariationTranslationSchema extends BaseModel {
 }
 
 export class ProductVariationSchema extends BaseModel {
-  static $columns = ['attributes', 'createdAt', 'deletedAt', 'downloadable', 'gtin', 'heightMm', 'id', 'imageMediaId', 'lengthMm', 'manageStockMode', 'menuOrder', 'productId', 'regularPrice', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'sku', 'taxClassId', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
+  static $columns = ['attributes', 'createdAt', 'deletedAt', 'downloadable', 'gtin', 'heightMm', 'id', 'imageMediaId', 'lengthMm', 'manageStockMode', 'menuOrder', 'productId', 'regularPrice', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'sku', 'status', 'taxClassId', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
   $columns = ProductVariationSchema.$columns
   @column()
   declare attributes: any
@@ -1983,6 +1985,8 @@ export class ProductVariationSchema extends BaseModel {
   declare saleStartsAt: DateTime | null
   @column()
   declare sku: string | null
+  @column()
+  declare status: string
   @column()
   declare taxClassId: bigint | number | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })

@@ -230,6 +230,7 @@ function applyVariationFields(row: ProductVariation, payload: Record<string, unk
     if (payload.tax_class_id !== undefined) row.taxClassId = (payload.tax_class_id as number | null) ?? null;
     if (payload.manage_stock_mode !== undefined) row.manageStockMode = payload.manage_stock_mode as string;
     if (payload.menu_order !== undefined) row.menuOrder = payload.menu_order as number;
+    if (payload.status !== undefined) row.status = payload.status as string;
     if (payload.attributes !== undefined) row.attributes = payload.attributes ?? {};
 }
 

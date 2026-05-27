@@ -41,6 +41,7 @@ export default class ProductVariationTransformer extends BaseTransformer<Product
             tax_class_id: v.taxClassId === null ? null : Number(v.taxClassId),
             manage_stock_mode: v.manageStockMode,
             menu_order: v.menuOrder,
+            status: v.status,
             description: translation?.description ?? null,
             attribute_pins: (v.attributePins ?? []).map((pin) => ({
                 attribute_id: Number(pin.attributeId),

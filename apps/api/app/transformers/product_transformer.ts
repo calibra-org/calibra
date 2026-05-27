@@ -113,6 +113,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
                 effective_price: variationPrice.effectivePrice === null ? null : Number(variationPrice.effectivePrice),
                 on_sale: variationPrice.onSale,
                 manage_stock_mode: v.manageStockMode,
+                status: v.status,
                 attribute_pins: (v.attributePins ?? []).map((pin) => ({
                     attribute_id: Number(pin.attributeId),
                     term_id: Number(pin.termId),
@@ -129,6 +130,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
                 position: link.position,
                 visible: link.visible,
                 used_for_variation: link.usedForVariation,
+                display_type: link.displayType ?? "dropdown",
                 term_ids: (link.terms ?? []).map((t) => Number(t.id)),
             }));
 

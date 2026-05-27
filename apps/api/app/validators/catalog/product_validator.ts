@@ -15,6 +15,7 @@ const ATTRIBUTE_LINK_SCHEMA = vine.object({
     position: vine.number().min(0).optional(),
     visible: vine.boolean().optional(),
     used_for_variation: vine.boolean().optional(),
+    display_type: vine.enum(["dropdown", "pills", "color_swatch", "image_swatch"]).optional(),
     term_ids: vine.array(vine.number()),
 });
 

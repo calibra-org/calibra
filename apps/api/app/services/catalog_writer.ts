@@ -175,6 +175,11 @@ export interface AttributeLinkInput {
     position?: number;
     visible?: boolean;
     used_for_variation?: boolean;
+    /**
+     * Customer-facing display type for the choice. Defaults to `dropdown` so unmigrated payloads
+     * keep working. The four enum values match the DB CHECK and the OpenAPI schema.
+     */
+    display_type?: "dropdown" | "pills" | "color_swatch" | "image_swatch";
     term_ids: number[];
 }
 
@@ -208,6 +213,7 @@ export async function syncProductAttributeLinks(
                 position: link.position ?? i,
                 visible: link.visible ?? true,
                 used_for_variation: link.used_for_variation ?? false,
+                display_type: link.display_type ?? "dropdown",
                 created_at: now,
                 updated_at: now,
             });
