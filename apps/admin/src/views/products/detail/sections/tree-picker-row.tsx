@@ -68,6 +68,13 @@ export function TreePickerRow({
         }
     };
 
+    /**
+     * Hide the chevron entirely when the consumer doesn't pass an expand handler (the brands
+     * picker is a flat list). When the handler IS provided but the row has no children, we
+     * still render an invisible chevron so siblings line up; that's the categories case.
+     */
+    const showChevronColumn = onToggleExpand !== undefined;
+
     return (
         <div>
             <div
@@ -86,26 +93,28 @@ export function TreePickerRow({
                 )}
                 style={{ paddingInlineStart: `${indentPx + 4}px` }}
             >
-                <button
-                    type="button"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        if (row.hasChildren && onToggleExpand !== undefined) onToggleExpand(row.category.id);
-                    }}
-                    aria-hidden={!row.hasChildren}
-                    tabIndex={-1}
-                    className={cn(
-                        "flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors",
-                        "hover:bg-muted/60 hover:text-foreground",
-                        row.hasChildren ? "opacity-100" : "pointer-events-none opacity-0",
-                    )}
-                >
-                    {row.isExpanded ? (
-                        <ChevronDown className="size-3.5" aria-hidden="true" />
-                    ) : (
-                        <ChevronRight className="size-3.5" data-rtl-flip aria-hidden="true" />
-                    )}
-                </button>
+                {showChevronColumn ? (
+                    <button
+                        type="button"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            if (row.hasChildren) onToggleExpand(row.category.id);
+                        }}
+                        aria-hidden={!row.hasChildren}
+                        tabIndex={-1}
+                        className={cn(
+                            "flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors",
+                            "hover:bg-muted/60 hover:text-foreground",
+                            row.hasChildren ? "opacity-100" : "pointer-events-none opacity-0",
+                        )}
+                    >
+                        {row.isExpanded ? (
+                            <ChevronDown className="size-3.5" aria-hidden="true" />
+                        ) : (
+                            <ChevronRight className="size-3.5" data-rtl-flip aria-hidden="true" />
+                        )}
+                    </button>
+                ) : null}
 
                 {selection === "multi" ? (
                     <Checkbox

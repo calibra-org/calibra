@@ -480,19 +480,28 @@ export async function searchTags(query: string, locale: string): Promise<{ id: n
 /**
  * Resolves a list of tag ids back to `{id, label}` options on form mount, so existing chips
  * render with their Persian names instead of `#42` placeholders.
+ *
+ * Fetches each id through `GET /admin/tags/{id}` rather than scanning the paginated index —
+ * with N saved tags spread across the catalog, the index lookup would miss any tag that
+ * doesn't land in the first page and leave the chip stuck on its `#${id}` fallback.
  */
 export async function resolveTags(ids: (number | string)[], locale: string): Promise<{ id: number; label: string }[]> {
     const numericIds = ids
         .map((value) => (typeof value === "number" ? value : Number(value)))
         .filter((value) => Number.isFinite(value));
     if (numericIds.length === 0) return [];
-    const envelope = await apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("tags", {
-        locale,
-        query: { perPage: Math.max(numericIds.length, 25) },
-    });
-    const idSet = new Set(numericIds);
-    return (envelope.data ?? [])
-        .filter((row) => idSet.has(Number(row.id)))
+    const results = await Promise.all(
+        numericIds.map(async (id) => {
+            try {
+                const res = await apiGet<{ data: SdkAdminTaxonomy }>(`tags/${id}`, { locale });
+                return res.data;
+            } catch {
+                return null;
+            }
+        }),
+    );
+    return results
+        .filter((row): row is SdkAdminTaxonomy => row !== null)
         .map((row) => ({ id: Number(row.id), label: row.name ?? `#${row.id}` }));
 }
 

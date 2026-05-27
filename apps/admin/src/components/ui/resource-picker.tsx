@@ -37,6 +37,8 @@ export interface ResourcePickerMultiProps {
     creatable?: { onCreate: (name: string) => Promise<ComboboxOption> };
     disabled?: boolean;
     className?: string;
+    /** Render the chip strip below the trigger button instead of above (default). */
+    chipsBelow?: boolean;
 }
 
 export type ResourcePickerProps = ResourcePickerSingleProps | ResourcePickerMultiProps;
@@ -68,6 +70,7 @@ function MultiResourcePicker({
     creatable,
     disabled,
     className,
+    chipsBelow,
 }: ResourcePickerMultiProps) {
     const t = useTranslations("Common");
     const [pending, setPending] = useState(false);
@@ -107,6 +110,7 @@ function MultiResourcePicker({
                 onSearch={wrappedSearch}
                 onResolve={onResolve}
                 disabled={disabled || pending}
+                chipsBelow={chipsBelow}
                 labels={{
                     placeholder: placeholder ?? t("select"),
                     search: t("search"),

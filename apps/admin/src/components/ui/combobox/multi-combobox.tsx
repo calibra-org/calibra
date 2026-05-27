@@ -11,6 +11,15 @@ import { cn } from "#/lib/utils";
 
 import type { ComboboxLabels, ComboboxOption } from "./combobox.types";
 
+/**
+ * Module-scoped stable references passed to `BaseCombobox.Root`. Selection state is owned
+ * externally (via `selectedIds`), so `value` is always `[]` and `onValueChange` is a noop —
+ * but Base UI's internal sync effect uses `value` reference as a dep, so a fresh array
+ * literal per render would re-fire the effect, call `onValueChange`, re-render, and loop.
+ */
+const STABLE_EMPTY_VALUE: ComboboxOption[] = [];
+const NOOP_VALUE_CHANGE = (): undefined => undefined;
+
 interface MultiComboboxProps {
     selectedIds: (number | string)[];
     onSelectionChange: (next: (number | string)[]) => void;
@@ -34,6 +43,8 @@ interface MultiComboboxProps {
     renderChip?: (option: ComboboxOption, remove: () => void) => ReactNode;
     /** Suppress the default chip strip — callers that render their own selection surface. */
     hideChips?: boolean;
+    /** Render the chip strip below the trigger instead of above (default). */
+    chipsBelow?: boolean;
 }
 
 /**
@@ -58,6 +69,7 @@ export function MultiCombobox({
     preload = false,
     renderChip,
     hideChips = false,
+    chipsBelow = false,
 }: MultiComboboxProps) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -140,7 +152,7 @@ export function MultiCombobox({
     const selectedChips = selectedIds.map((sid) => resolved.get(sid) ?? { id: sid, label: `#${sid}` });
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className={cn("flex flex-col gap-2", chipsBelow && "flex-col-reverse")}>
             {!hideChips && selectedChips.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5" id={`${id}-chips`}>
                     {selectedChips.map((opt) => {
@@ -176,9 +188,9 @@ export function MultiCombobox({
                         onOpenChange={setOpen}
                         multiple
                         inputValue={query}
-                        onInputValueChange={(next) => setQuery(next)}
-                        value={[]}
-                        onValueChange={() => undefined}
+                        onInputValueChange={setQuery}
+                        value={STABLE_EMPTY_VALUE}
+                        onValueChange={NOOP_VALUE_CHANGE}
                     >
                         <BaseCombobox.Trigger
                             render={(props) => (

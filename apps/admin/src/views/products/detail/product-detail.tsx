@@ -321,7 +321,7 @@ function GeneralBody({ locale }: { locale: Locale }) {
                     >
                         <Select value={field.value} onValueChange={field.onChange}>
                             <SelectTrigger id="type">
-                                <SelectValue />
+                                <SelectValue>{(value) => (typeof value === "string" ? tType(value) : null)}</SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                                 {(["simple", "variable", "grouped", "external"] as const).map((v) => (
@@ -517,7 +517,7 @@ function PricingBody({ externalUrlVariant }: { externalUrlVariant: boolean }) {
                             <Field id="taxStatus" label={tField("taxStatus")} span="col-span-12 md:col-span-6">
                                 <Select value={field.value} onValueChange={field.onChange}>
                                     <SelectTrigger id="taxStatus">
-                                        <SelectValue />
+                                        <SelectValue>{(value) => (typeof value === "string" ? tTax(value) : null)}</SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
                                         {(["taxable", "shipping", "none"] as const).map((v) => (
@@ -708,7 +708,7 @@ function PublishBody() {
                     <Field id="status" label={tField("status")}>
                         <Select value={field.value} onValueChange={field.onChange}>
                             <SelectTrigger id="status">
-                                <SelectValue />
+                                <SelectValue>{(value) => (typeof value === "string" ? tStatus(value) : null)}</SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                                 {(["draft", "publish", "pending", "private"] as const).map((v) => (
@@ -728,7 +728,7 @@ function PublishBody() {
                     <Field id="visibility" label={tField("visibility")}>
                         <Select value={field.value} onValueChange={field.onChange}>
                             <SelectTrigger id="visibility">
-                                <SelectValue />
+                                <SelectValue>{(value) => (typeof value === "string" ? tVisibility(value) : null)}</SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                                 {(["visible", "catalog", "search", "hidden"] as const).map((v) => (
@@ -773,7 +773,13 @@ function TaxBody({ options }: { options: { id: number; slug: string; name: strin
                         onValueChange={(v) => field.onChange(v === "_none" ? null : Number(v))}
                     >
                         <SelectTrigger id="taxClassId">
-                            <SelectValue />
+                            <SelectValue>
+                                {(value) =>
+                                    value === "_none" || value === null || value === undefined
+                                        ? t("noneSelected")
+                                        : (options.find((opt) => String(opt.id) === String(value))?.name ?? String(value))
+                                }
+                            </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="_none">{t("noneSelected")}</SelectItem>
@@ -805,7 +811,13 @@ function ShippingClassBody({ options }: { options: { id: number; slug: string; n
                         onValueChange={(v) => field.onChange(v === "_none" ? null : Number(v))}
                     >
                         <SelectTrigger id="shippingClassId">
-                            <SelectValue />
+                            <SelectValue>
+                                {(value) =>
+                                    value === "_none" || value === null || value === undefined
+                                        ? t("noneSelected")
+                                        : (options.find((opt) => String(opt.id) === String(value))?.name ?? String(value))
+                                }
+                            </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="_none">{t("noneSelected")}</SelectItem>
