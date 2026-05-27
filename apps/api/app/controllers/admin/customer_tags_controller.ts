@@ -1,13 +1,22 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
+import vine from "@vinejs/vine";
 
 import Customer from "#models/customer";
 import CustomerTag from "#models/customer_tag";
+import { adminCustomerTagsView, type AdminCustomerTagsViewQuery } from "#table_views/admin/customer_tags";
 import CustomerTagTransformer from "#transformers/customer_tag_transformer";
 import { adminCustomerTagAttachValidator, adminCustomerTagCreateValidator } from "#validators/admin/customer_validator";
 
 const TAG_NAME_RE = /^[a-z0-9._-]{1,40}$/;
+
+const adminCustomerTagsListValidator = vine.compile(
+    vine.object({
+        ...adminCustomerTagsView.schema.getProperties(),
+        q: vine.string().trim().minLength(1).maxLength(40).optional(),
+    }),
+);
 
 /**
  * Tag names are normalized to lowercase + a strict character set before they hit the DB so
@@ -25,21 +34,17 @@ function normalizeTagName(raw: string): string {
 export default class AdminCustomerTagsController {
     /** GET /api/v1/admin/customer-tags — paginated; `?q=` does prefix search for the autocomplete combobox. */
     async index(ctx: HttpContext) {
-        const page = Number(ctx.request.input("page", 1));
-        const perPage = Math.min(Number(ctx.request.input("perPage", 50)), 200);
-        const q = String(ctx.request.input("q", "")).trim().toLowerCase();
-        const query = CustomerTag.query();
-        if (q.length > 0) query.where("name", "like", `${q}%`);
-        const paginator = await query.orderBy("name", "asc").paginate(page, perPage);
-        const meta = paginator.getMeta();
+        const payload = (await adminCustomerTagsListValidator.validate(ctx.request.qs())) as AdminCustomerTagsViewQuery & {
+            q?: string;
+        };
+        const q = (payload.q ?? "").toLowerCase();
+        const builder = CustomerTag.query();
+        if (q.length > 0) builder.where("name", "like", `${q}%`);
+
+        const { data, meta } = await adminCustomerTagsView.run<CustomerTag>(builder, payload);
         return {
-            data: paginator.all().map((t) => new CustomerTagTransformer(t).toObject()),
-            meta: {
-                page: meta.currentPage,
-                perPage: meta.perPage,
-                total: meta.total,
-                lastPage: meta.lastPage,
-            },
+            data: data.map((t) => new CustomerTagTransformer(t).toObject()),
+            meta,
         };
     }
 
