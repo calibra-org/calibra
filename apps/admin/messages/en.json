@@ -762,8 +762,8 @@
                 }
             },
             "type": {
-                "simple": "Simple",
-                "variable": "Variable",
+                "simple": "One version",
+                "variable": "Multiple versions",
                 "grouped": "Grouped",
                 "external": "External"
             },
@@ -988,6 +988,7 @@
             "idHint": "Numeric id",
             "noneSelected": "None",
             "sections": {
+                "sellingMode": "How it sells",
                 "general": "General",
                 "description": "Description",
                 "pricing": "Pricing",
@@ -995,8 +996,9 @@
                 "shipping": "Shipping",
                 "shippingClass": "Shipping class",
                 "linked": "Linked products",
-                "attributes": "Attributes",
-                "variations": "Variations",
+                "specs": "Specs",
+                "choices": "Customer choices",
+                "versions": "Sellable versions",
                 "advanced": "Advanced",
                 "publish": "Publish",
                 "image": "Featured image",
@@ -1061,13 +1063,13 @@
                 "externalUrl": "URL of the partner page."
             },
             "types": {
-                "simple": "Simple",
-                "variable": "Variable",
+                "simple": "One version",
+                "variable": "Multiple versions",
                 "grouped": "Grouped",
-                "external": "External / Affiliate",
+                "external": "External",
                 "descriptions": {
-                    "simple": "A standalone product with no variations.",
-                    "variable": "A product with several variations (size/color/...).",
+                    "simple": "No options — one price, one SKU.",
+                    "variable": "Shopper picks between options (color, size, ...) before checkout.",
                     "grouped": "A bundle of related products.",
                     "external": "Links to another website."
                 }
@@ -1198,6 +1200,232 @@
                     "deleted": "Variation deleted",
                     "saveFailed": "Save failed"
                 }
+            },
+            "sellingMode": {
+                "title": "How does this product sell?",
+                "subtitle": "The selling mode controls what the shopper has to pick before they can buy.",
+                "oneVersion": {
+                    "title": "One version",
+                    "description": "When the shopper doesn't need to choose a color, size, capacity, or any other option.",
+                    "example": "Example: iPhone 15 Pro, 256 GB, Silver",
+                    "result": "One price, one SKU, one stock pool."
+                },
+                "multipleVersions": {
+                    "title": "Multiple versions",
+                    "description": "When the shopper picks between options like color, size, capacity, or storage before buying.",
+                    "example": "Example: iPhone 15 Pro — shopper picks color and storage",
+                    "result": "Each version can have its own price, stock, SKU, and image."
+                },
+                "customizable": {
+                    "title": "Customizable by the customer",
+                    "description": "When the shopper personalises the product: engraving, gift wrap, custom text, uploaded file.",
+                    "comingSoon": "Coming soon"
+                },
+                "advancedDisclosure": "Advanced selling modes",
+                "grouped": {
+                    "title": "Grouped",
+                    "description": "A bundle of related products displayed together."
+                },
+                "external": {
+                    "title": "External",
+                    "description": "A link to an external site for checkout."
+                },
+                "switchToVariableNotice": "Your current price and SKU become the defaults for newly generated versions.",
+                "convertToOneVersion": {
+                    "title": "Convert to 'One version'",
+                    "body": "This product currently has {count} sellable versions. Switching to 'One version' removes choices from the storefront.",
+                    "keepOne": "Keep one version as the main product",
+                    "archiveAll": "Archive every version",
+                    "ordersPreserved": "Past orders stay intact.",
+                    "selectKeeper": "Version to keep",
+                    "confirm": "Convert",
+                    "cancel": "Cancel"
+                }
+            },
+            "specs": {
+                "title": "Specs",
+                "subtitle": "Specs describe the product — they inform the shopper, but they don't create choosable options.",
+                "empty": "Add specs like material, color, size, capacity, or compatibility. Specs help shoppers understand the product but don't create sellable versions.",
+                "addFromTaxonomy": "Add from global specs",
+                "addFreeForm": "Add a free-form spec",
+                "expandAll": "Expand all",
+                "collapseAll": "Collapse all",
+                "row": {
+                    "name": "Name",
+                    "values": "Values",
+                    "valuesPlaceholder": "Type a value and press Enter",
+                    "namePlaceholder": "e.g. Material or Origin",
+                    "showOnProductPage": "Show on product page",
+                    "showOnProductPageTooltip": "When on, this spec is listed in the specifications table on the product page.",
+                    "clear": "Remove",
+                    "valueCount": "{count} values",
+                    "untitled": "Untitled spec"
+                },
+                "multiValueWarning": "You've added multiple values. Should the shopper pick between them?",
+                "multiValueWarningKeep": "Keep as a spec",
+                "multiValueWarningPromote": "Turn into a customer choice",
+                "freeFormCannotBeChoice": "Free-form specs can't become customer choices. Create a global spec first."
+            },
+            "choices": {
+                "title": "Customer choices",
+                "subtitle": "Options the shopper picks before adding to cart — like color, size, or storage.",
+                "empty": "No choices yet. For example, an iPhone might have 'Color' and 'Storage' choices. Each combination becomes a sellable version.",
+                "addChoice": "Add a choice from global specs",
+                "displayType": {
+                    "label": "Show to shopper as",
+                    "dropdown": "Dropdown",
+                    "pills": "Buttons",
+                    "color_swatch": "Color swatch",
+                    "image_swatch": "Image swatch"
+                },
+                "row": {
+                    "values": "Values",
+                    "selectAll": "Select all",
+                    "selectNone": "Select none",
+                    "createValue": "Create a value",
+                    "combinationCount": "This choice combined with the others makes {count} versions.",
+                    "singleValueWarning": "This choice has only one value. If the shopper can't pick anything else, move it to Specs.",
+                    "demoteToSpec": "Move to Specs"
+                },
+                "totalCount": "These choices produce {count} sellable versions.",
+                "warnLarge": "That's a lot of versions. Use bulk editing so you don't get them wrong.",
+                "warnVeryLarge": "I understand I'm generating 200+ versions.",
+                "blockTooMany": "Reduce the number of choices or values.",
+                "generateButton": "Generate sellable versions",
+                "ifVariableRequired": "To add a choice, the selling mode switches to 'Multiple versions'.",
+                "explainer": {
+                    "title": "How does this work? (Example)",
+                    "exampleProduct": "Example: iPhone 15 Pro",
+                    "exampleChoicesHeader": "Customer choices:",
+                    "exampleVersionsHeader": "Sellable versions:",
+                    "footer": "Each version can have its own price, stock, SKU, and image.",
+                    "dismiss": "Got it"
+                },
+                "migrationNotice": "Previous 'variations' have been renamed to 'sellable versions'. The data hasn't changed — only the labels for clarity.",
+                "migrationDismiss": "Got it"
+            },
+            "versions": {
+                "title": "Sellable versions",
+                "subtitle": "Every combination of choices becomes a sellable version. Edit price, stock, SKU, and image per version here.",
+                "notVariableHint": "Switch the selling mode to 'Multiple versions' to enable sellable versions.",
+                "needChoicesTitle": "Add a customer choice first",
+                "needChoicesDescription": "Add at least one customer choice with multiple values in the Customer choices card to generate sellable versions.",
+                "checklist": {
+                    "title": "Setup checklist",
+                    "prices": "Price every version",
+                    "skus": "Give every version a SKU",
+                    "stock": "Track stock for every version",
+                    "images": "Add an image for every active version",
+                    "drafts": "Review draft versions"
+                },
+                "search": "Search by version or SKU…",
+                "filter": {
+                    "status": "Status",
+                    "missingPrice": "Missing price",
+                    "missingSku": "Missing SKU",
+                    "outOfStock": "Out of stock",
+                    "missingImage": "Missing image",
+                    "clearAll": "Clear filters"
+                },
+                "status": {
+                    "draft": "Draft",
+                    "active": "Active",
+                    "inactive": "Inactive",
+                    "archived": "Archived"
+                },
+                "columns": {
+                    "version": "Version",
+                    "image": "Image",
+                    "sku": "SKU",
+                    "price": "Price",
+                    "stock": "Stock",
+                    "status": "Status",
+                    "compareAt": "Compare-at",
+                    "cost": "Cost",
+                    "barcode": "Barcode",
+                    "weight": "Weight (g)",
+                    "lowStockThreshold": "Low-stock threshold",
+                    "backorder": "Backorder",
+                    "actions": "Actions"
+                },
+                "rowActions": {
+                    "edit": "Open full edit",
+                    "duplicate": "Duplicate",
+                    "archive": "Archive",
+                    "delete": "Delete"
+                },
+                "selection": {
+                    "selectAll": "Select all",
+                    "selectRow": "Select this version",
+                    "selectedCount": "{count} versions selected"
+                },
+                "bulk": {
+                    "setPrice": "Set price",
+                    "setStock": "Set stock",
+                    "generateSku": "Generate SKUs",
+                    "markActive": "Activate",
+                    "markInactive": "Deactivate",
+                    "markArchived": "Archive",
+                    "delete": "Delete",
+                    "clear": "Clear selection"
+                },
+                "regenerate": "Rebuild from choices",
+                "regenerateDialog": {
+                    "title": "Generate sellable versions",
+                    "summaryNew": "{count} new versions will be created",
+                    "summaryUnchanged": "{count} versions stay unchanged",
+                    "summaryOutdated": "{count} versions no longer match any combination",
+                    "archiveOutdated": "Archive the outdated versions.",
+                    "draftNote": "New versions are created as drafts so you can review before publishing.",
+                    "cancel": "Cancel",
+                    "confirm": "Generate"
+                },
+                "setPriceDialog": {
+                    "title": "Bulk price update",
+                    "mode": "Mode",
+                    "modeAbsolute": "Fixed price",
+                    "modePercent": "Percent change",
+                    "absoluteLabel": "Price (Toman)",
+                    "percentLabel": "Percent change",
+                    "percentHint": "Positive = increase, negative = decrease.",
+                    "preview": "Preview on the first three versions:",
+                    "apply": "Apply to {count} versions",
+                    "cancel": "Cancel"
+                },
+                "setStockDialog": {
+                    "title": "Bulk stock update",
+                    "mode": "Mode",
+                    "modeReplace": "Replace",
+                    "modeIncrease": "Increase by",
+                    "modeDecrease": "Decrease by",
+                    "quantity": "Quantity",
+                    "apply": "Apply to {count} versions",
+                    "cancel": "Cancel"
+                },
+                "skuGenerator": {
+                    "title": "Generate SKUs",
+                    "subtitle": "Build SKUs from the product code and each choice value.",
+                    "patternLabel": "Pattern",
+                    "patternHint": "Use {product} and each {token-name}.",
+                    "abbrevLabel": "Abbreviations per value",
+                    "previewLabel": "Preview (first three rows)",
+                    "collisionWarning": "{count} duplicates detected. Adjust the pattern or shortened values.",
+                    "apply": "Apply to {count} versions",
+                    "cancel": "Cancel"
+                },
+                "toasts": {
+                    "generated": "New versions saved as drafts",
+                    "generateFailed": "Could not generate versions",
+                    "deleted": "Version deleted",
+                    "deleteRefused": "This version is referenced by orders — archived instead of deleted",
+                    "saveFailed": "Save failed",
+                    "bulkUpdated": "{count} versions updated",
+                    "bulkUpdateFailed": "Bulk update failed",
+                    "skusApplied": "{count} SKUs saved"
+                },
+                "deletedWithOrdersFallback": "This version is referenced by orders — archived instead of deleted.",
+                "rowSummaryFallback": "No values",
+                "noResults": "No version matches this filter."
             },
             "attributes": {
                 "empty": {
