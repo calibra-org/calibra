@@ -3119,7 +3119,13 @@ export interface paths {
         };
         /**
          * List media library entries (admin)
-         * @description Paginated listing of every media row, ordered newest first. Filters match the WordPress `/wp-admin/upload.php` filter pills — type group, month bucket, search, attached/unattached, "mine".
+         * @description Paginated media library listing. Sort + pagination + per-column filters go through the unified TableView grammar; the WordPress-style filter pills (`type` MIME-group expansion, `month` YYYY-MM bucket, multi-column `search`, `unattached` / `mine` existence checks, `uploaded_by`) stay as top-level params because their semantics need bespoke whereIn / subquery / OR logic the v1 runtime can't model.
+         *
+         *     **TableView filterable fields**: `id`, `kind`, `mime`, `size_bytes`, `width`, `height`, `uploaded_by_user_id`, `created_at`, `filename`.
+         *
+         *     **TableView orderable fields**: `id`, `size_bytes`, `created_at`, `filename`.
+         *
+         *     Default `limit` is 60 (the media grid's natural row count); legacy `?perPage=` / `?per_page=` keep working as aliases for `limit` so the existing FE doesn't need a wire refactor in this PR.
          */
         get: operations["adminMediaIndex"];
         put?: never;
@@ -10109,10 +10115,16 @@ export interface operations {
     adminMediaIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
                 /** @description MIME group (`image` / `audio` / `video` / `document` / `spreadsheet` / `archive`), `unattached` for rows not linked to any product image, or `mine` for rows uploaded by the calling user. */
                 type?: "all" | "image" | "audio" | "video" | "document" | "spreadsheet" | "archive" | "unattached" | "mine";
                 /** @description Filter to a single calendar month, formatted `YYYY-MM` (UTC). */
