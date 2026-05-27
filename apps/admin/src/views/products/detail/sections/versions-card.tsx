@@ -128,6 +128,65 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     const selectedSetNumeric = useMemo(() => new Set(selectedIdsNumeric), [selectedIdsNumeric]);
     const clearSelection = () => setSelected(new Set());
 
+    /**
+     * Built once per relevant dep change; declared above the early-return gates so React's hook
+     * order stays stable whether the gates fire or not. Putting it later violated rules-of-hooks
+     * — the gates short-circuited before `useMemo` ran, so the hook count varied per render.
+     */
+    const columns = useMemo(
+        () =>
+            buildVersionColumns({
+                locale,
+                sort,
+                onSort: setSort,
+                onHideColumn: (id) => setColumnVisibility((prev) => ({ ...prev, [id]: false })),
+                attributesIndex: attributes.data ?? [],
+                onUpdatePrice: async (variationId, next) => {
+                    try {
+                        await updateVariation.mutateAsync({
+                            variationId,
+                            body: { regular_price: next === null ? null : Math.round(next) },
+                        });
+                    } catch (error) {
+                        toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
+                    }
+                },
+                onUpdateSku: async (variationId, next) => {
+                    try {
+                        await updateVariation.mutateAsync({
+                            variationId,
+                            body: { sku: next.length === 0 ? null : next },
+                        });
+                    } catch (error) {
+                        toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
+                    }
+                },
+                onUpdateStatus: async (variationId, next) => {
+                    try {
+                        await updateVariation.mutateAsync({ variationId, body: { status: next } });
+                    } catch (error) {
+                        toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
+                    }
+                },
+                onDelete: async (variationId) => {
+                    try {
+                        await deleteVariation.mutateAsync({ variationId });
+                        toast.add({ title: t("toasts.deleted"), data: { tone: "success" } });
+                    } catch {
+                        try {
+                            await updateVariation.mutateAsync({ variationId, body: { status: "archived" } });
+                            toast.add({ title: t("toasts.deleteRefused"), data: { tone: "warning" } });
+                        } catch (error) {
+                            toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
+                        }
+                    }
+                },
+                t,
+                sortLabels: { asc: "↑", desc: "↓", hide: "—" },
+            }),
+        [attributes.data, deleteVariation, locale, sort, t, updateVariation],
+    );
+
     if (productType !== "variable") {
         return (
             <div className="flex items-center gap-2 rounded-md border border-border border-dashed bg-muted/30 p-3 text-muted-foreground text-xs">
@@ -243,60 +302,6 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     const missingImages = rows.filter((r) => r.status === "active" && r.imageMediaId === null).length;
     const draftCount = rows.filter((r) => r.status === "draft").length;
     const checklistComplete = missingPrices === 0 && missingSkus === 0 && missingImages === 0 && draftCount === 0;
-
-    const columns = useMemo(
-        () =>
-            buildVersionColumns({
-                locale,
-                sort,
-                onSort: setSort,
-                onHideColumn: (id) => setColumnVisibility((prev) => ({ ...prev, [id]: false })),
-                attributesIndex: attributes.data ?? [],
-                onUpdatePrice: async (variationId, next) => {
-                    try {
-                        await updateVariation.mutateAsync({
-                            variationId,
-                            body: { regular_price: next === null ? null : Math.round(next) },
-                        });
-                    } catch (error) {
-                        toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
-                    }
-                },
-                onUpdateSku: async (variationId, next) => {
-                    try {
-                        await updateVariation.mutateAsync({
-                            variationId,
-                            body: { sku: next.length === 0 ? null : next },
-                        });
-                    } catch (error) {
-                        toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
-                    }
-                },
-                onUpdateStatus: async (variationId, next) => {
-                    try {
-                        await updateVariation.mutateAsync({ variationId, body: { status: next } });
-                    } catch (error) {
-                        toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
-                    }
-                },
-                onDelete: async (variationId) => {
-                    try {
-                        await deleteVariation.mutateAsync({ variationId });
-                        toast.add({ title: t("toasts.deleted"), data: { tone: "success" } });
-                    } catch {
-                        try {
-                            await updateVariation.mutateAsync({ variationId, body: { status: "archived" } });
-                            toast.add({ title: t("toasts.deleteRefused"), data: { tone: "warning" } });
-                        } catch (error) {
-                            toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
-                        }
-                    }
-                },
-                t,
-                sortLabels: { asc: "↑", desc: "↓", hide: "—" },
-            }),
-        [attributes.data, deleteVariation, locale, sort, t, updateVariation],
-    );
 
     return (
         <div className="flex flex-col gap-3">
