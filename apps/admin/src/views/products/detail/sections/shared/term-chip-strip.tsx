@@ -8,7 +8,7 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import { arrayMove, horizontalListSortingStrategy, SortableContext, useSortable } from "@dnd-kit/sortable";
+import { arrayMove, rectSortingStrategy, SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { CSSProperties } from "react";
 
@@ -59,9 +59,22 @@ export function TermChipStrip({ attributeId, termIds, onChange, labels }: TermCh
         onChange(termIds.includes(termId) ? termIds.filter((id) => id !== termId) : [...termIds, termId]);
     };
 
-    const allIds = (terms.data ?? []).map((term) => term.id);
+    const all = terms.data ?? [];
+    const allIds = all.map((term) => term.id);
     const selectAll = () => onChange(allIds);
     const selectNone = () => onChange([]);
+
+    /**
+     * Active chips render FIRST in `termIds` order so dnd-kit's drop-position math (which reads
+     * the live DOM rect of each sortable item) matches the operator's chosen ordering. If we
+     * intermixed active + inactive in taxonomy order, the SortableContext index would diverge
+     * from the rendered DOM index and drags would land in surprising slots. Inactive chips
+     * render after a thin divider so the operator can scan "what's chosen vs. available" at a
+     * glance — and so they don't accidentally drop an active chip on an inactive one.
+     */
+    const termById = new Map(all.map((t) => [t.id, t]));
+    const activeTerms = termIds.map((id) => termById.get(id)).filter((t): t is { id: number; name: string } => t !== undefined);
+    const inactiveTerms = all.filter((t) => !termIds.includes(t.id));
 
     return (
         <div className="flex flex-col gap-2">
@@ -75,39 +88,49 @@ export function TermChipStrip({ attributeId, termIds, onChange, labels }: TermCh
                 </Button>
             </div>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={termIds} strategy={horizontalListSortingStrategy}>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                        {(terms.data ?? []).map((term) => {
-                            const active = termIds.includes(term.id);
-                            return (
-                                <TermChip
-                                    key={term.id}
-                                    id={term.id}
-                                    active={active}
-                                    sortable={active}
-                                    label={term.name}
-                                    onClick={() => toggle(term.id)}
-                                />
-                            );
-                        })}
-                        <InlineTermCreator
-                            placeholder={labels.createValue}
-                            busy={createTerm.isPending}
-                            onCreate={async (name) => {
-                                try {
-                                    const result = await createTerm.mutateAsync({ name });
-                                    onChange([...termIds, result.data.id]);
-                                } catch (error) {
-                                    toast.add({
-                                        title: labels.createFailed,
-                                        description: String(error),
-                                        data: { tone: "error" },
-                                    });
-                                }
-                            }}
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <SortableContext items={termIds} strategy={rectSortingStrategy}>
+                        {activeTerms.map((term) => (
+                            <TermChip
+                                key={term.id}
+                                id={term.id}
+                                active
+                                sortable
+                                label={term.name}
+                                onClick={() => toggle(term.id)}
+                            />
+                        ))}
+                    </SortableContext>
+                    {activeTerms.length > 0 && inactiveTerms.length > 0 ? (
+                        <span className="h-5 w-px bg-border" aria-hidden="true" />
+                    ) : null}
+                    {inactiveTerms.map((term) => (
+                        <TermChip
+                            key={term.id}
+                            id={term.id}
+                            active={false}
+                            sortable={false}
+                            label={term.name}
+                            onClick={() => toggle(term.id)}
                         />
-                    </div>
-                </SortableContext>
+                    ))}
+                    <InlineTermCreator
+                        placeholder={labels.createValue}
+                        busy={createTerm.isPending}
+                        onCreate={async (name) => {
+                            try {
+                                const result = await createTerm.mutateAsync({ name });
+                                onChange([...termIds, result.data.id]);
+                            } catch (error) {
+                                toast.add({
+                                    title: labels.createFailed,
+                                    description: String(error),
+                                    data: { tone: "error" },
+                                });
+                            }
+                        }}
+                    />
+                </div>
             </DndContext>
         </div>
     );
