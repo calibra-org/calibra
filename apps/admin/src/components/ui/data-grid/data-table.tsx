@@ -197,6 +197,13 @@ export interface DataTableProps<TData> {
     /** Bulk-action bar rendered when ≥1 row is selected. */
     bulkActions?: BulkActionsRenderer<TData>;
 
+    /**
+     * Suppress the bottom pagination strip. Use for inline editor surfaces that are constrained
+     * to a single product / parent (e.g. a product's sellable versions) where a "1-N of N"
+     * footer just consumes vertical space without ever advancing the page.
+     */
+    hidePagination?: boolean;
+
     /** Inline sub-row, e.g. the Quick Edit panel. Single-row expansion is enforced. */
     renderSubComponent?: SubRowRenderer<TData>;
     /** Controlled expanded row id (single-row expansion). Pass `undefined` to collapse. */
@@ -291,6 +298,7 @@ export function DataTable<TData>({
     onRetry,
     toolbar,
     bulkActions,
+    hidePagination = false,
     renderSubComponent,
     expandedRowId,
     onExpandedRowIdChange,
@@ -698,15 +706,17 @@ export function DataTable<TData>({
                     </div>
                 )}
 
-                <DataTablePagination
-                    meta={meta}
-                    perPageOptions={perPageOptions}
-                    onPageChange={onPageChange}
-                    onPerPageChange={onPerPageChange}
-                    selectedCount={selectedIds.size}
-                    labels={labels.pagination}
-                    formatNumber={formatNumber}
-                />
+                {hidePagination ? null : (
+                    <DataTablePagination
+                        meta={meta}
+                        perPageOptions={perPageOptions}
+                        onPageChange={onPageChange}
+                        onPerPageChange={onPerPageChange}
+                        selectedCount={selectedIds.size}
+                        labels={labels.pagination}
+                        formatNumber={formatNumber}
+                    />
+                )}
             </div>
             {selectedIds.size > 0 && bulkActions !== undefined ? (
                 <BulkActionsHost

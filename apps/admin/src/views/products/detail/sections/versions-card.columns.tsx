@@ -8,7 +8,7 @@ type TFunction = ReturnType<typeof useTranslations>;
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { type ColumnDef, DataTableColumnHeader, type SortState } from "#/components/ui/data-grid";
+import { type ColumnDef } from "#/components/ui/data-grid";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
 import { MoneyInput } from "#/components/ui/money-input";
@@ -24,36 +24,22 @@ const STATUS_VALUES: VersionStatus[] = ["draft", "active", "inactive", "archived
 
 export interface VersionColumnContext {
     locale: Locale;
-    sort: SortState | undefined;
-    onSort: (next: SortState | undefined) => void;
-    onHideColumn: (columnId: string) => void;
     attributesIndex: { id: number; name: string }[];
     onUpdatePrice: (variationId: number, next: number | null) => Promise<void>;
     onUpdateSku: (variationId: number, next: string) => Promise<void>;
     onUpdateStatus: (variationId: number, next: VersionStatus) => Promise<void>;
     onDelete: (variationId: number) => Promise<void>;
     t: TFunction;
-    sortLabels: { asc: string; desc: string; hide: string };
 }
 
 /**
- * Columns for the Sellable versions data-grid. Inline-editable cells receive the latest values
- * via TanStack's `row.original`, so a price change in one cell doesn't force the whole table to
- * re-render. The status cell renders a popover so the operator can flip lifecycle in place;
- * delete + archive live in the row-actions dropdown.
+ * Columns for the Sellable versions data-grid. Sortable headers are intentionally omitted —
+ * the variations table is a one-product editor surface, sorting it would just hide the
+ * operator's last-chosen order. Inline-editable cells receive the latest values via TanStack's
+ * `row.original`; the status cell renders a popover so lifecycle flips in place.
  */
 export function buildVersionColumns(ctx: VersionColumnContext): ColumnDef<VariationView>[] {
-    const sortableHeader = (columnId: string, title: string, className?: string) => () => (
-        <DataTableColumnHeader
-            columnId={columnId}
-            title={title}
-            sort={ctx.sort}
-            onSort={ctx.onSort}
-            onHide={() => ctx.onHideColumn(columnId)}
-            labels={ctx.sortLabels}
-            className={className}
-        />
-    );
+    const plainHeader = (title: string) => () => <span className="font-medium">{title}</span>;
 
     return [
         {
@@ -96,7 +82,7 @@ export function buildVersionColumns(ctx: VersionColumnContext): ColumnDef<Variat
         },
         {
             id: "sku",
-            header: sortableHeader("sku", ctx.t("columns.sku")),
+            header: plainHeader(ctx.t("columns.sku")),
             cell: ({ row }) => (
                 <InlineSkuCell
                     initial={row.original.sku ?? ""}
@@ -108,7 +94,7 @@ export function buildVersionColumns(ctx: VersionColumnContext): ColumnDef<Variat
         },
         {
             id: "price",
-            header: sortableHeader("price", ctx.t("columns.price")),
+            header: plainHeader(ctx.t("columns.price")),
             cell: ({ row }) => (
                 <MoneyInput
                     valueMinor={row.original.regularPriceMinor}
@@ -121,7 +107,7 @@ export function buildVersionColumns(ctx: VersionColumnContext): ColumnDef<Variat
         },
         {
             id: "status",
-            header: sortableHeader("status", ctx.t("columns.status")),
+            header: plainHeader(ctx.t("columns.status")),
             cell: ({ row }) => (
                 <StatusPopoverCell
                     value={row.original.status}

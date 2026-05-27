@@ -8,7 +8,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { DataTable, type SortState } from "#/components/ui/data-grid";
+import { DataTable } from "#/components/ui/data-grid";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
@@ -94,7 +94,6 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
         missingImage: false,
     });
     const [selected, setSelected] = useState<Set<string>>(() => new Set());
-    const [sort, setSort] = useState<SortState | undefined>(undefined);
     const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
     const [columnOrder, setColumnOrder] = useState<string[]>([]);
     const [regenerateOpen, setRegenerateOpen] = useState(false);
@@ -137,9 +136,6 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
         () =>
             buildVersionColumns({
                 locale,
-                sort,
-                onSort: setSort,
-                onHideColumn: (id) => setColumnVisibility((prev) => ({ ...prev, [id]: false })),
                 attributesIndex: attributes.data ?? [],
                 onUpdatePrice: async (variationId, next) => {
                     try {
@@ -182,9 +178,8 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                     }
                 },
                 t,
-                sortLabels: { asc: "↑", desc: "↓", hide: "—" },
             }),
-        [attributes.data, deleteVariation, locale, sort, t, updateVariation],
+        [attributes.data, deleteVariation, locale, t, updateVariation],
     );
 
     if (productType !== "variable") {
@@ -405,8 +400,6 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                 perPageOptions={[Math.max(filtered.length, 1)]}
                 onPageChange={() => undefined}
                 onPerPageChange={() => undefined}
-                sort={sort}
-                onSortChange={setSort}
                 selectedIds={selected}
                 onSelectedIdsChange={(next) => setSelected(new Set(next))}
                 columnVisibility={columnVisibility}
@@ -414,6 +407,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                 columnOrder={columnOrder}
                 onColumnOrderChange={setColumnOrder}
                 density="cozy"
+                hidePagination
                 hasActiveFilters={hasActiveFilters}
                 onClearFilters={clearAllFilters}
                 stickyColumns={{ start: ["select", "version"], end: ["actions"] }}
