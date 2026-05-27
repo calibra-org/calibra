@@ -55,25 +55,19 @@ form, you're almost certainly wrong — extend the dialog wrapper instead.
 import { type DateFacetDef, DataTableToolbar } from "#/components/ui/data-grid";
 
 const dateFacets: DateFacetDef[] = [
-    {
-        paramKey: "created",
-        label: t("filters.created"),
-        // back-compat: the API still talks `after=`/`before=`; we mirror until it migrates.
-        legacyParamKeys: { after: "created_after", before: "created_before" },
-    },
+    { paramKey: "created", label: t("filters.created") },
 ];
 
 const tableState = useDataTable({ id: "orders.list", dateFacets });
 
-const createdLegacy = useMemo(
-    () => (tableState.dateFacetValues.created === null ? {} : toLegacyDateRange(tableState.dateFacetValues.created)),
-    [tableState.dateFacetValues.created],
-);
-
 useOrdersList({
-    after: createdLegacy.after,
-    before: createdLegacy.before,
-    // …
+    query: useMemo(
+        () => ({
+            filter: dateFilterValueToTableViewFilter("created_at", tableState.dateFacetValues.created),
+            sort: [{ field: "created_at", dir: "desc" }],
+        }),
+        [tableState.dateFacetValues.created],
+    ),
 });
 
 <DataTableToolbar
@@ -161,15 +155,10 @@ Examples:
 ?created=within:2025-05-01..2025-05-07
 ```
 
-When `legacyParamKeys` is set on the facet, the table also mirrors the resolved Gregorian ISO
-boundary into the legacy keys so unmigrated endpoints keep working:
-
-```
-?created=before:2025          → ?created=before:2025&created_after=&created_before=2025-01-01
-```
-
-The mirror writes Gregorian ISO regardless of the picker's calendar — the API stays
-calendar-agnostic and works in UTC.
+Backend endpoints consume the resolved Gregorian ISO range as a TableView `filter[]=` entry
+on the corresponding date column, built via `dateFilterValueToTableViewFilter(field, value)`.
+The picker's calendar is irrelevant on the wire — the API stays calendar-agnostic and works
+in UTC.
 
 ## Keyboard
 

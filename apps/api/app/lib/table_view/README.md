@@ -237,14 +237,6 @@ meaningful filter dimension + OR composition + 422 paths.
 
 ## Limitations to know
 
-- **Vine has no strict-mode for objects.** Unknown query keys are silently dropped instead of
-  returning 422. The migrated admin UI never sends legacy keys post-cutover, but a stale deep
-  link degrades to an unfiltered list rather than an error. See the orders functional spec for
-  the documented test of this behaviour.
-- **`page` / `perPage` key mismatch is intentional.** The wire key is `limit`; the response
-  envelope key stays `perPage` for back-compat with everything consuming `Paginated<T>`. The
-  admin client maps one direction; the SDK type for the param is `limit`, the response type for
-  the meta is `perPage`.
 - **Multi-level relations and join-condition extras (e.g. `kind = 'billing'` on `order_addresses`)
   are out of scope for v1.** Stay controller-side via `whereExists` until a real second-level
   need lands.
@@ -254,36 +246,45 @@ meaningful filter dimension + OR composition + 422 paths.
 
 ## Migration status
 
-Endpoints fully on the unified grammar (shipped in this PR / branch):
+Every shipped endpoint speaks the unified grammar (`page` / `limit` / `filter[]` / `filterOr[]`
+/ `sort[]`), returns the `{ data, meta: { page, limit, total, lastPage } }` envelope, and
+goes through `view.compileStrict({ extras })` so unknown top-level query keys return 422
+instead of silently dropping. The wire param for free-text search is `q` everywhere it exists.
+
+**Shipped:**
 
 - `GET /api/v1/admin/orders` — full migration incl. date-picker adapter
-- `GET /api/v1/admin/customers` — simple per-column filters on TableView; tab / search / tags /
-  aggregate-based filters stay as endpoint extensions
-- `GET /api/v1/admin/catalog/products` — sort + pagination + col filters; legacy `?perPage=`
-  and `?sort=` kept as back-compat (FE not refactored; the `name` / `stock_quantity`
-  orderByRaw cases need joined-table sorts the runtime can't model)
+- `GET /api/v1/admin/customers` — simple per-column filters on TableView; tab / `q` / tags /
+  aggregate-based filters stay as declared endpoint extras
+- `GET /api/v1/admin/catalog/products` — sort + pagination + col filters; `name` and
+  `stock_quantity` use the primitive's `sortRaw` hook for joined-subquery ORDER BYs;
+  `applyListSort` / `SORTABLE_COLUMNS` are gone
 - `GET /api/v1/admin/payment-attempts`
 - `GET /api/v1/account/orders`
-- `GET /api/v1/admin/coupons` — bulk of per-column filters move; tab / search /
-  has_*_constraints / brand pivot / redemptions aggregate stay
+- `GET /api/v1/admin/coupons` — bulk of per-column filters move; tab / `q` /
+  has_*_constraints / brand pivot stay as extras
 - `GET /api/v1/admin/orders/:order_id/refunds` — sub-resource
-- `GET /api/v1/admin/orders/:order_id/notes` — sub-resource; legacy `?type=` alias retained
-- `GET /api/v1/admin/customer-tags` — `?q=` prefix-search alias retained for the combobox UX
-- `GET /api/v1/admin/catalog/reviews` — moderation queue; **breaking change** to `{data, meta}`
-  envelope
-- `GET /api/v1/admin/media` — sort + pagination + col filters; bespoke WP-style pills
-  (`type` MIME-group, `month` window, multi-col `search`, `unattached`/`mine`) stay top-level
+- `GET /api/v1/admin/orders/:order_id/notes` — sub-resource; `type` keyword alias retained as
+  an extra
+- `GET /api/v1/admin/customer-tags` — `?q=` prefix-search retained as an extra for the combobox UX
+- `GET /api/v1/admin/catalog/reviews` — moderation queue on the unified envelope
+- `GET /api/v1/admin/media` — sort + pagination + col filters; `q` multi-col free-text + bespoke
+  WP-style extras (`type` MIME-group, `month` window, `uploaded_by`) stay top-level; `defaultLimit`
+  is 60 (the grid's natural row count)
 
-**Deliberately un-paginated** (consumers are selectors / comboboxes / single-shot audit views
-that need the full set; migration would force pagination + a breaking response-shape change):
+**Pending follow-up PRs** (consumers are currently un-paginated; each migration is a breaking
+response-shape change that needs an FE update in the same commit — see the reviews migration
+for the pattern):
 
-- Catalog taxonomies: brands, categories, tags, attributes, attribute_terms, tax_classes,
-  shipping_classes — feed product-edit selectors and tree pickers.
-- Per-product variations — feed the variations grid inside a single product page.
-- Payment gateways — < 10 rows by contract.
-- Customer notes, customer timeline, order history, customer segments — audit-style timelines;
-  the full set per parent fits a single page.
-- Account-side: addresses, downloads, order_notes, order_history — small per-customer/per-order.
+- Catalog taxonomies — brands, categories, tags, attributes, attribute_terms, tax_classes,
+  shipping_classes, variations. Selector / combobox UIs (product editor's brand/category/tag
+  pickers) need to fetch all pages or adopt a server-search pattern in the same PR.
+- Admin auxiliaries — payment_gateways, customer_notes, customer_timeline, customer_segments,
+  order_history.
+- Account-side — order_history, order_notes, addresses, downloads.
 
-If pagination is ever needed for one of these, swap to TableView and update the FE consumer at
-the same commit (see the reviews migration for the pattern).
+The FE `useDataTable` ↔ `useTableView` consolidation (and removal of `useDataTable`'s URL
+plumbing in favour of a UI-state-only variant) is the third remaining piece. Every migrated
+list page on the admin still composes its `TableViewQuery` through `useTableView` already; the
+remaining work is splitting `useDataTable` into smaller UI-only hooks (`useColumnState` +
+`useSelectionState` + `useDensity`).
