@@ -489,32 +489,33 @@ function ChoicesExplainer() {
     if (dismissed) return null;
     return (
         <div className="rounded-md border border-border bg-muted/20 p-3 text-xs">
-            <button
-                type="button"
-                className="flex w-full items-center gap-2 text-foreground"
-                onClick={() => setOpen((v) => !v)}
-                aria-expanded={open}
-            >
-                {open ? (
-                    <ChevronDown className="size-3.5" aria-hidden="true" />
-                ) : (
-                    <ChevronRight className="size-3.5" data-rtl-flip aria-hidden="true" />
-                )}
-                <Sparkles className="size-3.5 text-info" aria-hidden="true" />
-                <span className="font-medium">{t("title")}</span>
+            <div className="flex items-center gap-2 text-foreground">
+                <button
+                    type="button"
+                    className="flex flex-1 items-center gap-2 text-start"
+                    onClick={() => setOpen((v) => !v)}
+                    aria-expanded={open}
+                >
+                    {open ? (
+                        <ChevronDown className="size-3.5" aria-hidden="true" />
+                    ) : (
+                        <ChevronRight className="size-3.5" data-rtl-flip aria-hidden="true" />
+                    )}
+                    <Sparkles className="size-3.5 text-info" aria-hidden="true" />
+                    <span className="font-medium">{t("title")}</span>
+                </button>
                 <button
                     type="button"
                     className="ms-auto text-muted-foreground hover:text-destructive"
                     aria-label={t("dismiss")}
-                    onClick={(event) => {
-                        event.stopPropagation();
+                    onClick={() => {
                         if (typeof window !== "undefined") window.localStorage.setItem(EXPLAINER_KEY, "1");
                         setDismissed(true);
                     }}
                 >
                     <X className="size-3.5" aria-hidden="true" />
                 </button>
-            </button>
+            </div>
             {open ? (
                 <div className="mt-2 flex flex-col gap-1 ps-6 text-muted-foreground">
                     <span className="font-medium text-foreground">{t("exampleProduct")}</span>
