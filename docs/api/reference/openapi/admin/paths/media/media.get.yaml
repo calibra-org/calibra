@@ -3,7 +3,7 @@ summary: List media library entries (admin)
 description: >
     Paginated media library listing. Sort + pagination + per-column filters go through the
     unified TableView grammar; the WordPress-style filter pills (`type` MIME-group expansion,
-    `month` YYYY-MM bucket, multi-column `search`, `unattached` / `mine` existence checks,
+    `month` YYYY-MM bucket, multi-column `q`, `unattached` / `mine` existence checks,
     `uploaded_by`) stay as top-level params because their semantics need bespoke whereIn /
     subquery / OR logic the v1 runtime can't model.
 
@@ -40,7 +40,7 @@ parameters:
       in: query
       schema: { type: string, pattern: "^\\d{4}-\\d{2}$" }
       description: Filter to a single calendar month, formatted `YYYY-MM` (UTC).
-    - name: search
+    - name: q
       in: query
       schema: { type: string }
       description: Case-insensitive substring match against filename, title, alt, and URL.

@@ -57,7 +57,7 @@ export function useResourceSearcher(kind: ResourceKind, baseExtra?: Record<strin
         async (query: string): Promise<ComboboxOption[]> => {
             const params: Record<string, string | number | undefined> = {
                 ...baseExtra,
-                search: query.length > 0 ? query : undefined,
+                q: query.length > 0 ? query : undefined,
                 limit: 20,
             };
             const envelope = await apiGet<ResourceListEnvelope<ResourceRow>>(pathFor(kind, baseExtra), {
@@ -79,7 +79,7 @@ export function useResourceList(kind: ResourceKind, options: ResourceSearchOptio
         queryFn: async () => {
             const params: Record<string, string | number | undefined> = {
                 ...extra,
-                search: query.length > 0 ? query : undefined,
+                q: query.length > 0 ? query : undefined,
                 limit,
             };
             const envelope = await apiGet<ResourceListEnvelope<ResourceRow>>(pathFor(kind, extra), { locale, query: params });

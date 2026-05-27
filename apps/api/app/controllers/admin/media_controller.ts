@@ -63,12 +63,9 @@ export default class AdminMediaController {
     /** `GET /api/v1/admin/media` — paginated listing with filters. */
     async index(ctx: HttpContext) {
         const { request, auth } = ctx;
-        /** Parse the TableView portion + accept the legacy `?perPage=` / `?per_page=` keys as a
-         * back-compat layer (the media grid wants the higher 60-item default to fit ~5 rows
-         * comfortably; the wire default of 20 would feel sparse). */
+        /** Default `limit` is 60 (the media grid's natural row count — ~5 rows of 12 cards).
+         * The wire default of 20 would feel sparse. */
         const qs = request.qs();
-        const legacy = qs.perPage ?? qs.per_page;
-        if (legacy !== undefined && qs.limit === undefined) qs.limit = legacy;
         if (qs.limit === undefined) qs.limit = "60";
         const parsed = await adminMediaListValidator.validate(qs);
 
@@ -100,9 +97,9 @@ export default class AdminMediaController {
             }
         }
 
-        const search = String(request.input("search", "")).trim();
-        if (search.length > 0) {
-            const needle = `%${search.toLowerCase()}%`;
+        const q = String(request.input("q", "")).trim();
+        if (q.length > 0) {
+            const needle = `%${q.toLowerCase()}%`;
             query.where((sub) => {
                 sub.whereRaw("LOWER(filename) like ?", [needle])
                     .orWhereRaw("LOWER(title) like ?", [needle])

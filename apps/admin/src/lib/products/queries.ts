@@ -139,7 +139,7 @@ export function useProductsList(
                     created_from: params.createdFrom,
                     created_to: params.createdTo,
                     ids: params.ids !== undefined && params.ids.length > 0 ? params.ids.join(",") : undefined,
-                    search: params.search,
+                    q: params.search,
                     include,
                 },
             }),

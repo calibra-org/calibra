@@ -116,7 +116,7 @@ export async function listProducts(params: ProductListParams = {}): Promise<Pagi
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(sdkStatus !== undefined ? { status: sdkStatus } : {}),
-                ...(params.search ? { search: params.search } : {}),
+                ...(params.search ? { q: params.search } : {}),
                 ...(params.categoryId !== undefined ? { category: params.categoryId } : {}),
             },
         },
@@ -438,7 +438,7 @@ export async function listMedia(params: MediaListParams = {}): Promise<Paginated
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { search: params.search } : {}),
+                ...(params.search ? { q: params.search } : {}),
                 ...(params.type !== undefined && params.type !== "all" ? { type: params.type } : {}),
                 ...(params.month !== undefined ? { month: params.month } : {}),
                 ...(params.uploadedBy !== undefined ? { uploaded_by: params.uploadedBy } : {}),
@@ -590,7 +590,7 @@ export async function listCoupons(params: CouponListParams = {}): Promise<Pagina
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { search: params.search } : {}),
+                ...(params.search ? { q: params.search } : {}),
             },
         },
     });

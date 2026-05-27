@@ -29,7 +29,7 @@ parameters:
     - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
     - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
     - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
-    - { name: search, in: query, schema: { type: string }, description: Matches across coupon code and translated description. }
+    - { name: q, in: query, schema: { type: string }, description: Matches across coupon code and translated description. }
     - { name: tab, in: query, schema: { type: string, enum: [any, active, disabled, expired, scheduled, used, trashed] } }
     - { name: redemptions_min, in: query, schema: { type: integer } }
     - { name: redemptions_max, in: query, schema: { type: integer } }

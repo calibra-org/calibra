@@ -31,13 +31,12 @@ import {
 } from "#validators/catalog/product_validator";
 
 /**
- * The products list endpoint keeps a wider compat surface than other resources: the legacy
- * `?perPage=` / `?per_page=` keys still drive pagination, and `?sort=` drives sort (with the
- * special-case `name` / `stock_quantity` orderByRaw paths the TableView runtime can't model).
- * The new TableView `page` / `limit` / `sort[]` grammar is accepted on top — operators can use
- * either form. The reason: facet_counts re-uses the controller's filter pipeline and the admin
- * UI relied on the orderByRaw sort cases. A clean break would have required reshaping
- * facet_counts AND every product-list call site in one go.
+ * The products list endpoint speaks the unified TableView grammar (`page` / `limit` / `sort[]` /
+ * `filter[]` / `filterOr[]`) plus a handful of endpoint-specific extras (`q` for multi-column
+ * free-text search, `category`/`brand`/`tag` for pivot filters the runtime doesn't auto-traverse,
+ * `with_trashed`/`only_trashed` for soft-delete scope, `include=facet_counts` for the toolbar's
+ * facet badges). The `name` and `stock_quantity` orderable columns use the view's `sortRaw`
+ * option to express ORDER BY over joined `product_translations` / `inventory_items` subqueries.
  */
 const adminProductsListTableViewValidator = vine.compile(adminProductsView.schema);
 
@@ -77,13 +76,10 @@ export default class AdminProductsController {
      */
     async index(ctx: HttpContext) {
         const { request } = ctx;
-        /** Parse the TableView portion (page/limit/filter[]/filterOr[]/sort[]). Bespoke filters
-         * + the legacy ?sort= path stay below in applyListFilters / applyListSort. The legacy
-         * ?perPage= / ?per_page= keys are mirrored into `limit` so the existing admin UI keeps
-         * working without an FE refactor in this PR. */
+        /** Parse the TableView portion (page/limit/filter[]/filterOr[]/sort[]). Bespoke
+         * predicates live below in applyListFilters (pivot joins for category/brand/tag, the
+         * multi-column `q` ILIKE, soft-delete scope, stock-level aggregate). */
         const qs = request.qs();
-        const legacyPerPage = qs.perPage ?? qs.per_page;
-        if (legacyPerPage !== undefined && qs.limit === undefined) qs.limit = legacyPerPage;
         const parsed = await adminProductsListTableViewValidator.validate(qs);
 
         const query = Product.query()
@@ -221,9 +217,9 @@ export default class AdminProductsController {
             if (list.length > 0) query.whereIn("id", list);
         }
 
-        const search = request.input("search");
-        if (search) {
-            const needle = `%${String(search)}%`;
+        const q = request.input("q");
+        if (q) {
+            const needle = `%${String(q)}%`;
             query.where((scope) => {
                 scope
                     .whereIn("id", (sub) => sub.select("product_id").from("product_translations").whereILike("name", needle))

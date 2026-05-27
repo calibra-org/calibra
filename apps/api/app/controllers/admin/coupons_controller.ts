@@ -42,11 +42,9 @@ export default class AdminCouponsController {
         /** Parse the TableView portion (filter[] / filterOr[] / sort[] / page / limit). All
          * bespoke filters below stay as ctx.request.input reads — same pattern as products. */
         const qs = ctx.request.qs();
-        const legacyPerPage = qs.perPage ?? qs.per_page;
-        if (legacyPerPage !== undefined && qs.limit === undefined) qs.limit = legacyPerPage;
         const parsed = await adminCouponsListTableViewValidator.validate(qs);
 
-        const search = String(ctx.request.input("search", "")).trim();
+        const q = String(ctx.request.input("q", "")).trim();
         /** Tab keyword → the predicate the spec describes. Soft-deleted rows are normally excluded;
          * `trashed` opts back into them, `any` shows everything. */
         const tab = String(ctx.request.input("tab", "")).trim();
@@ -75,11 +73,12 @@ export default class AdminCouponsController {
             query.whereNotNull("starts_at").where("starts_at", ">", nowIso);
         }
 
-        if (search) {
-            const needle = `%${search}%`;
-            query.where((q) => {
-                q.whereILike("code", needle).orWhereExists((sub) => {
-                    sub.from("coupon_translations")
+        if (q) {
+            const needle = `%${q}%`;
+            query.where((sub) => {
+                sub.whereILike("code", needle).orWhereExists((nested) => {
+                    nested
+                        .from("coupon_translations")
                         .whereColumn("coupon_translations.coupon_id", "coupons.id")
                         .whereILike("coupon_translations.description", needle);
                 });
@@ -252,7 +251,7 @@ export default class AdminCouponsController {
         const filters = {
             tab: ctx.request.input("tab"),
             status: ctx.request.input("status"),
-            search: String(ctx.request.input("search", "")).trim() || undefined,
+            search: String(ctx.request.input("q", "")).trim() || undefined,
             discountTypes: parseList(ctx.request.input("discount_type")),
             brandIds: parseList(ctx.request.input("brand"))
                 .map((s) => Number(s))

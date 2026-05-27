@@ -854,7 +854,7 @@ export interface paths {
         };
         /**
          * Export coupons as CSV (admin)
-         * @description Sync CSV export. Mirrors the list endpoint's filter set (`tab`, `status`, `search`, `discount_type`, `brand`) so the caller can "export current view." Returns `text/csv; charset=utf-8` with a filename hint via `content-disposition`. The number of rows emitted is repeated in the `X-Coupon-Export-Count` response header so the client can show a confirmation toast without re-parsing the body.
+         * @description Sync CSV export. Mirrors the list endpoint's filter set (`tab`, `status`, `q`, `discount_type`, `brand`) so the caller can "export current view." Returns `text/csv; charset=utf-8` with a filename hint via `content-disposition`. The number of rows emitted is repeated in the `X-Coupon-Export-Count` response header so the client can show a confirmation toast without re-parsing the body.
          */
         get: operations["adminCouponsExport"];
         put?: never;
@@ -2079,7 +2079,7 @@ export interface paths {
          *     **TableView orderable fields**: `id`, `sku`, `regular_price`, `menu_order`, `created_at`, `updated_at`. (The legacy `sort=name` and `sort=stock_quantity` cases — which required orderByRaw across product_translations and inventory_items — are not exposed through TableView; sort by `sku` or `created_at` instead, or filter via the dedicated stock facets.)
          *
          *     **Endpoint extensions** (kept as top-level params):
-         *         - `search` — multi-column ILIKE across `product_translations.name` and `products.sku`.
+         *         - `q` — multi-column ILIKE across `product_translations.name` and `products.sku`.
          *         - `category`, `brand`, `tag` — single-id whereIn through the respective pivot tables.
          *         - `stock_status` — subquery on inventory_items.
          *         - `stock_level` — aggregate having-clause grouping (instock / low / outofstock).
@@ -3119,7 +3119,7 @@ export interface paths {
         };
         /**
          * List media library entries (admin)
-         * @description Paginated media library listing. Sort + pagination + per-column filters go through the unified TableView grammar; the WordPress-style filter pills (`type` MIME-group expansion, `month` YYYY-MM bucket, multi-column `search`, `unattached` / `mine` existence checks, `uploaded_by`) stay as top-level params because their semantics need bespoke whereIn / subquery / OR logic the v1 runtime can't model.
+         * @description Paginated media library listing. Sort + pagination + per-column filters go through the unified TableView grammar; the WordPress-style filter pills (`type` MIME-group expansion, `month` YYYY-MM bucket, multi-column `q`, `unattached` / `mine` existence checks, `uploaded_by`) stay as top-level params because their semantics need bespoke whereIn / subquery / OR logic the v1 runtime can't model.
          *
          *     **TableView filterable fields**: `id`, `kind`, `mime`, `size_bytes`, `width`, `height`, `uploaded_by_user_id`, `created_at`, `filename`.
          *
@@ -5949,7 +5949,7 @@ export interface operations {
                 /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
                 "sort[]"?: components["parameters"]["Sort"];
                 /** @description Matches across coupon code and translated description. */
-                search?: string;
+                q?: string;
                 tab?: "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
                 redemptions_min?: number;
                 redemptions_max?: number;
@@ -6123,7 +6123,7 @@ export interface operations {
             query?: {
                 tab?: "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
                 status?: "active" | "disabled";
-                search?: string;
+                q?: string;
                 discount_type?: ("fixed_cart" | "fixed_product" | "percent" | "free_shipping")[];
                 brand?: number[];
             };
@@ -7960,7 +7960,7 @@ export interface operations {
                 "filterOr[]"?: components["parameters"]["FilterOr"];
                 /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
                 "sort[]"?: components["parameters"]["Sort"];
-                search?: string;
+                q?: string;
                 status?: "draft" | "publish" | "pending" | "private" | "archived";
                 type?: "simple" | "variable" | "virtual" | "downloadable" | "external" | "grouped";
                 category?: number;
@@ -10131,7 +10131,7 @@ export interface operations {
                 /** @description Filter to a single calendar month, formatted `YYYY-MM` (UTC). */
                 month?: string;
                 /** @description Case-insensitive substring match against filename, title, alt, and URL. */
-                search?: string;
+                q?: string;
                 /** @description Restrict to rows uploaded by the given user id. */
                 uploaded_by?: number;
             };
