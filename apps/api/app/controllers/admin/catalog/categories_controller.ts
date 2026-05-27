@@ -48,7 +48,12 @@ export default class AdminCategoriesController {
             });
         }
 
-        const rows = await ProductCategory.query().preload("translations").preload("image").orderBy("menu_order").orderBy("id");
+        const rows = await ProductCategory.query()
+            .preload("translations")
+            .preload("image")
+            .withCount("products", (q) => q.as("used_count"))
+            .orderBy("menu_order")
+            .orderBy("id");
         return collection(ProductCategoryTransformer.transform(rows, locale).useVariant("forAdmin"));
     }
 

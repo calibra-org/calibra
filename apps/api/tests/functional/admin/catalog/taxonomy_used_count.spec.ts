@@ -126,7 +126,7 @@ test.group("admin taxonomy index — sort=-used_count (categories)", (group) => 
         assert.equal(order[order.length - 1], Number(popular.id));
     });
 
-    test("default index path is unaffected and emits used_count=null", async ({ client, assert }) => {
+    test("default index path orders by menu_order but still emits the live used_count", async ({ client, assert }) => {
         const admin = await createAdmin();
         const cat = await seedCategory("plain");
         const product = (await seedProducts(1))[0]!;
@@ -136,7 +136,7 @@ test.group("admin taxonomy index — sort=-used_count (categories)", (group) => 
         res.assertStatus(200);
         res.assertAgainstApiSpec();
         const body = res.body() as { data: Array<{ id: number; used_count: number | null }> };
-        assert.equal(body.data.find((row) => row.id === Number(cat.id))?.used_count, null);
+        assert.equal(body.data.find((row) => row.id === Number(cat.id))?.used_count, 1);
     });
 
     test("respects perPage cap on most-used path", async ({ client, assert }) => {

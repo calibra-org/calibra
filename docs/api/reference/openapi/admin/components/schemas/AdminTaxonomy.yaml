@@ -22,9 +22,9 @@ properties:
     used_count:
         type: [integer, "null"]
         description: >
-            Number of products linked to this taxonomy row. Populated by `GET ?sort=-used_count`
-            on the admin index endpoints; `null` on every other read (the default index path does
-            not compute it).
+            Number of products linked to this taxonomy row. Always populated on the admin index
+            endpoints (a `withCount` subquery runs alongside the row fetch). `null` on reads
+            that don't carry the count (e.g. `show` or storefront list endpoints).
     translations:
         type: array
         items:

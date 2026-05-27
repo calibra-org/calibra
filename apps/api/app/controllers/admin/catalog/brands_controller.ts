@@ -48,7 +48,12 @@ export default class AdminBrandsController {
             });
         }
 
-        const rows = await ProductBrand.query().preload("translations").preload("image").orderBy("menu_order").orderBy("id");
+        const rows = await ProductBrand.query()
+            .preload("translations")
+            .preload("image")
+            .withCount("products", (q) => q.as("used_count"))
+            .orderBy("menu_order")
+            .orderBy("id");
         return collection(ProductBrandTransformer.transform(rows, locale).useVariant("forAdmin"));
     }
 

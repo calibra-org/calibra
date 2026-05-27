@@ -47,7 +47,11 @@ export default class AdminTagsController {
             });
         }
 
-        const rows = await ProductTag.query().preload("translations").orderBy("menu_order").orderBy("id");
+        const rows = await ProductTag.query()
+            .preload("translations")
+            .withCount("products", (q) => q.as("used_count"))
+            .orderBy("menu_order")
+            .orderBy("id");
         return collection(ProductTagTransformer.transform(rows, locale).useVariant("forAdmin"));
     }
 

@@ -4367,7 +4367,7 @@ export interface components {
             /** @description Convenience read-only URL resolved from the linked media row; `null` when no asset is attached. */
             image_url?: string | null;
             menu_order?: number;
-            /** @description Number of products linked to this taxonomy row. Populated by `GET ?sort=-used_count` on the admin index endpoints; `null` on every other read (the default index path does not compute it). */
+            /** @description Number of products linked to this taxonomy row. Always populated on the admin index endpoints (a `withCount` subquery runs alongside the row fetch). `null` on reads that don't carry the count (e.g. `show` or storefront list endpoints). */
             used_count?: number | null;
             translations?: {
                 locale?: string;
