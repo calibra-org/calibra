@@ -1410,7 +1410,7 @@
                     "title": "Generate SKUs",
                     "subtitle": "Build SKUs from the product code and each choice value.",
                     "patternLabel": "Pattern",
-                    "patternHint": "Use {product} and each {token-name}.",
+                    "patternHint": "Write `product` for the product code and each choice by its name, wrapped in braces.",
                     "abbrevLabel": "Abbreviations per value",
                     "previewLabel": "Preview (first three rows)",
                     "collisionWarning": "{count} duplicates detected. Adjust the pattern or shortened values.",

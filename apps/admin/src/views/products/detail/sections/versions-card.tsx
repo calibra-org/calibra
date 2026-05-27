@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -54,10 +54,17 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     const t = useTranslations("Products.detail.versions");
     const tChoices = useTranslations("Products.detail.choices");
     const locale = useLocale() as Locale;
-    const { watch } = useFormContext<ProductDetailFormValues>();
+    const { control, watch } = useFormContext<ProductDetailFormValues>();
     const attributes = useGlobalAttributes();
     const variations = useProductVariations(productId);
-    const attributeLinks = watch("attributeLinks");
+    /**
+     * `useWatch` (vs the parent's `watch()`) subscribes through RHF's controller channel, so
+     * nested term-id changes inside `attributeLinks[i].termIds` bubble back here. The plain
+     * `watch("attributeLinks")` returned the same top-level array reference even after a nested
+     * mutation, so the cartesian memo never recomputed and the empty-state hint stayed glued
+     * to the screen even after the operator picked values in the Choices card above.
+     */
+    const attributeLinks = useWatch({ control, name: "attributeLinks" });
     const productSku = watch("sku") ?? "";
 
     const variationAxes = useMemo<AttributeAxis[]>(
