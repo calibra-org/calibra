@@ -96,7 +96,7 @@ export function GalleryBody() {
 
     return (
         <div className="flex flex-col gap-2">
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <DndContext id="product-gallery" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={galleryIds} strategy={rectSortingStrategy}>
                     <div className="grid grid-cols-4 gap-2">
                         {galleryIds.map((id) => (

@@ -80,7 +80,12 @@ export function TermChipStrip({ attributeId, termIds, onChange, labels }: TermCh
                     {labels.selectNone}
                 </Button>
             </div>
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <DndContext
+                id={`term-chips-${attributeId}`}
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+            >
                 <div className="flex flex-wrap items-center gap-1.5">
                     <SortableContext items={termIds} strategy={rectSortingStrategy}>
                         {activeTerms.map((term) => (

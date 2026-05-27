@@ -277,7 +277,7 @@ export function SpecsBody({ onRequestVariableType }: SpecsBodyProps = {}) {
             </div>
 
             {visibleRowIds.length > 0 ? (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <DndContext id="specs-rows" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={visibleRowIds} strategy={verticalListSortingStrategy}>
                         <ul className="flex flex-col gap-2">
                             {visibleRowIds.map((rowId) => {
