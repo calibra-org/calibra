@@ -10,7 +10,6 @@ import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { DataTable } from "#/components/ui/data-grid";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
 import { MoneyInput } from "#/components/ui/money-input";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
@@ -344,36 +343,10 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                     selected={new Set(statusFilter as VersionStatus[])}
                     onChange={(next) => setFacetValues({ ...facetValues, status: Array.from(next) })}
                 />
-                <DropdownMenu>
-                    <DropdownMenuTrigger
-                        render={(props) => (
-                            <Button {...props} type="button" variant="outline" size="sm">
-                                <Filter className="size-3.5" aria-hidden="true" />
-                                {t("filter.status")}
-                            </Button>
-                        )}
-                    />
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            onClick={() => setToggleValues({ ...toggleValues, missingPrice: !quickFilters.missingPrice })}
-                        >
-                            {quickFilters.missingPrice ? "✓ " : ""}
-                            {t("filter.missingPrice")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => setToggleValues({ ...toggleValues, missingSku: !quickFilters.missingSku })}
-                        >
-                            {quickFilters.missingSku ? "✓ " : ""}
-                            {t("filter.missingSku")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => setToggleValues({ ...toggleValues, missingImage: !quickFilters.missingImage })}
-                        >
-                            {quickFilters.missingImage ? "✓ " : ""}
-                            {t("filter.missingImage")}
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <MissingFiltersPopover
+                    values={quickFilters}
+                    onChange={(next) => setToggleValues({ ...toggleValues, ...next })}
+                />
                 {hasActiveFilters ? (
                     <Button type="button" variant="ghost" size="sm" onClick={clearAllFilters}>
                         {t("filter.clearAll")}
@@ -586,6 +559,64 @@ function ChecklistRow({ done, label, count, onClick }: { done: boolean; label: s
                 {count > 0 ? <span className="text-muted-foreground"> ({count})</span> : null}
             </button>
         </li>
+    );
+}
+
+interface MissingFiltersValue {
+    missingPrice: boolean;
+    missingSku: boolean;
+    missingImage: boolean;
+}
+
+/**
+ * Mirrors `StatusFilterPopover`'s shape (Popover + Checkbox rows) so the editor's two facet
+ * filters share one visual language — instead of the prior dropdown-with-"✓"-prefix which looked
+ * misaligned next to the status chip popover.
+ */
+function MissingFiltersPopover({
+    values,
+    onChange,
+}: {
+    values: MissingFiltersValue;
+    onChange: (next: Partial<MissingFiltersValue>) => void;
+}) {
+    const t = useTranslations("Products.detail.versions");
+    const items: { key: keyof MissingFiltersValue; label: string }[] = [
+        { key: "missingPrice", label: t("filter.missingPrice") },
+        { key: "missingSku", label: t("filter.missingSku") },
+        { key: "missingImage", label: t("filter.missingImage") },
+    ];
+    const activeCount = items.filter((item) => values[item.key]).length;
+    return (
+        <Popover>
+            <PopoverTrigger
+                render={(props) => (
+                    <Button {...props} type="button" variant="outline" size="sm">
+                        <Filter className="size-3.5" aria-hidden="true" />
+                        {t("filter.status")}
+                        {activeCount > 0 ? (
+                            <Badge variant="secondary" className="ms-1">
+                                {activeCount}
+                            </Badge>
+                        ) : null}
+                    </Button>
+                )}
+            />
+            <PopoverContent className="w-48 p-1">
+                {items.map((item) => {
+                    const checked = values[item.key];
+                    return (
+                        <div
+                            key={item.key}
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-muted"
+                        >
+                            <Checkbox checked={checked} onCheckedChange={() => onChange({ [item.key]: !checked })} />
+                            <span>{item.label}</span>
+                        </div>
+                    );
+                })}
+            </PopoverContent>
+        </Popover>
     );
 }
 
