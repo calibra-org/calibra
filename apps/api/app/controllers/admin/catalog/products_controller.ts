@@ -1,6 +1,7 @@
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
+import vine from "@vinejs/vine";
 
 import { BusinessRuleException } from "#exceptions/domain_exceptions";
 import Product from "#models/product";
@@ -18,7 +19,8 @@ import {
     withTransaction,
 } from "#services/catalog_writer";
 import SettingsService from "#services/settings_service";
-import { paginated, resource } from "#transformers/api_envelope";
+import { adminProductsView } from "#table_views/admin/products";
+import { collection, resource } from "#transformers/api_envelope";
 import ProductTransformer, { type ProductTransformerOptions } from "#transformers/product_transformer";
 import {
     batchProductsValidator,
@@ -27,6 +29,17 @@ import {
     restoreProductsValidator,
     updateProductValidator,
 } from "#validators/catalog/product_validator";
+
+/**
+ * The products list endpoint keeps a wider compat surface than other resources: the legacy
+ * `?perPage=` / `?per_page=` keys still drive pagination, and `?sort=` drives sort (with the
+ * special-case `name` / `stock_quantity` orderByRaw paths the TableView runtime can't model).
+ * The new TableView `page` / `limit` / `sort[]` grammar is accepted on top — operators can use
+ * either form. The reason: facet_counts re-uses the controller's filter pipeline and the admin
+ * UI relied on the orderByRaw sort cases. A clean break would have required reshaping
+ * facet_counts AND every product-list call site in one go.
+ */
+const adminProductsListTableViewValidator = vine.compile(adminProductsView.schema);
 
 const PRODUCT_TRANSLATION_FIELDS = [
     "name",
@@ -64,29 +77,41 @@ export default class AdminProductsController {
      */
     async index(ctx: HttpContext) {
         const { request } = ctx;
-        const page = Math.max(1, Number(request.input("page", 1)) || 1);
-        const perPage = Math.min(200, Math.max(1, Number(request.input("per_page", request.input("perPage", 20))) || 20));
+        /** Parse the TableView portion (page/limit/filter[]/filterOr[]/sort[]). Bespoke filters
+         * + the legacy ?sort= path stay below in applyListFilters / applyListSort. The legacy
+         * ?perPage= / ?per_page= keys are mirrored into `limit` so the existing admin UI keeps
+         * working without an FE refactor in this PR. */
+        const qs = request.qs();
+        const legacyPerPage = qs.perPage ?? qs.per_page;
+        if (legacyPerPage !== undefined && qs.limit === undefined) qs.limit = legacyPerPage;
+        const parsed = await adminProductsListTableViewValidator.validate(qs);
 
         const query = Product.query()
             .preload("translations")
             .preload("images", (q) => q.preload("media"))
             .preload("inventoryItems");
         this.applyListFilters(query, request);
+        /** Legacy `?sort=-created_at` form continues to drive sort for products (special-cases
+         * `name` and `stock_quantity` need orderByRaw against joined tables); the new
+         * `?sort[]=…` form layers on top through view.run when present. */
         this.applyListSort(query, request);
 
-        const paginator = await query.paginate(page, perPage);
+        const { data: rows, meta } = await adminProductsView.run<Product>(query, parsed);
         const transformerOptions = await this.transformerOptions();
-        const envelope = paginated(
-            ProductTransformer.transform(paginator.all(), ctx.i18n.locale, transformerOptions).useVariant("forAdmin"),
-            paginator,
+        const { data } = await collection<unknown>(
+            ProductTransformer.transform(rows, ctx.i18n.locale, transformerOptions).useVariant("forAdmin"),
         );
+        const envelope: { data: unknown[]; meta: typeof meta; facets?: Record<string, Record<string, number>> } = {
+            data,
+            meta,
+        };
 
         const includes = String(request.input("include", ""))
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean);
         if (includes.includes("facet_counts")) {
-            (envelope as { facets?: Record<string, Record<string, number>> }).facets = await this.computeFacetCounts(request);
+            envelope.facets = await this.computeFacetCounts(request);
         }
 
         return envelope;
@@ -209,16 +234,10 @@ export default class AdminProductsController {
 
     private applyListSort(query: ReturnType<typeof Product.query>, request: HttpContext["request"]) {
         const raw = String(request.input("sort", "")).trim();
-        if (raw.length === 0) {
-            query.orderBy("id", "desc");
-            return;
-        }
+        if (raw.length === 0) return;
         const direction = raw.startsWith("-") ? "desc" : "asc";
         const column = raw.replace(/^-/, "");
-        if (!SORTABLE_COLUMNS.has(column)) {
-            query.orderBy("id", "desc");
-            return;
-        }
+        if (!SORTABLE_COLUMNS.has(column)) return;
         if (column === "name") {
             query.orderByRaw(
                 `(SELECT MIN(name) FROM product_translations WHERE product_translations.product_id = products.id) ${direction}`,

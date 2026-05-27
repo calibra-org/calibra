@@ -1,15 +1,52 @@
 operationId: adminProductsIndex
 summary: List products (admin)
 description: >
-    Paginated list of every non-deleted product, including drafts and archived rows. Filter by
-    status, type, free-text search, category/tag/brand, on-sale flag (schedule-aware), catalog
-    visibility, stock status / level, created date range, image presence, soft-delete state, and
-    arbitrary id whitelists. Optional facet counts are returned when `include=facet_counts`.
+    Paginated list of products. Sort + pagination + simple per-column filters go through the
+    unified TableView wire grammar (`filter[]=field:op:value`, `sort[]=field:dir`, `page`,
+    `limit`). The endpoint's bespoke surface — category/tag/brand pivot whereIn subqueries,
+    multi-column free-text search, stock_status/stock_level subquery / aggregate filters,
+    has_image existence, on_sale schedule-aware window, soft-delete scope toggles, id
+    whitelists, and the optional `include=facet_counts` response shape — stays as top-level
+    params because they need bespoke whereIn / aggregate / response-shape semantics the v1
+    TableView runtime can't model.
+
+
+    **TableView filterable fields**:
+        `id`, `sku`, `gtin`, `type`, `status`, `catalog_visibility`, `featured`, `virtual`,
+        `downloadable`, `regular_price`, `sale_price`, `tax_class_id`, `menu_order`,
+        `created_at`. Operator validity per type (see the shared `filter[]` parameter docs).
+
+
+    **TableView orderable fields**: `id`, `sku`, `regular_price`, `menu_order`, `created_at`,
+    `updated_at`. (The legacy `sort=name` and `sort=stock_quantity` cases — which required
+    orderByRaw across product_translations and inventory_items — are not exposed through
+    TableView; sort by `sku` or `created_at` instead, or filter via the dedicated stock
+    facets.)
+
+
+    **Endpoint extensions** (kept as top-level params):
+        - `search` — multi-column ILIKE across `product_translations.name` and `products.sku`.
+        - `category`, `brand`, `tag` — single-id whereIn through the respective pivot tables.
+        - `stock_status` — subquery on inventory_items.
+        - `stock_level` — aggregate having-clause grouping (instock / low / outofstock).
+        - `on_sale` — schedule-aware sale_starts_at / sale_ends_at window.
+        - `has_image` — existence check on product_images.
+        - `with_trashed` / `only_trashed` — soft-delete scope.
+        - `ids` — comma-separated id whitelist.
+        - `include=facet_counts` — adds a `facets` block to the envelope; counts are computed
+          per facet with each facet temporarily skipped from the predicate set.
+
+
+    Legacy `?sort=` / `?perPage=` query params are silently dropped — use `sort[]=` and `limit`
+    instead.
 tags: [Admin / Catalog / Products]
 
 parameters:
-    - $ref: "../../../common/components/parameters/PageQuery.yaml"
-    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: search, in: query, schema: { type: string } }
     - { name: status, in: query, schema: { type: string, enum: [draft, publish, pending, private, archived] } }
@@ -25,13 +62,6 @@ parameters:
     - { name: has_image, in: query, schema: { type: boolean } }
     - { name: with_trashed, in: query, schema: { type: boolean } }
     - { name: only_trashed, in: query, schema: { type: boolean } }
-    - { name: created_from, in: query, schema: { type: string, format: date } }
-    - { name: created_to, in: query, schema: { type: string, format: date } }
-    - name: sort
-      in: query
-      schema:
-          type: string
-          description: 'Whitelist: name, sku, regular_price, created_at, updated_at, menu_order, stock_quantity. Prefix "-" for descending.'
     - name: ids
       in: query
       schema:

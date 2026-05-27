@@ -22,16 +22,16 @@ test.group("Admin products list filters", (group) => {
         assert.equal(response.body().data.length, 2);
     });
 
-    test("perPage and per_page are both honoured", async ({ client, assert }) => {
+    test("limit constrains the page size via the TableView grammar", async ({ client, assert }) => {
         await createProduct({ fa: { name: "الف" }, en: { name: "A" } });
         await createProduct({ fa: { name: "ب" }, en: { name: "B" } });
         await createProduct({ fa: { name: "ج" }, en: { name: "C" } });
-        const camel = await client.get("/api/v1/admin/products?perPage=1");
-        const snake = await client.get("/api/v1/admin/products?per_page=2");
-        assert.equal(camel.body().meta.perPage, 1);
-        assert.equal(camel.body().data.length, 1);
-        assert.equal(snake.body().meta.perPage, 2);
-        assert.equal(snake.body().data.length, 2);
+        const single = await client.get("/api/v1/admin/products?limit=1");
+        const couple = await client.get("/api/v1/admin/products?limit=2");
+        assert.equal(single.body().meta.perPage, 1);
+        assert.equal(single.body().data.length, 1);
+        assert.equal(couple.body().meta.perPage, 2);
+        assert.equal(couple.body().data.length, 2);
     });
 
     test("category=<id> filters by category link", async ({ client, assert }) => {

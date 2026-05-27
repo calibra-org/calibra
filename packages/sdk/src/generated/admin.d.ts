@@ -2058,7 +2058,30 @@ export interface paths {
         };
         /**
          * List products (admin)
-         * @description Paginated list of every non-deleted product, including drafts and archived rows. Filter by status, type, free-text search, category/tag/brand, on-sale flag (schedule-aware), catalog visibility, stock status / level, created date range, image presence, soft-delete state, and arbitrary id whitelists. Optional facet counts are returned when `include=facet_counts`.
+         * @description Paginated list of products. Sort + pagination + simple per-column filters go through the unified TableView wire grammar (`filter[]=field:op:value`, `sort[]=field:dir`, `page`, `limit`). The endpoint's bespoke surface — category/tag/brand pivot whereIn subqueries, multi-column free-text search, stock_status/stock_level subquery / aggregate filters, has_image existence, on_sale schedule-aware window, soft-delete scope toggles, id whitelists, and the optional `include=facet_counts` response shape — stays as top-level params because they need bespoke whereIn / aggregate / response-shape semantics the v1 TableView runtime can't model.
+         *
+         *     **TableView filterable fields**:
+         *         `id`, `sku`, `gtin`, `type`, `status`, `catalog_visibility`, `featured`, `virtual`,
+         *         `downloadable`, `regular_price`, `sale_price`, `tax_class_id`, `menu_order`,
+         *         `created_at`. Operator validity per type (see the shared `filter[]` parameter docs).
+         *
+         *
+         *     **TableView orderable fields**: `id`, `sku`, `regular_price`, `menu_order`, `created_at`, `updated_at`. (The legacy `sort=name` and `sort=stock_quantity` cases — which required orderByRaw across product_translations and inventory_items — are not exposed through TableView; sort by `sku` or `created_at` instead, or filter via the dedicated stock facets.)
+         *
+         *     **Endpoint extensions** (kept as top-level params):
+         *         - `search` — multi-column ILIKE across `product_translations.name` and `products.sku`.
+         *         - `category`, `brand`, `tag` — single-id whereIn through the respective pivot tables.
+         *         - `stock_status` — subquery on inventory_items.
+         *         - `stock_level` — aggregate having-clause grouping (instock / low / outofstock).
+         *         - `on_sale` — schedule-aware sale_starts_at / sale_ends_at window.
+         *         - `has_image` — existence check on product_images.
+         *         - `with_trashed` / `only_trashed` — soft-delete scope.
+         *         - `ids` — comma-separated id whitelist.
+         *         - `include=facet_counts` — adds a `facets` block to the envelope; counts are computed
+         *           per facet with each facet temporarily skipped from the predicate set.
+         *
+         *
+         *     Legacy `?sort=` / `?perPage=` query params are silently dropped — use `sort[]=` and `limit` instead.
          */
         get: operations["adminProductsIndex"];
         put?: never;
@@ -7913,10 +7936,16 @@ export interface operations {
     adminProductsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
                 search?: string;
                 status?: "draft" | "publish" | "pending" | "private" | "archived";
                 type?: "simple" | "variable" | "virtual" | "downloadable" | "external" | "grouped";
@@ -7931,9 +7960,6 @@ export interface operations {
                 has_image?: boolean;
                 with_trashed?: boolean;
                 only_trashed?: boolean;
-                created_from?: string;
-                created_to?: string;
-                sort?: string;
                 ids?: string;
                 include?: string;
             };
