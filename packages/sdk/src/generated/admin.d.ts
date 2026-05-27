@@ -730,7 +730,13 @@ export interface paths {
         };
         /**
          * List coupons (admin)
-         * @description Paginated list of coupons. Filter by status, discount type, or free-text search across the code.
+         * @description Paginated list of coupons. Per-column filters + sort + pagination go through the unified TableView wire grammar. Bespoke filters (tab strip, free-text search, has_*_constraints existence checks, brand pivot whereIn, redemptions_min/max aggregate, expiring_soon horizon) stay as top-level params.
+         *
+         *     **TableView filterable fields**: `id`, `code`, `status`, `discount_type`, `amount`, `minimum_amount`, `maximum_amount`, `free_shipping`, `individual_use`, `exclude_sale_items`, `usage_limit`, `usage_limit_per_user`, `starts_at`, `expires_at`, `created_at`.
+         *
+         *     **TableView orderable fields**: `id`, `code`, `amount`, `starts_at`, `expires_at`, `created_at`, `updated_at`.
+         *
+         *     Legacy `?perPage=` is mirrored to `limit`; legacy `?sort=` is no longer honoured (use `sort[]=field:dir`). Per-column filters previously at `?status=`, `?discount_type=`, `?free_shipping=`, `?min_amount_min=`, `?starts_after=`, etc. should move to `filter[]=status:eq:X`, `filter[]=minimum_amount:gte:N`, `filter[]=starts_at:gte:DATE`, and so on.
          */
         get: operations["adminCouponsIndex"];
         put?: never;
@@ -5919,27 +5925,19 @@ export interface operations {
     adminCouponsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
                 /** @description Matches across coupon code and translated description. */
                 search?: string;
                 tab?: "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
-                status?: "active" | "disabled";
-                /** @description Comma-separated list (`?discount_type=fixed_cart,percent`). */
-                discount_type?: ("fixed_cart" | "fixed_product" | "percent" | "free_shipping")[];
-                free_shipping?: boolean;
-                individual_use?: boolean;
-                exclude_sale_items?: boolean;
-                min_amount_min?: number;
-                min_amount_max?: number;
-                max_amount_min?: number;
-                max_amount_max?: number;
-                starts_after?: string;
-                starts_before?: string;
-                expires_after?: string;
-                expires_before?: string;
                 redemptions_min?: number;
                 redemptions_max?: number;
                 has_product_constraints?: boolean;
@@ -5948,8 +5946,6 @@ export interface operations {
                 expiring_soon?: boolean;
                 /** @description Comma-separated brand ids. */
                 brand?: number[];
-                /** @description `column` for asc, `-column` for desc. Allowed: `code`, `discount_type`, `amount_minor`, `amount_percent`, `starts_at`, `expires_at`, `created_at`. */
-                sort?: string;
             };
             header?: never;
             path?: never;
