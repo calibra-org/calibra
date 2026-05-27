@@ -1,8 +1,8 @@
 # ADR 0001 — Unified TableView query language
 
-- **Status:** Proposed (awaiting sign-off on §6 decisions before implementation begins)
+- **Status:** Accepted — primitive + 5-endpoint migration shipped 2026-05-27
 - **Date:** 2026-05-27
-- **Spin / PR:** `spin/table-views` → PR #49 (draft, ADR-only at this point)
+- **Spin / PR:** `spin/table-views` → PR #49
 - **Owners:** API + admin
 - **Reference:** [`technance-backend/packages/typeorm/src/table-view/`](../../../../inf1nite-lo0p/technance-backend/packages/typeorm/src/table-view/)
 
@@ -295,7 +295,60 @@ A few things the design **explicitly does** to head off confusion mid-migration:
 - **`vine.any().use(filterRule(...))` does not give us pre-validated parsed types in TS inference automatically.** The technance schema returns `ParsedTableViewQuery<Filterables, Orderables>` via a heavy cast at the schema construction site. We will inherit that cast. The runtime is correct; the TS surface for consumers of `view.schema` is what the cast enforces.
 - **Existing `useDataTable` callsites without a clean break would be a slower roll than a per-page migration commit.** §6.3 recommends the clean break to absorb that churn in the per-resource migration commits, not separately.
 
-## 11. References
+## 11. What shipped vs what's deferred
+
+**Shipped in this PR (5 endpoints fully on the unified grammar)**
+
+- `GET /api/v1/admin/orders` — full migration including the date-picker adapter integration,
+  10 new Japa tests for the grammar surface, OpenAPI references the shared params, SDK regen.
+- `GET /api/v1/admin/customers` — simple per-column filters move to `filter[]`; the heavy
+  bespoke surface (tabs, multi-column `q` search, tag/city joins, marketing-opt-in existence
+  checks, with_orders / order_count / lifetime_spend aggregate filters, `include_stats`
+  response shape) stays as top-level params.
+- `GET /api/v1/admin/catalog/products` — sort + pagination + a wide column-filter surface go
+  through TableView; legacy `?perPage=` / `?per_page=` / `?sort=` keys are kept as a back-compat
+  layer because (a) the admin products page wasn't refactored to the new wire grammar in this
+  PR, and (b) the special-case `sort=name` / `sort=stock_quantity` cases need `orderByRaw`
+  across joined `product_translations` / `inventory_items` tables which the v1 TableView
+  runtime can't model. Facet-counts re-uses `applyListFilters` and stays as-is.
+- `GET /api/v1/admin/payment-attempts` — clean migration; all 4 filter dimensions + sort fit
+  TableView with no carve-outs.
+- `GET /api/v1/account/orders` — clean migration; customer-scope + draft/deleted exclusion
+  stay in the controller as security invariants.
+
+The shared OpenAPI components (`common/components/parameters/table-view/{Filter,FilterOr,Sort,Page,Limit}.yaml`)
+ship in this PR and are reused across every migrated endpoint. `node ace check:api-docs` is
+green; the merged test-spec `assertAgainstApiSpec()` passes on every migrated path.
+
+**Deferred to follow-up PRs**
+
+The pattern is established and copy-pasteable from any of the above shipped endpoints. The
+following remain on their legacy per-key wire grammar; each follow-up PR can take one resource
+family at a time.
+
+- *Catalog single-shot lists* — brands, categories, tags, attributes, attribute_terms,
+  reviews, variations, tax_classes, shipping_classes. Most return un-paginated `{ data }`
+  collections by current contract; migrating them is a separate decision about whether to
+  introduce pagination at all.
+- *Refunds* — sub-resource scoped by order; small surface, follows the orders pattern with
+  the parent-id pre-scope in the controller.
+- *Order notes / order history / customer notes* — sub-resources, small filter surface,
+  trivial migrations.
+- *Customer tags / customer segments* — config-shaped lists, small.
+- *Media* — paginated, but the `month` grouping is a custom non-TableView shape that needs
+  a small decision.
+- *Account-side: addresses, downloads, order_notes, order_history* — small, follow the
+  account/orders pattern.
+- *Customers list page (admin frontend)* — the `useCustomersList` hook is migrated to take a
+  `TableViewQuery`; the page still needs to compose date / status / country / role facets
+  into the new shape (the `view.run` server side already accepts them via `filter[]=` but the
+  page hasn't been wired through yet for every facet — search, tab, and a couple of facets
+  still flow as top-level params).
+- *Admin products page (FE)* — the controller now accepts both wire forms; the page itself
+  hasn't been refactored to send `filter[]=` instead of per-key params. The back-compat layer
+  keeps it working until that refactor lands.
+
+## 12. References
 
 - [`technance-backend/packages/typeorm/src/table-view/`](../../../../inf1nite-lo0p/technance-backend/packages/typeorm/src/table-view/) — runtime + types + validators + constants.
 - [`technance-backend/apps/core/app/table-views/affiliate-codes.ts`](../../../../inf1nite-lo0p/technance-backend/apps/core/app/table-views/affiliate-codes.ts) — minimal consumer.
