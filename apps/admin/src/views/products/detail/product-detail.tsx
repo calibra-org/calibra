@@ -35,14 +35,16 @@ import {
     productDetailSchema,
     productToFormValues,
 } from "./schema";
-import { AttributesBody } from "./sections/attributes-card";
 import { BrandsBody } from "./sections/brands-card";
 import { CategoriesBody } from "./sections/categories-card";
+import { ChoicesBody } from "./sections/choices-card";
 import { FeaturedImageBody } from "./sections/featured-image-card";
 import { GalleryBody } from "./sections/gallery-card";
 import { MediaUrlMapProvider } from "./sections/media-url-map";
+import { SellingModeBody } from "./sections/selling-mode-card";
+import { SpecsBody } from "./sections/specs-card";
 import { TagsBody } from "./sections/tags-card";
-import { VariationsBody } from "./sections/variations-card";
+import { VersionsBody } from "./sections/versions-card";
 
 export interface ProductDetailProps {
     /** SDK-shape payload from the server component. Adapted client-side. */
@@ -150,6 +152,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
 
     const mainSections: SectionSpec[] = useMemo(() => {
         const sections: SectionSpec[] = [
+            { id: "sellingMode", title: t("sections.sellingMode"), body: <SellingModeBody productId={initial?.id ?? null} locale={locale} /> },
             { id: "general", title: t("sections.general"), body: <GeneralBody locale={locale} /> },
             { id: "description", title: t("sections.description"), body: <DescriptionBody /> },
         ];
@@ -166,23 +169,33 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
         if (type === "simple" || type === "variable") {
             sections.push({ id: "shipping", title: t("sections.shipping"), body: <ShippingBody /> });
         }
-        if (type !== "external") {
+        if (type !== "external" && type !== "grouped") {
             sections.push({
-                id: "attributes",
-                title: t("sections.attributes"),
-                body: <AttributesBody productType={type} productId={initial?.id ?? null} ifMatch={initial?.updatedAt} />,
+                id: "specs",
+                title: t("sections.specs"),
+                body: <SpecsBody />,
             });
         }
         if (type === "variable") {
             sections.push({
-                id: "variations",
-                title: t("sections.variations"),
-                body: <VariationsBody productId={initial?.id ?? null} productType={type} />,
+                id: "choices",
+                title: t("sections.choices"),
+                body: (
+                    <ChoicesBody
+                        productType={type}
+                        onRequestVariableType={() => form.setValue("type", "variable", { shouldDirty: true })}
+                    />
+                ),
+            });
+            sections.push({
+                id: "versions",
+                title: t("sections.versions"),
+                body: <VersionsBody productId={initial?.id ?? null} productType={type} />,
             });
         }
         sections.push({ id: "advanced", title: t("sections.advanced"), body: <AdvancedBody />, defaultCollapsed: true });
         return sections;
-    }, [type, t, locale, initial?.id, initial?.updatedAt]);
+    }, [type, t, locale, initial?.id, form]);
 
     const sidebarSections: SectionSpec[] = useMemo(
         () => [
@@ -300,47 +313,16 @@ function GeneralBody({ locale }: { locale: Locale }) {
     const t = useTranslations("Products.detail");
     const tField = useTranslations("Products.detail.fields");
     const tTip = useTranslations("Products.detail.tooltips");
-    const tType = useTranslations("Products.detail.types");
-    const tDesc = useTranslations("Products.detail.types.descriptions");
-    const { control, register, watch, formState } = useFormFromCtx();
+    const { register, watch, formState } = useFormFromCtx();
     const slug = watch("slug");
     const slugCheck = useSlugAvailability({ slug, locale });
 
     return (
         <div className="grid grid-cols-12 gap-3">
-            <Controller
-                control={control}
-                name="type"
-                render={({ field }) => (
-                    <Field
-                        id="type"
-                        label={tField("type")}
-                        span="col-span-12 md:col-span-3"
-                        helper={<HelperTooltip>{tTip("type")}</HelperTooltip>}
-                    >
-                        <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger id="type">
-                                <SelectValue>{(value) => (typeof value === "string" ? tType(value) : null)}</SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {(["simple", "variable", "grouped", "external"] as const).map((v) => (
-                                    <SelectItem key={v} value={v}>
-                                        <div className="flex flex-col">
-                                            <span>{tType(v)}</span>
-                                            <span className="text-muted-foreground text-xs">{tDesc(v)}</span>
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                )}
-            />
-
             <Field
                 id="name"
                 label={tField("name")}
-                span="col-span-12 md:col-span-9"
+                span="col-span-12"
                 error={formState.errors.name?.message}
                 helper={<HelperTooltip>{tTip("name")}</HelperTooltip>}
             >
