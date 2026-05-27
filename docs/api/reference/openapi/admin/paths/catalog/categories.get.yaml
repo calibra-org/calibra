@@ -1,23 +1,26 @@
 operationId: adminCategoriesIndex
 summary: List categories (admin)
-description: Paginated list of every non-deleted category. Use `parent_id` to fetch one level of the hierarchy.
+description: >
+    Paginated list of every category on the unified TableView grammar. Use
+    `?filter[]=parent_id:eq:N` (or `:isnull` for top-level rows) for one level of the
+    hierarchy.
+
+    **TableView filterable fields**: `id`, `slug`, `parent_id`, `menu_order`, `created_at`.
+
+    **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`, `used_count`.
+
+    `used_count` sorts by the live `product_category_links` count via a correlated subquery.
+    Default page size is 100 (large enough for tree pickers' typical full set).
 tags: [Admin / Catalog / Categories]
 
 parameters:
-    - $ref: "../../../common/components/parameters/PageQuery.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
     - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
-    - { name: parent_id, in: query, schema: { type: integer }, description: "Filter children of a parent. Pass `0` for top-level rows." }
-    - { name: search, in: query, schema: { type: string } }
-    - name: sort
-      in: query
-      description: >
-          Optional ordering. `-used_count` ranks the rows most-used-first (categories with the
-          most attached products), `used_count` ranks ascending. Default (omitted) is
-          `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write.
-      schema:
-          type: string
-          enum: [used_count, -used_count, menu_order, -menu_order]
+    - { name: q, in: query, schema: { type: string, maxLength: 120 }, description: "Multi-column ILIKE across slug + translated name." }
 
 responses:
     "200":
@@ -26,7 +29,7 @@ responses:
             application/json:
                 schema:
                     type: object
-                    required: [data]
+                    required: [data, meta]
                     properties:
                         data:
                             type: array

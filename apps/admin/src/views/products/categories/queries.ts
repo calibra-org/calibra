@@ -63,7 +63,7 @@ export function useCategoriesList(params: CategoriesListParams = {}) {
     const search = params.search;
     return useQuery<CategoryListEnvelope, Error, Paginated<AdminCategory>>({
         queryKey: ["admin", "categories", "list", { locale, page, limit, search }],
-        queryFn: () => apiGet<CategoryListEnvelope>("categories", { locale, query: { page, limit, search } }),
+        queryFn: () => apiGet<CategoryListEnvelope>("categories", { locale, query: { page, limit, q: search } }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminCategory),
             meta: payload.meta ?? { page, limit, total: payload.data?.length ?? 0, lastPage: 1 },

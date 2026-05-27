@@ -1,60 +1,46 @@
-import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
+import vine from "@vinejs/vine";
 
 import ProductCategory from "#models/product_category";
 import { CacheInvalidation } from "#services/cache_invalidation";
-import { CacheKeys, CacheTags } from "#services/cache_keys";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
+import { adminCategoriesView } from "#table_views/admin/categories";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductCategoryTransformer from "#transformers/product_category_transformer";
 import { createCategoryValidator, updateCategoryValidator } from "#validators/catalog/taxonomy_validator";
 
 const TAXONOMY_FIELDS = ["name", "slug", "description"] as const;
 
-type TaxonomySort = "-used_count" | "used_count" | "menu_order" | "-menu_order" | undefined;
-
-function parseSort(input: unknown): TaxonomySort {
-    const value = typeof input === "string" ? input : "";
-    if (value === "-used_count" || value === "used_count" || value === "menu_order" || value === "-menu_order") {
-        return value;
-    }
-    return undefined;
-}
+const adminCategoriesListValidator = adminCategoriesView.compileStrict({
+    extras: { q: vine.string().trim().maxLength(120).optional() },
+    defaultLimit: 100,
+});
 
 export default class AdminCategoriesController {
     async index(ctx: HttpContext) {
-        const sort = parseSort(ctx.request.input("sort"));
-        const locale = ctx.i18n.locale;
+        const parsed = await adminCategoriesListValidator.validate(ctx.request.qs());
+        const builder = ProductCategory.query()
+            .preload("translations")
+            .preload("image")
+            .withCount("products", (q) => q.as("used_count"));
 
-        if (sort === "-used_count" || sort === "used_count") {
-            const direction = sort === "-used_count" ? "desc" : "asc";
-            const limitRaw = Number(ctx.request.input("limit", 0)) || 0;
-            const limit = limitRaw > 0 && limitRaw <= 500 ? limitRaw : 0;
-            return cache.getOrSet({
-                key: CacheKeys.admin.taxonomyUsedCount("categories", { sort, limit }, locale),
-                ttl: "2m",
-                tags: [CacheTags.catalogTaxonomy],
-                factory: async () => {
-                    let query = ProductCategory.query()
-                        .preload("translations")
-                        .preload("image")
-                        .withCount("products", (q) => q.as("used_count"))
-                        .orderBy("used_count", direction)
-                        .orderBy("id");
-                    if (limit > 0) query = query.limit(limit);
-                    const rows = await query;
-                    return collection(ProductCategoryTransformer.transform(rows, locale).useVariant("forAdmin"));
-                },
+        if (parsed.q !== undefined && parsed.q.length > 0) {
+            const needle = `%${parsed.q.toLowerCase()}%`;
+            builder.where((sub) => {
+                sub.whereILike("product_categories.slug", needle).orWhereIn("product_categories.id", (nested) => {
+                    nested
+                        .select("category_id")
+                        .from("product_category_translations")
+                        .whereRaw("LOWER(name) LIKE ?", [needle]);
+                });
             });
         }
 
-        const rows = await ProductCategory.query()
-            .preload("translations")
-            .preload("image")
-            .withCount("products", (q) => q.as("used_count"))
-            .orderBy("menu_order")
-            .orderBy("id");
-        return collection(ProductCategoryTransformer.transform(rows, locale).useVariant("forAdmin"));
+        const { data: rows, meta } = await adminCategoriesView.run<ProductCategory>(builder, parsed);
+        const { data } = await collection<unknown>(
+            ProductCategoryTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"),
+        );
+        return { data, meta };
     }
 
     async show(ctx: HttpContext) {

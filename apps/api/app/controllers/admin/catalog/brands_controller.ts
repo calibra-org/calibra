@@ -1,60 +1,57 @@
-import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
+import vine from "@vinejs/vine";
 
 import ProductBrand from "#models/product_brand";
 import { CacheInvalidation } from "#services/cache_invalidation";
-import { CacheKeys, CacheTags } from "#services/cache_keys";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
+import { adminBrandsView } from "#table_views/admin/brands";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductBrandTransformer from "#transformers/product_brand_transformer";
 import { createBrandValidator, updateBrandValidator } from "#validators/catalog/taxonomy_validator";
 
 const TAXONOMY_FIELDS = ["name", "slug", "description"] as const;
 
-type TaxonomySort = "-used_count" | "used_count" | "menu_order" | "-menu_order" | undefined;
-
-function parseSort(input: unknown): TaxonomySort {
-    const value = typeof input === "string" ? input : "";
-    if (value === "-used_count" || value === "used_count" || value === "menu_order" || value === "-menu_order") {
-        return value;
-    }
-    return undefined;
-}
+/**
+ * Default page size large enough that selector / combobox UIs render the full set without
+ * forcing a `?limit=` override on the wire. Hard cap stays at the TableView max (100); callers
+ * that need more than 100 must paginate. `q` is a controller-side multi-column ILIKE across
+ * the brand slug and the translated name (the runtime can't model "match across translations
+ * in any locale" as a per-field predicate).
+ */
+const adminBrandsListValidator = adminBrandsView.compileStrict({
+    extras: { q: vine.string().trim().maxLength(120).optional() },
+    defaultLimit: 100,
+});
 
 export default class AdminBrandsController {
     async index(ctx: HttpContext) {
-        const sort = parseSort(ctx.request.input("sort"));
-        const locale = ctx.i18n.locale;
+        const parsed = await adminBrandsListValidator.validate(ctx.request.qs());
+        /** `withCount('products')` surfaces the live link count to the transformer as
+         * `$extras.used_count`. The view's `used_count` orderable column drives ORDER BY via
+         * `sortRaw`; this `withCount` populates the response field — different surface, same
+         * predicate (count of `product_brand_links` rows). */
+        const builder = ProductBrand.query()
+            .preload("translations")
+            .preload("image")
+            .withCount("products", (q) => q.as("used_count"));
 
-        if (sort === "-used_count" || sort === "used_count") {
-            const direction = sort === "-used_count" ? "desc" : "asc";
-            const limitRaw = Number(ctx.request.input("limit", 0)) || 0;
-            const limit = limitRaw > 0 && limitRaw <= 500 ? limitRaw : 0;
-            return cache.getOrSet({
-                key: CacheKeys.admin.taxonomyUsedCount("brands", { sort, limit }, locale),
-                ttl: "2m",
-                tags: [CacheTags.catalogTaxonomy],
-                factory: async () => {
-                    let query = ProductBrand.query()
-                        .preload("translations")
-                        .preload("image")
-                        .withCount("products", (q) => q.as("used_count"))
-                        .orderBy("used_count", direction)
-                        .orderBy("id");
-                    if (limit > 0) query = query.limit(limit);
-                    const rows = await query;
-                    return collection(ProductBrandTransformer.transform(rows, locale).useVariant("forAdmin"));
-                },
+        if (parsed.q !== undefined && parsed.q.length > 0) {
+            const needle = `%${parsed.q.toLowerCase()}%`;
+            builder.where((sub) => {
+                sub.whereILike("product_brands.slug", needle).orWhereIn("product_brands.id", (nested) => {
+                    nested
+                        .select("brand_id")
+                        .from("product_brand_translations")
+                        .whereRaw("LOWER(name) LIKE ?", [needle]);
+                });
             });
         }
 
-        const rows = await ProductBrand.query()
-            .preload("translations")
-            .preload("image")
-            .withCount("products", (q) => q.as("used_count"))
-            .orderBy("menu_order")
-            .orderBy("id");
-        return collection(ProductBrandTransformer.transform(rows, locale).useVariant("forAdmin"));
+        const { data: rows, meta } = await adminBrandsView.run<ProductBrand>(builder, parsed);
+        const { data } = await collection<unknown>(
+            ProductBrandTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"),
+        );
+        return { data, meta };
     }
 
     async show(ctx: HttpContext) {

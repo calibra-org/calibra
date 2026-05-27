@@ -1,58 +1,45 @@
-import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
+import vine from "@vinejs/vine";
 
 import ProductTag from "#models/product_tag";
 import { CacheInvalidation } from "#services/cache_invalidation";
-import { CacheKeys, CacheTags } from "#services/cache_keys";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
+import { adminTagsView } from "#table_views/admin/tags";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductTagTransformer from "#transformers/product_tag_transformer";
 import { createTagValidator, updateTagValidator } from "#validators/catalog/taxonomy_validator";
 
 const TAXONOMY_FIELDS = ["name", "slug", "description"] as const;
 
-type TaxonomySort = "-used_count" | "used_count" | "menu_order" | "-menu_order" | undefined;
-
-function parseSort(input: unknown): TaxonomySort {
-    const value = typeof input === "string" ? input : "";
-    if (value === "-used_count" || value === "used_count" || value === "menu_order" || value === "-menu_order") {
-        return value;
-    }
-    return undefined;
-}
+const adminTagsListValidator = adminTagsView.compileStrict({
+    extras: { q: vine.string().trim().maxLength(120).optional() },
+    defaultLimit: 100,
+});
 
 export default class AdminTagsController {
     async index(ctx: HttpContext) {
-        const sort = parseSort(ctx.request.input("sort"));
-        const locale = ctx.i18n.locale;
+        const parsed = await adminTagsListValidator.validate(ctx.request.qs());
+        const builder = ProductTag.query()
+            .preload("translations")
+            .withCount("products", (q) => q.as("used_count"));
 
-        if (sort === "-used_count" || sort === "used_count") {
-            const direction = sort === "-used_count" ? "desc" : "asc";
-            const limitRaw = Number(ctx.request.input("limit", 0)) || 0;
-            const limit = limitRaw > 0 && limitRaw <= 500 ? limitRaw : 0;
-            return cache.getOrSet({
-                key: CacheKeys.admin.taxonomyUsedCount("tags", { sort, limit }, locale),
-                ttl: "2m",
-                tags: [CacheTags.catalogTaxonomy],
-                factory: async () => {
-                    let query = ProductTag.query()
-                        .preload("translations")
-                        .withCount("products", (q) => q.as("used_count"))
-                        .orderBy("used_count", direction)
-                        .orderBy("id");
-                    if (limit > 0) query = query.limit(limit);
-                    const rows = await query;
-                    return collection(ProductTagTransformer.transform(rows, locale).useVariant("forAdmin"));
-                },
+        if (parsed.q !== undefined && parsed.q.length > 0) {
+            const needle = `%${parsed.q.toLowerCase()}%`;
+            builder.where((sub) => {
+                sub.whereILike("product_tags.slug", needle).orWhereIn("product_tags.id", (nested) => {
+                    nested
+                        .select("tag_id")
+                        .from("product_tag_translations")
+                        .whereRaw("LOWER(name) LIKE ?", [needle]);
+                });
             });
         }
 
-        const rows = await ProductTag.query()
-            .preload("translations")
-            .withCount("products", (q) => q.as("used_count"))
-            .orderBy("menu_order")
-            .orderBy("id");
-        return collection(ProductTagTransformer.transform(rows, locale).useVariant("forAdmin"));
+        const { data: rows, meta } = await adminTagsView.run<ProductTag>(builder, parsed);
+        const { data } = await collection<unknown>(
+            ProductTagTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"),
+        );
+        return { data, meta };
     }
 
     async show(ctx: HttpContext) {

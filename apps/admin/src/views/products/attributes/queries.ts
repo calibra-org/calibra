@@ -60,7 +60,7 @@ export function useAttributesList(params: AttributesListParams = {}): UseQueryRe
     const search = params.search;
     return useQuery<AttributeListEnvelope, Error, AdminAttribute[]>({
         queryKey: ["admin", "attributes", "list", { locale, page, limit, search }],
-        queryFn: () => apiGet<AttributeListEnvelope>("attributes", { locale, query: { page, limit, search } }),
+        queryFn: () => apiGet<AttributeListEnvelope>("attributes", { locale, query: { page, limit, q: search } }),
         select: (payload) => (payload.data ?? []).map(toAdminAttribute),
         staleTime: 30_000,
     });

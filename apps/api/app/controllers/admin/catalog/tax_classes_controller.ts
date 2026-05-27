@@ -1,14 +1,19 @@
 import type { HttpContext } from "@adonisjs/core/http";
 
 import TaxClass from "#models/tax_class";
+import { adminTaxClassesView } from "#table_views/admin/tax_classes";
 import { collection, resource } from "#transformers/api_envelope";
 import TaxClassTransformer from "#transformers/tax_class_transformer";
 import { createTaxClassValidator, updateTaxClassValidator } from "#validators/catalog/taxonomy_validator";
 
+const adminTaxClassesListValidator = adminTaxClassesView.compileStrict({ defaultLimit: 100 });
+
 export default class AdminTaxClassesController {
-    async index() {
-        const rows = await TaxClass.query().orderBy("name").orderBy("id");
-        return collection(TaxClassTransformer.transform(rows).useVariant("forAdmin"));
+    async index(ctx: HttpContext) {
+        const parsed = await adminTaxClassesListValidator.validate(ctx.request.qs());
+        const { data: rows, meta } = await adminTaxClassesView.run<TaxClass>(TaxClass.query(), parsed);
+        const { data } = await collection<unknown>(TaxClassTransformer.transform(rows).useVariant("forAdmin"));
+        return { data, meta };
     }
 
     async show(ctx: HttpContext) {

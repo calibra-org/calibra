@@ -59,7 +59,7 @@ export function useAttributeTermsList(params: TermsListParams): UseQueryResult<A
         queryFn: () =>
             apiGet<TermListEnvelope>(`attributes/${attributeId}/terms`, {
                 locale,
-                query: { page, limit, search },
+                query: { page, limit, q: search },
             }),
         select: (payload) => (payload.data ?? []).map((row) => toAdminTerm(attributeId, row)),
         staleTime: 30_000,

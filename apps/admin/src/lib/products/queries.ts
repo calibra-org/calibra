@@ -424,10 +424,22 @@ interface TaxonomyEnvelopeAdmin<T> {
 export type TaxonomySort = "-used_count" | "used_count" | "menu_order" | "-menu_order";
 
 /**
+ * Translate the local `TaxonomySort` shorthand into the TableView wire form
+ * (`?sort[]=field:dir`). Kept colocated with the consumer hooks so it disappears when the
+ * picker UI eventually composes a `TableViewQuery` directly.
+ */
+function toTableViewSort(sort: TaxonomySort | undefined): string[] | undefined {
+    if (sort === undefined) return undefined;
+    const dir = sort.startsWith("-") ? "desc" : "asc";
+    const field = sort.replace(/^-/, "");
+    return [`${field}:${dir}`];
+}
+
+/**
  * Fetches the full categories tree for the product-detail picker. Caps at 500 rows by default —
  * the bulk seeder ships 56 leaves, so this comfortably covers any store the admin is going to
- * curate by hand. `sort` defaults to `menu_order`; pass `-used_count` to power the "Most used"
- * tab without paying for a second query.
+ * curate by hand. `sort` defaults to the endpoint's `menu_order` default; pass `-used_count`
+ * to power the "Most used" tab without paying for a second query.
  */
 export function useCategoriesTree(options?: { sort?: TaxonomySort; limit?: number }) {
     const locale = useLocale() as Locale;
@@ -438,7 +450,7 @@ export function useCategoriesTree(options?: { sort?: TaxonomySort; limit?: numbe
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("categories", {
                 locale,
-                query: { limit, ...(sort !== undefined ? { sort } : {}) },
+                query: { limit, ...(sort !== undefined ? { "sort[]": toTableViewSort(sort) } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerCategory),
         staleTime: 30 * 1000,
@@ -460,7 +472,7 @@ export function useBrandsList(options?: { sort?: TaxonomySort; limit?: number })
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("brands", {
                 locale,
-                query: { limit, ...(sort !== undefined ? { sort } : {}) },
+                query: { limit, ...(sort !== undefined ? { "sort[]": toTableViewSort(sort) } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerBrand),
         staleTime: 30 * 1000,
@@ -486,7 +498,7 @@ export function useTagsList(options?: { sort?: TaxonomySort; limit?: number }) {
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("tags", {
                 locale,
-                query: { limit, ...(sort !== undefined ? { sort } : {}) },
+                query: { limit, ...(sort !== undefined ? { "sort[]": toTableViewSort(sort) } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerTag),
         staleTime: 30 * 1000,

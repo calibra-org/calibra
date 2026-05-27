@@ -59,7 +59,7 @@ export function useBrandsList(params: BrandsListParams = {}): UseQueryResult<Pag
     const search = params.search;
     return useQuery<BrandListEnvelope, Error, Paginated<AdminBrand>>({
         queryKey: ["admin", "brands", "list", { locale, page, limit, search }],
-        queryFn: () => apiGet<BrandListEnvelope>("brands", { locale, query: { page, limit, search } }),
+        queryFn: () => apiGet<BrandListEnvelope>("brands", { locale, query: { page, limit, q: search } }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminBrand),
             meta: payload.meta ?? { page, limit, total: payload.data?.length ?? 0, lastPage: 1 },

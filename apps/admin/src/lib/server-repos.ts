@@ -211,7 +211,7 @@ export async function listCategories(params: ListParams = {}): Promise<Paginated
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { search: params.search } : {}),
+                ...(params.search ? { q: params.search } : {}),
             },
         },
     });
@@ -245,7 +245,7 @@ export async function listTags(params: ListParams = {}): Promise<Paginated<Admin
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { search: params.search } : {}),
+                ...(params.search ? { q: params.search } : {}),
             },
         },
     });
@@ -281,7 +281,7 @@ export async function listBrands(params: ListParams = {}): Promise<Paginated<Adm
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { search: params.search } : {}),
+                ...(params.search ? { q: params.search } : {}),
             },
         },
     });
@@ -544,8 +544,8 @@ export async function listOrders(params: OrderListParams = {}): Promise<Paginate
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.status && params.status !== "any" ? { status: params.status } : {}),
-                ...(params.search ? { search: params.search } : {}),
+                ...(params.status && params.status !== "any" ? { "filter[]": [`status:eq:${params.status}`] } : {}),
+                ...(params.search ? { q: params.search } : {}),
             },
         },
     });

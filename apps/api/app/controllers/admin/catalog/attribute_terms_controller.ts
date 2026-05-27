@@ -1,25 +1,48 @@
 import type { HttpContext } from "@adonisjs/core/http";
+import vine from "@vinejs/vine";
 
 import ProductAttribute from "#models/product_attribute";
 import ProductAttributeTerm from "#models/product_attribute_term";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
+import { adminAttributeTermsView } from "#table_views/admin/attribute_terms";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductAttributeTermTransformer from "#transformers/product_attribute_term_transformer";
 import { createAttributeTermValidator, updateAttributeTermValidator } from "#validators/catalog/attribute_validator";
 
 const TERM_FIELDS = ["name", "slug", "description"] as const;
 
+const adminAttributeTermsListValidator = adminAttributeTermsView.compileStrict({
+    extras: { q: vine.string().trim().maxLength(120).optional() },
+    defaultLimit: 100,
+});
+
 export default class AdminAttributeTermsController {
     async index(ctx: HttpContext) {
         const attribute = await ProductAttribute.find(ctx.params.attribute_id);
         if (!attribute) return ctx.response.status(404).json({ error: "attribute_not_found" });
-        const rows = await ProductAttributeTerm.query()
+        const parsed = await adminAttributeTermsListValidator.validate(ctx.request.qs());
+        /** Parent-id scope is the authorisation surface; pre-applied so a forged
+         * `?filter[]=attribute_id:eq:N` cannot cross-walk between attributes. */
+        const builder = ProductAttributeTerm.query()
             .where("attribute_id", String(attribute.id))
-            .preload("translations")
-            .orderBy("menu_order")
-            .orderBy("id");
-        return collection(ProductAttributeTermTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"));
+            .preload("translations");
+
+        if (parsed.q !== undefined && parsed.q.length > 0) {
+            const needle = `%${parsed.q.toLowerCase()}%`;
+            builder.whereIn("product_attribute_terms.id", (nested) => {
+                nested
+                    .select("term_id")
+                    .from("product_attribute_term_translations")
+                    .whereRaw("LOWER(name) LIKE ?", [needle]);
+            });
+        }
+
+        const { data: rows, meta } = await adminAttributeTermsView.run<ProductAttributeTerm>(builder, parsed);
+        const { data } = await collection<unknown>(
+            ProductAttributeTermTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"),
+        );
+        return { data, meta };
     }
 
     async store(ctx: HttpContext) {

@@ -52,7 +52,7 @@ export function useTagsList(params: TagsListParams = {}): UseQueryResult<Paginat
     const search = params.search;
     return useQuery<TagListEnvelope, Error, Paginated<AdminTag>>({
         queryKey: ["admin", "tags", "list", { locale, page, limit, search }],
-        queryFn: () => apiGet<TagListEnvelope>("tags", { locale, query: { page, limit, search } }),
+        queryFn: () => apiGet<TagListEnvelope>("tags", { locale, query: { page, limit, q: search } }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminTag),
             meta: payload.meta ?? { page, limit, total: payload.data?.length ?? 0, lastPage: 1 },

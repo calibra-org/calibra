@@ -7,6 +7,7 @@ import ProductAttributeLink from "#models/product_attribute_link";
 import ProductVariation from "#models/product_variation";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
+import { adminVariationsView } from "#table_views/admin/variations";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductVariationTransformer from "#transformers/product_variation_transformer";
 import {
@@ -17,24 +18,25 @@ import {
 
 const VARIATION_FIELDS = ["description"] as const;
 
+const adminVariationsListValidator = adminVariationsView.compileStrict({ defaultLimit: 100 });
+
 export default class AdminVariationsController {
     async index(ctx: HttpContext) {
         const product = await Product.find(ctx.params.product_id);
         if (!product) return ctx.response.status(404).json({ error: "product_not_found" });
-        /**
-         * Exclude soft-deleted rows — bulk delete (and the per-row destroy) write `deleted_at`
-         * instead of removing the variation outright, since order history may reference the row.
-         * Without this filter the just-deleted rows reappear on the next refetch and the admin's
-         * Sellable versions table looks like the delete silently failed.
-         */
-        const rows = await ProductVariation.query()
+        const parsed = await adminVariationsListValidator.validate(ctx.request.qs());
+        /** Parent-id + soft-delete pre-scope. Soft-deleted rows are excluded because bulk
+         * delete writes `deleted_at` (rather than removing rows outright) so order history can
+         * still reference them; without this filter, just-deleted rows would reappear on the
+         * next refetch and the Sellable versions table would look like the delete failed. */
+        const builder = ProductVariation.query()
             .where("product_id", String(product.id))
             .whereNull("deleted_at")
             .preload("translations")
-            .preload("attributePins")
-            .orderBy("menu_order")
-            .orderBy("id");
-        return collection(ProductVariationTransformer.transform(rows, ctx.i18n.locale));
+            .preload("attributePins");
+        const { data: rows, meta } = await adminVariationsView.run<ProductVariation>(builder, parsed);
+        const { data } = await collection<unknown>(ProductVariationTransformer.transform(rows, ctx.i18n.locale));
+        return { data, meta };
     }
 
     async store(ctx: HttpContext) {
