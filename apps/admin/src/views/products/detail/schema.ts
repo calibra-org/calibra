@@ -283,9 +283,15 @@ export function formValuesToPayload(values: ProductDetailFormValues): Record<str
             download_expiry_days: d.downloadExpiryDays,
             position: d.position,
         })),
+        /**
+         * `position` mirrors the array index after every drag-reorder, instead of round-tripping
+         * the server-side value. The form's array order IS the canonical order; the dedicated
+         * `position` column on the wire is what the storefront and admin lists read, so reorders
+         * have to write through every save or the new order silently disappears on reload.
+         */
         attribute_links: values.attributeLinks.map((link, i) => ({
             attribute_id: link.attributeId,
-            position: link.position === 0 ? i : link.position,
+            position: i,
             visible: link.visible,
             used_for_variation: link.usedForVariation,
             display_type: link.displayType,

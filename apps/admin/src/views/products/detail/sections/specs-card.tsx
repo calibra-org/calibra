@@ -403,7 +403,7 @@ function SpecLinkRow({ rowId, index, expanded, onToggleExpand, onRemove, onPromo
             style={style}
             {...dragAttrs}
             className={cn(
-                "group rounded-md border border-border bg-background",
+                "group overflow-hidden rounded-md border border-border bg-background",
                 isDragging && "z-10 opacity-70 ring-2 ring-primary/40",
             )}
         >
@@ -525,7 +525,7 @@ function SpecCustomRow({ rowId, index, expanded, onToggleExpand, onRemove, label
             style={style}
             {...dragAttrs}
             className={cn(
-                "group rounded-md border border-border bg-background",
+                "group overflow-hidden rounded-md border border-border bg-background",
                 isDragging && "z-10 opacity-70 ring-2 ring-primary/40",
             )}
         >
