@@ -168,29 +168,33 @@ type ParseResult =
 function parseFilterExpression(raw: string): ParseResult {
     if (raw.length === 0) return { ok: false, error: `Empty filter expression` };
 
-    const parts = raw.split(":", 3);
-    const fieldName = parts[0];
-    if (fieldName === undefined || fieldName.length === 0) {
-        return { ok: false, error: `Invalid filter expression "${raw}"` };
-    }
-
-    if (parts.length === 1) {
+    /** Hand-split into at most 3 parts but preserve trailing colons in the value slot — ISO
+     * datetime values (`2026-12-31T23:59:59.999Z`) carry colons too. JS `split(":", 3)` silently
+     * drops the tail, which would corrupt `between` bounds. */
+    const firstColon = raw.indexOf(":");
+    if (firstColon === -1) {
         return { ok: false, error: `Filter expression "${raw}" needs an operator or value` };
     }
+    const fieldName = raw.slice(0, firstColon);
+    if (fieldName.length === 0) {
+        return { ok: false, error: `Invalid filter expression "${raw}"` };
+    }
+    const rest = raw.slice(firstColon + 1);
 
-    if (parts.length === 2) {
-        const second = parts[1] ?? "";
-        if (VOID_OPERATORS.includes(second.toLowerCase() as (typeof VOID_OPERATORS)[number])) {
-            return { ok: true, fieldName, op: second.toLowerCase() as TableViewOperator, valueStr: "" };
+    const secondColon = rest.indexOf(":");
+    if (secondColon === -1) {
+        if (VOID_OPERATORS.includes(rest.toLowerCase() as (typeof VOID_OPERATORS)[number])) {
+            return { ok: true, fieldName, op: rest.toLowerCase() as TableViewOperator, valueStr: "" };
         }
-        return { ok: true, fieldName, op: "eq", valueStr: second };
+        return { ok: true, fieldName, op: "eq", valueStr: rest };
     }
 
-    const opCandidate = (parts[1] ?? "").toLowerCase() as TableViewOperator;
+    const opRaw = rest.slice(0, secondColon);
+    const opCandidate = opRaw.toLowerCase() as TableViewOperator;
     if (!TABLE_VIEW_OPERATORS.includes(opCandidate)) {
-        return { ok: false, error: `Invalid operator "${parts[1]}" in "${raw}"` };
+        return { ok: false, error: `Invalid operator "${opRaw}" in "${raw}"` };
     }
-    return { ok: true, fieldName, op: opCandidate, valueStr: parts[2] ?? "" };
+    return { ok: true, fieldName, op: opCandidate, valueStr: rest.slice(secondColon + 1) };
 }
 
 /* ------------------------------ value coercion ------------------------------ */
