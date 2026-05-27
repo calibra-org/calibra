@@ -246,45 +246,61 @@ meaningful filter dimension + OR composition + 422 paths.
 
 ## Migration status
 
-Every shipped endpoint speaks the unified grammar (`page` / `limit` / `filter[]` / `filterOr[]`
-/ `sort[]`), returns the `{ data, meta: { page, limit, total, lastPage } }` envelope, and
-goes through `view.compileStrict({ extras })` so unknown top-level query keys return 422
-instead of silently dropping. The wire param for free-text search is `q` everywhere it exists.
+Every paginated list endpoint on the API speaks the unified wire grammar
+(`page` / `limit` / `filter[]` / `filterOr[]` / `sort[]`), returns the
+`{ data, meta: { page, limit, total, lastPage } }` envelope, and goes through
+`view.compileStrict({ extras })` so unknown top-level query keys return 422 instead of
+silently dropping. The wire param for free-text search is `q` everywhere it exists.
 
-**Shipped:**
+**Admin:**
 
 - `GET /api/v1/admin/orders` — full migration incl. date-picker adapter
-- `GET /api/v1/admin/customers` — simple per-column filters on TableView; tab / `q` / tags /
+- `GET /api/v1/admin/customers` — simple per-column filters on TableView; `tab` / `q` / tags /
   aggregate-based filters stay as declared endpoint extras
 - `GET /api/v1/admin/catalog/products` — sort + pagination + col filters; `name` and
   `stock_quantity` use the primitive's `sortRaw` hook for joined-subquery ORDER BYs;
   `applyListSort` / `SORTABLE_COLUMNS` are gone
+- `GET /api/v1/admin/catalog/brands` / `categories` / `tags` — `used_count` is an orderable
+  column via `sortRaw`; `q` searches slug + translated name; `defaultLimit: 100`
+- `GET /api/v1/admin/catalog/attributes` + `attributes/:id/terms`
+- `GET /api/v1/admin/catalog/variations` — sub-resource scoped by `product_id` + soft-delete
+- `GET /api/v1/admin/catalog/tax-classes` / `shipping-classes`
 - `GET /api/v1/admin/payment-attempts`
-- `GET /api/v1/account/orders`
 - `GET /api/v1/admin/coupons` — bulk of per-column filters move; tab / `q` /
   has_*_constraints / brand pivot stay as extras
 - `GET /api/v1/admin/orders/:order_id/refunds` — sub-resource
 - `GET /api/v1/admin/orders/:order_id/notes` — sub-resource; `type` keyword alias retained as
   an extra
+- `GET /api/v1/admin/orders/:order_id/history` — sub-resource
 - `GET /api/v1/admin/customer-tags` — `?q=` prefix-search retained as an extra for the combobox UX
-- `GET /api/v1/admin/catalog/reviews` — moderation queue on the unified envelope
-- `GET /api/v1/admin/media` — sort + pagination + col filters; `q` multi-col free-text + bespoke
-  WP-style extras (`type` MIME-group, `month` window, `uploaded_by`) stay top-level; `defaultLimit`
-  is 60 (the grid's natural row count)
+- `GET /api/v1/admin/customers/:customer_id/notes` — sub-resource
+- `GET /api/v1/admin/customers/:id/timeline` — stitched in-controller; the wire grammar /
+  envelope still match (post-merge pagination + inline strict-keys validation)
+- `GET /api/v1/admin/customer-segments` — owner-scope pre-applied as a security invariant
+- `GET /api/v1/admin/catalog/reviews` — moderation queue
+- `GET /api/v1/admin/media` — `q` multi-col free-text + bespoke WP-style extras (`type`
+  MIME-group, `month` window, `uploaded_by`); `defaultLimit: 60`
+- `GET /api/v1/admin/payment-gateways`
 
-**Pending follow-up PRs** (consumers are currently un-paginated; each migration is a breaking
-response-shape change that needs an FE update in the same commit — see the reviews migration
-for the pattern):
+**Account-side (storefront-facing):**
 
-- Catalog taxonomies — brands, categories, tags, attributes, attribute_terms, tax_classes,
-  shipping_classes, variations. Selector / combobox UIs (product editor's brand/category/tag
-  pickers) need to fetch all pages or adopt a server-search pattern in the same PR.
-- Admin auxiliaries — payment_gateways, customer_notes, customer_timeline, customer_segments,
-  order_history.
-- Account-side — order_history, order_notes, addresses, downloads.
+- `GET /api/v1/account/orders`
+- `GET /api/v1/account/orders/:order_id/history` — `viewOrder` ability + parent-id pre-scope
+- `GET /api/v1/account/orders/:order_id/notes` — `visibility = 'customer'` pre-scope
+- `GET /api/v1/account/addresses` — customer-scope pre-scope; `field_metadata` lives as a
+  top-level sibling of `data`/`meta` (was previously under `meta.field_metadata`)
+- `GET /api/v1/account/downloads` — customer-scope + active-grant predicate pre-scope
 
-The FE `useDataTable` ↔ `useTableView` consolidation (and removal of `useDataTable`'s URL
-plumbing in favour of a UI-state-only variant) is the third remaining piece. Every migrated
-list page on the admin still composes its `TableViewQuery` through `useTableView` already; the
-remaining work is splitting `useDataTable` into smaller UI-only hooks (`useColumnState` +
-`useSelectionState` + `useDensity`).
+**Remaining follow-up work:**
+
+- **FE `useDataTable` ↔ `useTableView` consolidation.** Every migrated admin list page is
+  functional, but two URL-state managers coexist on each page: `useDataTable` owns the
+  legacy facet / toggle / dateFacet abstractions and writes `?sort=-name` form, while
+  `useTableView` owns the canonical `?sort[]=` form (used when the page composes a
+  `TableViewQuery`). The list pages map between them in `useMemo`. Collapsing the two
+  hooks into a single source of truth — with UI-only state (column visibility / density /
+  selection) split off into smaller hooks — is the remaining refactor.
+- **Server-side `parseDateFilter` service.** Still in use by `customers_controller` for the
+  `last_order` aggregate-filter parsing (the customers list's "ordered in last 30 days"
+  chip). Deletable once the customers picker emits a TableView-shaped range filter and the
+  controller swaps the aggregate predicate to a `havingRaw` on the joined orders subquery.

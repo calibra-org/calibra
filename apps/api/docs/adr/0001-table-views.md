@@ -295,74 +295,63 @@ A few things the design **explicitly does** to head off confusion mid-migration:
 - **`vine.any().use(filterRule(...))` does not give us pre-validated parsed types in TS inference automatically.** The technance schema returns `ParsedTableViewQuery<Filterables, Orderables>` via a heavy cast at the schema construction site. We will inherit that cast. The runtime is correct; the TS surface for consumers of `view.schema` is what the cast enforces.
 - **Existing `useDataTable` callsites without a clean break would be a slower roll than a per-page migration commit.** §6.3 recommends the clean break to absorb that churn in the per-resource migration commits, not separately.
 
-## 11. What shipped vs what's deferred
+## 11. What shipped
 
-**Shipped in this PR (11 endpoints, plus repo-wide primitive + envelope hardening)**
+**Every paginated list endpoint on the API now speaks the unified grammar.** No endpoint
+keeps a legacy per-list shape. Every list endpoint:
 
-Every shipped endpoint speaks the unified grammar (`page` / `limit` / `filter[]` /
-`filterOr[]` / `sort[]`), returns `{ data, meta: { page, limit, total, lastPage } }`, and
-goes through `view.compileStrict({ extras })` — any other top-level query key returns 422
-instead of silently dropping. The wire param for free-text search is `q` everywhere.
+- accepts `?page=N&limit=N&filter[]=field:op:value&filterOr[]=…&sort[]=field:dir` plus its
+  declared bespoke extras (`q`, `tab`, `trashed`, etc.);
+- returns `{ data, meta: { page, limit, total, lastPage } }` (BREAKING — `meta.perPage` is
+  renamed to `meta.limit` repo-wide);
+- runs through `view.compileStrict({ extras })` so any top-level query key not in
+  `{page, limit, filter, filterOr, sort} ∪ extras` returns 422 instead of silently dropping;
+- references the shared OpenAPI components in
+  `common/components/parameters/table-view/{Filter,FilterOr,Sort,Page,Limit}.yaml`;
+- uses `q` for free-text search where it exists (replacing the older `search` key everywhere
+  it appeared).
 
-- `GET /api/v1/admin/orders` — full migration including date-picker adapter integration.
-- `GET /api/v1/admin/customers` — simple per-column filters on `filter[]`; the heavy bespoke
-  surface (tabs, multi-column `q`, tag/city joins, marketing-opt-in existence checks,
-  with_orders / order_count / lifetime_spend aggregate filters, `include_stats`) is declared
-  as `extras` on `compileStrict`.
-- `GET /api/v1/admin/catalog/products` — sort + pagination + the full column-filter surface.
-  `name` and `stock_quantity` use the primitive's `sortRaw` hook to express ORDER BY against
-  the `product_translations` / `inventory_items` subqueries. `applyListSort` and the
-  `SORTABLE_COLUMNS` whitelist are gone; legacy `?perPage=` / `?per_page=` / `?sort=` /
-  `?search=` no longer parse. Facet-counts continues to re-use `applyListFilters`.
-- `GET /api/v1/admin/payment-attempts` — clean.
-- `GET /api/v1/account/orders` — clean; customer-scope stays a controller-side security
-  invariant.
-- `GET /api/v1/admin/coupons` — column filters on `filter[]`; tab strip / `q` /
-  has_*_constraints / brand pivot / expiring_soon stay as declared extras. Legacy `?search=`
-  / `?perPage=` / `?per_page=` no longer parse.
-- `GET /api/v1/admin/orders/:order_id/refunds` — sub-resource; parent-id pre-scoped.
-- `GET /api/v1/admin/orders/:order_id/notes` — sub-resource; `type` keyword alias is a
-  declared extra.
-- `GET /api/v1/admin/customer-tags` — autocomplete combobox; `q` prefix-search is a declared
-  extra.
-- `GET /api/v1/admin/catalog/reviews` — moderation queue on the paginated envelope.
-- `GET /api/v1/admin/media` — sort + pagination + col filters; `q` + WP-style pills
-  (`type` MIME-group, `month` window, `uploaded_by`) are declared extras. `defaultLimit: 60`
-  via `compileStrict({ defaultLimit })`. Legacy `?perPage=` / `?per_page=` / `?search=` no
-  longer parse.
+**Endpoint inventory** (full list — see [`app/lib/table_view/README.md`](../../app/lib/table_view/README.md)
+for declared filterable / orderable fields and bespoke extras per endpoint):
 
-Cross-cutting changes that landed alongside the per-endpoint work:
+Admin: orders, customers, products, catalog/{brands,categories,tags,attributes,attributes/{id}/terms,variations,tax-classes,shipping-classes,reviews}, payment-attempts, payment-gateways, coupons, media, customer-tags, customers/{id}/notes, customers/{id}/timeline, customer-segments, orders/{id}/{refunds,notes,history}.
 
-- **Response envelope:** `meta.perPage` → `meta.limit` everywhere (BREAKING). The wire request
-  key and the response meta key now match.
+Account-side: orders, orders/{id}/{history,notes}, addresses, downloads.
+
+**Cross-cutting hardening that landed alongside the per-endpoint work:**
+
+- **Response envelope rename** (`meta.perPage` → `meta.limit`) across api / sdk / admin / web.
 - **Primitive `compileStrict({ extras, defaultLimit })`** rejects unknown top-level keys with
   422; replaces the previous "Vine has no strict-mode" limitation.
 - **Primitive `sortRaw` column hook** lets an orderable column splice a custom ORDER BY
-  fragment without the view needing to model a relation.
+  fragment without the view needing to model a relation (used by products `name` /
+  `stock_quantity` and the taxonomies' `used_count`).
 - **Default-sort tie-breakers always append** after wire sorts they don't cover, so any
   single-column wire sort still pages deterministically via the declared default tail.
-- **Shared OpenAPI components** (`common/components/parameters/table-view/{Filter,FilterOr,Sort,Page,Limit}.yaml`)
-  are referenced by every migrated endpoint. `PerPageQuery.yaml` is deleted. `PaginationMeta.yaml`
-  is regenerated with `limit`. `node ace check:api-docs` is green.
+- **`PerPageQuery.yaml` parameter component deleted**; every paginated path references
+  `table-view/Limit.yaml`. `PaginationMeta.yaml` regenerated with `limit`. `node ace
+  check:api-docs` is green.
+- **Stitched-in-controller endpoints (`customers/{id}/timeline`)** keep the unified envelope
+  via inline strict-keys validation + post-merge pagination, even though the underlying data
+  isn't a single Lucid model the runtime can point at.
 
-**Deferred to follow-up PRs** (each migration is a breaking response-shape change for the
-current `{data}` consumers; the FE consumer must update in the same commit — see the reviews
-migration for the template):
+**Remaining follow-up work** (out of scope for this PR — non-blocking, pure code-quality
+items):
 
-- **Catalog taxonomies (8 endpoints)** — brands, categories, tags, attributes, attribute_terms,
-  variations, tax_classes, shipping_classes. The selector / combobox UIs that consume them
-  (product-edit brand/category/tag pickers) need to fetch all pages (or adopt server-side
-  search) in the same PR.
-- **Admin auxiliaries (5 endpoints)** — payment_gateways, customer_notes, customer_timeline,
-  customer_segments, admin order_history.
-- **Account-side (4 endpoints)** — order_history, order_notes, addresses, downloads.
-- **FE `useDataTable` consolidation** — every migrated list page already composes its
-  `TableViewQuery` through `useTableView`; the remaining work is splitting `useDataTable`'s
-  URL-state plumbing out of the UI-state portion and inlining the remaining UI bits
-  (column visibility / density / selection) as smaller hooks.
-- **Server-side `parseDateFilter` service** — still in use by `customers_controller` for the
-  `last_order` aggregate filter. It can be deleted once `last_order` is moved into a
-  TableView-style range filter on the customers endpoint.
+- **FE `useDataTable` ↔ `useTableView` consolidation.** Every migrated admin list page is
+  functional; the toolbar / facet UI is rendered correctly and the wire form is the
+  canonical TableView grammar. But two URL-state managers still coexist on each page:
+  `useDataTable` owns the legacy facet / toggle / dateFacet abstractions and writes
+  `?sort=-name` form to the URL, while `useTableView` owns the canonical `?sort[]=` form
+  (used when the page composes a `TableViewQuery`). The pages map between them in
+  `useMemo`. Collapsing the two hooks into a single source of truth — with UI-only state
+  (column visibility / density / selection) split off into smaller hooks — is the
+  remaining FE refactor.
+- **Server-side `parseDateFilter` service** still in use by `customers_controller` for the
+  `last_order` aggregate-filter parsing (the customers list's "ordered in last 30 days"
+  chip). Deletable once the customers picker emits a TableView-shaped range filter and
+  the controller swaps the aggregate predicate to a `havingRaw` on the joined orders
+  subquery.
 
 ## 12. References
 
