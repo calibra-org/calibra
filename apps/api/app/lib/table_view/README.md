@@ -256,23 +256,34 @@ meaningful filter dimension + OR composition + 422 paths.
 
 Endpoints fully on the unified grammar (shipped in this PR / branch):
 
-- `GET /api/v1/admin/orders`
-- `GET /api/v1/admin/customers`
-- `GET /api/v1/admin/catalog/products` (sort + pagination + simple filters; legacy `?perPage=`
-  and `?sort=` keys kept as back-compat because the FE wasn't refactored and `applyListSort`'s
-  `name` / `stock_quantity` orderByRaw cases can't go through TableView)
+- `GET /api/v1/admin/orders` — full migration incl. date-picker adapter
+- `GET /api/v1/admin/customers` — simple per-column filters on TableView; tab / search / tags /
+  aggregate-based filters stay as endpoint extensions
+- `GET /api/v1/admin/catalog/products` — sort + pagination + col filters; legacy `?perPage=`
+  and `?sort=` kept as back-compat (FE not refactored; the `name` / `stock_quantity`
+  orderByRaw cases need joined-table sorts the runtime can't model)
 - `GET /api/v1/admin/payment-attempts`
 - `GET /api/v1/account/orders`
+- `GET /api/v1/admin/coupons` — bulk of per-column filters move; tab / search /
+  has_*_constraints / brand pivot / redemptions aggregate stay
+- `GET /api/v1/admin/orders/:order_id/refunds` — sub-resource
+- `GET /api/v1/admin/orders/:order_id/notes` — sub-resource; legacy `?type=` alias retained
+- `GET /api/v1/admin/customer-tags` — `?q=` prefix-search alias retained for the combobox UX
+- `GET /api/v1/admin/catalog/reviews` — moderation queue; **breaking change** to `{data, meta}`
+  envelope
+- `GET /api/v1/admin/media` — sort + pagination + col filters; bespoke WP-style pills
+  (`type` MIME-group, `month` window, multi-col `search`, `unattached`/`mine`) stay top-level
 
-Endpoints **not yet migrated** (follow-up PRs):
+**Deliberately un-paginated** (consumers are selectors / comboboxes / single-shot audit views
+that need the full set; migration would force pagination + a breaking response-shape change):
 
-- Catalog: brands, categories, tags, attributes, attribute_terms, variations, reviews,
-  tax_classes, shipping_classes — most return un-paginated collections by contract; migration
-  needs a separate decision on whether to introduce pagination.
-- Refunds, order_notes, order_history, customer_notes, customer_tags, customer_segments — small
-  endpoints that follow the same shape as orders/customers/payment-attempts.
-- Media — paginated but uses `month` grouping that needs a custom non-TableView param.
-- Account: addresses, downloads, order_notes, order_history.
+- Catalog taxonomies: brands, categories, tags, attributes, attribute_terms, tax_classes,
+  shipping_classes — feed product-edit selectors and tree pickers.
+- Per-product variations — feed the variations grid inside a single product page.
+- Payment gateways — < 10 rows by contract.
+- Customer notes, customer timeline, order history, customer segments — audit-style timelines;
+  the full set per parent fits a single page.
+- Account-side: addresses, downloads, order_notes, order_history — small per-customer/per-order.
 
-The migration sequence in subsequent PRs follows the orders/customers pattern; the primitive
-itself does not need changes for any of them.
+If pagination is ever needed for one of these, swap to TableView and update the FE consumer at
+the same commit (see the reviews migration for the pattern).

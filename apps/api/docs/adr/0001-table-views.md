@@ -297,7 +297,7 @@ A few things the design **explicitly does** to head off confusion mid-migration:
 
 ## 11. What shipped vs what's deferred
 
-**Shipped in this PR (5 endpoints fully on the unified grammar)**
+**Shipped in this PR (11 endpoints fully on the unified grammar)**
 
 - `GET /api/v1/admin/orders` — full migration including the date-picker adapter integration,
   10 new Japa tests for the grammar surface, OpenAPI references the shared params, SDK regen.
@@ -311,42 +311,54 @@ A few things the design **explicitly does** to head off confusion mid-migration:
   PR, and (b) the special-case `sort=name` / `sort=stock_quantity` cases need `orderByRaw`
   across joined `product_translations` / `inventory_items` tables which the v1 TableView
   runtime can't model. Facet-counts re-uses `applyListFilters` and stays as-is.
-- `GET /api/v1/admin/payment-attempts` — clean migration; all 4 filter dimensions + sort fit
-  TableView with no carve-outs.
-- `GET /api/v1/account/orders` — clean migration; customer-scope + draft/deleted exclusion
-  stay in the controller as security invariants.
+- `GET /api/v1/admin/payment-attempts` — clean; all 4 filter dimensions + sort fit TableView.
+- `GET /api/v1/account/orders` — clean; customer-scope + draft/deleted exclusion stay as
+  controller-side security invariants.
+- `GET /api/v1/admin/coupons` — bulk of per-column filters move (discount_type, amounts,
+  starts_at/expires_at windows, free_shipping etc.); tab strip, multi-source search,
+  has_*_constraints existence checks, brand pivot whereIn, redemptions aggregate stay.
+- `GET /api/v1/admin/orders/:order_id/refunds` — sub-resource; parent-id pre-scoped at the
+  controller before `view.run`.
+- `GET /api/v1/admin/orders/:order_id/notes` — sub-resource; legacy `?type=` keyword retained
+  as an alias for the visibility filter so the existing admin UI doesn't break.
+- `GET /api/v1/admin/customer-tags` — autocomplete combobox; `?q=` prefix-search retained.
+- `GET /api/v1/admin/catalog/reviews` — moderation queue; **breaking change** to the
+  paginated `{data, meta}` envelope (FE consumers updated in the same commit).
+- `GET /api/v1/admin/media` — TableView for sort + pagination + simple cols; the WP-style
+  filter pills (`type` MIME-group, `month` window, multi-col `search`, `unattached` / `mine`,
+  `uploaded_by`) stay top-level. Legacy `?perPage=` / `?per_page=` aliased to `limit`; default
+  cap is 60 to fit the media grid.
 
 The shared OpenAPI components (`common/components/parameters/table-view/{Filter,FilterOr,Sort,Page,Limit}.yaml`)
 ship in this PR and are reused across every migrated endpoint. `node ace check:api-docs` is
 green; the merged test-spec `assertAgainstApiSpec()` passes on every migrated path.
 
-**Deferred to follow-up PRs**
+**Deliberately un-paginated (left on legacy `{data}` shape on purpose)**
 
-The pattern is established and copy-pasteable from any of the above shipped endpoints. The
-following remain on their legacy per-key wire grammar; each follow-up PR can take one resource
-family at a time.
+These endpoints feed select/combobox UIs or audit-style timeline views that need the full
+set in one request. Migration would force pagination AND a breaking response-shape change at
+the same time for zero operator benefit.
 
-- *Catalog single-shot lists* — brands, categories, tags, attributes, attribute_terms,
-  reviews, variations, tax_classes, shipping_classes. Most return un-paginated `{ data }`
-  collections by current contract; migrating them is a separate decision about whether to
-  introduce pagination at all.
-- *Refunds* — sub-resource scoped by order; small surface, follows the orders pattern with
-  the parent-id pre-scope in the controller.
-- *Order notes / order history / customer notes* — sub-resources, small filter surface,
-  trivial migrations.
-- *Customer tags / customer segments* — config-shaped lists, small.
-- *Media* — paginated, but the `month` grouping is a custom non-TableView shape that needs
-  a small decision.
-- *Account-side: addresses, downloads, order_notes, order_history* — small, follow the
-  account/orders pattern.
-- *Customers list page (admin frontend)* — the `useCustomersList` hook is migrated to take a
-  `TableViewQuery`; the page still needs to compose date / status / country / role facets
-  into the new shape (the `view.run` server side already accepts them via `filter[]=` but the
-  page hasn't been wired through yet for every facet — search, tab, and a couple of facets
-  still flow as top-level params).
-- *Admin products page (FE)* — the controller now accepts both wire forms; the page itself
-  hasn't been refactored to send `filter[]=` instead of per-key params. The back-compat layer
-  keeps it working until that refactor lands.
+- Catalog taxonomies: brands, categories, tags, attributes, attribute_terms, tax_classes,
+  shipping_classes — populate product-edit selectors and tree pickers.
+- Per-product variations — the variations grid lives inside a single product page.
+- Payment gateways — < 10 rows by contract.
+- Customer notes, customer timeline, order history, customer segments — audit-style timelines
+  per parent; full set fits one page.
+- Account-side: addresses, downloads, order_notes, order_history.
+
+**Deferred FE refactors**
+
+- *Customers list page* — the hook is migrated to take a `TableViewQuery`, and the page
+  composes country / status / created facets into it; tab, search, and a few advanced facets
+  (acquisition channels, multi-city) still flow as top-level params alongside the TableView
+  query. Both wire forms are accepted server-side so the page works either way.
+- *Admin products page* — the controller now accepts both legacy `?status=…&type=…` and the
+  new `filter[]=…` form; the page itself wasn't refactored, kept on legacy via the back-compat
+  layer.
+
+A future PR can swap these last two FE pages onto pure `filter[]=` wire without any further
+server work.
 
 ## 12. References
 
