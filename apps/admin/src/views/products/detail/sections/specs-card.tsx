@@ -14,7 +14,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from "@dnd-kit/utilities";
 import { useLocale, useTranslations } from "next-intl";
 import { type CSSProperties, useEffect, useId, useMemo, useState } from "react";
-import { Controller, useFieldArray, useFormContext } from "react-hook-form";
+import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -47,11 +47,17 @@ import { TermChipStrip } from "./shared/term-chip-strip";
  * consider whether shoppers should be choosing between them. The "promote" button on a
  * from-taxonomy spec flips `usedForVariation=true` in place (no data loss — same link row).
  */
-export function SpecsBody() {
+interface SpecsBodyProps {
+    /** When provided + the product is `simple`, the empty state shows a "switch to multi-version" CTA. */
+    onRequestVariableType?: () => void;
+}
+
+export function SpecsBody({ onRequestVariableType }: SpecsBodyProps = {}) {
     const t = useTranslations("Products.detail.specs");
     const tLinks = useTranslations("Products.detail.attributes");
     const locale = useLocale() as Locale;
     const { control, getValues } = useFormContext<ProductDetailFormValues>();
+    const productType = useWatch({ control, name: "type" });
     const links = useFieldArray({ control, name: "attributeLinks" });
     const customs = useFieldArray({ control, name: "customAttributes" });
     const attributes = useGlobalAttributes();
@@ -188,8 +194,23 @@ export function SpecsBody() {
                     id="specs.empty"
                     icon={Tag}
                     title={t("title")}
-                    description={t("empty")}
+                    description={
+                        <>
+                            <span>{t("empty")}</span>
+                            {productType === "simple" ? (
+                                <>
+                                    <br />
+                                    <span className="mt-1 inline-block text-foreground">{t("emptyWantChoicesHint")}</span>
+                                </>
+                            ) : null}
+                        </>
+                    }
                     dismissible={false}
+                    cta={
+                        productType === "simple" && onRequestVariableType !== undefined
+                            ? { label: t("switchToMultipleCta"), onClick: onRequestVariableType }
+                            : undefined
+                    }
                 />
             ) : null}
 

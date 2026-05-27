@@ -173,7 +173,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
             sections.push({
                 id: "specs",
                 title: t("sections.specs"),
-                body: <SpecsBody />,
+                body: <SpecsBody onRequestVariableType={() => form.setValue("type", "variable", { shouldDirty: true })} />,
             });
         }
         if (type === "variable") {

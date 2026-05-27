@@ -1246,6 +1246,8 @@
                 "title": "Specs",
                 "subtitle": "Specs describe the product — they inform the shopper, but they don't create choosable options.",
                 "empty": "Add specs like material, color, size, capacity, or compatibility. Specs help shoppers understand the product but don't create sellable versions.",
+                "emptyWantChoicesHint": "Want the shopper to pick between options (color, size, …)? Switch the selling mode to 'Multiple versions'.",
+                "switchToMultipleCta": "Switch to 'Multiple versions'",
                 "addFromTaxonomy": "Add from global specs",
                 "addFreeForm": "Add a free-form spec",
                 "expandAll": "Expand all",
