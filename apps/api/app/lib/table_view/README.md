@@ -293,14 +293,11 @@ silently dropping. The wire param for free-text search is `q` everywhere it exis
 
 **Remaining follow-up work:**
 
-- **FE `useDataTable` ↔ `useTableView` consolidation.** Every migrated admin list page is
-  functional, but two URL-state managers coexist on each page: `useDataTable` owns the
-  legacy facet / toggle / dateFacet abstractions and writes `?sort=-name` form, while
-  `useTableView` owns the canonical `?sort[]=` form (used when the page composes a
-  `TableViewQuery`). The list pages map between them in `useMemo`. Collapsing the two
-  hooks into a single source of truth — with UI-only state (column visibility / density /
-  selection) split off into smaller hooks — is the remaining refactor.
-- **Server-side `parseDateFilter` service.** Still in use by `customers_controller` for the
-  `last_order` aggregate-filter parsing (the customers list's "ordered in last 30 days"
-  chip). Deletable once the customers picker emits a TableView-shaped range filter and the
-  controller swaps the aggregate predicate to a `havingRaw` on the joined orders subquery.
+- **FE per-page migration off `useDataTable`.** The new primitives are in place
+  (`useTableView` with typed `extras`, `useColumnState`, `useSelectionState` — see
+  [`apps/admin/src/lib/table-view/README.md`](../../../../admin/src/lib/table-view/README.md))
+  but the five legacy list pages (`orders-list`, `customers-list`, `products-list`,
+  `reviews-list`, `coupons-list`) still compose URL state through `useDataTable` and then
+  project onto `TableViewQuery` via `useMemo`. Each page is functional today; the
+  consolidation onto the new primitives is pure code-quality work that can land one page
+  at a time.

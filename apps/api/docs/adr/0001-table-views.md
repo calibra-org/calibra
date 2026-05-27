@@ -335,23 +335,30 @@ Account-side: orders, orders/{id}/{history,notes}, addresses, downloads.
   via inline strict-keys validation + post-merge pagination, even though the underlying data
   isn't a single Lucid model the runtime can point at.
 
-**Remaining follow-up work** (out of scope for this PR — non-blocking, pure code-quality
-items):
+**FE primitive consolidation — partial:**
 
-- **FE `useDataTable` ↔ `useTableView` consolidation.** Every migrated admin list page is
-  functional; the toolbar / facet UI is rendered correctly and the wire form is the
-  canonical TableView grammar. But two URL-state managers still coexist on each page:
-  `useDataTable` owns the legacy facet / toggle / dateFacet abstractions and writes
-  `?sort=-name` form to the URL, while `useTableView` owns the canonical `?sort[]=` form
-  (used when the page composes a `TableViewQuery`). The pages map between them in
-  `useMemo`. Collapsing the two hooks into a single source of truth — with UI-only state
-  (column visibility / density / selection) split off into smaller hooks — is the
-  remaining FE refactor.
-- **Server-side `parseDateFilter` service** still in use by `customers_controller` for the
-  `last_order` aggregate-filter parsing (the customers list's "ordered in last 30 days"
-  chip). Deletable once the customers picker emits a TableView-shaped range filter and
-  the controller swaps the aggregate predicate to a `havingRaw` on the joined orders
-  subquery.
+`useTableView` now accepts a typed `extras` parser map so endpoint-specific top-level keys
+(`q`, `tab`, `trashed`, etc.) live in the same URL-state hook as the TableView wire keys.
+`useDataTable`'s UI-only state is also split into two smaller hooks:
+
+- `useColumnState({ id, defaultColumnVisibility, defaultDensity? })` — persisted visibility /
+  order / density in localStorage; SSR-safe.
+- `useSelectionState()` — in-memory `selectedIds`; never mirrored to URL (selections
+  shouldn't leak into shareable links).
+
+The per-page rewrite (`orders-list`, `customers-list`, `products-list`, `reviews-list`,
+`coupons-list`) is the remaining FE refactor. Each page is functional today with the
+dual-hook composition (`useDataTable` for URL state + facet abstractions, page-level
+`useMemo` to project onto `TableViewQuery`). The new primitives let each page migrate
+incrementally to a single source of truth (`useTableView` + UI hooks) without a
+big-bang rewrite. See [`apps/admin/src/lib/table-view/README.md`](../../../admin/src/lib/table-view/README.md)
+for the per-page migration recipe.
+
+**Server-side `parseDateFilter` service**: deleted. The customers `last_order` filter now
+flows as two ISO date-time bounds (`last_order_after` + `last_order_before`) produced by
+the FE's `dateFilterValueToTableViewFilter` helper from the date-picker's `DateFilterValue`;
+the controller applies them directly against the orders whereExists subquery without an
+intermediate operator-syntax parser.
 
 ## 12. References
 
