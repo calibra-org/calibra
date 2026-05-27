@@ -10,7 +10,13 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useLocale, useTranslations } from "next-intl";
 import { type CSSProperties, useEffect, useId, useMemo, useState } from "react";
@@ -462,7 +468,13 @@ function SpecLinkRow({ rowId, index, expanded, onToggleExpand, onRemove, onPromo
                     {showPromote ? (
                         <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/30 p-2 text-xs">
                             <span className="min-w-0 flex-1 text-muted-foreground">{labels.multiValueWarning}</span>
-                            <Button type="button" variant="outline" size="sm" className="h-7 shrink-0 text-xs" onClick={onPromote}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 shrink-0 text-xs"
+                                onClick={onPromote}
+                            >
                                 {labels.multiValuePromote}
                             </Button>
                         </div>

@@ -635,10 +635,7 @@ function StatusFilterPopover({
                 {STATUS_VALUES.map((s) => {
                     const checked = selected.has(s);
                     return (
-                        <div
-                            key={s}
-                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-muted"
-                        >
+                        <div key={s} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-muted">
                             <Checkbox
                                 checked={checked}
                                 onCheckedChange={() => {

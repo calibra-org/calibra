@@ -51,12 +51,7 @@ SelectTrigger.displayName = "SelectTrigger";
 export function SelectContent({ className, children, ...props }: ComponentProps<typeof BaseSelect.Popup>) {
     return (
         <BaseSelect.Portal>
-            <BaseSelect.Positioner
-                sideOffset={6}
-                alignItemWithTrigger={false}
-                align="start"
-                className="z-50"
-            >
+            <BaseSelect.Positioner sideOffset={6} alignItemWithTrigger={false} align="start" className="z-50">
                 {/**
                  * Popup is sized to match the trigger:
                  *   - `w-(--anchor-width)` pins width to the trigger's measured width so the

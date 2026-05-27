@@ -42,11 +42,7 @@ function PinTermName({
     const terms = useGlobalAttributeTerms(attributeId);
     const attribute = attributesIndex.find((a) => a.id === attributeId);
     if (termId === null) {
-        return (
-            <span className="text-muted-foreground">
-                {attribute?.name ?? `#${attributeId}`}: —
-            </span>
-        );
+        return <span className="text-muted-foreground">{attribute?.name ?? `#${attributeId}`}: —</span>;
     }
     const term = terms.data?.find((t) => t.id === termId);
     return <span className="font-medium text-foreground">{term?.name ?? `#${termId}`}</span>;

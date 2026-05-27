@@ -47,9 +47,7 @@ test.group("Admin variation status", (group) => {
         const fetched = await client.get(`/api/v1/admin/products/${p.id}/variations`);
         fetched.assertStatus(200);
         fetched.assertAgainstApiSpec();
-        const row = (fetched.body().data as { id: number; status: string }[]).find(
-            (r) => r.id === created.body().data.id,
-        );
+        const row = (fetched.body().data as { id: number; status: string }[]).find((r) => r.id === created.body().data.id);
         assert.exists(row);
         assert.equal(row!.status, "draft");
     });

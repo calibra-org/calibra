@@ -1,13 +1,6 @@
 "use client";
 
-import {
-    closestCenter,
-    DndContext,
-    type DragEndEvent,
-    PointerSensor,
-    useSensor,
-    useSensors,
-} from "@dnd-kit/core";
+import { closestCenter, DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, rectSortingStrategy, SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { CSSProperties } from "react";
@@ -195,11 +188,7 @@ function TermChip({ id, active, sortable, label, onClick }: TermChipProps) {
             >
                 <GripVertical className="size-3" aria-hidden="true" />
             </button>
-            <button
-                type="button"
-                onClick={onClick}
-                className="px-2 py-0.5 text-foreground transition-colors hover:bg-primary/20"
-            >
+            <button type="button" onClick={onClick} className="px-2 py-0.5 text-foreground transition-colors hover:bg-primary/20">
                 {label}
             </button>
         </div>

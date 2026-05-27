@@ -161,10 +161,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
      *   3. commerce     pricing + (simple) inventory + (physical) shipping
      *   4. advanced     opt-in switches — kept separate because it's collapsed by default
      */
-    const requestVariable = useCallback(
-        () => form.setValue("type", "variable", { shouldDirty: true }),
-        [form],
-    );
+    const requestVariable = useCallback(() => form.setValue("type", "variable", { shouldDirty: true }), [form]);
 
     const mainSections: SectionSpec[] = useMemo(() => {
         const sections: SectionSpec[] = [

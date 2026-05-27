@@ -2267,7 +2267,7 @@ export interface paths {
         };
         /**
          * List a product's variations
-         * @description Paginated list of every variation row for the parent product. 404s if the product doesn't exist or `type != variable`.
+         * @description Flat list of every variation row for the parent product. Not paginated — the variations table is small enough (tens to a few hundred rows for SKU-heavy products) that pagination would just add noise to the editor's inline data-grid. 404s if the product doesn't exist.
          */
         get: operations["adminVariationsIndex"];
         put?: never;
@@ -8388,12 +8388,7 @@ export interface operations {
     };
     adminVariationsIndex: {
         parameters: {
-            query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-            };
+            query?: never;
             header?: never;
             path: {
                 product_id: number;
@@ -8402,7 +8397,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Paginated variation list. */
+            /** @description Variation list. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -8410,7 +8405,6 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminProductVariation"][];
-                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };

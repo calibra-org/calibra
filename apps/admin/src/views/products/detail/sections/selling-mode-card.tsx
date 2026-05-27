@@ -221,9 +221,7 @@ function ModeCard({ icon, title, description, example, result, badge, selected, 
             aria-pressed={selected}
             className={cn(
                 "flex flex-col gap-2 rounded-md border p-3 text-start transition-colors",
-                selected
-                    ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                    : "border-border hover:border-ring/40",
+                selected ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border hover:border-ring/40",
                 disabled && "pointer-events-none opacity-50",
             )}
         >
@@ -270,7 +268,9 @@ function ConvertDialog({
                 </DialogHeader>
                 <div className="flex flex-col gap-3 text-xs">
                     <div className="flex flex-col gap-1">
-                        <span className="text-muted-foreground" id="keeper-label">{t("selectKeeper")}</span>
+                        <span className="text-muted-foreground" id="keeper-label">
+                            {t("selectKeeper")}
+                        </span>
                         <Select
                             value={String(keeperId)}
                             onValueChange={(v) => onKeeperChange(v === "_archive" ? "_archive" : Number(v))}

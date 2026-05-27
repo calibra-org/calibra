@@ -25,10 +25,7 @@ export default class extends BaseSchema {
                 .string("display_type", 20)
                 .notNullable()
                 .defaultTo("dropdown")
-                .checkIn(
-                    ["dropdown", "pills", "color_swatch", "image_swatch"],
-                    "product_attribute_links_display_type_chk",
-                );
+                .checkIn(["dropdown", "pills", "color_swatch", "image_swatch"], "product_attribute_links_display_type_chk");
         });
     }
 
