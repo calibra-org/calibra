@@ -1374,6 +1374,13 @@
                     "clear": "Clear selection"
                 },
                 "regenerate": "Rebuild from choices",
+                "bulkDeleteDialog": {
+                    "title": "Delete selected versions",
+                    "body": "{count} versions will be permanently deleted.",
+                    "ordersPreserved": "Versions referenced by existing orders are archived instead of deleted.",
+                    "cancel": "Cancel",
+                    "confirm": "Delete {count} versions"
+                },
                 "regenerateDialog": {
                     "title": "Generate sellable versions",
                     "summaryNew": "{count} new versions will be created",

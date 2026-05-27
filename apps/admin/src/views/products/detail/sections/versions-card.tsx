@@ -198,6 +198,22 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
         }
     };
 
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+    const bulkDelete = async () => {
+        if (selected.size === 0 || productId === null) return;
+        try {
+            await batch.mutateAsync({ delete: Array.from(selected) });
+            toast.add({
+                title: t("toasts.bulkUpdated", { count: formatNumber(selected.size, locale) }),
+                data: { tone: "success" },
+            });
+            clearSelection();
+            setBulkDeleteOpen(false);
+        } catch (error) {
+            toast.add({ title: t("toasts.bulkUpdateFailed"), description: String(error), data: { tone: "error" } });
+        }
+    };
+
     const checklistVisible = rows.length > 0;
     const missingPrices = rows.filter((r) => r.regularPriceMinor === null).length;
     const missingSkus = rows.filter((r) => r.sku === null || r.sku.length === 0).length;
@@ -421,11 +437,46 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                     <Button type="button" size="sm" variant="outline" onClick={() => void bulkMarkStatus("archived")}>
                         {t("bulk.markArchived")}
                     </Button>
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setBulkDeleteOpen(true)}
+                    >
+                        <Trash2 className="size-3.5" aria-hidden="true" />
+                        {t("bulk.delete")}
+                    </Button>
                     <Button type="button" size="sm" variant="ghost" className="ms-auto" onClick={clearSelection}>
                         {t("bulk.clear")}
                     </Button>
                 </div>
             ) : null}
+
+            <Dialog open={bulkDeleteOpen} onOpenChange={(next) => (!next ? setBulkDeleteOpen(false) : undefined)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t("bulkDeleteDialog.title")}</DialogTitle>
+                    </DialogHeader>
+                    <p className="text-muted-foreground text-sm">
+                        {t("bulkDeleteDialog.body", { count: formatNumber(selected.size, locale) })}
+                    </p>
+                    <p className="text-muted-foreground text-xs">{t("bulkDeleteDialog.ordersPreserved")}</p>
+                    <DialogFooter className="gap-2">
+                        <Button type="button" variant="outline" onClick={() => setBulkDeleteOpen(false)}>
+                            {t("bulkDeleteDialog.cancel")}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={batch.isPending}
+                            onClick={() => void bulkDelete()}
+                        >
+                            {t("bulkDeleteDialog.confirm", { count: formatNumber(selected.size, locale) })}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <RegenerateDialog
                 open={regenerateOpen}
