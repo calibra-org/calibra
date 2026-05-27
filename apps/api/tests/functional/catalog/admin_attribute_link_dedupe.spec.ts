@@ -2,6 +2,8 @@ import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
 import ProductAttributeLink from "#models/product_attribute_link";
+import ProductAttributeTerm from "#models/product_attribute_term";
+import ProductAttributeTermTranslation from "#models/product_attribute_term_translation";
 
 import { createAttributeWithTerm, createProduct } from "./helpers.js";
 
@@ -27,11 +29,25 @@ test.group("Admin product attribute_links dedupe", (group) => {
             attrEn: "Material",
             term: { fa: "چرم", en: "Leather", slug: "leather" },
         });
-        const { term: termB } = await createAttributeWithTerm({
-            code: "material-2",
-            attrFa: "جنس-ب",
-            attrEn: "Material B",
-            term: { fa: "پارچه", en: "Fabric", slug: "fabric" },
+        /** Second term on the SAME attribute — the validator refuses term_ids that don't belong
+         *  to the link's attribute, so both inbound dupes have to share an attribute for the
+         *  dedupe path to be the thing under test (not the cross-attribute check). */
+        const termB = await ProductAttributeTerm.create({
+            attributeId: attribute.id,
+            menuOrder: 1,
+            attributes: {},
+        });
+        await ProductAttributeTermTranslation.create({
+            termId: termB.id,
+            locale: "fa",
+            name: "پارچه",
+            slug: "material-fabric-fa",
+        });
+        await ProductAttributeTermTranslation.create({
+            termId: termB.id,
+            locale: "en",
+            name: "Fabric",
+            slug: "material-fabric",
         });
 
         const response = await client.patch(`/api/v1/admin/products/${p.id}`).json({

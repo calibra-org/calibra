@@ -8,7 +8,7 @@ type TFunction = ReturnType<typeof useTranslations>;
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { type ColumnDef } from "#/components/ui/data-grid";
+import type { ColumnDef } from "#/components/ui/data-grid";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
 import { MoneyInput } from "#/components/ui/money-input";

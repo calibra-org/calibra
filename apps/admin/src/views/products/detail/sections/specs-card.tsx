@@ -34,6 +34,7 @@ import { useGlobalAttributes } from "#/lib/products/queries";
 import { cn } from "#/lib/utils";
 
 import type { ProductDetailFormValues } from "../schema";
+
 import { AttributeRowHeader } from "./shared/attribute-row-header";
 import { CustomChipInput } from "./shared/custom-chip-input";
 import { TermChipStrip } from "./shared/term-chip-strip";
@@ -597,7 +598,7 @@ function SpecCustomRow({ rowId, index, expanded, onToggleExpand, onRemove, label
                         )}
                     />
                     {valueCount >= 2 ? (
-                        <div className="rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+                        <div className="rounded-md border border-border bg-muted/30 p-2 text-muted-foreground text-xs">
                             <span className="text-foreground">{labels.multiValueWarning}</span>
                             <span className="ms-1">{labels.cannotPromote}</span>
                         </div>
