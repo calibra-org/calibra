@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useLocale, useTranslations } from "next-intl";
-import { type CSSProperties, useEffect, useId, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 
 import { Button } from "#/components/ui/button";
@@ -47,9 +47,12 @@ interface ChoicesBodyProps {
  * Customer choices card body. Shows {@link ProductDetailFormValues.attributeLinks} rows where
  * `usedForVariation === true`. Each choice exposes:
  *
- *   - a display-type select (dropdown / pills / color_swatch / image_swatch),
  *   - a sortable term chip strip (the operator picks the values shoppers can choose between),
  *   - a live combination count footer (`{this choice} × {other choices} = {N} versions`).
+ *
+ * Each link still writes `displayType: "dropdown"` on the wire so the column stays populated
+ * for when the storefront learns to render the alternate display modes (pills / swatches);
+ * the per-choice picker is intentionally not surfaced here yet.
  *
  * The card footer enforces a graduated guardrail against combinatorial explosion: 50 = warn,
  * 200 = require explicit confirmation checkbox, 1000 = block the generate path entirely.
@@ -286,11 +289,6 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
                                             selectNone: tLinks("row.selectNone"),
                                             createValue: tLinks("row.createValue"),
                                             createFailed: tLinks("createTermFailed"),
-                                            displayLabel: t("displayType.label"),
-                                            displayDropdown: t("displayType.dropdown"),
-                                            displayPills: t("displayType.pills"),
-                                            displayColor: t("displayType.color_swatch"),
-                                            displayImage: t("displayType.image_swatch"),
                                             combinationCount: (count: number) =>
                                                 t("row.combinationCount", { count: formatNumber(count, locale) }),
                                             singleValueWarning: t("row.singleValueWarning"),
@@ -332,11 +330,6 @@ interface ChoiceRowProps {
         selectNone: string;
         createValue: string;
         createFailed: string;
-        displayLabel: string;
-        displayDropdown: string;
-        displayPills: string;
-        displayColor: string;
-        displayImage: string;
         combinationCount: (count: number) => string;
         singleValueWarning: string;
         demoteToSpec: string;
@@ -351,7 +344,6 @@ function ChoiceRow({ rowId, index, expanded, onToggleExpand, onDemoteToSpec, sib
     const title = attribute?.name ?? `#${link.attributeId}`;
     const { setNodeRef, attributes: dragAttrs, listeners, transform, transition, isDragging } = useSortable({ id: rowId });
     const style: CSSProperties = { transform: CSS.Translate.toString(transform), transition };
-    const displayId = useId();
 
     const otherCount = siblingTermIds.reduce((acc, ids) => (ids.length === 0 ? 0 : acc * ids.length), 1);
     const thisCount = link.termIds.length === 0 ? 0 : link.termIds.length;
@@ -383,35 +375,13 @@ function ChoiceRow({ rowId, index, expanded, onToggleExpand, onDemoteToSpec, sib
             />
             {expanded ? (
                 <div className="flex flex-col gap-3 border-border/60 border-t px-3 pt-2 pb-3">
-                    <Controller
-                        control={control}
-                        name={`attributeLinks.${index}.displayType`}
-                        render={({ field }) => (
-                            <label htmlFor={displayId} className="flex items-center gap-2 text-xs">
-                                <span className="text-muted-foreground">{labels.displayLabel}</span>
-                                <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger id={displayId} className="h-8 w-48">
-                                        <SelectValue>
-                                            {(value) => {
-                                                if (typeof value !== "string") return null;
-                                                if (value === "dropdown") return labels.displayDropdown;
-                                                if (value === "pills") return labels.displayPills;
-                                                if (value === "color_swatch") return labels.displayColor;
-                                                if (value === "image_swatch") return labels.displayImage;
-                                                return null;
-                                            }}
-                                        </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="dropdown">{labels.displayDropdown}</SelectItem>
-                                        <SelectItem value="pills">{labels.displayPills}</SelectItem>
-                                        <SelectItem value="color_swatch">{labels.displayColor}</SelectItem>
-                                        <SelectItem value="image_swatch">{labels.displayImage}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </label>
-                        )}
-                    />
+                    {/**
+                     * The per-choice display-type picker (dropdown / pills / color-swatch /
+                     * image-swatch) is dropped from the UI until the storefront knows how to
+                     * render those variants. The form field keeps writing the wire-default
+                     * `dropdown` value on every save so the data shape and the backend
+                     * `display_type` column stay live for when the storefront catches up.
+                     */}
                     <Controller
                         control={control}
                         name={`attributeLinks.${index}.termIds`}
