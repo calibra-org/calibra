@@ -20,8 +20,13 @@ export const productDetailSchema = z
         status: z.enum(["draft", "publish", "pending", "private"]),
         catalogVisibility: z.enum(["visible", "catalog", "search", "hidden"]),
         featured: z.boolean(),
-        virtual: z.boolean(),
-        downloadable: z.boolean(),
+        /**
+         * Unified "digital / downloadable" flag. On the wire we still write the legacy
+         * `virtual` + `downloadable` booleans (the API + reports + invoices read them
+         * independently) but the editor exposes a single toggle, so the two server fields are
+         * always kept in lock-step. On read we lift either truthy column into `isDigital`.
+         */
+        isDigital: z.boolean(),
         regularPriceToman: z.number().min(0).nullable(),
         salePriceToman: z.number().min(0).nullable(),
         saleStartsAt: z.string().nullable(),
@@ -101,8 +106,7 @@ export function emptyProductDetailValues(): ProductDetailFormValues {
         status: "draft",
         catalogVisibility: "visible",
         featured: false,
-        virtual: false,
-        downloadable: false,
+        isDigital: false,
         regularPriceToman: null,
         salePriceToman: null,
         saleStartsAt: null,
@@ -170,8 +174,7 @@ export function productToFormValues(p: AdminProductDetailView): ProductDetailFor
         status: p.status,
         catalogVisibility: p.catalogVisibility,
         featured: p.featured,
-        virtual: p.virtual,
-        downloadable: p.downloadable,
+        isDigital: p.virtual || p.downloadable,
         regularPriceToman: p.regularPriceMinor === null ? null : p.regularPriceMinor / 10,
         salePriceToman: p.salePriceMinor === null ? null : p.salePriceMinor / 10,
         saleStartsAt: p.saleStartsAt,
@@ -236,8 +239,8 @@ export function formValuesToPayload(values: ProductDetailFormValues): Record<str
         status: values.status,
         catalog_visibility: values.catalogVisibility,
         featured: values.featured,
-        virtual: values.virtual,
-        downloadable: values.downloadable,
+        virtual: values.isDigital,
+        downloadable: values.isDigital,
         regular_price: values.regularPriceToman === null ? null : Math.round(values.regularPriceToman * 10),
         sale_price: values.salePriceToman === null ? null : Math.round(values.salePriceToman * 10),
         sale_starts_at: values.saleStartsAt,

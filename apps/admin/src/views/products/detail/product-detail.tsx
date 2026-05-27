@@ -146,6 +146,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
     const status = form.watch("status");
     const sku = form.watch("sku");
     const name = form.watch("name");
+    const isDigital = form.watch("isDigital");
     const isSubmitting = form.formState.isSubmitting || update.isPending || create.isPending;
 
     const labels = { grabHandle: tDnd("grabHandle"), collapse: tDnd("collapse"), expand: tDnd("expand") };
@@ -166,7 +167,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
         if (type === "simple") {
             sections.push({ id: "inventory", title: t("sections.inventory"), body: <InventoryBody /> });
         }
-        if (type === "simple" || type === "variable") {
+        if ((type === "simple" || type === "variable") && !isDigital) {
             sections.push({ id: "shipping", title: t("sections.shipping"), body: <ShippingBody /> });
         }
         if (type !== "external" && type !== "grouped") {
@@ -195,10 +196,10 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
         }
         sections.push({ id: "advanced", title: t("sections.advanced"), body: <AdvancedBody />, defaultCollapsed: true });
         return sections;
-    }, [type, t, locale, initial?.id, form]);
+    }, [type, isDigital, t, locale, initial?.id, form]);
 
-    const sidebarSections: SectionSpec[] = useMemo(
-        () => [
+    const sidebarSections: SectionSpec[] = useMemo(() => {
+        const sections: SectionSpec[] = [
             { id: "publish", title: t("sections.publish"), body: <PublishBody /> },
             { id: "featuredImage", title: t("sections.image"), body: <FeaturedImageBody /> },
             { id: "gallery", title: t("sections.gallery"), body: <GalleryBody /> },
@@ -206,15 +207,17 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
             { id: "tags", title: t("sections.tags"), body: <TagsBody /> },
             { id: "brand", title: t("sections.brand"), body: <BrandsBody /> },
             { id: "tax", title: t("sections.tax"), body: <TaxBody options={taxClassOptions} />, defaultCollapsed: true },
-            {
+        ];
+        if (!isDigital) {
+            sections.push({
                 id: "shippingClass",
                 title: t("sections.shippingClass"),
                 body: <ShippingClassBody options={shippingClassOptions} />,
                 defaultCollapsed: true,
-            },
-        ],
-        [t, taxClassOptions, shippingClassOptions],
-    );
+            });
+        }
+        return sections;
+    }, [t, isDigital, taxClassOptions, shippingClassOptions]);
 
     const headerActions = (
         <div className="flex items-center gap-2">
@@ -313,7 +316,7 @@ function GeneralBody({ locale }: { locale: Locale }) {
     const t = useTranslations("Products.detail");
     const tField = useTranslations("Products.detail.fields");
     const tTip = useTranslations("Products.detail.tooltips");
-    const { register, watch, formState } = useFormFromCtx();
+    const { control, register, watch, formState } = useFormFromCtx();
     const slug = watch("slug");
     const slugCheck = useSlugAvailability({ slug, locale });
 
@@ -376,6 +379,21 @@ function GeneralBody({ locale }: { locale: Locale }) {
             >
                 <Textarea id="shortDescription" rows={2} {...register("shortDescription")} />
             </Field>
+
+            <Controller
+                control={control}
+                name="isDigital"
+                render={({ field }) => (
+                    <ToggleRow
+                        id="isDigital"
+                        span="col-span-12 md:col-span-6"
+                        title={tField("isDigital")}
+                        icon={<ExternalLink className="size-4" aria-hidden="true" />}
+                        checked={field.value}
+                        onChange={field.onChange}
+                    />
+                )}
+            />
         </div>
     );
 }
@@ -559,7 +577,7 @@ function InventoryBody() {
 
 function ShippingBody() {
     const tField = useTranslations("Products.detail.fields");
-    const { control, register } = useFormFromCtx();
+    const { register } = useFormFromCtx();
 
     return (
         <div className="grid grid-cols-12 gap-3">
@@ -587,34 +605,6 @@ function ShippingBody() {
                     {...register("heightMm", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
                 />
             </Field>
-            <Controller
-                control={control}
-                name="virtual"
-                render={({ field }) => (
-                    <ToggleRow
-                        id="virtual"
-                        span="col-span-6 md:col-span-4"
-                        title={tField("virtual")}
-                        icon={<ExternalLink className="size-4" aria-hidden="true" />}
-                        checked={field.value}
-                        onChange={field.onChange}
-                    />
-                )}
-            />
-            <Controller
-                control={control}
-                name="downloadable"
-                render={({ field }) => (
-                    <ToggleRow
-                        id="downloadable"
-                        span="col-span-6 md:col-span-4"
-                        title={tField("downloadable")}
-                        icon={<ExternalLink className="size-4" aria-hidden="true" />}
-                        checked={field.value}
-                        onChange={field.onChange}
-                    />
-                )}
-            />
         </div>
     );
 }
