@@ -25,7 +25,7 @@ import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "#/components/ui/button";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, Layers, Sparkles, X } from "#/icons";
+import { AlertTriangle, ChevronDown, ChevronEnd, ChevronRight, Layers, Sparkles, X } from "#/icons";
 import { formatNumber } from "#/lib/format";
 import { useGlobalAttributes } from "#/lib/products/queries";
 import { cartesianPins } from "#/lib/products/variations-cartesian";
@@ -529,11 +529,10 @@ function ChoicesExplainer() {
                             {t("exampleProduct").split(":")[1]?.trim() ?? t("exampleProduct")}
                         </span>
                     </p>
-                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-2">
                         <ExampleColumn title={t("exampleChoicesHeader")} bullets={choiceBullets} />
-                        <ChevronLeft
-                            className="hidden size-4 self-center text-muted-foreground/60 md:block"
-                            data-rtl-flip
+                        <ChevronEnd
+                            className="mt-3 hidden size-4 self-start text-muted-foreground/60 md:block"
                             aria-hidden="true"
                         />
                         <ExampleColumn title={t("exampleVersionsHeader")} bullets={versionBullets} />
