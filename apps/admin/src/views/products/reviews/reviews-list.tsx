@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { parseAsBoolean, parseAsString } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
 import { Button } from "#/components/ui/button";
@@ -15,8 +16,9 @@ import {
     DataTableToolbar,
     DataTableViewOptions,
     type FacetedFilterDef,
+    useColumnState,
+    useSelectionState,
 } from "#/components/ui/data-grid";
-import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { toast } from "#/components/ui/toast";
@@ -24,6 +26,7 @@ import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
 import { useDeleteReviews, useModerateReview, useRestoreReviews, useTrashReviews } from "#/lib/reviews/mutations";
 import { useReviewCountsByStatus, useReviewsList } from "#/lib/reviews/queries";
+import { singleSortToTableView, tableViewToSingleSort, useTableView } from "#/lib/table-view";
 import type { AdminReview, ReviewStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
@@ -60,62 +63,91 @@ export function ReviewsList() {
 
     const { facets, toggles } = useReviewFiltersConfig();
 
-    /**
-     * Same trick as the products list: status drives the tab strip but it still needs a URL
-     * facet so `setFacetValues("status", …)` from `onTabChange` round-trips through nuqs. Empty
-     * `options` prevents it from also rendering as a popover.
-     */
-    const facetsWithStatus = useMemo<FacetedFilterDef[]>(
-        () => [...facets, { paramKey: "status", label: "status", multiple: false, options: [] }],
-        [facets],
-    );
-
-    const tableState = useDataTable({
-        id: TABLE_ID,
-        facets: facetsWithStatus,
-        toggles,
-        defaultColumnVisibility: {},
+    const tv = useTableView({
+        extras: {
+            q: parseAsString.withDefault(""),
+            status: parseAsString.withDefault(""),
+            rating: parseAsString.withDefault(""),
+            product: parseAsString.withDefault(""),
+            verified: parseAsBoolean.withDefault(false),
+        },
     });
 
+    const ui = useColumnState({ id: TABLE_ID, defaultColumnVisibility: {} });
+    const selection = useSelectionState();
+
     const status: ReviewStatus | "any" = useMemo(() => {
-        const value = tableState.facetValues.status?.[0];
+        const value = tv.status;
         if (value === "pending" || value === "approved" || value === "spam" || value === "trash") return value;
         return "any";
-    }, [tableState.facetValues.status]);
+    }, [tv.status]);
 
-    const ratingValue = (() => {
-        const value = tableState.facetValues.rating?.[0];
-        const n = Number(value);
+    const ratingValue = useMemo(() => {
+        const n = Number(tv.rating);
         return Number.isFinite(n) && n >= 1 && n <= 5 ? (n as 1 | 2 | 3 | 4 | 5) : undefined;
-    })();
-    const productIdValue = (() => {
-        const value = tableState.facetValues.product?.[0];
-        if (value === undefined) return undefined;
-        const n = Number(value);
+    }, [tv.rating]);
+    const productIdValue = useMemo(() => {
+        if (tv.product.length === 0) return undefined;
+        const n = Number(tv.product);
         return Number.isFinite(n) ? n : undefined;
-    })();
-    const verifiedOnly = tableState.toggleValues.verified === true ? true : undefined;
+    }, [tv.product]);
+    const verifiedOnly = tv.verified ? true : undefined;
+
+    const facetValues = useMemo<Record<string, string[]>>(
+        () => ({
+            rating: tv.rating.length > 0 ? [tv.rating] : [],
+            product: tv.product.length > 0 ? [tv.product] : [],
+        }),
+        [tv.rating, tv.product],
+    );
+
+    const setFacetValues = useCallback(
+        (key: string, values: string[]) => {
+            const next = values[0] ?? "";
+            if (key === "rating") tv.setRating(next);
+            else if (key === "product") tv.setProduct(next);
+        },
+        [tv],
+    );
+
+    const toggleValues = useMemo<Record<string, boolean>>(() => ({ verified: tv.verified }), [tv.verified]);
+    const setToggleValue = useCallback(
+        (key: string, value: boolean) => {
+            if (key === "verified") tv.setVerified(value);
+        },
+        [tv],
+    );
+
+    const sort = tableViewToSingleSort(tv.query.sort);
+    const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
 
     const { data: statusCounts } = useReviewCountsByStatus();
 
     const { data, isPending, isError, refetch } = useReviewsList({
-        page: tableState.page,
-        limit: tableState.limit,
-        sort:
-            tableState.sort !== undefined
-                ? tableState.sort.direction === "desc"
-                    ? `-${tableState.sort.id}`
-                    : tableState.sort.id
-                : undefined,
+        page: tv.query.page,
+        limit: tv.query.limit,
+        sort: sort !== undefined ? (sort.direction === "desc" ? `-${sort.id}` : sort.id) : undefined,
         status,
         rating: ratingValue,
         productId: productIdValue,
         verified: verifiedOnly,
-        search: tableState.q.length > 0 ? tableState.q : undefined,
+        search: tv.q.length > 0 ? tv.q : undefined,
     });
 
     const baseRows = data?.data ?? [];
-    const meta = data?.meta ?? { page: tableState.page, limit: tableState.limit, total: 0, lastPage: 1 };
+    const meta = data?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
+
+    const hasActiveFilters = useMemo(
+        () => tv.q.length > 0 || tv.rating.length > 0 || tv.product.length > 0 || tv.verified,
+        [tv.q, tv.rating, tv.product, tv.verified],
+    );
+
+    const clearAllFilters = useCallback(() => {
+        tv.setQ("");
+        tv.setRating("");
+        tv.setProduct("");
+        tv.setVerified(false);
+    }, [tv]);
 
     /**
      * Rows that have been trashed or marked-as-spam through the row UI sit in this map. The
@@ -154,8 +186,8 @@ export function ReviewsList() {
     }, []);
 
     const onHideColumn = useCallback(
-        (id: string) => tableState.setColumnVisibility({ ...tableState.columnVisibility, [id]: false }),
-        [tableState.setColumnVisibility, tableState.columnVisibility],
+        (id: string) => ui.setColumnVisibility({ ...ui.columnVisibility, [id]: false }),
+        [ui.setColumnVisibility, ui.columnVisibility],
     );
 
     const moderate = useModerateReview();
@@ -284,8 +316,8 @@ export function ReviewsList() {
         () =>
             buildReviewColumns({
                 locale,
-                sort: tableState.sort,
-                onSort: tableState.setSort,
+                sort,
+                onSort: setSort,
                 onHideColumn,
                 onToggleQuickEdit: (rowId) => onToggleQuickEdit(rowId, "edit"),
                 onApprove,
@@ -320,8 +352,8 @@ export function ReviewsList() {
             onUnspam,
             statusT,
             t,
-            tableState.setSort,
-            tableState.sort,
+            sort,
+            setSort,
         ],
     );
 
@@ -343,7 +375,7 @@ export function ReviewsList() {
     const activeChips = useMemo(() => {
         const out: { key: string; value: string; label: string }[] = [];
         for (const facet of facets) {
-            const values = tableState.facetValues[facet.paramKey] ?? [];
+            const values = facetValues[facet.paramKey] ?? [];
             for (const value of values) {
                 const option = facet.options.find((opt) => opt.value === value);
                 const label = typeof option?.label === "string" ? option.label : value;
@@ -351,15 +383,14 @@ export function ReviewsList() {
             }
         }
         return out;
-    }, [facets, tableState.facetValues]);
+    }, [facets, facetValues]);
 
-    const onTabChange = (value: string) => {
-        if (value === "any") {
-            tableState.setFacetValues("status", []);
-            return;
-        }
-        tableState.setFacetValues("status", [value]);
-    };
+    const onTabChange = useCallback(
+        (value: string) => {
+            tv.setStatus(value === "any" ? "" : value);
+        },
+        [tv],
+    );
 
     const headerSubtitle =
         data === undefined ? t("loadingTotal") : t("totalReviews", { count: formatNumber(meta.total, locale) });
@@ -412,23 +443,23 @@ export function ReviewsList() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                limitOptions={tableState.limitOptions}
-                onPageChange={tableState.setPage}
-                onLimitChange={tableState.setLimit}
-                sort={tableState.sort}
-                onSortChange={tableState.setSort}
-                selectedIds={tableState.selectedIds}
-                onSelectedIdsChange={tableState.setSelected}
-                columnVisibility={tableState.columnVisibility}
-                onColumnVisibilityChange={tableState.setColumnVisibility}
-                columnOrder={tableState.columnOrder}
-                onColumnOrderChange={tableState.setColumnOrder}
-                density={tableState.density}
+                limitOptions={[10, 20, 50, 100]}
+                onPageChange={tv.setPage}
+                onLimitChange={tv.setLimit}
+                sort={sort}
+                onSortChange={setSort}
+                selectedIds={selection.selectedIds}
+                onSelectedIdsChange={selection.setSelected}
+                columnVisibility={ui.columnVisibility}
+                onColumnVisibilityChange={ui.setColumnVisibility}
+                columnOrder={ui.columnOrder}
+                onColumnOrderChange={ui.setColumnOrder}
+                density={ui.density}
                 isLoading={isPending}
                 isError={isError}
                 onRetry={() => refetch()}
-                hasActiveFilters={tableState.hasActiveFilters}
-                onClearFilters={tableState.clearAllFilters}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearAllFilters}
                 expandedRowId={expandedRowId}
                 onExpandedRowIdChange={setExpandedRowId}
                 renderSubComponent={(row: Row<AdminReview>) => (
@@ -453,16 +484,16 @@ export function ReviewsList() {
                     <div className="flex flex-col gap-2">
                         <DataTableToolbar
                             searchPlaceholder={t("searchPlaceholder")}
-                            q={tableState.q}
-                            onQChange={tableState.setQ}
+                            q={tv.q}
+                            onQChange={tv.setQ}
                             facets={facets}
-                            facetValues={tableState.facetValues}
-                            onFacetValuesChange={tableState.setFacetValues}
+                            facetValues={facetValues}
+                            onFacetValuesChange={setFacetValues}
                             toggles={toggles}
-                            toggleValues={tableState.toggleValues}
-                            onToggleChange={tableState.setToggleValue}
-                            hasActiveFilters={tableState.hasActiveFilters}
-                            onClearAll={tableState.clearAllFilters}
+                            toggleValues={toggleValues}
+                            onToggleChange={setToggleValue}
+                            hasActiveFilters={hasActiveFilters}
+                            onClearAll={clearAllFilters}
                             onRefresh={() => {
                                 void queryClient.invalidateQueries({ queryKey: ["admin", "reviews", "list"] });
                             }}
@@ -475,10 +506,10 @@ export function ReviewsList() {
                             rightSlot={
                                 <DataTableViewOptions
                                     columns={columnVisibilityItems}
-                                    visibility={tableState.columnVisibility}
-                                    onVisibilityChange={tableState.setColumnVisibility}
-                                    density={tableState.density}
-                                    onDensityChange={tableState.setDensity}
+                                    visibility={ui.columnVisibility}
+                                    onVisibilityChange={ui.setColumnVisibility}
+                                    density={ui.density}
+                                    onDensityChange={ui.setDensity}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),
@@ -495,8 +526,8 @@ export function ReviewsList() {
                         <ActiveFilterChips
                             chips={activeChips}
                             onRemove={(key, value) => {
-                                const current = tableState.facetValues[key] ?? [];
-                                tableState.setFacetValues(
+                                const current = facetValues[key] ?? [];
+                                setFacetValues(
                                     key,
                                     current.filter((item) => item !== value),
                                 );

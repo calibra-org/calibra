@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { Download, Plus, Tag } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { parseAsStringEnum, useQueryState } from "nuqs";
+import { parseAsBoolean, parseAsString, parseAsStringEnum } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
 import { PageHeader } from "#/components/PageHeader";
@@ -14,11 +14,13 @@ import {
     DataTable,
     type FacetedFilterDef,
     type ToggleFilterDef,
+    useColumnState,
+    useSelectionState,
 } from "#/components/ui/data-grid";
-import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
 import { useBulkUpdateCoupons, useCouponCounts, useCouponsList, useDeleteCoupon } from "#/lib/queries/coupons";
+import { singleSortToTableView, tableViewToSingleSort, useTableView } from "#/lib/table-view";
 import type { AdminCoupon, CouponTabKey } from "#/lib/types";
 import { DuplicateCouponDialog } from "#/views/coupons/dialogs/duplicate-dialog";
 import { ExpirySheet } from "#/views/coupons/dialogs/expiry-sheet";
@@ -36,7 +38,36 @@ export function CouponsListClient() {
     const locale = useLocale() as Locale;
     const t = useTranslations("Coupons");
 
-    const [tab, setTab] = useQueryState("tab", parseAsStringEnum<CouponTabKey>(TAB_VALUES).withDefault("any"));
+    const tv = useTableView({
+        initial: { limit: 25 },
+        extras: {
+            q: parseAsString.withDefault(""),
+            tab: parseAsStringEnum<CouponTabKey>(TAB_VALUES).withDefault("any"),
+            discount_type: parseAsString.withDefault(""),
+            free_shipping: parseAsBoolean.withDefault(false),
+            individual_use: parseAsBoolean.withDefault(false),
+            exclude_sale_items: parseAsBoolean.withDefault(false),
+            expiring_soon: parseAsBoolean.withDefault(false),
+            has_product_constraints: parseAsBoolean.withDefault(false),
+            has_category_constraints: parseAsBoolean.withDefault(false),
+            has_email_restrictions: parseAsBoolean.withDefault(false),
+        },
+    });
+
+    const ui = useColumnState({
+        id: TABLE_ID,
+        defaultColumnVisibility: {
+            description: false,
+            startsAt: false,
+            minimumAmount: false,
+            individualUse: false,
+        },
+    });
+    const selection = useSelectionState();
+
+    const tab = tv.tab;
+    const setTab = useCallback((next: CouponTabKey) => tv.setTab(next), [tv]);
+
     const { data: counts } = useCouponCounts();
 
     const facets = useMemo<FacetedFilterDef[]>(
@@ -68,35 +99,81 @@ export function CouponsListClient() {
         [t],
     );
 
-    const tableState = useDataTable({
-        id: TABLE_ID,
-        facets,
-        toggles,
-        defaultLimit: 25,
-        defaultColumnVisibility: {
-            description: false,
-            startsAt: false,
-            minimumAmount: false,
-            individualUse: false,
+    /** Project the scalar extras onto the per-facet/toggle maps the toolbar expects. */
+    const facetValues = useMemo<Record<string, string[]>>(
+        () => ({ discount_type: tv.discount_type.length > 0 ? tv.discount_type.split(",").filter(Boolean) : [] }),
+        [tv.discount_type],
+    );
+    const setFacetValues = useCallback(
+        (key: string, values: string[]) => {
+            if (key === "discount_type") tv.setDiscount_type(values.join(","));
         },
-    });
+        [tv],
+    );
+
+    const toggleValues = useMemo<Record<string, boolean>>(
+        () => ({
+            free_shipping: tv.free_shipping,
+            individual_use: tv.individual_use,
+            exclude_sale_items: tv.exclude_sale_items,
+            expiring_soon: tv.expiring_soon,
+            has_product_constraints: tv.has_product_constraints,
+            has_category_constraints: tv.has_category_constraints,
+            has_email_restrictions: tv.has_email_restrictions,
+        }),
+        [
+            tv.free_shipping,
+            tv.individual_use,
+            tv.exclude_sale_items,
+            tv.expiring_soon,
+            tv.has_product_constraints,
+            tv.has_category_constraints,
+            tv.has_email_restrictions,
+        ],
+    );
+    const setToggleValue = useCallback(
+        (key: string, value: boolean) => {
+            switch (key) {
+                case "free_shipping":
+                    tv.setFree_shipping(value);
+                    break;
+                case "individual_use":
+                    tv.setIndividual_use(value);
+                    break;
+                case "exclude_sale_items":
+                    tv.setExclude_sale_items(value);
+                    break;
+                case "expiring_soon":
+                    tv.setExpiring_soon(value);
+                    break;
+                case "has_product_constraints":
+                    tv.setHas_product_constraints(value);
+                    break;
+                case "has_category_constraints":
+                    tv.setHas_category_constraints(value);
+                    break;
+                case "has_email_restrictions":
+                    tv.setHas_email_restrictions(value);
+                    break;
+            }
+        },
+        [tv],
+    );
+
+    const sort = tableViewToSingleSort(tv.query.sort);
+    const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
 
     const params = useMemo(
         () => ({
-            page: tableState.page,
-            limit: tableState.limit,
-            search: tableState.q.length > 0 ? tableState.q : undefined,
+            page: tv.query.page,
+            limit: tv.query.limit,
+            search: tv.q.length > 0 ? tv.q : undefined,
             tab,
-            sort:
-                tableState.sort !== undefined
-                    ? tableState.sort.direction === "desc"
-                        ? `-${tableState.sort.id}`
-                        : tableState.sort.id
-                    : undefined,
-            facets: tableState.facetValues,
-            booleans: tableState.toggleValues,
+            sort: sort !== undefined ? (sort.direction === "desc" ? `-${sort.id}` : sort.id) : undefined,
+            facets: facetValues,
+            booleans: toggleValues,
         }),
-        [tableState.page, tableState.limit, tableState.q, tableState.sort, tableState.facetValues, tableState.toggleValues, tab],
+        [tv.query.page, tv.query.limit, tv.q, sort, facetValues, toggleValues, tab],
     );
 
     const { data: result, isPending, isError, refetch } = useCouponsList(params);
@@ -123,9 +200,9 @@ export function CouponsListClient() {
         () =>
             buildCouponColumns({
                 locale,
-                sort: tableState.sort,
-                onSort: tableState.setSort,
-                onHideColumn: (columnId) => tableState.setColumnVisibility({ ...tableState.columnVisibility, [columnId]: false }),
+                sort,
+                onSort: setSort,
+                onHideColumn: (columnId) => ui.setColumnVisibility({ ...ui.columnVisibility, [columnId]: false }),
                 sortLabels: { asc: t("sort.asc"), desc: t("sort.desc"), hide: t("sort.hide") },
                 t: (key, values) => t(key, values),
                 onCopyCode: copyCode,
@@ -148,20 +225,10 @@ export function CouponsListClient() {
                     });
                 },
             }),
-        [
-            locale,
-            t,
-            tableState.sort,
-            tableState.setSort,
-            tableState.columnVisibility,
-            tableState.setColumnVisibility,
-            copyCode,
-            deleteMutation,
-            bulkMutation,
-        ],
+        [locale, t, sort, setSort, ui.columnVisibility, ui.setColumnVisibility, copyCode, deleteMutation, bulkMutation],
     );
 
-    const meta = result?.meta ?? { page: tableState.page, limit: tableState.limit, total: 0, lastPage: 1 };
+    const meta = result?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
 
     const columnVisibilityItems = useMemo(
         () => [
@@ -184,15 +251,21 @@ export function CouponsListClient() {
     /** `DataGridToolbar` computes hasActiveFilters + chips internally; we keep a local copy of the
      * flag for the table's empty-state branch. */
     const hasActiveFilters =
-        tableState.q.length > 0 ||
-        Object.values(tableState.facetValues).some((arr) => Array.isArray(arr) && arr.length > 0) ||
-        Object.values(tableState.toggleValues).some((v) => v === true);
+        tv.q.length > 0 ||
+        Object.values(facetValues).some((arr) => Array.isArray(arr) && arr.length > 0) ||
+        Object.values(toggleValues).some((v) => v === true);
 
-    const clearAllFilters = () => {
-        tableState.setQ("");
-        for (const facet of facets) tableState.setFacetValues(facet.paramKey, []);
-        for (const toggle of toggles) tableState.setToggleValue(toggle.paramKey, false);
-    };
+    const clearAllFilters = useCallback(() => {
+        tv.setQ("");
+        tv.setDiscount_type("");
+        tv.setFree_shipping(false);
+        tv.setIndividual_use(false);
+        tv.setExclude_sale_items(false);
+        tv.setExpiring_soon(false);
+        tv.setHas_product_constraints(false);
+        tv.setHas_category_constraints(false);
+        tv.setHas_email_restrictions(false);
+    }, [tv]);
 
     return (
         <section className="flex flex-col gap-4">
@@ -205,8 +278,8 @@ export function CouponsListClient() {
                             <a
                                 href={buildExportUrl({
                                     tab,
-                                    search: tableState.q,
-                                    discountType: tableState.facetValues.discount_type,
+                                    search: tv.q,
+                                    discountType: facetValues.discount_type,
                                 })}
                                 download
                             >
@@ -228,7 +301,6 @@ export function CouponsListClient() {
                 value={tab}
                 onChange={(next) => {
                     setTab(next);
-                    tableState.setPage(1);
                 }}
                 counts={counts}
                 locale={locale}
@@ -241,17 +313,17 @@ export function CouponsListClient() {
                 getRowId={(row) => String(row.id)}
                 meta={meta}
                 limitOptions={[10, 25, 50, 100]}
-                onPageChange={(page) => tableState.setPage(page)}
-                onLimitChange={(limit) => tableState.setLimit(limit)}
-                sort={tableState.sort}
-                onSortChange={tableState.setSort}
-                selectedIds={tableState.selectedIds}
-                onSelectedIdsChange={tableState.setSelected}
-                columnVisibility={tableState.columnVisibility}
-                onColumnVisibilityChange={tableState.setColumnVisibility}
-                columnOrder={tableState.columnOrder}
-                onColumnOrderChange={tableState.setColumnOrder}
-                density={tableState.density}
+                onPageChange={(page) => tv.setPage(page)}
+                onLimitChange={(limit) => tv.setLimit(limit)}
+                sort={sort}
+                onSortChange={setSort}
+                selectedIds={selection.selectedIds}
+                onSelectedIdsChange={selection.setSelected}
+                columnVisibility={ui.columnVisibility}
+                onColumnVisibilityChange={ui.setColumnVisibility}
+                columnOrder={ui.columnOrder}
+                onColumnOrderChange={ui.setColumnOrder}
+                density={ui.density}
                 isLoading={isPending}
                 isError={isError}
                 onRetry={() => refetch()}
@@ -300,19 +372,19 @@ export function CouponsListClient() {
                 )}
                 toolbar={
                     <DataGridToolbar
-                        q={tableState.q}
-                        onQChange={tableState.setQ}
+                        q={tv.q}
+                        onQChange={tv.setQ}
                         facets={facets}
-                        facetValues={tableState.facetValues}
-                        onFacetValuesChange={tableState.setFacetValues}
+                        facetValues={facetValues}
+                        onFacetValuesChange={setFacetValues}
                         toggles={toggles}
-                        toggleValues={tableState.toggleValues}
-                        onToggleChange={tableState.setToggleValue}
+                        toggleValues={toggleValues}
+                        onToggleChange={setToggleValue}
                         columns={columnVisibilityItems}
-                        columnVisibility={tableState.columnVisibility}
-                        onColumnVisibilityChange={tableState.setColumnVisibility}
-                        density={tableState.density}
-                        onDensityChange={tableState.setDensity}
+                        columnVisibility={ui.columnVisibility}
+                        onColumnVisibilityChange={ui.setColumnVisibility}
+                        density={ui.density}
+                        onDensityChange={ui.setDensity}
                         onRefresh={() => refetch()}
                         labels={buildDataGridToolbarLabels(t, t("search"))}
                     />

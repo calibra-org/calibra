@@ -20,18 +20,6 @@ import {
 } from "#/components/ui/data-grid";
 import { formatNumber } from "#/lib/format";
 import {
-    dateFilterValueToTableViewFilter,
-    type FacetColumnMap,
-    serializeDateFacetForUrl,
-    singleSortToTableView,
-    tableViewToSingleSort,
-    type TableViewFilter,
-    useDateFacetValues,
-    useFacetValuesFromQuery,
-    useSetFacetValue,
-    useTableView,
-} from "#/lib/table-view";
-import {
     type CustomerTabKey,
     useBulkRowPasswordResetMutation,
     useBulkRowStatusMutation,
@@ -40,6 +28,18 @@ import {
     useDeleteCustomer,
     useRestoreCustomer,
 } from "#/lib/queries/customers";
+import {
+    dateFilterValueToTableViewFilter,
+    type FacetColumnMap,
+    serializeDateFacetForUrl,
+    singleSortToTableView,
+    type TableViewFilter,
+    tableViewToSingleSort,
+    useDateFacetValues,
+    useFacetValuesFromQuery,
+    useSetFacetValue,
+    useTableView,
+} from "#/lib/table-view";
 import type { AdminCustomer } from "#/lib/types";
 
 import { CustomerBulkActions } from "./bulk-actions";
@@ -213,7 +213,12 @@ export function CustomersListClient() {
         [tv.setSort],
     );
 
-    const { data: result, isPending, isError, refetch } = useCustomersList({
+    const {
+        data: result,
+        isPending,
+        isError,
+        refetch,
+    } = useCustomersList({
         query: tv.query,
         q: tv.q.length > 0 ? tv.q : undefined,
         tab: tv.tab,
@@ -318,8 +323,7 @@ export function CustomersListClient() {
         return out;
     }, [facets, facetValues]);
 
-    const hasActiveFilters =
-        tv.q.length > 0 || Object.values(facetValues).some((arr) => Array.isArray(arr) && arr.length > 0);
+    const hasActiveFilters = tv.q.length > 0 || Object.values(facetValues).some((arr) => Array.isArray(arr) && arr.length > 0);
 
     const clearAllFilters = useCallback(() => {
         tv.setQ("");

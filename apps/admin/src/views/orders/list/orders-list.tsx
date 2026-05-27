@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { parseAsBoolean, parseAsString } from "nuqs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { OrderStatusBadge } from "#/components/OrderStatusBadge";
@@ -37,7 +38,6 @@ import {
     useSetFacetValue,
     useTableView,
 } from "#/lib/table-view";
-import { parseAsBoolean, parseAsString } from "nuqs";
 import type { AdminOrder } from "#/lib/types";
 
 import { RiskFlagsRow } from "../shared/risk-flag-chip";
@@ -89,9 +89,7 @@ export function OrdersList() {
 
     const { facets, toggles } = useOrderFilters();
     const dateFacets = useMemo<DateFacetDef[]>(
-        () => [
-            { paramKey: "created", label: t("filters.created"), calendar: "auto" },
-        ],
+        () => [{ paramKey: "created", label: t("filters.created"), calendar: "auto" }],
         [t],
     );
 
@@ -130,10 +128,7 @@ export function OrdersList() {
      *  Render it as an empty multi-select so the UI shape stays intact; clicking does nothing
      *  server-side. When the API gains `?filter[]=billing_country:in:...` support this becomes a
      *  regular entry in `FACET_COLUMN_MAP`. */
-    const facetValuesWithCountry = useMemo<Record<string, string[]>>(
-        () => ({ ...facetValues, country: [] }),
-        [facetValues],
-    );
+    const facetValuesWithCountry = useMemo<Record<string, string[]>>(() => ({ ...facetValues, country: [] }), [facetValues]);
 
     const dateFacetValuesRaw = useMemo(() => ({ created: tv.created }), [tv.created]);
     const dateFacetValues = useDateFacetValues(
@@ -155,10 +150,7 @@ export function OrdersList() {
         [tv],
     );
 
-    const toggleValues = useMemo<Record<string, boolean>>(
-        () => ({ needsAttention: tv.needsAttention }),
-        [tv.needsAttention],
-    );
+    const toggleValues = useMemo<Record<string, boolean>>(() => ({ needsAttention: tv.needsAttention }), [tv.needsAttention]);
     const setToggleValue = useCallback(
         (key: string, value: boolean) => {
             if (key === "needsAttention") tv.setNeedsAttention(value);
@@ -168,10 +160,7 @@ export function OrdersList() {
 
     /** Sort projection — single-sort UI ↔ TableViewSort[] array. */
     const sort = tableViewToSingleSort(tv.query.sort);
-    const setSort = useCallback(
-        (next: typeof sort) => tv.setSort(singleSortToTableView(next)),
-        [tv.setSort],
-    );
+    const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
 
     const { data: counts } = useOrderCounts();
 
@@ -320,12 +309,7 @@ export function OrdersList() {
     );
 
     const hasActiveFilters = useMemo(
-        () =>
-            tv.q.length > 0 ||
-            tv.query.filter.length > 0 ||
-            tv.needsAttention ||
-            tv.trashed ||
-            tv.created.length > 0,
+        () => tv.q.length > 0 || tv.query.filter.length > 0 || tv.needsAttention || tv.trashed || tv.created.length > 0,
         [tv.q, tv.query.filter, tv.needsAttention, tv.trashed, tv.created],
     );
 

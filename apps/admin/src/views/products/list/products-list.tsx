@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { PackagePlus, Plus, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { parseAsBoolean, parseAsString } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
 import { ShortcutsDialog } from "#/components/shortcuts-dialog";
@@ -16,14 +17,16 @@ import {
     DataTableToolbar,
     DataTableViewOptions,
     type FacetedFilterDef,
+    useColumnState,
+    useSelectionState,
 } from "#/components/ui/data-grid";
-import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
 import { type CatalogVisibility, type StockLevel, useProductCountsByStatus, useProductsList } from "#/lib/products/queries";
+import { singleSortToTableView, tableViewToSingleSort, useTableView } from "#/lib/table-view";
 import type { AdminProduct, ProductStatus, ProductType, StockStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
@@ -58,59 +61,135 @@ export function ProductsList() {
     const { facets, toggles } = useProductFilters();
 
     /**
-     * Status + Trash live in URL-backed facets even though the tab strip drives them — that way
-     * deep links and the browser back button restore the exact tab. They're registered with
-     * empty option lists so they don't render as toolbar chips / popovers.
+     * Every wire param the products endpoint accepts lives as a typed nuqs extra on
+     * {@link useTableView}. `page` / `limit` / `sort[]` come from the TableView grammar; the
+     * scalar facets (`type`, `stock`, `category`, …) and toggles travel as endpoint extras the
+     * server's `compileStrict({ extras })` declared. The tab strip is computed from `status` +
+     * `onlyTrashed`.
      */
-    const facetsWithStatus = useMemo<FacetedFilterDef[]>(
-        () => [
-            ...facets,
-            { paramKey: "status", label: "status", multiple: false, options: [] },
-            { paramKey: "trashed", label: "trashed", multiple: false, options: [] },
-        ],
-        [facets],
-    );
+    const tv = useTableView({
+        extras: {
+            q: parseAsString.withDefault(""),
+            status: parseAsString.withDefault(""),
+            onlyTrashed: parseAsBoolean.withDefault(false),
+            type: parseAsString.withDefault(""),
+            stock: parseAsString.withDefault(""),
+            stockLevel: parseAsString.withDefault(""),
+            visibility: parseAsString.withDefault(""),
+            category: parseAsString.withDefault(""),
+            brand: parseAsString.withDefault(""),
+            tag: parseAsString.withDefault(""),
+            fav: parseAsBoolean.withDefault(false),
+            onSale: parseAsBoolean.withDefault(false),
+            featured: parseAsBoolean.withDefault(false),
+            hasImage: parseAsBoolean.withDefault(false),
+        },
+    });
 
-    const tableState = useDataTable({
+    const ui = useColumnState({
         id: TABLE_ID,
-        facets: facetsWithStatus,
-        toggles,
         defaultColumnVisibility: { tags: false, views: false, inventory: false, salePeriod: false, createdAt: false },
     });
 
-    const onlyTrashed = tableState.facetValues.trashed?.[0] === "1";
+    const selection = useSelectionState();
+
+    const onlyTrashed = tv.onlyTrashed;
     const status: ProductStatus | "any" = useMemo(() => {
         if (onlyTrashed) return "any";
-        const value = tableState.facetValues.status?.[0];
+        const value = tv.status;
         if (value === "publish" || value === "draft" || value === "pending" || value === "private") return value;
         return "any";
-    }, [tableState.facetValues.status, onlyTrashed]);
+    }, [tv.status, onlyTrashed]);
 
     const activeTab: TabValue = onlyTrashed ? TRASH_TAB : status;
 
-    const productTypeValue = tableState.facetValues.type?.[0] as ProductType | undefined;
-    const stockStatusValue = tableState.facetValues.stock?.[0] as StockStatus | undefined;
-    const stockLevelValue = tableState.facetValues.stockLevel?.[0] as StockLevel | undefined;
-    const visibilityValue = tableState.facetValues.visibility?.[0] as CatalogVisibility | undefined;
-    const categoryId = numericFirst(tableState.facetValues.category);
-    const brandId = numericFirst(tableState.facetValues.brand);
-    const tagId = numericFirst(tableState.facetValues.tag);
-    const favOnly = tableState.toggleValues.fav === true;
-    const onSale = tableState.toggleValues.onSale === true;
-    const featured = tableState.toggleValues.featured === true;
-    const hasImage = tableState.toggleValues.hasImage === true;
+    /** Project the scalar extras onto the `facetValues: Record<string, string[]>` shape the
+     *  toolbar's chip-display contracts expect. Single-element arrays for set extras; empty
+     *  arrays otherwise. */
+    const facetValues = useMemo<Record<string, string[]>>(
+        () => ({
+            type: tv.type.length > 0 ? [tv.type] : [],
+            stock: tv.stock.length > 0 ? [tv.stock] : [],
+            stockLevel: tv.stockLevel.length > 0 ? [tv.stockLevel] : [],
+            visibility: tv.visibility.length > 0 ? [tv.visibility] : [],
+            category: tv.category.length > 0 ? [tv.category] : [],
+            brand: tv.brand.length > 0 ? [tv.brand] : [],
+            tag: tv.tag.length > 0 ? [tv.tag] : [],
+        }),
+        [tv.type, tv.stock, tv.stockLevel, tv.visibility, tv.category, tv.brand, tv.tag],
+    );
+
+    const setFacetValues = useCallback(
+        (key: string, values: string[]) => {
+            const next = values[0] ?? "";
+            switch (key) {
+                case "type":
+                    tv.setType(next);
+                    break;
+                case "stock":
+                    tv.setStock(next);
+                    break;
+                case "stockLevel":
+                    tv.setStockLevel(next);
+                    break;
+                case "visibility":
+                    tv.setVisibility(next);
+                    break;
+                case "category":
+                    tv.setCategory(next);
+                    break;
+                case "brand":
+                    tv.setBrand(next);
+                    break;
+                case "tag":
+                    tv.setTag(next);
+                    break;
+            }
+        },
+        [tv],
+    );
+
+    const toggleValues = useMemo<Record<string, boolean>>(
+        () => ({ fav: tv.fav, onSale: tv.onSale, featured: tv.featured, hasImage: tv.hasImage }),
+        [tv.fav, tv.onSale, tv.featured, tv.hasImage],
+    );
+    const setToggleValue = useCallback(
+        (key: string, value: boolean) => {
+            switch (key) {
+                case "fav":
+                    tv.setFav(value);
+                    break;
+                case "onSale":
+                    tv.setOnSale(value);
+                    break;
+                case "featured":
+                    tv.setFeatured(value);
+                    break;
+                case "hasImage":
+                    tv.setHasImage(value);
+                    break;
+            }
+        },
+        [tv],
+    );
+
+    const sort = tableViewToSingleSort(tv.query.sort);
+    const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
+
+    const productTypeValue = tv.type.length > 0 ? (tv.type as ProductType) : undefined;
+    const stockStatusValue = tv.stock.length > 0 ? (tv.stock as StockStatus) : undefined;
+    const stockLevelValue = tv.stockLevel.length > 0 ? (tv.stockLevel as StockLevel) : undefined;
+    const visibilityValue = tv.visibility.length > 0 ? (tv.visibility as CatalogVisibility) : undefined;
+    const categoryId = numericOr(tv.category);
+    const brandId = numericOr(tv.brand);
+    const tagId = numericOr(tv.tag);
 
     const { data: statusCounts } = useProductCountsByStatus();
 
     const { data, isPending, isError, refetch } = useProductsList({
-        page: tableState.page,
-        limit: tableState.limit,
-        sort:
-            tableState.sort !== undefined
-                ? tableState.sort.direction === "desc"
-                    ? `-${tableState.sort.id}`
-                    : tableState.sort.id
-                : undefined,
+        page: tv.query.page,
+        limit: tv.query.limit,
+        sort: sort !== undefined ? (sort.direction === "desc" ? `-${sort.id}` : sort.id) : undefined,
         status,
         type: productTypeValue,
         stockStatus: stockStatusValue,
@@ -119,16 +198,61 @@ export function ProductsList() {
         categoryId,
         brandId,
         tagId,
-        onSale: onSale ? true : undefined,
-        featured: featured ? true : undefined,
-        hasImage: hasImage ? true : undefined,
+        onSale: tv.onSale ? true : undefined,
+        featured: tv.featured ? true : undefined,
+        hasImage: tv.hasImage ? true : undefined,
         onlyTrashed: onlyTrashed ? true : undefined,
-        favoriteIds: favOnly ? Array.from(favorites) : undefined,
-        search: tableState.q.length > 0 ? tableState.q : undefined,
+        favoriteIds: tv.fav ? Array.from(favorites) : undefined,
+        search: tv.q.length > 0 ? tv.q : undefined,
     });
 
     const rows = data?.data ?? [];
-    const meta = data?.meta ?? { page: tableState.page, limit: tableState.limit, total: 0, lastPage: 1 };
+    const meta = data?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
+
+    const hasActiveFilters = useMemo(
+        () =>
+            tv.q.length > 0 ||
+            tv.type.length > 0 ||
+            tv.stock.length > 0 ||
+            tv.stockLevel.length > 0 ||
+            tv.visibility.length > 0 ||
+            tv.category.length > 0 ||
+            tv.brand.length > 0 ||
+            tv.tag.length > 0 ||
+            tv.fav ||
+            tv.onSale ||
+            tv.featured ||
+            tv.hasImage,
+        [
+            tv.q,
+            tv.type,
+            tv.stock,
+            tv.stockLevel,
+            tv.visibility,
+            tv.category,
+            tv.brand,
+            tv.tag,
+            tv.fav,
+            tv.onSale,
+            tv.featured,
+            tv.hasImage,
+        ],
+    );
+
+    const clearAllFilters = useCallback(() => {
+        tv.setQ("");
+        tv.setType("");
+        tv.setStock("");
+        tv.setStockLevel("");
+        tv.setVisibility("");
+        tv.setCategory("");
+        tv.setBrand("");
+        tv.setTag("");
+        tv.setFav(false);
+        tv.setOnSale(false);
+        tv.setFeatured(false);
+        tv.setHasImage(false);
+    }, [tv]);
 
     /**
      * Quick Edit expansion is keyed by the TanStack row id (a stringified product id). Driving
@@ -143,16 +267,16 @@ export function ProductsList() {
     const onOpenDetail = useCallback((row: AdminProduct) => router.push(`/products/${row.id}` as never), [router]);
 
     const onHideColumn = useCallback(
-        (id: string) => tableState.setColumnVisibility({ ...tableState.columnVisibility, [id]: false }),
-        [tableState.setColumnVisibility, tableState.columnVisibility],
+        (id: string) => ui.setColumnVisibility({ ...ui.columnVisibility, [id]: false }),
+        [ui.setColumnVisibility, ui.columnVisibility],
     );
 
     const columns: ColumnDef<AdminProduct>[] = useMemo(
         () =>
             buildProductColumns({
                 locale,
-                sort: tableState.sort,
-                onSort: tableState.setSort,
+                sort,
+                onSort: setSort,
                 onHideColumn,
                 onToggleQuickEdit,
                 onOpenDetail,
@@ -163,18 +287,7 @@ export function ProductsList() {
                 stockT,
                 sortLabels: { asc: t("sortAsc"), desc: t("sortDesc"), hide: t("hideColumn") },
             }),
-        [
-            isFavorite,
-            locale,
-            onHideColumn,
-            onOpenDetail,
-            onToggleQuickEdit,
-            statusT,
-            stockT,
-            t,
-            tableState.setSort,
-            tableState.sort,
-        ],
+        [isFavorite, locale, onHideColumn, onOpenDetail, onToggleQuickEdit, statusT, stockT, t, sort, setSort],
     );
 
     const columnVisibilityItems = useMemo(
@@ -195,29 +308,28 @@ export function ProductsList() {
     const activeChips = useMemo(() => {
         const out: { key: string; value: string; label: string }[] = [];
         for (const facet of facets) {
-            const values = tableState.facetValues[facet.paramKey] ?? [];
+            const values = facetValues[facet.paramKey] ?? [];
             for (const value of values) {
                 const option = facet.options.find((opt) => opt.value === value);
                 out.push({ key: facet.paramKey, value, label: `${facet.label}: ${option?.label ?? value}` });
             }
         }
         return out;
-    }, [facets, tableState.facetValues]);
+    }, [facets, facetValues]);
 
-    const onTabChange = (value: string) => {
-        if (!TAB_VALUES.includes(value)) return;
-        if (value === TRASH_TAB) {
-            tableState.setFacetValues("status", []);
-            tableState.setFacetValues("trashed", ["1"]);
-            return;
-        }
-        tableState.setFacetValues("trashed", []);
-        if (value === "any") {
-            tableState.setFacetValues("status", []);
-            return;
-        }
-        tableState.setFacetValues("status", [value]);
-    };
+    const onTabChange = useCallback(
+        (value: string) => {
+            if (!TAB_VALUES.includes(value)) return;
+            if (value === TRASH_TAB) {
+                tv.setStatus("");
+                tv.setOnlyTrashed(true);
+                return;
+            }
+            tv.setOnlyTrashed(false);
+            tv.setStatus(value === "any" ? "" : value);
+        },
+        [tv],
+    );
 
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     useProductsListShortcuts({
@@ -231,7 +343,7 @@ export function ProductsList() {
             void queryClient.invalidateQueries({ queryKey: ["admin", "product-counts"] });
         },
         onOpenShortcuts: () => setShortcutsOpen(true),
-        onClearSelection: () => tableState.setSelected(new Set<string>()),
+        onClearSelection: () => selection.setSelected(new Set<string>()),
     });
 
     const shortcutGroups = useMemo(() => {
@@ -263,7 +375,7 @@ export function ProductsList() {
     const headerSubtitle =
         data === undefined ? t("loadingTotal") : t("totalProducts", { count: formatNumber(meta.total, locale) });
 
-    const hasNoFiltersOrSearch = !tableState.hasActiveFilters && tableState.q.length === 0 && !onlyTrashed;
+    const hasNoFiltersOrSearch = !hasActiveFilters && !onlyTrashed;
     const showOnboardingHint = hasNoFiltersOrSearch && !isPending && !isError && rows.length === 0;
 
     return (
@@ -347,23 +459,23 @@ export function ProductsList() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                limitOptions={tableState.limitOptions}
-                onPageChange={tableState.setPage}
-                onLimitChange={tableState.setLimit}
-                sort={tableState.sort}
-                onSortChange={tableState.setSort}
-                selectedIds={tableState.selectedIds}
-                onSelectedIdsChange={tableState.setSelected}
-                columnVisibility={tableState.columnVisibility}
-                onColumnVisibilityChange={tableState.setColumnVisibility}
-                columnOrder={tableState.columnOrder}
-                onColumnOrderChange={tableState.setColumnOrder}
-                density={tableState.density}
+                limitOptions={[10, 20, 50, 100]}
+                onPageChange={tv.setPage}
+                onLimitChange={tv.setLimit}
+                sort={sort}
+                onSortChange={setSort}
+                selectedIds={selection.selectedIds}
+                onSelectedIdsChange={selection.setSelected}
+                columnVisibility={ui.columnVisibility}
+                onColumnVisibilityChange={ui.setColumnVisibility}
+                columnOrder={ui.columnOrder}
+                onColumnOrderChange={ui.setColumnOrder}
+                density={ui.density}
                 isLoading={isPending}
                 isError={isError}
                 onRetry={() => refetch()}
-                hasActiveFilters={tableState.hasActiveFilters}
-                onClearFilters={tableState.clearAllFilters}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearAllFilters}
                 onRowOpen={onOpenDetail}
                 expandedRowId={expandedRowId}
                 onExpandedRowIdChange={setExpandedRowId}
@@ -382,16 +494,16 @@ export function ProductsList() {
                     <div className="flex flex-col gap-2">
                         <DataTableToolbar
                             searchPlaceholder={t("searchPlaceholder")}
-                            q={tableState.q}
-                            onQChange={tableState.setQ}
+                            q={tv.q}
+                            onQChange={tv.setQ}
                             facets={facets}
-                            facetValues={tableState.facetValues}
-                            onFacetValuesChange={tableState.setFacetValues}
+                            facetValues={facetValues}
+                            onFacetValuesChange={setFacetValues}
                             toggles={toggles}
-                            toggleValues={tableState.toggleValues}
-                            onToggleChange={tableState.setToggleValue}
-                            hasActiveFilters={tableState.hasActiveFilters}
-                            onClearAll={tableState.clearAllFilters}
+                            toggleValues={toggleValues}
+                            onToggleChange={setToggleValue}
+                            hasActiveFilters={hasActiveFilters}
+                            onClearAll={clearAllFilters}
                             onRefresh={() => {
                                 void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });
                             }}
@@ -404,10 +516,10 @@ export function ProductsList() {
                             rightSlot={
                                 <DataTableViewOptions
                                     columns={columnVisibilityItems}
-                                    visibility={tableState.columnVisibility}
-                                    onVisibilityChange={tableState.setColumnVisibility}
-                                    density={tableState.density}
-                                    onDensityChange={tableState.setDensity}
+                                    visibility={ui.columnVisibility}
+                                    onVisibilityChange={ui.setColumnVisibility}
+                                    density={ui.density}
+                                    onDensityChange={ui.setDensity}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),
@@ -424,8 +536,8 @@ export function ProductsList() {
                         <ActiveFilterChips
                             chips={activeChips}
                             onRemove={(key, value) => {
-                                const current = tableState.facetValues[key] ?? [];
-                                tableState.setFacetValues(
+                                const current = facetValues[key] ?? [];
+                                setFacetValues(
                                     key,
                                     current.filter((item) => item !== value),
                                 );
@@ -481,9 +593,9 @@ export function ProductsList() {
     );
 }
 
-function numericFirst(values: string[] | undefined): number | undefined {
-    if (values === undefined || values.length === 0) return undefined;
-    const numeric = Number(values[0]);
+function numericOr(value: string): number | undefined {
+    if (value.length === 0) return undefined;
+    const numeric = Number(value);
     return Number.isFinite(numeric) ? numeric : undefined;
 }
 

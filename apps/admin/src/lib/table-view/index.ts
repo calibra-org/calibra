@@ -7,9 +7,9 @@ export {
 } from "./constants";
 export { dateFilterValueToTableViewFilter } from "./date-adapter";
 export {
-    dateFacetToTableViewFilter,
     type DateFacetColumnMap,
     type DateFacetColumnSpec,
+    dateFacetToTableViewFilter,
     type FacetColumnMap,
     type FacetColumnSpec,
     serializeDateFacetForUrl,

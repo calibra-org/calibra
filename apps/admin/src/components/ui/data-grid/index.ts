@@ -13,13 +13,7 @@ export { ActiveFilterChips, DataTableToolbar } from "./data-table-toolbar";
 export { DataTableViewOptions } from "./data-table-view-options";
 export { DENSITY_CLASSES } from "./types";
 export { type UseColumnStateOptions, useColumnState } from "./use-column-state";
-export {
-    DEFAULT_LIMIT_OPTIONS,
-    emptyPaginationMeta,
-    parseSort,
-    serializeSort,
-    useDataTable,
-} from "./use-data-table";
+export { DEFAULT_LIMIT_OPTIONS, emptyPaginationMeta, parseSort, serializeSort } from "./use-data-table";
 export { isAllVisibleSelected, useSelectionState } from "./use-selection-state";
 export type { ColumnVisibilityItem, DataGridToolbarLabels, DataGridToolbarProps } from "./data-grid-toolbar";
 export type { DataTableProps } from "./data-table";
@@ -39,4 +33,3 @@ export type {
     Table,
     ToggleFilterDef,
 } from "./types";
-export type { UseDataTableOptions, UseDataTableUrlKeys } from "./use-data-table";
