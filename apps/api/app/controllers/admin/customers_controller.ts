@@ -8,7 +8,6 @@ import CustomerDownload from "#models/customer_download";
 import User from "#models/user";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { aggregateForCustomerIds, fetchCounts, forSingleCustomer } from "#services/customer_stats_service";
-import { parseDateFilter } from "#services/date_filter_parser";
 import phoneService from "#services/phone_service";
 import { adminCustomersView, type AdminCustomersViewQuery } from "#table_views/admin/customers";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
@@ -55,7 +54,8 @@ export default class AdminCustomersController {
             has_national_id?: boolean;
             with_orders?: boolean;
             no_orders?: boolean;
-            last_order?: string;
+            last_order_after?: string;
+            last_order_before?: string;
         };
         const tab = payload.tab ?? "any";
 
@@ -199,7 +199,13 @@ export default class AdminCustomersController {
                     .whereNotNull("national_id"),
             );
         }
-        const lastOrderRange = parseDateFilter(payload.last_order);
+        /** `last_order_after` / `last_order_before` are ISO date-time strings emitted by the FE's
+         * date-picker → TableView adapter (`dateFilterValueToTableViewFilter`). The picker writes
+         * inclusive bounds — after = period start at 00:00, before = period end at 23:59:59.999
+         * — so the `>=` / `<=` comparison matches the full trailing day. The calendar layer is
+         * the FE's concern; the server sees ISO Gregorian only. */
+        const lastOrderAfter = payload.last_order_after;
+        const lastOrderBefore = payload.last_order_before;
         const wantOrderFilter =
             payload.with_orders === true ||
             payload.order_count_min !== undefined ||
@@ -208,15 +214,16 @@ export default class AdminCustomersController {
             payload.lifetime_spend_max !== undefined ||
             payload.aov_min !== undefined ||
             payload.aov_max !== undefined ||
-            lastOrderRange !== null;
+            lastOrderAfter !== undefined ||
+            lastOrderBefore !== undefined;
         if (wantOrderFilter) {
             query.whereExists((sub) => {
                 sub.from("orders").whereRaw("orders.customer_id = customers.id").whereIn("status", ORDER_COUNTED_STATUSES);
-                if (lastOrderRange?.after !== null && lastOrderRange?.after !== undefined) {
-                    sub.where("orders.created_at", ">=", lastOrderRange.after);
+                if (lastOrderAfter !== undefined) {
+                    sub.where("orders.created_at", ">=", lastOrderAfter);
                 }
-                if (lastOrderRange?.before !== null && lastOrderRange?.before !== undefined) {
-                    sub.where("orders.created_at", "<=", lastOrderRange.before);
+                if (lastOrderBefore !== undefined) {
+                    sub.where("orders.created_at", "<=", lastOrderBefore);
                 }
             });
         }

@@ -1157,7 +1157,7 @@ export interface paths {
          *         - `opt_in_email`, `opt_in_sms`, `email_verified`, `has_national_id` — existence checks on
          *           marketing prefs / iran profile.
          *         - `with_orders`, `no_orders`, `order_count_{min,max}`, `lifetime_spend_{min,max}`,
-         *           `aov_{min,max}`, `last_order` — aggregate filters scoped through the orders table.
+         *           `aov_{min,max}`, `last_order_{after,before}` — aggregate filters scoped through the orders table.
          *         - `include_stats=true` folds per-customer lifetime metrics into each row via one
          *           GROUP BY query.
          *
@@ -6583,8 +6583,10 @@ export interface operations {
                 email_verified?: boolean;
                 opt_in_email?: boolean;
                 opt_in_sms?: boolean;
-                /** @description Same shape as the previous `created` filter — filters by the customer's last counted order date. */
-                last_order?: string;
+                /** @description Inclusive ISO date-time lower bound on the customer's most-recent counted order date. */
+                last_order_after?: string;
+                /** @description Inclusive ISO date-time upper bound on the customer's most-recent counted order date. */
+                last_order_before?: string;
                 order_count_min?: number;
                 order_count_max?: number;
                 lifetime_spend_min?: number;

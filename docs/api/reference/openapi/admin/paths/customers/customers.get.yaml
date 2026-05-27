@@ -26,7 +26,7 @@ description: >
         - `opt_in_email`, `opt_in_sms`, `email_verified`, `has_national_id` — existence checks on
           marketing prefs / iran profile.
         - `with_orders`, `no_orders`, `order_count_{min,max}`, `lifetime_spend_{min,max}`,
-          `aov_{min,max}`, `last_order` — aggregate filters scoped through the orders table.
+          `aov_{min,max}`, `last_order_{after,before}` — aggregate filters scoped through the orders table.
         - `include_stats=true` folds per-customer lifetime metrics into each row via one
           GROUP BY query.
 
@@ -64,7 +64,8 @@ parameters:
     - { name: email_verified, in: query, schema: { type: boolean } }
     - { name: opt_in_email, in: query, schema: { type: boolean } }
     - { name: opt_in_sms, in: query, schema: { type: boolean } }
-    - { name: last_order, in: query, schema: { type: string, maxLength: 60 }, description: "Same shape as the previous `created` filter — filters by the customer's last counted order date." }
+    - { name: last_order_after, in: query, schema: { type: string, maxLength: 60 }, description: "Inclusive ISO date-time lower bound on the customer's most-recent counted order date." }
+    - { name: last_order_before, in: query, schema: { type: string, maxLength: 60 }, description: "Inclusive ISO date-time upper bound on the customer's most-recent counted order date." }
     - { name: order_count_min, in: query, schema: { type: integer, minimum: 0 } }
     - { name: order_count_max, in: query, schema: { type: integer, minimum: 0 } }
     - { name: lifetime_spend_min, in: query, schema: { type: integer, minimum: 0 } }

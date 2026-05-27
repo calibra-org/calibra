@@ -83,7 +83,11 @@ export const adminCustomerListValidator = adminCustomersView.compileStrict({
         has_national_id: vine.boolean().optional(),
         with_orders: vine.boolean().optional(),
         no_orders: vine.boolean().optional(),
-        last_order: vine.string().trim().maxLength(60).optional(),
+        /** Inclusive ISO date-time bounds for the customer's most-recent counted order. The FE
+         * picker primitive computes these via `dateFilterValueToTableViewFilter` so the wire
+         * stays calendar-agnostic. */
+        last_order_after: vine.string().trim().maxLength(60).optional(),
+        last_order_before: vine.string().trim().maxLength(60).optional(),
     },
 });
 

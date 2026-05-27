@@ -50,8 +50,10 @@ export interface CustomersListParams {
     tags?: string[];
     optInEmail?: boolean;
     optInSms?: boolean;
-    /** Unified date filter string applied to the customer's most-recent counted order. */
-    lastOrder?: string;
+    /** Inclusive ISO date-time bounds for the customer's most-recent counted order. The
+     * picker primitive computes these via {@link dateFilterValueToTableViewFilter}. */
+    lastOrderAfter?: string;
+    lastOrderBefore?: string;
     hasNationalId?: boolean;
     withOrders?: boolean;
     noOrders?: boolean;
@@ -95,7 +97,8 @@ export function useCustomersList(params: CustomersListParams = {}) {
                 tags: csv(params.tags),
                 optInEmail: params.optInEmail,
                 optInSms: params.optInSms,
-                lastOrder: params.lastOrder,
+                lastOrderAfter: params.lastOrderAfter,
+                lastOrderBefore: params.lastOrderBefore,
                 hasNationalId: params.hasNationalId,
                 withOrders: params.withOrders,
                 noOrders: params.noOrders,
@@ -113,7 +116,8 @@ export function useCustomersList(params: CustomersListParams = {}) {
                     tags: csv(params.tags),
                     opt_in_email: params.optInEmail,
                     opt_in_sms: params.optInSms,
-                    last_order: params.lastOrder,
+                    last_order_after: params.lastOrderAfter,
+                    last_order_before: params.lastOrderBefore,
                     has_national_id: params.hasNationalId,
                     with_orders: params.withOrders,
                     no_orders: params.noOrders,

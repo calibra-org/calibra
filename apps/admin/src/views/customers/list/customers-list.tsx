@@ -17,7 +17,6 @@ import {
     type FacetedFilterDef,
 } from "#/components/ui/data-grid";
 import { useDataTable } from "#/components/ui/data-grid/use-data-table";
-import { serializeDateFilter } from "#/components/ui/date-picker";
 import { formatNumber } from "#/lib/format";
 import {
     dateFilterValueToTableViewFilter,
@@ -112,15 +111,28 @@ export function CustomersListClient() {
 
     const createdValue = tableState.dateFacetValues.created;
     const lastOrderValue = tableState.dateFacetValues.lastOrder;
-    const lastOrderParam = useMemo(
-        () => (lastOrderValue === null ? undefined : serializeDateFilter(lastOrderValue).main),
-        [lastOrderValue],
-    );
+    /** Translate the picker's `DateFilterValue` to inclusive ISO bounds the controller's
+     * whereExists subquery applies as `orders.created_at >= after AND <= before`. The
+     * date-picker → TableView adapter handles calendar conversion + end-of-day rounding; here we
+     * just project the resulting `gte` / `lte` / `between` shape onto two scalar slots. */
+    const lastOrderBounds = useMemo(() => {
+        if (lastOrderValue === null) return { after: undefined as string | undefined, before: undefined as string | undefined };
+        const mapped = dateFilterValueToTableViewFilter("last_order_at", lastOrderValue);
+        if (mapped === null) return { after: undefined as string | undefined, before: undefined as string | undefined };
+        if (mapped.op === "between") {
+            const [start, end] = mapped.value as readonly [string, string];
+            return { after: start, before: end };
+        }
+        if (mapped.op === "gte") return { after: mapped.value as string, before: undefined };
+        if (mapped.op === "lte") return { after: undefined, before: mapped.value as string };
+        return { after: undefined as string | undefined, before: undefined as string | undefined };
+    }, [lastOrderValue]);
 
     /**
      * Compose the unified TableView query from the toolbar's simple-column facets + sort. Tab,
-     * search (`q`), and `last_order` stay outside the TableView grammar (tab is a bespoke scope
-     * dimension, `q` is a multi-column ILIKE, `last_order` is an aggregate on the orders table).
+     * search (`q`), and `last_order_*` stay outside the TableView grammar (tab is a bespoke
+     * scope dimension, `q` is a multi-column ILIKE, `last_order_*` are aggregate bounds against
+     * the orders table that the v1 runtime can't express).
      */
     const tableViewQuery = useMemo<TableViewQuery>(() => {
         const filter: TableViewFilter[] = [];
@@ -166,7 +178,8 @@ export function CustomersListClient() {
         q: tableState.q.length > 0 ? tableState.q : undefined,
         tab,
         includeStats: true,
-        lastOrder: lastOrderParam,
+        lastOrderAfter: lastOrderBounds.after,
+        lastOrderBefore: lastOrderBounds.before,
     });
 
     const deleteMutation = useDeleteCustomer();
