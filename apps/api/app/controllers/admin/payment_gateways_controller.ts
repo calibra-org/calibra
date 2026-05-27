@@ -3,6 +3,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 
 import { GatewayNotImplementedException } from "#exceptions/payment_exceptions";
 import PaymentGateway from "#models/payment_gateway";
+import { adminPaymentGatewaysView } from "#table_views/admin/payment_gateways";
 import PaymentGatewayTransformer, { readImplementationStatus } from "#transformers/payment_gateway_transformer";
 import {
     adminPaymentGatewayListValidator,
@@ -16,11 +17,12 @@ import {
  */
 export default class AdminPaymentGatewaysController {
     async index(ctx: HttpContext) {
-        const payload = await ctx.request.validateUsing(adminPaymentGatewayListValidator);
-        const query = PaymentGateway.query().orderBy("ordering").orderBy("id");
-        if (payload.enabled !== undefined) query.where("enabled", payload.enabled);
-        const rows = await query;
-        return { data: rows.map((row) => new PaymentGatewayTransformer(row).forAdmin()) };
+        const parsed = await ctx.request.validateUsing(adminPaymentGatewayListValidator);
+        const { data: rows, meta } = await adminPaymentGatewaysView.run<PaymentGateway>(PaymentGateway.query(), parsed);
+        return {
+            data: rows.map((row) => new PaymentGatewayTransformer(row).forAdmin()),
+            meta,
+        };
     }
 
     async show(ctx: HttpContext) {

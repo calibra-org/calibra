@@ -1,6 +1,7 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
+import vine, { errors as vineErrors } from "@vinejs/vine";
 
 import Customer from "#models/customer";
 
@@ -12,16 +13,53 @@ interface TimelineRow {
 }
 
 /**
+ * Allow-listed top-level wire keys for the timeline. The endpoint can't go through TableView
+ * because the data is stitched across six tables in-controller (no single model the runtime
+ * could point at); we keep the wire surface uniform by enforcing strict-keys here.
+ */
+const TIMELINE_ALLOWED_KEYS = new Set<string>([
+    "page",
+    "limit",
+    "types",
+    "params",
+    "headers",
+    "cookies",
+]);
+
+const timelineQueryValidator = vine.compile(
+    vine.object({
+        page: vine.number().withoutDecimals().min(1).optional(),
+        limit: vine.number().withoutDecimals().min(1).max(200).optional(),
+        types: vine.string().trim().maxLength(120).optional(),
+    }),
+);
+
+/**
  * Returns a merged activity feed for a single customer — orders + notes + status flips +
  * marketing-consent flips + impersonations + audit. Result is sorted newest-first across all
- * sources. The `types` query param filters to a subset; `limit` caps the total row count (default
- * 50, max 200).
+ * sources. The `types` query param filters to a subset; `limit` caps the per-page row count
+ * (default 50, max 200). Strict-keys at the wire (any other top-level key returns 422).
  */
 export default class AdminCustomerTimelineController {
     async index(ctx: HttpContext) {
         const customer = await this.findCustomerOrFail(ctx.params.id);
-        const limit = Math.min(Number(ctx.request.input("limit", 50)), 200);
-        const requestedTypes = String(ctx.request.input("types", ""))
+
+        const qs = ctx.request.qs() as Record<string, unknown>;
+        for (const key of Object.keys(qs)) {
+            if (!TIMELINE_ALLOWED_KEYS.has(key)) {
+                throw new vineErrors.E_VALIDATION_ERROR([
+                    {
+                        message: `Unknown query parameter "${key}" — see /docs for the allowed list`,
+                        rule: "table_view.unknown_query_key",
+                        field: key,
+                    },
+                ]);
+            }
+        }
+        const parsed = await timelineQueryValidator.validate(qs);
+        const page = parsed.page ?? 1;
+        const limit = parsed.limit ?? 50;
+        const requestedTypes = (parsed.types ?? "")
             .split(",")
             .map((s) => s.trim())
             .filter((s) => s.length > 0);
@@ -143,7 +181,18 @@ export default class AdminCustomerTimelineController {
         }
 
         rows.sort((a, b) => b.occurred_at.localeCompare(a.occurred_at));
-        return { data: rows.slice(0, limit) };
+
+        /** Wire-level pagination over the stitched merge. The TableView envelope shape stays
+         * consistent across every list endpoint even when the underlying data isn't a single
+         * model the runtime could point at. */
+        const total = rows.length;
+        const lastPage = Math.max(1, Math.ceil(total / limit));
+        const start = (page - 1) * limit;
+        const slice = rows.slice(start, start + limit);
+        return {
+            data: slice,
+            meta: { page, limit, total, lastPage },
+        };
     }
 
     private async findCustomerOrFail(id: unknown) {

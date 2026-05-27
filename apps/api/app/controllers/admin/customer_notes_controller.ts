@@ -3,18 +3,22 @@ import type { HttpContext } from "@adonisjs/core/http";
 
 import Customer from "#models/customer";
 import CustomerNote from "#models/customer_note";
+import { adminCustomerNotesView } from "#table_views/admin/customer_notes";
 import CustomerNoteTransformer from "#transformers/customer_note_transformer";
 import { adminCustomerNoteCreateValidator, adminCustomerNoteUpdateValidator } from "#validators/admin/customer_validator";
+
+const adminCustomerNotesListValidator = adminCustomerNotesView.compileStrict({ defaultLimit: 100 });
 
 export default class AdminCustomerNotesController {
     /** GET /api/v1/admin/customers/:customer_id/notes — newest first. */
     async index(ctx: HttpContext) {
         await this.findCustomerOrFail(ctx.params.customer_id);
-        const notes = await CustomerNote.query()
+        const parsed = await adminCustomerNotesListValidator.validate(ctx.request.qs());
+        const builder = CustomerNote.query()
             .where("customer_id", Number(ctx.params.customer_id))
-            .preload("author")
-            .orderBy("created_at", "desc");
-        return { data: notes.map((n) => new CustomerNoteTransformer(n).toObject()) };
+            .preload("author");
+        const { data: rows, meta } = await adminCustomerNotesView.run<CustomerNote>(builder, parsed);
+        return { data: rows.map((n) => new CustomerNoteTransformer(n).toObject()), meta };
     }
 
     async store(ctx: HttpContext) {

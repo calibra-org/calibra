@@ -1,25 +1,32 @@
 operationId: adminOrderHistoryIndex
 summary: List an order's status-history audit rows
 description: >
-    Returns every `order_status_history` row for the order, ordered ascending by `occurred_at`.
-    Rows are written by {@link OrderStateMachine.transition}; this endpoint is read-only — admins
-    cannot mutate audit history.
+    Paginated `order_status_history` rows for the order on the unified TableView grammar, by
+    default ordered ascending by `occurred_at`. Rows are written by
+    {@link OrderStateMachine.transition}; this endpoint is read-only.
+
+    **TableView filterable fields**: `id`, `from_status`, `to_status`, `actor_user_id`,
+    `occurred_at`.
+
+    **TableView orderable fields**: `id`, `occurred_at`.
 tags: [Admin / Order History]
 
 parameters:
-    - name: order_id
-      in: path
-      required: true
-      schema: { type: integer }
+    - { name: order_id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
 
 responses:
     "200":
-        description: Full status history.
+        description: Paginated status history.
         content:
             application/json:
                 schema:
                     type: object
-                    required: [data]
+                    required: [data, meta]
                     properties:
                         data:
                             type: array
@@ -33,6 +40,7 @@ responses:
                                     actor_user_id: { type: [integer, "null"] }
                                     reason: { type: [string, "null"] }
                                     occurred_at: { type: string, format: date-time }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "403":

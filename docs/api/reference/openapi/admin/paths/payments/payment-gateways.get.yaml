@@ -1,25 +1,38 @@
 operationId: adminPaymentGatewaysIndex
 summary: List payment gateways
 description: >
-    Returns every payment gateway in the registry — both enabled and disabled — ordered by
-    `sort_order`. The capabilities map is reported back per row so the admin UI can hide refund
-    affordances on gateways that don't support them.
+    Paginated list of every payment gateway in the registry — both enabled and disabled — on
+    the unified TableView grammar. The capabilities map is reported back per row so the admin
+    UI can hide refund affordances on gateways that don't support them.
+
+    **TableView filterable fields**: `id`, `code`, `enabled`, `ordering`.
+
+    **TableView orderable fields**: `id`, `code`, `enabled`, `ordering`.
+
+    Legacy `?enabled=true` is no longer accepted — use `?filter[]=enabled:eq:true`. Default
+    page size is 100.
 tags: [Admin / Payments]
 
 parameters:
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
 
 responses:
     "200":
-        description: Gateway list.
+        description: Paginated gateway list.
         content:
             application/json:
                 schema:
                     type: object
-                    required: [data]
+                    required: [data, meta]
                     properties:
                         data:
                             type: array
                             items: { $ref: "../../components/schemas/AdminPaymentGateway.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
     "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
     "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
