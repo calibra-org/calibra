@@ -487,26 +487,30 @@ function ChoicesExplainer() {
     const [open, setOpen] = useState<boolean>(!dismissed);
 
     if (dismissed) return null;
+
+    const choiceBullets = ["رنگ: نقره‌ای، آبی", "حافظه: ۱۲۸ گیگ، ۲۵۶ گیگ"];
+    const versionBullets = ["نقره‌ای / ۱۲۸ گیگ", "نقره‌ای / ۲۵۶ گیگ", "آبی / ۱۲۸ گیگ", "آبی / ۲۵۶ گیگ"];
+
     return (
-        <div className="rounded-md border border-border bg-muted/20 p-3 text-xs">
-            <div className="flex items-center gap-2 text-foreground">
+        <div className="rounded-md border border-info/30 bg-info/5 text-xs">
+            <div className="flex items-center gap-2 px-3 py-2">
                 <button
                     type="button"
-                    className="flex flex-1 items-center gap-2 text-start"
+                    className="flex flex-1 items-center gap-2 text-start text-foreground"
                     onClick={() => setOpen((v) => !v)}
                     aria-expanded={open}
                 >
                     {open ? (
-                        <ChevronDown className="size-3.5" aria-hidden="true" />
+                        <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden="true" />
                     ) : (
-                        <ChevronRight className="size-3.5" data-rtl-flip aria-hidden="true" />
+                        <ChevronRight className="size-3.5 text-muted-foreground" data-rtl-flip aria-hidden="true" />
                     )}
                     <Sparkles className="size-3.5 text-info" aria-hidden="true" />
                     <span className="font-medium">{t("title")}</span>
                 </button>
                 <button
                     type="button"
-                    className="ms-auto text-muted-foreground hover:text-destructive"
+                    className="grid size-6 place-items-center rounded text-muted-foreground hover:bg-background hover:text-destructive"
                     aria-label={t("dismiss")}
                     onClick={() => {
                         if (typeof window !== "undefined") window.localStorage.setItem(EXPLAINER_KEY, "1");
@@ -517,19 +521,41 @@ function ChoicesExplainer() {
                 </button>
             </div>
             {open ? (
-                <div className="mt-2 flex flex-col gap-1 ps-6 text-muted-foreground">
-                    <span className="font-medium text-foreground">{t("exampleProduct")}</span>
-                    <span>{t("exampleChoicesHeader")}</span>
-                    <span className="ps-3">• {`رنگ: نقره‌ای، آبی`}</span>
-                    <span className="ps-3">• {`حافظه: ۱۲۸ گیگ، ۲۵۶ گیگ`}</span>
-                    <span>{t("exampleVersionsHeader")}</span>
-                    <span className="ps-3">• {`نقره‌ای / ۱۲۸ گیگ`}</span>
-                    <span className="ps-3">• {`نقره‌ای / ۲۵۶ گیگ`}</span>
-                    <span className="ps-3">• {`آبی / ۱۲۸ گیگ`}</span>
-                    <span className="ps-3">• {`آبی / ۲۵۶ گیگ`}</span>
-                    <span className="mt-1">{t("footer")}</span>
+                <div className="flex flex-col gap-3 border-info/20 border-t bg-background/60 px-3 py-3">
+                    <p className="text-muted-foreground">
+                        <span className="text-muted-foreground/80">{t("exampleProduct").split(":")[0]}:</span>{" "}
+                        <span className="font-medium text-foreground">{t("exampleProduct").split(":")[1]?.trim() ?? t("exampleProduct")}</span>
+                    </p>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <ExampleColumn title={t("exampleChoicesHeader")} tone="muted" bullets={choiceBullets} />
+                        <ExampleColumn title={t("exampleVersionsHeader")} tone="info" bullets={versionBullets} />
+                    </div>
+                    <p className="text-muted-foreground/80 italic">{t("footer")}</p>
                 </div>
             ) : null}
+        </div>
+    );
+}
+
+function ExampleColumn({ title, tone, bullets }: { title: string; tone: "muted" | "info"; bullets: string[] }) {
+    return (
+        <div
+            className={cn(
+                "rounded-md border p-2",
+                tone === "info" ? "border-info/30 bg-info/5" : "border-border bg-muted/40",
+            )}
+        >
+            <p className={cn("mb-1 font-medium text-xs", tone === "info" ? "text-info" : "text-foreground")}>
+                {title.replace(/:$/, "")}
+            </p>
+            <ul className="flex flex-col gap-0.5 text-foreground">
+                {bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-1.5 leading-relaxed">
+                        <span className="text-muted-foreground/60">•</span>
+                        <span className="flex-1">{b}</span>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
