@@ -15,7 +15,7 @@ export default async function HomePage({ params }: PageProps) {
     const productsT = await getTranslations("Products");
     const api = await apiServer();
     const { data } = await api.storefront.GET("/api/v1/products", {
-        params: { query: { perPage: 8, featured: true } },
+        params: { query: { limit: 8, featured: true } },
     });
     const featured = data?.data ?? [];
 

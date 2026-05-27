@@ -9,16 +9,24 @@ import CustomerIranProfile from "#models/customer_iran_profile";
 import { throwIfErrors, validateAddressForCountry } from "#services/address_country_validator";
 import { rulesFor } from "#services/country_address_rules/index";
 import phoneService from "#services/phone_service";
+import { accountAddressesView } from "#table_views/account/addresses";
 import CustomerAddressTransformer from "#transformers/customer_address_transformer";
 import { addressCreateValidator, addressUpdateValidator } from "#validators/account/address_validator";
+
+const accountAddressesListValidator = accountAddressesView.compileStrict({ defaultLimit: 100 });
 
 export default class AddressesController {
     async index(ctx: HttpContext) {
         const customer = await this.requireCustomer(ctx);
-        const addresses = await CustomerAddress.query().where("customer_id", Number(customer.id)).orderBy("id", "asc");
+        const parsed = await accountAddressesListValidator.validate(ctx.request.qs());
+        /** Customer-scope pre-applied as a security invariant — a forged
+         * `?filter[]=customer_id:eq:N` cannot read another customer's addresses. */
+        const builder = CustomerAddress.query().where("customer_id", Number(customer.id));
+        const { data: rows, meta } = await accountAddressesView.run<CustomerAddress>(builder, parsed);
         return {
-            data: addresses.map((a) => new CustomerAddressTransformer(a).toObject()),
-            meta: { field_metadata: this.fieldMetadataFor(customer.countryDefault) },
+            data: rows.map((a) => new CustomerAddressTransformer(a).toObject()),
+            meta,
+            field_metadata: this.fieldMetadataFor(customer.countryDefault),
         };
     }
 

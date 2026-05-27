@@ -5,7 +5,10 @@ import { viewOrder } from "#abilities/main";
 import { OrderStatus } from "#enums/order_status";
 import Order from "#models/order";
 import OrderStatusHistory from "#models/order_status_history";
+import { accountOrderHistoryView } from "#table_views/account/order_history";
 import OrderStatusHistoryTransformer from "#transformers/order_status_history_transformer";
+
+const accountOrderHistoryListValidator = accountOrderHistoryView.compileStrict({ defaultLimit: 100 });
 
 /**
  * `GET /api/v1/account/orders/:id/history`. Returns the public-safe timeline through
@@ -16,9 +19,12 @@ export default class AccountOrderHistoryController {
     async index(ctx: HttpContext) {
         const order = await this.findOrderOrFail(ctx);
         await ctx.bouncer.authorize(viewOrder, order);
-        const rows = await OrderStatusHistory.query().where("order_id", Number(order.id)).orderBy("occurred_at", "asc");
+        const parsed = await accountOrderHistoryListValidator.validate(ctx.request.qs());
+        const builder = OrderStatusHistory.query().where("order_id", Number(order.id));
+        const { data: rows, meta } = await accountOrderHistoryView.run<OrderStatusHistory>(builder, parsed);
         return {
             data: rows.map((row) => new OrderStatusHistoryTransformer(row).forCustomer()),
+            meta,
         };
     }
 

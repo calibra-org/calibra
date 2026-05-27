@@ -1,31 +1,41 @@
 operationId: accountAddressesIndex
 summary: List the signed-in customer's addresses
 description: >
-    Returns every saved address (billing + shipping) belonging to the authenticated customer,
-    sorted by id ascending. The `meta.field_metadata` map describes how the storefront should
-    render the address form for the customer's `country_default`.
+    Paginated list of every saved address (billing + shipping) belonging to the authenticated
+    customer on the unified TableView grammar. Customer-scope is pre-applied as a security
+    invariant; a forged `?filter[]=customer_id:eq:N` cannot read another customer's addresses.
+
+    The `field_metadata` map (top-level sibling of `data` / `meta`) describes how the storefront
+    should render the address form for the customer's `country_default`. The shape has moved
+    out of `meta` so the pagination meta can occupy that slot.
+
+    **TableView filterable fields**: `id`, `kind`, `country`, `city`, `is_default`, `created_at`.
+
+    **TableView orderable fields**: `id`, `kind`, `country`, `city`, `is_default`, `created_at`.
 tags: [Account]
 
 parameters:
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
 
 responses:
     "200":
-        description: Address list with form-field metadata.
+        description: Paginated address list with form-field metadata.
         content:
             application/json:
                 schema:
                     type: object
-                    required: [data, meta]
+                    required: [data, meta, field_metadata]
                     properties:
                         data:
                             type: array
                             items: { $ref: "../../components/schemas/CustomerAddress.yaml" }
-                        meta:
-                            type: object
-                            required: [field_metadata]
-                            properties:
-                                field_metadata: { $ref: "../../components/schemas/AddressFieldMetadata.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+                        field_metadata: { $ref: "../../components/schemas/AddressFieldMetadata.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "404":

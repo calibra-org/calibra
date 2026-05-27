@@ -13,7 +13,7 @@ export default async function ProductsPage({ params }: PageProps) {
 
     const api = await apiServer();
     const { data } = await api.storefront.GET("/api/v1/products", {
-        params: { query: { perPage: 24 } },
+        params: { query: { limit: 24 } },
     });
     const products = data?.data ?? [];
 
