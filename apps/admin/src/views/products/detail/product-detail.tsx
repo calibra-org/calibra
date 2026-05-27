@@ -5,7 +5,7 @@ import type { Locale } from "@calibra/shared/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Boxes, ExternalLink, Eye, Loader2, Save, Sparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, FormProvider, useForm, useFormContext } from "react-hook-form";
 
 import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
@@ -152,68 +152,83 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
     const labels = { grabHandle: tDnd("grabHandle"), collapse: tDnd("collapse"), expand: tDnd("expand") };
 
     /**
-     * Section order follows the operator's mental flow from "what is this product" → "what does
-     * it cost / how do we ship it" → "edge cases". Every section that the `sellingMode` toggle
-     * gates (specs / choices / versions) lives directly under it so the page reads as one
-     * coherent story instead of jumping back and forth between concepts.
+     * Three composite cards collapse what used to be ten flat sections. Each outer card is one
+     * concern; the inner blocks (separated by `<InnerSection>` headers) are the pieces of that
+     * concern. The operator scans the page as three groups instead of ten cards:
      *
-     *   1. sellingMode     foundational decision
-     *   2. general         identity
-     *   3. description     long body
-     *   4. specs           descriptive metadata               (simple + variable)
-     *   5. choices         options the shopper picks          (variable only)
-     *   6. versions        the SKUable rows                   (variable only)
-     *   7. pricing         money                              (everything except grouped)
-     *   8. inventory       stock pool                         (simple only — per-version stock lives in Versions)
-     *   9. shipping        weight / dimensions                (physical, non-digital, simple/variable)
-     *  10. advanced        opt-in / rarely-changed switches   (collapsed)
+     *   1. howItSells   selling-mode picker + (simple|variable) specs + (variable) choices + versions
+     *   2. productInfo  general identity + long-form description
+     *   3. commerce     pricing + (simple) inventory + (physical) shipping
+     *   4. advanced     opt-in switches — kept separate because it's collapsed by default
      */
+    const requestVariable = useCallback(
+        () => form.setValue("type", "variable", { shouldDirty: true }),
+        [form],
+    );
+
     const mainSections: SectionSpec[] = useMemo(() => {
         const sections: SectionSpec[] = [
-            { id: "sellingMode", title: t("sections.sellingMode"), body: <SellingModeBody productId={initial?.id ?? null} locale={locale} /> },
-            { id: "general", title: t("sections.general"), body: <GeneralBody locale={locale} /> },
-            { id: "description", title: t("sections.description"), body: <DescriptionBody /> },
-        ];
-        if (type !== "external" && type !== "grouped") {
-            sections.push({
-                id: "specs",
-                title: t("sections.specs"),
-                body: <SpecsBody onRequestVariableType={() => form.setValue("type", "variable", { shouldDirty: true })} />,
-            });
-        }
-        if (type === "variable") {
-            sections.push({
-                id: "choices",
-                title: t("sections.choices"),
+            {
+                id: "howItSells",
+                title: t("sections.howItSells"),
                 body: (
-                    <ChoicesBody
-                        productType={type}
-                        onRequestVariableType={() => form.setValue("type", "variable", { shouldDirty: true })}
-                    />
+                    <div className="flex flex-col gap-6">
+                        <SellingModeBody productId={initial?.id ?? null} locale={locale} />
+                        {type !== "external" && type !== "grouped" ? (
+                            <InnerSection title={t("sections.specs")}>
+                                <SpecsBody onRequestVariableType={requestVariable} />
+                            </InnerSection>
+                        ) : null}
+                        {type === "variable" ? (
+                            <>
+                                <InnerSection title={t("sections.choices")}>
+                                    <ChoicesBody productType={type} onRequestVariableType={requestVariable} />
+                                </InnerSection>
+                                <InnerSection title={t("sections.versions")}>
+                                    <VersionsBody productId={initial?.id ?? null} productType={type} />
+                                </InnerSection>
+                            </>
+                        ) : null}
+                    </div>
                 ),
-            });
-            sections.push({
-                id: "versions",
-                title: t("sections.versions"),
-                body: <VersionsBody productId={initial?.id ?? null} productType={type} />,
-            });
-        }
+            },
+            {
+                id: "productInfo",
+                title: t("sections.productInfo"),
+                body: (
+                    <div className="flex flex-col gap-6">
+                        <GeneralBody locale={locale} />
+                        <InnerSection title={t("sections.description")}>
+                            <DescriptionBody />
+                        </InnerSection>
+                    </div>
+                ),
+            },
+        ];
         if (type !== "grouped") {
             sections.push({
-                id: "pricing",
-                title: t("sections.pricing"),
-                body: <PricingBody externalUrlVariant={type === "external"} />,
+                id: "commerce",
+                title: t("sections.commerce"),
+                body: (
+                    <div className="flex flex-col gap-6">
+                        <PricingBody externalUrlVariant={type === "external"} />
+                        {type === "simple" ? (
+                            <InnerSection title={t("sections.inventory")}>
+                                <InventoryBody />
+                            </InnerSection>
+                        ) : null}
+                        {(type === "simple" || type === "variable") && !isDigital ? (
+                            <InnerSection title={t("sections.shipping")}>
+                                <ShippingBody />
+                            </InnerSection>
+                        ) : null}
+                    </div>
+                ),
             });
-        }
-        if (type === "simple") {
-            sections.push({ id: "inventory", title: t("sections.inventory"), body: <InventoryBody /> });
-        }
-        if ((type === "simple" || type === "variable") && !isDigital) {
-            sections.push({ id: "shipping", title: t("sections.shipping"), body: <ShippingBody /> });
         }
         sections.push({ id: "advanced", title: t("sections.advanced"), body: <AdvancedBody />, defaultCollapsed: true });
         return sections;
-    }, [type, isDigital, t, locale, initial?.id, form]);
+    }, [type, isDigital, t, locale, initial?.id, requestVariable]);
 
     const sidebarSections: SectionSpec[] = useMemo(() => {
         const sections: SectionSpec[] = [
@@ -327,6 +342,21 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
 
 function useFormFromCtx() {
     return useFormContext<ProductDetailFormValues>();
+}
+
+/**
+ * Visual divider used inside composite section cards. Renders a subtitle-style heading with a
+ * faint top rule so the inner blocks read as siblings sharing one parent concern instead of
+ * collapsing into one mushy column. The composite card's own title already carries the heading
+ * for the first block, so callers wrap every block AFTER the first.
+ */
+function InnerSection({ title, children }: { title: string; children: ReactNode }) {
+    return (
+        <section className="flex flex-col gap-3 border-border border-t pt-5">
+            <h3 className="font-medium text-foreground text-sm">{title}</h3>
+            {children}
+        </section>
+    );
 }
 
 function GeneralBody({ locale }: { locale: Locale }) {

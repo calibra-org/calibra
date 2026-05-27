@@ -113,10 +113,7 @@ export function SellingModeBody({ productId, locale: _locale }: SellingModeBodyP
             name="type"
             render={({ field }) => (
                 <div className="flex flex-col gap-3">
-                    <header className="flex flex-col gap-1">
-                        <h3 className="font-medium text-foreground text-sm">{t("title")}</h3>
-                        <p className="text-muted-foreground text-xs">{t("subtitle")}</p>
-                    </header>
+                    <p className="text-muted-foreground text-xs">{t("subtitle")}</p>
 
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <ModeCard

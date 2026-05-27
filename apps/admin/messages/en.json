@@ -988,6 +988,9 @@
             "idHint": "Numeric id",
             "noneSelected": "None",
             "sections": {
+                "howItSells": "How this product sells & its structure",
+                "productInfo": "Product info",
+                "commerce": "Pricing, inventory & shipping",
                 "sellingMode": "How it sells",
                 "general": "General",
                 "description": "Description",

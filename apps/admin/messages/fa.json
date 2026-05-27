@@ -988,6 +988,9 @@
             "idHint": "شناسهٔ عددی",
             "noneSelected": "بدون انتخاب",
             "sections": {
+                "howItSells": "نحوهٔ فروش و ساختار محصول",
+                "productInfo": "اطلاعات محصول",
+                "commerce": "قیمت‌گذاری، موجودی و ارسال",
                 "sellingMode": "نحوهٔ فروش",
                 "general": "عمومی",
                 "description": "توضیحات",
