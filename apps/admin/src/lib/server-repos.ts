@@ -578,6 +578,7 @@ function toAdminPaymentGateway(g: SdkAdminPaymentGateway): AdminPaymentGateway {
         enabled: Boolean(g.enabled),
         ordering: g.ordering ?? 0,
         supportsRefunds: Boolean((g.supports as Record<string, unknown>)?.refunds ?? false),
+        implementationStatus: g.implementation_status === "live" ? "live" : "stub",
         settings,
     };
 }

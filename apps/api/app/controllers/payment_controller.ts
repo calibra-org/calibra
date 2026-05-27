@@ -1,6 +1,7 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 
+import { GatewayNotImplementedException } from "#exceptions/payment_exceptions";
 import Order from "#models/order";
 import { paymentService } from "#services/payment_service";
 import { paymentInitValidator } from "#validators/payments/init_validator";
@@ -47,10 +48,19 @@ export default class PaymentController {
             const result = await paymentService.verifyCallback(String(code), ctx.request);
             return ctx.response.redirect(result.redirect);
         } catch (error) {
-            const message = (error as Error)?.message ?? "callback_failed";
+            /**
+             * Stub PSPs intentionally never make it to a real callback. If a stray redirect-hop
+             * lands on one, redirect with the canonical `gateway_not_implemented` reason so the
+             * storefront's failed-page can render the right user-facing copy instead of leaking
+             * an internal error message.
+             */
+            const reason =
+                error instanceof GatewayNotImplementedException
+                    ? "gateway_not_implemented"
+                    : ((error as Error)?.message ?? "callback_failed").slice(0, 200);
             const fallback = "http://localhost:3000/checkout/failed";
             const u = new URL(fallback);
-            u.searchParams.set("reason", message.slice(0, 200));
+            u.searchParams.set("reason", reason);
             return ctx.response.redirect(u.toString());
         }
     }

@@ -4,19 +4,18 @@ import PaymentGateway from "#models/payment_gateway";
 import { resetPhase05 } from "#tests/helpers/orders";
 
 /**
- * Drop every phase-08 row on top of the phase-05 reset and re-enable the gateways most tests need
- * out of the box (`cod`, `bank_transfer`, `zarinpal`). `zarinpal` keeps a placeholder `merchant_id`
- * so adapter tests can flip it off via PATCH /admin/payment-gateways/:id; the registry-only tests
- * disable+enable rows by id directly.
+ * Drop every phase-08 row on top of the phase-05 reset. Configures `bank_transfer` with the
+ * required IBAN + account name so the storefront submit flow can route through the only live
+ * redirect-less gateway alongside `cod`.
+ *
+ * Note: this used to also enable `zarinpal` so callback tests could mock its HTTP endpoints.
+ * That coverage was retired when the PSP adapters were stubbed out — every PSP that requires a
+ * real HTTP integration (`zarinpal`, `idpay`, `nextpay`, `payir`, `zibal`) now resolves to
+ * `UnimplementedPspGateway` and the registry refuses to serve them regardless of `enabled`.
  */
 export async function resetPhase08(): Promise<void> {
     await resetPhase05();
     await db.rawQuery(`TRUNCATE TABLE "payment_links", "payment_attempts" RESTART IDENTITY CASCADE`);
-    /** Enable ZarinPal with a non-empty merchant_id so init can call the (mocked) endpoint. */
-    const zarinpal = await PaymentGateway.findByOrFail("code", "zarinpal");
-    zarinpal.enabled = true;
-    zarinpal.settings = { ...((zarinpal.settings as Record<string, unknown>) ?? {}), merchant_id: "TEST-MERCHANT" };
-    await zarinpal.save();
     const bank = await PaymentGateway.findByOrFail("code", "bank_transfer");
     bank.enabled = true;
     bank.settings = {

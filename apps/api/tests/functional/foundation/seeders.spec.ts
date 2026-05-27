@@ -57,6 +57,18 @@ test.group("Foundation seeder", (group) => {
         assert.deepEqual(codes, ["bank_transfer", "cod", "idpay", "nextpay", "payir", "zarinpal", "zibal"]);
     });
 
+    test("seeds implementation_status — only offline gateways are live", async ({ assert }) => {
+        const gateways = await PaymentGateway.all();
+        const byCode = new Map(
+            gateways.map((g) => [g.code, ((g.attributes as Record<string, unknown> | null) ?? {}).implementation_status]),
+        );
+        assert.equal(byCode.get("cod"), "live");
+        assert.equal(byCode.get("bank_transfer"), "live");
+        for (const psp of ["zarinpal", "idpay", "nextpay", "payir", "zibal"]) {
+            assert.equal(byCode.get(psp), "stub", `${psp} should be seeded as a stub`);
+        }
+    });
+
     test("seeds the critical settings", async ({ assert }) => {
         const required = [
             { group: "general", key: "currency", value: "IRR" },

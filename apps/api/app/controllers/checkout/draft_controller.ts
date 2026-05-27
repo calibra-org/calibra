@@ -3,6 +3,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
 
 import { OrderStatus } from "#enums/order_status";
+import { GatewayNotImplementedException } from "#exceptions/payment_exceptions";
 import type Cart from "#models/cart";
 import Order from "#models/order";
 import OrderAddress from "#models/order_address";
@@ -11,6 +12,7 @@ import PaymentGateway from "#models/payment_gateway";
 import { throwIfErrors, validateAddressForCountry } from "#services/address_country_validator";
 import { orderFactory } from "#services/order_factory";
 import OrderTransformer from "#transformers/order_transformer";
+import { readImplementationStatus } from "#transformers/payment_gateway_transformer";
 import { checkoutDraftValidator } from "#validators/checkout/draft_validator";
 
 /**
@@ -42,7 +44,16 @@ export default class CheckoutDraftController {
             }
             if (payload.payment_gateway_id !== undefined) {
                 const gateway = await PaymentGateway.find(payload.payment_gateway_id, { client: trx });
-                if (!gateway?.enabled) {
+                if (!gateway) {
+                    throw new Exception("Payment method is unavailable", {
+                        status: 422,
+                        code: "E_PAYMENT_GATEWAY_INVALID",
+                    });
+                }
+                if (readImplementationStatus(gateway) === "stub") {
+                    throw new GatewayNotImplementedException(gateway.code, "init");
+                }
+                if (!gateway.enabled) {
                     throw new Exception("Payment method is unavailable", {
                         status: 422,
                         code: "E_PAYMENT_GATEWAY_INVALID",
