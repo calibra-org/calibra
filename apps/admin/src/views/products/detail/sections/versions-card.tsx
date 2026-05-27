@@ -487,9 +487,20 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                 onApply={async (compute) => {
                     if (selected.size === 0 || productId === null) return;
                     try {
+                        /**
+                         * Skip rows whose computed price is null — that happens in percent mode
+                         * when the row has no base price. Without the filter we'd send
+                         * `regular_price: null` and silently reset whatever price was already on
+                         * those rows (or no-op if it was already null).
+                         */
                         const updates = rows
                             .filter((r) => selectedSetNumeric.has(r.id))
-                            .map((r) => ({ id: r.id, regular_price: compute(r) }));
+                            .map((r) => ({ id: r.id, regular_price: compute(r) }))
+                            .filter((u) => u.regular_price !== null);
+                        if (updates.length === 0) {
+                            setSetPriceOpen(false);
+                            return;
+                        }
                         await batch.mutateAsync({ update: updates });
                         toast.add({
                             title: t("toasts.bulkUpdated", { count: formatNumber(selected.size, locale) }),
@@ -753,7 +764,16 @@ function SetPriceDialog({
         if (row.regularPriceMinor === null) return null;
         return Math.round(row.regularPriceMinor * (1 + percent / 100));
     };
-    const previews = selected.slice(0, 3).map((row) => compute(row));
+    /**
+     * In percent mode rows with no base price can't move (null × anything = null), so the
+     * preview filters them out and the summary line below tells the operator how many got
+     * skipped. Otherwise the dialog showed three em-dashes and looked broken.
+     */
+    const changeableRows = mode === "percent" ? selected.filter((row) => row.regularPriceMinor !== null) : selected;
+    const skippedCount = selected.length - changeableRows.length;
+    const previews = changeableRows.slice(0, 3).map((row) => compute(row));
+    const canApply =
+        !busy && (mode === "absolute" ? absoluteMinor !== null : changeableRows.length > 0);
 
     return (
         <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : undefined)}>
@@ -798,13 +818,22 @@ function SetPriceDialog({
                     )}
                     <div className="rounded border border-border bg-muted/30 p-2 text-xs">
                         <p className="mb-1 text-muted-foreground">{t("preview")}</p>
-                        <ul className="flex flex-col gap-1">
-                            {previews.map((p, i) => (
-                                <li key={`${selected[i]?.id ?? i}`} className="font-mono">
-                                    {p === null ? "—" : formatNumber(p, locale)}
-                                </li>
-                            ))}
-                        </ul>
+                        {previews.length === 0 ? (
+                            <p className="text-muted-foreground">{t("previewEmpty")}</p>
+                        ) : (
+                            <ul className="flex flex-col gap-1">
+                                {previews.map((p, i) => (
+                                    <li key={`${changeableRows[i]?.id ?? i}`} className="font-mono">
+                                        {p === null ? "—" : formatNumber(p, locale)}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        {skippedCount > 0 ? (
+                            <p className="mt-2 text-muted-foreground">
+                                {t("skippedNoBasePrice", { count: formatNumber(skippedCount, locale) })}
+                            </p>
+                        ) : null}
                     </div>
                 </div>
                 <DialogFooter className="gap-2">
@@ -813,10 +842,10 @@ function SetPriceDialog({
                     </Button>
                     <Button
                         type="button"
-                        disabled={busy || (mode === "absolute" && absoluteMinor === null)}
+                        disabled={!canApply}
                         onClick={() => void onApply(compute)}
                     >
-                        {t("apply", { count: selected.length })}
+                        {t("apply", { count: changeableRows.length })}
                     </Button>
                 </DialogFooter>
             </DialogContent>

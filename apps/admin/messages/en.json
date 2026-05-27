@@ -1400,6 +1400,8 @@
                     "percentLabel": "Percent change",
                     "percentHint": "Positive = increase, negative = decrease.",
                     "preview": "Preview on the first three versions:",
+                    "previewEmpty": "Nothing to change — none of the selected versions have a base price.",
+                    "skippedNoBasePrice": "{count} versions have no base price and are skipped by percent change.",
                     "apply": "Apply to {count} versions",
                     "cancel": "Cancel"
                 },
