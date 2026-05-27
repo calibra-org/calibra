@@ -97,7 +97,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     if (variationAxes.length === 0) {
         return (
             <OnboardingHint
-                variant="card"
+                variant="inline"
                 id="versions.no-choices"
                 icon={Sparkles}
                 title={t("needChoicesTitle")}

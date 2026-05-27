@@ -630,6 +630,20 @@ function AdvancedBody() {
             </Field>
             <Controller
                 control={control}
+                name="featured"
+                render={({ field }) => (
+                    <ToggleRow
+                        id="featured"
+                        span="col-span-6 md:col-span-4"
+                        title={tField("featured")}
+                        icon={<Sparkles className="size-4" aria-hidden="true" />}
+                        checked={field.value}
+                        onChange={field.onChange}
+                    />
+                )}
+            />
+            <Controller
+                control={control}
                 name="reviewsAllowed"
                 render={({ field }) => (
                     <ToggleRow
@@ -706,19 +720,6 @@ function PublishBody() {
                             </SelectContent>
                         </Select>
                     </Field>
-                )}
-            />
-            <Controller
-                control={control}
-                name="featured"
-                render={({ field }) => (
-                    <ToggleRow
-                        id="featured"
-                        title={tField("featured")}
-                        icon={<Sparkles className="size-4" aria-hidden="true" />}
-                        checked={field.value}
-                        onChange={field.onChange}
-                    />
                 )}
             />
         </div>

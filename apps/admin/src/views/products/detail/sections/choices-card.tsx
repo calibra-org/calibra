@@ -198,7 +198,7 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
         <div className="flex flex-col gap-3">
             {isEmpty ? (
                 <OnboardingHint
-                    variant="card"
+                    variant="inline"
                     id="choices.empty"
                     icon={Layers}
                     title={t("title")}
