@@ -43,12 +43,20 @@ export function MoneyInput({
     className,
 }: MoneyInputProps) {
     const t = useTranslations("Common.money");
+    /**
+     * Toman is the operator-facing unit; admins type and read whole numbers (1 Rial precision
+     * is invisible noise). Round the display value before handing it to NumberField so seeds
+     * like 6,376,171 Rial render as "637,617" instead of "637,617.1" — but commit unchanged
+     * when the operator doesn't touch the field, so the original sub-Toman value isn't
+     * silently rewritten until they actually edit.
+     */
     const major = rialToToman(valueMinor ?? null);
+    const displayMajor = major === null ? null : Math.round(major);
     const resolvedSuffix = suffix ?? t("tomanShort");
     return (
         <NumberField
             id={id}
-            value={major}
+            value={displayMajor}
             onValueChange={(next) => {
                 if (next === null || next === undefined) {
                     if (nullable) onChangeMinor(null);

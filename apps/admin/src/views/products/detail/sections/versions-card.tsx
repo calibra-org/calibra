@@ -70,6 +70,12 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
      */
     const attributeLinks = useWatch({ control, name: "attributeLinks" });
     const productSku = watch("sku") ?? "";
+    const productRegularPriceToman = watch("regularPriceToman");
+    /** Parent product's price in MINOR units — used as the starting value for bulk-price dialogs. */
+    const productPriceMinor: number | null =
+        productRegularPriceToman === null || productRegularPriceToman === undefined
+            ? null
+            : Math.round(productRegularPriceToman * 10);
 
     const variationAxes = useMemo<AttributeAxis[]>(
         () =>
@@ -484,6 +490,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                 open={setPriceOpen}
                 onClose={() => setSetPriceOpen(false)}
                 selected={rows.filter((r) => selectedSetNumeric.has(r.id))}
+                defaultPriceMinor={productPriceMinor}
                 onApply={async (compute) => {
                     if (selected.size === 0 || productId === null) return;
                     try {
@@ -743,6 +750,7 @@ function SetPriceDialog({
     open,
     onClose,
     selected,
+    defaultPriceMinor,
     onApply,
     locale,
     busy,
@@ -750,14 +758,28 @@ function SetPriceDialog({
     open: boolean;
     onClose: () => void;
     selected: VariationView[];
+    /**
+     * Starting value for absolute mode — typically the parent product's `regular_price` so the
+     * operator anchors to "the existing price" instead of typing from zero. Pre-fill happens
+     * once on open; if the operator clears the field, we don't keep re-pushing it.
+     */
+    defaultPriceMinor?: number | null;
     onApply: (compute: (row: VariationView) => number | null) => Promise<void>;
     locale: Locale;
     busy: boolean;
 }) {
     const t = useTranslations("Products.detail.versions.setPriceDialog");
     const [mode, setMode] = useState<"absolute" | "percent">("absolute");
-    const [absoluteMinor, setAbsoluteMinor] = useState<number | null>(null);
+    const [absoluteMinor, setAbsoluteMinor] = useState<number | null>(defaultPriceMinor ?? null);
     const [percent, setPercent] = useState<number>(0);
+    /**
+     * When the dialog re-opens (after a cancel + reopen) re-seed from the latest parent price
+     * — the operator's previous typed value loses to fresh context on every open.
+     */
+    useEffect(() => {
+        if (!open) return;
+        setAbsoluteMinor(defaultPriceMinor ?? null);
+    }, [open, defaultPriceMinor]);
 
     const compute = (row: VariationView): number | null => {
         if (mode === "absolute") return absoluteMinor;
