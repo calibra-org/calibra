@@ -22,7 +22,7 @@ import { HelperTooltip } from "#/components/ui/helper-tooltip";
 import { Input } from "#/components/ui/input";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { AlertTriangle, Plus, Tag } from "#/icons";
+import { Plus, Tag } from "#/icons";
 import { formatNumber } from "#/lib/format";
 import { useGlobalAttributes } from "#/lib/products/queries";
 import { cn } from "#/lib/utils";
@@ -460,16 +460,11 @@ function SpecLinkRow({ rowId, index, expanded, onToggleExpand, onRemove, onPromo
                         )}
                     />
                     {showPromote ? (
-                        <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-2 text-xs">
-                            <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden="true" />
-                            <div className="flex flex-1 flex-col gap-1">
-                                <span className="text-foreground">{labels.multiValueWarning}</span>
-                                <div className="flex flex-wrap gap-2">
-                                    <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onPromote}>
-                                        {labels.multiValuePromote}
-                                    </Button>
-                                </div>
-                            </div>
+                        <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/30 p-2 text-xs">
+                            <Button type="button" variant="outline" size="sm" className="h-7 shrink-0 text-xs" onClick={onPromote}>
+                                {labels.multiValuePromote}
+                            </Button>
+                            <span className="min-w-0 flex-1 text-muted-foreground">{labels.multiValueWarning}</span>
                         </div>
                     ) : null}
                 </div>
@@ -590,12 +585,9 @@ function SpecCustomRow({ rowId, index, expanded, onToggleExpand, onRemove, label
                         )}
                     />
                     {valueCount >= 2 ? (
-                        <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-2 text-xs">
-                            <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden="true" />
-                            <div className="flex flex-1 flex-col gap-1">
-                                <span className="text-foreground">{labels.multiValueWarning}</span>
-                                <span className="text-muted-foreground">{labels.cannotPromote}</span>
-                            </div>
+                        <div className="rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+                            <span className="text-foreground">{labels.multiValueWarning}</span>
+                            <span className="ms-1">{labels.cannotPromote}</span>
                         </div>
                     ) : null}
                 </div>

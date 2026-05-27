@@ -25,7 +25,7 @@ import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "#/components/ui/button";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { AlertTriangle, ChevronDown, ChevronEnd, ChevronRight, Layers, Sparkles } from "#/icons";
+import { ChevronDown, ChevronEnd, ChevronRight, Layers, Sparkles } from "#/icons";
 import { formatNumber } from "#/lib/format";
 import { useGlobalAttributes } from "#/lib/products/queries";
 import { cartesianPins } from "#/lib/products/variations-cartesian";
@@ -434,22 +434,17 @@ function ChoiceRow({ rowId, index, expanded, onToggleExpand, onDemoteToSpec, sib
                         <div className="text-muted-foreground text-xs">{labels.combinationCount(combinations)}</div>
                     ) : null}
                     {singleValue ? (
-                        <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-2 text-xs">
-                            <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden="true" />
-                            <div className="flex flex-1 flex-col gap-1">
-                                <span className="text-foreground">{labels.singleValueWarning}</span>
-                                <div>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-7 text-xs"
-                                        onClick={onDemoteToSpec}
-                                    >
-                                        {labels.demoteToSpec}
-                                    </Button>
-                                </div>
-                            </div>
+                        <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/30 p-2 text-xs">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 shrink-0 text-xs"
+                                onClick={onDemoteToSpec}
+                            >
+                                {labels.demoteToSpec}
+                            </Button>
+                            <span className="min-w-0 flex-1 text-muted-foreground">{labels.singleValueWarning}</span>
                         </div>
                     ) : null}
                 </div>
