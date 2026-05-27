@@ -28,10 +28,7 @@ export default class AdminCategoriesController {
             const needle = `%${parsed.q.toLowerCase()}%`;
             builder.where((sub) => {
                 sub.whereILike("product_categories.slug", needle).orWhereIn("product_categories.id", (nested) => {
-                    nested
-                        .select("category_id")
-                        .from("product_category_translations")
-                        .whereRaw("LOWER(name) LIKE ?", [needle]);
+                    nested.select("category_id").from("product_category_translations").whereRaw("LOWER(name) LIKE ?", [needle]);
                 });
             });
         }

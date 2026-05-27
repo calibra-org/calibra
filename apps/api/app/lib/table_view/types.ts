@@ -187,7 +187,7 @@ export interface TableView<Model extends LucidModel, Columns extends Record<stri
      *     },
      * });
      */
-    compileStrict<Extras extends Record<string, SchemaTypes> = {}>(
+    compileStrict<Extras extends Record<string, SchemaTypes> = Record<string, never>>(
         options?: CompileStrictOptions<Extras>,
     ): VineValidator<
         VineObject<
@@ -215,9 +215,7 @@ export interface TableView<Model extends LucidModel, Columns extends Record<stri
  * @example
  * type Q = InferTableViewQuery<typeof adminOrdersView>;
  */
-export type InferTableViewQuery<V extends TableView<LucidModel, Record<string, TableViewColumn>>> = V extends TableView<
-    infer _Model,
-    infer Columns
->
-    ? ParsedTableViewQuery<FilterableFields<Columns>, OrderableFields<Columns>>
-    : never;
+export type InferTableViewQuery<V extends TableView<LucidModel, Record<string, TableViewColumn>>> =
+    V extends TableView<infer _Model, infer Columns>
+        ? ParsedTableViewQuery<FilterableFields<Columns>, OrderableFields<Columns>>
+        : never;

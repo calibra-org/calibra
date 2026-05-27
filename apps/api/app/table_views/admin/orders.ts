@@ -1,7 +1,6 @@
+import { ORDER_STATUS_VALUES } from "#enums/order_status";
 import { createTableView } from "#lib/table_view/create_table_view";
 import type { InferTableViewQuery } from "#lib/table_view/types";
-
-import { ORDER_STATUS_VALUES } from "#enums/order_status";
 import Order from "#models/order";
 
 /**

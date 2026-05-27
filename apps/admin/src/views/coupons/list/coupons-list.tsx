@@ -96,15 +96,7 @@ export function CouponsListClient() {
             facets: tableState.facetValues,
             booleans: tableState.toggleValues,
         }),
-        [
-            tableState.page,
-            tableState.limit,
-            tableState.q,
-            tableState.sort,
-            tableState.facetValues,
-            tableState.toggleValues,
-            tab,
-        ],
+        [tableState.page, tableState.limit, tableState.q, tableState.sort, tableState.facetValues, tableState.toggleValues, tab],
     );
 
     const { data: result, isPending, isError, refetch } = useCouponsList(params);

@@ -17,14 +17,7 @@ interface TimelineRow {
  * because the data is stitched across six tables in-controller (no single model the runtime
  * could point at); we keep the wire surface uniform by enforcing strict-keys here.
  */
-const TIMELINE_ALLOWED_KEYS = new Set<string>([
-    "page",
-    "limit",
-    "types",
-    "params",
-    "headers",
-    "cookies",
-]);
+const TIMELINE_ALLOWED_KEYS = new Set<string>(["page", "limit", "types", "params", "headers", "cookies"]);
 
 const timelineQueryValidator = vine.compile(
     vine.object({

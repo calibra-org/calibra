@@ -1,7 +1,7 @@
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
-import { DateTime } from "luxon";
 import vine from "@vinejs/vine";
+import { DateTime } from "luxon";
 
 import { BusinessRuleException } from "#exceptions/domain_exceptions";
 import Product from "#models/product";

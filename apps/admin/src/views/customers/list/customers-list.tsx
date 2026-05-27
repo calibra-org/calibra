@@ -19,13 +19,6 @@ import {
 import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { formatNumber } from "#/lib/format";
 import {
-    dateFilterValueToTableViewFilter,
-    EMPTY_TABLE_VIEW_QUERY,
-    type TableViewFilter,
-    type TableViewQuery,
-    type TableViewSort,
-} from "#/lib/table-view";
-import {
     type CustomerTabKey,
     useBulkRowPasswordResetMutation,
     useBulkRowStatusMutation,
@@ -34,6 +27,13 @@ import {
     useDeleteCustomer,
     useRestoreCustomer,
 } from "#/lib/queries/customers";
+import {
+    dateFilterValueToTableViewFilter,
+    EMPTY_TABLE_VIEW_QUERY,
+    type TableViewFilter,
+    type TableViewQuery,
+    type TableViewSort,
+} from "#/lib/table-view";
 import type { AdminCustomer } from "#/lib/types";
 
 import { CustomerBulkActions } from "./bulk-actions";

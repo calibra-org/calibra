@@ -22,9 +22,7 @@ export default class AccountOrderNotesController {
         const parsed = await accountOrderNotesListValidator.validate(ctx.request.qs());
         /** Visibility pre-scope is a security invariant — internal notes must never reach this
          * endpoint regardless of the wire `filter[]`. */
-        const builder = OrderNote.query()
-            .where("order_id", Number(order.id))
-            .where("visibility", "customer");
+        const builder = OrderNote.query().where("order_id", Number(order.id)).where("visibility", "customer");
         const { data: rows, meta } = await accountOrderNotesView.run<OrderNote>(builder, parsed);
         return {
             data: rows.map((row) => new OrderNoteTransformer(row).forCustomer()),

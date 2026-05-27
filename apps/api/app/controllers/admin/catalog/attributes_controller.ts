@@ -25,10 +25,7 @@ export default class AdminAttributesController {
             const needle = `%${parsed.q.toLowerCase()}%`;
             builder.where((sub) => {
                 sub.whereILike("product_attributes.code", needle).orWhereIn("product_attributes.id", (nested) => {
-                    nested
-                        .select("attribute_id")
-                        .from("product_attribute_translations")
-                        .whereRaw("LOWER(name) LIKE ?", [needle]);
+                    nested.select("attribute_id").from("product_attribute_translations").whereRaw("LOWER(name) LIKE ?", [needle]);
                 });
             });
         }

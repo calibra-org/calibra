@@ -1,11 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import {
-    EMPTY_TABLE_VIEW_QUERY,
-    parseTableViewQuery,
-    serializeTableViewQuery,
-    toUrlSearchParams,
-} from "./serialize";
+import { EMPTY_TABLE_VIEW_QUERY, parseTableViewQuery, serializeTableViewQuery, toUrlSearchParams } from "./serialize";
 import type { TableViewQuery } from "./types";
 
 /**
@@ -16,14 +11,8 @@ import type { TableViewQuery } from "./types";
  */
 
 const roundTripCases: ReadonlyArray<readonly [string, TableViewQuery]> = [
-    [
-        "empty query",
-        EMPTY_TABLE_VIEW_QUERY,
-    ],
-    [
-        "page + limit set together",
-        { ...EMPTY_TABLE_VIEW_QUERY, page: 3, limit: 50 },
-    ],
+    ["empty query", EMPTY_TABLE_VIEW_QUERY],
+    ["page + limit set together", { ...EMPTY_TABLE_VIEW_QUERY, page: 3, limit: 50 }],
     [
         "single eq filter",
         {
@@ -95,9 +84,7 @@ const roundTripCases: ReadonlyArray<readonly [string, TableViewQuery]> = [
         "between with string date bounds",
         {
             ...EMPTY_TABLE_VIEW_QUERY,
-            filter: [
-                { field: "created_at", op: "between", value: ["2026-01-01", "2026-12-31T23:59:59.999Z"] },
-            ],
+            filter: [{ field: "created_at", op: "between", value: ["2026-01-01", "2026-12-31T23:59:59.999Z"] }],
         },
     ],
     [
@@ -121,10 +108,7 @@ const roundTripCases: ReadonlyArray<readonly [string, TableViewQuery]> = [
             ],
         },
     ],
-    [
-        "single sort ascending",
-        { ...EMPTY_TABLE_VIEW_QUERY, sort: [{ field: "created_at", dir: "asc" }] },
-    ],
+    ["single sort ascending", { ...EMPTY_TABLE_VIEW_QUERY, sort: [{ field: "created_at", dir: "asc" }] }],
     [
         "multiple sort entries chain in order",
         {

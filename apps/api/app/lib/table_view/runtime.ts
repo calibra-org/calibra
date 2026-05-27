@@ -220,10 +220,7 @@ function collectFilters(
     return out;
 }
 
-function collectSorts(
-    wire: Partial<Record<string, TableViewSort>>,
-    overrides: TableViewRunOptions["sort"],
-): TableViewSort[] {
+function collectSorts(wire: Partial<Record<string, TableViewSort>>, overrides: TableViewRunOptions["sort"]): TableViewSort[] {
     const out: TableViewSort[] = [];
     const seen = new Set<string>();
     if (overrides !== undefined) {
@@ -278,22 +275,34 @@ function applyFilterClause<Builder extends BasicQueryBuilder>(
 
     switch (filter.op) {
         case "eq":
-            asOr ? builder.orWhere(sqlColumn, "=", v as TableViewPrimitive) : builder.where(sqlColumn, "=", v as TableViewPrimitive);
+            asOr
+                ? builder.orWhere(sqlColumn, "=", v as TableViewPrimitive)
+                : builder.where(sqlColumn, "=", v as TableViewPrimitive);
             break;
         case "neq":
-            asOr ? builder.orWhere(sqlColumn, "!=", v as TableViewPrimitive) : builder.where(sqlColumn, "!=", v as TableViewPrimitive);
+            asOr
+                ? builder.orWhere(sqlColumn, "!=", v as TableViewPrimitive)
+                : builder.where(sqlColumn, "!=", v as TableViewPrimitive);
             break;
         case "gt":
-            asOr ? builder.orWhere(sqlColumn, ">", v as TableViewPrimitive) : builder.where(sqlColumn, ">", v as TableViewPrimitive);
+            asOr
+                ? builder.orWhere(sqlColumn, ">", v as TableViewPrimitive)
+                : builder.where(sqlColumn, ">", v as TableViewPrimitive);
             break;
         case "gte":
-            asOr ? builder.orWhere(sqlColumn, ">=", v as TableViewPrimitive) : builder.where(sqlColumn, ">=", v as TableViewPrimitive);
+            asOr
+                ? builder.orWhere(sqlColumn, ">=", v as TableViewPrimitive)
+                : builder.where(sqlColumn, ">=", v as TableViewPrimitive);
             break;
         case "lt":
-            asOr ? builder.orWhere(sqlColumn, "<", v as TableViewPrimitive) : builder.where(sqlColumn, "<", v as TableViewPrimitive);
+            asOr
+                ? builder.orWhere(sqlColumn, "<", v as TableViewPrimitive)
+                : builder.where(sqlColumn, "<", v as TableViewPrimitive);
             break;
         case "lte":
-            asOr ? builder.orWhere(sqlColumn, "<=", v as TableViewPrimitive) : builder.where(sqlColumn, "<=", v as TableViewPrimitive);
+            asOr
+                ? builder.orWhere(sqlColumn, "<=", v as TableViewPrimitive)
+                : builder.where(sqlColumn, "<=", v as TableViewPrimitive);
             break;
         case "like":
             applyLikeOp(builder, sqlColumn, "like", String(v), asOr, false);
@@ -331,7 +340,9 @@ function applyFilterClause<Builder extends BasicQueryBuilder>(
             break;
         case "between": {
             const tuple = v as readonly [TableViewPrimitive, TableViewPrimitive];
-            asOr ? builder.orWhereBetween(sqlColumn, [tuple[0], tuple[1]]) : builder.whereBetween(sqlColumn, [tuple[0], tuple[1]]);
+            asOr
+                ? builder.orWhereBetween(sqlColumn, [tuple[0], tuple[1]])
+                : builder.whereBetween(sqlColumn, [tuple[0], tuple[1]]);
             break;
         }
         case "isnull":

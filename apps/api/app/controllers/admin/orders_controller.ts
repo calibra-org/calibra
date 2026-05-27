@@ -14,7 +14,7 @@ import ProductVariation from "#models/product_variation";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { orderNumberService } from "#services/order_number_service";
 import { orderStateMachine } from "#services/order_state_machine";
-import { adminOrdersView, type AdminOrdersViewQuery } from "#table_views/admin/orders";
+import { type AdminOrdersViewQuery, adminOrdersView } from "#table_views/admin/orders";
 import OrderTransformer from "#transformers/order_transformer";
 import {
     adminOrderBatchValidator,

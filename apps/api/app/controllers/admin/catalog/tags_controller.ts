@@ -27,18 +27,13 @@ export default class AdminTagsController {
             const needle = `%${parsed.q.toLowerCase()}%`;
             builder.where((sub) => {
                 sub.whereILike("product_tags.slug", needle).orWhereIn("product_tags.id", (nested) => {
-                    nested
-                        .select("tag_id")
-                        .from("product_tag_translations")
-                        .whereRaw("LOWER(name) LIKE ?", [needle]);
+                    nested.select("tag_id").from("product_tag_translations").whereRaw("LOWER(name) LIKE ?", [needle]);
                 });
             });
         }
 
         const { data: rows, meta } = await adminTagsView.run<ProductTag>(builder, parsed);
-        const { data } = await collection<unknown>(
-            ProductTagTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"),
-        );
+        const { data } = await collection<unknown>(ProductTagTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"));
         return { data, meta };
     }
 

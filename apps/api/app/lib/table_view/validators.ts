@@ -5,11 +5,11 @@ import {
     OPERATORS_BY_COLUMN_TYPE,
     TABLE_VIEW_OPERATORS,
     TABLE_VIEW_SORT_DIRS,
-    UNIVERSAL_OPERATORS,
-    VOID_OPERATORS,
     type TableViewColumnType,
     type TableViewOperator,
     type TableViewSortDir,
+    UNIVERSAL_OPERATORS,
+    VOID_OPERATORS,
 } from "./constants.js";
 import type { TableViewColumn, TableViewFilter, TableViewPrimitive, TableViewSort } from "./types.js";
 
@@ -162,9 +162,7 @@ export const sortRule = vine.createRule(sortRuleFn, { implicit: true });
 
 /* ----------------------------- expression parser ----------------------------- */
 
-type ParseResult =
-    | { ok: true; fieldName: string; op: TableViewOperator; valueStr: string }
-    | { ok: false; error: string };
+type ParseResult = { ok: true; fieldName: string; op: TableViewOperator; valueStr: string } | { ok: false; error: string };
 
 function parseFilterExpression(raw: string): ParseResult {
     if (raw.length === 0) return { ok: false, error: `Empty filter expression` };

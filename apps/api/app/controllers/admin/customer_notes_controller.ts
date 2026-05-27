@@ -14,9 +14,7 @@ export default class AdminCustomerNotesController {
     async index(ctx: HttpContext) {
         await this.findCustomerOrFail(ctx.params.customer_id);
         const parsed = await adminCustomerNotesListValidator.validate(ctx.request.qs());
-        const builder = CustomerNote.query()
-            .where("customer_id", Number(ctx.params.customer_id))
-            .preload("author");
+        const builder = CustomerNote.query().where("customer_id", Number(ctx.params.customer_id)).preload("author");
         const { data: rows, meta } = await adminCustomerNotesView.run<CustomerNote>(builder, parsed);
         return { data: rows.map((n) => new CustomerNoteTransformer(n).toObject()), meta };
     }

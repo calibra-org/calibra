@@ -4,7 +4,7 @@ import logger from "@adonisjs/core/services/logger";
 
 import Order from "#models/order";
 import OrderNote from "#models/order_note";
-import { adminOrderNotesView, type AdminOrderNotesViewQuery } from "#table_views/admin/order_notes";
+import { type AdminOrderNotesViewQuery, adminOrderNotesView } from "#table_views/admin/order_notes";
 import OrderNoteTransformer from "#transformers/order_note_transformer";
 import { adminNoteCreateValidator, adminNoteListValidator } from "#validators/admin/note_validator";
 

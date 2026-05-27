@@ -1,8 +1,8 @@
 import { test } from "@japa/runner";
 import vine, { errors } from "@vinejs/vine";
 
-import { filterRule, sortRule } from "#lib/table_view/validators";
 import type { TableViewColumn } from "#lib/table_view/types";
+import { filterRule, sortRule } from "#lib/table_view/validators";
 
 /**
  * Pure grammar coverage for the TableView VineJS rules — no model, no DB. We construct a small
@@ -67,9 +67,7 @@ async function assertValidationError(promise: Promise<unknown>, includes: string
         throw new Error(`Expected validation error containing "${includes}" but resolved`);
     } catch (err) {
         if (err instanceof errors.E_VALIDATION_ERROR) {
-            const messages = err.messages
-                .map((m: { message: string }) => m.message)
-                .join(" | ");
+            const messages = err.messages.map((m: { message: string }) => m.message).join(" | ");
             if (!messages.includes(includes)) {
                 throw new Error(`Expected error to include "${includes}", got: ${messages}`);
             }
@@ -198,7 +196,10 @@ test.group("table_view validators / filter — rejection paths", () => {
 
     test("rejects an operator not allowed on the column type", async () => {
         /** datetime doesn't support `like`. */
-        await assertValidationError(compileFilter().validate({ filter: "created_at:like:foo" }), 'not allowed on field "created_at"');
+        await assertValidationError(
+            compileFilter().validate({ filter: "created_at:like:foo" }),
+            'not allowed on field "created_at"',
+        );
     });
 
     test("rejects a value-bearing op with no value", async () => {

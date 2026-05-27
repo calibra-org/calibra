@@ -5,7 +5,7 @@ import vine from "@vinejs/vine";
 
 import Customer from "#models/customer";
 import CustomerTag from "#models/customer_tag";
-import { adminCustomerTagsView, type AdminCustomerTagsViewQuery } from "#table_views/admin/customer_tags";
+import { type AdminCustomerTagsViewQuery, adminCustomerTagsView } from "#table_views/admin/customer_tags";
 import CustomerTagTransformer from "#transformers/customer_tag_transformer";
 import { adminCustomerTagAttachValidator, adminCustomerTagCreateValidator } from "#validators/admin/customer_validator";
 

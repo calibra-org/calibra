@@ -1,5 +1,17 @@
-import { TABLE_VIEW_OPERATORS, TABLE_VIEW_SORT_DIRS, VOID_OPERATORS, type TableViewOperator, type TableViewSortDir } from "./constants";
-import { EMPTY_TABLE_VIEW_QUERY, type TableViewFilter, type TableViewQuery, type TableViewSort, type TableViewPrimitive } from "./types";
+import {
+    TABLE_VIEW_OPERATORS,
+    TABLE_VIEW_SORT_DIRS,
+    type TableViewOperator,
+    type TableViewSortDir,
+    VOID_OPERATORS,
+} from "./constants";
+import {
+    EMPTY_TABLE_VIEW_QUERY,
+    type TableViewFilter,
+    type TableViewPrimitive,
+    type TableViewQuery,
+    type TableViewSort,
+} from "./types";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
@@ -46,8 +58,8 @@ export function toUrlSearchParams(query: TableViewQuery): URLSearchParams {
  */
 export function parseTableViewQuery(input: URLSearchParams | { getAll(name: string): string[] }): TableViewQuery {
     const params = input;
-    const pageRaw = "get" in params ? params.get("page") : params.getAll("page")[0] ?? null;
-    const limitRaw = "get" in params ? params.get("limit") : params.getAll("limit")[0] ?? null;
+    const pageRaw = "get" in params ? params.get("page") : (params.getAll("page")[0] ?? null);
+    const limitRaw = "get" in params ? params.get("limit") : (params.getAll("limit")[0] ?? null);
 
     const page = parsePositiveInt(pageRaw, DEFAULT_PAGE);
     const limit = parsePositiveInt(limitRaw, DEFAULT_LIMIT);

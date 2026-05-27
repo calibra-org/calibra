@@ -103,7 +103,9 @@ test.group("table_view runtime / single-op SQL shape", () => {
     test("in / nin → `IN (...)` / `NOT IN (...)`", ({ assert }) => {
         const inSql = buildSql(emptyQuery({ filter: { status: { field: "status", op: "in", value: ["active", "inactive"] } } }));
         assert.include(inSql, `"customers"."status" in ('active', 'inactive')`);
-        const ninSql = buildSql(emptyQuery({ filter: { status: { field: "status", op: "nin", value: ["active", "inactive"] } } }));
+        const ninSql = buildSql(
+            emptyQuery({ filter: { status: { field: "status", op: "nin", value: ["active", "inactive"] } } }),
+        );
         assert.include(ninSql, `"customers"."status" not in ('active', 'inactive')`);
     });
 
@@ -255,18 +257,13 @@ test.group("table_view runtime / sort tie-breaker", () => {
 
     function tieBreakerSql(parsedSort: Record<string, { field: string; dir: "asc" | "desc" }>) {
         const builder = Customer.query();
-        const ready = applyTableView(
-            tieBreakerView.config,
-            tieBreakerIndex,
-            builder,
-            {
-                page: 1,
-                limit: 20,
-                filter: {},
-                filterOr: {},
-                sort: parsedSort,
-            },
-        );
+        const ready = applyTableView(tieBreakerView.config, tieBreakerIndex, builder, {
+            page: 1,
+            limit: 20,
+            filter: {},
+            filterOr: {},
+            sort: parsedSort,
+        });
         return ready.toQuery();
     }
 
@@ -298,7 +295,8 @@ test.group("table_view runtime / sortRaw", () => {
                     type: "bigint",
                     filterable: false,
                     orderable: true,
-                    sortRaw: (dir) => `(SELECT COALESCE(SUM(grand_total), 0) FROM orders WHERE orders.customer_id = customers.id) ${dir}`,
+                    sortRaw: (dir) =>
+                        `(SELECT COALESCE(SUM(grand_total), 0) FROM orders WHERE orders.customer_id = customers.id) ${dir}`,
                 },
             },
             defaultSort: [["id", "desc"]],

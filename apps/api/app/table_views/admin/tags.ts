@@ -1,6 +1,5 @@
 import { createTableView } from "#lib/table_view/create_table_view";
 import type { InferTableViewQuery } from "#lib/table_view/types";
-
 import ProductTag from "#models/product_tag";
 
 /**
@@ -18,8 +17,7 @@ export const adminTagsView = createTableView({
             type: "number",
             filterable: false,
             orderable: true,
-            sortRaw: (dir) =>
-                `(SELECT COUNT(*) FROM product_tag_links WHERE product_tag_links.tag_id = product_tags.id) ${dir}`,
+            sortRaw: (dir) => `(SELECT COUNT(*) FROM product_tag_links WHERE product_tag_links.tag_id = product_tags.id) ${dir}`,
         },
     },
     defaultSort: [

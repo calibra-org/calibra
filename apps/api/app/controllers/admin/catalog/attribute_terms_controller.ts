@@ -24,17 +24,12 @@ export default class AdminAttributeTermsController {
         const parsed = await adminAttributeTermsListValidator.validate(ctx.request.qs());
         /** Parent-id scope is the authorisation surface; pre-applied so a forged
          * `?filter[]=attribute_id:eq:N` cannot cross-walk between attributes. */
-        const builder = ProductAttributeTerm.query()
-            .where("attribute_id", String(attribute.id))
-            .preload("translations");
+        const builder = ProductAttributeTerm.query().where("attribute_id", String(attribute.id)).preload("translations");
 
         if (parsed.q !== undefined && parsed.q.length > 0) {
             const needle = `%${parsed.q.toLowerCase()}%`;
             builder.whereIn("product_attribute_terms.id", (nested) => {
-                nested
-                    .select("term_id")
-                    .from("product_attribute_term_translations")
-                    .whereRaw("LOWER(name) LIKE ?", [needle]);
+                nested.select("term_id").from("product_attribute_term_translations").whereRaw("LOWER(name) LIKE ?", [needle]);
             });
         }
 

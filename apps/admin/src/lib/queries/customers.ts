@@ -78,8 +78,7 @@ function buildQueryRecord(entries: Array<[string, string]>): Record<string, stri
 export function useCustomersList(params: CustomersListParams = {}) {
     const locale = useLocale() as Locale;
     const includeStats = params.includeStats ?? true;
-    const query: TableViewQuery =
-        params.query ?? { page: 1, limit: 20, filter: [], filterOr: [], sort: [] };
+    const query: TableViewQuery = params.query ?? { page: 1, limit: 20, filter: [], filterOr: [], sort: [] };
     const serialised = serializeTableViewQuery(query);
     const csv = (arr?: string[]) => (arr && arr.length > 0 ? arr.join(",") : undefined);
     return useQuery<ListEnvelope, Error, Paginated<AdminCustomer>>({

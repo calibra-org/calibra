@@ -39,10 +39,7 @@ export default class AdminBrandsController {
             const needle = `%${parsed.q.toLowerCase()}%`;
             builder.where((sub) => {
                 sub.whereILike("product_brands.slug", needle).orWhereIn("product_brands.id", (nested) => {
-                    nested
-                        .select("brand_id")
-                        .from("product_brand_translations")
-                        .whereRaw("LOWER(name) LIKE ?", [needle]);
+                    nested.select("brand_id").from("product_brand_translations").whereRaw("LOWER(name) LIKE ?", [needle]);
                 });
             });
         }

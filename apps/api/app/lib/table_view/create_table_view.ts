@@ -1,11 +1,11 @@
-import vine, { errors as vineErrors } from "@vinejs/vine";
 import type { LucidModel } from "@adonisjs/lucid/types/model";
+import vine, { errors as vineErrors } from "@vinejs/vine";
 import type { SchemaTypes } from "@vinejs/vine/types";
 
 import { TABLE_VIEW_DEFAULT_LIMIT, TABLE_VIEW_MAX_LIMIT } from "./constants.js";
 import { buildFieldIndex, runTableView } from "./runtime.js";
+import { filterRule, STRICT_KEYS_RULE_NAME, sortRule } from "./validators.js";
 import type { CompileStrictOptions, TableView, TableViewColumn, TableViewConfig } from "./types.js";
-import { STRICT_KEYS_RULE_NAME, filterRule, sortRule } from "./validators.js";
 
 /** The fixed top-level keys the TableView wire grammar accepts on every endpoint. */
 const TABLE_VIEW_BASE_KEYS = ["page", "limit", "filter", "filterOr", "sort"] as const;
@@ -73,7 +73,12 @@ export function createTableView<Model extends LucidModel, const Columns extends 
      * `compileStrict` validator. The limit field's `.transform()` default can be overridden
      * per-endpoint via `compileStrict({ defaultLimit })`; everything else is fixed. */
     const buildBaseProperties = (defaultLimit: number) => ({
-        page: vine.number().withoutDecimals().min(1).optional().transform((v) => v ?? 1),
+        page: vine
+            .number()
+            .withoutDecimals()
+            .min(1)
+            .optional()
+            .transform((v) => v ?? 1),
         limit: vine
             .number()
             .withoutDecimals()

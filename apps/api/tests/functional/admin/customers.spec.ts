@@ -198,11 +198,7 @@ test.group("/api/v1/admin/customers", (group) => {
 
         const tabs = ["any", "account", "guest", "new"] as const;
         for (const tab of tabs) {
-            const response = await client
-                .get("/api/v1/admin/customers")
-                .qs({ tab, limit: 100 })
-                .withGuard("api")
-                .loginAs(admin);
+            const response = await client.get("/api/v1/admin/customers").qs({ tab, limit: 100 }).withGuard("api").loginAs(admin);
             response.assertStatus(200);
             const body = response.body() as { data: Array<{ user: { role?: string } | null }> };
             for (const row of body.data) {

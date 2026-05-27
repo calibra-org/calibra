@@ -12,7 +12,7 @@ export { DataTableSkeleton } from "./data-table-skeleton";
 export { ActiveFilterChips, DataTableToolbar } from "./data-table-toolbar";
 export { DataTableViewOptions } from "./data-table-view-options";
 export { DENSITY_CLASSES } from "./types";
-export { useColumnState, type UseColumnStateOptions } from "./use-column-state";
+export { type UseColumnStateOptions, useColumnState } from "./use-column-state";
 export {
     DEFAULT_LIMIT_OPTIONS,
     emptyPaginationMeta,

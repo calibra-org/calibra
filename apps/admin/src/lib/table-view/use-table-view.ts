@@ -3,13 +3,12 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
+import type { DateFilterValue } from "#/components/ui/date-picker/types";
 import { usePathname, useRouter } from "#/lib/i18n/navigation";
 
 import { dateFilterValueToTableViewFilter } from "./date-adapter";
 import { parseTableViewQuery, serializeTableViewQuery } from "./serialize";
 import type { TableViewFilter, TableViewQuery, TableViewSort } from "./types";
-
-import type { DateFilterValue } from "#/components/ui/date-picker/types";
 
 /**
  * URL-backed state hook for a {@link TableViewQuery}. Every list page that migrates to the
@@ -152,17 +151,11 @@ export function useTableView<E extends ExtraParsers | undefined = undefined>(
         [options.extras, pathname, router],
     );
 
-    const writeQuery = useCallback(
-        (next: TableViewQuery) => writeAll(next, extraValues),
-        [extraValues, writeAll],
-    );
+    const writeQuery = useCallback((next: TableViewQuery) => writeAll(next, extraValues), [extraValues, writeAll]);
 
     const setQuery = useCallback((next: TableViewQuery) => writeQuery(next), [writeQuery]);
 
-    const setFilter = useCallback(
-        (filter: TableViewFilter[]) => writeQuery({ ...query, filter, page: 1 }),
-        [query, writeQuery],
-    );
+    const setFilter = useCallback((filter: TableViewFilter[]) => writeQuery({ ...query, filter, page: 1 }), [query, writeQuery]);
 
     const setFilterOr = useCallback(
         (filterOr: TableViewFilter[]) => writeQuery({ ...query, filterOr, page: 1 }),
@@ -192,10 +185,7 @@ export function useTableView<E extends ExtraParsers | undefined = undefined>(
         [query, writeQuery],
     );
 
-    const clearFilters = useCallback(
-        () => writeQuery({ ...query, filter: [], filterOr: [], page: 1 }),
-        [query, writeQuery],
-    );
+    const clearFilters = useCallback(() => writeQuery({ ...query, filter: [], filterOr: [], page: 1 }), [query, writeQuery]);
 
     /** Build the typed `setX` mutators for each declared extra. Each setter merges into the
      * current extras map then writes both the query and the extras in one router.replace, so

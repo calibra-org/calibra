@@ -9,7 +9,7 @@ import User from "#models/user";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { aggregateForCustomerIds, fetchCounts, forSingleCustomer } from "#services/customer_stats_service";
 import phoneService from "#services/phone_service";
-import { adminCustomersView, type AdminCustomersViewQuery } from "#table_views/admin/customers";
+import { type AdminCustomersViewQuery, adminCustomersView } from "#table_views/admin/customers";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";

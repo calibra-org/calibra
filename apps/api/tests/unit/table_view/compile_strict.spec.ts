@@ -118,10 +118,7 @@ test.group("table_view compileStrict / unknown-key rejection", () => {
         } catch (err) {
             if (!(err instanceof errors.E_VALIDATION_ERROR)) throw err;
             const messages = err.messages as Array<{ field: string }>;
-            assert.deepEqual(
-                messages.map((m) => m.field).sort(),
-                ["bar", "baz", "foo"],
-            );
+            assert.deepEqual(messages.map((m) => m.field).sort(), ["bar", "baz", "foo"]);
         }
     });
 });

@@ -1,6 +1,5 @@
 import { createTableView } from "#lib/table_view/create_table_view";
 import type { InferTableViewQuery } from "#lib/table_view/types";
-
 import OrderNote from "#models/order_note";
 
 /**

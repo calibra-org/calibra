@@ -191,10 +191,7 @@ test.group("GET /api/v1/admin/orders (filters)", (group) => {
         const csvIds = (csv.body().data as Array<{ id: number }>).map((row) => row.id);
         assert.includeMembers(csvIds, [Number(orderA.id), Number(orderB.id)]);
 
-        const sourceOnly = await client
-            .get("/api/v1/admin/orders")
-            .qs({ "filter[]": "created_via:eq:checkout" })
-            .loginAs(admin);
+        const sourceOnly = await client.get("/api/v1/admin/orders").qs({ "filter[]": "created_via:eq:checkout" }).loginAs(admin);
         sourceOnly.assertStatus(200);
         sourceOnly.assertAgainstApiSpec();
         const sourceIds = (sourceOnly.body().data as Array<{ id: number }>).map((row) => row.id);
@@ -213,10 +210,7 @@ test.group("GET /api/v1/admin/orders (extended list shape)", (group) => {
         const small = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 1_000_000 });
         const big = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 250, price: 1_000_000 });
 
-        const res = await client
-            .get("/api/v1/admin/orders")
-            .qs({ "sort[]": "grand_total:desc", limit: 50 })
-            .loginAs(admin);
+        const res = await client.get("/api/v1/admin/orders").qs({ "sort[]": "grand_total:desc", limit: 50 }).loginAs(admin);
         res.assertStatus(200);
         res.assertAgainstApiSpec();
         const data = res.body().data as Array<{
@@ -346,20 +340,14 @@ test.group("GET /api/v1/admin/orders (TableView grammar)", (group) => {
 
     test("rejects an unknown TableView field with 422", async ({ client }) => {
         const admin = await adminUser();
-        const res = await client
-            .get("/api/v1/admin/orders")
-            .qs({ "filter[]": "evil_field:eq:1" })
-            .loginAs(admin);
+        const res = await client.get("/api/v1/admin/orders").qs({ "filter[]": "evil_field:eq:1" }).loginAs(admin);
         res.assertStatus(422);
     });
 
     test("rejects an op that's not allowed on the column type with 422", async ({ client }) => {
         const admin = await adminUser();
         /** `like` is a string op; `created_at` is datetime — should be rejected at validate time. */
-        const res = await client
-            .get("/api/v1/admin/orders")
-            .qs({ "filter[]": "created_at:like:foo" })
-            .loginAs(admin);
+        const res = await client.get("/api/v1/admin/orders").qs({ "filter[]": "created_at:like:foo" }).loginAs(admin);
         res.assertStatus(422);
     });
 
@@ -383,7 +371,10 @@ test.group("GET /api/v1/admin/orders (TableView grammar)", (group) => {
         const product = await createTaxableProduct({ regularPrice: 500_000 });
         const o = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
 
-        const res = await client.get("/api/v1/admin/orders").qs({ q: String(o.orderNumber) }).loginAs(admin);
+        const res = await client
+            .get("/api/v1/admin/orders")
+            .qs({ q: String(o.orderNumber) })
+            .loginAs(admin);
         res.assertStatus(200);
         res.assertAgainstApiSpec();
         const ids = (res.body().data as Array<{ id: number }>).map((row) => row.id);
