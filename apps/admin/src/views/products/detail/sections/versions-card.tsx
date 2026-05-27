@@ -92,6 +92,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     const [setPriceOpen, setSetPriceOpen] = useState(false);
     const [skuGenOpen, setSkuGenOpen] = useState(false);
     const [archiveOutdated, setArchiveOutdated] = useState(true);
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
     if (productType !== "variable") {
         return (
@@ -198,7 +199,6 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
         }
     };
 
-    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
     const bulkDelete = async () => {
         if (selected.size === 0 || productId === null) return;
         try {
