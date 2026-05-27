@@ -444,65 +444,29 @@ export function useMostUsedBrands(limit = 20) {
 }
 
 /**
- * Top-N most-used tags rendered as clickable chips below the tags chip-picker. Backed by the
- * 2m server-side cache.
+ * Flat tags list — fetched up-front so the product-detail tags card can render every existing
+ * tag as a check-row (mirroring the brands picker), and so saved tag ids resolve to the right
+ * Persian name without a per-id round-trip.
  */
-export function useMostUsedTags(limit = 10) {
+export function useTagsList(options?: { sort?: TaxonomySort; perPage?: number }) {
     const locale = useLocale() as Locale;
+    const sort = options?.sort;
+    const perPage = options?.perPage ?? 500;
     return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminTag[]>({
-        queryKey: ["admin", "tags", "most-used", { locale, limit }],
+        queryKey: ["admin", "tags", "picker", { locale, sort: sort ?? "", perPage }],
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("tags", {
                 locale,
-                query: { perPage: limit, sort: "-used_count" },
+                query: { perPage, ...(sort !== undefined ? { sort } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerTag),
         staleTime: 30 * 1000,
     });
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Tag chip-picker async helpers (ResourcePicker integration)                */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Async search adapter that feeds the {@link ResourcePicker} multi-creatable picker on the tags
- * card. The picker debounces internally; we just resolve a list of `{id, label}` options.
- */
-export async function searchTags(query: string, locale: string): Promise<{ id: number; label: string }[]> {
-    const envelope = await apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("tags", {
-        locale,
-        query: { perPage: 25, ...(query.length > 0 ? { search: query } : {}) },
-    });
-    return (envelope.data ?? []).map((row) => ({ id: Number(row.id), label: row.name ?? `#${row.id}` }));
-}
-
-/**
- * Resolves a list of tag ids back to `{id, label}` options on form mount, so existing chips
- * render with their Persian names instead of `#42` placeholders.
- *
- * Fetches each id through `GET /admin/tags/{id}` rather than scanning the paginated index —
- * with N saved tags spread across the catalog, the index lookup would miss any tag that
- * doesn't land in the first page and leave the chip stuck on its `#${id}` fallback.
- */
-export async function resolveTags(ids: (number | string)[], locale: string): Promise<{ id: number; label: string }[]> {
-    const numericIds = ids
-        .map((value) => (typeof value === "number" ? value : Number(value)))
-        .filter((value) => Number.isFinite(value));
-    if (numericIds.length === 0) return [];
-    const results = await Promise.all(
-        numericIds.map(async (id) => {
-            try {
-                const res = await apiGet<{ data: SdkAdminTaxonomy }>(`tags/${id}`, { locale });
-                return res.data;
-            } catch {
-                return null;
-            }
-        }),
-    );
-    return results
-        .filter((row): row is SdkAdminTaxonomy => row !== null)
-        .map((row) => ({ id: Number(row.id), label: row.name ?? `#${row.id}` }));
+/** Top-N most-used tags for the tags sidebar's "Most used" tab. */
+export function useMostUsedTags(limit = 20) {
+    return useTagsList({ sort: "-used_count", perPage: limit });
 }
 
 /**

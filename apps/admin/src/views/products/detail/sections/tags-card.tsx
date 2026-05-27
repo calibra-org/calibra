@@ -1,123 +1,181 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useFormContext } from "react-hook-form";
 
-import { ResourcePicker } from "#/components/ui/resource-picker";
-import { formatNumber } from "#/lib/format";
+import { Input } from "#/components/ui/input";
 import { useCreateTagInline } from "#/lib/products/mutations";
-import { resolveTags, searchTags, useMostUsedTags } from "#/lib/products/queries";
+import { useMostUsedTags, useTagsList } from "#/lib/products/queries";
 import { cn } from "#/lib/utils";
+import type { CategoryTreeRow } from "#/views/products/categories/types";
 
 import type { ProductDetailFormValues } from "../schema";
 
+import { InlineTaxonomyCreateForm } from "./inline-taxonomy-create-form";
+import { TreePickerRow } from "./tree-picker-row";
+
+type Tab = "all" | "mostUsed";
+
 /**
- * Sidebar Tags card. Mounts the multi-creatable {@link ResourcePicker} for the operator's
- * primary action and a clickable "Most used" cloud below to surface popular tags from the
- * server-side cache. Clicking a most-used chip adds it to the selection (no-op when already
- * picked).
+ * Sidebar Tags card. Same chrome as the Brands picker — multi-select checkbox list with
+ * All / Most-used tabs, a search input, and an inline-create form at the bottom. The full
+ * tags list is fetched once on mount (capped at 500) so saved tag ids always resolve to
+ * their Persian name in the row without a per-id round-trip.
  */
 export function TagsBody() {
     const t = useTranslations("Products.detail.tags");
     const locale = useLocale() as Locale;
     const { watch, setValue } = useFormContext<ProductDetailFormValues>();
-    const mostUsed = useMostUsedTags(10);
+    const allQuery = useTagsList();
+    const mostUsedQuery = useMostUsedTags(20);
     const createInline = useCreateTagInline();
+
+    const [tab, setTab] = useState<Tab>("all");
+    const [query, setQuery] = useState("");
 
     const tagIds = watch("tagIds");
     const tagIdSet = useMemo(() => new Set(tagIds), [tagIds]);
 
-    const search = useCallback((query: string) => searchTags(query, locale), [locale]);
-    const resolve = useCallback((ids: (number | string)[]) => resolveTags(ids, locale), [locale]);
+    const rows = allQuery.data ?? [];
 
-    /**
-     * `mutateAsync` is stable across renders (TanStack Query memoises it on the mutation
-     * result), so depending on it rather than the whole mutation object keeps `onCreate`
-     * reference-stable — which keeps the `creatable={{ onCreate }}` object identity behaving
-     * as if it were memoised too once we wrap it below.
-     */
-    const createInlineAsync = createInline.mutateAsync;
-    const onCreate = useCallback(
-        async (name: string) => {
-            const created = await createInlineAsync({ name });
-            return { id: Number(created.data.id), label: name };
-        },
-        [createInlineAsync],
-    );
-    const creatable = useMemo(() => ({ onCreate }), [onCreate]);
-    const onPickerChange = useCallback((next: number[]) => setValue("tagIds", next, { shouldDirty: true }), [setValue]);
-
-    const addTag = (id: number) => {
-        if (tagIdSet.has(id)) return;
-        setValue("tagIds", [...tagIds, id], { shouldDirty: true });
+    const toggleChecked = (id: number) => {
+        if (tagIdSet.has(id)) {
+            setValue(
+                "tagIds",
+                tagIds.filter((value) => value !== id),
+                { shouldDirty: true },
+            );
+        } else {
+            setValue("tagIds", [...tagIds, id], { shouldDirty: true });
+        }
     };
 
-    const [mostUsedOpen, setMostUsedOpen] = useState(false);
-    const mostUsedTags = mostUsed.data ?? [];
+    const visibleRows = useMemo<CategoryTreeRow[]>(() => {
+        const trimmed = query.trim().toLowerCase();
+        const source = tab === "mostUsed" ? (mostUsedQuery.data ?? []) : rows;
+        const filtered =
+            trimmed.length === 0
+                ? source
+                : source.filter((row) => {
+                      const haystack = `${row.name[locale] ?? ""} ${row.slug[locale] ?? ""}`.toLowerCase();
+                      return haystack.includes(trimmed);
+                  });
+        return filtered.map((tag) => ({
+            category: {
+                id: tag.id,
+                parentId: null,
+                name: tag.name,
+                slug: tag.slug,
+                productCount: tag.productCount,
+                imageMediaId: null,
+                imageUrl: null,
+            },
+            depth: 0,
+            parentChain: [],
+            hasChildren: false,
+            descendantCount: 0,
+            isExpanded: false,
+        }));
+    }, [tab, rows, mostUsedQuery.data, query, locale]);
+
+    const handleInlineCreate = async (name: string): Promise<{ id: number }> => {
+        const result = await createInline.mutateAsync({ name });
+        const newId = Number(result.data.id);
+        setValue("tagIds", [...tagIds, newId], { shouldDirty: true });
+        return { id: newId };
+    };
+
+    const isLoading = tab === "mostUsed" ? mostUsedQuery.isPending : allQuery.isPending;
 
     return (
         <div className="flex flex-col gap-3">
-            <ResourcePicker
-                multiple
-                value={tagIds}
-                onChange={onPickerChange}
-                search={search}
-                onResolve={resolve}
-                creatable={creatable}
-                placeholder={t("addPlaceholder")}
-            />
+            <TabStrip value={tab} onChange={setTab} labels={{ all: t("tabs.all"), mostUsed: t("tabs.mostUsed") }} />
 
-            <div className="flex flex-col gap-1.5">
-                <button
-                    type="button"
-                    onClick={() => setMostUsedOpen((prev) => !prev)}
-                    aria-expanded={mostUsedOpen}
-                    className="flex w-full items-center gap-1 text-muted-foreground text-xs transition-colors hover:text-foreground"
-                >
-                    {mostUsedOpen ? (
-                        <ChevronDown className="size-3" aria-hidden="true" />
-                    ) : (
-                        <ChevronRight className="size-3" data-rtl-flip aria-hidden="true" />
-                    )}
-                    <span>{t("mostUsedTitle")}</span>
-                </button>
-                {mostUsedOpen ? (
-                    mostUsed.isPending ? (
-                        <div className="h-6 animate-pulse rounded bg-muted/40" />
-                    ) : mostUsedTags.length === 0 ? (
-                        <p className="text-muted-foreground text-xs">{t("mostUsedEmpty")}</p>
-                    ) : (
-                        <div className="flex flex-wrap gap-1">
-                            {mostUsedTags.map((tag) => {
-                                const picked = tagIdSet.has(tag.id);
-                                return (
-                                    <button
-                                        key={tag.id}
-                                        type="button"
-                                        onClick={() => addTag(tag.id)}
-                                        disabled={picked}
-                                        className={cn(
-                                            "inline-flex h-6 items-center gap-1 rounded-full border ps-1.5 pe-1 text-xs transition-colors",
-                                            picked
-                                                ? "cursor-default border-primary/30 bg-primary/10 text-primary"
-                                                : "border-border bg-background text-foreground/80 hover:border-primary/40 hover:text-foreground",
-                                        )}
-                                    >
-                                        {!picked ? <Plus className="size-3" aria-hidden="true" /> : null}
-                                        <span>{tag.name[locale] || `#${tag.id}`}</span>
-                                        <span className="ms-0.5 rounded bg-muted/70 px-1 font-normal text-[10px] text-foreground/60 tabular-nums">
-                                            {formatNumber(tag.productCount, locale)}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )
-                ) : null}
+            {tab === "all" ? (
+                <div className="relative">
+                    <Search
+                        className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+                        aria-hidden="true"
+                    />
+                    <Input
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder={t("searchPlaceholder")}
+                        className="h-8 ps-7"
+                    />
+                </div>
+            ) : null}
+
+            <div role="tree" aria-label={t("treeLabel")} className="flex max-h-72 flex-col gap-0.5 overflow-y-auto pe-1">
+                {isLoading ? (
+                    <div className="flex items-center justify-center py-4 text-muted-foreground">
+                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    </div>
+                ) : visibleRows.length === 0 ? (
+                    <p className="px-2 py-3 text-center text-muted-foreground text-xs">
+                        {query.trim().length > 0 ? t("noMatches") : t("empty")}
+                    </p>
+                ) : (
+                    visibleRows.map((row) => (
+                        <TreePickerRow
+                            key={row.category.id}
+                            row={row}
+                            locale={locale}
+                            selection="multi"
+                            isChecked={tagIdSet.has(row.category.id)}
+                            onToggleChecked={toggleChecked}
+                            productCount={row.category.productCount}
+                        />
+                    ))
+                )}
             </div>
+
+            <InlineTaxonomyCreateForm
+                triggerLabel={t("addNew")}
+                placeholder={t("addNewPlaceholder")}
+                onSubmit={handleInlineCreate}
+                successToast={t("createdToast")}
+                errorToast={t("createFailedToast")}
+            />
         </div>
+    );
+}
+
+interface TabStripProps {
+    value: Tab;
+    onChange: (next: Tab) => void;
+    labels: { all: string; mostUsed: string };
+}
+
+function TabStrip({ value, onChange, labels }: TabStripProps) {
+    return (
+        <div className="inline-flex w-full items-center rounded-md border border-border/60 bg-muted/40 p-0.5" role="tablist">
+            <TabButton active={value === "all"} onClick={() => onChange("all")}>
+                {labels.all}
+            </TabButton>
+            <TabButton active={value === "mostUsed"} onClick={() => onChange("mostUsed")}>
+                {labels.mostUsed}
+            </TabButton>
+        </div>
+    );
+}
+
+function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+    return (
+        <button
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={onClick}
+            className={cn(
+                "inline-flex h-7 flex-1 items-center justify-center rounded px-2 font-medium text-xs transition-colors",
+                active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+            )}
+        >
+            {children}
+        </button>
     );
 }

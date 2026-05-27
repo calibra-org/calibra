@@ -16,7 +16,6 @@ import { HelperTooltip } from "#/components/ui/helper-tooltip";
 import { Input } from "#/components/ui/input";
 import { JalaliDateRangeInput } from "#/components/ui/jalali-date-range-input";
 import { MoneyInput } from "#/components/ui/money-input";
-import { NumberField } from "#/components/ui/number-field";
 import { RichTextEditor } from "#/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
@@ -644,20 +643,6 @@ function AdvancedBody() {
 
     return (
         <div className="grid grid-cols-12 gap-3">
-            <Controller
-                control={control}
-                name="menuOrder"
-                render={({ field }) => (
-                    <Field id="menuOrder" label={tField("menuOrder")} span="col-span-6 md:col-span-3">
-                        <NumberField
-                            id="menuOrder"
-                            value={field.value}
-                            onValueChange={(next) => field.onChange(typeof next === "number" ? next : 0)}
-                            min={0}
-                        />
-                    </Field>
-                )}
-            />
             <Field id="purchaseNote" label={tField("purchaseNote")} span="col-span-12">
                 <Textarea id="purchaseNote" rows={2} {...register("purchaseNote")} />
             </Field>

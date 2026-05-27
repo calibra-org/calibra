@@ -1150,9 +1150,15 @@
                 "empty": "No brands yet."
             },
             "tags": {
-                "addPlaceholder": "Add or create tag",
-                "mostUsedTitle": "Choose from the most used tags",
-                "mostUsedEmpty": "No popular tags yet."
+                "tabs": { "all": "All tags", "mostUsed": "Most used" },
+                "searchPlaceholder": "Search tags",
+                "treeLabel": "Product tags",
+                "addNew": "Add new tag",
+                "addNewPlaceholder": "Tag name",
+                "createdToast": "Tag created",
+                "createFailedToast": "Failed to create tag",
+                "noMatches": "No matching tags",
+                "empty": "No tags yet."
             },
             "variations": {
                 "placeholderTitle": "Variations",

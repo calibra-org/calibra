@@ -1150,9 +1150,15 @@
                 "empty": "هنوز برندی ساخته نشده است."
             },
             "tags": {
-                "addPlaceholder": "افزودن یا ساخت برچسب",
-                "mostUsedTitle": "از میان برچسب‌های بیشتر استفاده شده انتخاب کنید",
-                "mostUsedEmpty": "هنوز برچسب پر استفاده‌ای وجود ندارد."
+                "tabs": { "all": "همه برچسب‌ها", "mostUsed": "پر استفاده‌ها" },
+                "searchPlaceholder": "جستجو در برچسب‌ها",
+                "treeLabel": "برچسب‌های محصول",
+                "addNew": "افزودن برچسب جدید",
+                "addNewPlaceholder": "نام برچسب",
+                "createdToast": "برچسب ساخته شد",
+                "createFailedToast": "ساخت برچسب ناموفق بود",
+                "noMatches": "هیچ برچسبی پیدا نشد",
+                "empty": "هنوز برچسبی ساخته نشده است."
             },
             "variations": {
                 "placeholderTitle": "تنوعات",
