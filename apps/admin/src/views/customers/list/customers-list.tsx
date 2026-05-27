@@ -20,6 +20,13 @@ import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { serializeDateFilter } from "#/components/ui/date-picker";
 import { formatNumber } from "#/lib/format";
 import {
+    dateFilterValueToTableViewFilter,
+    EMPTY_TABLE_VIEW_QUERY,
+    type TableViewFilter,
+    type TableViewQuery,
+    type TableViewSort,
+} from "#/lib/table-view";
+import {
     type CustomerTabKey,
     useBulkRowPasswordResetMutation,
     useBulkRowStatusMutation,
@@ -105,14 +112,49 @@ export function CustomersListClient() {
 
     const createdValue = tableState.dateFacetValues.created;
     const lastOrderValue = tableState.dateFacetValues.lastOrder;
-    const createdParam = useMemo(
-        () => (createdValue === null ? undefined : serializeDateFilter(createdValue).main),
-        [createdValue],
-    );
     const lastOrderParam = useMemo(
         () => (lastOrderValue === null ? undefined : serializeDateFilter(lastOrderValue).main),
         [lastOrderValue],
     );
+
+    /**
+     * Compose the unified TableView query from the toolbar's simple-column facets + sort. Tab,
+     * search (`q`), and `last_order` stay outside the TableView grammar (tab is a bespoke scope
+     * dimension, `q` is a multi-column ILIKE, `last_order` is an aggregate on the orders table).
+     */
+    const tableViewQuery = useMemo<TableViewQuery>(() => {
+        const filter: TableViewFilter[] = [];
+        const countries = tableState.facetValues.country ?? [];
+        if (countries.length > 0) {
+            filter.push({ field: "country_default", op: "in", value: countries.map((c) => c.toUpperCase()) });
+        }
+        const statuses = tableState.facetValues.status ?? [];
+        if (statuses.length > 0) {
+            filter.push({ field: "status", op: "in", value: statuses });
+        }
+        if (createdValue !== null) {
+            const dateFilter = dateFilterValueToTableViewFilter("created_at", createdValue);
+            if (dateFilter !== null) filter.push(dateFilter);
+        }
+        const sort: TableViewSort[] = [];
+        if (tableState.sort !== undefined) {
+            sort.push({ field: tableState.sort.id, dir: tableState.sort.direction });
+        }
+        return {
+            ...EMPTY_TABLE_VIEW_QUERY,
+            page: tableState.page,
+            limit: tableState.perPage,
+            filter,
+            sort,
+        };
+    }, [
+        tableState.facetValues.country,
+        tableState.facetValues.status,
+        tableState.page,
+        tableState.perPage,
+        tableState.sort,
+        createdValue,
+    ]);
 
     const {
         data: result,
@@ -120,18 +162,10 @@ export function CustomersListClient() {
         isError,
         refetch,
     } = useCustomersList({
-        page: tableState.page,
-        perPage: tableState.perPage,
-        search: tableState.q.length > 0 ? tableState.q : undefined,
-        sort:
-            tableState.sort !== undefined
-                ? ((tableState.sort.direction === "desc" ? `-${tableState.sort.id}` : tableState.sort.id) as `last_name`)
-                : undefined,
+        query: tableViewQuery,
+        q: tableState.q.length > 0 ? tableState.q : undefined,
         tab,
         includeStats: true,
-        countries: tableState.facetValues.country,
-        statuses: (tableState.facetValues.status ?? []) as ("active" | "suspended")[],
-        created: createdParam,
         lastOrder: lastOrderParam,
     });
 

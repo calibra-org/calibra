@@ -17,6 +17,7 @@ import {
     toAdminCustomerTimeline,
 } from "#/lib/adapters/customers";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
+import { serializeTableViewQuery, type TableViewQuery } from "#/lib/table-view";
 import type {
     AdminCustomer,
     AdminCustomerCounts,
@@ -25,33 +26,30 @@ import type {
     AdminCustomerNote,
     AdminCustomerSegment,
     AdminCustomerStatsDetail,
-    AdminCustomerStatus,
     AdminCustomerStatusHistory,
     AdminCustomerTagRow,
     AdminCustomerTimelineEntry,
     Paginated,
 } from "#/lib/types";
 
-type SortableColumn = "last_name" | "created_at" | "last_seen_at";
-
 export type CustomerTabKey = "any" | "account" | "guest" | "big" | "new" | "inactive" | "no_address" | "trashed";
 
+/**
+ * Inputs accepted by {@link useCustomersList}. `query` carries the unified TableView grammar
+ * (filter / filterOr / sort / page / limit). Every other field is an endpoint extension that
+ * doesn't fit the TableView surface: tab-strip scopes, free-text search across many columns,
+ * join-traversing facets (tags/cities), aggregate-based filters (with_orders, order_count_*,
+ * lifetime_spend_*, aov_*), and the `include_stats` response-shape flag.
+ */
 export interface CustomersListParams {
-    page?: number;
-    perPage?: number;
-    search?: string;
-    sort?: `${SortableColumn}` | `-${SortableColumn}`;
+    query?: TableViewQuery;
+    q?: string;
     tab?: CustomerTabKey;
     includeStats?: boolean;
-    countries?: string[];
     cities?: string[];
     tags?: string[];
-    statuses?: AdminCustomerStatus[];
-    acquisitionChannels?: string[];
     optInEmail?: boolean;
     optInSms?: boolean;
-    /** Unified date filter string (`<op>:<value>`); applied to `customers.created_at`. */
-    created?: string;
     /** Unified date filter string applied to the customer's most-recent counted order. */
     lastOrder?: string;
     hasNationalId?: boolean;
@@ -64,41 +62,68 @@ interface ListEnvelope {
     meta?: { page: number; perPage: number; total: number; lastPage: number };
 }
 
-function listQuery(params: CustomersListParams): Record<string, string | number | boolean | undefined> {
-    const csv = (arr?: string[]) => (arr && arr.length > 0 ? arr.join(",") : undefined);
-    return {
-        page: params.page ?? 1,
-        perPage: params.perPage ?? 20,
-        search: params.search,
-        sort: params.sort,
-        tab: params.tab,
-        include_stats: params.includeStats,
-        countries: csv(params.countries),
-        cities: csv(params.cities),
-        tags: csv(params.tags),
-        statuses: csv(params.statuses),
-        acquisition_channels: csv(params.acquisitionChannels),
-        opt_in_email: params.optInEmail,
-        opt_in_sms: params.optInSms,
-        created: params.created,
-        last_order: params.lastOrder,
-        has_national_id: params.hasNationalId,
-        with_orders: params.withOrders,
-        no_orders: params.noOrders,
-    };
+function buildQueryRecord(entries: Array<[string, string]>): Record<string, string | string[]> {
+    const out: Record<string, string | string[]> = {};
+    for (const [k, v] of entries) {
+        const existing = out[k];
+        if (existing === undefined) out[k] = v;
+        else if (Array.isArray(existing)) existing.push(v);
+        else out[k] = [existing, v];
+    }
+    return out;
 }
 
 export function useCustomersList(params: CustomersListParams = {}) {
     const locale = useLocale() as Locale;
-    const query = listQuery({ ...params, includeStats: params.includeStats ?? true });
+    const includeStats = params.includeStats ?? true;
+    const query: TableViewQuery =
+        params.query ?? { page: 1, limit: 20, filter: [], filterOr: [], sort: [] };
+    const serialised = serializeTableViewQuery(query);
+    const csv = (arr?: string[]) => (arr && arr.length > 0 ? arr.join(",") : undefined);
     return useQuery<ListEnvelope, Error, Paginated<AdminCustomer>>({
-        queryKey: ["admin", "customers", "list", { locale, ...query }],
-        queryFn: () => apiGet<ListEnvelope>("customers", { locale, query }),
+        queryKey: [
+            "admin",
+            "customers",
+            "list",
+            {
+                locale,
+                serialised,
+                q: params.q,
+                tab: params.tab,
+                includeStats,
+                cities: csv(params.cities),
+                tags: csv(params.tags),
+                optInEmail: params.optInEmail,
+                optInSms: params.optInSms,
+                lastOrder: params.lastOrder,
+                hasNationalId: params.hasNationalId,
+                withOrders: params.withOrders,
+                noOrders: params.noOrders,
+            },
+        ],
+        queryFn: () =>
+            apiGet<ListEnvelope>("customers", {
+                locale,
+                query: {
+                    ...buildQueryRecord(serialised),
+                    q: params.q,
+                    tab: params.tab,
+                    include_stats: includeStats,
+                    cities: csv(params.cities),
+                    tags: csv(params.tags),
+                    opt_in_email: params.optInEmail,
+                    opt_in_sms: params.optInSms,
+                    last_order: params.lastOrder,
+                    has_national_id: params.hasNationalId,
+                    with_orders: params.withOrders,
+                    no_orders: params.noOrders,
+                },
+            }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminCustomer),
             meta: payload.meta ?? {
-                page: Number(query.page),
-                perPage: Number(query.perPage),
+                page: query.page,
+                perPage: query.limit,
                 total: payload.data?.length ?? 0,
                 lastPage: 1,
             },

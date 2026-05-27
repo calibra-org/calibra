@@ -1,5 +1,7 @@
 import vine from "@vinejs/vine";
 
+import { adminCustomersView } from "#table_views/admin/customers";
+
 const passwordRule = vine
     .string()
     .minLength(8)
@@ -51,29 +53,30 @@ const csvArray = <T extends string>() =>
         return arr.map((v) => String(v).trim()).filter((v) => v.length > 0) as T[];
     });
 
+/**
+ * Wraps the unified {@link adminCustomersView}'s TableView schema with the customers list's
+ * endpoint-specific extras: free-text search across name/email/phone/national_id/city/postcode
+ * (`q`), the tab-strip scope dimension (`tab` — any / account / guest / big / new / inactive /
+ * no_address / trashed), tag/city/region multi-selects that traverse joins, marketing opt-in
+ * existence flags, has_national_id, and the aggregate-based filters (with_orders, order_count,
+ * lifetime_spend, aov) that need having-clause semantics the TableView v1 runtime can't model.
+ *
+ * Simple per-column filters (is_paying_customer, status, country_default, acquisition_channel,
+ * created_at, user_id) and sort go through the unified `filter[]` / `sort[]` grammar.
+ */
 export const adminCustomerListValidator = vine.compile(
     vine.object({
-        page: vine.number().positive().optional(),
-        perPage: vine.number().positive().max(100).optional(),
-        search: vine.string().trim().minLength(1).maxLength(120).optional(),
-        sort: vine.string().trim().maxLength(64).optional(),
+        ...adminCustomersView.schema.getProperties(),
+        q: vine.string().trim().minLength(1).maxLength(120).optional(),
         role: vine.enum(["customer", "admin"]).optional(),
-        is_paying_customer: vine.boolean().optional(),
-        country: vine.string().trim().fixedLength(2).optional(),
         include_stats: vine.boolean().optional(),
         tab: vine.enum(["any", "account", "guest", "big", "new", "inactive", "no_address", "trashed"]).optional(),
-        countries: csvArray<string>().optional(),
         cities: csvArray<string>().optional(),
         regions: csvArray<string>().optional(),
         tags: csvArray<string>().optional(),
-        statuses: csvArray<string>().optional(),
-        acquisition_channels: csvArray<string>().optional(),
         email_verified: vine.boolean().optional(),
         opt_in_email: vine.boolean().optional(),
         opt_in_sms: vine.boolean().optional(),
-        /** Unified date filter, parsed by `parseDateFilter` — replaces the prior pair shape. */
-        created: vine.string().trim().maxLength(60).optional(),
-        last_order: vine.string().trim().maxLength(60).optional(),
         order_count_min: vine.number().min(0).optional(),
         order_count_max: vine.number().min(0).optional(),
         lifetime_spend_min: vine.number().min(0).optional(),
@@ -83,6 +86,7 @@ export const adminCustomerListValidator = vine.compile(
         has_national_id: vine.boolean().optional(),
         with_orders: vine.boolean().optional(),
         no_orders: vine.boolean().optional(),
+        last_order: vine.string().trim().maxLength(60).optional(),
     }),
 );
 

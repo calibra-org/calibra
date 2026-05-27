@@ -1129,7 +1129,32 @@ export interface paths {
         };
         /**
          * List customers (admin)
-         * @description Paginated list of every customer. Free-text search runs over `users.email`, `customers.first_name`, `customers.last_name`, `customers.phone`, address `city`/`postcode`, and Iran `national_id`. Twenty-plus filter dimensions (tab, country list, city, tags, status, acquisition channel, marketing opt-ins, date ranges, order count/spend/AOV ranges). Pass `include_stats=1` to fold lifetime metrics into each row via a single GROUP BY query (no N+1).
+         * @description Paginated list of customers. Simple per-column filters and sort go through the unified TableView wire grammar (`filter[]=field:op:value`, `filterOr[]=…`, `sort[]=field:dir`). Endpoint-specific extensions stay as top-level params for filters that don't fit the grammar.
+         *
+         *     **TableView filterable fields**:
+         *         `id`, `first_name`, `last_name`, `is_paying_customer`, `country_default`, `status`,
+         *         `acquisition_channel`, `created_at`, `user_id`.
+         *
+         *
+         *     **TableView orderable fields**: `id`, `first_name`, `last_name`, `created_at`, `updated_at`.
+         *
+         *     **Endpoint extensions** (outside TableView):
+         *         - `q` — free-text search over `users.email`, `customers.first_name`, `last_name`,
+         *           `phone`, address `city`/`postcode`, and Iran `national_id`.
+         *         - `tab` — bespoke scope (any / account / guest / big / new / inactive / no_address /
+         *           trashed). The `big` bucket uses a 90th-percentile spend threshold over paid orders.
+         *         - `role` — restrict via the joined `users.role` (`customer` / `admin`).
+         *         - `tags`, `cities`, `regions` — multi-value joins through the respective pivot/related
+         *           tables.
+         *         - `opt_in_email`, `opt_in_sms`, `email_verified`, `has_national_id` — existence checks on
+         *           marketing prefs / iran profile.
+         *         - `with_orders`, `no_orders`, `order_count_{min,max}`, `lifetime_spend_{min,max}`,
+         *           `aov_{min,max}`, `last_order` — aggregate filters scoped through the orders table.
+         *         - `include_stats=true` folds per-customer lifetime metrics into each row via one
+         *           GROUP BY query.
+         *
+         *
+         *     All pre-TableView per-column query params (`is_paying_customer=`, `country=`, `countries=`, `statuses=`, `acquisition_channels=`, `created=`, `sort=`, `perPage=`, `search=`) are no longer accepted at their original shape — `is_paying_customer` / `country` / `statuses` / `acquisition_channels` / `created` move to `filter[]`, `sort` moves to `sort[]`, `perPage` becomes `limit`, and `search` becomes `q`.
          */
         get: operations["adminCustomersIndex"];
         put?: never;
@@ -6452,35 +6477,32 @@ export interface operations {
     adminCustomersIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                search?: string;
-                /** @description One of `last_name`, `created_at`, `last_seen_at`; prefix with `-` for descending. */
-                sort?: string;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Free-text search across the customer's joined identity columns. */
+                q?: string;
                 include_stats?: boolean;
                 /** @description Selects the tab bucket. Counterpart of the `/counts` endpoint. */
                 tab?: "any" | "account" | "guest" | "big" | "new" | "inactive" | "no_address" | "trashed";
-                is_paying_customer?: boolean;
-                /** @description ISO-3166-1 alpha-2 country code. */
-                country?: string;
-                /** @description Comma-separated ISO-3166-1 alpha-2 list. */
-                countries?: string;
+                /** @description Restrict via the joined `users.role`. Defaults to `customer` + null user. */
+                role?: "customer" | "admin";
                 /** @description Comma-separated city names (case-insensitive). */
                 cities?: string;
                 regions?: string;
                 /** @description Comma-separated tag names. */
                 tags?: string;
-                /** @description Comma-separated subset of [active, suspended, deleted]. */
-                statuses?: string;
-                acquisition_channels?: string;
                 email_verified?: boolean;
                 opt_in_email?: boolean;
                 opt_in_sms?: boolean;
-                /** @description Unified date filter — `<op>:<value>` where op ∈ `in|before|after|within`; value ∈ `YYYY-MM-DD`, `YYYY-MM`, `YYYY-Q1..Q4`, `YYYY-H1|H2`, `YYYY`. Use `within:YYYY-MM-DD..YYYY-MM-DD` for closed ranges. Year < 1700 parses as Jalali and converts to Gregorian server-side. */
-                created?: string;
-                /** @description Same shape as `created`, filters by the customer's last counted order date. */
+                /** @description Same shape as the previous `created` filter — filters by the customer's last counted order date. */
                 last_order?: string;
                 order_count_min?: number;
                 order_count_max?: number;
@@ -6510,7 +6532,6 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["AdminCustomer"][];
                         meta: components["schemas"]["PaginationMeta"];
-                        sort?: string;
                     };
                 };
             };
