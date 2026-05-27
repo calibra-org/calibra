@@ -26,5 +26,8 @@ export const adminPaymentGatewayUpdateValidator = vine.compile(
     }),
 );
 
-/** All filters move to the TableView `filter[]` grammar via {@link adminPaymentAttemptsView}. */
-export const adminPaymentAttemptListValidator = vine.compile(adminPaymentAttemptsView.schema);
+/**
+ * All filters move to the TableView `filter[]` grammar via {@link adminPaymentAttemptsView}.
+ * Strict mode: any non-TableView query key returns 422.
+ */
+export const adminPaymentAttemptListValidator = adminPaymentAttemptsView.compileStrict();

@@ -1,5 +1,4 @@
 import type { HttpContext } from "@adonisjs/core/http";
-import vine from "@vinejs/vine";
 
 import ProductReview from "#models/product_review";
 import { adminReviewsView } from "#table_views/admin/reviews";
@@ -7,7 +6,8 @@ import { resource } from "#transformers/api_envelope";
 import ProductReviewTransformer from "#transformers/product_review_transformer";
 import { moderateReviewValidator } from "#validators/catalog/review_validator";
 
-const adminReviewsListValidator = vine.compile(adminReviewsView.schema);
+/** Strict mode: any non-TableView query key returns 422. */
+const adminReviewsListValidator = adminReviewsView.compileStrict();
 
 export default class AdminReviewsController {
     async index(ctx: HttpContext) {

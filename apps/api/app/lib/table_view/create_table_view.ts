@@ -11,6 +11,13 @@ import { STRICT_KEYS_RULE_NAME, filterRule, sortRule } from "./validators.js";
 const TABLE_VIEW_BASE_KEYS = ["page", "limit", "filter", "filterOr", "sort"] as const;
 
 /**
+ * Keys AdonisJS's `request.validateUsing()` injects into the data object alongside the raw
+ * query / body fields. The strict-keys check skips these because none of them is a wire param
+ * the operator could have sent — they're framework metadata the request handler bundles in.
+ */
+const ADONIS_INJECTED_KEYS = new Set<string>(["params", "headers", "cookies"]);
+
+/**
  * Build a typed {@link TableView} from a config. The returned object exposes:
  *
  * - `schema` — a Vine schema you pass to `vine.compile(view.schema)` for the soft-validation
@@ -141,6 +148,10 @@ function wrapStrict(inner: any, allowedKeys: Set<string>, defaultLimit: number):
         if (data !== null && data !== undefined && typeof data === "object" && !Array.isArray(data)) {
             const violations: Array<{ message: string; rule: string; field: string }> = [];
             for (const key of Object.keys(data as Record<string, unknown>)) {
+                /** Skip the framework-injected siblings AdonisJS's `request.validateUsing()`
+                 * bundles into the data object alongside the qs/body it gathered. None of these
+                 * names is a legitimate wire-level query key. */
+                if (ADONIS_INJECTED_KEYS.has(key)) continue;
                 if (!allowedKeys.has(key)) {
                     violations.push({
                         message: `Unknown query parameter "${key}" — see /docs for the allowed list`,
@@ -149,9 +160,7 @@ function wrapStrict(inner: any, allowedKeys: Set<string>, defaultLimit: number):
                     });
                 }
             }
-            if (violations.length > 0) {
-                throw new vineErrors.E_VALIDATION_ERROR(violations);
-            }
+            if (violations.length > 0) throw new vineErrors.E_VALIDATION_ERROR(violations);
         }
         const result = await inner.validate(data, ...rest);
         /** Vine's `.optional().transform(fn)` skips the transform when the field is absent, so

@@ -8,10 +8,11 @@ import Product from "#models/product";
  * relational (category/brand/tag pivots), aggregate (stock_level having clauses), or compound
  * (free-text search across translations+sku, facet_counts response shape, on-sale window
  * derived from sale_starts_at/sale_ends_at, has_image existence check) stays as top-level
- * `request.input()` reads on the controller.
+ * controller-side predicates.
  *
- * The `name` sort is custom (`ORDER BY (SELECT MIN(name) FROM product_translations)`) and
- * can't be expressed as a column sort here — it stays a controller-level orderByRaw.
+ * The `name` and `stock_quantity` sort cases target joined tables (translations + the
+ * inventory_items aggregate). They opt into the primitive's `sortRaw` hook so the ORDER BY
+ * fragment can target a subquery without forcing the view to model a relation.
  */
 export const adminProductsView = createTableView({
     model: Product,
@@ -31,6 +32,20 @@ export const adminProductsView = createTableView({
         menu_order: { type: "number", filterable: true, orderable: true },
         created_at: { type: "datetime", filterable: true, orderable: true },
         updated_at: { type: "datetime", filterable: false, orderable: true },
+        name: {
+            type: "string",
+            filterable: false,
+            orderable: true,
+            sortRaw: (dir) =>
+                `(SELECT MIN(name) FROM product_translations WHERE product_translations.product_id = products.id) ${dir}`,
+        },
+        stock_quantity: {
+            type: "number",
+            filterable: false,
+            orderable: true,
+            sortRaw: (dir) =>
+                `(SELECT COALESCE(SUM(stock_quantity), 0) FROM inventory_items WHERE inventory_items.product_id = products.id) ${dir}`,
+        },
     },
     defaultSort: [["id", "desc"]],
 });

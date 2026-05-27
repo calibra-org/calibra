@@ -1,6 +1,5 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import vine from "@vinejs/vine";
 
 import { viewOrder } from "#abilities/main";
 import { OrderStatus } from "#enums/order_status";
@@ -8,7 +7,8 @@ import Order from "#models/order";
 import { accountOrdersView } from "#table_views/account/orders";
 import OrderTransformer from "#transformers/order_transformer";
 
-const accountOrdersListValidator = vine.compile(accountOrdersView.schema);
+/** Strict mode: any non-TableView query key returns 422. */
+const accountOrdersListValidator = accountOrdersView.compileStrict();
 
 /**
  * `GET /api/v1/account/orders`. The list endpoint filters at the SQL layer (Bouncer would

@@ -27,5 +27,8 @@ export const adminRefundCreateValidator = vine.compile(
     }),
 );
 
-/** Sub-resource list — TableView grammar via {@link adminRefundsView}. */
-export const adminRefundListValidator = vine.compile(adminRefundsView.schema);
+/**
+ * Sub-resource list — TableView grammar via {@link adminRefundsView}. Strict mode: any
+ * non-TableView query key returns 422.
+ */
+export const adminRefundListValidator = adminRefundsView.compileStrict();

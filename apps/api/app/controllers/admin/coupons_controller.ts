@@ -28,8 +28,24 @@ type UpdatePayload = Awaited<ReturnType<typeof updateCouponValidator.validate>>;
 const PAGE_SIZE_DEFAULT = 25;
 const PAGE_SIZE_MAX = 100;
 
-/** TableView portion of the coupons list query — per-column filters + sort + pagination. */
-const adminCouponsListTableViewValidator = vine.compile(adminCouponsView.schema);
+/**
+ * Coupons list query — TableView grammar plus the endpoint's bespoke extras. The `q` free-text
+ * search spans the coupon code + translated description. `tab` is the tab-strip scope
+ * (any/active/disabled/expired/scheduled/used/trashed). `expiring_soon` / `has_*_constraints` /
+ * `brand` are existence-check predicates the runtime can't model on its own. Strict mode: any
+ * other top-level query key returns 422.
+ */
+const adminCouponsListTableViewValidator = adminCouponsView.compileStrict({
+    extras: {
+        q: vine.string().trim().maxLength(120).optional(),
+        tab: vine.enum(["any", "active", "disabled", "expired", "scheduled", "used", "trashed"] as const).optional(),
+        expiring_soon: vine.boolean().optional(),
+        has_product_constraints: vine.boolean().optional(),
+        has_category_constraints: vine.boolean().optional(),
+        has_email_restrictions: vine.boolean().optional(),
+        brand: vine.string().trim().maxLength(255).optional(),
+    },
+});
 
 /**
  * Admin CRUD over `coupons`. Soft-delete blocks future redemptions but preserves history (the

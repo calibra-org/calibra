@@ -11,12 +11,12 @@ import { adminCustomerTagAttachValidator, adminCustomerTagCreateValidator } from
 
 const TAG_NAME_RE = /^[a-z0-9._-]{1,40}$/;
 
-const adminCustomerTagsListValidator = vine.compile(
-    vine.object({
-        ...adminCustomerTagsView.schema.getProperties(),
+/** Strict mode: any non-TableView query key beyond `q` returns 422. */
+const adminCustomerTagsListValidator = adminCustomerTagsView.compileStrict({
+    extras: {
         q: vine.string().trim().minLength(1).maxLength(40).optional(),
-    }),
-);
+    },
+});
 
 /**
  * Tag names are normalized to lowercase + a strict character set before they hit the DB so

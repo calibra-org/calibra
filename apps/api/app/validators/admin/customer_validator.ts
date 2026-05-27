@@ -38,11 +38,6 @@ export const adminCustomerCreateValidator = vine.compile(createShape);
 export const adminCustomerUpdateValidator = vine.compile(updateShape);
 
 /**
- * Extended list validator. `page`/`perPage`/`search` keep the original shape; everything else is
- * brand new for the WP/Shopify-grade filtering surface. Arrays use the comma-separated wire form
- * by way of `csvArray` so URL serialization stays compact.
- */
-/**
  * Parses a comma-separated query value into a clean string array. URLs like
  * `?tags=vip,wholesale,b2b` deserialize to the array form the controller expects.
  */
@@ -63,10 +58,12 @@ const csvArray = <T extends string>() =>
  *
  * Simple per-column filters (is_paying_customer, status, country_default, acquisition_channel,
  * created_at, user_id) and sort go through the unified `filter[]` / `sort[]` grammar.
+ *
+ * Strict mode: any top-level query key not in the union of {TableView wire keys} ∪ {extras
+ * below} returns 422 — legacy per-column query params don't silently drop.
  */
-export const adminCustomerListValidator = vine.compile(
-    vine.object({
-        ...adminCustomersView.schema.getProperties(),
+export const adminCustomerListValidator = adminCustomersView.compileStrict({
+    extras: {
         q: vine.string().trim().minLength(1).maxLength(120).optional(),
         role: vine.enum(["customer", "admin"]).optional(),
         include_stats: vine.boolean().optional(),
@@ -87,8 +84,8 @@ export const adminCustomerListValidator = vine.compile(
         with_orders: vine.boolean().optional(),
         no_orders: vine.boolean().optional(),
         last_order: vine.string().trim().maxLength(60).optional(),
-    }),
-);
+    },
+});
 
 export const adminCustomerBatchValidator = vine.compile(
     vine.object({

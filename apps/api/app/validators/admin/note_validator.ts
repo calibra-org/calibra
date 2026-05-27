@@ -11,12 +11,12 @@ export const adminNoteCreateValidator = vine.compile(
 );
 
 /**
- * Wraps the TableView schema with the legacy `type` keyword (`any`/`customer`/`internal`).
- * `type` is the UI tab name; the controller flips it into a `visibility:eq:...` predicate.
+ * Wraps the TableView schema with the `type` keyword (`any`/`customer`/`internal`). `type` is
+ * the UI tab name; the controller flips it into a `visibility:eq:...` predicate. Strict mode:
+ * any other top-level query key returns 422.
  */
-export const adminNoteListValidator = vine.compile(
-    vine.object({
-        ...adminOrderNotesView.schema.getProperties(),
+export const adminNoteListValidator = adminOrderNotesView.compileStrict({
+    extras: {
         type: vine.enum(["any", "customer", "internal"] as const).optional(),
-    }),
-);
+    },
+});

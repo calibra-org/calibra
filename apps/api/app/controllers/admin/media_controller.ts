@@ -10,7 +10,23 @@ import { collection, resource } from "#transformers/api_envelope";
 import MediaTransformer from "#transformers/media_transformer";
 import { updateMediaValidator } from "#validators/admin/media_validator";
 
-const adminMediaListValidator = vine.compile(adminMediaView.schema);
+/** Strict mode: declares the bespoke top-level extras that don't fit per-column filtering
+ * (`q` is multi-column ILIKE; `type` is a MIME-group keyword; `month` is a YYYY-MM window;
+ * `uploaded_by` is a controller-side scope). Default page size is 60 (the media grid's natural
+ * row count — ~5 rows of 12 cards). */
+const adminMediaListValidator = adminMediaView.compileStrict({
+    extras: {
+        q: vine.string().trim().maxLength(120).optional(),
+        type: vine.string().trim().maxLength(40).optional(),
+        month: vine
+            .string()
+            .trim()
+            .regex(/^\d{4}-\d{2}$/)
+            .optional(),
+        uploaded_by: vine.number().positive().optional(),
+    },
+    defaultLimit: 60,
+});
 
 /** Maps the WordPress-style filter token to a Postgres-friendly MIME prefix check. */
 const MIME_GROUPS = {
@@ -63,11 +79,7 @@ export default class AdminMediaController {
     /** `GET /api/v1/admin/media` — paginated listing with filters. */
     async index(ctx: HttpContext) {
         const { request, auth } = ctx;
-        /** Default `limit` is 60 (the media grid's natural row count — ~5 rows of 12 cards).
-         * The wire default of 20 would feel sparse. */
-        const qs = request.qs();
-        if (qs.limit === undefined) qs.limit = "60";
-        const parsed = await adminMediaListValidator.validate(qs);
+        const parsed = await adminMediaListValidator.validate(request.qs());
 
         const query = Media.query();
 

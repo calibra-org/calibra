@@ -29,16 +29,15 @@ const lineShape = vine.object({
  * `q` search box (a multi-column ILIKE the runtime can't model per-field) and the soft-delete
  * scope toggle (`trashed=true` flips the controller from `whereNull(deleted_at)` to
  * `whereNotNull(deleted_at)`). Everything else — status, customer_id, source, payment, country,
- * created date filter — moves to the TableView `filter[]` grammar. Old per-list query params
- * return 422.
+ * created date filter — moves to the TableView `filter[]` grammar. Strict mode: any other
+ * top-level query key returns 422.
  */
-export const adminOrderListValidator = vine.compile(
-    vine.object({
-        ...adminOrdersView.schema.getProperties(),
+export const adminOrderListValidator = adminOrdersView.compileStrict({
+    extras: {
         q: vine.string().trim().minLength(1).maxLength(120).optional(),
         trashed: vine.boolean().optional(),
-    }),
-);
+    },
+});
 
 export const adminOrderMarkShippedValidator = vine.compile(
     vine.object({

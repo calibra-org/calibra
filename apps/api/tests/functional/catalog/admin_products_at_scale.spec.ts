@@ -30,7 +30,7 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
     });
 
     test("baseline list returns the full seeded catalog", async ({ client, assert }) => {
-        const response = await client.get("/api/v1/admin/products?per_page=1");
+        const response = await client.get("/api/v1/admin/products?limit=1");
         response.assertStatus(200);
         assert.equal(response.body().meta.total, 1_000);
     });
@@ -38,7 +38,7 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
     test("category filter narrows the list to a single leaf category", async ({ client, assert }) => {
         const smartphoneId = await leafCategoryId("bk-smartphones");
         const linkCount = await countLinks("product_category_links", "category_id", smartphoneId);
-        const response = await client.get(`/api/v1/admin/products?per_page=1&category=${smartphoneId}`);
+        const response = await client.get(`/api/v1/admin/products?limit=1&category=${smartphoneId}`);
         response.assertStatus(200);
         assert.equal(
             response.body().meta.total,
@@ -52,7 +52,7 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
     test("tag filter narrows the list to products linked to that tag", async ({ client, assert }) => {
         const tagId = await firstBulkTagId();
         const linkCount = await countLinks("product_tag_links", "tag_id", tagId);
-        const response = await client.get(`/api/v1/admin/products?per_page=1&tag=${tagId}`);
+        const response = await client.get(`/api/v1/admin/products?limit=1&tag=${tagId}`);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, linkCount);
         assert.isBelow(response.body().meta.total, 1_000);
@@ -61,7 +61,7 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
     test("brand filter narrows the list to products linked to that brand", async ({ client, assert }) => {
         const brandId = await firstSeededBrandId();
         const linkCount = await countLinks("product_brand_links", "brand_id", brandId);
-        const response = await client.get(`/api/v1/admin/products?per_page=1&brand=${brandId}`);
+        const response = await client.get(`/api/v1/admin/products?limit=1&brand=${brandId}`);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, linkCount);
     });

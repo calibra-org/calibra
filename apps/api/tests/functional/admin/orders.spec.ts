@@ -334,21 +334,14 @@ test.group("GET /api/v1/admin/orders (TableView grammar)", (group) => {
         assert.includeMembers(ids, [Number(small.id), Number(big.id)]);
     });
 
-    test("ignores legacy per-list query params silently (no filter applied)", async ({ client, assert }) => {
-        /** Vine objects silently drop unknown keys; we don't add a strict-mode validator because
-         * the migrated admin UI never sends legacy keys post-cutover. Stale deep links degrade
-         * to an unfiltered list rather than a 500 / 422 — annoying but not data-corrupting. */
+    test("rejects legacy per-list query params with 422 (strict mode)", async ({ client }) => {
+        /** `view.compileStrict({ extras })` enforces the contract: any top-level query key that
+         * is not a TableView wire key (`page` / `limit` / `filter` / `filterOr` / `sort`) nor a
+         * declared endpoint extra (`q` / `trashed` for this endpoint) returns 422. Stale deep
+         * links and old admin UIs surface explicitly instead of silently degrading. */
         const admin = await adminUser();
-        const product = await createTaxableProduct({ regularPrice: 500_000 });
-        await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
-        await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
-
         const res = await client.get("/api/v1/admin/orders").qs({ status: "pending", source: "checkout" }).loginAs(admin);
-        res.assertStatus(200);
-        res.assertAgainstApiSpec();
-        const ids = (res.body().data as Array<{ id: number; status: string }>).map((row) => row.id);
-        /** Both drafts come back — `status` was silently dropped, no filter narrowed the set. */
-        assert.isAtLeast(ids.length, 2);
+        res.assertStatus(422);
     });
 
     test("rejects an unknown TableView field with 422", async ({ client }) => {

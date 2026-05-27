@@ -35,10 +35,30 @@ import {
  * `filter[]` / `filterOr[]`) plus a handful of endpoint-specific extras (`q` for multi-column
  * free-text search, `category`/`brand`/`tag` for pivot filters the runtime doesn't auto-traverse,
  * `with_trashed`/`only_trashed` for soft-delete scope, `include=facet_counts` for the toolbar's
- * facet badges). The `name` and `stock_quantity` orderable columns use the view's `sortRaw`
- * option to express ORDER BY over joined `product_translations` / `inventory_items` subqueries.
+ * facet badges). Strict mode: any other top-level query key returns 422.
  */
-const adminProductsListTableViewValidator = vine.compile(adminProductsView.schema);
+const adminProductsListTableViewValidator = adminProductsView.compileStrict({
+    extras: {
+        q: vine.string().trim().maxLength(120).optional(),
+        category: vine.number().positive().optional(),
+        tag: vine.number().positive().optional(),
+        brand: vine.number().positive().optional(),
+        type: vine.string().trim().maxLength(40).optional(),
+        status: vine.string().trim().maxLength(40).optional(),
+        stock_status: vine.string().trim().maxLength(40).optional(),
+        stock_level: vine.string().trim().maxLength(40).optional(),
+        catalog_visibility: vine.enum(["visible", "catalog", "search", "hidden"] as const).optional(),
+        featured: vine.boolean().optional(),
+        on_sale: vine.boolean().optional(),
+        has_image: vine.boolean().optional(),
+        with_trashed: vine.boolean().optional(),
+        only_trashed: vine.boolean().optional(),
+        created_from: vine.string().trim().maxLength(40).optional(),
+        created_to: vine.string().trim().maxLength(40).optional(),
+        ids: vine.string().trim().maxLength(2000).optional(),
+        include: vine.string().trim().maxLength(120).optional(),
+    },
+});
 
 const PRODUCT_TRANSLATION_FIELDS = [
     "name",
@@ -48,8 +68,6 @@ const PRODUCT_TRANSLATION_FIELDS = [
     "purchase_note",
     "external_button_text",
 ] as const;
-
-const SORTABLE_COLUMNS = new Set(["name", "sku", "regular_price", "created_at", "updated_at", "menu_order", "stock_quantity"]);
 
 const FACET_COUNT_KEYS = ["type", "stock_status", "category", "brand", "tag", "catalog_visibility"] as const;
 
@@ -61,18 +79,21 @@ export default class AdminProductsController {
      * `GET /api/v1/admin/products` — paginated admin list.
      *
      * Filter params (all optional, all server-side AND-composed):
-     * - `status`, `type`, `category`, `tag`, `brand`, `stock_status` — discrete facets
+     * - `status`, `type`, `catalog_visibility` — discrete facet keywords
+     * - `category`, `tag`, `brand` — pivot-table whereIn filters (controller-side)
      * - `with_trashed=1` / `only_trashed=1` — soft-delete inclusion
      * - `on_sale=1` — schedule-aware on-sale predicate
-     * - `catalog_visibility` — visible|catalog|search|hidden
      * - `has_image=1` — at least one row in product_images
      * - `created_from`, `created_to` — ISO date-only inclusive bounds
+     * - `stock_status` — single keyword whereIn against inventory_items
      * - `stock_level=instock|low|outofstock` — aggregate over inventory_items
      * - `featured=1` — featured-only
-     * - `search=<q>` — ILIKE on product_translations.name OR products.sku
+     * - `q=<needle>` — ILIKE on product_translations.name OR products.sku
      * - `ids=<csv>` — id whitelist (used by "export selected" + facet count callers)
-     * - `sort=<field>` / `sort=-<field>` — whitelist: name|sku|regular_price|created_at|updated_at|menu_order|stock_quantity
      * - `include=facet_counts` — adds a `facets` block to the response envelope
+     *
+     * Sort is the TableView `sort[]=field:dir` grammar; `name` and `stock_quantity` use the
+     * view's `sortRaw` hook to target joined-subquery ORDER BYs.
      */
     async index(ctx: HttpContext) {
         const { request } = ctx;
@@ -87,10 +108,6 @@ export default class AdminProductsController {
             .preload("images", (q) => q.preload("media"))
             .preload("inventoryItems");
         this.applyListFilters(query, request);
-        /** Legacy `?sort=-created_at` form continues to drive sort for products (special-cases
-         * `name` and `stock_quantity` need orderByRaw against joined tables); the new
-         * `?sort[]=…` form layers on top through view.run when present. */
-        this.applyListSort(query, request);
 
         const { data: rows, meta } = await adminProductsView.run<Product>(query, parsed);
         const transformerOptions = await this.transformerOptions();
@@ -226,27 +243,6 @@ export default class AdminProductsController {
                     .orWhereILike("sku", needle);
             });
         }
-    }
-
-    private applyListSort(query: ReturnType<typeof Product.query>, request: HttpContext["request"]) {
-        const raw = String(request.input("sort", "")).trim();
-        if (raw.length === 0) return;
-        const direction = raw.startsWith("-") ? "desc" : "asc";
-        const column = raw.replace(/^-/, "");
-        if (!SORTABLE_COLUMNS.has(column)) return;
-        if (column === "name") {
-            query.orderByRaw(
-                `(SELECT MIN(name) FROM product_translations WHERE product_translations.product_id = products.id) ${direction}`,
-            );
-            return;
-        }
-        if (column === "stock_quantity") {
-            query.orderByRaw(
-                `(SELECT COALESCE(SUM(stock_quantity), 0) FROM inventory_items WHERE inventory_items.product_id = products.id) ${direction}`,
-            );
-            return;
-        }
-        query.orderBy(column, direction);
     }
 
     private async computeFacetCounts(request: HttpContext["request"]): Promise<Record<string, Record<string, number>>> {
