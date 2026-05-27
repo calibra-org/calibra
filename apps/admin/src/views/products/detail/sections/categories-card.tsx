@@ -1,11 +1,12 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { Loader2, Search } from "lucide-react";
+import { ChevronsDownUp, ChevronsUpDown, Loader2, Search } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { useFormContext } from "react-hook-form";
 
+import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { useCreateCategoryInline } from "#/lib/products/mutations";
 import { useCategoriesTree, useMostUsedCategories } from "#/lib/products/queries";
@@ -86,6 +87,18 @@ export function CategoriesBody() {
         });
     };
 
+    const expandAll = () => {
+        setExpanded(() => {
+            const next = new Set<number>();
+            for (const row of rows) next.add(row.id);
+            return next;
+        });
+    };
+
+    const collapseAll = () => {
+        setExpanded(new Set());
+    };
+
     const visibleRows = useMemo<CategoryTreeRow[]>(() => {
         const trimmed = query.trim().toLowerCase();
         if (tab === "mostUsed") {
@@ -136,17 +149,41 @@ export function CategoriesBody() {
             <TabStrip value={tab} onChange={setTab} labels={{ all: t("tabs.all"), mostUsed: t("tabs.mostUsed") }} />
 
             {tab === "all" ? (
-                <div className="relative">
-                    <Search
-                        className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
-                        aria-hidden="true"
-                    />
-                    <Input
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value)}
-                        placeholder={t("searchPlaceholder")}
-                        className="h-8 ps-7"
-                    />
+                <div className="flex items-center gap-1">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={expandAll}
+                        aria-label={t("expandAll")}
+                        title={t("expandAll")}
+                        className="h-8 shrink-0 px-2 text-muted-foreground hover:text-foreground"
+                    >
+                        <ChevronsUpDown className="size-3.5" aria-hidden="true" />
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={collapseAll}
+                        aria-label={t("collapseAll")}
+                        title={t("collapseAll")}
+                        className="h-8 shrink-0 px-2 text-muted-foreground hover:text-foreground"
+                    >
+                        <ChevronsDownUp className="size-3.5" aria-hidden="true" />
+                    </Button>
+                    <div className="relative min-w-0 flex-1">
+                        <Search
+                            className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+                            aria-hidden="true"
+                        />
+                        <Input
+                            value={query}
+                            onChange={(event) => setQuery(event.target.value)}
+                            placeholder={t("searchPlaceholder")}
+                            className="h-8 ps-7"
+                        />
+                    </div>
                 </div>
             ) : null}
 

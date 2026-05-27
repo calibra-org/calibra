@@ -1129,6 +1129,8 @@
                 "tabs": { "all": "همه دسته‌ها", "mostUsed": "پر استفاده‌ها" },
                 "searchPlaceholder": "جستجو در دسته‌ها",
                 "treeLabel": "دسته‌بندی‌های محصول",
+                "expandAll": "گسترش همه",
+                "collapseAll": "جمع کردن همه",
                 "addNew": "افزودن دسته جدید",
                 "addNewPlaceholder": "نام دسته",
                 "addNewParent": "زیرمجموعهٔ",

@@ -1129,6 +1129,8 @@
                 "tabs": { "all": "All categories", "mostUsed": "Most used" },
                 "searchPlaceholder": "Search categories",
                 "treeLabel": "Product categories",
+                "expandAll": "Expand all",
+                "collapseAll": "Collapse all",
                 "addNew": "Add new category",
                 "addNewPlaceholder": "Category name",
                 "addNewParent": "Under",
