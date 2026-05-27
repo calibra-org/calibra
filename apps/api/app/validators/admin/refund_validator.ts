@@ -1,5 +1,7 @@
 import vine from "@vinejs/vine";
 
+import { adminRefundsView } from "#table_views/admin/refunds";
+
 /**
  * Wire-shape validator for `POST /admin/orders/:order_id/refunds`. The body MUST contain either
  * `amount` (free refund) XOR `line_items[]` (per-line refund) — never both, never neither. The
@@ -25,9 +27,5 @@ export const adminRefundCreateValidator = vine.compile(
     }),
 );
 
-export const adminRefundListValidator = vine.compile(
-    vine.object({
-        page: vine.number().positive().optional(),
-        perPage: vine.number().positive().max(100).optional(),
-    }),
-);
+/** Sub-resource list — TableView grammar via {@link adminRefundsView}. */
+export const adminRefundListValidator = vine.compile(adminRefundsView.schema);

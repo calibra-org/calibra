@@ -779,7 +779,7 @@ function buildSalesSeries(orders: AdminOrder[]): { date: string; revenue: MoneyM
 
 export async function getSalesReport(): Promise<SalesReport> {
     const api = await apiServer();
-    const { data } = await api.admin.GET("/api/v1/admin/orders", { params: { query: { perPage: 100 } } });
+    const { data } = await api.admin.GET("/api/v1/admin/orders", { params: { query: { limit: 100 } } });
     const orders = ((data?.data ?? []) as SdkAdminOrderListRow[]).map(toAdminOrderListRow);
     const totalRevenue = orders.reduce((s, o) => s + Number(o.grandTotal), 0) as MoneyMinor;
     const orderCount = orders.length;

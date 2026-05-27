@@ -4,10 +4,9 @@ import logger from "@adonisjs/core/services/logger";
 
 import Order from "#models/order";
 import OrderNote from "#models/order_note";
+import { adminOrderNotesView, type AdminOrderNotesViewQuery } from "#table_views/admin/order_notes";
 import OrderNoteTransformer from "#transformers/order_note_transformer";
 import { adminNoteCreateValidator, adminNoteListValidator } from "#validators/admin/note_validator";
-
-const DEFAULT_PER_PAGE = 25;
 
 /**
  * Admin notes surface. List + create + delete; the customer-side endpoint lives in
@@ -18,24 +17,18 @@ const DEFAULT_PER_PAGE = 25;
 export default class AdminOrderNotesController {
     async index(ctx: HttpContext) {
         const order = await this.findOrderOrFail(ctx.params.order_id);
-        const payload = await ctx.request.validateUsing(adminNoteListValidator);
+        const payload = (await ctx.request.validateUsing(adminNoteListValidator)) as AdminOrderNotesViewQuery & {
+            type?: "any" | "customer" | "internal";
+        };
         const type = payload.type ?? "any";
-        const page = payload.page ?? 1;
-        const perPage = payload.perPage ?? DEFAULT_PER_PAGE;
 
-        const query = OrderNote.query().where("order_id", Number(order.id));
-        if (type !== "any") query.where("visibility", type);
+        const builder = OrderNote.query().where("order_id", Number(order.id));
+        if (type !== "any") builder.where("visibility", type);
 
-        const paginator = await query.orderBy("id", "desc").paginate(page, perPage);
-        const meta = paginator.getMeta();
+        const { data, meta } = await adminOrderNotesView.run<OrderNote>(builder, payload);
         return {
-            data: paginator.all().map((note) => new OrderNoteTransformer(note).forAdmin()),
-            meta: {
-                page: meta.currentPage,
-                perPage: meta.perPage,
-                total: meta.total,
-                lastPage: meta.lastPage,
-            },
+            data: data.map((note) => new OrderNoteTransformer(note).forAdmin()),
+            meta,
         };
     }
 
