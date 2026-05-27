@@ -65,7 +65,13 @@ export function SpecsBody({ onRequestVariableType }: SpecsBodyProps = {}) {
     const usedAttributeIds = new Set(links.fields.map((f) => f.attributeId));
     const available = (attributes.data ?? []).filter((a) => !usedAttributeIds.has(a.id));
 
-    type RowId = `link:${number}` | `custom:${string}`;
+    /**
+     * Row identifier uses the RHF synthetic `f.id` rather than `attributeId` so React keys
+     * stay unique even if two field-array entries transiently share the same attribute_id
+     * (e.g. during a drag, a promote/demote flip, or stale seed data). Lookups back to the
+     * field array use the same id, so identity is preserved end-to-end.
+     */
+    type RowId = `link:${string}` | `custom:${string}`;
 
     /**
      * Visible rows = every taxonomy link with `usedForVariation=false` + every custom row.
@@ -74,9 +80,9 @@ export function SpecsBody({ onRequestVariableType }: SpecsBodyProps = {}) {
      */
     const visibleRowIds = useMemo<RowId[]>(() => {
         const ids: RowId[] = [];
-        for (const f of links.fields) {
-            const v = getValues(`attributeLinks.${links.fields.indexOf(f)}.usedForVariation`);
-            if (v === false) ids.push(`link:${f.attributeId}` as RowId);
+        for (let i = 0; i < links.fields.length; i += 1) {
+            const v = getValues(`attributeLinks.${i}.usedForVariation`);
+            if (v === false) ids.push(`link:${links.fields[i]!.id}` as RowId);
         }
         for (const f of customs.fields) ids.push(`custom:${f.id}` as RowId);
         return ids;
@@ -109,6 +115,7 @@ export function SpecsBody({ onRequestVariableType }: SpecsBodyProps = {}) {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
     );
 
+    const [autoExpandLastLink, setAutoExpandLastLink] = useState(false);
     const appendFromTaxonomy = (attributeId: number) => {
         links.append({
             attributeId,
@@ -118,8 +125,14 @@ export function SpecsBody({ onRequestVariableType }: SpecsBodyProps = {}) {
             displayType: "dropdown",
             termIds: [],
         });
-        setExpanded((prev) => new Set(prev).add(`link:${attributeId}` as RowId));
+        setAutoExpandLastLink(true);
     };
+    useEffect(() => {
+        if (!autoExpandLastLink) return;
+        const last = links.fields[links.fields.length - 1];
+        if (last !== undefined) setExpanded((prev) => new Set(prev).add(`link:${last.id}` as RowId));
+        setAutoExpandLastLink(false);
+    }, [autoExpandLastLink, links.fields]);
 
     const [autoExpandLastCustom, setAutoExpandLastCustom] = useState(false);
     const appendFreeForm = () => {
@@ -145,13 +158,13 @@ export function SpecsBody({ onRequestVariableType }: SpecsBodyProps = {}) {
         const newIndex = visibleRowIds.indexOf(over.id as RowId);
         if (oldIndex === -1 || newIndex === -1) return;
         const next = arrayMove(visibleRowIds, oldIndex, newIndex);
-        const newLinkOrder: number[] = [];
+        const newLinkOrder: string[] = [];
         const newCustomOrder: string[] = [];
         for (const id of next) {
-            if (id.startsWith("link:")) newLinkOrder.push(Number(id.slice("link:".length)));
+            if (id.startsWith("link:")) newLinkOrder.push(id.slice("link:".length));
             else newCustomOrder.push(id.slice("custom:".length));
         }
-        const currentLinkIds = links.fields.map((f) => f.attributeId);
+        const currentLinkIds: string[] = links.fields.map((f) => f.id);
         for (let target = 0; target < newLinkOrder.length; target += 1) {
             const desiredId = newLinkOrder[target]!;
             const currentPos = currentLinkIds.indexOf(desiredId);
@@ -263,9 +276,10 @@ export function SpecsBody({ onRequestVariableType }: SpecsBodyProps = {}) {
                         <ul className="flex flex-col gap-2">
                             {visibleRowIds.map((rowId) => {
                                 if (rowId.startsWith("link:")) {
-                                    const attributeId = Number(rowId.slice("link:".length));
-                                    const index = links.fields.findIndex((f) => f.attributeId === attributeId);
+                                    const fieldId = rowId.slice("link:".length);
+                                    const index = links.fields.findIndex((f) => f.id === fieldId);
                                     if (index === -1) return null;
+                                    const attributeId = links.fields[index]!.attributeId;
                                     return (
                                         <SpecLinkRow
                                             key={rowId}

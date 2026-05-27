@@ -66,7 +66,12 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
     const links = useFieldArray({ control, name: "attributeLinks" });
     const attributes = useGlobalAttributes();
 
-    type RowId = `link:${number}`;
+    /**
+     * Row identifier uses the RHF synthetic `f.id` rather than `attributeId` so React keys stay
+     * unique even if two field-array entries transiently share the same attribute_id. Lookups
+     * back to the field array key off the same id end-to-end.
+     */
+    type RowId = `link:${string}`;
 
     /**
      * Visible rows are the subset of links where `usedForVariation=true`. Reading the watched
@@ -76,7 +81,7 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
     const visibleRowIds = useMemo<RowId[]>(() => {
         return links.fields
             .filter((_, idx) => getValues(`attributeLinks.${idx}.usedForVariation`) === true)
-            .map((f) => `link:${f.attributeId}` as RowId);
+            .map((f) => `link:${f.id}` as RowId);
     }, [links.fields, getValues]);
 
     /**
@@ -119,10 +124,11 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
     const addOrPromote = (attributeId: number) => {
         const idx = links.fields.findIndex((f) => f.attributeId === attributeId);
         if (idx !== -1) {
+            const fieldId = links.fields[idx]!.id;
             links.update(idx, { ...links.fields[idx]!, usedForVariation: true });
             setCollapsed((prev) => {
                 const next = new Set(prev);
-                next.delete(`link:${attributeId}` as RowId);
+                next.delete(`link:${fieldId}` as RowId);
                 return next;
             });
             return;
@@ -134,11 +140,6 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
             usedForVariation: true,
             displayType: "dropdown",
             termIds: [],
-        });
-        setCollapsed((prev) => {
-            const next = new Set(prev);
-            next.delete(`link:${attributeId}` as RowId);
-            return next;
         });
     };
 
@@ -163,8 +164,8 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
         const newIndex = visibleRowIds.indexOf(over.id as RowId);
         if (oldIndex === -1 || newIndex === -1) return;
         const next = arrayMove(visibleRowIds, oldIndex, newIndex);
-        const newOrder = next.map((id) => Number(id.slice("link:".length)));
-        const currentIds = links.fields.map((f) => f.attributeId);
+        const newOrder: string[] = next.map((id) => id.slice("link:".length));
+        const currentIds: string[] = links.fields.map((f) => f.id);
         for (let target = 0; target < newOrder.length; target += 1) {
             const desiredId = newOrder[target]!;
             const currentPos = currentIds.indexOf(desiredId);
@@ -176,8 +177,8 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
         }
     };
 
-    const demoteToSpec = (attributeId: number) => {
-        const idx = links.fields.findIndex((f) => f.attributeId === attributeId);
+    const demoteToSpec = (fieldId: string) => {
+        const idx = links.fields.findIndex((f) => f.id === fieldId);
         if (idx === -1) return;
         links.update(idx, { ...links.fields[idx]!, usedForVariation: false });
     };
@@ -248,8 +249,8 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
                     <SortableContext items={visibleRowIds} strategy={verticalListSortingStrategy}>
                         <ul className="flex flex-col gap-2">
                             {visibleRowIds.map((rowId) => {
-                                const attributeId = Number(rowId.slice("link:".length));
-                                const index = links.fields.findIndex((f) => f.attributeId === attributeId);
+                                const fieldId = rowId.slice("link:".length);
+                                const index = links.fields.findIndex((f) => f.id === fieldId);
                                 if (index === -1) return null;
                                 const siblingIds = links.fields
                                     .map((_, j) => j)
@@ -269,7 +270,7 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
                                                 return next;
                                             })
                                         }
-                                        onDemoteToSpec={() => demoteToSpec(attributeId)}
+                                        onDemoteToSpec={() => demoteToSpec(fieldId)}
                                         locale={locale}
                                         siblingTermIds={siblingIds}
                                         labels={{
