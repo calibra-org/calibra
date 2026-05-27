@@ -21,8 +21,15 @@ export default class AdminVariationsController {
     async index(ctx: HttpContext) {
         const product = await Product.find(ctx.params.product_id);
         if (!product) return ctx.response.status(404).json({ error: "product_not_found" });
+        /**
+         * Exclude soft-deleted rows — bulk delete (and the per-row destroy) write `deleted_at`
+         * instead of removing the variation outright, since order history may reference the row.
+         * Without this filter the just-deleted rows reappear on the next refetch and the admin's
+         * Sellable versions table looks like the delete silently failed.
+         */
         const rows = await ProductVariation.query()
             .where("product_id", String(product.id))
+            .whereNull("deleted_at")
             .preload("translations")
             .preload("attributePins")
             .orderBy("menu_order")

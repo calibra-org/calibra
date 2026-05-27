@@ -1431,6 +1431,7 @@
                     "deleteRefused": "This version is referenced by orders — archived instead of deleted",
                     "saveFailed": "Save failed",
                     "bulkUpdated": "{count} versions updated",
+                    "bulkDeleted": "{count} versions deleted",
                     "bulkUpdateFailed": "Bulk update failed",
                     "skusApplied": "{count} SKUs saved"
                 },

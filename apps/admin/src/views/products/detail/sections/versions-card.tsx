@@ -280,7 +280,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
         try {
             await batch.mutateAsync({ delete: selectedIdsNumeric });
             toast.add({
-                title: t("toasts.bulkUpdated", { count: formatNumber(selectedIdsNumeric.length, locale) }),
+                title: t("toasts.bulkDeleted", { count: formatNumber(selectedIdsNumeric.length, locale) }),
                 data: { tone: "success" },
             });
             clearSelection();

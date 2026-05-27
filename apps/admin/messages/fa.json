@@ -1431,6 +1431,7 @@
                     "deleteRefused": "این نسخه در سفارش‌ها استفاده شده — به‌جای حذف، آرشیو می‌شود",
                     "saveFailed": "ذخیره ناموفق بود",
                     "bulkUpdated": "{count} نسخه به‌روزرسانی شد",
+                    "bulkDeleted": "{count} نسخه حذف شد",
                     "bulkUpdateFailed": "به‌روزرسانی گروهی ناموفق بود",
                     "skusApplied": "{count} شناسه ذخیره شد"
                 },
