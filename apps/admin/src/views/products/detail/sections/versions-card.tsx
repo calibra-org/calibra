@@ -8,6 +8,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
+import { DataTable, type SortState } from "#/components/ui/data-grid";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
@@ -15,20 +16,19 @@ import { MoneyInput } from "#/components/ui/money-input";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { toast } from "#/components/ui/toast";
-import { CircleDashed, Filter, MoreHorizontal, Plus, Sparkles, Trash2 } from "#/icons";
+import { CircleDashed, Filter, Plus, Sparkles, Trash2 } from "#/icons";
 import { formatNumber } from "#/lib/format";
 import { useBatchVariations, useDeleteVariation, useUpdateProduct, useUpdateVariation } from "#/lib/products/mutations";
 import { useGlobalAttributes, useProductVariations, type VariationView } from "#/lib/products/queries";
 import { applyPattern, defaultAbbrev, type SkuTokenSpec } from "#/lib/products/sku-generator";
 import { type AttributeAxis, diffCartesian } from "#/lib/products/variations-cartesian";
-import { statusTone, type VersionStatus } from "#/lib/products/versions-format";
+import type { VersionStatus } from "#/lib/products/versions-format";
 import { cn } from "#/lib/utils";
 
 import { formValuesToPayload, type ProductDetailFormValues } from "../schema";
 
-import { VersionTermNames } from "./versions-card.term-lookup";
+import { buildVersionColumns } from "./versions-card.columns";
 
 interface VersionsBodyProps {
     productId: number | null;
@@ -81,18 +81,52 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     const deleteVariation = useDeleteVariation(productId ?? 0);
 
     const [search, setSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState<Set<VersionStatus>>(() => new Set());
-    const [quickFilters, setQuickFilters] = useState<{ missingPrice: boolean; missingSku: boolean; missingImage: boolean }>({
+    /**
+     * Local-state mirror of the DataTable toolbar shape (`facetValues` for multi-select facets,
+     * `toggleValues` for single booleans). This card's filters never round-trip to the URL — it's
+     * an inline editor, not a routed list — but reusing the toolbar primitive keeps the visual
+     * language consistent with every other admin table.
+     */
+    const [facetValues, setFacetValues] = useState<Record<string, string[]>>({ status: [] });
+    const [toggleValues, setToggleValues] = useState<Record<string, boolean>>({
         missingPrice: false,
         missingSku: false,
         missingImage: false,
     });
-    const [selected, setSelected] = useState<Set<number>>(() => new Set());
+    const [selected, setSelected] = useState<Set<string>>(() => new Set());
+    const [sort, setSort] = useState<SortState | undefined>(undefined);
+    const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+    const [columnOrder, setColumnOrder] = useState<string[]>([]);
     const [regenerateOpen, setRegenerateOpen] = useState(false);
     const [setPriceOpen, setSetPriceOpen] = useState(false);
     const [skuGenOpen, setSkuGenOpen] = useState(false);
     const [archiveOutdated, setArchiveOutdated] = useState(true);
     const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
+    const statusFilter = facetValues.status ?? [];
+    const quickFilters = {
+        missingPrice: toggleValues.missingPrice === true,
+        missingSku: toggleValues.missingSku === true,
+        missingImage: toggleValues.missingImage === true,
+    };
+    const hasActiveFilters =
+        statusFilter.length > 0 || quickFilters.missingPrice || quickFilters.missingSku || quickFilters.missingImage;
+    const clearAllFilters = () => {
+        setFacetValues({ status: [] });
+        setToggleValues({ missingPrice: false, missingSku: false, missingImage: false });
+        setSearch("");
+    };
+
+    /** DataTable speaks string ids; map back to the numeric variation ids the batch endpoint expects. */
+    const selectedIdsNumeric = useMemo(
+        () =>
+            Array.from(selected)
+                .map((id) => Number(id))
+                .filter((n) => Number.isFinite(n)),
+        [selected],
+    );
+    const selectedSetNumeric = useMemo(() => new Set(selectedIdsNumeric), [selectedIdsNumeric]);
+    const clearSelection = () => setSelected(new Set());
 
     if (productType !== "variable") {
         return (
@@ -118,7 +152,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
 
     const rows = variations.data ?? [];
     const filtered = rows.filter((row) => {
-        if (statusFilter.size > 0 && !statusFilter.has(row.status)) return false;
+        if (statusFilter.length > 0 && !statusFilter.includes(row.status)) return false;
         if (quickFilters.missingPrice && row.regularPriceMinor !== null) return false;
         if (quickFilters.missingSku && row.sku !== null && row.sku.length > 0) return false;
         if (quickFilters.missingImage && row.imageMediaId !== null) return false;
@@ -172,25 +206,14 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
         }
     };
 
-    const toggleSelected = (id: number) =>
-        setSelected((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
-    const toggleSelectAll = () =>
-        setSelected((prev) => (prev.size === filtered.length ? new Set() : new Set(filtered.map((r) => r.id))));
-    const clearSelection = () => setSelected(new Set());
-
     const bulkMarkStatus = async (status: VersionStatus) => {
-        if (selected.size === 0 || productId === null) return;
+        if (selectedIdsNumeric.length === 0 || productId === null) return;
         try {
             await batch.mutateAsync({
-                update: Array.from(selected).map((id) => ({ id, status })),
+                update: selectedIdsNumeric.map((id) => ({ id, status })),
             });
             toast.add({
-                title: t("toasts.bulkUpdated", { count: formatNumber(selected.size, locale) }),
+                title: t("toasts.bulkUpdated", { count: formatNumber(selectedIdsNumeric.length, locale) }),
                 data: { tone: "success" },
             });
             clearSelection();
@@ -200,11 +223,11 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     };
 
     const bulkDelete = async () => {
-        if (selected.size === 0 || productId === null) return;
+        if (selectedIdsNumeric.length === 0 || productId === null) return;
         try {
-            await batch.mutateAsync({ delete: Array.from(selected) });
+            await batch.mutateAsync({ delete: selectedIdsNumeric });
             toast.add({
-                title: t("toasts.bulkUpdated", { count: formatNumber(selected.size, locale) }),
+                title: t("toasts.bulkUpdated", { count: formatNumber(selectedIdsNumeric.length, locale) }),
                 data: { tone: "success" },
             });
             clearSelection();
@@ -221,6 +244,60 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     const draftCount = rows.filter((r) => r.status === "draft").length;
     const checklistComplete = missingPrices === 0 && missingSkus === 0 && missingImages === 0 && draftCount === 0;
 
+    const columns = useMemo(
+        () =>
+            buildVersionColumns({
+                locale,
+                sort,
+                onSort: setSort,
+                onHideColumn: (id) => setColumnVisibility((prev) => ({ ...prev, [id]: false })),
+                attributesIndex: attributes.data ?? [],
+                onUpdatePrice: async (variationId, next) => {
+                    try {
+                        await updateVariation.mutateAsync({
+                            variationId,
+                            body: { regular_price: next === null ? null : Math.round(next) },
+                        });
+                    } catch (error) {
+                        toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
+                    }
+                },
+                onUpdateSku: async (variationId, next) => {
+                    try {
+                        await updateVariation.mutateAsync({
+                            variationId,
+                            body: { sku: next.length === 0 ? null : next },
+                        });
+                    } catch (error) {
+                        toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
+                    }
+                },
+                onUpdateStatus: async (variationId, next) => {
+                    try {
+                        await updateVariation.mutateAsync({ variationId, body: { status: next } });
+                    } catch (error) {
+                        toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
+                    }
+                },
+                onDelete: async (variationId) => {
+                    try {
+                        await deleteVariation.mutateAsync({ variationId });
+                        toast.add({ title: t("toasts.deleted"), data: { tone: "success" } });
+                    } catch {
+                        try {
+                            await updateVariation.mutateAsync({ variationId, body: { status: "archived" } });
+                            toast.add({ title: t("toasts.deleteRefused"), data: { tone: "warning" } });
+                        } catch (error) {
+                            toast.add({ title: t("toasts.saveFailed"), description: String(error), data: { tone: "error" } });
+                        }
+                    }
+                },
+                t,
+                sortLabels: { asc: "↑", desc: "↓", hide: "—" },
+            }),
+        [attributes.data, deleteVariation, locale, sort, t, updateVariation],
+    );
+
     return (
         <div className="flex flex-col gap-3">
             {checklistVisible && !checklistComplete ? (
@@ -231,25 +308,25 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                             done={missingPrices === 0}
                             label={t("checklist.prices")}
                             count={missingPrices}
-                            onClick={() => setQuickFilters({ ...quickFilters, missingPrice: true })}
+                            onClick={() => setToggleValues({ ...toggleValues, missingPrice: true })}
                         />
                         <ChecklistRow
                             done={missingSkus === 0}
                             label={t("checklist.skus")}
                             count={missingSkus}
-                            onClick={() => setQuickFilters({ ...quickFilters, missingSku: true })}
+                            onClick={() => setToggleValues({ ...toggleValues, missingSku: true })}
                         />
                         <ChecklistRow
                             done={missingImages === 0}
                             label={t("checklist.images")}
                             count={missingImages}
-                            onClick={() => setQuickFilters({ ...quickFilters, missingImage: true })}
+                            onClick={() => setToggleValues({ ...toggleValues, missingImage: true })}
                         />
                         <ChecklistRow
                             done={draftCount === 0}
                             label={t("checklist.drafts")}
                             count={draftCount}
-                            onClick={() => setStatusFilter(new Set(["draft"]))}
+                            onClick={() => setFacetValues({ ...facetValues, status: ["draft"] })}
                         />
                     </ul>
                 </div>
@@ -263,7 +340,10 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                     className="h-9 w-64"
                     aria-label={t("search")}
                 />
-                <StatusFilterPopover selected={statusFilter} onChange={setStatusFilter} />
+                <StatusFilterPopover
+                    selected={new Set(statusFilter as VersionStatus[])}
+                    onChange={(next) => setFacetValues({ ...facetValues, status: Array.from(next) })}
+                />
                 <DropdownMenu>
                     <DropdownMenuTrigger
                         render={(props) => (
@@ -275,35 +355,27 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                     />
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                            onClick={() => setQuickFilters({ ...quickFilters, missingPrice: !quickFilters.missingPrice })}
+                            onClick={() => setToggleValues({ ...toggleValues, missingPrice: !quickFilters.missingPrice })}
                         >
                             {quickFilters.missingPrice ? "✓ " : ""}
                             {t("filter.missingPrice")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                            onClick={() => setQuickFilters({ ...quickFilters, missingSku: !quickFilters.missingSku })}
+                            onClick={() => setToggleValues({ ...toggleValues, missingSku: !quickFilters.missingSku })}
                         >
                             {quickFilters.missingSku ? "✓ " : ""}
                             {t("filter.missingSku")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                            onClick={() => setQuickFilters({ ...quickFilters, missingImage: !quickFilters.missingImage })}
+                            onClick={() => setToggleValues({ ...toggleValues, missingImage: !quickFilters.missingImage })}
                         >
                             {quickFilters.missingImage ? "✓ " : ""}
                             {t("filter.missingImage")}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                {statusFilter.size > 0 || quickFilters.missingPrice || quickFilters.missingSku || quickFilters.missingImage ? (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                            setStatusFilter(new Set());
-                            setQuickFilters({ missingPrice: false, missingSku: false, missingImage: false });
-                        }}
-                    >
+                {hasActiveFilters ? (
+                    <Button type="button" variant="ghost" size="sm" onClick={clearAllFilters}>
                         {t("filter.clearAll")}
                     </Button>
                 ) : null}
@@ -313,106 +385,53 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                 </Button>
             </div>
 
-            {filtered.length === 0 ? (
-                <p className="rounded-md border border-border border-dashed bg-muted/30 p-3 text-center text-muted-foreground text-xs">
-                    {rows.length === 0 ? tChoices("totalCount", { count: 0 }) : t("noResults")}
-                </p>
-            ) : (
-                <div className="overflow-x-auto rounded-md border border-border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-10">
-                                    <Checkbox
-                                        checked={selected.size > 0 && selected.size === filtered.length}
-                                        onCheckedChange={toggleSelectAll}
-                                        aria-label={t("selection.selectAll")}
-                                    />
-                                </TableHead>
-                                <TableHead>{t("columns.version")}</TableHead>
-                                <TableHead className="w-40">{t("columns.sku")}</TableHead>
-                                <TableHead className="w-44">{t("columns.price")}</TableHead>
-                                <TableHead className="w-28">{t("columns.status")}</TableHead>
-                                <TableHead className="w-10" aria-label={t("columns.actions")} />
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filtered.map((row) => (
-                                <VersionRow
-                                    key={row.id}
-                                    row={row}
-                                    selected={selected.has(row.id)}
-                                    onToggleSelect={() => toggleSelected(row.id)}
-                                    onUpdatePrice={async (next) => {
-                                        try {
-                                            await updateVariation.mutateAsync({
-                                                variationId: row.id,
-                                                body: { regular_price: next === null ? null : Math.round(next) },
-                                            });
-                                        } catch (error) {
-                                            toast.add({
-                                                title: t("toasts.saveFailed"),
-                                                description: String(error),
-                                                data: { tone: "error" },
-                                            });
-                                        }
-                                    }}
-                                    onUpdateSku={async (next) => {
-                                        try {
-                                            await updateVariation.mutateAsync({
-                                                variationId: row.id,
-                                                body: { sku: next.length === 0 ? null : next },
-                                            });
-                                        } catch (error) {
-                                            toast.add({
-                                                title: t("toasts.saveFailed"),
-                                                description: String(error),
-                                                data: { tone: "error" },
-                                            });
-                                        }
-                                    }}
-                                    onUpdateStatus={async (next) => {
-                                        try {
-                                            await updateVariation.mutateAsync({
-                                                variationId: row.id,
-                                                body: { status: next },
-                                            });
-                                        } catch (error) {
-                                            toast.add({
-                                                title: t("toasts.saveFailed"),
-                                                description: String(error),
-                                                data: { tone: "error" },
-                                            });
-                                        }
-                                    }}
-                                    onDelete={async () => {
-                                        try {
-                                            await deleteVariation.mutateAsync({ variationId: row.id });
-                                            toast.add({ title: t("toasts.deleted"), data: { tone: "success" } });
-                                        } catch {
-                                            try {
-                                                await updateVariation.mutateAsync({
-                                                    variationId: row.id,
-                                                    body: { status: "archived" },
-                                                });
-                                                toast.add({ title: t("toasts.deleteRefused"), data: { tone: "warning" } });
-                                            } catch (error) {
-                                                toast.add({
-                                                    title: t("toasts.saveFailed"),
-                                                    description: String(error),
-                                                    data: { tone: "error" },
-                                                });
-                                            }
-                                        }
-                                    }}
-                                    attributesIndex={attributes.data ?? []}
-                                    locale={locale}
-                                />
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            )}
+            {/**
+             * Inline use of the shared `DataTable` primitive — pagination is suppressed by feeding
+             * single-page meta + a single-entry `perPageOptions`, since the variations table is
+             * already constrained to a single product's rows and the editor's vertical real estate
+             * would be wasted on a "1-N of N" footer. Toolbar + bulk-bar stay as custom inline
+             * elements above / below so the editor's tighter visual language survives.
+             */}
+            <DataTable<VariationView>
+                data={filtered}
+                columns={columns}
+                getRowId={(row) => String(row.id)}
+                meta={{ page: 1, perPage: Math.max(filtered.length, 1), total: filtered.length, lastPage: 1 }}
+                perPageOptions={[Math.max(filtered.length, 1)]}
+                onPageChange={() => undefined}
+                onPerPageChange={() => undefined}
+                sort={sort}
+                onSortChange={setSort}
+                selectedIds={selected}
+                onSelectedIdsChange={(next) => setSelected(new Set(next))}
+                columnVisibility={columnVisibility}
+                onColumnVisibilityChange={setColumnVisibility}
+                columnOrder={columnOrder}
+                onColumnOrderChange={setColumnOrder}
+                density="cozy"
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearAllFilters}
+                stickyColumns={{ start: ["select", "version"], end: ["actions"] }}
+                labels={{
+                    empty: { title: tChoices("totalCount", { count: 0 }), description: t("needChoicesDescription") },
+                    filtered: { title: t("noResults"), description: t("filter.clearAll") },
+                    clearFiltersLabel: t("filter.clearAll"),
+                    errorTitle: t("toasts.generateFailed"),
+                    errorRetry: t("filter.clearAll"),
+                    pagination: {
+                        rowsPerPage: "",
+                        showing: (_from, _to, total) => formatNumber(total, locale),
+                        selectedOf: (selectedCount, total) =>
+                            `${t("selection.selectedCount", { count: formatNumber(selectedCount, locale) })} / ${formatNumber(total, locale)}`,
+                        first: "",
+                        previous: "",
+                        next: "",
+                        last: "",
+                        pageOf: () => "",
+                    },
+                }}
+                formatNumber={(value) => formatNumber(value, locale)}
+            />
 
             {selected.size > 0 ? (
                 <div
@@ -466,12 +485,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                         <Button type="button" variant="outline" onClick={() => setBulkDeleteOpen(false)}>
                             {t("bulkDeleteDialog.cancel")}
                         </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            disabled={batch.isPending}
-                            onClick={() => void bulkDelete()}
-                        >
+                        <Button type="button" variant="destructive" disabled={batch.isPending} onClick={() => void bulkDelete()}>
                             {t("bulkDeleteDialog.confirm", { count: formatNumber(selected.size, locale) })}
                         </Button>
                     </DialogFooter>
@@ -493,12 +507,12 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
             <SetPriceDialog
                 open={setPriceOpen}
                 onClose={() => setSetPriceOpen(false)}
-                selected={rows.filter((r) => selected.has(r.id))}
+                selected={rows.filter((r) => selectedSetNumeric.has(r.id))}
                 onApply={async (compute) => {
                     if (selected.size === 0 || productId === null) return;
                     try {
                         const updates = rows
-                            .filter((r) => selected.has(r.id))
+                            .filter((r) => selectedSetNumeric.has(r.id))
                             .map((r) => ({ id: r.id, regular_price: compute(r) }));
                         await batch.mutateAsync({ update: updates });
                         toast.add({
@@ -518,7 +532,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
             <SkuGeneratorDialog
                 open={skuGenOpen}
                 onClose={() => setSkuGenOpen(false)}
-                selected={rows.filter((r) => selected.has(r.id))}
+                selected={rows.filter((r) => selectedSetNumeric.has(r.id))}
                 productSku={productSku.length > 0 ? productSku : "SKU"}
                 axes={variationAxes}
                 attributes={attributes.data ?? []}
@@ -573,115 +587,6 @@ function ChecklistRow({ done, label, count, onClick }: { done: boolean; label: s
                 {count > 0 ? <span className="text-muted-foreground"> ({count})</span> : null}
             </button>
         </li>
-    );
-}
-
-interface VersionRowProps {
-    row: VariationView;
-    selected: boolean;
-    onToggleSelect: () => void;
-    onUpdatePrice: (next: number | null) => Promise<void>;
-    onUpdateSku: (next: string) => Promise<void>;
-    onUpdateStatus: (next: VersionStatus) => Promise<void>;
-    onDelete: () => Promise<void>;
-    attributesIndex: { id: number; name: string }[];
-    locale: Locale;
-}
-
-function VersionRow({
-    row,
-    selected,
-    onToggleSelect,
-    onUpdatePrice,
-    onUpdateSku,
-    onUpdateStatus,
-    onDelete,
-    attributesIndex,
-    locale: _locale,
-}: VersionRowProps) {
-    const t = useTranslations("Products.detail.versions");
-    const [sku, setSku] = useState(row.sku ?? "");
-    const tone = statusTone(row.status);
-    return (
-        <TableRow data-state={selected ? "selected" : undefined}>
-            <TableCell className="w-10">
-                <Checkbox checked={selected} onCheckedChange={onToggleSelect} aria-label={t("selection.selectRow")} />
-            </TableCell>
-            <TableCell>
-                <VersionTermNames pins={row.pins} attributesIndex={attributesIndex} fallback={t("rowSummaryFallback")} />
-            </TableCell>
-            <TableCell className="w-40">
-                <Input
-                    value={sku}
-                    onChange={(e) => setSku(e.target.value)}
-                    onBlur={() => sku !== (row.sku ?? "") && void onUpdateSku(sku)}
-                    dir="ltr"
-                    className="h-8 font-mono text-xs"
-                    aria-label={t("columns.sku")}
-                />
-            </TableCell>
-            <TableCell className="w-44">
-                <MoneyInput
-                    valueMinor={row.regularPriceMinor}
-                    onChangeMinor={(next) => void onUpdatePrice(next)}
-                    min={0}
-                    step={1000}
-                />
-            </TableCell>
-            <TableCell className="w-28">
-                <Popover>
-                    <PopoverTrigger
-                        render={(props) => (
-                            <button
-                                {...props}
-                                type="button"
-                                className={cn(
-                                    "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs",
-                                    tone === "success" && "border-success/30 bg-success/10 text-success",
-                                    tone === "warning" && "border-warning/30 bg-warning/10 text-warning",
-                                    tone === "danger" && "border-danger/30 bg-danger/10 text-danger",
-                                    tone === "neutral" && "border-border bg-muted text-muted-foreground",
-                                )}
-                            >
-                                {t(`status.${row.status}`)}
-                            </button>
-                        )}
-                    />
-                    <PopoverContent className="w-40 p-1">
-                        {STATUS_VALUES.map((s) => (
-                            <button
-                                key={s}
-                                type="button"
-                                className="block w-full rounded px-2 py-1 text-start text-xs hover:bg-muted"
-                                onClick={() => void onUpdateStatus(s)}
-                            >
-                                {t(`status.${s}`)}
-                            </button>
-                        ))}
-                    </PopoverContent>
-                </Popover>
-            </TableCell>
-            <TableCell className="w-10">
-                <DropdownMenu>
-                    <DropdownMenuTrigger
-                        render={(props) => (
-                            <Button {...props} type="button" variant="ghost" size="icon" className="size-7">
-                                <MoreHorizontal className="size-3.5" aria-hidden="true" />
-                            </Button>
-                        )}
-                    />
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => void onUpdateStatus("archived")}>
-                            {t("rowActions.archive")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => void onDelete()} className="text-danger">
-                            <Trash2 className="me-2 size-3.5" aria-hidden="true" />
-                            {t("rowActions.delete")}
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </TableCell>
-        </TableRow>
     );
 }
 
