@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function TagsPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const { data } = await listTags({ perPage: 200 });
+    const { data } = await listTags({ limit: 200 });
 
     return <TagsView initialRows={data} />;
 }

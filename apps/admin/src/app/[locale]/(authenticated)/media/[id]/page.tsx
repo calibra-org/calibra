@@ -29,7 +29,7 @@ export default async function MediaDeepLinkPage({ params }: PageProps) {
     const numericId = Number.parseInt(id, 10);
     if (!Number.isFinite(numericId) || numericId <= 0) notFound();
 
-    const [row, initial, months] = await Promise.all([getMedia(numericId), listMedia({ perPage: 60 }), listMediaMonths()]);
+    const [row, initial, months] = await Promise.all([getMedia(numericId), listMedia({ limit: 60 }), listMediaMonths()]);
     if (row === null) notFound();
 
     return <MediaView initialPage={initial} initialMonths={months} initialOpenId={numericId} initialOpenRow={row} />;

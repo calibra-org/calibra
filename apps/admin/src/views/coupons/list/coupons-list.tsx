@@ -72,7 +72,7 @@ export function CouponsListClient() {
         id: TABLE_ID,
         facets,
         toggles,
-        defaultPerPage: 25,
+        defaultLimit: 25,
         defaultColumnVisibility: {
             description: false,
             startsAt: false,
@@ -84,7 +84,7 @@ export function CouponsListClient() {
     const params = useMemo(
         () => ({
             page: tableState.page,
-            perPage: tableState.perPage,
+            limit: tableState.limit,
             search: tableState.q.length > 0 ? tableState.q : undefined,
             tab,
             sort:
@@ -98,7 +98,7 @@ export function CouponsListClient() {
         }),
         [
             tableState.page,
-            tableState.perPage,
+            tableState.limit,
             tableState.q,
             tableState.sort,
             tableState.facetValues,
@@ -169,7 +169,7 @@ export function CouponsListClient() {
         ],
     );
 
-    const meta = result?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+    const meta = result?.meta ?? { page: tableState.page, limit: tableState.limit, total: 0, lastPage: 1 };
 
     const columnVisibilityItems = useMemo(
         () => [
@@ -248,9 +248,9 @@ export function CouponsListClient() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                perPageOptions={[10, 25, 50, 100]}
+                limitOptions={[10, 25, 50, 100]}
                 onPageChange={(page) => tableState.setPage(page)}
-                onPerPageChange={(perPage) => tableState.setPerPage(perPage)}
+                onLimitChange={(limit) => tableState.setLimit(limit)}
                 sort={tableState.sort}
                 onSortChange={tableState.setSort}
                 selectedIds={tableState.selectedIds}

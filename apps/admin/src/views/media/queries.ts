@@ -12,7 +12,7 @@ import type { MediaTypeFilter } from "./types";
 /** Listing parameter set used by both the live query and the SSR cache seed key. */
 export interface MediaListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     search?: string;
     type?: MediaTypeFilter;
     month?: string;
@@ -20,7 +20,7 @@ export interface MediaListParams {
 
 interface MediaListEnvelope {
     data: AdminMediaWire[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 interface MediaResourceEnvelope {
@@ -77,18 +77,18 @@ const MONTHS_KEY = ["admin", "media", "months"] as const;
 export function useMediaList(params: MediaListParams = {}): UseQueryResult<Paginated<AdminMedia>, Error> {
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
-    const perPage = params.perPage ?? 60;
+    const limit = params.limit ?? 60;
     const search = params.search;
     const type = params.type ?? "all";
     const month = params.month;
     return useQuery<MediaListEnvelope, Error, Paginated<AdminMedia>>({
-        queryKey: ["admin", "media", "list", { locale, page, perPage, search, type, month }],
+        queryKey: ["admin", "media", "list", { locale, page, limit, search, type, month }],
         queryFn: () =>
             apiGet<MediaListEnvelope>("media", {
                 locale,
                 query: {
                     page,
-                    perPage,
+                    limit,
                     search,
                     ...(type !== "all" ? { type } : {}),
                     ...(month !== undefined && month.length > 0 ? { month } : {}),
@@ -96,7 +96,7 @@ export function useMediaList(params: MediaListParams = {}): UseQueryResult<Pagin
             }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminMedia),
-            meta: payload.meta ?? { page, perPage, total: payload.data?.length ?? 0, lastPage: 1 },
+            meta: payload.meta ?? { page, limit, total: payload.data?.length ?? 0, lastPage: 1 },
         }),
         staleTime: 30_000,
     });
@@ -279,7 +279,7 @@ export function useUploadMedia() {
                     data: [wire, ...snapshot.data],
                     meta: snapshot.meta
                         ? { ...snapshot.meta, total: snapshot.meta.total + 1 }
-                        : { page: 1, perPage: snapshot.data.length + 1, total: snapshot.data.length + 1, lastPage: 1 },
+                        : { page: 1, limit: snapshot.data.length + 1, total: snapshot.data.length + 1, lastPage: 1 },
                 });
             }
             void queryClient.invalidateQueries({ queryKey: LIST_KEY });
@@ -364,12 +364,12 @@ function adminMediaToWire(row: AdminMedia): AdminMediaWire {
 }
 
 /** Key used by the page to plant the SSR snapshot into the React Query cache. */
-export function seedMediaListKey({ locale, perPage }: { locale: Locale; perPage: number }) {
+export function seedMediaListKey({ locale, limit }: { locale: Locale; limit: number }) {
     return [
         "admin",
         "media",
         "list",
-        { locale, page: 1, perPage, search: undefined, type: "all" as MediaTypeFilter, month: undefined },
+        { locale, page: 1, limit, search: undefined, type: "all" as MediaTypeFilter, month: undefined },
     ] as const;
 }
 

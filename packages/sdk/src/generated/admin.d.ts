@@ -3260,7 +3260,7 @@ export interface components {
          * @description Pagination metadata returned alongside any paginated `data` array.
          * @example {
          *       "page": 1,
-         *       "perPage": 20,
+         *       "limit": 20,
          *       "total": 137,
          *       "lastPage": 7
          *     }
@@ -3268,8 +3268,11 @@ export interface components {
         PaginationMeta: {
             /** @description The 1-indexed page returned. */
             page: number;
-            /** @description Number of items per page. */
-            perPage: number;
+            /**
+             * @description Number of items per page. Mirrors the `?limit=N` wire param the client can send;
+             *     servers may clamp to a per-endpoint cap.
+             */
+            limit: number;
             /** @description Total number of matching records across all pages. */
             total: number;
             /** @description The last 1-indexed page that contains records. */
@@ -4649,8 +4652,6 @@ export interface components {
         LocaleHeader: "fa" | "en";
         /** @description 1-indexed page number. Defaults to 1 when omitted. */
         PageQuery: number;
-        /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-        PerPageQuery: number;
         /** @description Client-generated idempotency token (≤ 64 chars) for write operations that must be safe to retry: `POST /checkout/submit`, `POST /payment/init/:order_key`, admin `POST .../refunds`. A retry with the same key returns the original result without re-running side effects. Keys are scoped per-resource (per-order for refunds, per-cart for submit). */
         IdempotencyKeyHeader: string;
     };
@@ -5692,8 +5693,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -5803,8 +5804,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -6300,8 +6301,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -6858,8 +6859,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -7099,8 +7100,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
                 q?: string;
             };
             header?: {
@@ -7406,8 +7407,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -8693,8 +8694,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
                 search?: string;
             };
             header?: {
@@ -8892,8 +8893,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -9062,8 +9063,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
                 /** @description Filter children of a parent. Pass `0` for top-level rows. */
                 parent_id?: number;
                 search?: string;
@@ -9256,8 +9257,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
                 search?: string;
                 /** @description Optional ordering. `-used_count` ranks tags most-used-first; `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
                 sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
@@ -9444,8 +9445,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
                 search?: string;
                 /** @description Optional ordering. `-used_count` ranks brands most-used-first; `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
                 sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
@@ -9633,8 +9634,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */

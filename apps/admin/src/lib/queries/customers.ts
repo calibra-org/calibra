@@ -59,7 +59,7 @@ export interface CustomersListParams {
 
 interface ListEnvelope {
     data: Parameters<typeof toAdminCustomer>[0][];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 function buildQueryRecord(entries: Array<[string, string]>): Record<string, string | string[]> {
@@ -123,7 +123,7 @@ export function useCustomersList(params: CustomersListParams = {}) {
             data: (payload.data ?? []).map(toAdminCustomer),
             meta: payload.meta ?? {
                 page: query.page,
-                perPage: query.limit,
+                limit: query.limit,
                 total: payload.data?.length ?? 0,
                 lastPage: 1,
             },
@@ -214,7 +214,7 @@ export function useCustomerTagSuggestions(q: string) {
     const locale = useLocale() as Locale;
     return useQuery<{ data: Parameters<typeof toAdminCustomerTag>[0][] }, Error, AdminCustomerTagRow[]>({
         queryKey: ["admin", "customer-tags", { locale, q }],
-        queryFn: () => apiGet("customer-tags", { locale, query: { q, perPage: 50 } }),
+        queryFn: () => apiGet("customer-tags", { locale, query: { q, limit: 50 } }),
         select: (payload) => payload.data.map(toAdminCustomerTag),
     });
 }

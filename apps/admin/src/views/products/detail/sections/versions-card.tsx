@@ -362,7 +362,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
 
             {/**
              * Inline use of the shared `DataTable` primitive — pagination is suppressed by feeding
-             * single-page meta + a single-entry `perPageOptions`, since the variations table is
+             * single-page meta + a single-entry `limitOptions`, since the variations table is
              * already constrained to a single product's rows and the editor's vertical real estate
              * would be wasted on a "1-N of N" footer. Toolbar + bulk-bar stay as custom inline
              * elements above / below so the editor's tighter visual language survives.
@@ -371,10 +371,10 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                 data={filtered}
                 columns={columns}
                 getRowId={(row) => String(row.id)}
-                meta={{ page: 1, perPage: Math.max(filtered.length, 1), total: filtered.length, lastPage: 1 }}
-                perPageOptions={[Math.max(filtered.length, 1)]}
+                meta={{ page: 1, limit: Math.max(filtered.length, 1), total: filtered.length, lastPage: 1 }}
+                limitOptions={[Math.max(filtered.length, 1)]}
                 onPageChange={() => undefined}
-                onPerPageChange={() => undefined}
+                onLimitChange={() => undefined}
                 selectedIds={selected}
                 onSelectedIdsChange={(next) => setSelected(new Set(next))}
                 columnVisibility={columnVisibility}

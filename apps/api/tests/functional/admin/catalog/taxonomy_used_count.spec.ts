@@ -139,10 +139,10 @@ test.group("admin taxonomy index — sort=-used_count (categories)", (group) => 
         assert.equal(body.data.find((row) => row.id === Number(cat.id))?.used_count, 1);
     });
 
-    test("respects perPage cap on most-used path", async ({ client, assert }) => {
+    test("respects limit cap on most-used path", async ({ client, assert }) => {
         const admin = await createAdmin();
         for (let i = 0; i < 6; i += 1) await seedCategory(`c${i}`);
-        const res = await client.get("/api/v1/admin/categories?sort=-used_count&perPage=3").withGuard("api").loginAs(admin);
+        const res = await client.get("/api/v1/admin/categories?sort=-used_count&limit=3").withGuard("api").loginAs(admin);
         res.assertStatus(200);
         const body = res.body() as { data: unknown[] };
         assert.equal(body.data.length, 3);

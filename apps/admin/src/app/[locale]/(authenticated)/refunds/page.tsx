@@ -25,7 +25,7 @@ export default async function RefundsPage({ params }: PageProps) {
     const locale = rawLocale as Locale;
     const t = await getTranslations("Refunds");
     const cols = t.raw("table") as Record<string, string>;
-    const { data } = await listRefunds({ perPage: 100 });
+    const { data } = await listRefunds({ limit: 100 });
 
     return (
         <section className="flex flex-col gap-6">

@@ -190,7 +190,7 @@ export async function runTableView<Model extends LucidModel, TRow = InstanceType
     const paginator = await ready.paginate(page, limit);
     const meta: PaginationMeta = {
         page: paginator.currentPage,
-        perPage: paginator.perPage,
+        limit: paginator.perPage,
         total: paginator.total,
         lastPage: paginator.lastPage,
     };

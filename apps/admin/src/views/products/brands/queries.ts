@@ -13,7 +13,7 @@ type SdkAdminTaxonomy = Schemas["AdminTaxonomy"];
 
 interface BrandListEnvelope {
     data: SdkAdminTaxonomy[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 interface BrandResourceEnvelope {
@@ -40,7 +40,7 @@ const LIST_KEY = ["admin", "brands", "list"] as const;
 
 export interface BrandsListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     search?: string;
 }
 
@@ -55,14 +55,14 @@ export interface BrandsListParams {
 export function useBrandsList(params: BrandsListParams = {}): UseQueryResult<Paginated<AdminBrand>, Error> {
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
-    const perPage = params.perPage ?? 200;
+    const limit = params.limit ?? 200;
     const search = params.search;
     return useQuery<BrandListEnvelope, Error, Paginated<AdminBrand>>({
-        queryKey: ["admin", "brands", "list", { locale, page, perPage, search }],
-        queryFn: () => apiGet<BrandListEnvelope>("brands", { locale, query: { page, perPage, search } }),
+        queryKey: ["admin", "brands", "list", { locale, page, limit, search }],
+        queryFn: () => apiGet<BrandListEnvelope>("brands", { locale, query: { page, limit, search } }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminBrand),
-            meta: payload.meta ?? { page, perPage, total: payload.data?.length ?? 0, lastPage: 1 },
+            meta: payload.meta ?? { page, limit, total: payload.data?.length ?? 0, lastPage: 1 },
         }),
         staleTime: 30_000,
     });
@@ -241,6 +241,6 @@ export function useBulkDeleteBrands() {
 }
 
 /** Used by `brands-view.tsx` to seed the React Query cache from the SSR page payload. */
-export function seedBrandsListKey({ locale, perPage }: { locale: Locale; perPage: number }) {
-    return ["admin", "brands", "list", { locale, page: 1, perPage, search: undefined }] as const;
+export function seedBrandsListKey({ locale, limit }: { locale: Locale; limit: number }) {
+    return ["admin", "brands", "list", { locale, page: 1, limit, search: undefined }] as const;
 }

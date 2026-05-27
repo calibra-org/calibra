@@ -244,8 +244,8 @@ export default class AdminProductImportsController {
         if (filters.include_resolved !== true) query.whereNull("retried_at");
 
         const page = Math.max(1, Number(ctx.request.input("page", 1)) || 1);
-        const perPage = Math.min(200, Math.max(1, Number(ctx.request.input("per_page", 50)) || 50));
-        const paginator = await query.paginate(page, perPage);
+        const limit = Math.min(200, Math.max(1, Number(ctx.request.input("limit", 50)) || 50));
+        const paginator = await query.paginate(page, limit);
         return paginated(ProductImportErrorTransformer.transform(paginator.all()), paginator);
     }
 
@@ -360,8 +360,8 @@ export default class AdminProductImportsController {
         if (filters.to !== undefined) query.where("created_at", "<=", filters.to);
 
         const page = Math.max(1, filters.page ?? 1);
-        const perPage = Math.min(200, filters.per_page ?? 20);
-        const paginator = await query.paginate(page, perPage);
+        const limit = Math.min(200, filters.limit ?? 20);
+        const paginator = await query.paginate(page, limit);
         return paginated(ProductImportTransformer.transform(paginator.all()), paginator);
     }
 
@@ -374,8 +374,8 @@ export default class AdminProductImportsController {
             query.where("sku", ctx.request.input("sku") as string);
         }
         const page = Math.max(1, Number(ctx.request.input("page", 1)) || 1);
-        const perPage = Math.min(500, Math.max(1, Number(ctx.request.input("per_page", 100)) || 100));
-        const paginator = await query.paginate(page, perPage);
+        const limit = Math.min(500, Math.max(1, Number(ctx.request.input("limit", 100)) || 100));
+        const paginator = await query.paginate(page, limit);
         return paginated(ProductImportChangeTransformer.transform(paginator.all()), paginator);
     }
 

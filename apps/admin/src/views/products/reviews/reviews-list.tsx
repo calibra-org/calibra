@@ -100,7 +100,7 @@ export function ReviewsList() {
 
     const { data, isPending, isError, refetch } = useReviewsList({
         page: tableState.page,
-        perPage: tableState.perPage,
+        limit: tableState.limit,
         sort:
             tableState.sort !== undefined
                 ? tableState.sort.direction === "desc"
@@ -115,7 +115,7 @@ export function ReviewsList() {
     });
 
     const baseRows = data?.data ?? [];
-    const meta = data?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+    const meta = data?.meta ?? { page: tableState.page, limit: tableState.limit, total: 0, lastPage: 1 };
 
     /**
      * Rows that have been trashed or marked-as-spam through the row UI sit in this map. The
@@ -412,9 +412,9 @@ export function ReviewsList() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                perPageOptions={tableState.perPageOptions}
+                limitOptions={tableState.limitOptions}
                 onPageChange={tableState.setPage}
-                onPerPageChange={tableState.setPerPage}
+                onLimitChange={tableState.setLimit}
                 sort={tableState.sort}
                 onSortChange={tableState.setSort}
                 selectedIds={tableState.selectedIds}

@@ -10,9 +10,9 @@ import type { DataTableDensity, DateFacetDef, FacetedFilterDef, PaginationMeta, 
 
 /**
  * Default per-page selectable steps shown in the pagination footer. Callers may override via
- * {@link UseDataTableOptions.perPageOptions}.
+ * {@link UseDataTableOptions.limitOptions}.
  */
-export const DEFAULT_PER_PAGE_OPTIONS = [10, 20, 50, 100] as const;
+export const DEFAULT_LIMIT_OPTIONS = [10, 20, 50, 100] as const;
 
 /**
  * Shape of every key nuqs writes to the URL. We keep these literal so the test suite can
@@ -20,12 +20,12 @@ export const DEFAULT_PER_PAGE_OPTIONS = [10, 20, 50, 100] as const;
  */
 export interface UseDataTableUrlKeys {
     page: string;
-    perPage: string;
+    limit: string;
     sort: string;
     q: string;
 }
 
-const DEFAULT_KEYS: UseDataTableUrlKeys = { page: "page", perPage: "perPage", sort: "sort", q: "q" };
+const DEFAULT_KEYS: UseDataTableUrlKeys = { page: "page", limit: "limit", sort: "sort", q: "q" };
 
 export interface UseDataTableOptions {
     /**
@@ -39,10 +39,10 @@ export interface UseDataTableOptions {
     toggles?: ToggleFilterDef[];
     /** Date-picker filters; each renders as a chip in the toolbar. URL-syncs the picked value. */
     dateFacets?: DateFacetDef[];
-    /** Items per page allowed in the selector. Defaults to {@link DEFAULT_PER_PAGE_OPTIONS}. */
-    perPageOptions?: readonly number[];
+    /** Items per page allowed in the selector. Defaults to {@link DEFAULT_LIMIT_OPTIONS}. */
+    limitOptions?: readonly number[];
     /** Initial per-page when the URL doesn't yet specify one. Defaults to `20`. */
-    defaultPerPage?: number;
+    defaultLimit?: number;
     /** Override URL keys when two tables coexist on the same page. */
     urlKeys?: Partial<UseDataTableUrlKeys>;
     /** Initial column visibility per column id. Stored in `localStorage` afterwards. */
@@ -75,11 +75,11 @@ export function serializeSort(state: SortState | undefined): string {
  */
 export function useDataTable(options: UseDataTableOptions) {
     const keys = { ...DEFAULT_KEYS, ...options.urlKeys };
-    const perPageOptions = options.perPageOptions ?? DEFAULT_PER_PAGE_OPTIONS;
-    const defaultPerPage = options.defaultPerPage ?? 20;
+    const limitOptions = options.limitOptions ?? DEFAULT_LIMIT_OPTIONS;
+    const defaultLimit = options.defaultLimit ?? 20;
 
     const [page, setPage] = useQueryState(keys.page, parseAsInteger.withDefault(1));
-    const [perPage, setPerPage] = useQueryState(keys.perPage, parseAsInteger.withDefault(defaultPerPage));
+    const [limit, setLimit] = useQueryState(keys.limit, parseAsInteger.withDefault(defaultLimit));
     const [sortRaw, setSortRaw] = useQueryState(keys.sort, parseAsString.withDefault(""));
     const [q, setQ] = useQueryState(keys.q, parseAsString.withDefault(""));
 
@@ -214,11 +214,11 @@ export function useDataTable(options: UseDataTableOptions) {
     return {
         keys,
         page,
-        perPage,
-        perPageOptions,
+        limit,
+        limitOptions,
         setPage: (next: number) => void setPage(next),
-        setPerPage: (next: number) => {
-            void setPerPage(next);
+        setLimit: (next: number) => {
+            void setLimit(next);
             void setPage(1);
         },
         sort,
@@ -301,6 +301,6 @@ export function isAllVisibleSelected<TData>(
 }
 
 /** Convenience: produce the empty {@link PaginationMeta} shape when no data has arrived yet. */
-export function emptyPaginationMeta(perPage: number): PaginationMeta {
-    return { page: 1, perPage, total: 0, lastPage: 1 };
+export function emptyPaginationMeta(limit: number): PaginationMeta {
+    return { page: 1, limit, total: 0, lastPage: 1 };
 }

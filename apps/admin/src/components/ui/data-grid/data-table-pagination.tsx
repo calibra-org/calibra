@@ -10,9 +10,9 @@ import type { PaginationMeta } from "./types";
 
 interface DataTablePaginationProps {
     meta: PaginationMeta;
-    perPageOptions: readonly number[];
+    limitOptions: readonly number[];
     onPageChange: (page: number) => void;
-    onPerPageChange: (perPage: number) => void;
+    onLimitChange: (limit: number) => void;
     /** Optional selection count rendered on the start side. */
     selectedCount?: number;
     labels: {
@@ -39,15 +39,15 @@ interface DataTablePaginationProps {
  */
 export function DataTablePagination({
     meta,
-    perPageOptions,
+    limitOptions,
     onPageChange,
-    onPerPageChange,
+    onLimitChange,
     selectedCount,
     labels,
     formatNumber,
 }: DataTablePaginationProps) {
-    const from = meta.total === 0 ? 0 : (meta.page - 1) * meta.perPage + 1;
-    const to = Math.min(meta.page * meta.perPage, meta.total);
+    const from = meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1;
+    const to = Math.min(meta.page * meta.limit, meta.total);
     const canPrev = meta.page > 1;
     const canNext = meta.page < meta.lastPage;
 
@@ -61,12 +61,12 @@ export function DataTablePagination({
                 )}
                 <div className="flex items-center gap-2">
                     <span>{labels.rowsPerPage}</span>
-                    <Select value={String(meta.perPage)} onValueChange={(value) => onPerPageChange(Number(value))}>
+                    <Select value={String(meta.limit)} onValueChange={(value) => onLimitChange(Number(value))}>
                         <SelectTrigger className="h-7 w-[5rem] gap-1 px-2 text-xs">
-                            <SelectValue>{formatNumber(meta.perPage)}</SelectValue>
+                            <SelectValue>{formatNumber(meta.limit)}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                            {perPageOptions.map((option) => (
+                            {limitOptions.map((option) => (
                                 <SelectItem key={option} value={String(option)}>
                                     {formatNumber(option)}
                                 </SelectItem>

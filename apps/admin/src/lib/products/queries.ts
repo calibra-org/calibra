@@ -19,7 +19,7 @@ export type CatalogVisibility = "visible" | "catalog" | "search" | "hidden";
 
 export interface ProductListMeta {
     page: number;
-    perPage: number;
+    limit: number;
     total: number;
     lastPage: number;
 }
@@ -37,7 +37,7 @@ interface TaxonomyEnvelope {
 
 export interface ProductsListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     sort?: string;
     status?: ProductStatus | "any";
     type?: ProductType;
@@ -79,7 +79,7 @@ export function useProductsList(
 ): ReturnType<typeof useQuery<ProductListEnvelope, Error, ProductsListResult>> {
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
-    const perPage = params.perPage ?? 20;
+    const limit = params.limit ?? 20;
     const status = params.status === undefined || params.status === "any" ? undefined : params.status;
     const includeParts: string[] = [];
     if (params.includeFacetCounts === true) includeParts.push("facet_counts");
@@ -93,7 +93,7 @@ export function useProductsList(
             {
                 locale,
                 page,
-                perPage,
+                limit,
                 sort: params.sort ?? "",
                 status,
                 type: params.type,
@@ -121,7 +121,7 @@ export function useProductsList(
                 locale,
                 query: {
                     page,
-                    perPage,
+                    limit,
                     sort: params.sort,
                     status,
                     type: params.type,
@@ -153,7 +153,7 @@ export function useProductsList(
              */
             const filtered =
                 params.favoriteIds === undefined ? data : data.filter((row) => params.favoriteIds?.includes(row.id) === true);
-            const meta = payload.meta ?? { page, perPage, total: filtered.length, lastPage: 1 };
+            const meta = payload.meta ?? { page, limit, total: filtered.length, lastPage: 1 };
             return { data: filtered, meta, facets: payload.facets };
         },
     });
@@ -167,7 +167,7 @@ interface AdminProductFacetEntry<T extends string | number = string> {
 
 /**
  * Lightweight facets query. Pulls all categories/brands/tags via their list endpoints (one shot,
- * `perPage=100`) and feeds them into the toolbar's faceted-filter options.
+ * `limit=100`) and feeds them into the toolbar's faceted-filter options.
  */
 export function useProductFacets() {
     const locale = useLocale() as Locale;
@@ -175,13 +175,13 @@ export function useProductFacets() {
         queryKey: ["admin", "product-facets", { locale }],
         queryFn: async () => {
             const [cats, brands, tags] = await Promise.all([
-                apiGet<TaxonomyEnvelope>("categories", { locale, query: { perPage: 100 } }).catch(
+                apiGet<TaxonomyEnvelope>("categories", { locale, query: { limit: 100 } }).catch(
                     () => ({ data: [] }) as TaxonomyEnvelope,
                 ),
-                apiGet<TaxonomyEnvelope>("brands", { locale, query: { perPage: 100 } }).catch(
+                apiGet<TaxonomyEnvelope>("brands", { locale, query: { limit: 100 } }).catch(
                     () => ({ data: [] }) as TaxonomyEnvelope,
                 ),
-                apiGet<TaxonomyEnvelope>("tags", { locale, query: { perPage: 100 } }).catch(
+                apiGet<TaxonomyEnvelope>("tags", { locale, query: { limit: 100 } }).catch(
                     () => ({ data: [] }) as TaxonomyEnvelope,
                 ),
             ]);
@@ -429,16 +429,16 @@ export type TaxonomySort = "-used_count" | "used_count" | "menu_order" | "-menu_
  * curate by hand. `sort` defaults to `menu_order`; pass `-used_count` to power the "Most used"
  * tab without paying for a second query.
  */
-export function useCategoriesTree(options?: { sort?: TaxonomySort; perPage?: number }) {
+export function useCategoriesTree(options?: { sort?: TaxonomySort; limit?: number }) {
     const locale = useLocale() as Locale;
     const sort = options?.sort;
-    const perPage = options?.perPage ?? 500;
+    const limit = options?.limit ?? 500;
     return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminCategory[]>({
-        queryKey: ["admin", "categories", "picker", { locale, sort: sort ?? "", perPage }],
+        queryKey: ["admin", "categories", "picker", { locale, sort: sort ?? "", limit }],
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("categories", {
                 locale,
-                query: { perPage, ...(sort !== undefined ? { sort } : {}) },
+                query: { limit, ...(sort !== undefined ? { sort } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerCategory),
         staleTime: 30 * 1000,
@@ -447,20 +447,20 @@ export function useCategoriesTree(options?: { sort?: TaxonomySort; perPage?: num
 
 /** Top-N most-used categories for the "پر استفاده‌ها" tab. Cached server-side for 2m. */
 export function useMostUsedCategories(limit = 20) {
-    return useCategoriesTree({ sort: "-used_count", perPage: limit });
+    return useCategoriesTree({ sort: "-used_count", limit: limit });
 }
 
 /** Flat brands list. `parent_id` is always null upstream; the picker renders them at depth 0. */
-export function useBrandsList(options?: { sort?: TaxonomySort; perPage?: number }) {
+export function useBrandsList(options?: { sort?: TaxonomySort; limit?: number }) {
     const locale = useLocale() as Locale;
     const sort = options?.sort;
-    const perPage = options?.perPage ?? 500;
+    const limit = options?.limit ?? 500;
     return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminBrand[]>({
-        queryKey: ["admin", "brands", "picker", { locale, sort: sort ?? "", perPage }],
+        queryKey: ["admin", "brands", "picker", { locale, sort: sort ?? "", limit }],
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("brands", {
                 locale,
-                query: { perPage, ...(sort !== undefined ? { sort } : {}) },
+                query: { limit, ...(sort !== undefined ? { sort } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerBrand),
         staleTime: 30 * 1000,
@@ -469,7 +469,7 @@ export function useBrandsList(options?: { sort?: TaxonomySort; perPage?: number 
 
 /** Top-N most-used brands for the brand sidebar's "Most used" tab. */
 export function useMostUsedBrands(limit = 20) {
-    return useBrandsList({ sort: "-used_count", perPage: limit });
+    return useBrandsList({ sort: "-used_count", limit: limit });
 }
 
 /**
@@ -477,16 +477,16 @@ export function useMostUsedBrands(limit = 20) {
  * tag as a check-row (mirroring the brands picker), and so saved tag ids resolve to the right
  * Persian name without a per-id round-trip.
  */
-export function useTagsList(options?: { sort?: TaxonomySort; perPage?: number }) {
+export function useTagsList(options?: { sort?: TaxonomySort; limit?: number }) {
     const locale = useLocale() as Locale;
     const sort = options?.sort;
-    const perPage = options?.perPage ?? 500;
+    const limit = options?.limit ?? 500;
     return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminTag[]>({
-        queryKey: ["admin", "tags", "picker", { locale, sort: sort ?? "", perPage }],
+        queryKey: ["admin", "tags", "picker", { locale, sort: sort ?? "", limit }],
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("tags", {
                 locale,
-                query: { perPage, ...(sort !== undefined ? { sort } : {}) },
+                query: { limit, ...(sort !== undefined ? { sort } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerTag),
         staleTime: 30 * 1000,
@@ -495,7 +495,7 @@ export function useTagsList(options?: { sort?: TaxonomySort; perPage?: number })
 
 /** Top-N most-used tags for the tags sidebar's "Most used" tab. */
 export function useMostUsedTags(limit = 20) {
-    return useTagsList({ sort: "-used_count", perPage: limit });
+    return useTagsList({ sort: "-used_count", limit: limit });
 }
 
 /**

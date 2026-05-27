@@ -11,7 +11,7 @@ test.group("GET /api/v1/products", (group) => {
         return await testUtils.db().truncate();
     });
 
-    test("returns a paginated envelope with default page=1 perPage=20", async ({ client, assert }) => {
+    test("returns a paginated envelope with default page=1 limit=20", async ({ client, assert }) => {
         for (let i = 0; i < 5; i += 1) {
             await createProduct({
                 fa: { name: `محصول الف ${i}`, slug: `slug-fa-${i}` },
@@ -21,7 +21,7 @@ test.group("GET /api/v1/products", (group) => {
         const response = await client.get("/api/v1/products");
         response.assertStatus(200);
         response.assertAgainstApiSpec();
-        response.assertBodyContains({ meta: { page: 1, perPage: 20 } });
+        response.assertBodyContains({ meta: { page: 1, limit: 20 } });
         assert.equal(response.body().data.length, 5);
         assert.equal(response.body().meta.total, 5);
     });

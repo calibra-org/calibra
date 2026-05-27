@@ -79,7 +79,7 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [type, setType] = useState<MediaTypeFilter>("all");
     const [month, setMonth] = useState("");
-    const [perPage, setPerPage] = useState(initialPage.meta.perPage > 0 ? initialPage.meta.perPage : PER_PAGE);
+    const [limit, setLimit] = useState(initialPage.meta.limit > 0 ? initialPage.meta.limit : PER_PAGE);
 
     /**
      * Plant the SSR snapshot into the React Query cache once so the listing hook below doesn't
@@ -87,10 +87,10 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
      * `useMediaList` query and overwrite as needed.
      */
     useEffect(() => {
-        const key = seedMediaListKey({ locale, perPage });
+        const key = seedMediaListKey({ locale, limit });
         if (queryClient.getQueryData(key) !== undefined) return;
         queryClient.setQueryData(key, adminMediaListToEnvelope(initialPage.data, initialPage.meta));
-    }, [initialPage.data, initialPage.meta, locale, perPage, queryClient]);
+    }, [initialPage.data, initialPage.meta, locale, limit, queryClient]);
 
     useEffect(() => {
         const id = window.setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
@@ -98,25 +98,25 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
     }, [search]);
 
     /**
-     * Filter setters wrap state mutations with a `perPage` reset so the previous "Load more" page
+     * Filter setters wrap state mutations with a `limit` reset so the previous "Load more" page
      * window doesn't leak across queries (and bloat the response). Co-locating the reset with the
      * setters is clearer than chasing a separate effect that watches the same state.
      */
     const setSearchWithReset = useCallback((value: string) => {
         setSearch(value);
-        setPerPage(PER_PAGE);
+        setLimit(PER_PAGE);
     }, []);
     const setTypeWithReset = useCallback((value: MediaTypeFilter) => {
         setType(value);
-        setPerPage(PER_PAGE);
+        setLimit(PER_PAGE);
     }, []);
     const setMonthWithReset = useCallback((value: string) => {
         setMonth(value);
-        setPerPage(PER_PAGE);
+        setLimit(PER_PAGE);
     }, []);
 
     const query = useMediaList({
-        perPage,
+        limit,
         search: debouncedSearch.length > 0 ? debouncedSearch : undefined,
         type,
         month,
@@ -194,7 +194,7 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
     }, []);
 
     const handleLoadMore = useCallback(() => {
-        setPerPage((current) => current + PER_PAGE);
+        setLimit((current) => current + PER_PAGE);
     }, []);
 
     const handleOpen = useCallback((row: AdminMedia) => setActiveId(row.id), []);
@@ -304,11 +304,11 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
     const isFiltering = debouncedSearch.length > 0 || type !== "all" || month.length > 0;
 
     /** Track which row count we have currently rendered so "Load more" knows whether the click landed. */
-    const previousPerPage = useRef(perPage);
-    const isLoadingMore = query.isFetching && previousPerPage.current !== perPage;
+    const previousLimit = useRef(limit);
+    const isLoadingMore = query.isFetching && previousLimit.current !== limit;
     useEffect(() => {
-        if (!query.isFetching) previousPerPage.current = perPage;
-    }, [perPage, query.isFetching]);
+        if (!query.isFetching) previousLimit.current = limit;
+    }, [limit, query.isFetching]);
 
     return (
         <section className="flex flex-col gap-5">

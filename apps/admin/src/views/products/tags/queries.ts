@@ -13,7 +13,7 @@ type SdkAdminTaxonomy = Schemas["AdminTaxonomy"];
 
 interface TagListEnvelope {
     data: SdkAdminTaxonomy[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 interface TagResourceEnvelope {
@@ -33,7 +33,7 @@ const LIST_KEY = ["admin", "tags", "list"] as const;
 
 export interface TagsListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     search?: string;
 }
 
@@ -48,14 +48,14 @@ export interface TagsListParams {
 export function useTagsList(params: TagsListParams = {}): UseQueryResult<Paginated<AdminTag>, Error> {
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
-    const perPage = params.perPage ?? 200;
+    const limit = params.limit ?? 200;
     const search = params.search;
     return useQuery<TagListEnvelope, Error, Paginated<AdminTag>>({
-        queryKey: ["admin", "tags", "list", { locale, page, perPage, search }],
-        queryFn: () => apiGet<TagListEnvelope>("tags", { locale, query: { page, perPage, search } }),
+        queryKey: ["admin", "tags", "list", { locale, page, limit, search }],
+        queryFn: () => apiGet<TagListEnvelope>("tags", { locale, query: { page, limit, search } }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminTag),
-            meta: payload.meta ?? { page, perPage, total: payload.data?.length ?? 0, lastPage: 1 },
+            meta: payload.meta ?? { page, limit, total: payload.data?.length ?? 0, lastPage: 1 },
         }),
         staleTime: 30_000,
     });
@@ -227,6 +227,6 @@ export function useBulkDeleteTags() {
 }
 
 /** Used by `tags-view.tsx` to seed the React Query cache from the SSR page payload. */
-export function seedTagsListKey({ locale, perPage }: { locale: Locale; perPage: number }) {
-    return ["admin", "tags", "list", { locale, page: 1, perPage, search: undefined }] as const;
+export function seedTagsListKey({ locale, limit }: { locale: Locale; limit: number }) {
+    return ["admin", "tags", "list", { locale, page: 1, limit, search: undefined }] as const;
 }

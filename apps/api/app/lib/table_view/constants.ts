@@ -128,8 +128,8 @@ export const OPERATORS_BY_COLUMN_TYPE = {
 } as const satisfies Record<TableViewColumnType, ReadonlyArray<TableViewOperator>>;
 
 /**
- * Default pagination cap. The wire field is `limit`; the response envelope key stays `perPage`
- * for back-compat with everything consuming `Paginated<T>` already.
+ * Default pagination cap. Both the wire field and the response envelope key are `limit` — every
+ * paginated endpoint speaks the same vocabulary so client code can map one shape across the board.
  */
 export const TABLE_VIEW_DEFAULT_LIMIT = 20;
 export const TABLE_VIEW_MAX_LIMIT = 100;

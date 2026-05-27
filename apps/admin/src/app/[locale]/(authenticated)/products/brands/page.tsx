@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function BrandsPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const { data } = await listBrands({ perPage: 200 });
+    const { data } = await listBrands({ limit: 200 });
 
     return <BrandsView initialRows={data} />;
 }

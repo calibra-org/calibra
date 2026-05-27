@@ -58,7 +58,7 @@ export function StepDone({ importRow, onAnother, onBackToList }: StepDoneProps):
             setErrorsLoaded(true);
             return;
         }
-        listImportErrors(row.id, locale, { perPage: FIRST_ERRORS_PAGE_SIZE })
+        listImportErrors(row.id, locale, { limit: FIRST_ERRORS_PAGE_SIZE })
             .then((response) => {
                 if (cancelled) return;
                 setErrors(response.data);

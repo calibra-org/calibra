@@ -5,7 +5,7 @@ tags: [Admin / Catalog / Categories]
 
 parameters:
     - $ref: "../../../common/components/parameters/PageQuery.yaml"
-    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: parent_id, in: query, schema: { type: integer }, description: "Filter children of a parent. Pass `0` for top-level rows." }
     - { name: search, in: query, schema: { type: string } }

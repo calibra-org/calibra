@@ -67,7 +67,7 @@ export function TagsView({ initialRows }: TagsViewProps) {
      * empty while the browser-side fetch is in flight.
      */
     useEffect(() => {
-        const key = seedTagsListKey({ locale, perPage: 200 });
+        const key = seedTagsListKey({ locale, limit: 200 });
         const existing = queryClient.getQueryData(key);
         if (existing !== undefined) return;
         queryClient.setQueryData(key, {
@@ -78,7 +78,7 @@ export function TagsView({ initialRows }: TagsViewProps) {
                 parent_id: null,
                 image_url: null,
             })),
-            meta: { page: 1, perPage: 200, total: initialRows.length, lastPage: 1 },
+            meta: { page: 1, limit: 200, total: initialRows.length, lastPage: 1 },
         });
         /**
          * Stash the resolved counts in a side cache because the SDK payload doesn't carry
@@ -87,7 +87,7 @@ export function TagsView({ initialRows }: TagsViewProps) {
         queryClient.setQueryData(["admin", "tags", "counts", locale], productCountMap(initialRows));
     }, [initialRows, locale, queryClient]);
 
-    const query = useTagsList({ perPage: 200 });
+    const query = useTagsList({ limit: 200 });
     const counts = queryClient.getQueryData<Map<number, number>>(["admin", "tags", "counts", locale]);
 
     /**

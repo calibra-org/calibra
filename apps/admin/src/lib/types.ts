@@ -606,7 +606,7 @@ export interface AdminMedia {
 
 export interface Paginated<T> {
     data: T[];
-    meta: { page: number; perPage: number; total: number; lastPage: number };
+    meta: { page: number; limit: number; total: number; lastPage: number };
 }
 
 /**

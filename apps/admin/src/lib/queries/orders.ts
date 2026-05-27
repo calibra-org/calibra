@@ -18,7 +18,7 @@ interface OrderEnvelope {
 
 interface OrderListEnvelope {
     data: SdkAdminOrderListRow[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 /** Surface for the admin tab strip — `all` plus one count per backend status, plus `trashed`. */
@@ -71,7 +71,7 @@ export function useOrdersList(params: OrdersListParams = {}) {
             }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminOrderListRow),
-            meta: payload.meta ?? { page: query.page, perPage: query.limit, total: payload.data?.length ?? 0, lastPage: 1 },
+            meta: payload.meta ?? { page: query.page, limit: query.limit, total: payload.data?.length ?? 0, lastPage: 1 },
         }),
         placeholderData: (previous) => previous,
     });
@@ -294,7 +294,7 @@ export function useOrderNotes(orderId: number) {
         Error
     >({
         queryKey: ["admin", "orders", "notes", orderId, { locale }],
-        queryFn: () => apiGet(`orders/${orderId}/notes?perPage=100`, { locale }),
+        queryFn: () => apiGet(`orders/${orderId}/notes?limit=100`, { locale }),
         enabled: orderId > 0,
     });
 }
@@ -317,7 +317,7 @@ export function useOrderRefunds(orderId: number) {
         Error
     >({
         queryKey: ["admin", "orders", "refunds", orderId, { locale }],
-        queryFn: () => apiGet(`orders/${orderId}/refunds?perPage=100`, { locale }),
+        queryFn: () => apiGet(`orders/${orderId}/refunds?limit=100`, { locale }),
         enabled: orderId > 0,
     });
 }

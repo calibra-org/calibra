@@ -79,7 +79,7 @@ export function OrdersList() {
         facets: facetsWithStatus,
         toggles,
         dateFacets,
-        defaultPerPage: 25,
+        defaultLimit: 25,
         defaultColumnVisibility: { shipTo: false, items: false, coupon: false, source: false },
     });
 
@@ -150,7 +150,7 @@ export function OrdersList() {
         return {
             ...EMPTY_TABLE_VIEW_QUERY,
             page: tableState.page,
-            limit: tableState.perPage,
+            limit: tableState.limit,
             filter,
             sort,
         };
@@ -159,7 +159,7 @@ export function OrdersList() {
         tableState.facetValues.source,
         tableState.facetValues.payment,
         tableState.page,
-        tableState.perPage,
+        tableState.limit,
         tableState.sort,
         customerIdFilter,
         createdValue,
@@ -172,7 +172,7 @@ export function OrdersList() {
     });
 
     const rows = data?.data ?? [];
-    const meta = data?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+    const meta = data?.meta ?? { page: tableState.page, limit: tableState.limit, total: 0, lastPage: 1 };
 
     /**
      * Quick preview drawer. Stores the currently-previewed order so we can render the drawer even
@@ -366,9 +366,9 @@ export function OrdersList() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                perPageOptions={tableState.perPageOptions}
+                limitOptions={tableState.limitOptions}
                 onPageChange={tableState.setPage}
-                onPerPageChange={tableState.setPerPage}
+                onLimitChange={tableState.setLimit}
                 sort={tableState.sort}
                 onSortChange={tableState.setSort}
                 selectedIds={tableState.selectedIds}

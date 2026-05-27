@@ -30,13 +30,13 @@ export default class ProductsController {
         const { request } = ctx;
         const locale = ctx.i18n.locale;
         const page = Math.max(1, Number(request.input("page", 1)) || 1);
-        const perPage = Math.min(100, Math.max(1, Number(request.input("per_page", 20)) || 20));
+        const limit = Math.min(100, Math.max(1, Number(request.input("limit", 20)) || 20));
         const orderby = String(request.input("orderby", "menu_order"));
         const order = String(request.input("order", "asc")).toLowerCase() === "desc" ? "desc" : "asc";
 
         const filters = {
             page,
-            perPage,
+            limit,
             orderby,
             order,
             category: request.input("category") ?? null,
@@ -67,7 +67,7 @@ export default class ProductsController {
                     locale,
                 );
                 if (categoryIds.length === 0) {
-                    return { data: [], meta: { page, perPage, total: 0, lastPage: 0 } };
+                    return { data: [], meta: { page, limit, total: 0, lastPage: 0 } };
                 }
                 query.whereIn("id", (sub) =>
                     sub.select("product_id").from("product_category_links").whereIn("category_id", categoryIds),
@@ -78,7 +78,7 @@ export default class ProductsController {
             if (tagFilter) {
                 const tagIds = await resolveSlugsToIds("product_tag_translations", "tag_id", String(tagFilter), locale);
                 if (tagIds.length === 0) {
-                    return { data: [], meta: { page, perPage, total: 0, lastPage: 0 } };
+                    return { data: [], meta: { page, limit, total: 0, lastPage: 0 } };
                 }
                 query.whereIn("id", (sub) => sub.select("product_id").from("product_tag_links").whereIn("tag_id", tagIds));
             }
@@ -87,7 +87,7 @@ export default class ProductsController {
             if (brandFilter) {
                 const brandIds = await resolveSlugsToIds("product_brand_translations", "brand_id", String(brandFilter), locale);
                 if (brandIds.length === 0) {
-                    return { data: [], meta: { page, perPage, total: 0, lastPage: 0 } };
+                    return { data: [], meta: { page, limit, total: 0, lastPage: 0 } };
                 }
                 query.whereIn("id", (sub) => sub.select("product_id").from("product_brand_links").whereIn("brand_id", brandIds));
             }
@@ -111,7 +111,7 @@ export default class ProductsController {
                     .select("product_attribute_links.product_id as product_id");
                 const productIds = linkIds.map((row) => row.product_id);
                 if (productIds.length === 0) {
-                    return { data: [], meta: { page, perPage, total: 0, lastPage: 0 } };
+                    return { data: [], meta: { page, limit, total: 0, lastPage: 0 } };
                 }
                 query.whereIn("id", productIds);
             }
@@ -142,7 +142,7 @@ export default class ProductsController {
             query.orderBy(sortColumn, order as "asc" | "desc");
             query.orderBy("id", "asc");
 
-            const paginator = await query.paginate(page, perPage);
+            const paginator = await query.paginate(page, limit);
             return paginated(ProductTransformer.transform(paginator.all(), locale), paginator);
         };
 

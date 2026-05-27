@@ -49,7 +49,7 @@ type SdkAdminPaymentGateway = Schemas["AdminPaymentGateway"];
 
 interface ListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     search?: string;
 }
 
@@ -63,8 +63,8 @@ function dup(value: string | null | undefined): LocalizedString {
     return { fa: safe, en: safe };
 }
 
-function emptyPage<T>(perPage = 20): Paginated<T> {
-    return { data: [], meta: { page: 1, perPage, total: 0, lastPage: 1 } };
+function emptyPage<T>(limit = 20): Paginated<T> {
+    return { data: [], meta: { page: 1, limit, total: 0, lastPage: 1 } };
 }
 
 const _VIEW_PRODUCT_STATUS_MAP: Record<string, ProductStatus> = {
@@ -114,16 +114,16 @@ export async function listProducts(params: ProductListParams = {}): Promise<Pagi
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+                ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(sdkStatus !== undefined ? { status: sdkStatus } : {}),
                 ...(params.search ? { search: params.search } : {}),
                 ...(params.categoryId !== undefined ? { category: params.categoryId } : {}),
             },
         },
     });
-    if (error !== undefined || !data) return emptyPage<AdminProduct>(params.perPage);
+    if (error !== undefined || !data) return emptyPage<AdminProduct>(params.limit);
     const rows = (data.data ?? []).map(toAdminProduct);
-    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    const meta = data.meta ?? { page: 1, limit: params.limit ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
 
@@ -210,27 +210,27 @@ export async function listCategories(params: ListParams = {}): Promise<Paginated
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+                ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(params.search ? { search: params.search } : {}),
             },
         },
     });
-    if (error !== undefined || !data) return emptyPage<AdminCategory>(params.perPage);
+    if (error !== undefined || !data) return emptyPage<AdminCategory>(params.limit);
     const rows = (data.data ?? []).map(toAdminCategory);
     /**
      * The /admin/categories index doesn't return product counts. Run one parallel
-     * `/admin/products?category={id}&perPage=1` per row and read `meta.total` — fine for a
+     * `/admin/products?category={id}&limit=1` per row and read `meta.total` — fine for a
      * page-size list (≤ 20 categories typically), but skip the lookups if there are no rows.
      */
     await Promise.all(
         rows.map(async (row) => {
             const res = await api.admin.GET("/api/v1/admin/products", {
-                params: { query: { category: row.id, perPage: 1 } },
+                params: { query: { category: row.id, limit: 1 } },
             });
             row.productCount = res.data?.meta?.total ?? 0;
         }),
     );
-    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    const meta = data.meta ?? { page: 1, limit: params.limit ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
 
@@ -244,22 +244,22 @@ export async function listTags(params: ListParams = {}): Promise<Paginated<Admin
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+                ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(params.search ? { search: params.search } : {}),
             },
         },
     });
-    if (error !== undefined || !data) return emptyPage<AdminTag>(params.perPage);
+    if (error !== undefined || !data) return emptyPage<AdminTag>(params.limit);
     const rows = (data.data ?? []).map(toAdminTag);
     await Promise.all(
         rows.map(async (row) => {
             const res = await api.admin.GET("/api/v1/admin/products", {
-                params: { query: { tag: row.id, perPage: 1 } },
+                params: { query: { tag: row.id, limit: 1 } },
             });
             row.productCount = res.data?.meta?.total ?? 0;
         }),
     );
-    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    const meta = data.meta ?? { page: 1, limit: params.limit ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
 
@@ -280,22 +280,22 @@ export async function listBrands(params: ListParams = {}): Promise<Paginated<Adm
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+                ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(params.search ? { search: params.search } : {}),
             },
         },
     });
-    if (error !== undefined || !data) return emptyPage<AdminBrand>(params.perPage);
+    if (error !== undefined || !data) return emptyPage<AdminBrand>(params.limit);
     const rows = (data.data ?? []).map(toAdminBrand);
     await Promise.all(
         rows.map(async (row) => {
             const res = await api.admin.GET("/api/v1/admin/products", {
-                params: { query: { brand: row.id, perPage: 1 } },
+                params: { query: { brand: row.id, limit: 1 } },
             });
             row.productCount = res.data?.meta?.total ?? 0;
         }),
     );
-    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    const meta = data.meta ?? { page: 1, limit: params.limit ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
 
@@ -362,7 +362,7 @@ export async function listAttributesWithTerms(): Promise<AdminAttributesIndex> {
             const res = await api.admin.GET("/api/v1/admin/attributes/{attribute_id}/terms", {
                 params: {
                     path: { attribute_id: attribute.id },
-                    query: { perPage: ATTRIBUTE_TERMS_PREVIEW_LIMIT },
+                    query: { limit: ATTRIBUTE_TERMS_PREVIEW_LIMIT },
                 },
             });
             termCounts[attribute.id] = res.data?.meta?.total ?? res.data?.data?.length ?? 0;
@@ -437,7 +437,7 @@ export async function listMedia(params: MediaListParams = {}): Promise<Paginated
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+                ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(params.search ? { search: params.search } : {}),
                 ...(params.type !== undefined && params.type !== "all" ? { type: params.type } : {}),
                 ...(params.month !== undefined ? { month: params.month } : {}),
@@ -445,9 +445,9 @@ export async function listMedia(params: MediaListParams = {}): Promise<Paginated
             },
         },
     });
-    if (error !== undefined || !data) return emptyPage<AdminMedia>(params.perPage);
+    if (error !== undefined || !data) return emptyPage<AdminMedia>(params.limit);
     const rows = (data.data ?? []).map(toAdminMedia);
-    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    const meta = data.meta ?? { page: 1, limit: params.limit ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
 
@@ -490,14 +490,14 @@ export async function listReviews(params: ReviewListParams = {}): Promise<Pagina
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { limit: params.perPage } : {}),
+                ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(filter.length > 0 ? { "filter[]": filter } : {}),
             },
         },
     });
-    if (error !== undefined || !data) return emptyPage<AdminReview>(params.perPage);
+    if (error !== undefined || !data) return emptyPage<AdminReview>(params.limit);
     const rows = (data.data ?? []).map((row) => toAdminReview(row));
-    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    const meta = data.meta ?? { page: 1, limit: params.limit ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
 
@@ -511,14 +511,14 @@ export async function listCustomers(params: ListParams = {}): Promise<Paginated<
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { limit: params.perPage } : {}),
+                ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(params.search ? { q: params.search } : {}),
             },
         },
     });
-    if (error !== undefined || !data) return emptyPage<AdminCustomer>(params.perPage);
+    if (error !== undefined || !data) return emptyPage<AdminCustomer>(params.limit);
     const rows = (data.data ?? []).map(toAdminCustomer);
-    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    const meta = data.meta ?? { page: 1, limit: params.limit ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
 
@@ -543,15 +543,15 @@ export async function listOrders(params: OrderListParams = {}): Promise<Paginate
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+                ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(params.status && params.status !== "any" ? { status: params.status } : {}),
                 ...(params.search ? { search: params.search } : {}),
             },
         },
     });
-    if (error !== undefined || !data) return emptyPage<AdminOrder>(params.perPage);
+    if (error !== undefined || !data) return emptyPage<AdminOrder>(params.limit);
     const rows = ((data.data ?? []) as SdkAdminOrderListRow[]).map(toAdminOrderListRow);
-    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    const meta = data.meta ?? { page: 1, limit: params.limit ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
 
@@ -572,7 +572,7 @@ export async function getOrder(id: number): Promise<AdminOrder | null> {
 /* -------------------------------------------------------------------------- */
 
 export async function listRefunds(params: ListParams = {}): Promise<Paginated<AdminRefund>> {
-    return emptyPage<AdminRefund>(params.perPage);
+    return emptyPage<AdminRefund>(params.limit);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -589,14 +589,14 @@ export async function listCoupons(params: CouponListParams = {}): Promise<Pagina
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
+                ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(params.search ? { search: params.search } : {}),
             },
         },
     });
-    if (error !== undefined || !data) return emptyPage<AdminCoupon>(params.perPage);
+    if (error !== undefined || !data) return emptyPage<AdminCoupon>(params.limit);
     const rows = (data.data ?? []).map(toAdminCoupon);
-    const meta = data.meta ?? { page: 1, perPage: params.perPage ?? rows.length, total: rows.length, lastPage: 1 };
+    const meta = data.meta ?? { page: 1, limit: params.limit ?? rows.length, total: rows.length, lastPage: 1 };
     return { data: rows, meta };
 }
 

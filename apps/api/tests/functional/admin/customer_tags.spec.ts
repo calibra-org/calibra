@@ -56,7 +56,7 @@ test.group("/api/v1/admin/customer-tags + per-customer attach/detach", (group) =
 
         const listCustomers = await client
             .get("/api/v1/admin/customers")
-            .qs({ tags: "vip", perPage: 50 })
+            .qs({ tags: "vip", limit: 50 })
             .withGuard("api")
             .loginAs(admin);
         listCustomers.assertStatus(200);
@@ -71,7 +71,7 @@ test.group("/api/v1/admin/customer-tags + per-customer attach/detach", (group) =
 
         const afterDetach = await client
             .get("/api/v1/admin/customers")
-            .qs({ tags: "vip", perPage: 50 })
+            .qs({ tags: "vip", limit: 50 })
             .withGuard("api")
             .loginAs(admin);
         assert.equal(afterDetach.body().data.length, 0);
@@ -103,7 +103,7 @@ test.group("/api/v1/admin/customer-tags + per-customer attach/detach", (group) =
 
         const listing = await client
             .get("/api/v1/admin/customers")
-            .qs({ tags: "wholesale", perPage: 50 })
+            .qs({ tags: "wholesale", limit: 50 })
             .withGuard("api")
             .loginAs(admin);
         assert.equal(listing.body().data.length, 0);

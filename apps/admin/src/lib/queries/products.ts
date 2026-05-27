@@ -13,7 +13,7 @@ type Schemas = AdminSchemas["schemas"];
 
 interface ProductListEnvelope {
     data: Schemas["AdminProduct"][];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 const SDK_PRODUCT_STATUS_MAP: Record<ProductStatus, "draft" | "published" | "archived" | undefined> = {
@@ -25,7 +25,7 @@ const SDK_PRODUCT_STATUS_MAP: Record<ProductStatus, "draft" | "published" | "arc
 
 export interface ProductsListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     status?: ProductStatus | "any";
     search?: string;
     categoryId?: number;
@@ -39,20 +39,20 @@ export interface ProductsListParams {
 export function useProductsList(params: ProductsListParams = {}) {
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
-    const perPage = params.perPage ?? 20;
+    const limit = params.limit ?? 20;
     const sdkStatus = params.status === undefined || params.status === "any" ? undefined : SDK_PRODUCT_STATUS_MAP[params.status];
     const search = params.search;
     const categoryId = params.categoryId;
     return useQuery<ProductListEnvelope, Error, Paginated<AdminProduct>>({
-        queryKey: ["admin", "products", "list", { locale, page, perPage, sdkStatus, search, categoryId }],
+        queryKey: ["admin", "products", "list", { locale, page, limit, sdkStatus, search, categoryId }],
         queryFn: () =>
             apiGet<ProductListEnvelope>("products", {
                 locale,
-                query: { page, perPage, status: sdkStatus, search, category: categoryId },
+                query: { page, limit, status: sdkStatus, search, category: categoryId },
             }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminProduct),
-            meta: payload.meta ?? { page, perPage, total: payload.data?.length ?? 0, lastPage: 1 },
+            meta: payload.meta ?? { page, limit, total: payload.data?.length ?? 0, lastPage: 1 },
         }),
     });
 }

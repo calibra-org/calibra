@@ -104,7 +104,7 @@ export function ProductsList() {
 
     const { data, isPending, isError, refetch } = useProductsList({
         page: tableState.page,
-        perPage: tableState.perPage,
+        limit: tableState.limit,
         sort:
             tableState.sort !== undefined
                 ? tableState.sort.direction === "desc"
@@ -128,7 +128,7 @@ export function ProductsList() {
     });
 
     const rows = data?.data ?? [];
-    const meta = data?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+    const meta = data?.meta ?? { page: tableState.page, limit: tableState.limit, total: 0, lastPage: 1 };
 
     /**
      * Quick Edit expansion is keyed by the TanStack row id (a stringified product id). Driving
@@ -347,9 +347,9 @@ export function ProductsList() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                perPageOptions={tableState.perPageOptions}
+                limitOptions={tableState.limitOptions}
                 onPageChange={tableState.setPage}
-                onPerPageChange={tableState.setPerPage}
+                onLimitChange={tableState.setLimit}
                 sort={tableState.sort}
                 onSortChange={tableState.setSort}
                 selectedIds={tableState.selectedIds}

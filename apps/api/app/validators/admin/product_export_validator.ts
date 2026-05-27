@@ -117,7 +117,7 @@ export const previewExportValidator = vine.compile(
 export const exportHistoryQueryValidator = vine.compile(
     vine.object({
         page: vine.number().positive().optional(),
-        per_page: vine.number().range([1, 200]).optional(),
+        limit: vine.number().range([1, 200]).optional(),
         status: vine.enum(["queued", "running", "completed", "completed_with_errors", "failed", "cancelled"] as const).optional(),
         user_id: vine.number().positive().optional(),
         from: vine.string().trim().optional(),

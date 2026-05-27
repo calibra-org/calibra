@@ -92,7 +92,7 @@ export type BulkActionsRenderer<TData> = (ctx: BulkActionContext<TData>) => Reac
  */
 export interface PaginationMeta {
     page: number;
-    perPage: number;
+    limit: number;
     total: number;
     lastPage: number;
 }

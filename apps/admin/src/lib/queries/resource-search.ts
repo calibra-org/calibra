@@ -13,7 +13,7 @@ export type ResourceKind = "categories" | "brands" | "tags" | "products" | "attr
 
 interface ResourceListEnvelope<T> {
     data: T[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 interface ResourceRow {
@@ -44,8 +44,8 @@ function adapt(row: ResourceRow, kind: ResourceKind): ComboboxOption {
 export interface ResourceSearchOptions {
     /** Search query — empty string returns the head of the list. */
     query: string;
-    /** Override default perPage (20). */
-    perPage?: number;
+    /** Override default limit (20). */
+    limit?: number;
     /** Extra query params (e.g. `attribute_id` for attribute-terms). */
     extra?: Record<string, string | number | undefined>;
 }
@@ -58,7 +58,7 @@ export function useResourceSearcher(kind: ResourceKind, baseExtra?: Record<strin
             const params: Record<string, string | number | undefined> = {
                 ...baseExtra,
                 search: query.length > 0 ? query : undefined,
-                perPage: 20,
+                limit: 20,
             };
             const envelope = await apiGet<ResourceListEnvelope<ResourceRow>>(pathFor(kind, baseExtra), {
                 locale,
@@ -73,14 +73,14 @@ export function useResourceSearcher(kind: ResourceKind, baseExtra?: Record<strin
 /** Reactive list — useful for "show top brands" rows that don't need an open popup. */
 export function useResourceList(kind: ResourceKind, options: ResourceSearchOptions = { query: "" }) {
     const locale = useLocale() as Locale;
-    const { query, perPage = 20, extra } = options;
+    const { query, limit = 20, extra } = options;
     return useQuery<ComboboxOption[]>({
-        queryKey: ["admin", kind, "search", { locale, query, perPage, extra }],
+        queryKey: ["admin", kind, "search", { locale, query, limit, extra }],
         queryFn: async () => {
             const params: Record<string, string | number | undefined> = {
                 ...extra,
                 search: query.length > 0 ? query : undefined,
-                perPage,
+                limit,
             };
             const envelope = await apiGet<ResourceListEnvelope<ResourceRow>>(pathFor(kind, extra), { locale, query: params });
             return (envelope.data ?? []).map((row) => adapt(row, kind));
@@ -94,7 +94,7 @@ export function useResourceResolver(kind: ResourceKind) {
     return useCallback(
         async (ids: (number | string)[]): Promise<ComboboxOption[]> => {
             if (ids.length === 0) return [];
-            const params = { ids: ids.join(","), perPage: ids.length };
+            const params = { ids: ids.join(","), limit: ids.length };
             const envelope = await apiGet<ResourceListEnvelope<ResourceRow>>(pathFor(kind), {
                 locale,
                 query: params,

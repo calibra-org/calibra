@@ -28,9 +28,9 @@ test.group("Admin products list filters", (group) => {
         await createProduct({ fa: { name: "ج" }, en: { name: "C" } });
         const single = await client.get("/api/v1/admin/products?limit=1");
         const couple = await client.get("/api/v1/admin/products?limit=2");
-        assert.equal(single.body().meta.perPage, 1);
+        assert.equal(single.body().meta.limit, 1);
         assert.equal(single.body().data.length, 1);
-        assert.equal(couple.body().meta.perPage, 2);
+        assert.equal(couple.body().meta.limit, 2);
         assert.equal(couple.body().data.length, 2);
     });
 

@@ -23,7 +23,7 @@ Anything not re-exported from `src/index.ts` is private to the package.
 Two response envelopes recur across the API:
 
 - `{ data: T, ... }` — single-resource. Use `Resource<T>` / `unwrapResource`.
-- `{ data: T[], meta: { page, perPage, total, lastPage } }` — paginated list. Use `Paginated<T>` / `unwrapPaginated`.
+- `{ data: T[], meta: { page, limit, total, lastPage } }` — paginated list. Use `Paginated<T>` / `unwrapPaginated`. The wire request key is `?limit=N`; the response meta uses the same identifier.
 
 ## Codegen workflow
 

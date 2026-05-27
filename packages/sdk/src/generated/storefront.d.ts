@@ -1416,7 +1416,7 @@ export interface components {
          * @description Pagination metadata returned alongside any paginated `data` array.
          * @example {
          *       "page": 1,
-         *       "perPage": 20,
+         *       "limit": 20,
          *       "total": 137,
          *       "lastPage": 7
          *     }
@@ -1424,8 +1424,11 @@ export interface components {
         PaginationMeta: {
             /** @description The 1-indexed page returned. */
             page: number;
-            /** @description Number of items per page. */
-            perPage: number;
+            /**
+             * @description Number of items per page. Mirrors the `?limit=N` wire param the client can send;
+             *     servers may clamp to a per-endpoint cap.
+             */
+            limit: number;
             /** @description Total number of matching records across all pages. */
             total: number;
             /** @description The last 1-indexed page that contains records. */
@@ -2091,14 +2094,12 @@ export interface components {
         LocaleHeader: "fa" | "en";
         /** @description 1-indexed page number. Defaults to 1 when omitted. */
         PageQuery: number;
-        /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-        PerPageQuery: number;
+        /** @description Items per page. Capped at 100. Defaults to 20. */
+        Limit: number;
         /** @description Client-generated idempotency token (≤ 64 chars) for write operations that must be safe to retry: `POST /checkout/submit`, `POST /payment/init/:order_key`, admin `POST .../refunds`. A retry with the same key returns the original result without re-running side effects. Keys are scoped per-resource (per-order for refunds, per-cart for submit). */
         IdempotencyKeyHeader: string;
         /** @description 1-indexed page number. Defaults to 1. */
         Page: number;
-        /** @description Items per page. Capped at 100. Defaults to 20. */
-        Limit: number;
         /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
         Filter: string[];
         /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
@@ -2327,8 +2328,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
                 /** @description Free-text search across product name, slug, and sku. */
                 search?: string;
                 /** @description Filter by category id (single value; chain query strings for OR semantics). */

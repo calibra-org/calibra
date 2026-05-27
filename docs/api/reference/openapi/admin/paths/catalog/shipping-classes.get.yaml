@@ -5,7 +5,7 @@ tags: [Admin / Catalog / Shipping Classes]
 
 parameters:
     - $ref: "../../../common/components/parameters/PageQuery.yaml"
-    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
 
 responses:

@@ -28,10 +28,10 @@ export default class AdminCategoriesController {
 
         if (sort === "-used_count" || sort === "used_count") {
             const direction = sort === "-used_count" ? "desc" : "asc";
-            const perPageRaw = Number(ctx.request.input("perPage", 0)) || 0;
-            const perPage = perPageRaw > 0 && perPageRaw <= 500 ? perPageRaw : 0;
+            const limitRaw = Number(ctx.request.input("limit", 0)) || 0;
+            const limit = limitRaw > 0 && limitRaw <= 500 ? limitRaw : 0;
             return cache.getOrSet({
-                key: CacheKeys.admin.taxonomyUsedCount("categories", { sort, perPage }, locale),
+                key: CacheKeys.admin.taxonomyUsedCount("categories", { sort, limit }, locale),
                 ttl: "2m",
                 tags: [CacheTags.catalogTaxonomy],
                 factory: async () => {
@@ -41,7 +41,7 @@ export default class AdminCategoriesController {
                         .withCount("products", (q) => q.as("used_count"))
                         .orderBy("used_count", direction)
                         .orderBy("id");
-                    if (perPage > 0) query = query.limit(perPage);
+                    if (limit > 0) query = query.limit(limit);
                     const rows = await query;
                     return collection(ProductCategoryTransformer.transform(rows, locale).useVariant("forAdmin"));
                 },

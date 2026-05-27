@@ -53,7 +53,7 @@ export function AttributeTermsView({ attribute, initialRows }: AttributeTermsVie
     const queryClient = useQueryClient();
 
     useEffect(() => {
-        const key = seedAttributeTermsListKey({ attributeId: attribute.id, locale, perPage: 200 });
+        const key = seedAttributeTermsListKey({ attributeId: attribute.id, locale, limit: 200 });
         const existing = queryClient.getQueryData(key);
         if (existing !== undefined) return;
         queryClient.setQueryData(key, {
@@ -64,11 +64,11 @@ export function AttributeTermsView({ attribute, initialRows }: AttributeTermsVie
                 parent_id: null,
                 image_url: null,
             })),
-            meta: { page: 1, perPage: 200, total: initialRows.length, lastPage: 1 },
+            meta: { page: 1, limit: 200, total: initialRows.length, lastPage: 1 },
         });
     }, [attribute.id, initialRows, locale, queryClient]);
 
-    const query = useAttributeTermsList({ attributeId: attribute.id, perPage: 200 });
+    const query = useAttributeTermsList({ attributeId: attribute.id, limit: 200 });
     const rows = query.data ?? initialRows;
 
     const [search, setSearch] = useState("");

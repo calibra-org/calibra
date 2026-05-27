@@ -101,7 +101,7 @@ export function CustomersListClient() {
         id: TABLE_ID,
         facets,
         dateFacets,
-        defaultPerPage: 20,
+        defaultLimit: 20,
         defaultColumnVisibility: {
             nationalId: false,
             country: false,
@@ -143,7 +143,7 @@ export function CustomersListClient() {
         return {
             ...EMPTY_TABLE_VIEW_QUERY,
             page: tableState.page,
-            limit: tableState.perPage,
+            limit: tableState.limit,
             filter,
             sort,
         };
@@ -151,7 +151,7 @@ export function CustomersListClient() {
         tableState.facetValues.country,
         tableState.facetValues.status,
         tableState.page,
-        tableState.perPage,
+        tableState.limit,
         tableState.sort,
         createdValue,
     ]);
@@ -234,7 +234,7 @@ export function CustomersListClient() {
         ],
     );
 
-    const meta = result?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+    const meta = result?.meta ?? { page: tableState.page, limit: tableState.limit, total: 0, lastPage: 1 };
 
     const columnVisibilityItems = useMemo(
         () => [
@@ -306,9 +306,9 @@ export function CustomersListClient() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                perPageOptions={[10, 20, 50, 100]}
+                limitOptions={[10, 20, 50, 100]}
                 onPageChange={(page) => tableState.setPage(page)}
-                onPerPageChange={(perPage) => tableState.setPerPage(perPage)}
+                onLimitChange={(limit) => tableState.setLimit(limit)}
                 sort={tableState.sort}
                 onSortChange={tableState.setSort}
                 selectedIds={tableState.selectedIds}

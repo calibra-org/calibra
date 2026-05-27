@@ -17,7 +17,7 @@ type Schemas = AdminSchemas["schemas"];
 
 interface ReviewListEnvelope {
     data: Schemas["AdminReview"][];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 interface ProductRowEnvelope {
@@ -26,7 +26,7 @@ interface ProductRowEnvelope {
 
 export interface ReviewsListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     sort?: string;
     status?: ReviewStatus | "any";
     rating?: 1 | 2 | 3 | 4 | 5;
@@ -65,7 +65,7 @@ export function useReviewProductLookup() {
     return useQuery({
         queryKey: ["admin", "reviews", "product-lookup", { locale }],
         queryFn: async (): Promise<Map<number, { name: LocalizedString; slug: LocalizedString }>> => {
-            const payload = await apiGet<ProductRowEnvelope>("products", { locale, query: { perPage: 200, limit: 200 } });
+            const payload = await apiGet<ProductRowEnvelope>("products", { locale, query: { limit: 200 } });
             const out = new Map<number, { name: LocalizedString; slug: LocalizedString }>();
             for (const row of payload.data) {
                 const fa = row.translations?.find((t) => t.locale === "fa") ??
@@ -91,7 +91,7 @@ export function useReviewProductLookup() {
 export function useReviewsList(params: ReviewsListParams = {}) {
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
-    const perPage = params.perPage ?? 20;
+    const limit = params.limit ?? 20;
     const { trashedIds, replies } = useClientReviewExtras();
     const { data: productLookup } = useReviewProductLookup();
 
@@ -112,7 +112,7 @@ export function useReviewsList(params: ReviewsListParams = {}) {
             {
                 locale,
                 page,
-                perPage,
+                limit,
                 sort: params.sort ?? "",
                 sdkStatus,
                 rating: params.rating,
@@ -136,7 +136,7 @@ export function useReviewsList(params: ReviewsListParams = {}) {
                 locale,
                 query: {
                     page,
-                    limit: perPage,
+                    limit: limit,
                     ...(filter.length > 0 ? { "filter[]": filter } : {}),
                 },
             });
@@ -170,7 +170,7 @@ export function useReviewsList(params: ReviewsListParams = {}) {
 
             const filtered = rowsAll.filter((row) => tabFilter(row) && searchFilter(row));
             const sorted = sortReviews(filtered, params.sort);
-            const meta = payload.meta ?? { page, perPage, total: filtered.length, lastPage: 1 };
+            const meta = payload.meta ?? { page, limit, total: filtered.length, lastPage: 1 };
             return { data: sorted, meta };
         },
     });
@@ -208,7 +208,7 @@ function sortValue(row: AdminReview, id: string): number | string {
 
 /**
  * Per-status row counts powering the WP-style status tabs. Each call lands on a cached
- * `?perPage=1` request so flipping tabs reuses the count without a refetch. `trash` is derived
+ * `?limit=1` request so flipping tabs reuses the count without a refetch. `trash` is derived
  * from the local trash store rather than the API.
  */
 export function useReviewCountsByStatus() {

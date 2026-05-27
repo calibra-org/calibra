@@ -199,8 +199,8 @@ export default class AdminProductExportsController {
         if (filters.from !== undefined) query.where("created_at", ">=", filters.from);
         if (filters.to !== undefined) query.where("created_at", "<=", filters.to);
         const page = Math.max(1, filters.page ?? 1);
-        const perPage = Math.min(200, filters.per_page ?? 20);
-        const paginator = await query.paginate(page, perPage);
+        const limit = Math.min(200, filters.limit ?? 20);
+        const paginator = await query.paginate(page, limit);
         return paginated(ProductExportTransformer.transform(paginator.all()), paginator);
     }
 

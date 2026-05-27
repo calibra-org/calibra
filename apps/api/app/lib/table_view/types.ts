@@ -120,7 +120,7 @@ export interface TableViewRunOptions {
 /** Response envelope. Mirrors the existing `Transformer.paginate(paginator)` output. */
 export interface PaginationMeta {
     page: number;
-    perPage: number;
+    limit: number;
     total: number;
     lastPage: number;
 }
@@ -187,7 +187,7 @@ export interface TableView<Model extends LucidModel, Columns extends Record<stri
      *     },
      * });
      */
-    compileStrict<Extras extends Record<string, SchemaTypes> = Record<string, never>>(
+    compileStrict<Extras extends Record<string, SchemaTypes> = {}>(
         options?: CompileStrictOptions<Extras>,
     ): VineValidator<
         VineObject<
@@ -198,7 +198,8 @@ export interface TableView<Model extends LucidModel, Columns extends Record<stri
             },
             unknown
         >,
-        undefined
+        // biome-ignore lint/suspicious/noExplicitAny: matches the MetaData parameter Vine's own `vine.compile()` uses; narrowing to `unknown` would force every caller to pass an explicit `meta` arg.
+        Record<string, any> | undefined
     >;
     /** Wire field name → column declaration; flattens relations for tooling consumers. */
     allowedFields: {

@@ -13,12 +13,12 @@ type Schemas = AdminSchemas["schemas"];
 
 interface CouponListEnvelope {
     data: Schemas["AdminCoupon"][];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 export interface CouponsListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     search?: string;
     tab?: CouponTabKey;
     sort?: string;
@@ -32,7 +32,7 @@ export interface CouponsListParams {
 function buildQuery(params: CouponsListParams): Record<string, string | number | boolean | undefined> {
     const out: Record<string, string | number | boolean | undefined> = {
         page: params.page ?? 1,
-        perPage: params.perPage ?? 25,
+        limit: params.limit ?? 25,
     };
     if (params.search && params.search.length > 0) out.search = params.search;
     if (params.tab && params.tab !== "any") out.tab = params.tab;
@@ -61,7 +61,7 @@ export function useCouponsList(params: CouponsListParams = {}) {
             data: (payload.data ?? []).map(toAdminCoupon),
             meta: payload.meta ?? {
                 page: params.page ?? 1,
-                perPage: params.perPage ?? 25,
+                limit: params.limit ?? 25,
                 total: payload.data?.length ?? 0,
                 lastPage: 1,
             },
@@ -237,13 +237,13 @@ interface RedemptionsEnvelope {
         discount_minor: number;
         redeemed_at: string;
     }[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
-export function useCouponRedemptions(id: number, page = 1, perPage = 10) {
+export function useCouponRedemptions(id: number, page = 1, limit = 10) {
     const locale = useLocale() as Locale;
     return useQuery<RedemptionsEnvelope>({
-        queryKey: ["admin", "coupons", "redemptions", { locale, id, page, perPage }],
-        queryFn: () => apiGet<RedemptionsEnvelope>(`coupons/${id}/redemptions`, { locale, query: { page, perPage } }),
+        queryKey: ["admin", "coupons", "redemptions", { locale, id, page, limit }],
+        queryFn: () => apiGet<RedemptionsEnvelope>(`coupons/${id}/redemptions`, { locale, query: { page, limit } }),
     });
 }

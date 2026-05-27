@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CategoriesPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const { data } = await listCategories({ perPage: 200 });
+    const { data } = await listCategories({ limit: 200 });
 
     return <CategoriesView initialRows={data} />;
 }

@@ -13,7 +13,7 @@ export { ActiveFilterChips, DataTableToolbar } from "./data-table-toolbar";
 export { DataTableViewOptions } from "./data-table-view-options";
 export { DENSITY_CLASSES } from "./types";
 export {
-    DEFAULT_PER_PAGE_OPTIONS,
+    DEFAULT_LIMIT_OPTIONS,
     emptyPaginationMeta,
     isAllVisibleSelected,
     parseSort,

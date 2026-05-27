@@ -5,10 +5,13 @@ import type { Collection, Item, Paginator } from "@adonisjs/core/transformers";
  * Pagination metadata shape the SDK expects (`Paginated<T>`). Different from Adonis' default
  * `metadata` envelope: we reshape so the SDK consumers don't have to change. Keep this in sync with
  * `packages/sdk/src/types.ts`.
+ *
+ * `limit` mirrors the TableView wire grammar's `?limit=` param so the request key and the
+ * response key match — every list endpoint speaks the same vocabulary.
  */
 export interface PaginationMeta {
     page: number;
-    perPage: number;
+    limit: number;
     total: number;
     lastPage: number;
 }
@@ -65,7 +68,7 @@ export async function paginated<T>(coll: Collection<any, any, any>, paginator: P
         data,
         meta: {
             page: paginator.currentPage,
-            perPage: paginator.perPage,
+            limit: paginator.perPage,
             total: paginator.total,
             lastPage: paginator.lastPage,
         },

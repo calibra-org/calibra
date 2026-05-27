@@ -44,7 +44,7 @@ export function BrandPicker({ selectedIds, onSelectionChange, placeholder }: Bra
         async (query: string): Promise<EntityOption[]> => {
             const payload = await apiGet<BrandListEnvelope>("brands", {
                 locale,
-                query: { search: query, perPage: 50 },
+                query: { search: query, limit: 50 },
             });
             return (payload.data ?? []).map((row) => ({
                 id: row.id,
@@ -60,7 +60,7 @@ export function BrandPicker({ selectedIds, onSelectionChange, placeholder }: Bra
             if (ids.length === 0) return [];
             const payload = await apiGet<BrandListEnvelope>("brands", {
                 locale,
-                query: { ids: ids.join(","), perPage: ids.length },
+                query: { ids: ids.join(","), limit: ids.length },
             });
             return (payload.data ?? []).map((row) => ({
                 id: row.id,
