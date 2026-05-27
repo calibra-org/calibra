@@ -485,7 +485,12 @@ function ChoicesExplainer() {
         if (typeof window === "undefined") return false;
         return window.localStorage.getItem(EXPLAINER_KEY) === "1";
     });
-    const [open, setOpen] = useState<boolean>(!dismissed);
+    /**
+     * Start collapsed so the explainer doesn't dominate the Customer choices section. Operators
+     * who want the worked-example open it via the chevron; their preference isn't persisted —
+     * the explainer is reference material, not a per-product setting.
+     */
+    const [open, setOpen] = useState<boolean>(false);
 
     if (dismissed) return null;
 
