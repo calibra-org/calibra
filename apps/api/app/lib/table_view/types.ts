@@ -1,6 +1,6 @@
 import type { LucidModel, ModelQueryBuilderContract } from "@adonisjs/lucid/types/model";
-import type { VineObject } from "@vinejs/vine";
-import type { ConstructableSchema } from "@vinejs/vine/types";
+import type { VineObject, VineValidator } from "@vinejs/vine";
+import type { ConstructableSchema, Infer, SchemaTypes } from "@vinejs/vine/types";
 
 import type { TableViewColumnType, TableViewOperator, TableViewSortDir } from "./constants.js";
 
@@ -29,6 +29,17 @@ export interface TableViewColumn {
      * constraint or domain enum check.
      */
     values?: ReadonlyArray<string>;
+    /**
+     * Custom SQL fragment for sorting. When set, the runtime emits
+     * `.orderByRaw(sortRaw(direction))` instead of `.orderBy(sqlColumn, dir)`. Use for columns
+     * that aren't on the model's own table — translated names living in a joined
+     * `<entity>_translations.name` subquery, aggregate stock counts from a child table, etc.
+     *
+     * The returned fragment must be safe to splice into ORDER BY verbatim: do **not** include
+     * operator-supplied input. The direction is constrained to `"asc" | "desc"` so it's
+     * trivially safe to interpolate.
+     */
+    sortRaw?: (direction: TableViewSortDir) => string;
 }
 
 /**
@@ -132,9 +143,23 @@ type OrderableFields<Columns extends Record<string, TableViewColumn>> = {
 }[keyof Columns & string];
 
 /**
+ * Options accepted by {@link TableView.compileStrict}. `extras` declares the endpoint-specific
+ * top-level query params layered on top of the TableView grammar (e.g. `q`, `tab`, `trashed`);
+ * `defaultLimit` overrides {@link TABLE_VIEW_DEFAULT_LIMIT} for endpoints whose natural page
+ * size is different (media → 60, taxonomies feeding selectors → 100).
+ */
+export interface CompileStrictOptions<Extras extends Record<string, SchemaTypes>> {
+    extras?: Extras;
+    defaultLimit?: number;
+}
+
+/**
  * The runtime artifact returned by {@link createTableView}. `schema` is the Vine schema you
  * `vine.compile` into a validator; `run` consumes the parsed query plus a pre-scoped query
  * builder; `config` is the raw config exposed for tooling (the Ace allowed-fields dumper).
+ *
+ * Prefer {@link compileStrict} over `vine.compile(view.schema)` — it both layers endpoint extras
+ * into the schema AND rejects unknown query keys with 422 instead of silently dropping them.
  */
 export interface TableView<Model extends LucidModel, Columns extends Record<string, TableViewColumn>> {
     config: TableViewConfig<Model, Columns>;
@@ -149,6 +174,32 @@ export interface TableView<Model extends LucidModel, Columns extends Record<stri
         query: ParsedTableViewQuery<FilterableFields<Columns>, OrderableFields<Columns>>,
         options?: TableViewRunOptions,
     ): Promise<TableViewRunResult<TRow>>;
+    /**
+     * Build a `validateUsing`-compatible validator that rejects unknown query keys with 422.
+     * Use this instead of `vine.compile(view.schema)` on every migrated endpoint — strict mode
+     * is the contract.
+     *
+     * @example
+     * export const adminOrderListValidator = adminOrdersView.compileStrict({
+     *     extras: {
+     *         q: vine.string().trim().minLength(1).maxLength(120).optional(),
+     *         trashed: vine.boolean().optional(),
+     *     },
+     * });
+     */
+    compileStrict<Extras extends Record<string, SchemaTypes> = Record<string, never>>(
+        options?: CompileStrictOptions<Extras>,
+    ): VineValidator<
+        VineObject<
+            Record<string, ConstructableSchema<unknown, unknown, unknown>>,
+            unknown,
+            ParsedTableViewQuery<FilterableFields<Columns>, OrderableFields<Columns>> & {
+                [K in keyof Extras]: Infer<Extras[K]>;
+            },
+            unknown
+        >,
+        undefined
+    >;
     /** Wire field name → column declaration; flattens relations for tooling consumers. */
     allowedFields: {
         filterable: ReadonlyArray<string>;

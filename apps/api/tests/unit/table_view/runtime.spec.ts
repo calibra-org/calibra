@@ -238,6 +238,87 @@ test.group("table_view runtime / relation joins", () => {
     });
 });
 
+test.group("table_view runtime / sort tie-breaker", () => {
+    /** Local view with a two-entry default sort so we can prove the tail survives. */
+    const tieBreakerView = createTableView({
+        model: Customer,
+        columns: {
+            id: { type: "bigint", filterable: true, orderable: true },
+            created_at: { type: "datetime", filterable: true, orderable: true },
+        },
+        defaultSort: [
+            ["created_at", "desc"],
+            ["id", "desc"],
+        ],
+    });
+    const tieBreakerIndex = buildFieldIndex(tieBreakerView.config);
+
+    function tieBreakerSql(parsedSort: Record<string, { field: string; dir: "asc" | "desc" }>) {
+        const builder = Customer.query();
+        const ready = applyTableView(
+            tieBreakerView.config,
+            tieBreakerIndex,
+            builder,
+            {
+                page: 1,
+                limit: 20,
+                filter: {},
+                filterOr: {},
+                sort: parsedSort,
+            },
+        );
+        return ready.toQuery();
+    }
+
+    test("wire sort on a defaultSort field still appends the remaining default tie-breakers", ({ assert }) => {
+        const sql = tieBreakerSql({ created_at: { field: "created_at", dir: "asc" } });
+        assert.include(sql, `order by "customers"."created_at" asc, "customers"."id" desc`);
+    });
+
+    test("wire sort that covers every default field does not duplicate any tie-breaker", ({ assert }) => {
+        const sql = tieBreakerSql({
+            created_at: { field: "created_at", dir: "asc" },
+            id: { field: "id", dir: "asc" },
+        });
+        const occurrences = (sql.match(/"customers"\."id"/g) ?? []).length;
+        /** Each column appears once in the order-by clause — no leaking default `id desc` tail. */
+        assert.equal(occurrences, 1);
+        assert.notInclude(sql, `"customers"."id" desc`);
+    });
+});
+
+test.group("table_view runtime / sortRaw", () => {
+    test("a column declaring sortRaw emits orderByRaw with the consumer fragment", ({ assert }) => {
+        const v = createTableView({
+            model: Customer,
+            columns: {
+                id: { type: "bigint", filterable: true, orderable: true },
+                /** Synthetic — sorts via a subquery against a sibling table. */
+                lifetime_spend: {
+                    type: "bigint",
+                    filterable: false,
+                    orderable: true,
+                    sortRaw: (dir) => `(SELECT COALESCE(SUM(grand_total), 0) FROM orders WHERE orders.customer_id = customers.id) ${dir}`,
+                },
+            },
+            defaultSort: [["id", "desc"]],
+        });
+        const index = buildFieldIndex(v.config);
+        const builder = Customer.query();
+        const ready = applyTableView(v.config, index, builder, {
+            page: 1,
+            limit: 20,
+            filter: {},
+            filterOr: {},
+            sort: { lifetime_spend: { field: "lifetime_spend", dir: "asc" } },
+        });
+        const sql = ready.toQuery();
+        assert.match(sql, /order by \(SELECT COALESCE\(SUM\(grand_total\), 0\) FROM orders[^)]+\) asc/);
+        /** The plain orderBy path must NOT also fire for the sortRaw column. */
+        assert.notMatch(sql, /"customers"\."lifetime_spend"/);
+    });
+});
+
 test.group("table_view runtime / module wiring", () => {
     test("View exposes allowedFields including relation paths, sorted", ({ assert }) => {
         assert.includeMembers([...view.allowedFields.filterable], ["id", "first_name", "status", "user.email"]);

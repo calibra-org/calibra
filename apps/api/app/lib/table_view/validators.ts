@@ -16,6 +16,7 @@ import type { TableViewColumn, TableViewFilter, TableViewPrimitive, TableViewSor
 /** Internal: rule names referenced in `field.report` calls and assertion `details.rule` lookups. */
 export const FILTER_RULE_NAME = "table_view.filter";
 export const SORT_RULE_NAME = "table_view.sort";
+export const STRICT_KEYS_RULE_NAME = "table_view.unknown_query_key";
 
 interface FilterRuleOptions {
     /** Resolves wire-field name → column declaration. Includes relation fields (dotted keys). */

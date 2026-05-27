@@ -13,6 +13,7 @@ export {
     type TableViewSortDir,
 } from "./constants.js";
 export type {
+    CompileStrictOptions,
     InferTableViewQuery,
     PaginationMeta,
     ParsedTableViewQuery,
@@ -26,4 +27,4 @@ export type {
     TableViewRunResult,
     TableViewSort,
 } from "./types.js";
-export { FILTER_RULE_NAME, SORT_RULE_NAME, filterRule, sortRule } from "./validators.js";
+export { FILTER_RULE_NAME, SORT_RULE_NAME, STRICT_KEYS_RULE_NAME, filterRule, sortRule } from "./validators.js";

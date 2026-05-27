@@ -126,26 +126,47 @@ export function applyTableView<Model extends LucidModel>(
         });
     }
 
-    /** Sort layering: wire-supplied entries first, then defaults the consumer didn't override. */
+    /** Sort layering: wire-supplied entries first, then defaults the consumer didn't override.
+     * The tie-breaker pass below ALWAYS runs (regardless of whether wire entries were supplied)
+     * so a single-column wire sort like `?sort[]=created_at:asc` still gets a deterministic
+     * `, id desc` tail when the default sort declared it. Without the tail, rows with equal
+     * `created_at` paginate non-deterministically and pages 1 + 2 can return the same row. */
     const seenSort = new Set<string>();
     const sortEntries = collectSorts(parsed.sort, options?.sort);
     for (const sort of sortEntries) {
         const resolved = resolveForOverride(fields, sort.field, options?.sort);
         if (resolved.joinKey !== undefined) ensureJoin(resolved.joinKey);
-        builder.orderBy(resolved.sqlColumn, sort.dir);
+        applySortClause(builder, resolved, sort.dir);
         seenSort.add(sort.field);
     }
-    if (sortEntries.length === 0 && config.defaultSort !== undefined) {
+    if (config.defaultSort !== undefined) {
         for (const [f, dir] of config.defaultSort) {
             if (seenSort.has(f)) continue;
             const resolved = fields.get(f);
             if (resolved === undefined) continue;
             if (resolved.joinKey !== undefined) ensureJoin(resolved.joinKey);
-            builder.orderBy(resolved.sqlColumn, dir);
+            applySortClause(builder, resolved, dir);
         }
     }
 
     return builder;
+}
+
+/**
+ * Dispatch a single ORDER BY entry against the builder. Columns that declare `sortRaw` go
+ * through `.orderByRaw()` with the consumer's SQL fragment (used for sorts that target a joined
+ * subquery or aggregate); everything else takes the plain `.orderBy(col, dir)` path.
+ */
+function applySortClause<Model extends LucidModel>(
+    builder: ModelQueryBuilderContract<Model, InstanceType<Model>>,
+    resolved: ResolvedColumn,
+    dir: "asc" | "desc",
+): void {
+    if (resolved.column.sortRaw !== undefined) {
+        builder.orderByRaw(resolved.column.sortRaw(dir));
+        return;
+    }
+    builder.orderBy(resolved.sqlColumn, dir);
 }
 
 /**
