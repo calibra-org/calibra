@@ -17,6 +17,8 @@
         "#services/*": "./app/services/*.js",
         "#middleware/*": "./app/middleware/*.js",
         "#enums/*": "./app/enums/*.js",
+        "#lib/*": "./app/lib/*.js",
+        "#table_views/*": "./app/table_views/*.js",
         "#validators/*": "./app/validators/*.js",
         "#transformers/*": "./app/transformers/*.js",
         "#providers/*": "./providers/*.js",
