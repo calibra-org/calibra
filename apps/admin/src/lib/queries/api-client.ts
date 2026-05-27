@@ -28,10 +28,16 @@ function getCsrfToken(): string | undefined {
     return match ? decodeURIComponent(match[1]) : undefined;
 }
 
-function buildUrl(path: string, query?: Record<string, string | number | boolean | undefined | null>): string {
+type QueryValue = string | number | boolean | undefined | null | ReadonlyArray<string | number | boolean>;
+
+function buildUrl(path: string, query?: Record<string, QueryValue>): string {
     const search = new URLSearchParams();
     for (const [k, v] of Object.entries(query ?? {})) {
         if (v === undefined || v === null) continue;
+        if (Array.isArray(v)) {
+            for (const item of v) search.append(k, String(item));
+            continue;
+        }
         search.set(k, String(v));
     }
     const qs = search.toString();
@@ -41,7 +47,7 @@ function buildUrl(path: string, query?: Record<string, string | number | boolean
 
 export interface ApiFetchOptions {
     locale: string;
-    query?: Record<string, string | number | boolean | undefined | null>;
+    query?: Record<string, QueryValue>;
     signal?: AbortSignal;
 }
 

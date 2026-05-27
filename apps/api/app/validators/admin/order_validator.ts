@@ -1,6 +1,7 @@
 import vine from "@vinejs/vine";
 
 import { ORDER_STATUS_VALUES } from "#enums/order_status";
+import { adminOrdersView } from "#table_views/admin/orders";
 
 const addressShape = vine.object({
     first_name: vine.string().trim().minLength(1).maxLength(80),
@@ -24,51 +25,18 @@ const lineShape = vine.object({
 });
 
 /**
- * Accepts either a single string (`?key=a`), a CSV (`?key=a,b,c`), or an array (`?key[]=a&key[]=b`)
- * — different HTTP clients serialise multi-select facets differently. The vine union normalises all
- * three into `string[]` so the controller can call `whereIn` without a second pass.
+ * Wraps the unified {@link adminOrdersView}'s TableView schema with the endpoint's free-text
+ * `q` search box (a multi-column ILIKE the runtime can't model per-field) and the soft-delete
+ * scope toggle (`trashed=true` flips the controller from `whereNull(deleted_at)` to
+ * `whereNotNull(deleted_at)`). Everything else — status, customer_id, source, payment, country,
+ * created date filter — moves to the TableView `filter[]` grammar. Old per-list query params
+ * return 422.
  */
-const csvList = vine
-    .union([
-        vine.union.if((value) => Array.isArray(value), vine.array(vine.string().trim().minLength(1).maxLength(80)).maxLength(50)),
-        vine.union.else(
-            vine
-                .string()
-                .trim()
-                .minLength(1)
-                .maxLength(400)
-                .transform((value) =>
-                    value
-                        .split(",")
-                        .map((entry) => entry.trim())
-                        .filter((entry) => entry.length > 0),
-                ),
-        ),
-    ])
-    .optional();
-
 export const adminOrderListValidator = vine.compile(
     vine.object({
-        page: vine.number().positive().optional(),
-        perPage: vine.number().positive().max(100).optional(),
-        status: vine.enum([...(ORDER_STATUS_VALUES as unknown as readonly string[]), "trashed"]).optional(),
-        customer_id: vine.number().positive().optional(),
-        created_via: vine.enum(["checkout", "admin", "api", "import"]).optional(),
-        /** Multi-value source filter (mirrors `created_via` but accepts `cod,bank_transfer` style CSV from the URL). */
-        source: csvList,
-        /** Multi-value filter against the snapshot of the chosen gateway's `code` column. */
-        payment: csvList,
-        /** Multi-value filter against the billing-address country (ISO-3166 alpha-2). */
-        country: csvList,
-        search: vine.string().trim().minLength(1).maxLength(120).optional(),
-        /**
-         * Unified date-filter shape parsed by {@link parseDateFilter}. Single URL param replaces
-         * the previous `after`/`before` pair; admits `before:<period>`, `after:<period>`,
-         * `in:YYYY-Q1`, `in:YYYY-H1`, `in:YYYY-MM`, `in:YYYY`, and `within:YYYY-MM-DD..YYYY-MM-DD`.
-         * The picker UI mirrors this exact grammar.
-         */
-        created: vine.string().trim().maxLength(60).optional(),
-        sort: vine.string().trim().maxLength(40).optional(),
+        ...adminOrdersView.schema.getProperties(),
+        q: vine.string().trim().minLength(1).maxLength(120).optional(),
+        trashed: vine.boolean().optional(),
     }),
 );
 

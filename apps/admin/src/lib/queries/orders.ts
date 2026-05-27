@@ -7,6 +7,7 @@ import { useLocale } from "next-intl";
 
 import { type SdkAdminOrderListRow, toAdminOrderDetail, toAdminOrderListRow } from "#/lib/adapters/orders";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
+import { serializeTableViewQuery, type TableViewQuery } from "#/lib/table-view";
 import type { AdminOrder, OrderStatus, Paginated } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];
@@ -30,78 +31,66 @@ interface OrderCountsEnvelope {
     data: OrderCountsMap;
 }
 
+/**
+ * Inputs accepted by {@link useOrdersList}. `query` carries the unified TableView grammar
+ * (filter / filterOr / sort / page / limit); `q` and `trashed` are the endpoint extras outside
+ * the grammar — `q` is a free-text search across `billing_email`, `order_number`, and numeric
+ * `id`; `trashed` flips the soft-delete scope so only deleted orders return.
+ */
 export interface OrdersListParams {
-    page?: number;
-    perPage?: number;
-    status?: OrderStatus | "any" | "trashed";
-    search?: string;
-    sort?: string;
-    createdVia?: string;
-    /** Multi-select source filter (mirrors the toolbar facet). Serialised as `?source=a,b,c`. */
-    sources?: string[];
-    /** Multi-select payment-method filter — values are payment_gateway.code snapshots. */
-    payments?: string[];
-    /** Multi-select billing-country filter (ISO-3166 alpha-2). */
-    countries?: string[];
-    /** Unified date filter string (`<op>:<value>`); see `apps/api/.../date_filter_parser.ts`. */
-    created?: string;
-    customerId?: number;
+    query?: TableViewQuery;
+    q?: string;
+    trashed?: boolean;
 }
 
+const PER_PAGE_DEFAULT = 25;
+
 /**
- * Paginated admin orders list. `status === "any"` (and `undefined`) skip the filter; non-`any`
- * values feed the API's `status=` query. Search is forwarded verbatim. Every filter dimension
- * lives in the query key so toggles refetch instead of mutating the same cache entry.
+ * Paginated admin orders list. Wire shape is the unified TableView grammar
+ * (`filter[]` / `filterOr[]` / `sort[]` / `page` / `limit`) plus `q` + `trashed`. Every filter
+ * dimension lives in the query key so toggles refetch instead of mutating the same cache entry.
  */
 export function useOrdersList(params: OrdersListParams = {}) {
     const locale = useLocale() as Locale;
-    const page = params.page ?? 1;
-    const perPage = params.perPage ?? 25;
-    const status = params.status === "any" ? undefined : params.status;
-    const search = params.search;
-    const sort = params.sort;
-    const createdVia = params.createdVia;
-    const created = params.created;
-    const customerId = params.customerId;
-    /** Serialise multi-select facets as CSV; absent / empty arrays drop out of the URL entirely. */
-    const sources = csvOrUndefined(params.sources);
-    const payments = csvOrUndefined(params.payments);
-    const countries = csvOrUndefined(params.countries);
+    const query: TableViewQuery = params.query ?? { page: 1, limit: PER_PAGE_DEFAULT, filter: [], filterOr: [], sort: [] };
+    const q = params.q;
+    const trashed = params.trashed;
+    /** Serialise the TableView query into repeated `filter[]=`/`filterOr[]=`/`sort[]=` entries
+     * the API's VineJS schema understands. */
+    const serialised = serializeTableViewQuery(query);
     return useQuery<OrderListEnvelope, Error, Paginated<AdminOrder>>({
-        queryKey: [
-            "admin",
-            "orders",
-            "list",
-            { locale, page, perPage, status, search, sort, createdVia, sources, payments, countries, created, customerId },
-        ],
+        queryKey: ["admin", "orders", "list", { locale, serialised, q, trashed }],
         queryFn: () =>
             apiGet<OrderListEnvelope>("orders", {
                 locale,
                 query: {
-                    page,
-                    perPage,
-                    status,
-                    search,
-                    sort,
-                    created_via: createdVia,
-                    source: sources,
-                    payment: payments,
-                    country: countries,
-                    created,
-                    customer_id: customerId,
+                    ...buildQueryRecord(serialised),
+                    q,
+                    trashed: trashed === true ? true : undefined,
                 },
             }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminOrderListRow),
-            meta: payload.meta ?? { page, perPage, total: payload.data?.length ?? 0, lastPage: 1 },
+            meta: payload.meta ?? { page: query.page, perPage: query.limit, total: payload.data?.length ?? 0, lastPage: 1 },
         }),
         placeholderData: (previous) => previous,
     });
 }
 
-function csvOrUndefined(values: string[] | undefined): string | undefined {
-    if (values === undefined || values.length === 0) return undefined;
-    return values.join(",");
+/** Collapse `[name, value][]` (with repeated names) into a record where repeated names become arrays. */
+function buildQueryRecord(entries: Array<[string, string]>): Record<string, string | string[]> {
+    const out: Record<string, string | string[]> = {};
+    for (const [k, v] of entries) {
+        const existing = out[k];
+        if (existing === undefined) {
+            out[k] = v;
+        } else if (Array.isArray(existing)) {
+            existing.push(v);
+        } else {
+            out[k] = [existing, v];
+        }
+    }
+    return out;
 }
 
 /**

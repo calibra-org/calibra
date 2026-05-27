@@ -13,7 +13,21 @@ export interface paths {
         };
         /**
          * List orders (admin)
-         * @description Paginated list of every non-deleted order. Filter by status, customer, date range, and free-text search across `order_number`, `billing_email`, and customer name. Drafts are included by default — pass `include_drafts=false` to exclude them.
+         * @description Paginated list of orders. Filter, sort, and paginate via the unified TableView wire grammar (`filter[]=field:op:value`, `filterOr[]=…`, `sort[]=field:dir`).
+         *
+         *     **Filterable fields** (with allowed operators per type):
+         *         `id` (bigint), `order_number` (bigint), `status` (enum: draft, pending, on_hold,
+         *         processing, completed, cancelled, refunded, failed), `customer_id` (bigint),
+         *         `created_via` (string), `payment_method_code_snapshot` (string), `billing_email`
+         *         (string), `created_at` (datetime), `grand_total` (bigint), `date_paid_at` (datetime),
+         *         `date_completed_at` (datetime).
+         *
+         *
+         *     **Orderable fields**: `id`, `order_number`, `status`, `created_at`, `updated_at`, `grand_total`, `date_paid_at`, `date_completed_at`.
+         *
+         *     Two extras outside the TableView grammar: `q` is a free-text search across `billing_email`, `order_number`, and `id`. `trashed=true` flips the soft-delete scope so only deleted orders are returned (default scope excludes deleted rows).
+         *
+         *     All pre-TableView per-list query params (`status=`, `customer_id=`, `source=`, `payment=`, `country=`, `created=`, `sort=`, `perPage=`) are no longer accepted and return `422`.
          */
         get: operations["adminOrdersIndex"];
         put?: never;
@@ -4551,12 +4565,22 @@ export interface components {
         };
     };
     parameters: {
+        /** @description 1-indexed page number. Defaults to 1. */
+        Page: number;
+        /** @description Items per page. Capped at 100. Defaults to 20. */
+        Limit: number;
+        /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+        Filter: string[];
+        /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+        FilterOr: string[];
+        /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+        Sort: string[];
+        /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+        LocaleHeader: "fa" | "en";
         /** @description 1-indexed page number. Defaults to 1 when omitted. */
         PageQuery: number;
         /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
         PerPageQuery: number;
-        /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
-        LocaleHeader: "fa" | "en";
         /** @description Client-generated idempotency token (≤ 64 chars) for write operations that must be safe to retry: `POST /checkout/submit`, `POST /payment/init/:order_key`, admin `POST .../refunds`. A retry with the same key returns the original result without re-running side effects. Keys are scoped per-resource (per-order for refunds, per-cart for submit). */
         IdempotencyKeyHeader: string;
     };
@@ -4569,24 +4593,20 @@ export interface operations {
     adminOrdersIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                status?: "draft" | "pending" | "on_hold" | "processing" | "completed" | "cancelled" | "refunded" | "failed";
-                customer_id?: number;
-                search?: string;
-                /** @description Unified date filter — `<op>:<value>` where op ∈ `in|before|after|within`; value ∈ `YYYY-MM-DD`, `YYYY-MM`, `YYYY-Q1..Q4`, `YYYY-H1|H2`, `YYYY`. Use `within:YYYY-MM-DD..YYYY-MM-DD` for closed ranges. Year < 1700 parses as Jalali and converts to Gregorian server-side. */
-                created?: string;
-                include_drafts?: boolean;
-                /** @description Sort key. Hyphen prefix for descending. Allowed keys&#58; `id`, `order_number`, `created_at`, `grand_total`, `status`, `paid`, `completed`. */
-                sort?: string;
-                /** @description CSV of created_via values to include (`checkout,admin,api,import`). */
-                source?: string;
-                /** @description CSV of payment method codes to include (matched against `payment_method_code_snapshot`). */
-                payment?: string;
-                /** @description CSV of ISO-3166 alpha-2 country codes to filter the billing address by. */
-                country?: string;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Free-text search across `billing_email`, `order_number`, and numeric `id`. */
+                q?: string;
+                /** @description When `true`, return only soft-deleted orders instead of live ones. */
+                trashed?: boolean;
             };
             header?: never;
             path?: never;

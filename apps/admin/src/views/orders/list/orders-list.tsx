@@ -19,12 +19,18 @@ import {
     type FacetedFilterDef,
 } from "#/components/ui/data-grid";
 import { useDataTable } from "#/components/ui/data-grid/use-data-table";
-import { serializeDateFilter } from "#/components/ui/date-picker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";
 import { formatDateTime, formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
 import { useMarkShipped, useOrderCounts, useOrdersList } from "#/lib/queries/orders";
+import {
+    dateFilterValueToTableViewFilter,
+    EMPTY_TABLE_VIEW_QUERY,
+    type TableViewFilter,
+    type TableViewQuery,
+    type TableViewSort,
+} from "#/lib/table-view";
 import type { AdminOrder } from "#/lib/types";
 
 import { RiskFlagsRow } from "../shared/risk-flag-chip";
@@ -78,10 +84,6 @@ export function OrdersList() {
     });
 
     const createdValue = tableState.dateFacetValues.created;
-    const createdParam = useMemo(
-        () => (createdValue === null ? undefined : serializeDateFilter(createdValue).main),
-        [createdValue],
-    );
 
     const status: StatusTabKey = useMemo(() => {
         const value = tableState.facetValues.status?.[0];
@@ -111,22 +113,62 @@ export function OrdersList() {
     const customerIdParam = searchParams?.get("customer_id");
     const customerIdFilter = customerIdParam !== null && customerIdParam.length > 0 ? Number(customerIdParam) : undefined;
 
-    const { data, isPending, isError, refetch } = useOrdersList({
-        page: tableState.page,
-        perPage: tableState.perPage,
-        sort:
-            tableState.sort !== undefined
-                ? tableState.sort.direction === "desc"
-                    ? `-${tableState.sort.id}`
-                    : tableState.sort.id
-                : undefined,
+    /**
+     * Compose the unified TableView query from the toolbar's facet / search / sort state. The
+     * status tab and `trashed` flag are NOT TableView filters — `status:any` and `trashed` are
+     * the page's own scope dimensions, mapped onto either a single `status:eq:X` filter or the
+     * top-level `trashed=true` flag. Country facet stays off the TableView surface in v1 (it
+     * requires a `whereExists` through `order_addresses` that the v1 runtime can't model).
+     */
+    const tableViewQuery = useMemo<TableViewQuery>(() => {
+        const filter: TableViewFilter[] = [];
+
+        if (status !== "any" && status !== "trashed") {
+            filter.push({ field: "status", op: "eq", value: status });
+        }
+        const sources = tableState.facetValues.source ?? [];
+        if (sources.length > 0) {
+            filter.push({ field: "created_via", op: "in", value: sources });
+        }
+        const payments = tableState.facetValues.payment ?? [];
+        if (payments.length > 0) {
+            filter.push({ field: "payment_method_code_snapshot", op: "in", value: payments });
+        }
+        if (customerIdFilter !== undefined && Number.isFinite(customerIdFilter)) {
+            filter.push({ field: "customer_id", op: "eq", value: customerIdFilter });
+        }
+        if (createdValue !== null) {
+            const dateFilter = dateFilterValueToTableViewFilter("created_at", createdValue);
+            if (dateFilter !== null) filter.push(dateFilter);
+        }
+
+        const sort: TableViewSort[] = [];
+        if (tableState.sort !== undefined) {
+            sort.push({ field: tableState.sort.id, dir: tableState.sort.direction });
+        }
+
+        return {
+            ...EMPTY_TABLE_VIEW_QUERY,
+            page: tableState.page,
+            limit: tableState.perPage,
+            filter,
+            sort,
+        };
+    }, [
         status,
-        search: tableState.q.length > 0 ? tableState.q : undefined,
-        sources: tableState.facetValues.source,
-        payments: tableState.facetValues.payment,
-        countries: tableState.facetValues.country,
-        created: createdParam,
-        customerId: customerIdFilter !== undefined && Number.isFinite(customerIdFilter) ? customerIdFilter : undefined,
+        tableState.facetValues.source,
+        tableState.facetValues.payment,
+        tableState.page,
+        tableState.perPage,
+        tableState.sort,
+        customerIdFilter,
+        createdValue,
+    ]);
+
+    const { data, isPending, isError, refetch } = useOrdersList({
+        query: tableViewQuery,
+        q: tableState.q.length > 0 ? tableState.q : undefined,
+        trashed: status === "trashed" ? true : undefined,
     });
 
     const rows = data?.data ?? [];

@@ -240,11 +240,11 @@ test.group("table_view runtime / relation joins", () => {
 
 test.group("table_view runtime / module wiring", () => {
     test("View exposes allowedFields including relation paths, sorted", ({ assert }) => {
-        assert.includeMembers(view.allowedFields.filterable, ["id", "first_name", "status", "user.email"]);
-        assert.includeMembers(view.allowedFields.orderable, ["id", "first_name", "user.email"]);
+        assert.includeMembers([...view.allowedFields.filterable], ["id", "first_name", "status", "user.email"]);
+        assert.includeMembers([...view.allowedFields.orderable], ["id", "first_name", "user.email"]);
         /** Sorted for stable consumer output. */
         const sorted = [...view.allowedFields.filterable].sort();
-        assert.deepEqual(view.allowedFields.filterable, sorted);
+        assert.deepEqual([...view.allowedFields.filterable], sorted);
     });
 
     test("buildFieldIndex throws synchronously on an unknown relation key", ({ assert }) => {

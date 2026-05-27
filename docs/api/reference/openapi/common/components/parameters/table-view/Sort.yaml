@@ -1,0 +1,14 @@
+name: sort[]
+in: query
+description: >
+    Sort entries in the format `field:direction` (case-insensitive `asc` or
+    `desc`). Multiple entries chain in the order supplied. The endpoint
+    description enumerates the allowed `field` set.
+required: false
+style: form
+explode: true
+schema:
+    type: array
+    items:
+        type: string
+        pattern: "^[a-zA-Z0-9_.]+:(asc|desc|ASC|DESC)$"

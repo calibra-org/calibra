@@ -161,7 +161,12 @@ export async function runTableView<Model extends LucidModel, TRow = InstanceType
     options?: TableViewRunOptions,
 ): Promise<TableViewRunResult<TRow>> {
     const ready = applyTableView(config, fieldIndex, builder, parsed, options);
-    const paginator = await ready.paginate(parsed.page, parsed.limit);
+    /** Vine's `.optional().transform(v => v ?? defaultValue)` is fired only for present values,
+     * so `parsed.page` / `parsed.limit` can legitimately be `undefined` for callers that omit
+     * both params. Apply defaults here so the paginator never receives `NaN`. */
+    const page = typeof parsed.page === "number" && parsed.page >= 1 ? parsed.page : 1;
+    const limit = typeof parsed.limit === "number" && parsed.limit >= 1 ? parsed.limit : 20;
+    const paginator = await ready.paginate(page, limit);
     const meta: PaginationMeta = {
         page: paginator.currentPage,
         perPage: paginator.perPage,
