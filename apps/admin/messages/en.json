@@ -1210,12 +1210,39 @@
                     "useForVariations": "Use for variations",
                     "terms": "Terms",
                     "addTerms": "Add term...",
-                    "remove": "Remove"
+                    "remove": "Remove",
+                    "clear": "Clear",
+                    "selectAll": "Select all",
+                    "selectNone": "Select none",
+                    "createValue": "Create value",
+                    "termCount": "{count} values",
+                    "dragHandle": "Reorder attribute",
+                    "dragTooltip": "Drag to reorder attributes",
+                    "expand": "Expand this row",
+                    "collapse": "Collapse this row",
+                    "nameLabel": "Name"
                 },
+                "toolbar": {
+                    "addExisting": "Add existing",
+                    "addNew": "Add new",
+                    "expandAll": "Expand all",
+                    "collapseAll": "Collapse all"
+                },
+                "newAttribute": {
+                    "untitled": "New attribute",
+                    "placeholderName": "e.g. length or weight",
+                    "valuesHelp": "Enter the options customers can choose from — e.g. 'Blue' or 'Large'. Press Enter after each value.",
+                    "valuesPlaceholder": "Type a value and press Enter"
+                },
+                "saveButton": "Save attributes",
+                "savedToast": "Attributes saved",
+                "saveFailedToast": "Saving attributes failed",
+                "customNotSavedWarning": "{count} custom attributes are not saved yet — click 'Save attributes' to persist them.",
                 "tooltips": {
                     "showOnProductPage": "When on, this attribute shows up in the spec table on the storefront product page.",
                     "useForVariations": "Turn on so this attribute drives the cartesian variation generator.",
-                    "useForVariationsDisabled": "Switch the product type to Variable to enable this."
+                    "useForVariationsDisabled": "Switch the product type to Variable to enable this.",
+                    "useForVariationsCustom": "Custom attributes can't drive variation generation yet."
                 },
                 "createTermFailed": "Term creation failed"
             },

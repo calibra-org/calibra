@@ -70,6 +70,15 @@ export const productDetailSchema = z
                 termIds: z.array(z.number()),
             }),
         ),
+        customAttributes: z.array(
+            z.object({
+                id: z.number().optional(),
+                name: z.string().min(1).max(200),
+                values: z.array(z.string().min(1).max(200)).max(200),
+                position: z.number().int().min(0),
+                visible: z.boolean(),
+            }),
+        ),
         defaultVariationId: z.number().nullable(),
     })
     .refine(
@@ -124,6 +133,7 @@ export function emptyProductDetailValues(): ProductDetailFormValues {
         groupedMemberIds: [],
         downloads: [],
         attributeLinks: [],
+        customAttributes: [],
         defaultVariationId: null,
     };
 }
@@ -199,6 +209,13 @@ export function productToFormValues(p: AdminProductDetailView): ProductDetailFor
             position: d.position,
         })),
         attributeLinks: p.attributeLinks,
+        customAttributes: (p.customAttributes ?? []).map((row) => ({
+            id: row.id,
+            name: row.name,
+            values: row.values,
+            position: row.position,
+            visible: row.visible,
+        })),
         defaultVariationId: p.defaultVariationId,
     };
 }
@@ -268,6 +285,13 @@ export function formValuesToPayload(values: ProductDetailFormValues): Record<str
             visible: link.visible,
             used_for_variation: link.usedForVariation,
             term_ids: link.termIds,
+        })),
+        custom_attributes: values.customAttributes.map((row, i) => ({
+            ...(row.id !== undefined ? { id: row.id } : {}),
+            name: row.name,
+            values: row.values,
+            position: i,
+            visible: row.visible,
         })),
         default_variation_id: values.defaultVariationId,
     };

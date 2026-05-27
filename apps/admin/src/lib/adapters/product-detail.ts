@@ -88,6 +88,13 @@ export interface AdminProductDetailView {
         usedForVariation: boolean;
         termIds: number[];
     }[];
+    customAttributes: {
+        id: number;
+        position: number;
+        name: string;
+        values: string[];
+        visible: boolean;
+    }[];
     defaultVariationId: number | null;
     createdAt: string;
     updatedAt: string;
@@ -210,6 +217,25 @@ export function toAdminProductDetail(p: SdkAdminProductDetail): AdminProductDeta
             visible: Boolean(row.visible),
             usedForVariation: Boolean(row.used_for_variation),
             termIds: (row.term_ids ?? []).map((id) => Number(id)),
+        })),
+        customAttributes: (
+            (
+                p as {
+                    custom_attributes?: {
+                        id: number;
+                        position: number;
+                        name: string;
+                        values: string[];
+                        visible: boolean;
+                    }[];
+                }
+            ).custom_attributes ?? []
+        ).map((row) => ({
+            id: Number(row.id),
+            position: Number(row.position),
+            name: row.name,
+            values: Array.isArray(row.values) ? row.values.map((v) => String(v)) : [],
+            visible: Boolean(row.visible),
         })),
         defaultVariationId:
             (p as { default_variation_id?: number | null }).default_variation_id === null ||

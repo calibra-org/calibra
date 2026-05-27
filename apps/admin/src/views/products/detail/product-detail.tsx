@@ -170,7 +170,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
             sections.push({
                 id: "attributes",
                 title: t("sections.attributes"),
-                body: <AttributesBody productType={type} />,
+                body: <AttributesBody productType={type} productId={initial?.id ?? null} ifMatch={initial?.updatedAt} />,
             });
         }
         if (type === "variable") {
@@ -182,7 +182,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
         }
         sections.push({ id: "advanced", title: t("sections.advanced"), body: <AdvancedBody />, defaultCollapsed: true });
         return sections;
-    }, [type, t, locale, initial?.id]);
+    }, [type, t, locale, initial?.id, initial?.updatedAt]);
 
     const sidebarSections: SectionSpec[] = useMemo(
         () => [

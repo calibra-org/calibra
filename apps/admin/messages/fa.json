@@ -1210,12 +1210,39 @@
                     "useForVariations": "استفاده برای تنوعات",
                     "terms": "مقادیر",
                     "addTerms": "افزودن مقدار...",
-                    "remove": "حذف"
+                    "remove": "حذف",
+                    "clear": "پاک کردن",
+                    "selectAll": "انتخاب همه",
+                    "selectNone": "انتخاب هیچکدام",
+                    "createValue": "ایجاد مقدار",
+                    "termCount": "{count} مقدار",
+                    "dragHandle": "جابه‌جایی ویژگی",
+                    "dragTooltip": "برای تعیین ترتیب ویژگی‌ها بکشید و رها کنید",
+                    "expand": "گسترش این ردیف",
+                    "collapse": "بستن این ردیف",
+                    "nameLabel": "نام"
                 },
+                "toolbar": {
+                    "addExisting": "موجود را اضافه کنید",
+                    "addNew": "افزودن جدید",
+                    "expandAll": "گسترش همه",
+                    "collapseAll": "بستن همه"
+                },
+                "newAttribute": {
+                    "untitled": "ویژگی جدید",
+                    "placeholderName": "برای مثال، طول یا وزن",
+                    "valuesHelp": "گزینه‌هایی را وارد کنید تا مشتریان از بین آن‌ها انتخاب کنند، برای مثال: «آبی» یا «بزرگ». پس از هر مقدار Enter بزنید.",
+                    "valuesPlaceholder": "مقدار را بنویسید و Enter بزنید"
+                },
+                "saveButton": "ذخیره ویژگی‌ها",
+                "savedToast": "ویژگی‌ها ذخیره شدند",
+                "saveFailedToast": "ذخیرهٔ ویژگی‌ها ناموفق بود",
+                "customNotSavedWarning": "{count} ویژگی سفارشی هنوز ذخیره نشده — برای ذخیرهٔ نهایی روی «ذخیره ویژگی‌ها» بزنید.",
                 "tooltips": {
                     "showOnProductPage": "اگر روشن باشد، این ویژگی در جدول مشخصات محصول در فروشگاه نمایش داده می‌شود.",
                     "useForVariations": "روشن کنید تا این ویژگی به ساخت تنوع‌های محصول کمک کند.",
-                    "useForVariationsDisabled": "برای فعال‌سازی این گزینه، نوع محصول باید «متغیر» باشد."
+                    "useForVariationsDisabled": "برای فعال‌سازی این گزینه، نوع محصول باید «متغیر» باشد.",
+                    "useForVariationsCustom": "ویژگی‌های سفارشی هنوز برای ساخت تنوعات استفاده نمی‌شوند."
                 },
                 "createTermFailed": "ایجاد مقدار ناموفق بود"
             },
