@@ -102,6 +102,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                 icon={Sparkles}
                 title={t("needChoicesTitle")}
                 description={t("needChoicesDescription")}
+                dismissible={false}
             />
         );
     }

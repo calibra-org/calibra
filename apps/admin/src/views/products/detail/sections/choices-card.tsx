@@ -203,6 +203,7 @@ export function ChoicesBody({ productType, onRequestVariableType }: ChoicesBodyP
                     icon={Layers}
                     title={t("title")}
                     description={t("empty")}
+                    dismissible={false}
                     cta={
                         productType === "variable"
                             ? undefined

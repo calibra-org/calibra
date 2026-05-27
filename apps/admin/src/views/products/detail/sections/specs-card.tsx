@@ -182,7 +182,16 @@ export function SpecsBody() {
 
     return (
         <div className="flex flex-col gap-3">
-            {isEmpty ? <OnboardingHint variant="inline" id="specs.empty" icon={Tag} title={t("title")} description={t("empty")} /> : null}
+            {isEmpty ? (
+                <OnboardingHint
+                    variant="inline"
+                    id="specs.empty"
+                    icon={Tag}
+                    title={t("title")}
+                    description={t("empty")}
+                    dismissible={false}
+                />
+            ) : null}
 
             <div className="flex flex-wrap items-center gap-2">
                 <Select
