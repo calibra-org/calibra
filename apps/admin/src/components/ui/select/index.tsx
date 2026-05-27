@@ -91,20 +91,26 @@ export function SelectItem({ className, children, ...props }: ComponentProps<typ
         <BaseSelect.Item
             data-slot="select-item"
             className={cn(
-                "relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm py-1.5 ps-8 pe-2 text-sm outline-none",
+                "relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm py-1.5 ps-2 pe-2 text-sm outline-none",
                 "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
                 "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                 className,
             )}
             {...props}
         >
-            <span className="absolute start-2 flex size-3.5 items-center justify-center">
+            {/** Single-line item text — long values ellipsis-truncate instead of pushing the popup wider than the trigger anchor. */}
+            <BaseSelect.ItemText className="min-w-0 flex-1 truncate">{children}</BaseSelect.ItemText>
+            {/**
+             * Tick lives at the END of the row (logical end — flips to the left in LTR, right
+             * in RTL via `me-0`). Sized to match the row height so it never collapses; the
+             * indicator only renders content when the item is selected, leaving a clean gap
+             * for unselected rows without padding shift.
+             */}
+            <span className="ms-2 flex size-3.5 shrink-0 items-center justify-center text-muted-foreground">
                 <BaseSelect.ItemIndicator>
                     <Check className="size-3.5" aria-hidden="true" />
                 </BaseSelect.ItemIndicator>
             </span>
-            {/** Single-line item text — long values ellipsis-truncate instead of pushing the popup wider than the trigger anchor. */}
-            <BaseSelect.ItemText className="min-w-0 flex-1 truncate">{children}</BaseSelect.ItemText>
         </BaseSelect.Item>
     );
 }
