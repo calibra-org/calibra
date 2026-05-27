@@ -38,6 +38,7 @@ export function TopProductsList({ products, locale }: TopProductsListProps) {
                                     {formatNumber(index + 1, locale)}
                                 </span>
                                 {product.imageUrl ? (
+                                    // biome-ignore lint/performance/noImgElement: top-products tile is a 32px thumb; next/image's optimizer adds no value
                                     <img
                                         src={product.imageUrl}
                                         alt=""

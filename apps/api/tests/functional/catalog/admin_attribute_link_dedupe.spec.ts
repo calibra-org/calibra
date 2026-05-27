@@ -1,11 +1,10 @@
 import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
+import { createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductAttributeTerm from "#models/product_attribute_term";
 import ProductAttributeTermTranslation from "#models/product_attribute_term_translation";
-
-import { createAttributeWithTerm, createProduct } from "./helpers.js";
 
 /**
  * Locks the `syncProductAttributeLinks` dedupe behaviour. A 23505 unique-constraint violation

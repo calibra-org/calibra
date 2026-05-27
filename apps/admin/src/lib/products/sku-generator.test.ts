@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { VariationView } from "./queries";
 import { applyPattern, defaultAbbrev, type SkuTokenSpec } from "./sku-generator";
+import type { VariationView } from "./queries";
 
 /**
  * Locks the cases the operator hit in production. The dialog's "6 duplicates" warning isn't a

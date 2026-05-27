@@ -285,6 +285,7 @@ function SingleResourcePicker({
                                                 </span>
                                                 {opt.imageUrl !== null && opt.imageUrl !== undefined && (
                                                     // eslint-disable-next-line @next/next/no-img-element
+                                                    // biome-ignore lint/performance/noImgElement: combobox thumbs are user-uploaded URLs of unknown size; next/image's optimizer is overkill here
                                                     <img
                                                         src={opt.imageUrl}
                                                         alt=""

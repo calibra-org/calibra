@@ -28,7 +28,7 @@ const productStatusTone: Record<ProductStatus, StatusTone> = {
     private: "info",
 };
 
-const stockTone: Record<StockStatus, StatusTone> = {
+const _stockTone: Record<StockStatus, StatusTone> = {
     instock: "success",
     outofstock: "danger",
     onbackorder: "warning",
@@ -436,7 +436,7 @@ interface StockCellProps {
  * status-only chip without a quantity, since the number would always be `0` and read as out of
  * stock by mistake.
  */
-function StockCell({ quantity, stockStatus, lowStock, lowStockThreshold, locale, stockT, t }: StockCellProps) {
+function StockCell({ quantity, stockStatus: _stockStatus, lowStock, lowStockThreshold, locale, stockT, t }: StockCellProps) {
     const tracked = quantity !== null;
     const isOut = tracked && quantity <= 0;
     const isLow = !isOut && tracked && (lowStock || (quantity ?? 0) <= lowStockThreshold);

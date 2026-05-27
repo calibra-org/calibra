@@ -1,7 +1,7 @@
 "use client";
 
-import { useGlobalAttributeTerms } from "#/lib/products/queries";
 import type { VariationView } from "#/lib/products/queries";
+import { useGlobalAttributeTerms } from "#/lib/products/queries";
 
 interface VersionTermNamesProps {
     pins: VariationView["pins"];
