@@ -22,13 +22,15 @@ interface DataTableEmptyProps {
 export function DataTableEmpty({ variant, title, description, primaryAction, secondaryAction }: DataTableEmptyProps) {
     const Icon = variant === "empty" ? Inbox : SearchX;
     return (
-        <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
+        <div className="flex w-full flex-col items-center gap-3 px-6 py-16 text-center">
             <div className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
                 <Icon className="size-5" aria-hidden="true" />
             </div>
-            <div className="flex max-w-md flex-col gap-1.5">
-                <p className="font-medium text-foreground">{title}</p>
-                {description !== undefined && <p className="text-muted-foreground text-sm">{description}</p>}
+            <div className="flex max-w-md flex-col items-center gap-1.5">
+                <p className="text-center font-medium text-foreground">{title}</p>
+                {description !== undefined && (
+                    <p className="text-center text-muted-foreground text-sm">{description}</p>
+                )}
             </div>
             {(primaryAction !== undefined || secondaryAction !== undefined) && (
                 <div className="mt-1 flex items-center gap-2">

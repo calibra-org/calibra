@@ -1437,7 +1437,10 @@
                 },
                 "deletedWithOrdersFallback": "This version is referenced by orders — archived instead of deleted.",
                 "rowSummaryFallback": "No values",
-                "noResults": "No version matches this filter."
+                "noResults": "No version matches this filter.",
+                "noResultsDescription": "Clear the filters to see every version again.",
+                "emptyTitle": "No sellable versions yet",
+                "emptyDescription": "Click 'Rebuild from choices' to generate the first versions from the customer choices."
             },
             "attributes": {
                 "empty": {

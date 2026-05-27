@@ -51,7 +51,6 @@ const STATUS_VALUES: VersionStatus[] = ["draft", "active", "inactive", "archived
  */
 export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     const t = useTranslations("Products.detail.versions");
-    const tChoices = useTranslations("Products.detail.choices");
     const locale = useLocale() as Locale;
     const { control, watch, getValues, formState, reset } = useFormContext<ProductDetailFormValues>();
     const attributes = useGlobalAttributes();
@@ -385,8 +384,8 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                 onClearFilters={clearAllFilters}
                 stickyColumns={{ start: ["select", "version"], end: ["actions"] }}
                 labels={{
-                    empty: { title: tChoices("totalCount", { count: 0 }), description: t("needChoicesDescription") },
-                    filtered: { title: t("noResults"), description: t("filter.clearAll") },
+                    empty: { title: t("emptyTitle"), description: t("emptyDescription") },
+                    filtered: { title: t("noResults"), description: t("noResultsDescription") },
                     clearFiltersLabel: t("filter.clearAll"),
                     errorTitle: t("toasts.generateFailed"),
                     errorRetry: t("filter.clearAll"),
