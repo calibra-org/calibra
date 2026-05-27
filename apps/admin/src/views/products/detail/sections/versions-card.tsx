@@ -2,7 +2,7 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import { Badge } from "#/components/ui/badge";
@@ -882,7 +882,24 @@ function SkuGeneratorDialog({
             }),
         [axes, attributes],
     );
-    const [pattern, setPattern] = useState<string>(() => `{product}-${tokens.map((t) => `{${t.token}}`).join("-")}`);
+    /**
+     * Default pattern uses every axis token so newly-generated SKUs are unique by construction.
+     * The dialog opens with `axes` already populated (the regenerate flow that lands here
+     * computes the cartesian from the same axes), but the `useState` initializer only runs once
+     * — if the operator hand-types into the pattern, we never overwrite their input. Otherwise
+     * if tokens fill in after first render we refresh the default in an effect so the
+     * out-of-the-box pattern always covers every axis.
+     */
+    const defaultPattern = useMemo(
+        () => (tokens.length === 0 ? "{product}" : `{product}-${tokens.map((tk) => `{${tk.token}}`).join("-")}`),
+        [tokens],
+    );
+    const [pattern, setPattern] = useState<string>(defaultPattern);
+    const [patternTouched, setPatternTouched] = useState(false);
+    useEffect(() => {
+        if (patternTouched) return;
+        setPattern(defaultPattern);
+    }, [defaultPattern, patternTouched]);
     const [abbrevByTermId, setAbbrevByTermId] = useState<Record<number, string>>({});
 
     const liveTokens = tokens.map((tk) => ({
@@ -924,7 +941,10 @@ function SkuGeneratorDialog({
                         <span className="text-muted-foreground">{t("patternLabel")}</span>
                         <Input
                             value={pattern}
-                            onChange={(e) => setPattern(e.target.value)}
+                            onChange={(e) => {
+                                setPattern(e.target.value);
+                                setPatternTouched(true);
+                            }}
                             dir="ltr"
                             className="h-8 font-mono"
                             aria-label={t("patternLabel")}
