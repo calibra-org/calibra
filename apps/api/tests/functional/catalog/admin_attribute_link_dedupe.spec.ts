@@ -60,10 +60,7 @@ test.group("Admin product attribute_links dedupe", (group) => {
         const links = response.body().data.attribute_links as { attribute_id: number; term_ids: number[] }[];
         assert.lengthOf(links, 1);
         /** Term ids unioned across both inbound entries so no value the operator picked gets dropped. */
-        assert.deepEqual(
-            links[0]!.term_ids.slice().sort(),
-            [Number(termA.id), Number(termB.id)].sort(),
-        );
+        assert.deepEqual(links[0]!.term_ids.slice().sort(), [Number(termA.id), Number(termB.id)].sort());
     });
 
     test("identical duplicate entries collapse to one without changing term_ids", async ({ client, assert }) => {

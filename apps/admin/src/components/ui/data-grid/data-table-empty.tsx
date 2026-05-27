@@ -28,9 +28,7 @@ export function DataTableEmpty({ variant, title, description, primaryAction, sec
             </div>
             <div className="flex max-w-md flex-col items-center gap-1.5">
                 <p className="text-center font-medium text-foreground">{title}</p>
-                {description !== undefined && (
-                    <p className="text-center text-muted-foreground text-sm">{description}</p>
-                )}
+                {description !== undefined && <p className="text-center text-muted-foreground text-sm">{description}</p>}
             </div>
             {(primaryAction !== undefined || secondaryAction !== undefined) && (
                 <div className="mt-1 flex items-center gap-2">

@@ -19,12 +19,7 @@ import { toast } from "#/components/ui/toast";
 import { CircleDashed, Filter, Plus, Sparkles, Trash2 } from "#/icons";
 import { formatNumber } from "#/lib/format";
 import { useBatchVariations, useDeleteVariation, useUpdateProduct, useUpdateVariation } from "#/lib/products/mutations";
-import {
-    useAttributeTermsMap,
-    useGlobalAttributes,
-    useProductVariations,
-    type VariationView,
-} from "#/lib/products/queries";
+import { useAttributeTermsMap, useGlobalAttributes, useProductVariations, type VariationView } from "#/lib/products/queries";
 import { applyPattern, defaultAbbrev, type SkuTokenSpec } from "#/lib/products/sku-generator";
 import { type AttributeAxis, diffCartesian } from "#/lib/products/variations-cartesian";
 import type { VersionStatus } from "#/lib/products/versions-format";
@@ -353,10 +348,7 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
                     selected={new Set(statusFilter as VersionStatus[])}
                     onChange={(next) => setFacetValues({ ...facetValues, status: Array.from(next) })}
                 />
-                <MissingFiltersPopover
-                    values={quickFilters}
-                    onChange={(next) => setToggleValues({ ...toggleValues, ...next })}
-                />
+                <MissingFiltersPopover values={quickFilters} onChange={(next) => setToggleValues({ ...toggleValues, ...next })} />
                 {hasActiveFilters ? (
                     <Button type="button" variant="ghost" size="sm" onClick={clearAllFilters}>
                         {t("filter.clearAll")}
@@ -794,8 +786,7 @@ function SetPriceDialog({
     const changeableRows = mode === "percent" ? selected.filter((row) => row.regularPriceMinor !== null) : selected;
     const skippedCount = selected.length - changeableRows.length;
     const previews = changeableRows.slice(0, 3).map((row) => compute(row));
-    const canApply =
-        !busy && (mode === "absolute" ? absoluteMinor !== null : changeableRows.length > 0);
+    const canApply = !busy && (mode === "absolute" ? absoluteMinor !== null : changeableRows.length > 0);
 
     return (
         <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : undefined)}>
@@ -862,11 +853,7 @@ function SetPriceDialog({
                     <Button type="button" variant="outline" onClick={onClose}>
                         {t("cancel")}
                     </Button>
-                    <Button
-                        type="button"
-                        disabled={!canApply}
-                        onClick={() => void onApply(compute)}
-                    >
+                    <Button type="button" disabled={!canApply} onClick={() => void onApply(compute)}>
                         {t("apply", { count: changeableRows.length })}
                     </Button>
                 </DialogFooter>
