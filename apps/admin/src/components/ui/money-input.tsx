@@ -73,6 +73,13 @@ export function MoneyInput({
             disabled={disabled}
             aria-invalid={ariaInvalid}
             className={className}
+            /**
+             * Live grouping (1,234,567) + no fractional Toman so the input doesn't render
+             * "835617000000000" mid-edit. Locale pins to en-US so the thousand separator stays
+             * a comma even when the operator's UI is Persian — Persian's `٬` separator would
+             * clash with the LTR digit-entry mode the input forces.
+             */
+            format={{ maximumFractionDigits: 0, useGrouping: true }}
         />
     );
 }
