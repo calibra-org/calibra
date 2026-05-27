@@ -118,7 +118,7 @@ export function SellingModeBody({ productId, locale: _locale }: SellingModeBodyP
                         <p className="text-muted-foreground text-xs">{t("subtitle")}</p>
                     </header>
 
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <ModeCard
                             icon={<Package className="size-5" aria-hidden="true" />}
                             title={t("oneVersion.title")}
@@ -136,15 +136,6 @@ export function SellingModeBody({ productId, locale: _locale }: SellingModeBodyP
                             result={t("multipleVersions.result")}
                             selected={field.value === "variable"}
                             onClick={() => requestType("variable")}
-                        />
-                        <ModeCard
-                            icon={<Sparkles className="size-5" aria-hidden="true" />}
-                            title={t("customizable.title")}
-                            description={t("customizable.description")}
-                            badge={<Badge variant="secondary">{t("customizable.comingSoon")}</Badge>}
-                            disabled
-                            selected={false}
-                            onClick={() => undefined}
                         />
                     </div>
 
@@ -169,7 +160,7 @@ export function SellingModeBody({ productId, locale: _locale }: SellingModeBodyP
                     </button>
 
                     {advancedOpen ? (
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                             <ModeCard
                                 icon={<Users className="size-5" aria-hidden="true" />}
                                 title={t("grouped.title")}
@@ -183,6 +174,15 @@ export function SellingModeBody({ productId, locale: _locale }: SellingModeBodyP
                                 description={t("external.description")}
                                 selected={field.value === "external"}
                                 onClick={() => requestType("external")}
+                            />
+                            <ModeCard
+                                icon={<Sparkles className="size-5" aria-hidden="true" />}
+                                title={t("customizable.title")}
+                                description={t("customizable.description")}
+                                badge={<Badge variant="secondary">{t("customizable.comingSoon")}</Badge>}
+                                disabled
+                                selected={false}
+                                onClick={() => undefined}
                             />
                         </div>
                     ) : null}
