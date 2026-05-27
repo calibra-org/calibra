@@ -688,14 +688,17 @@ function RegenerateDialog({
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{t("title")}</DialogTitle>
-                    <DialogDescription>
-                        <ul className="flex flex-col gap-1">
-                            <li>{t("summaryNew", { count: createCount })}</li>
-                            <li>{t("summaryUnchanged", { count: unchangedCount })}</li>
-                            {outdatedCount > 0 ? <li>{t("summaryOutdated", { count: outdatedCount })}</li> : null}
-                        </ul>
-                    </DialogDescription>
                 </DialogHeader>
+                {/**
+                 * The summary is a `<ul>`, which can't live inside `DialogDescription` (that
+                 * primitive renders a `<p>` and putting block elements inside `<p>` is invalid
+                 * HTML — React 19 raises a hydration error). Render it as a sibling instead.
+                 */}
+                <ul className="flex flex-col gap-1 text-muted-foreground text-sm">
+                    <li>{t("summaryNew", { count: createCount })}</li>
+                    <li>{t("summaryUnchanged", { count: unchangedCount })}</li>
+                    {outdatedCount > 0 ? <li>{t("summaryOutdated", { count: outdatedCount })}</li> : null}
+                </ul>
                 {outdatedCount > 0 ? (
                     <div className="flex cursor-pointer items-center gap-2 text-xs">
                         <Checkbox checked={archiveOutdated} onCheckedChange={(v) => onToggleArchiveOutdated(v === true)} />
