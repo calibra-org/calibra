@@ -144,6 +144,37 @@ export function emptyProductDetailValues(): ProductDetailFormValues {
 }
 
 /**
+ * Collapse duplicate `attributeLinks` entries by `attribute_id`. The DB enforces a unique
+ * `(product_id, attribute_id)` pair, so any save with two rows pointing at the same attribute
+ * blows up with a `23505` violation. We keep the LAST entry as the canonical row (it carries
+ * the operator's most recent flip of `visible` / `usedForVariation` / `displayType`) and union
+ * its `termIds` with the earlier dupes so a value the operator already picked doesn't vanish
+ * silently if the same attribute was added twice.
+ */
+function dedupeAttributeLinks(links: ProductDetailFormValues["attributeLinks"]): ProductDetailFormValues["attributeLinks"] {
+    const indexByAttribute = new Map<number, number>();
+    const result: ProductDetailFormValues["attributeLinks"] = [];
+    for (const link of links) {
+        const existingIndex = indexByAttribute.get(link.attributeId);
+        if (existingIndex === undefined) {
+            indexByAttribute.set(link.attributeId, result.length);
+            result.push({ ...link, termIds: [...link.termIds] });
+            continue;
+        }
+        const previous = result[existingIndex]!;
+        const mergedTermIds: number[] = [];
+        const seen = new Set<number>();
+        for (const id of [...previous.termIds, ...link.termIds]) {
+            if (seen.has(id)) continue;
+            seen.add(id);
+            mergedTermIds.push(id);
+        }
+        result[existingIndex] = { ...link, termIds: mergedTermIds };
+    }
+    return result;
+}
+
+/**
  * Drops NaN / non-finite / duplicate ids. The adapter coerces every id through `Number(...)` so
  * a missing field surfaces as `NaN`; we filter at the form boundary so React renders never see
  * duplicate `NaN` keys and async resolvers don't loop on ids that can never be resolved.
@@ -288,8 +319,15 @@ export function formValuesToPayload(values: ProductDetailFormValues): Record<str
          * the server-side value. The form's array order IS the canonical order; the dedicated
          * `position` column on the wire is what the storefront and admin lists read, so reorders
          * have to write through every save or the new order silently disappears on reload.
+         *
+         * Dedupe by `attribute_id` before sending. The DB has a unique `(product_id,
+         * attribute_id)` constraint, so duplicates introduced by a UI race (e.g. clicking a
+         * promote-to-choice while a stale field-array snapshot is in flight) or by bad legacy
+         * seed data would otherwise crash the save with a 500 instead of going through. When a
+         * dupe shows up, we keep the LAST entry (the operator's most recent edit) and union its
+         * term_ids with the earlier one's so no chosen value silently disappears.
          */
-        attribute_links: values.attributeLinks.map((link, i) => ({
+        attribute_links: dedupeAttributeLinks(values.attributeLinks).map((link, i) => ({
             attribute_id: link.attributeId,
             position: i,
             visible: link.visible,

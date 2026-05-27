@@ -195,15 +195,39 @@ export async function syncProductAttributeLinks(
     links: AttributeLinkInput[] | undefined,
 ): Promise<void> {
     if (links === undefined) return;
+    /**
+     * Dedupe by `attribute_id` before insert so the unique `(product_id, attribute_id)`
+     * constraint can't surface as a 500. Last-write-wins on metadata; term_ids unioned across
+     * dupes so values the operator picked under either entry survive the merge. The admin
+     * already collapses dupes in `formValuesToPayload`, but other clients (or a third-party
+     * integration POSTing directly) shouldn't be able to crash the save either.
+     */
+    const dedupedMap = new Map<number, AttributeLinkInput>();
+    for (const link of links) {
+        const prior = dedupedMap.get(link.attribute_id);
+        if (prior === undefined) {
+            dedupedMap.set(link.attribute_id, { ...link, term_ids: [...link.term_ids] });
+            continue;
+        }
+        const merged: number[] = [];
+        const seen = new Set<number>();
+        for (const id of [...prior.term_ids, ...link.term_ids]) {
+            if (seen.has(id)) continue;
+            seen.add(id);
+            merged.push(id);
+        }
+        dedupedMap.set(link.attribute_id, { ...link, term_ids: merged });
+    }
+    const deduped = Array.from(dedupedMap.values());
     const now = DateTime.utc().toSQL();
     await trx
         .from("product_attribute_link_terms")
         .whereIn("link_id", trx.from("product_attribute_links").where("product_id", String(productId)).select("id"))
         .delete();
     await trx.from("product_attribute_links").where("product_id", String(productId)).delete();
-    if (links.length === 0) return;
-    for (let i = 0; i < links.length; i += 1) {
-        const link = links[i]!;
+    if (deduped.length === 0) return;
+    for (let i = 0; i < deduped.length; i += 1) {
+        const link = deduped[i]!;
         const [{ id }] = await trx
             .table("product_attribute_links")
             .returning("id")
