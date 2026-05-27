@@ -14,6 +14,7 @@ import type { CSSProperties } from "react";
 
 import { Button } from "#/components/ui/button";
 import { toast } from "#/components/ui/toast";
+import { GripVertical } from "#/icons";
 import { useCreateAttributeTerm } from "#/lib/products/mutations";
 import { useGlobalAttributeTerms } from "#/lib/products/queries";
 import { cn } from "#/lib/utils";
@@ -120,30 +121,64 @@ interface TermChipProps {
     onClick: () => void;
 }
 
+/**
+ * Active chips get a separate grip dot so click-to-deselect and drag-to-reorder don't compete
+ * over the same pointer gesture. dnd-kit's setNodeRef + attributes ride on the outer `<div>`
+ * (which is not interactive), the grip `<button>` carries the listeners, and the label
+ * `<button>` is click-only. Inactive chips skip the grip entirely — they're not in the
+ * ordered list yet, so there's nothing to drag.
+ */
 function TermChip({ id, active, sortable, label, onClick }: TermChipProps) {
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id,
         disabled: !sortable,
     });
     const style: CSSProperties = { transform: CSS.Translate.toString(transform), transition };
+
+    if (!active) {
+        return (
+            <button
+                ref={setNodeRef}
+                style={style}
+                type="button"
+                onClick={onClick}
+                {...attributes}
+                className="rounded-md border border-border px-2 py-0.5 text-muted-foreground text-xs transition-colors hover:border-ring/40"
+            >
+                {label}
+            </button>
+        );
+    }
+
     return (
-        <button
+        <div
             ref={setNodeRef}
             style={style}
-            type="button"
-            onClick={onClick}
             {...attributes}
-            {...(sortable ? listeners : {})}
             className={cn(
-                "rounded-md border px-2 py-0.5 text-xs transition-colors",
-                active
-                    ? "border-primary/50 bg-primary/10 text-foreground"
-                    : "border-border text-muted-foreground hover:border-ring/40",
-                sortable && "cursor-grab active:cursor-grabbing",
+                "inline-flex items-center overflow-hidden rounded-md border border-primary/50 bg-primary/10 text-xs transition-colors",
                 isDragging && "opacity-70 ring-2 ring-primary/40",
             )}
         >
-            {label}
-        </button>
+            <button
+                type="button"
+                {...(sortable ? listeners : {})}
+                aria-label="reorder"
+                className={cn(
+                    "flex items-center justify-center self-stretch border-primary/30 border-e px-1 text-muted-foreground/70 transition-colors",
+                    "hover:bg-primary/20 hover:text-foreground active:cursor-grabbing",
+                    sortable && "cursor-grab",
+                )}
+            >
+                <GripVertical className="size-3" aria-hidden="true" />
+            </button>
+            <button
+                type="button"
+                onClick={onClick}
+                className="px-2 py-0.5 text-foreground transition-colors hover:bg-primary/20"
+            >
+                {label}
+            </button>
+        </div>
     );
 }

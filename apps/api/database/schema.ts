@@ -1248,12 +1248,14 @@ export class ProcessedWebhookEventSchema extends BaseModel {
 }
 
 export class ProductAttributeLinkTermSchema extends BaseModel {
-  static $columns = ['createdAt', 'linkId', 'termId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'linkId', 'position', 'termId', 'updatedAt'] as const
   $columns = ProductAttributeLinkTermSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column({ isPrimary: true })
   declare linkId: bigint | number
+  @column()
+  declare position: number
   @column()
   declare termId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })

@@ -219,9 +219,10 @@ export async function syncProductAttributeLinks(
             });
         if (link.term_ids.length > 0) {
             await trx.table("product_attribute_link_terms").insert(
-                link.term_ids.map((termId) => ({
+                link.term_ids.map((termId, termPos) => ({
                     link_id: id,
                     term_id: termId,
+                    position: termPos,
                     created_at: now,
                     updated_at: now,
                 })),
