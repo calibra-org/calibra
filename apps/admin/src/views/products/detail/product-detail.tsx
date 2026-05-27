@@ -151,25 +151,29 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
 
     const labels = { grabHandle: tDnd("grabHandle"), collapse: tDnd("collapse"), expand: tDnd("expand") };
 
+    /**
+     * Section order follows the operator's mental flow from "what is this product" → "what does
+     * it cost / how do we ship it" → "edge cases". Every section that the `sellingMode` toggle
+     * gates (specs / choices / versions) lives directly under it so the page reads as one
+     * coherent story instead of jumping back and forth between concepts.
+     *
+     *   1. sellingMode     foundational decision
+     *   2. general         identity
+     *   3. description     long body
+     *   4. specs           descriptive metadata               (simple + variable)
+     *   5. choices         options the shopper picks          (variable only)
+     *   6. versions        the SKUable rows                   (variable only)
+     *   7. pricing         money                              (everything except grouped)
+     *   8. inventory       stock pool                         (simple only — per-version stock lives in Versions)
+     *   9. shipping        weight / dimensions                (physical, non-digital, simple/variable)
+     *  10. advanced        opt-in / rarely-changed switches   (collapsed)
+     */
     const mainSections: SectionSpec[] = useMemo(() => {
         const sections: SectionSpec[] = [
             { id: "sellingMode", title: t("sections.sellingMode"), body: <SellingModeBody productId={initial?.id ?? null} locale={locale} /> },
             { id: "general", title: t("sections.general"), body: <GeneralBody locale={locale} /> },
             { id: "description", title: t("sections.description"), body: <DescriptionBody /> },
         ];
-        if (type !== "grouped") {
-            sections.push({
-                id: "pricing",
-                title: t("sections.pricing"),
-                body: <PricingBody externalUrlVariant={type === "external"} />,
-            });
-        }
-        if (type === "simple") {
-            sections.push({ id: "inventory", title: t("sections.inventory"), body: <InventoryBody /> });
-        }
-        if ((type === "simple" || type === "variable") && !isDigital) {
-            sections.push({ id: "shipping", title: t("sections.shipping"), body: <ShippingBody /> });
-        }
         if (type !== "external" && type !== "grouped") {
             sections.push({
                 id: "specs",
@@ -193,6 +197,19 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
                 title: t("sections.versions"),
                 body: <VersionsBody productId={initial?.id ?? null} productType={type} />,
             });
+        }
+        if (type !== "grouped") {
+            sections.push({
+                id: "pricing",
+                title: t("sections.pricing"),
+                body: <PricingBody externalUrlVariant={type === "external"} />,
+            });
+        }
+        if (type === "simple") {
+            sections.push({ id: "inventory", title: t("sections.inventory"), body: <InventoryBody /> });
+        }
+        if ((type === "simple" || type === "variable") && !isDigital) {
+            sections.push({ id: "shipping", title: t("sections.shipping"), body: <ShippingBody /> });
         }
         sections.push({ id: "advanced", title: t("sections.advanced"), body: <AdvancedBody />, defaultCollapsed: true });
         return sections;
