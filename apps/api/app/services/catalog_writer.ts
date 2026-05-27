@@ -224,6 +224,65 @@ export async function syncProductAttributeLinks(
     }
 }
 
+export interface CustomAttributeInput {
+    id?: number;
+    name: string;
+    values: string[];
+    position?: number;
+    visible?: boolean;
+}
+
+/**
+ * Replace `product_custom_attributes` rows for a product. Same diff-by-id shape as
+ * {@link syncProductDownloads}: rows whose `id` is not in the inbound list are deleted,
+ * rows with no id are inserted, rows with an id are updated in-place. Position falls back
+ * to array index. Values are stored as a JSONB string[] inline — they have no shared term
+ * table by design, and they never feed the variations cartesian builder.
+ */
+export async function syncProductCustomAttributes(
+    trx: TransactionClientContract,
+    productId: bigint | number,
+    rows: CustomAttributeInput[] | undefined,
+): Promise<void> {
+    if (rows === undefined) return;
+    const now = DateTime.utc().toSQL();
+    const keepIds = rows.map((r) => r.id).filter((id): id is number => typeof id === "number" && Number.isFinite(id));
+    if (keepIds.length === 0) {
+        await trx.from("product_custom_attributes").where("product_id", String(productId)).delete();
+    } else {
+        await trx.from("product_custom_attributes").where("product_id", String(productId)).whereNotIn("id", keepIds).delete();
+    }
+    let index = 0;
+    for (const row of rows) {
+        const position = row.position ?? index;
+        const valuesJson = JSON.stringify(row.values ?? []);
+        if (typeof row.id === "number" && Number.isFinite(row.id)) {
+            await trx
+                .from("product_custom_attributes")
+                .where("id", row.id)
+                .where("product_id", String(productId))
+                .update({
+                    name: row.name,
+                    values: valuesJson,
+                    position,
+                    visible: row.visible ?? true,
+                    updated_at: now,
+                });
+        } else {
+            await trx.table("product_custom_attributes").insert({
+                product_id: productId,
+                name: row.name,
+                values: valuesJson,
+                position,
+                visible: row.visible ?? true,
+                created_at: now,
+                updated_at: now,
+            });
+        }
+        index += 1;
+    }
+}
+
 /** Replace `product_images` rows for a product with the given media ids, preserving order. */
 export async function syncProductImages(
     trx: TransactionClientContract,

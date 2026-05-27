@@ -61,6 +61,12 @@ allOf:
                       term_ids:
                           type: array
                           items: { type: integer }
+          custom_attributes:
+              type: array
+              description: >
+                  Per-product attributes (name + chip values) that have no global taxonomy
+                  counterpart and never feed variation generation.
+              items: { $ref: "./AdminCustomAttribute.yaml" }
           categories:
               type: array
               items:

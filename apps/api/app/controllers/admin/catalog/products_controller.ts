@@ -11,6 +11,7 @@ import {
     syncLinks,
     syncOrderedLinks,
     syncProductAttributeLinks,
+    syncProductCustomAttributes,
     syncProductDownloads,
     syncProductImages,
     upsertTranslations,
@@ -394,6 +395,7 @@ export default class AdminProductsController {
             );
             await syncProductDownloads(trx, row.id, payload.downloads);
             await syncProductAttributeLinks(trx, row.id, payload.attribute_links);
+            await syncProductCustomAttributes(trx, row.id, payload.custom_attributes);
             return row;
         });
         const reloaded = await this.reload(product.id);
@@ -417,7 +419,7 @@ export default class AdminProductsController {
         const linkedTouched =
             payload.upsell_ids !== undefined || payload.cross_sell_ids !== undefined || payload.grouped_member_ids !== undefined;
         const downloadsTouched = payload.downloads !== undefined;
-        const attributesTouched = payload.attribute_links !== undefined;
+        const attributesTouched = payload.attribute_links !== undefined || payload.custom_attributes !== undefined;
         await withTransaction(async (trx) => {
             product.useTransaction(trx);
             assignProductFields(product, payload);
@@ -455,6 +457,7 @@ export default class AdminProductsController {
             );
             await syncProductDownloads(trx, product.id, payload.downloads);
             await syncProductAttributeLinks(trx, product.id, payload.attribute_links);
+            await syncProductCustomAttributes(trx, product.id, payload.custom_attributes);
         });
         const reloaded = await this.reload(product.id);
         await CacheInvalidation.productChanged(product.id);
@@ -830,6 +833,7 @@ export default class AdminProductsController {
             .preload("images", (q) => q.preload("media"))
             .preload("variations", (q) => q.preload("translations").preload("attributePins"))
             .preload("attributeLinks", (q) => q.preload("terms"))
+            .preload("customAttributes", (q) => q.orderBy("position"))
             .preload("categories", (q) => q.preload("translations"))
             .preload("tags", (q) => q.preload("translations"))
             .preload("brands", (q) => q.preload("translations"))

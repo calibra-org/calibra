@@ -132,6 +132,29 @@ export default class ProductTransformer extends BaseTransformer<Product> {
                 term_ids: (link.terms ?? []).map((t) => Number(t.id)),
             }));
 
+        const customAttributes = (
+            (
+                p as unknown as {
+                    customAttributes?: {
+                        id: bigint | number;
+                        position: number;
+                        name: string;
+                        values: unknown;
+                        visible: boolean;
+                    }[];
+                }
+            ).customAttributes ?? []
+        )
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map((row) => ({
+                id: Number(row.id),
+                position: row.position,
+                name: row.name,
+                values: Array.isArray(row.values) ? (row.values as string[]) : [],
+                visible: Boolean(row.visible),
+            }));
+
         const categories = (p.categories ?? []).map((c) => ({
             id: Number(c.id),
             name: pickTranslation(c.translations, this.locale)?.name ?? null,
@@ -155,6 +178,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             images,
             variations,
             attribute_links: attributeLinks,
+            custom_attributes: customAttributes,
             categories,
             tags,
             brands,

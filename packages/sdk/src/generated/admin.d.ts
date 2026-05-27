@@ -4204,6 +4204,21 @@ export interface components {
             description?: string | null;
         };
         /**
+         * AdminCustomAttribute
+         * @description Per-product custom attribute row. Unlike global attribute links, custom rows carry the name + values inline (no shared taxonomy) and never feed variation generation — they're a freeform display-only slot for operator-typed metadata like "Material" or "Origin".
+         */
+        AdminCustomAttribute: {
+            /** @description Stable row id; survives renames and reorders. */
+            id: number;
+            /** @description Display order within the product's attribute card. */
+            position: number;
+            name: string;
+            /** @description Chip-style values entered by the operator. Order is preserved. */
+            values: string[];
+            /** @description Surface on the storefront product page (specs table). */
+            visible: boolean;
+        };
+        /**
          * AdminProductDetail
          * @description Admin detail-page payload for a single product. Matches `ProductTransformer.forAdmin()` exactly — the storefront detail shape extended with every translation row, the `global_unique_id`, the free-form `attributes` map, and the audit timestamps.
          */
@@ -4244,6 +4259,8 @@ export interface components {
                 used_for_variation: boolean;
                 term_ids: number[];
             }[];
+            /** @description Per-product attributes (name + chip values) that have no global taxonomy counterpart and never feed variation generation. */
+            custom_attributes?: components["schemas"]["AdminCustomAttribute"][];
             categories?: {
                 id: number;
                 name?: string | null;
@@ -7957,6 +7974,15 @@ export interface operations {
                         /** @default false */
                         variation?: boolean;
                         term_ids?: number[];
+                    }[];
+                    /** @description Per-product attributes (name + chip values). Persisted to the `product_custom_attributes` sibling table; never feed variation generation. Max 50 rows. */
+                    custom_attributes?: {
+                        id?: number;
+                        name: string;
+                        position?: number;
+                        /** @default true */
+                        visible?: boolean;
+                        values: string[];
                     }[];
                     translations: components["schemas"]["AdminTranslationInput"][];
                 };

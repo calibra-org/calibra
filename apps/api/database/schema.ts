@@ -1466,6 +1466,27 @@ export class ProductCrossSellSchema extends BaseModel {
   declare updatedAt: DateTime
 }
 
+export class ProductCustomAttributeSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'name', 'position', 'productId', 'updatedAt', 'values', 'visible'] as const
+  $columns = ProductCustomAttributeSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare name: string
+  @column()
+  declare position: number
+  @column()
+  declare productId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare values: any
+  @column()
+  declare visible: boolean
+}
+
 export class ProductDownloadSchema extends BaseModel {
   static $columns = ['createdAt', 'downloadExpiryDays', 'downloadLimit', 'fileLabel', 'id', 'mediaId', 'position', 'productId', 'updatedAt'] as const
   $columns = ProductDownloadSchema.$columns

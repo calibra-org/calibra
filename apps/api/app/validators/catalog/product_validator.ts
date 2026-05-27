@@ -27,6 +27,14 @@ const DOWNLOAD_SCHEMA = vine.object({
     position: vine.number().min(0).optional(),
 });
 
+const CUSTOM_ATTRIBUTE_SCHEMA = vine.object({
+    id: vine.number().optional(),
+    name: vine.string().trim().minLength(1).maxLength(200),
+    values: vine.array(vine.string().trim().minLength(1).maxLength(200)).maxLength(200),
+    position: vine.number().min(0).optional(),
+    visible: vine.boolean().optional(),
+});
+
 export const createProductValidator = vine.compile(
     vine.object({
         type: vine.enum(["simple", "variable", "grouped", "external"]).optional(),
@@ -70,6 +78,7 @@ export const createProductValidator = vine.compile(
         downloads: vine.array(DOWNLOAD_SCHEMA).optional(),
         pos_available: vine.boolean().optional(),
         attribute_links: vine.array(ATTRIBUTE_LINK_SCHEMA).optional(),
+        custom_attributes: vine.array(CUSTOM_ATTRIBUTE_SCHEMA).maxLength(50).optional(),
         default_variation_id: vine.number().nullable().optional(),
     }),
 );
@@ -117,6 +126,7 @@ export const updateProductValidator = vine.compile(
         downloads: vine.array(DOWNLOAD_SCHEMA).optional(),
         pos_available: vine.boolean().optional(),
         attribute_links: vine.array(ATTRIBUTE_LINK_SCHEMA).optional(),
+        custom_attributes: vine.array(CUSTOM_ATTRIBUTE_SCHEMA).maxLength(50).optional(),
         default_variation_id: vine.number().nullable().optional(),
     }),
 );
