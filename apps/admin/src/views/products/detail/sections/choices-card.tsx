@@ -25,7 +25,7 @@ import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "#/components/ui/button";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { AlertTriangle, ChevronDown, ChevronEnd, ChevronRight, Layers, Sparkles, X } from "#/icons";
+import { AlertTriangle, ChevronDown, ChevronEnd, ChevronRight, Layers, Sparkles } from "#/icons";
 import { formatNumber } from "#/lib/format";
 import { useGlobalAttributes } from "#/lib/products/queries";
 import { cartesianPins } from "#/lib/products/variations-cartesian";
@@ -477,55 +477,34 @@ function ChoicesFooter({ total, locale }: { total: number; locale: Locale }) {
     );
 }
 
-const EXPLAINER_KEY = "products.detail.choices.explainer.dismissed";
-
+/**
+ * Reference card explaining the choices → versions concept. Collapsed by default; the operator
+ * expands the chevron when they want the worked iPhone example. Permanently visible — there's
+ * no dismiss path because the collapsed state already gets it out of the way.
+ */
 function ChoicesExplainer() {
     const t = useTranslations("Products.detail.choices.explainer");
-    const [dismissed, setDismissed] = useState<boolean>(() => {
-        if (typeof window === "undefined") return false;
-        return window.localStorage.getItem(EXPLAINER_KEY) === "1";
-    });
-    /**
-     * Start collapsed so the explainer doesn't dominate the Customer choices section. Operators
-     * who want the worked-example open it via the chevron; their preference isn't persisted —
-     * the explainer is reference material, not a per-product setting.
-     */
     const [open, setOpen] = useState<boolean>(false);
-
-    if (dismissed) return null;
 
     const choiceBullets = ["رنگ: نقره‌ای، آبی", "حافظه: ۱۲۸ گیگ، ۲۵۶ گیگ"];
     const versionBullets = ["نقره‌ای / ۱۲۸ گیگ", "نقره‌ای / ۲۵۶ گیگ", "آبی / ۱۲۸ گیگ", "آبی / ۲۵۶ گیگ"];
 
     return (
         <div className="rounded-md border border-border bg-muted/30 text-xs">
-            <div className="flex items-center gap-2 px-3 py-2">
-                <button
-                    type="button"
-                    className="flex flex-1 items-center gap-2 text-start text-foreground"
-                    onClick={() => setOpen((v) => !v)}
-                    aria-expanded={open}
-                >
-                    {open ? (
-                        <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                    ) : (
-                        <ChevronRight className="size-3.5 text-muted-foreground" data-rtl-flip aria-hidden="true" />
-                    )}
-                    <Sparkles className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                    <span className="font-medium">{t("title")}</span>
-                </button>
-                <button
-                    type="button"
-                    className="grid size-6 place-items-center rounded text-muted-foreground hover:bg-background hover:text-destructive"
-                    aria-label={t("dismiss")}
-                    onClick={() => {
-                        if (typeof window !== "undefined") window.localStorage.setItem(EXPLAINER_KEY, "1");
-                        setDismissed(true);
-                    }}
-                >
-                    <X className="size-3.5" aria-hidden="true" />
-                </button>
-            </div>
+            <button
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-2 text-start text-foreground"
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+            >
+                {open ? (
+                    <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                ) : (
+                    <ChevronRight className="size-3.5 text-muted-foreground" data-rtl-flip aria-hidden="true" />
+                )}
+                <Sparkles className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                <span className="font-medium">{t("title")}</span>
+            </button>
             {open ? (
                 <div className="flex flex-col gap-3 border-border border-t bg-background px-3 py-3">
                     <p>
