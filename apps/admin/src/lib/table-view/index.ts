@@ -7,6 +7,19 @@ export {
 } from "./constants";
 export { dateFilterValueToTableViewFilter } from "./date-adapter";
 export {
+    dateFacetToTableViewFilter,
+    type DateFacetColumnMap,
+    type DateFacetColumnSpec,
+    type FacetColumnMap,
+    type FacetColumnSpec,
+    serializeDateFacetForUrl,
+    singleSortToTableView,
+    tableViewToSingleSort,
+    useDateFacetValues,
+    useFacetValuesFromQuery,
+    useSetFacetValue,
+} from "./facet-adapter";
+export {
     applyTableViewPatch,
     EMPTY_TABLE_VIEW_QUERY,
     parseTableViewQuery,

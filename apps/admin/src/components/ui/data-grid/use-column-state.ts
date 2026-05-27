@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import type { DataTableDensity } from "./types";
+
 /**
  * Persisted column visibility + order + density for one list page. The state lives in
  * `localStorage` (namespaced by the caller-supplied `id` so two tables on different routes
@@ -11,7 +13,7 @@ import { useCallback, useEffect, useState } from "react";
  * Companion to {@link useSelectionState} (in-memory only) and {@link useTableView} (URL state).
  * Together they replace the older monolithic `useDataTable`.
  */
-export type DataTableDensity = "compact" | "comfortable" | "spacious";
+export type { DataTableDensity };
 
 export interface UseColumnStateOptions {
     /** Stable id used to namespace `localStorage` keys. */

@@ -3,8 +3,8 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { Globe, Plus, Tag } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { parseAsStringEnum, useQueryState } from "nuqs";
-import { useMemo, useState } from "react";
+import { parseAsString, parseAsStringEnum } from "nuqs";
+import { useCallback, useMemo, useState } from "react";
 
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
@@ -15,9 +15,22 @@ import {
     DataTableViewOptions,
     type DateFacetDef,
     type FacetedFilterDef,
+    useColumnState,
+    useSelectionState,
 } from "#/components/ui/data-grid";
-import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { formatNumber } from "#/lib/format";
+import {
+    dateFilterValueToTableViewFilter,
+    type FacetColumnMap,
+    serializeDateFacetForUrl,
+    singleSortToTableView,
+    tableViewToSingleSort,
+    type TableViewFilter,
+    useDateFacetValues,
+    useFacetValuesFromQuery,
+    useSetFacetValue,
+    useTableView,
+} from "#/lib/table-view";
 import {
     type CustomerTabKey,
     useBulkRowPasswordResetMutation,
@@ -27,13 +40,6 @@ import {
     useDeleteCustomer,
     useRestoreCustomer,
 } from "#/lib/queries/customers";
-import {
-    dateFilterValueToTableViewFilter,
-    EMPTY_TABLE_VIEW_QUERY,
-    type TableViewFilter,
-    type TableViewQuery,
-    type TableViewSort,
-} from "#/lib/table-view";
 import type { AdminCustomer } from "#/lib/types";
 
 import { CustomerBulkActions } from "./bulk-actions";
@@ -54,17 +60,58 @@ const SUSPENSION_FACET_OPTIONS = ["active", "suspended"] as const;
 
 const TAB_VALUES: CustomerTabKey[] = ["any", "account", "guest", "big", "new", "inactive", "no_address", "trashed"];
 
+/**
+ * Facet → TableView column mapping. The toolbar's `country` facet projects onto
+ * `filter[]=country_default:in:...` on the wire; `status` projects onto `filter[]=status:in:...`.
+ * Values get uppercased for the country code so the wire stays canonical.
+ */
+const FACET_COLUMN_MAP: FacetColumnMap = {
+    country: { field: "country_default", op: "in", transform: (v) => v.toUpperCase() },
+    status: { field: "status", op: "in" },
+};
+
+/**
+ * Date-facet keys (separate from `FACET_COLUMN_MAP` because date-pickers carry a richer value
+ * shape than multi-select facets). `created` flows through the TableView filter on
+ * `created_at`; `lastOrder` is an aggregate over the orders table so it travels as the
+ * `last_order_after` / `last_order_before` extras instead.
+ */
+const DATE_FACET_KEYS = { created: { field: "created_at", calendar: "auto" as const } };
+
 export function CustomersListClient() {
     const locale = useLocale() as Locale;
     const t = useTranslations("Customers");
     const statusT = useTranslations("Customers.statusBadge");
-    /**
-     * Tab state goes through nuqs so it survives refreshes and is shareable as a deep link.
-     * `parseAsStringEnum` clamps the value to the allowed set — anyone hitting `?tab=garbage`
-     * falls back to `any` rather than sending bad input to the API.
-     */
-    const [tab, setTab] = useQueryState("tab", parseAsStringEnum<CustomerTabKey>(TAB_VALUES).withDefault("any"));
     const [newSheetOpen, setNewSheetOpen] = useState(false);
+
+    /**
+     * One URL-state hook for everything that lives on the wire: pagination, sort, filter[],
+     * filterOr[], plus the customers-specific extras (`q`, `tab`, the date-chip URL strings
+     * `created` / `lastOrder`, and the aggregate `last_order_after` / `last_order_before`
+     * bounds the controller's whereExists subquery applies).
+     */
+    const tv = useTableView({
+        extras: {
+            q: parseAsString.withDefault(""),
+            tab: parseAsStringEnum<CustomerTabKey>(TAB_VALUES).withDefault("any"),
+            created: parseAsString.withDefault(""),
+            lastOrder: parseAsString.withDefault(""),
+            last_order_after: parseAsString.withDefault(""),
+            last_order_before: parseAsString.withDefault(""),
+        },
+    });
+
+    const ui = useColumnState({
+        id: TABLE_ID,
+        defaultColumnVisibility: {
+            nationalId: false,
+            country: false,
+            aov: false,
+            createdAt: false,
+        },
+    });
+
+    const selection = useSelectionState();
 
     const { data: counts } = useCustomerCounts();
 
@@ -96,90 +143,83 @@ export function CustomersListClient() {
         [t],
     );
 
-    const tableState = useDataTable({
-        id: TABLE_ID,
-        facets,
-        dateFacets,
-        defaultLimit: 20,
-        defaultColumnVisibility: {
-            nationalId: false,
-            country: false,
-            aov: false,
-            createdAt: false,
+    /** Facet values projected from the canonical TableView filter[]. Read-only — onChange goes
+     *  back through `tv.setFilter` to keep the URL in lock-step with the wire shape. */
+    const facetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
+    const setFacetValues = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
+
+    /** Date facets need their own URL slot (`?created=…`, `?lastOrder=…`) because the picker
+     *  primitive parses its own grammar (`in:30d`, `within:2026-01-01..2026-05-26`, …). The
+     *  TableView projection lives elsewhere — for `created` it's a filter entry on
+     *  `created_at`; for `lastOrder` it's the aggregate bounds extras pair. */
+    const dateFacetValues = useDateFacetValues(
+        useMemo(() => ({ created: tv.created, lastOrder: tv.lastOrder }), [tv.created, tv.lastOrder]),
+        useMemo(() => ({ ...DATE_FACET_KEYS, lastOrder: { field: "last_order_at", calendar: "auto" as const } }), []),
+    );
+
+    const setDateFacet = useCallback(
+        (key: string, value: typeof dateFacetValues.created) => {
+            const urlForm = serializeDateFacetForUrl(value);
+            if (key === "created") {
+                tv.setCreated(urlForm ?? "");
+                /** Sync the TableView filter on `created_at` so the wire and URL agree. */
+                const remaining = tv.query.filter.filter((f) => f.field !== "created_at");
+                if (value !== null) {
+                    const mapped = dateFilterValueToTableViewFilter("created_at", value);
+                    tv.setFilter(mapped !== null ? [...remaining, mapped] : remaining);
+                } else {
+                    tv.setFilter(remaining);
+                }
+                return;
+            }
+            if (key === "lastOrder") {
+                tv.setLastOrder(urlForm ?? "");
+                /** Aggregate bounds — the controller applies `orders.created_at >= after AND <= before`
+                 *  via a whereExists subquery; can't be a TableView filter on customers. */
+                if (value === null) {
+                    tv.setLast_order_after("");
+                    tv.setLast_order_before("");
+                    return;
+                }
+                const mapped = dateFilterValueToTableViewFilter("last_order_at", value);
+                if (mapped === null) {
+                    tv.setLast_order_after("");
+                    tv.setLast_order_before("");
+                    return;
+                }
+                if (mapped.op === "between") {
+                    const [start, end] = mapped.value as readonly [string, string];
+                    tv.setLast_order_after(start);
+                    tv.setLast_order_before(end);
+                } else if (mapped.op === "gte") {
+                    tv.setLast_order_after(mapped.value as string);
+                    tv.setLast_order_before("");
+                } else if (mapped.op === "lte") {
+                    tv.setLast_order_after("");
+                    tv.setLast_order_before(mapped.value as string);
+                }
+            }
         },
-    });
+        [tv],
+    );
 
-    const createdValue = tableState.dateFacetValues.created;
-    const lastOrderValue = tableState.dateFacetValues.lastOrder;
-    /** Translate the picker's `DateFilterValue` to inclusive ISO bounds the controller's
-     * whereExists subquery applies as `orders.created_at >= after AND <= before`. The
-     * date-picker → TableView adapter handles calendar conversion + end-of-day rounding; here we
-     * just project the resulting `gte` / `lte` / `between` shape onto two scalar slots. */
-    const lastOrderBounds = useMemo(() => {
-        if (lastOrderValue === null) return { after: undefined as string | undefined, before: undefined as string | undefined };
-        const mapped = dateFilterValueToTableViewFilter("last_order_at", lastOrderValue);
-        if (mapped === null) return { after: undefined as string | undefined, before: undefined as string | undefined };
-        if (mapped.op === "between") {
-            const [start, end] = mapped.value as readonly [string, string];
-            return { after: start, before: end };
-        }
-        if (mapped.op === "gte") return { after: mapped.value as string, before: undefined };
-        if (mapped.op === "lte") return { after: undefined, before: mapped.value as string };
-        return { after: undefined as string | undefined, before: undefined as string | undefined };
-    }, [lastOrderValue]);
+    /** Sort projection — the TableView grammar uses an array but the column-header component
+     *  is still single-sort. Project both directions through tiny helpers. */
+    const sort = tableViewToSingleSort(tv.query.sort);
+    const setSort = useCallback(
+        (next: typeof sort) => {
+            tv.setSort(singleSortToTableView(next));
+        },
+        [tv.setSort],
+    );
 
-    /**
-     * Compose the unified TableView query from the toolbar's simple-column facets + sort. Tab,
-     * search (`q`), and `last_order_*` stay outside the TableView grammar (tab is a bespoke
-     * scope dimension, `q` is a multi-column ILIKE, `last_order_*` are aggregate bounds against
-     * the orders table that the v1 runtime can't express).
-     */
-    const tableViewQuery = useMemo<TableViewQuery>(() => {
-        const filter: TableViewFilter[] = [];
-        const countries = tableState.facetValues.country ?? [];
-        if (countries.length > 0) {
-            filter.push({ field: "country_default", op: "in", value: countries.map((c) => c.toUpperCase()) });
-        }
-        const statuses = tableState.facetValues.status ?? [];
-        if (statuses.length > 0) {
-            filter.push({ field: "status", op: "in", value: statuses });
-        }
-        if (createdValue !== null) {
-            const dateFilter = dateFilterValueToTableViewFilter("created_at", createdValue);
-            if (dateFilter !== null) filter.push(dateFilter);
-        }
-        const sort: TableViewSort[] = [];
-        if (tableState.sort !== undefined) {
-            sort.push({ field: tableState.sort.id, dir: tableState.sort.direction });
-        }
-        return {
-            ...EMPTY_TABLE_VIEW_QUERY,
-            page: tableState.page,
-            limit: tableState.limit,
-            filter,
-            sort,
-        };
-    }, [
-        tableState.facetValues.country,
-        tableState.facetValues.status,
-        tableState.page,
-        tableState.limit,
-        tableState.sort,
-        createdValue,
-    ]);
-
-    const {
-        data: result,
-        isPending,
-        isError,
-        refetch,
-    } = useCustomersList({
-        query: tableViewQuery,
-        q: tableState.q.length > 0 ? tableState.q : undefined,
-        tab,
+    const { data: result, isPending, isError, refetch } = useCustomersList({
+        query: tv.query,
+        q: tv.q.length > 0 ? tv.q : undefined,
+        tab: tv.tab,
         includeStats: true,
-        lastOrderAfter: lastOrderBounds.after,
-        lastOrderBefore: lastOrderBounds.before,
+        lastOrderAfter: tv.last_order_after.length > 0 ? tv.last_order_after : undefined,
+        lastOrderBefore: tv.last_order_before.length > 0 ? tv.last_order_before : undefined,
     });
 
     const deleteMutation = useDeleteCustomer();
@@ -191,9 +231,9 @@ export function CustomersListClient() {
         () =>
             buildCustomerColumns({
                 locale,
-                sort: tableState.sort,
-                onSort: tableState.setSort,
-                onHideColumn: (columnId) => tableState.setColumnVisibility({ ...tableState.columnVisibility, [columnId]: false }),
+                sort,
+                onSort: setSort,
+                onHideColumn: (columnId) => ui.setColumnVisibility({ ...ui.columnVisibility, [columnId]: false }),
                 sortLabels: {
                     asc: t("sort.asc"),
                     desc: t("sort.desc"),
@@ -240,14 +280,14 @@ export function CustomersListClient() {
             restoreMutation,
             statusMutation,
             resetMutation,
-            tableState.sort,
-            tableState.setSort,
-            tableState.columnVisibility,
-            tableState.setColumnVisibility,
+            sort,
+            setSort,
+            ui.columnVisibility,
+            ui.setColumnVisibility,
         ],
     );
 
-    const meta = result?.meta ?? { page: tableState.page, limit: tableState.limit, total: 0, lastPage: 1 };
+    const meta = result?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
 
     const columnVisibilityItems = useMemo(
         () => [
@@ -269,24 +309,29 @@ export function CustomersListClient() {
     const activeChips = useMemo(() => {
         const out: { key: string; value: string; label: React.ReactNode }[] = [];
         for (const facet of facets) {
-            const values = tableState.facetValues[facet.paramKey] ?? [];
+            const values = facetValues[facet.paramKey] ?? [];
             for (const v of values) {
                 const opt = facet.options.find((o) => o.value === v);
                 out.push({ key: facet.paramKey, value: v, label: opt?.label ?? v });
             }
         }
         return out;
-    }, [facets, tableState.facetValues]);
+    }, [facets, facetValues]);
 
     const hasActiveFilters =
-        tableState.q.length > 0 || Object.values(tableState.facetValues).some((arr) => Array.isArray(arr) && arr.length > 0);
+        tv.q.length > 0 || Object.values(facetValues).some((arr) => Array.isArray(arr) && arr.length > 0);
 
-    const clearAllFilters = () => {
-        tableState.setQ("");
-        for (const facet of facets) {
-            tableState.setFacetValues(facet.paramKey, []);
-        }
-    };
+    const clearAllFilters = useCallback(() => {
+        tv.setQ("");
+        tv.clearFilters();
+        tv.setCreated("");
+        tv.setLastOrder("");
+        tv.setLast_order_after("");
+        tv.setLast_order_before("");
+    }, [tv]);
+
+    /** No-op toggle map; this page has no boolean toggles but the toolbar still wants the shape. */
+    const emptyToggleValues = useMemo<Record<string, boolean>>(() => ({}), []);
 
     return (
         <section className="flex flex-col gap-4">
@@ -304,10 +349,9 @@ export function CustomersListClient() {
             />
 
             <CustomerStatusTabs
-                value={tab}
+                value={tv.tab}
                 onChange={(next) => {
-                    setTab(next);
-                    tableState.setPage(1);
+                    tv.setTab(next);
                 }}
                 counts={counts}
                 locale={locale}
@@ -320,17 +364,17 @@ export function CustomersListClient() {
                 getRowId={(row) => String(row.id)}
                 meta={meta}
                 limitOptions={[10, 20, 50, 100]}
-                onPageChange={(page) => tableState.setPage(page)}
-                onLimitChange={(limit) => tableState.setLimit(limit)}
-                sort={tableState.sort}
-                onSortChange={tableState.setSort}
-                selectedIds={tableState.selectedIds}
-                onSelectedIdsChange={tableState.setSelected}
-                columnVisibility={tableState.columnVisibility}
-                onColumnVisibilityChange={tableState.setColumnVisibility}
-                columnOrder={tableState.columnOrder}
-                onColumnOrderChange={tableState.setColumnOrder}
-                density={tableState.density}
+                onPageChange={(page) => tv.setPage(page)}
+                onLimitChange={(limit) => tv.setLimit(limit)}
+                sort={sort}
+                onSortChange={setSort}
+                selectedIds={selection.selectedIds}
+                onSelectedIdsChange={selection.setSelected}
+                columnVisibility={ui.columnVisibility}
+                onColumnVisibilityChange={ui.setColumnVisibility}
+                columnOrder={ui.columnOrder}
+                onColumnOrderChange={ui.setColumnOrder}
+                density={ui.density}
                 isLoading={isPending}
                 isError={isError}
                 onRetry={() => refetch()}
@@ -340,17 +384,17 @@ export function CustomersListClient() {
                     <div className="flex flex-col gap-2">
                         <DataTableToolbar
                             searchPlaceholder={t("search")}
-                            q={tableState.q}
-                            onQChange={tableState.setQ}
+                            q={tv.q}
+                            onQChange={tv.setQ}
                             facets={facets}
-                            facetValues={tableState.facetValues}
-                            onFacetValuesChange={tableState.setFacetValues}
+                            facetValues={facetValues}
+                            onFacetValuesChange={setFacetValues}
                             toggles={[]}
-                            toggleValues={tableState.toggleValues}
-                            onToggleChange={tableState.setToggleValue}
+                            toggleValues={emptyToggleValues}
+                            onToggleChange={() => {}}
                             dateFacets={dateFacets}
-                            dateFacetValues={tableState.dateFacetValues}
-                            onDateFacetChange={tableState.setDateFilterValue}
+                            dateFacetValues={dateFacetValues}
+                            onDateFacetChange={setDateFacet}
                             locale={locale}
                             hasActiveFilters={hasActiveFilters}
                             onClearAll={clearAllFilters}
@@ -364,10 +408,10 @@ export function CustomersListClient() {
                             rightSlot={
                                 <DataTableViewOptions
                                     columns={columnVisibilityItems}
-                                    visibility={tableState.columnVisibility}
-                                    onVisibilityChange={tableState.setColumnVisibility}
-                                    density={tableState.density}
-                                    onDensityChange={tableState.setDensity}
+                                    visibility={ui.columnVisibility}
+                                    onVisibilityChange={ui.setColumnVisibility}
+                                    density={ui.density}
+                                    onDensityChange={ui.setDensity}
                                     labels={{
                                         trigger: t("toolbar.viewOptions"),
                                         densityHeading: t("toolbar.density"),
@@ -384,8 +428,8 @@ export function CustomersListClient() {
                         <ActiveFilterChips
                             chips={activeChips}
                             onRemove={(key, value) => {
-                                const next = (tableState.facetValues[key] ?? []).filter((v) => v !== value);
-                                tableState.setFacetValues(key, next);
+                                const next = (facetValues[key] ?? []).filter((v) => v !== value);
+                                setFacetValues(key, next);
                             }}
                         />
                     </div>
