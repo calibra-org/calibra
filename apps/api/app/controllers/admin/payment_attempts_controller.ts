@@ -2,10 +2,9 @@ import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 
 import PaymentAttempt from "#models/payment_attempt";
+import { adminPaymentAttemptsView } from "#table_views/admin/payment_attempts";
 import PaymentAttemptTransformer from "#transformers/payment_attempt_transformer";
 import { adminPaymentAttemptListValidator } from "#validators/admin/payment_gateway_validator";
-
-const DEFAULT_PER_PAGE = 20;
 
 /**
  * Read-only admin view onto `payment_attempts`. Useful for incident response — "what did
@@ -14,26 +13,11 @@ const DEFAULT_PER_PAGE = 20;
  */
 export default class AdminPaymentAttemptsController {
     async index(ctx: HttpContext) {
-        const payload = await ctx.request.validateUsing(adminPaymentAttemptListValidator);
-        const page = payload.page ?? 1;
-        const perPage = payload.perPage ?? DEFAULT_PER_PAGE;
-
-        const query = PaymentAttempt.query().orderBy("id", "desc");
-        if (payload.gateway_code) query.where("gateway_code_snapshot", payload.gateway_code);
-        if (payload.status) query.where("status", payload.status);
-        if (payload.order_id !== undefined) query.where("order_id", payload.order_id);
-
-        const paginator = await query.paginate(page, perPage);
-        const meta = paginator.getMeta();
-
+        const parsed = await ctx.request.validateUsing(adminPaymentAttemptListValidator);
+        const { data, meta } = await adminPaymentAttemptsView.run<PaymentAttempt>(PaymentAttempt.query(), parsed);
         return {
-            data: paginator.all().map((row) => new PaymentAttemptTransformer(row).forList()),
-            meta: {
-                page: meta.currentPage,
-                perPage: meta.perPage,
-                total: meta.total,
-                lastPage: meta.lastPage,
-            },
+            data: data.map((row) => new PaymentAttemptTransformer(row).forList()),
+            meta,
         };
     }
 

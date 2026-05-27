@@ -1,5 +1,7 @@
 import vine from "@vinejs/vine";
 
+import { adminPaymentAttemptsView } from "#table_views/admin/payment_attempts";
+
 /**
  * Admin `GET /api/v1/admin/payment-gateways` list query. Single-page list — no pagination needed
  * for the < 10 rows we ship.
@@ -24,12 +26,5 @@ export const adminPaymentGatewayUpdateValidator = vine.compile(
     }),
 );
 
-export const adminPaymentAttemptListValidator = vine.compile(
-    vine.object({
-        page: vine.number().positive().optional(),
-        perPage: vine.number().positive().max(100).optional(),
-        gateway_code: vine.string().trim().optional(),
-        status: vine.string().trim().optional(),
-        order_id: vine.number().positive().optional(),
-    }),
-);
+/** All filters move to the TableView `filter[]` grammar via {@link adminPaymentAttemptsView}. */
+export const adminPaymentAttemptListValidator = vine.compile(adminPaymentAttemptsView.schema);

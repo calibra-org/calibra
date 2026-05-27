@@ -1,12 +1,14 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
+import vine from "@vinejs/vine";
 
 import { viewOrder } from "#abilities/main";
 import { OrderStatus } from "#enums/order_status";
 import Order from "#models/order";
+import { accountOrdersView } from "#table_views/account/orders";
 import OrderTransformer from "#transformers/order_transformer";
 
-const DEFAULT_PER_PAGE = 20;
+const accountOrdersListValidator = vine.compile(accountOrdersView.schema);
 
 /**
  * `GET /api/v1/account/orders`. The list endpoint filters at the SQL layer (Bouncer would
@@ -16,28 +18,21 @@ const DEFAULT_PER_PAGE = 20;
 export default class AccountOrdersController {
     async index(ctx: HttpContext) {
         const customer = await this.requireCustomer(ctx);
-        const page = Number(ctx.request.input("page", 1)) || 1;
-        const perPage = Math.min(Number(ctx.request.input("perPage", DEFAULT_PER_PAGE)) || DEFAULT_PER_PAGE, 100);
+        const parsed = await accountOrdersListValidator.validate(ctx.request.qs());
 
-        const paginator = await Order.query()
+        const builder = Order.query()
             .where("customer_id", Number(customer.id))
             .whereNot("status", OrderStatus.Draft)
             .whereNull("deleted_at")
             .preload("lineItems")
             .preload("billingAddress")
-            .preload("shippingAddress")
-            .orderBy("id", "desc")
-            .paginate(page, perPage);
+            .preload("shippingAddress");
 
-        const meta = paginator.getMeta();
+        const { data, meta } = await accountOrdersView.run<Order>(builder, parsed);
+
         return {
-            data: paginator.all().map((order) => new OrderTransformer(order).forList()),
-            meta: {
-                page: meta.currentPage,
-                perPage: meta.perPage,
-                total: meta.total,
-                lastPage: meta.lastPage,
-            },
+            data: data.map((order) => new OrderTransformer(order).forList()),
+            meta,
         };
     }
 

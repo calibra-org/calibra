@@ -1943,7 +1943,11 @@ export interface paths {
         };
         /**
          * List payment attempts
-         * @description Paginated audit log of every `payment_attempts` row — every init + callback writes here. Filter by order, gateway, status, or date range. Read-only on the admin surface; the payment service is the sole writer.
+         * @description Paginated audit log of every `payment_attempts` row — every init + callback writes here. Filter, sort, and paginate via the unified TableView wire grammar (`filter[]=field:op:value`, `sort[]=field:dir`, `page`, `limit`). Read-only on the admin surface; the payment service is the sole writer.
+         *
+         *     **TableView filterable fields**: `id`, `order_id`, `gateway_id`, `gateway_code_snapshot`, `status`, `amount_minor`, `created_at`, `initiated_at`, `verified_at`.
+         *
+         *     **TableView orderable fields**: `id`, `status`, `amount_minor`, `created_at`, `initiated_at`, `verified_at`.
          */
         get: operations["adminPaymentAttemptsIndex"];
         put?: never;
@@ -7844,15 +7848,16 @@ export interface operations {
     adminPaymentAttemptsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                order_id?: number;
-                payment_gateway_id?: number;
-                status?: "initialized" | "pending" | "succeeded" | "failed" | "cancelled";
-                created_from?: string;
-                created_to?: string;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
             };
             header?: never;
             path?: never;

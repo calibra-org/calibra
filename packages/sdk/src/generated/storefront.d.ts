@@ -828,7 +828,13 @@ export interface paths {
         };
         /**
          * List the signed-in customer's orders
-         * @description Paginated list of the customer's own orders. Drafts are excluded — only orders that reached `pending` or later appear.
+         * @description Paginated list of the customer's own orders. Drafts are excluded — only orders that reached `pending` or later appear. The customer scope and the draft/deleted exclusion are server-side invariants the operator cannot bypass via the URL.
+         *
+         *     Filter, sort, and paginate via the unified TableView wire grammar.
+         *
+         *     **TableView filterable fields**: `id`, `order_number`, `status`, `created_at`.
+         *
+         *     **TableView orderable fields**: `id`, `order_number`, `grand_total`, `created_at`, `date_paid_at`, `date_completed_at`.
          */
         get: operations["accountOrdersIndex"];
         put?: never;
@@ -2089,6 +2095,16 @@ export interface components {
         PerPageQuery: number;
         /** @description Client-generated idempotency token (≤ 64 chars) for write operations that must be safe to retry: `POST /checkout/submit`, `POST /payment/init/:order_key`, admin `POST .../refunds`. A retry with the same key returns the original result without re-running side effects. Keys are scoped per-resource (per-order for refunds, per-cart for submit). */
         IdempotencyKeyHeader: string;
+        /** @description 1-indexed page number. Defaults to 1. */
+        Page: number;
+        /** @description Items per page. Capped at 100. Defaults to 20. */
+        Limit: number;
+        /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+        Filter: string[];
+        /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+        FilterOr: string[];
+        /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+        Sort: string[];
     };
     requestBodies: never;
     headers: never;
@@ -3129,11 +3145,16 @@ export interface operations {
     accountOrdersIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                status?: "pending" | "on_hold" | "processing" | "completed" | "cancelled" | "refunded" | "failed";
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
