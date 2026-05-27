@@ -1,8 +1,9 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 
+import { GatewayNotImplementedException } from "#exceptions/payment_exceptions";
 import PaymentGateway from "#models/payment_gateway";
-import PaymentGatewayTransformer from "#transformers/payment_gateway_transformer";
+import PaymentGatewayTransformer, { readImplementationStatus } from "#transformers/payment_gateway_transformer";
 import {
     adminPaymentGatewayListValidator,
     adminPaymentGatewayUpdateValidator,
@@ -30,6 +31,15 @@ export default class AdminPaymentGatewaysController {
     async update(ctx: HttpContext) {
         const gateway = await this.findOrFail(ctx.params.id);
         const payload = await ctx.request.validateUsing(adminPaymentGatewayUpdateValidator);
+        if (payload.enabled === true && readImplementationStatus(gateway) === "stub") {
+            /**
+             * Operator cannot flip a stub gateway to enabled — neither the storefront submit
+             * flow nor a stray PSP callback could complete against it, so the toggle is
+             * load-bearing dishonesty. A future PSP integration ships a real adapter and bumps
+             * the seed row's `implementation_status` to `"live"` in the same PR.
+             */
+            throw new GatewayNotImplementedException(gateway.code, "enable");
+        }
         if (payload.enabled !== undefined) gateway.enabled = payload.enabled;
         if (payload.ordering !== undefined) gateway.ordering = payload.ordering;
         if (payload.settings) {

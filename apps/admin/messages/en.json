@@ -3267,6 +3267,10 @@
             "ordering": "Order",
             "actions": "Actions"
         },
+        "stub": {
+            "badge": "Not implemented",
+            "tooltip": "This PSP is recognised by the platform but not yet integrated. The enable toggle stays off until a real adapter ships."
+        },
         "detail": {
             "title": "{title}",
             "subtitle": "Gateway configuration and customer-facing copy.",

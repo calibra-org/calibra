@@ -224,6 +224,16 @@ export default class FoundationSeeder extends BaseSeeder {
          * gateway adds HMAC support upstream, flip this to `true` and populate
          * `webhook_secret_env_key` / `webhook_signature_header` so the middleware kicks in.
          */
+        /**
+         * `attributes.implementation_status` records the actual posture of each adapter:
+         *
+         * - `"stub"` — the platform knows about the PSP, the registry resolves it, but every
+         *   lifecycle method throws `E_GATEWAY_NOT_IMPLEMENTED`. The admin UI surfaces a "not
+         *   implemented" badge and the validator refuses `enabled: true` until the status flips.
+         * - `"live"` — the adapter is a real integration (offline gateways today: `cod`,
+         *   `bank_transfer`). A future PSP integration phase ships a real adapter and updates
+         *   this row to `"live"` in the same PR that wires the integration.
+         */
         const gateways = [
             {
                 code: "zarinpal",
@@ -234,16 +244,18 @@ export default class FoundationSeeder extends BaseSeeder {
                 signedCallback: false,
                 webhookSecretEnvKey: null,
                 webhookSignatureHeader: null,
+                attributes: { implementation_status: "stub" },
             },
             {
                 code: "idpay",
                 enabled: false,
                 ordering: 2,
                 settings: { api_key: "" },
-                supports: { refunds: false },
+                supports: { refunds: true },
                 signedCallback: false,
                 webhookSecretEnvKey: null,
                 webhookSignatureHeader: null,
+                attributes: { implementation_status: "stub" },
             },
             {
                 code: "nextpay",
@@ -254,26 +266,29 @@ export default class FoundationSeeder extends BaseSeeder {
                 signedCallback: false,
                 webhookSecretEnvKey: null,
                 webhookSignatureHeader: null,
+                attributes: { implementation_status: "stub" },
             },
             {
                 code: "payir",
                 enabled: false,
                 ordering: 4,
                 settings: { api_key: "" },
-                supports: { refunds: false },
+                supports: { refunds: true },
                 signedCallback: false,
                 webhookSecretEnvKey: null,
                 webhookSignatureHeader: null,
+                attributes: { implementation_status: "stub" },
             },
             {
                 code: "zibal",
                 enabled: false,
                 ordering: 5,
                 settings: { merchant_id: "" },
-                supports: { refunds: false },
+                supports: { refunds: true },
                 signedCallback: false,
                 webhookSecretEnvKey: null,
                 webhookSignatureHeader: null,
+                attributes: { implementation_status: "stub" },
             },
             {
                 code: "cod",
@@ -284,6 +299,7 @@ export default class FoundationSeeder extends BaseSeeder {
                 signedCallback: false,
                 webhookSecretEnvKey: null,
                 webhookSignatureHeader: null,
+                attributes: { implementation_status: "live" },
             },
             {
                 code: "bank_transfer",
@@ -294,6 +310,7 @@ export default class FoundationSeeder extends BaseSeeder {
                 signedCallback: false,
                 webhookSecretEnvKey: null,
                 webhookSignatureHeader: null,
+                attributes: { implementation_status: "live" },
             },
         ];
 

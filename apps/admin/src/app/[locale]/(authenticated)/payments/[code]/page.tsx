@@ -11,6 +11,7 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "#/components/ui/tooltip";
 import { getPaymentGateway } from "#/lib/server-repos";
 
 interface PageProps {
@@ -33,12 +34,15 @@ export default async function PaymentGatewayDetailPage({ params }: PageProps) {
     const t = await getTranslations("Payments.detail");
     const commonT = await getTranslations("Common");
 
+    const isStub = gateway.implementationStatus === "stub";
+    const stubTooltip = (await getTranslations("Payments"))("stub.tooltip");
+
     return (
         <section className="flex flex-col gap-6">
             <PageHeader
                 title={t("title", { title: gateway.title[locale] })}
                 subtitle={t("subtitle")}
-                actions={<Button>{t("save")}</Button>}
+                actions={<Button disabled={isStub}>{t("save")}</Button>}
             />
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -52,7 +56,18 @@ export default async function PaymentGatewayDetailPage({ params }: PageProps) {
                             <Label htmlFor={`enabled-${gateway.code}`} className="text-sm">
                                 {commonT("enabled")}
                             </Label>
-                            <Switch id={`enabled-${gateway.code}`} defaultChecked={gateway.enabled} />
+                            {isStub ? (
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger className="inline-flex items-center" aria-label={stubTooltip}>
+                                            <Switch id={`enabled-${gateway.code}`} defaultChecked={false} disabled />
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-xs">{stubTooltip}</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            ) : (
+                                <Switch id={`enabled-${gateway.code}`} defaultChecked={gateway.enabled} />
+                            )}
                         </div>
                         <div className="flex flex-col gap-1.5 md:col-span-2">
                             <Label htmlFor={`title-${gateway.code}`}>Title</Label>
@@ -81,9 +96,13 @@ export default async function PaymentGatewayDetailPage({ params }: PageProps) {
                         <CardContent className="flex flex-col gap-2 pt-6 text-sm">
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">{commonT("active")}</span>
-                                <StatusBadge tone={gateway.enabled ? "success" : "neutral"}>
-                                    {gateway.enabled ? commonT("enabled") : commonT("disabled")}
-                                </StatusBadge>
+                                {isStub ? (
+                                    <StatusBadge tone="warning">{(await getTranslations("Payments"))("stub.badge")}</StatusBadge>
+                                ) : (
+                                    <StatusBadge tone={gateway.enabled ? "success" : "neutral"}>
+                                        {gateway.enabled ? commonT("enabled") : commonT("disabled")}
+                                    </StatusBadge>
+                                )}
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Refunds</span>

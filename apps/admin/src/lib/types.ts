@@ -527,6 +527,8 @@ export interface AdminShippingZoneMethod {
 
 export type PaymentGatewayCode = "zarinpal" | "idpay" | "nextpay" | "payir" | "zibal" | "cod" | "bank_transfer";
 
+export type PaymentGatewayImplementationStatus = "stub" | "live";
+
 export interface AdminPaymentGateway {
     id: number;
     code: PaymentGatewayCode;
@@ -536,6 +538,12 @@ export interface AdminPaymentGateway {
     enabled: boolean;
     ordering: number;
     supportsRefunds: boolean;
+    /**
+     * `"stub"` rows are recognised by the platform but every PSP lifecycle method throws
+     * `E_GATEWAY_NOT_IMPLEMENTED`. The admin UI surfaces a badge and disables the enable
+     * toggle on these rows; the storefront refuses to submit against them.
+     */
+    implementationStatus: PaymentGatewayImplementationStatus;
     settings: Record<string, string>;
 }
 
