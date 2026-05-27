@@ -33,6 +33,7 @@ export default class PaymentGatewayTransformer extends BaseTransformer<PaymentGa
             enabled: gateway.enabled,
             ordering: gateway.ordering,
             supports: (gateway.supports as Record<string, unknown>) ?? {},
+            implementation_status: readImplementationStatus(gateway),
         };
     }
 
@@ -61,3 +62,15 @@ export default class PaymentGatewayTransformer extends BaseTransformer<PaymentGa
 }
 
 export { SENSITIVE_KEYS };
+
+/**
+ * Reads the `attributes.implementation_status` flag — `"stub"` means the registry resolves the
+ * code but every lifecycle method throws `E_GATEWAY_NOT_IMPLEMENTED`; `"live"` means the
+ * adapter is a real integration (cod, bank_transfer today). Unknown values fall back to
+ * `"stub"` defensively — a misconfigured attribute should never silently let an unverified PSP
+ * pose as live.
+ */
+export function readImplementationStatus(gateway: PaymentGateway): "stub" | "live" {
+    const attrs = (gateway.attributes as Record<string, unknown> | null) ?? {};
+    return attrs.implementation_status === "live" ? "live" : "stub";
+}
