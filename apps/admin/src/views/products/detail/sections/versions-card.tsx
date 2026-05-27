@@ -19,14 +19,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#
 import { toast } from "#/components/ui/toast";
 import { CircleDashed, Filter, MoreHorizontal, Plus, Sparkles, Trash2 } from "#/icons";
 import { formatNumber } from "#/lib/format";
-import { useBatchVariations, useDeleteVariation, useUpdateVariation } from "#/lib/products/mutations";
+import { useBatchVariations, useDeleteVariation, useUpdateProduct, useUpdateVariation } from "#/lib/products/mutations";
 import { useGlobalAttributes, useProductVariations, type VariationView } from "#/lib/products/queries";
 import { applyPattern, defaultAbbrev, type SkuTokenSpec } from "#/lib/products/sku-generator";
 import { type AttributeAxis, diffCartesian } from "#/lib/products/variations-cartesian";
 import { statusTone, type VersionStatus } from "#/lib/products/versions-format";
 import { cn } from "#/lib/utils";
 
-import type { ProductDetailFormValues } from "../schema";
+import { formValuesToPayload, type ProductDetailFormValues } from "../schema";
 
 import { VersionTermNames } from "./versions-card.term-lookup";
 
@@ -54,9 +54,10 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
     const t = useTranslations("Products.detail.versions");
     const tChoices = useTranslations("Products.detail.choices");
     const locale = useLocale() as Locale;
-    const { control, watch } = useFormContext<ProductDetailFormValues>();
+    const { control, watch, getValues, formState, reset } = useFormContext<ProductDetailFormValues>();
     const attributes = useGlobalAttributes();
     const variations = useProductVariations(productId);
+    const updateProduct = useUpdateProduct(productId ?? 0);
     /**
      * `useWatch` (vs the parent's `watch()`) subscribes through RHF's controller channel, so
      * nested term-id changes inside `attributeLinks[i].termIds` bubble back here. The plain
@@ -134,6 +135,24 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
 
     const onGenerate = async () => {
         if (productId === null) return;
+        /**
+         * Persist the product first so the backend's variable-type check + `used_for_variation`
+         * link map are in sync with what the operator's seeing. Otherwise a fresh selling-mode
+         * flip + choice picks would hit the batch endpoint while the DB still shows the old
+         * `simple` type → 422 `parent_product_not_variable`. Reset the form's dirty flag from
+         * the same values we just sent so the auto-save doesn't bounce on every Generate click.
+         */
+        if (formState.isDirty) {
+            try {
+                const payload = formValuesToPayload(getValues());
+                await updateProduct.mutateAsync({ body: payload });
+                reset(getValues());
+            } catch (error) {
+                toast.add({ title: t("toasts.generateFailed"), description: String(error), data: { tone: "error" } });
+                setRegenerateOpen(false);
+                return;
+            }
+        }
         try {
             await batch.mutateAsync({
                 create: diff.create.map((pins) => ({
