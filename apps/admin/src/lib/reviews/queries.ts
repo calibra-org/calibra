@@ -65,7 +65,7 @@ export function useReviewProductLookup() {
     return useQuery({
         queryKey: ["admin", "reviews", "product-lookup", { locale }],
         queryFn: async (): Promise<Map<number, { name: LocalizedString; slug: LocalizedString }>> => {
-            const payload = await apiGet<ProductRowEnvelope>("products", { locale, query: { perPage: 200 } });
+            const payload = await apiGet<ProductRowEnvelope>("products", { locale, query: { perPage: 200, limit: 200 } });
             const out = new Map<number, { name: LocalizedString; slug: LocalizedString }>();
             for (const row of payload.data) {
                 const fa = row.translations?.find((t) => t.locale === "fa") ??
@@ -126,18 +126,21 @@ export function useReviewsList(params: ReviewsListParams = {}) {
                 trashSize: trashedIds.size,
             },
         ],
-        queryFn: () =>
-            apiGet<ReviewListEnvelope>("reviews", {
+        queryFn: () => {
+            const filter: string[] = [];
+            if (sdkStatus !== undefined) filter.push(`status:eq:${sdkStatus}`);
+            if (params.rating !== undefined) filter.push(`rating:eq:${params.rating}`);
+            if (params.productId !== undefined) filter.push(`product_id:eq:${params.productId}`);
+            if (params.verified !== undefined) filter.push(`verified:eq:${params.verified}`);
+            return apiGet<ReviewListEnvelope>("reviews", {
                 locale,
                 query: {
                     page,
-                    perPage,
-                    status: sdkStatus,
-                    rating: params.rating,
-                    product_id: params.productId,
-                    verified: params.verified,
+                    limit: perPage,
+                    ...(filter.length > 0 ? { "filter[]": filter } : {}),
                 },
-            }),
+            });
+        },
         placeholderData: keepPreviousData,
         select: (payload): Paginated<AdminReview> => {
             const ctx: AdapterContext = { products: productLookup, trashedIds, replies };
@@ -218,7 +221,10 @@ export function useReviewCountsByStatus() {
                 try {
                     const payload = await apiGet<ReviewListEnvelope>("reviews", {
                         locale,
-                        query: { perPage: 1, status },
+                        query: {
+                            limit: 1,
+                            ...(status !== undefined ? { "filter[]": `status:eq:${status}` } : {}),
+                        },
                     });
                     return payload.meta?.total ?? payload.data?.length ?? 0;
                 } catch {

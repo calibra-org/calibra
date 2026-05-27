@@ -3051,7 +3051,13 @@ export interface paths {
         };
         /**
          * List product reviews (admin)
-         * @description Paginated list of every review, including pending and rejected rows. Filter by status, product, rating, or verification.
+         * @description Paginated list of every review, including pending and rejected rows. Filter, sort, and paginate via the unified TableView wire grammar (`filter[]=field:op:value`, `sort[]=field:dir`, `page`, `limit`).
+         *
+         *     **TableView filterable fields**: `id`, `product_id`, `customer_id`, `rating`, `status` (`pending`/`approved`/`rejected`), `verified`, `created_at`.
+         *
+         *     **TableView orderable fields**: `id`, `rating`, `created_at`.
+         *
+         *     Response shape moved from un-paginated `{ data }` to `{ data, meta }` — this is the breaking change of the moderation-queue migration. FE consumers were updated to read `meta.total` instead of falling back to `data.length`.
          */
         get: operations["adminReviewsIndex"];
         put?: never;
@@ -10006,14 +10012,16 @@ export interface operations {
     adminReviewsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                status?: "pending" | "approved" | "rejected";
-                product_id?: number;
-                rating?: number;
-                verified?: boolean;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
             };
             header?: never;
             path?: never;

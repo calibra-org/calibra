@@ -484,12 +484,14 @@ export async function listReviews(params: ReviewListParams = {}): Promise<Pagina
     else if (params.status === "pending") sdkStatus = "pending";
     else if (params.status === "spam" || params.status === "trash") sdkStatus = "rejected";
 
+    const filter: string[] = [];
+    if (sdkStatus !== undefined) filter.push(`status:eq:${sdkStatus}`);
     const { data, error } = await api.admin.GET("/api/v1/admin/reviews", {
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
-                ...(sdkStatus !== undefined ? { status: sdkStatus } : {}),
+                ...(params.perPage !== undefined ? { limit: params.perPage } : {}),
+                ...(filter.length > 0 ? { "filter[]": filter } : {}),
             },
         },
     });
@@ -509,8 +511,8 @@ export async function listCustomers(params: ListParams = {}): Promise<Paginated<
         params: {
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
-                ...(params.perPage !== undefined ? { perPage: params.perPage } : {}),
-                ...(params.search ? { search: params.search } : {}),
+                ...(params.perPage !== undefined ? { limit: params.perPage } : {}),
+                ...(params.search ? { q: params.search } : {}),
             },
         },
     });

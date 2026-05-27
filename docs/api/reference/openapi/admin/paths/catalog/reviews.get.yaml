@@ -1,15 +1,29 @@
 operationId: adminReviewsIndex
 summary: List product reviews (admin)
-description: Paginated list of every review, including pending and rejected rows. Filter by status, product, rating, or verification.
+description: >
+    Paginated list of every review, including pending and rejected rows. Filter, sort, and
+    paginate via the unified TableView wire grammar (`filter[]=field:op:value`, `sort[]=field:dir`,
+    `page`, `limit`).
+
+
+    **TableView filterable fields**: `id`, `product_id`, `customer_id`, `rating`, `status`
+    (`pending`/`approved`/`rejected`), `verified`, `created_at`.
+
+
+    **TableView orderable fields**: `id`, `rating`, `created_at`.
+
+
+    Response shape moved from un-paginated `{ data }` to `{ data, meta }` — this is the breaking
+    change of the moderation-queue migration. FE consumers were updated to read `meta.total`
+    instead of falling back to `data.length`.
 tags: [Admin / Catalog / Reviews]
 
 parameters:
-    - $ref: "../../../common/components/parameters/PageQuery.yaml"
-    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
-    - { name: status, in: query, schema: { type: string, enum: [pending, approved, rejected] } }
-    - { name: product_id, in: query, schema: { type: integer } }
-    - { name: rating, in: query, schema: { type: integer, minimum: 1, maximum: 5 } }
-    - { name: verified, in: query, schema: { type: boolean } }
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
 
 responses:
     "200":
