@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_LIMIT_OPTIONS, emptyPaginationMeta, isAllVisibleSelected, parseSort, serializeSort } from "./use-data-table";
+import { DEFAULT_LIMIT_OPTIONS, emptyPaginationMeta, parseSort, serializeSort } from "./use-data-table";
+import { isAllVisibleSelected } from "./use-selection-state";
 
 describe("parseSort / serializeSort", () => {
     it("parses an empty URL value as undefined", () => {

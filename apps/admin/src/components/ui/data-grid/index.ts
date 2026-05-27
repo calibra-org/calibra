@@ -12,14 +12,15 @@ export { DataTableSkeleton } from "./data-table-skeleton";
 export { ActiveFilterChips, DataTableToolbar } from "./data-table-toolbar";
 export { DataTableViewOptions } from "./data-table-view-options";
 export { DENSITY_CLASSES } from "./types";
+export { useColumnState, type UseColumnStateOptions } from "./use-column-state";
 export {
     DEFAULT_LIMIT_OPTIONS,
     emptyPaginationMeta,
-    isAllVisibleSelected,
     parseSort,
     serializeSort,
     useDataTable,
 } from "./use-data-table";
+export { isAllVisibleSelected, useSelectionState } from "./use-selection-state";
 export type { ColumnVisibilityItem, DataGridToolbarLabels, DataGridToolbarProps } from "./data-grid-toolbar";
 export type { DataTableProps } from "./data-table";
 export type {

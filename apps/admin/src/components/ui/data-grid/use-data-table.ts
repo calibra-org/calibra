@@ -284,22 +284,6 @@ function useLocalStorageState<T>(key: string, defaultValue: T): [T, (next: T) =>
     return [value, update];
 }
 
-/** Convenience: derive whether `selectedIds` covers every visible row of the current page. */
-export function isAllVisibleSelected<TData>(
-    visibleRows: TData[],
-    getRowId: (row: TData) => string,
-    selectedIds: ReadonlySet<string>,
-): "none" | "some" | "all" {
-    if (visibleRows.length === 0) return "none";
-    let matched = 0;
-    for (const row of visibleRows) {
-        if (selectedIds.has(getRowId(row))) matched += 1;
-    }
-    if (matched === 0) return "none";
-    if (matched === visibleRows.length) return "all";
-    return "some";
-}
-
 /** Convenience: produce the empty {@link PaginationMeta} shape when no data has arrived yet. */
 export function emptyPaginationMeta(limit: number): PaginationMeta {
     return { page: 1, limit, total: 0, lastPage: 1 };

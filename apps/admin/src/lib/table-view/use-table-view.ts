@@ -24,18 +24,63 @@ import type { DateFilterValue } from "#/components/ui/date-picker/types";
  *    `replace`, not `push`).
  *  - Resets `page` to `1` on every predicate change. The operator never expects the page index
  *    to survive a filter toggle.
+ *  - Optional `extras` carry the endpoint's bespoke top-level params (`q`, `tab`, `trashed`,
+ *    etc.) — declared as a `nuqs` parser map, the hook reads + writes them alongside the
+ *    TableView keys and returns typed accessors (`q`, `setQ`, `tab`, `setTab`, …).
  *
  * Consumers receive the parsed `query` plus a small set of mutators (`setFilter`, `setSort`,
- * `setPage`, …) and a `setQuery` for one-shot full-state writes. There's intentionally no
- * facets / toggles / dateFacets abstraction layered above this — pages compose those at the
- * call site by mapping their UI state directly to `TableViewFilter[]` entries.
+ * `setPage`, …) and a `setQuery` for one-shot full-state writes.
  */
-export interface UseTableViewOptions {
-    /** Optional initial query applied when the URL is empty. */
-    initial?: Partial<TableViewQuery>;
+/**
+ * A nuqs parser shape that includes a default value. We require callers to pass parsers built
+ * with `.withDefault(...)` so we can safely read + strip default-equal values when serialising
+ * the URL back. Loose typing on `parse` / `serialize` keeps the variance simple.
+ */
+interface ExtraParser<TValue> {
+    parse(value: string): TValue | null;
+    serialize(value: TValue): string;
+    defaultValue: TValue;
 }
 
-export interface UseTableViewReturn {
+type ExtraParsers = Record<string, ExtraParser<unknown>>;
+
+type ExtraValueFor<P> = P extends ExtraParser<infer V> ? V : never;
+
+type ExtrasValues<E extends ExtraParsers | undefined> = E extends ExtraParsers
+    ? { [K in keyof E]: ExtraValueFor<E[K]> }
+    : Record<string, never>;
+
+/**
+ * Setter map keyed by the same names as {@link ExtrasValues} with each entry typed as
+ * `(value: ExtraValue | null) => void`. The null branch clears the URL key entirely.
+ */
+type ExtrasSetters<E extends ExtraParsers | undefined> = E extends ExtraParsers
+    ? { [K in keyof E as `set${Capitalize<string & K>}`]: (value: ExtraValueFor<E[K]> | null) => void }
+    : Record<string, never>;
+
+export interface UseTableViewOptions<E extends ExtraParsers | undefined = undefined> {
+    /** Optional initial query applied when the URL is empty. */
+    initial?: Partial<TableViewQuery>;
+    /**
+     * Endpoint-specific top-level extras. Each entry is a `nuqs` parser. The hook reads + writes
+     * the URL key alongside the TableView grammar; setters reset `page` to `1` on every change.
+     *
+     * @example
+     * ```ts
+     * const tv = useTableView({
+     *     extras: {
+     *         q: parseAsString.withDefault(""),
+     *         trashed: parseAsBoolean.withDefault(false),
+     *     },
+     * });
+     * tv.q;          // string
+     * tv.setQ("…");  // writes ?q=… and resets page=1
+     * ```
+     */
+    extras?: E;
+}
+
+export interface UseTableViewBase {
     query: TableViewQuery;
     /** Replace the entire query. Caller is responsible for `page: 1` on predicate changes. */
     setQuery(next: TableViewQuery): void;
@@ -53,7 +98,13 @@ export interface UseTableViewReturn {
     clearFilters(): void;
 }
 
-export function useTableView(options: UseTableViewOptions = {}): UseTableViewReturn {
+export type UseTableViewReturn<E extends ExtraParsers | undefined = undefined> = UseTableViewBase &
+    ExtrasValues<E> &
+    ExtrasSetters<E>;
+
+export function useTableView<E extends ExtraParsers | undefined = undefined>(
+    options: UseTableViewOptions<E> = {},
+): UseTableViewReturn<E> {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -66,14 +117,44 @@ export function useTableView(options: UseTableViewOptions = {}): UseTableViewRet
         return parsed;
     }, [searchParams, options.initial]);
 
-    const writeQuery = useCallback(
-        (next: TableViewQuery) => {
+    /** Read every declared extra value once per render. Each parser receives the raw URL string
+     * (or null when absent) and yields its typed value plus the default. */
+    const extraValues = useMemo<Record<string, unknown>>(() => {
+        const out: Record<string, unknown> = {};
+        if (options.extras !== undefined) {
+            for (const [key, parser] of Object.entries(options.extras)) {
+                const raw = searchParams.get(key);
+                out[key] = parser.parse(raw === null ? "" : raw) ?? parser.defaultValue;
+            }
+        }
+        return out;
+    }, [searchParams, options.extras]);
+
+    /** Single write path: re-encode the TableView wire keys via the canonical serialiser, then
+     * write the extras as plain `?key=value` entries. Empty / default extras are stripped so the
+     * URL stays clean. */
+    const writeAll = useCallback(
+        (nextQuery: TableViewQuery, nextExtras: Record<string, unknown>) => {
             const params = new URLSearchParams();
-            for (const [k, v] of serializeTableViewQuery(next)) params.append(k, v);
+            for (const [k, v] of serializeTableViewQuery(nextQuery)) params.append(k, v);
+            if (options.extras !== undefined) {
+                for (const [key, parser] of Object.entries(options.extras)) {
+                    const value = nextExtras[key];
+                    if (value === null || value === undefined || value === parser.defaultValue) continue;
+                    const serialized = parser.serialize(value);
+                    if (serialized === "" || serialized === null) continue;
+                    params.set(key, serialized);
+                }
+            }
             const qs = params.toString();
             router.replace(qs.length === 0 ? pathname : `${pathname}?${qs}`);
         },
-        [pathname, router],
+        [options.extras, pathname, router],
+    );
+
+    const writeQuery = useCallback(
+        (next: TableViewQuery) => writeAll(next, extraValues),
+        [extraValues, writeAll],
     );
 
     const setQuery = useCallback((next: TableViewQuery) => writeQuery(next), [writeQuery]);
@@ -116,6 +197,22 @@ export function useTableView(options: UseTableViewOptions = {}): UseTableViewRet
         [query, writeQuery],
     );
 
+    /** Build the typed `setX` mutators for each declared extra. Each setter merges into the
+     * current extras map then writes both the query and the extras in one router.replace, so
+     * back-to-back filter toggles don't race on URL state. */
+    const extraSetters = useMemo<Record<string, (value: unknown) => void>>(() => {
+        const out: Record<string, (value: unknown) => void> = {};
+        if (options.extras !== undefined) {
+            for (const key of Object.keys(options.extras)) {
+                const setterName = `set${key.charAt(0).toUpperCase()}${key.slice(1)}`;
+                out[setterName] = (value: unknown) => {
+                    writeAll({ ...query, page: 1 }, { ...extraValues, [key]: value });
+                };
+            }
+        }
+        return out;
+    }, [options.extras, query, extraValues, writeAll]);
+
     return {
         query,
         setQuery,
@@ -126,7 +223,9 @@ export function useTableView(options: UseTableViewOptions = {}): UseTableViewRet
         setLimit,
         upsertDateFilter,
         clearFilters,
-    };
+        ...(extraValues as ExtrasValues<E>),
+        ...(extraSetters as ExtrasSetters<E>),
+    } as UseTableViewReturn<E>;
 }
 
 /** True when the URL has no TableView-shaped params yet — used to honour `initial` once on mount. */
