@@ -3880,7 +3880,7 @@ export interface components {
         };
         /**
          * AdminPaymentGateway
-         * @description Payment gateway registry row — matches `PaymentGatewayTransformer.forAdmin()` exactly. The base `forStorefront()` shape (`id`, `code`, `enabled`, `ordering`, `supports`) is augmented with `settings` (sensitive keys masked to `"***"` on GET; PATCH accepts unmasked values for rotation) and audit timestamps.
+         * @description Payment gateway registry row — matches `PaymentGatewayTransformer.forAdmin()` exactly. The base `forStorefront()` shape (`id`, `code`, `enabled`, `ordering`, `supports`, `implementation_status`) is augmented with `settings` (sensitive keys masked to `"***"` on GET; PATCH accepts unmasked values for rotation) and audit timestamps.
          */
         AdminPaymentGateway: {
             id: number;
@@ -3892,6 +3892,11 @@ export interface components {
             supports: {
                 [key: string]: unknown;
             };
+            /**
+             * @description `"stub"` — the registry knows about the PSP but every lifecycle method throws `E_GATEWAY_NOT_IMPLEMENTED`; the admin UI disables the enable toggle and the storefront refuses to submit against the row. `"live"` — the adapter is a real integration (today: `cod`, `bank_transfer`). PSP integrations land via follow-up PRs that ship a real adapter and bump this field to `"live"`.
+             * @enum {string}
+             */
+            implementation_status: "stub" | "live";
             /** @description Free-form per-gateway settings. Sensitive keys masked to `"***"` on GET. */
             settings: {
                 [key: string]: unknown;
