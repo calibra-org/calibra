@@ -291,13 +291,7 @@ silently dropping. The wire param for free-text search is `q` everywhere it exis
   top-level sibling of `data`/`meta` (was previously under `meta.field_metadata`)
 - `GET /api/v1/account/downloads` — customer-scope + active-grant predicate pre-scope
 
-**Remaining follow-up work:**
-
-- **FE per-page migration off `useDataTable`.** The new primitives are in place
-  (`useTableView` with typed `extras`, `useColumnState`, `useSelectionState` — see
-  [`apps/admin/src/lib/table-view/README.md`](../../../../admin/src/lib/table-view/README.md))
-  but the five legacy list pages (`orders-list`, `customers-list`, `products-list`,
-  `reviews-list`, `coupons-list`) still compose URL state through `useDataTable` and then
-  project onto `TableViewQuery` via `useMemo`. Each page is functional today; the
-  consolidation onto the new primitives is pure code-quality work that can land one page
-  at a time.
+All known follow-up work has landed in this PR. The FE list pages
+(`orders-list`, `customers-list`, `products-list`, `reviews-list`, `coupons-list`) are on
+the new composition pattern (`useTableView` for URL state + `useColumnState` for persisted
+UI + `useSelectionState` for selection); the legacy `useDataTable` hook is deleted.

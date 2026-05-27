@@ -76,28 +76,26 @@ sel.setSelected(next);
 sel.clearSelection();
 ```
 
-## Migrating a list page off `useDataTable`
+## How the list pages compose
 
-`useDataTable` ([`#/components/ui/data-grid`](../../components/ui/data-grid/use-data-table.ts))
-is the legacy monolithic hook that bundles URL plumbing + UI state + per-facet abstractions. New
-pages should use `useTableView` + `useColumnState` + `useSelectionState` instead. Existing pages
-can migrate incrementally — they currently compose a `TableViewQuery` via `useMemo` on top of
-`useDataTable`'s outputs, which still works.
+Every admin list page (`orders-list.tsx`, `customers-list.tsx`, `products-list.tsx`,
+`reviews-list.tsx`, `coupons-list.tsx`) follows the same composition:
 
-When migrating a page:
+1. `useTableView({ extras })` owns URL state — page, limit, filter[], filterOr[], sort[], plus
+   the endpoint-specific extras (`q`, `tab`, `trashed`, picker URL strings, etc.).
+2. `useColumnState({ id, defaultColumnVisibility })` owns persisted UI state — visibility,
+   density, column order in localStorage (namespaced per page id).
+3. `useSelectionState()` owns in-memory selection (`selectedIds`).
+4. The toolbar's facet shape (`facetValues: Record<string, string[]>`) is **projected** from
+   the canonical state — either via `useFacetValuesFromQuery` for facets that map onto
+   `filter[]` entries (customers, orders), or from scalar extras for endpoints that take
+   per-facet wire params (products, reviews, coupons). onChange handlers write back through
+   the same projection.
 
-1. Replace the URL pieces of `useDataTable` (`page`, `limit`, `sort`, `q`, `facetValues`,
-   `toggleValues`, `dateFacetValues`) with `useTableView({ extras })`.
-2. Build `TableViewFilter[]` entries directly inside the toolbar's facet `onChange` handlers,
-   calling `tv.setFilter([...])` to write them through. The per-facet UI affordances
-   (`DataTableFacetedFilter`, `DataTableToolbar`) accept whatever shape the page wires up —
-   they aren't bound to `useDataTable`'s abstractions.
-3. Replace UI state (`density`, `columnVisibility`, `columnOrder`) with `useColumnState`.
-4. Replace selection (`selectedIds`, `setSelected`, `clearSelection`) with `useSelectionState`.
-5. Drop the `useMemo`-based projection — the page reads `tv.query` directly and forwards it to
-   the list query hook (`useOrdersList`, `useCustomersList`, …).
+The legacy monolithic `useDataTable` hook is deleted. Only its small URL-shape utilities
+(`parseSort` / `serializeSort` / `DEFAULT_LIMIT_OPTIONS` / `emptyPaginationMeta`) survive for
+the column-header + pagination-footer call sites.
 
-See the server-side ADR §11 for the broader migration context. The pages currently in flight
-(`orders-list.tsx`, `customers-list.tsx`, `products-list.tsx`, `reviews-list.tsx`,
-`coupons-list.tsx`) are functional with the dual-hook pattern and don't need to migrate to
-ship; the consolidation is pure code-quality follow-up.
+See any of the migrated list pages for the full pattern; `customers-list.tsx` is the
+cleanest reference (uses `useFacetValuesFromQuery` for TableView-backed facets + extras-backed
+date-picker URL strings).

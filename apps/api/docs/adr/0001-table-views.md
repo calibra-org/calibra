@@ -337,22 +337,22 @@ Account-side: orders, orders/{id}/{history,notes}, addresses, downloads.
 
 **FE primitive consolidation — partial:**
 
-`useTableView` now accepts a typed `extras` parser map so endpoint-specific top-level keys
-(`q`, `tab`, `trashed`, etc.) live in the same URL-state hook as the TableView wire keys.
-`useDataTable`'s UI-only state is also split into two smaller hooks:
+`useTableView` accepts a typed `extras` parser map so endpoint-specific top-level keys
+(`q`, `tab`, `trashed`, …) live in the same URL-state hook as the TableView wire keys.
+`useDataTable`'s UI-only state has been split into two smaller hooks:
 
 - `useColumnState({ id, defaultColumnVisibility, defaultDensity? })` — persisted visibility /
   order / density in localStorage; SSR-safe.
 - `useSelectionState()` — in-memory `selectedIds`; never mirrored to URL (selections
   shouldn't leak into shareable links).
 
-The per-page rewrite (`orders-list`, `customers-list`, `products-list`, `reviews-list`,
-`coupons-list`) is the remaining FE refactor. Each page is functional today with the
-dual-hook composition (`useDataTable` for URL state + facet abstractions, page-level
-`useMemo` to project onto `TableViewQuery`). The new primitives let each page migrate
-incrementally to a single source of truth (`useTableView` + UI hooks) without a
-big-bang rewrite. See [`apps/admin/src/lib/table-view/README.md`](../../../admin/src/lib/table-view/README.md)
-for the per-page migration recipe.
+The five admin list pages (`orders-list`, `customers-list`, `products-list`, `reviews-list`,
+`coupons-list`) are migrated to the new composition; the legacy monolithic `useDataTable`
+hook is deleted. Only its small URL-shape utilities (`parseSort` / `serializeSort` /
+`DEFAULT_LIMIT_OPTIONS` / `emptyPaginationMeta`) survive as a tiny module for the
+column-header + pagination-footer call sites. The
+[`apps/admin/src/lib/table-view/README.md`](../../../admin/src/lib/table-view/README.md)
+documents the new composition pattern.
 
 **Server-side `parseDateFilter` service**: deleted. The customers `last_order` filter now
 flows as two ISO date-time bounds (`last_order_after` + `last_order_before`) produced by
