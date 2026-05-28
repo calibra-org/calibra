@@ -1,7 +1,7 @@
 import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
-import { createBrand, createCategory, createProduct, createTag } from "./helpers.js";
+import { createAdmin, createBrand, createCategory, createProduct, createTag } from "./helpers.js";
 import InventoryItem from "#models/inventory_item";
 
 /**
@@ -11,12 +11,16 @@ import InventoryItem from "#models/inventory_item";
  * server-repos category/tag/brand pages all showed the same count. These tests pin the fix in.
  */
 test.group("Admin products list filters", (group) => {
-    group.each.setup(async () => testUtils.db().truncate());
+    let admin: Awaited<ReturnType<typeof createAdmin>>;
+    group.each.setup(async () => {
+        admin = await createAdmin();
+        return await testUtils.db().truncate();
+    });
 
     test("default request returns the paginated envelope", async ({ client, assert }) => {
         await createProduct({ fa: { name: "اول" }, en: { name: "First" } });
         await createProduct({ fa: { name: "دوم" }, en: { name: "Second" } });
-        const response = await client.get("/api/v1/admin/products");
+        const response = await client.get("/api/v1/admin/products").withGuard("api").loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, 2);
         assert.equal(response.body().data.length, 2);
@@ -26,8 +30,8 @@ test.group("Admin products list filters", (group) => {
         await createProduct({ fa: { name: "الف" }, en: { name: "A" } });
         await createProduct({ fa: { name: "ب" }, en: { name: "B" } });
         await createProduct({ fa: { name: "ج" }, en: { name: "C" } });
-        const single = await client.get("/api/v1/admin/products?limit=1");
-        const couple = await client.get("/api/v1/admin/products?limit=2");
+        const single = await client.get("/api/v1/admin/products?limit=1").withGuard("api").loginAs(admin);
+        const couple = await client.get("/api/v1/admin/products?limit=2").withGuard("api").loginAs(admin);
         assert.equal(single.body().meta.limit, 1);
         assert.equal(single.body().data.length, 1);
         assert.equal(couple.body().meta.limit, 2);
@@ -42,7 +46,10 @@ test.group("Admin products list filters", (group) => {
             en: { name: "Phones" },
             products: [matching],
         });
-        const response = await client.get(`/api/v1/admin/products?category=${Number(category.id)}`);
+        const response = await client
+            .get(`/api/v1/admin/products?category=${Number(category.id)}`)
+            .withGuard("api")
+            .loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, 1);
         assert.equal(response.body().data[0].id, Number(matching.id));
@@ -50,7 +57,7 @@ test.group("Admin products list filters", (group) => {
 
     test("unknown category id returns an empty page (not the global total)", async ({ client, assert }) => {
         await createProduct({ fa: { name: "تنها" }, en: { name: "Lonely" } });
-        const response = await client.get("/api/v1/admin/products?category=999999");
+        const response = await client.get("/api/v1/admin/products?category=999999").withGuard("api").loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, 0);
         assert.equal(response.body().data.length, 0);
@@ -64,7 +71,10 @@ test.group("Admin products list filters", (group) => {
             en: { name: "Special", slug: "special-admin" },
         });
         await tag.related("products").attach([String(tagged.id)]);
-        const response = await client.get(`/api/v1/admin/products?tag=${Number(tag.id)}`);
+        const response = await client
+            .get(`/api/v1/admin/products?tag=${Number(tag.id)}`)
+            .withGuard("api")
+            .loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, 1);
         assert.equal(response.body().data[0].id, Number(tagged.id));
@@ -78,7 +88,10 @@ test.group("Admin products list filters", (group) => {
             en: { name: "Calibra", slug: "calibra-admin" },
         });
         await brand.related("products").attach([String(branded.id)]);
-        const response = await client.get(`/api/v1/admin/products?brand=${Number(brand.id)}`);
+        const response = await client
+            .get(`/api/v1/admin/products?brand=${Number(brand.id)}`)
+            .withGuard("api")
+            .loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, 1);
         assert.equal(response.body().data[0].id, Number(branded.id));
@@ -92,7 +105,7 @@ test.group("Admin products list filters", (group) => {
             salePrice: 1_500_000,
         });
         await createProduct({ fa: { name: "بدون حراج" }, en: { name: "Regular" }, regularPrice: 2_000_000 });
-        const response = await client.get("/api/v1/admin/products?on_sale=1");
+        const response = await client.get("/api/v1/admin/products?on_sale=1").withGuard("api").loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, 1);
         assert.equal(response.body().data[0].id, Number(onSale.id));
@@ -115,7 +128,7 @@ test.group("Admin products list filters", (group) => {
             backorders: "no",
             stockStatus: "outofstock",
         });
-        const response = await client.get("/api/v1/admin/products?stock_status=outofstock");
+        const response = await client.get("/api/v1/admin/products?stock_status=outofstock").withGuard("api").loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, 1);
         assert.equal(response.body().data[0].id, Number(outOfStock.id));

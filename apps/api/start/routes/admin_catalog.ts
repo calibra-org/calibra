@@ -10,6 +10,7 @@ import AdminShippingClassesController from "#controllers/admin/catalog/shipping_
 import AdminTagsController from "#controllers/admin/catalog/tags_controller";
 import AdminTaxClassesController from "#controllers/admin/catalog/tax_classes_controller";
 import AdminVariationsController from "#controllers/admin/catalog/variations_controller";
+import { middleware } from "#start/kernel";
 
 router
     .group(() => {
@@ -89,4 +90,6 @@ router
         router.patch("/reviews/:id", [AdminReviewsController, "update"]).as("admin.reviews.update");
         router.delete("/reviews/:id", [AdminReviewsController, "destroy"]).as("admin.reviews.destroy");
     })
-    .prefix("/api/v1/admin");
+    .prefix("/api/v1/admin")
+    .use(middleware.auth({ guards: ["api"] }))
+    .use(middleware.admin());

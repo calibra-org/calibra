@@ -1,7 +1,7 @@
 import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
-import { createAttributeWithTerm, createProduct } from "./helpers.js";
+import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductVariation from "#models/product_variation";
 
@@ -11,7 +11,11 @@ import ProductVariation from "#models/product_variation";
  * updates, and the load-bearing default (`active`) that keeps unmigrated rows sellable.
  */
 test.group("Admin variation status", (group) => {
-    group.each.setup(async () => testUtils.db().truncate());
+    let admin: Awaited<ReturnType<typeof createAdmin>>;
+    group.each.setup(async () => {
+        admin = await createAdmin();
+        return await testUtils.db().truncate();
+    });
 
     test("creating a variation defaults status to active", async ({ client, assert }) => {
         const p = await createProduct({
@@ -19,7 +23,7 @@ test.group("Admin variation status", (group) => {
             en: { name: "Variable", slug: "var-en" },
             type: "variable",
         });
-        const response = await client.post(`/api/v1/admin/products/${p.id}/variations`).json({
+        const response = await client.post(`/api/v1/admin/products/${p.id}/variations`).withGuard("api").loginAs(admin).json({
             sku: "STAT-DEF",
             regular_price: 1_000_000,
         });
@@ -34,7 +38,7 @@ test.group("Admin variation status", (group) => {
             en: { name: "Variable 2", slug: "var2-en" },
             type: "variable",
         });
-        const created = await client.post(`/api/v1/admin/products/${p.id}/variations`).json({
+        const created = await client.post(`/api/v1/admin/products/${p.id}/variations`).withGuard("api").loginAs(admin).json({
             sku: "STAT-DRAFT",
             regular_price: 1_000_000,
             status: "draft",
@@ -43,7 +47,7 @@ test.group("Admin variation status", (group) => {
         created.assertAgainstApiSpec();
         assert.equal(created.body().data.status, "draft");
 
-        const fetched = await client.get(`/api/v1/admin/products/${p.id}/variations`);
+        const fetched = await client.get(`/api/v1/admin/products/${p.id}/variations`).withGuard("api").loginAs(admin);
         fetched.assertStatus(200);
         fetched.assertAgainstApiSpec();
         const row = (fetched.body().data as { id: number; status: string }[]).find((r) => r.id === created.body().data.id);
@@ -57,7 +61,7 @@ test.group("Admin variation status", (group) => {
             en: { name: "Lifecycle", slug: "lifecycle-en" },
             type: "variable",
         });
-        const created = await client.post(`/api/v1/admin/products/${p.id}/variations`).json({
+        const created = await client.post(`/api/v1/admin/products/${p.id}/variations`).withGuard("api").loginAs(admin).json({
             sku: "LC-1",
             regular_price: 500_000,
             status: "draft",
@@ -65,16 +69,24 @@ test.group("Admin variation status", (group) => {
         created.assertStatus(201);
         const id = created.body().data.id as number;
 
-        const toActive = await client.patch(`/api/v1/admin/products/${p.id}/variations/${id}`).json({
-            status: "active",
-        });
+        const toActive = await client
+            .patch(`/api/v1/admin/products/${p.id}/variations/${id}`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                status: "active",
+            });
         toActive.assertStatus(200);
         toActive.assertAgainstApiSpec();
         assert.equal(toActive.body().data.status, "active");
 
-        const toArchived = await client.patch(`/api/v1/admin/products/${p.id}/variations/${id}`).json({
-            status: "archived",
-        });
+        const toArchived = await client
+            .patch(`/api/v1/admin/products/${p.id}/variations/${id}`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                status: "archived",
+            });
         toArchived.assertStatus(200);
         toArchived.assertAgainstApiSpec();
         assert.equal(toArchived.body().data.status, "archived");
@@ -86,7 +98,7 @@ test.group("Admin variation status", (group) => {
             en: { name: "Reject", slug: "reject-en" },
             type: "variable",
         });
-        const response = await client.post(`/api/v1/admin/products/${p.id}/variations`).json({
+        const response = await client.post(`/api/v1/admin/products/${p.id}/variations`).withGuard("api").loginAs(admin).json({
             sku: "BAD",
             regular_price: 100_000,
             status: "bogus",
@@ -100,23 +112,27 @@ test.group("Admin variation status", (group) => {
             en: { name: "Batch", slug: "batch-en" },
             type: "variable",
         });
-        const first = await client.post(`/api/v1/admin/products/${p.id}/variations`).json({
+        const first = await client.post(`/api/v1/admin/products/${p.id}/variations`).withGuard("api").loginAs(admin).json({
             sku: "B-1",
             regular_price: 100_000,
             status: "draft",
         });
-        const second = await client.post(`/api/v1/admin/products/${p.id}/variations`).json({
+        const second = await client.post(`/api/v1/admin/products/${p.id}/variations`).withGuard("api").loginAs(admin).json({
             sku: "B-2",
             regular_price: 200_000,
             status: "draft",
         });
 
-        const batch = await client.post(`/api/v1/admin/products/${p.id}/variations/batch`).json({
-            update: [
-                { id: first.body().data.id, status: "active" },
-                { id: second.body().data.id, status: "inactive" },
-            ],
-        });
+        const batch = await client
+            .post(`/api/v1/admin/products/${p.id}/variations/batch`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                update: [
+                    { id: first.body().data.id, status: "active" },
+                    { id: second.body().data.id, status: "inactive" },
+                ],
+            });
         batch.assertStatus(200);
 
         const reloaded = await ProductVariation.query().where("product_id", String(p.id)).orderBy("id");
@@ -144,13 +160,17 @@ test.group("Admin variation status", (group) => {
             visible: true,
             usedForVariation: true,
         });
-        await client.post(`/api/v1/admin/products/${p.id}/variations`).json({
-            sku: "SHOW-1",
-            regular_price: 750_000,
-            status: "active",
-            attribute_pins: [{ attribute_id: Number(attribute.id), term_id: Number(term.id) }],
-        });
-        const detail = await client.get(`/api/v1/admin/products/${p.id}`);
+        await client
+            .post(`/api/v1/admin/products/${p.id}/variations`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                sku: "SHOW-1",
+                regular_price: 750_000,
+                status: "active",
+                attribute_pins: [{ attribute_id: Number(attribute.id), term_id: Number(term.id) }],
+            });
+        const detail = await client.get(`/api/v1/admin/products/${p.id}`).withGuard("api").loginAs(admin);
         detail.assertStatus(200);
         detail.assertAgainstApiSpec();
         const variations = detail.body().data.variations as { status: string }[];

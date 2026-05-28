@@ -2,7 +2,7 @@ import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 import { DateTime } from "luxon";
 
-import { createProduct } from "./helpers.js";
+import { createAdmin, createProduct } from "./helpers.js";
 import Product from "#models/product";
 
 /**
@@ -10,11 +10,15 @@ import Product from "#models/product";
  * shipped on the products-list-foundation branch.
  */
 test.group("Admin products — trash, restore, force-delete, counts", (group) => {
-    group.each.setup(async () => testUtils.db().truncate());
+    let admin: Awaited<ReturnType<typeof createAdmin>>;
+    group.each.setup(async () => {
+        admin = await createAdmin();
+        return await testUtils.db().truncate();
+    });
 
     test("DELETE soft-deletes the product (deleted_at is set)", async ({ client, assert }) => {
         const product = await createProduct({ fa: { name: "حذف" }, en: { name: "Trashy" } });
-        const res = await client.delete(`/api/v1/admin/products/${product.id}`);
+        const res = await client.delete(`/api/v1/admin/products/${product.id}`).withGuard("api").loginAs(admin);
         res.assertStatus(204);
         const reloaded = await Product.query().where("id", Number(product.id)).first();
         assert.isNotNull(reloaded);
@@ -27,12 +31,12 @@ test.group("Admin products — trash, restore, force-delete, counts", (group) =>
         trashed.deletedAt = DateTime.utc();
         await trashed.save();
 
-        const onlyTrash = await client.get("/api/v1/admin/products?only_trashed=1");
+        const onlyTrash = await client.get("/api/v1/admin/products?only_trashed=1").withGuard("api").loginAs(admin);
         onlyTrash.assertStatus(200);
         assert.equal(onlyTrash.body().meta.total, 1);
         assert.equal(onlyTrash.body().data[0].id, Number(trashed.id));
 
-        const liveOnly = await client.get("/api/v1/admin/products");
+        const liveOnly = await client.get("/api/v1/admin/products").withGuard("api").loginAs(admin);
         liveOnly.assertStatus(200);
         assert.equal(liveOnly.body().meta.total, 1);
         assert.equal(liveOnly.body().data[0].id, Number(live.id));
@@ -43,7 +47,7 @@ test.group("Admin products — trash, restore, force-delete, counts", (group) =>
         product.deletedAt = DateTime.utc();
         await product.save();
 
-        const res = await client.post(`/api/v1/admin/products/${product.id}/restore`);
+        const res = await client.post(`/api/v1/admin/products/${product.id}/restore`).withGuard("api").loginAs(admin);
         res.assertStatus(200);
         assert.isNull(res.body().data.deleted_at);
 
@@ -59,7 +63,11 @@ test.group("Admin products — trash, restore, force-delete, counts", (group) =>
         b.deletedAt = DateTime.utc();
         await b.save();
 
-        const res = await client.post("/api/v1/admin/products/restore").json({ ids: [Number(a.id), Number(b.id)] });
+        const res = await client
+            .post("/api/v1/admin/products/restore")
+            .withGuard("api")
+            .loginAs(admin)
+            .json({ ids: [Number(a.id), Number(b.id)] });
         res.assertStatus(200);
         assert.deepEqual(res.body().data.restored.sort(), [Number(a.id), Number(b.id)].sort());
 
@@ -72,7 +80,7 @@ test.group("Admin products — trash, restore, force-delete, counts", (group) =>
     test("DELETE ?force=1 hard-deletes when no active order references the product", async ({ client, assert }) => {
         const product = await createProduct({ fa: { name: "حذف کامل" }, en: { name: "Force kill" } });
         const id = Number(product.id);
-        const res = await client.delete(`/api/v1/admin/products/${id}?force=1`);
+        const res = await client.delete(`/api/v1/admin/products/${id}?force=1`).withGuard("api").loginAs(admin);
         res.assertStatus(204);
         const stillThere = await Product.query().where("id", id).first();
         assert.isNull(stillThere ?? null);
@@ -85,7 +93,7 @@ test.group("Admin products — trash, restore, force-delete, counts", (group) =>
         trashed.deletedAt = DateTime.utc();
         await trashed.save();
 
-        const res = await client.get("/api/v1/admin/products/counts");
+        const res = await client.get("/api/v1/admin/products/counts").withGuard("api").loginAs(admin);
         res.assertStatus(200);
         const data = res.body().data;
         assert.equal(data.publish, 1);
@@ -108,7 +116,7 @@ test.group("Admin products — trash, restore, force-delete, counts", (group) =>
         await onSale.save();
         void noSale;
 
-        const res = await client.get("/api/v1/admin/products?on_sale=1");
+        const res = await client.get("/api/v1/admin/products?on_sale=1").withGuard("api").loginAs(admin);
         res.assertStatus(200);
         assert.equal(res.body().meta.total, 1);
         assert.equal(res.body().data[0].id, Number(onSale.id));

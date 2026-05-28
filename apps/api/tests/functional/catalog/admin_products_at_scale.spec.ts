@@ -2,6 +2,7 @@ import testUtils from "@adonisjs/core/services/test_utils";
 import db from "@adonisjs/lucid/services/db";
 import { test } from "@japa/runner";
 
+import { createAdmin } from "./helpers.js";
 import BulkDatasetSeeder, { FIXED_ADMINS } from "#database/seed_modules/0010_bulk_dataset_seeder";
 
 /**
@@ -16,6 +17,7 @@ import BulkDatasetSeeder, { FIXED_ADMINS } from "#database/seed_modules/0010_bul
  * magnitude bigger than the per-test fixtures elsewhere.
  */
 test.group("Admin products list — bulk-seeded scale", (group) => {
+    let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.setup(async () => {
         /**
          * `testUtils.db().truncate()` returns a cleanup callback — calling it doesn't truncate,
@@ -27,10 +29,11 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
         const seeder = new BulkDatasetSeeder(db.connection());
         seeder.setOptions({ products: 1_000, users: 100, orders: 50, reset: false });
         await seeder.run();
+        admin = await createAdmin();
     });
 
     test("baseline list returns the full seeded catalog", async ({ client, assert }) => {
-        const response = await client.get("/api/v1/admin/products?limit=1");
+        const response = await client.get("/api/v1/admin/products?limit=1").withGuard("api").loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, 1_000);
     });
@@ -38,7 +41,10 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
     test("category filter narrows the list to a single leaf category", async ({ client, assert }) => {
         const smartphoneId = await leafCategoryId("bk-smartphones");
         const linkCount = await countLinks("product_category_links", "category_id", smartphoneId);
-        const response = await client.get(`/api/v1/admin/products?limit=1&category=${smartphoneId}`);
+        const response = await client
+            .get(`/api/v1/admin/products?limit=1&category=${smartphoneId}`)
+            .withGuard("api")
+            .loginAs(admin);
         response.assertStatus(200);
         assert.equal(
             response.body().meta.total,
@@ -52,7 +58,7 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
     test("tag filter narrows the list to products linked to that tag", async ({ client, assert }) => {
         const tagId = await firstBulkTagId();
         const linkCount = await countLinks("product_tag_links", "tag_id", tagId);
-        const response = await client.get(`/api/v1/admin/products?limit=1&tag=${tagId}`);
+        const response = await client.get(`/api/v1/admin/products?limit=1&tag=${tagId}`).withGuard("api").loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, linkCount);
         assert.isBelow(response.body().meta.total, 1_000);
@@ -61,7 +67,7 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
     test("brand filter narrows the list to products linked to that brand", async ({ client, assert }) => {
         const brandId = await firstSeededBrandId();
         const linkCount = await countLinks("product_brand_links", "brand_id", brandId);
-        const response = await client.get(`/api/v1/admin/products?limit=1&brand=${brandId}`);
+        const response = await client.get(`/api/v1/admin/products?limit=1&brand=${brandId}`).withGuard("api").loginAs(admin);
         response.assertStatus(200);
         assert.equal(response.body().meta.total, linkCount);
     });

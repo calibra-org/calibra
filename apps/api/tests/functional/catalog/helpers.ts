@@ -1,3 +1,4 @@
+import Customer from "#models/customer";
 import Product from "#models/product";
 import ProductAttribute from "#models/product_attribute";
 import ProductAttributeTerm from "#models/product_attribute_term";
@@ -10,12 +11,29 @@ import ProductCategoryTranslation from "#models/product_category_translation";
 import ProductTag from "#models/product_tag";
 import ProductTagTranslation from "#models/product_tag_translation";
 import ProductTranslation from "#models/product_translation";
+import User from "#models/user";
 
 let serial = 1;
 
 /** Internal counter that guarantees unique slugs across the test run without leaking state. */
 function nextSerial() {
     return serial++;
+}
+
+/**
+ * Seed an admin user (with the customer profile the auth pipeline expects) for authenticating
+ * admin-catalog requests via `.withGuard("api").loginAs(admin)`. Recreate it per test after the
+ * DB reset truncates the `users` table.
+ */
+export async function createAdmin(): Promise<User> {
+    const user = await User.create({
+        email: `admin-${nextSerial()}@catalog-test.dev`,
+        passwordHash: "Passw0rd1!",
+        role: "admin",
+        locale: "fa",
+    });
+    await Customer.create({ userId: user.id, firstName: "Admin", lastName: "User", countryDefault: "IR" });
+    return user;
 }
 
 /** Seed a single product with fa + en translations. */

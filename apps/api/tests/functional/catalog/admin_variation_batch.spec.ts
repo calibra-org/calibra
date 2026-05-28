@@ -1,7 +1,7 @@
 import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
-import { createAttributeWithTerm, createProduct } from "./helpers.js";
+import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductVariation from "#models/product_variation";
 
@@ -13,7 +13,11 @@ import ProductVariation from "#models/product_variation";
  * red instead of the editor.
  */
 test.group("Admin variations batch", (group) => {
-    group.each.setup(async () => testUtils.db().truncate());
+    let admin: Awaited<ReturnType<typeof createAdmin>>;
+    group.each.setup(async () => {
+        admin = await createAdmin();
+        return await testUtils.db().truncate();
+    });
 
     test("creates the full N×M cartesian when every pin matches a used_for_variation link", async ({ client, assert }) => {
         const p = await createProduct({
@@ -38,17 +42,21 @@ test.group("Admin variations batch", (group) => {
             { productId: p.id, attributeId: sizeAttr.id, position: 1, visible: true, usedForVariation: true },
         ]);
 
-        const response = await client.post(`/api/v1/admin/products/${p.id}/variations/batch`).json({
-            create: [
-                {
-                    attribute_pins: [
-                        { attribute_id: Number(colorAttr.id), term_id: Number(silverTerm.id) },
-                        { attribute_id: Number(sizeAttr.id), term_id: Number(smallTerm.id) },
-                    ],
-                    status: "draft",
-                },
-            ],
-        });
+        const response = await client
+            .post(`/api/v1/admin/products/${p.id}/variations/batch`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                create: [
+                    {
+                        attribute_pins: [
+                            { attribute_id: Number(colorAttr.id), term_id: Number(silverTerm.id) },
+                            { attribute_id: Number(sizeAttr.id), term_id: Number(smallTerm.id) },
+                        ],
+                        status: "draft",
+                    },
+                ],
+            });
         response.assertStatus(200);
         const body = response.body() as { data: { created: number[] } };
         assert.lengthOf(body.data.created, 1);
@@ -70,14 +78,18 @@ test.group("Admin variations batch", (group) => {
             attrEn: "Color 2",
             term: { fa: "آبی", en: "Blue", slug: "blue" },
         });
-        const response = await client.post(`/api/v1/admin/products/${p.id}/variations/batch`).json({
-            create: [
-                {
-                    attribute_pins: [{ attribute_id: Number(attribute.id), term_id: Number(term.id) }],
-                    status: "draft",
-                },
-            ],
-        });
+        const response = await client
+            .post(`/api/v1/admin/products/${p.id}/variations/batch`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                create: [
+                    {
+                        attribute_pins: [{ attribute_id: Number(attribute.id), term_id: Number(term.id) }],
+                        status: "draft",
+                    },
+                ],
+            });
         response.assertStatus(422);
         assert.equal(response.body().error, "parent_product_not_variable");
     });
@@ -102,14 +114,18 @@ test.group("Admin variations batch", (group) => {
             visible: true,
             usedForVariation: false,
         });
-        const response = await client.post(`/api/v1/admin/products/${p.id}/variations/batch`).json({
-            create: [
-                {
-                    attribute_pins: [{ attribute_id: Number(attribute.id), term_id: Number(term.id) }],
-                    status: "draft",
-                },
-            ],
-        });
+        const response = await client
+            .post(`/api/v1/admin/products/${p.id}/variations/batch`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                create: [
+                    {
+                        attribute_pins: [{ attribute_id: Number(attribute.id), term_id: Number(term.id) }],
+                        status: "draft",
+                    },
+                ],
+            });
         /** The controller throws → the request handler returns 500; the assertion here is that the
          *  batch did NOT succeed and no variations were created — exact status code is whatever
          *  AdonisJS's exception handler chose, so just confirm it isn't 200. */
@@ -122,22 +138,26 @@ test.group("Admin variations batch", (group) => {
             en: { name: "Batch Update", slug: "batch-update-en" },
             type: "variable",
         });
-        const first = await client.post(`/api/v1/admin/products/${p.id}/variations`).json({
+        const first = await client.post(`/api/v1/admin/products/${p.id}/variations`).withGuard("api").loginAs(admin).json({
             sku: "BU-1",
             regular_price: 100_000,
             status: "draft",
         });
-        const second = await client.post(`/api/v1/admin/products/${p.id}/variations`).json({
+        const second = await client.post(`/api/v1/admin/products/${p.id}/variations`).withGuard("api").loginAs(admin).json({
             sku: "BU-2",
             regular_price: 200_000,
             status: "draft",
         });
-        const response = await client.post(`/api/v1/admin/products/${p.id}/variations/batch`).json({
-            update: [
-                { id: first.body().data.id, status: "active" },
-                { id: second.body().data.id, status: "archived" },
-            ],
-        });
+        const response = await client
+            .post(`/api/v1/admin/products/${p.id}/variations/batch`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                update: [
+                    { id: first.body().data.id, status: "active" },
+                    { id: second.body().data.id, status: "archived" },
+                ],
+            });
         response.assertStatus(200);
         const rows = await ProductVariation.query().where("product_id", String(p.id)).orderBy("id");
         const byId = new Map(rows.map((r) => [Number(r.id), r.status]));
