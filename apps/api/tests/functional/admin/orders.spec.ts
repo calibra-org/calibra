@@ -4,6 +4,7 @@ import { OrderStatus } from "#enums/order_status";
 import { UserFactory } from "#factories/user_factory";
 import Customer from "#models/customer";
 import Order from "#models/order";
+import OrderAddress from "#models/order_address";
 import { createTaxableProduct } from "#tests/helpers/cart";
 import { makeDraftOrder, resetPhase05 } from "#tests/helpers/orders";
 
@@ -196,6 +197,42 @@ test.group("GET /api/v1/admin/orders (filters)", (group) => {
         sourceOnly.assertAgainstApiSpec();
         const sourceIds = (sourceOnly.body().data as Array<{ id: number }>).map((row) => row.id);
         assert.includeMembers(sourceIds, [Number(orderA.id), Number(orderB.id)]);
+    });
+
+    test("country=<a>,<b> filters by billing-address country (multi-select)", async ({ client, assert }) => {
+        const admin = await adminUser();
+        const product = await createTaxableProduct({ regularPrice: 500_000 });
+        const mk = () => makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
+        const orderIR = await mk();
+        const orderDE = await mk();
+        const orderFR = await mk();
+        const billing = (orderId: number, country: string) =>
+            OrderAddress.create({
+                orderId,
+                kind: "billing",
+                firstName: "A",
+                lastName: "B",
+                addressLine1: "x",
+                city: "c",
+                country,
+            });
+        await billing(Number(orderIR.id), "IR");
+        await billing(Number(orderDE.id), "DE");
+        await billing(Number(orderFR.id), "FR");
+
+        const de = await client.get("/api/v1/admin/orders").qs({ country: "DE" }).loginAs(admin);
+        de.assertStatus(200);
+        de.assertAgainstApiSpec();
+        const deIds = (de.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(deIds, [Number(orderDE.id)]);
+        assert.notInclude(deIds, Number(orderIR.id));
+        assert.notInclude(deIds, Number(orderFR.id));
+
+        const multi = await client.get("/api/v1/admin/orders").qs({ country: "IR,DE" }).loginAs(admin);
+        multi.assertStatus(200);
+        const multiIds = (multi.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(multiIds, [Number(orderIR.id), Number(orderDE.id)]);
+        assert.notInclude(multiIds, Number(orderFR.id));
     });
 });
 

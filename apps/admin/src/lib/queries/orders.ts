@@ -41,6 +41,8 @@ export interface OrdersListParams {
     query?: TableViewQuery;
     q?: string;
     trashed?: boolean;
+    /** Multi-select billing-country filter — comma-joined ISO-2 codes (`"IR,DE"`). */
+    country?: string;
 }
 
 /**
@@ -51,6 +53,7 @@ export interface OrdersListParams {
 interface OrdersListExtras {
     q?: string;
     trashed?: boolean;
+    country?: string;
 }
 
 const PER_PAGE_DEFAULT = 25;
@@ -66,6 +69,7 @@ export function useOrdersList(params: OrdersListParams = {}) {
     const sdkQuery = tableViewQueryToSdkQuery(query, {
         q: params.q,
         trashed: params.trashed === true ? true : undefined,
+        country: params.country,
     } satisfies OrdersListExtras);
     return useQuery<OrderListEnvelope, Error, Paginated<AdminOrder>>({
         queryKey: ["admin", "orders", "list", { locale, sdkQuery }],

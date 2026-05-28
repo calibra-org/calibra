@@ -39,6 +39,7 @@ export default class AdminOrdersController {
         const payload = (await ctx.request.validateUsing(adminOrderListValidator)) as AdminOrdersViewQuery & {
             q?: string;
             trashed?: boolean;
+            country?: string[];
         };
 
         const builder = Order.query();
@@ -54,6 +55,16 @@ export default class AdminOrdersController {
                     sub.orWhere("orders.order_number", numeric).orWhere("orders.id", numeric);
                 }
             });
+        }
+
+        /** Country is a multi-select on the order's billing address — not an `orders` column, so it
+         * rides as a controller-side `whereExists` against `order_addresses` rather than the
+         * TableView grammar. Values are uppercased ISO-2; the DB stores the same. */
+        const countries = (payload.country ?? []).map((c) => c.toUpperCase()).filter((c) => c.length > 0);
+        if (countries.length > 0) {
+            builder.whereIn("orders.id", (sub) =>
+                sub.select("order_id").from("order_addresses").where("kind", "billing").whereIn("country", countries),
+            );
         }
 
         builder.preload("lineItems").preload("couponLines");
