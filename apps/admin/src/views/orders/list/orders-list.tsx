@@ -149,14 +149,15 @@ export function OrdersList() {
 
     const setDateFacet = useCallback(
         (_key: string, value: typeof dateFacetValues.created) => {
-            tv.setCreated(serializeDateFacetForUrl(value) ?? "");
+            /** The chip's display string (`created` extra) and the wire predicate (`created_at`
+             *  filter[]) must move together — one `patch`, never two chained writes (they race on
+             *  router.replace and the filter[] gets clobbered, so the date never applies). */
             const remaining = tv.query.filter.filter((f) => f.field !== "created_at");
-            if (value !== null) {
-                const mapped = dateFilterValueToTableViewFilter("created_at", value);
-                tv.setFilter(mapped !== null ? [...remaining, mapped] : remaining);
-            } else {
-                tv.setFilter(remaining);
-            }
+            const mapped = value !== null ? dateFilterValueToTableViewFilter("created_at", value) : null;
+            tv.patch({
+                query: { filter: mapped !== null ? [...remaining, mapped] : remaining },
+                extras: { created: serializeDateFacetForUrl(value) ?? "" },
+            });
         },
         [tv],
     );
