@@ -11,9 +11,15 @@ import { createTagValidator, updateTagValidator } from "#validators/catalog/taxo
 
 const TAXONOMY_FIELDS = ["name", "slug", "description"] as const;
 
+/**
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) so the tags picker
+ * (`useTagsList` defaults to `limit=500`) and the tags list page (`limit=200`) can fetch the
+ * whole set in one shot. Uniform across the taxonomy family.
+ */
 const adminTagsListValidator = adminTagsView.compileStrict({
     extras: { q: vine.string().trim().maxLength(120).optional() },
     defaultLimit: 100,
+    maxLimit: 500,
 });
 
 export default class AdminTagsController {
@@ -25,10 +31,14 @@ export default class AdminTagsController {
 
         if (parsed.q !== undefined && parsed.q.length > 0) {
             const needle = `%${parsed.q.toLowerCase()}%`;
-            builder.where((sub) => {
-                sub.whereILike("product_tags.slug", needle).orWhereIn("product_tags.id", (nested) => {
-                    nested.select("tag_id").from("product_tag_translations").whereRaw("LOWER(name) LIKE ?", [needle]);
-                });
+            /** `slug` lives on the translations table, not `product_tags`, so both the name and
+             * slug needles match against `product_tag_translations`. */
+            builder.whereIn("product_tags.id", (nested) => {
+                nested
+                    .select("tag_id")
+                    .from("product_tag_translations")
+                    .whereRaw("LOWER(name) LIKE ?", [needle])
+                    .orWhereRaw("LOWER(slug) LIKE ?", [needle]);
             });
         }
 

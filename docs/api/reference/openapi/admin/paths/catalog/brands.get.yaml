@@ -3,9 +3,12 @@ summary: List brands (admin)
 description: >
     Paginated list of every non-deleted brand on the unified TableView grammar.
 
-    **TableView filterable fields**: `id`, `slug`, `menu_order`, `created_at`.
+    **TableView filterable fields**: `id`, `menu_order`, `created_at`.
 
     **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`, `used_count`.
+
+    `slug` lives on the translations table, so it is sort-only (ordered by the per-row translated
+    slug via a correlated subquery); free-text slug matching is available through `?q=`.
 
     `used_count` sorts by the live `product_brand_links` count via a correlated subquery; use
     `?sort[]=used_count:desc` to rank brands most-used first. Default page size is 100 (large
@@ -15,7 +18,7 @@ tags: [Admin / Catalog / Brands]
 
 parameters:
     - $ref: "../../../common/components/parameters/table-view/Page.yaml"
-    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit500.yaml"
     - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
     - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
     - $ref: "../../../common/components/parameters/table-view/Sort.yaml"

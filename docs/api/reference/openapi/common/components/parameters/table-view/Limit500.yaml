@@ -1,0 +1,12 @@
+name: limit
+in: query
+description: >
+    Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the
+    whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to
+    the endpoint's natural page size.
+required: false
+schema:
+    type: integer
+    minimum: 1
+    maximum: 500
+    default: 100

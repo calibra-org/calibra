@@ -6,7 +6,11 @@ import { collection, resource } from "#transformers/api_envelope";
 import TaxClassTransformer from "#transformers/tax_class_transformer";
 import { createTaxClassValidator, updateTaxClassValidator } from "#validators/catalog/taxonomy_validator";
 
-const adminTaxClassesListValidator = adminTaxClassesView.compileStrict({ defaultLimit: 100 });
+/**
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) so tax-class selectors
+ * fetch the whole set in one shot. Uniform across the catalog family.
+ */
+const adminTaxClassesListValidator = adminTaxClassesView.compileStrict({ defaultLimit: 100, maxLimit: 500 });
 
 export default class AdminTaxClassesController {
     async index(ctx: HttpContext) {

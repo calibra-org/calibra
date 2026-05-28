@@ -5,9 +5,12 @@ description: >
     `?filter[]=parent_id:eq:N` (or `:isnull` for top-level rows) for one level of the
     hierarchy.
 
-    **TableView filterable fields**: `id`, `slug`, `parent_id`, `menu_order`, `created_at`.
+    **TableView filterable fields**: `id`, `parent_id`, `menu_order`, `created_at`.
 
     **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`, `used_count`.
+
+    `slug` lives on the translations table, so it is sort-only (ordered by the per-row translated
+    slug via a correlated subquery); free-text slug matching is available through `?q=`.
 
     `used_count` sorts by the live `product_category_links` count via a correlated subquery.
     Default page size is 100 (large enough for tree pickers' typical full set).
@@ -15,7 +18,7 @@ tags: [Admin / Catalog / Categories]
 
 parameters:
     - $ref: "../../../common/components/parameters/table-view/Page.yaml"
-    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit500.yaml"
     - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
     - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
     - $ref: "../../../common/components/parameters/table-view/Sort.yaml"

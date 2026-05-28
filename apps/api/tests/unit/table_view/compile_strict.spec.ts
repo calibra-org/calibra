@@ -136,3 +136,47 @@ test.group("table_view compileStrict / defaultLimit override", () => {
         assert.equal(result.limit, 5);
     });
 });
+
+test.group("table_view compileStrict / maxLimit override", () => {
+    test("default cap rejects limit=101 and accepts the 100 boundary", async ({ assert }) => {
+        const v = view.compileStrict();
+        const ok = await v.validate({ limit: 100 });
+        assert.equal(ok.limit, 100);
+        try {
+            await v.validate({ limit: 101 });
+            throw new Error("expected limit=101 to be rejected by the default cap");
+        } catch (err) {
+            if (!(err instanceof errors.E_VALIDATION_ERROR)) throw err;
+            const messages = err.messages as Array<{ field: string }>;
+            assert.include(
+                messages.map((m) => m.field),
+                "limit",
+            );
+        }
+    });
+
+    test("maxLimit:500 accepts limit=500 and rejects limit=501", async ({ assert }) => {
+        const v = view.compileStrict({ maxLimit: 500 });
+        const ok = await v.validate({ limit: 500 });
+        assert.equal(ok.limit, 500);
+        try {
+            await v.validate({ limit: 501 });
+            throw new Error("expected limit=501 to be rejected by maxLimit:500");
+        } catch (err) {
+            if (!(err instanceof errors.E_VALIDATION_ERROR)) throw err;
+            const messages = err.messages as Array<{ field: string }>;
+            assert.include(
+                messages.map((m) => m.field),
+                "limit",
+            );
+        }
+    });
+
+    test("maxLimit composes with defaultLimit independently", async ({ assert }) => {
+        const v = view.compileStrict({ defaultLimit: 100, maxLimit: 500 });
+        const absent = await v.validate({});
+        assert.equal(absent.limit, 100);
+        const explicit = await v.validate({ limit: 300 });
+        assert.equal(explicit.limit, 300);
+    });
+});

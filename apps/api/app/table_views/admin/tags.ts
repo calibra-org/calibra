@@ -10,7 +10,13 @@ export const adminTagsView = createTableView({
     model: ProductTag,
     columns: {
         id: { type: "bigint", filterable: true, orderable: true },
-        slug: { type: "string", filterable: true, orderable: true },
+        slug: {
+            type: "string",
+            filterable: false,
+            orderable: true,
+            sortRaw: (dir) =>
+                `(SELECT MIN(slug) FROM product_tag_translations WHERE product_tag_translations.tag_id = product_tags.id) ${dir}`,
+        },
         menu_order: { type: "number", filterable: true, orderable: true },
         created_at: { type: "datetime", filterable: true, orderable: true },
         used_count: {

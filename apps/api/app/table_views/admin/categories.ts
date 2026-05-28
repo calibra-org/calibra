@@ -12,7 +12,13 @@ export const adminCategoriesView = createTableView({
     model: ProductCategory,
     columns: {
         id: { type: "bigint", filterable: true, orderable: true },
-        slug: { type: "string", filterable: true, orderable: true },
+        slug: {
+            type: "string",
+            filterable: false,
+            orderable: true,
+            sortRaw: (dir) =>
+                `(SELECT MIN(slug) FROM product_category_translations WHERE product_category_translations.category_id = product_categories.id) ${dir}`,
+        },
         parent_id: { type: "bigint", filterable: true, orderable: false },
         menu_order: { type: "number", filterable: true, orderable: true },
         created_at: { type: "datetime", filterable: true, orderable: true },

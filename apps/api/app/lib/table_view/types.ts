@@ -146,11 +146,14 @@ type OrderableFields<Columns extends Record<string, TableViewColumn>> = {
  * Options accepted by {@link TableView.compileStrict}. `extras` declares the endpoint-specific
  * top-level query params layered on top of the TableView grammar (e.g. `q`, `tab`, `trashed`);
  * `defaultLimit` overrides {@link TABLE_VIEW_DEFAULT_LIMIT} for endpoints whose natural page
- * size is different (media → 60, taxonomies feeding selectors → 100).
+ * size is different (media → 60, taxonomies feeding selectors → 100); `maxLimit` raises the
+ * per-page ceiling above {@link TABLE_VIEW_MAX_LIMIT} for selector/tree endpoints that legitimately
+ * fetch the whole set in one request (taxonomy pickers request up to 500 rows).
  */
 export interface CompileStrictOptions<Extras extends Record<string, SchemaTypes>> {
     extras?: Extras;
     defaultLimit?: number;
+    maxLimit?: number;
 }
 
 /**

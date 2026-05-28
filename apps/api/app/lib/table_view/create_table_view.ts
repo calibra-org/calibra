@@ -22,9 +22,10 @@ const ADONIS_INJECTED_KEYS = new Set<string>(["params", "headers", "cookies"]);
  *
  * - `schema` — a Vine schema you pass to `vine.compile(view.schema)` for the soft-validation
  *   case (kept for backwards compatibility — most callers should use `compileStrict` instead).
- * - `compileStrict({ extras, defaultLimit })` — the preferred entry point. Returns a fully
- *   compiled `VineValidator` that layers the endpoint's bespoke top-level params on top of the
- *   TableView grammar AND rejects unknown query keys with 422.
+ * - `compileStrict({ extras, defaultLimit, maxLimit })` — the preferred entry point. Returns a
+ *   fully compiled `VineValidator` that layers the endpoint's bespoke top-level params on top of
+ *   the TableView grammar AND rejects unknown query keys with 422. `maxLimit` raises the per-page
+ *   ceiling above the default `TABLE_VIEW_MAX_LIMIT` for selector/tree endpoints.
  * - `run(builder, parsed, overrides?)` — applies the parsed query against a pre-scoped Lucid
  *   builder and returns `{ data, meta }` matching the existing pagination envelope.
  * - `config` / `allowedFields` — read-only metadata for tooling (the Ace allowed-fields dumper
@@ -70,9 +71,10 @@ export function createTableView<Model extends LucidModel, const Columns extends 
     }
 
     /** Build the page/limit/filter/filterOr/sort properties shared by `schema` and any
-     * `compileStrict` validator. The limit field's `.transform()` default can be overridden
-     * per-endpoint via `compileStrict({ defaultLimit })`; everything else is fixed. */
-    const buildBaseProperties = (defaultLimit: number) => ({
+     * `compileStrict` validator. The limit field's `.transform()` default and its `.max()`
+     * ceiling can both be overridden per-endpoint via `compileStrict({ defaultLimit, maxLimit })`;
+     * everything else is fixed. */
+    const buildBaseProperties = (defaultLimit: number, maxLimit: number) => ({
         page: vine
             .number()
             .withoutDecimals()
@@ -83,7 +85,7 @@ export function createTableView<Model extends LucidModel, const Columns extends 
             .number()
             .withoutDecimals()
             .min(1)
-            .max(TABLE_VIEW_MAX_LIMIT)
+            .max(maxLimit)
             .optional()
             .transform((v) => v ?? defaultLimit),
         filter: vine
@@ -105,7 +107,7 @@ export function createTableView<Model extends LucidModel, const Columns extends 
             ),
     });
 
-    const schema = vine.object(buildBaseProperties(TABLE_VIEW_DEFAULT_LIMIT));
+    const schema = vine.object(buildBaseProperties(TABLE_VIEW_DEFAULT_LIMIT, TABLE_VIEW_MAX_LIMIT));
 
     const view: TableView<Model, Columns> = {
         config,
@@ -118,10 +120,11 @@ export function createTableView<Model extends LucidModel, const Columns extends 
         ) => {
             const extras = (options?.extras ?? {}) as Record<string, SchemaTypes>;
             const defaultLimit = options?.defaultLimit ?? TABLE_VIEW_DEFAULT_LIMIT;
+            const maxLimit = options?.maxLimit ?? TABLE_VIEW_MAX_LIMIT;
             const allowedKeys = new Set<string>([...TABLE_VIEW_BASE_KEYS, ...Object.keys(extras)]);
             const inner = vine.compile(
                 vine.object({
-                    ...buildBaseProperties(defaultLimit),
+                    ...buildBaseProperties(defaultLimit, maxLimit),
                     ...extras,
                 }),
             );

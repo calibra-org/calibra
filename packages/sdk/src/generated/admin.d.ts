@@ -2611,8 +2611,9 @@ export interface paths {
         /**
          * List categories (admin)
          * @description Paginated list of every category on the unified TableView grammar. Use `?filter[]=parent_id:eq:N` (or `:isnull` for top-level rows) for one level of the hierarchy.
-         *     **TableView filterable fields**: `id`, `slug`, `parent_id`, `menu_order`, `created_at`.
+         *     **TableView filterable fields**: `id`, `parent_id`, `menu_order`, `created_at`.
          *     **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`, `used_count`.
+         *     `slug` lives on the translations table, so it is sort-only (ordered by the per-row translated slug via a correlated subquery); free-text slug matching is available through `?q=`.
          *     `used_count` sorts by the live `product_category_links` count via a correlated subquery. Default page size is 100 (large enough for tree pickers' typical full set).
          */
         get: operations["adminCategoriesIndex"];
@@ -2706,8 +2707,9 @@ export interface paths {
         /**
          * List tags (admin)
          * @description Paginated list of every tag on the unified TableView grammar.
-         *     **TableView filterable fields**: `id`, `slug`, `menu_order`, `created_at`.
+         *     **TableView filterable fields**: `id`, `menu_order`, `created_at`.
          *     **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`, `used_count`.
+         *     `slug` lives on the translations table, so it is sort-only (ordered by the per-row translated slug via a correlated subquery); free-text slug matching is available through `?q=`.
          *     `used_count` sorts by the live `product_tag_links` count via a correlated subquery. Default page size is 100.
          */
         get: operations["adminTagsIndex"];
@@ -2801,8 +2803,9 @@ export interface paths {
         /**
          * List brands (admin)
          * @description Paginated list of every non-deleted brand on the unified TableView grammar.
-         *     **TableView filterable fields**: `id`, `slug`, `menu_order`, `created_at`.
+         *     **TableView filterable fields**: `id`, `menu_order`, `created_at`.
          *     **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`, `used_count`.
+         *     `slug` lives on the translations table, so it is sort-only (ordered by the per-row translated slug via a correlated subquery); free-text slug matching is available through `?q=`.
          *     `used_count` sorts by the live `product_brand_links` count via a correlated subquery; use `?sort[]=used_count:desc` to rank brands most-used first. Default page size is 100 (large enough to render the typical full set into selector / combobox UIs without a `?limit=` override). Legacy `?perPage=` / `?sort=-used_count` / `?search=` no longer parse.
          */
         get: operations["adminBrandsIndex"];
@@ -4687,6 +4690,8 @@ export interface components {
         PageQuery: number;
         /** @description Client-generated idempotency token (≤ 64 chars) for write operations that must be safe to retry: `POST /checkout/submit`, `POST /payment/init/:order_key`, admin `POST .../refunds`. A retry with the same key returns the original result without re-running side effects. Keys are scoped per-resource (per-order for refunds, per-cart for submit). */
         IdempotencyKeyHeader: string;
+        /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+        Limit500: number;
     };
     requestBodies: never;
     headers: never;
@@ -8038,8 +8043,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1. */
                 page?: components["parameters"]["Page"];
-                /** @description Items per page. Capped at 100. Defaults to 20. */
-                limit?: components["parameters"]["Limit"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
                 /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
                 "filter[]"?: components["parameters"]["Filter"];
                 /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
@@ -8558,8 +8563,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1. */
                 page?: components["parameters"]["Page"];
-                /** @description Items per page. Capped at 100. Defaults to 20. */
-                limit?: components["parameters"]["Limit"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
                 /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
                 "filter[]"?: components["parameters"]["Filter"];
                 /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
@@ -8792,8 +8797,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1. */
                 page?: components["parameters"]["Page"];
-                /** @description Items per page. Capped at 100. Defaults to 20. */
-                limit?: components["parameters"]["Limit"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
                 /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
                 "filter[]"?: components["parameters"]["Filter"];
                 /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
@@ -8998,8 +9003,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1. */
                 page?: components["parameters"]["Page"];
-                /** @description Items per page. Capped at 100. Defaults to 20. */
-                limit?: components["parameters"]["Limit"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
                 /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
                 "filter[]"?: components["parameters"]["Filter"];
                 /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
@@ -9176,8 +9181,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1. */
                 page?: components["parameters"]["Page"];
-                /** @description Items per page. Capped at 100. Defaults to 20. */
-                limit?: components["parameters"]["Limit"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
                 /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
                 "filter[]"?: components["parameters"]["Filter"];
                 /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
@@ -9373,8 +9378,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1. */
                 page?: components["parameters"]["Page"];
-                /** @description Items per page. Capped at 100. Defaults to 20. */
-                limit?: components["parameters"]["Limit"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
                 /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
                 "filter[]"?: components["parameters"]["Filter"];
                 /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
@@ -9566,8 +9571,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1. */
                 page?: components["parameters"]["Page"];
-                /** @description Items per page. Capped at 100. Defaults to 20. */
-                limit?: components["parameters"]["Limit"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
                 /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
                 "filter[]"?: components["parameters"]["Filter"];
                 /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
@@ -9760,8 +9765,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1. */
                 page?: components["parameters"]["Page"];
-                /** @description Items per page. Capped at 100. Defaults to 20. */
-                limit?: components["parameters"]["Limit"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
                 /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
                 "filter[]"?: components["parameters"]["Filter"];
                 /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
@@ -9952,8 +9957,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1. */
                 page?: components["parameters"]["Page"];
-                /** @description Items per page. Capped at 100. Defaults to 20. */
-                limit?: components["parameters"]["Limit"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
                 /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
                 "filter[]"?: components["parameters"]["Filter"];
                 /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */

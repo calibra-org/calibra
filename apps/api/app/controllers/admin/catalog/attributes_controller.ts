@@ -11,9 +11,15 @@ import { createAttributeValidator, updateAttributeValidator } from "#validators/
 
 const ATTRIBUTE_FIELDS = ["name"] as const;
 
+/**
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) so the attributes view
+ * (`useAttributesList` requests `limit=200`) can fetch the whole set in one shot. Uniform across
+ * the taxonomy family.
+ */
 const adminAttributesListValidator = adminAttributesView.compileStrict({
     extras: { q: vine.string().trim().maxLength(120).optional() },
     defaultLimit: 100,
+    maxLimit: 500,
 });
 
 export default class AdminAttributesController {

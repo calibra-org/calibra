@@ -11,9 +11,15 @@ import { createCategoryValidator, updateCategoryValidator } from "#validators/ca
 
 const TAXONOMY_FIELDS = ["name", "slug", "description"] as const;
 
+/**
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) so the category tree
+ * picker (`useCategoriesTree` defaults to `limit=500`) and the categories list page
+ * (`limit=200`) can fetch the whole set in one shot. Uniform across the taxonomy family.
+ */
 const adminCategoriesListValidator = adminCategoriesView.compileStrict({
     extras: { q: vine.string().trim().maxLength(120).optional() },
     defaultLimit: 100,
+    maxLimit: 500,
 });
 
 export default class AdminCategoriesController {
@@ -26,10 +32,14 @@ export default class AdminCategoriesController {
 
         if (parsed.q !== undefined && parsed.q.length > 0) {
             const needle = `%${parsed.q.toLowerCase()}%`;
-            builder.where((sub) => {
-                sub.whereILike("product_categories.slug", needle).orWhereIn("product_categories.id", (nested) => {
-                    nested.select("category_id").from("product_category_translations").whereRaw("LOWER(name) LIKE ?", [needle]);
-                });
+            /** `slug` lives on the translations table, not `product_categories`, so both the
+             * name and slug needles match against `product_category_translations`. */
+            builder.whereIn("product_categories.id", (nested) => {
+                nested
+                    .select("category_id")
+                    .from("product_category_translations")
+                    .whereRaw("LOWER(name) LIKE ?", [needle])
+                    .orWhereRaw("LOWER(slug) LIKE ?", [needle]);
             });
         }
 

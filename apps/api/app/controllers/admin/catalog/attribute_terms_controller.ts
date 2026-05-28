@@ -12,9 +12,15 @@ import { createAttributeTermValidator, updateAttributeTermValidator } from "#val
 
 const TERM_FIELDS = ["name", "slug", "description"] as const;
 
+/**
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) so the terms view
+ * (`useAttributeTermsList` requests `limit=200`) can fetch the whole set in one shot. Uniform
+ * across the taxonomy family.
+ */
 const adminAttributeTermsListValidator = adminAttributeTermsView.compileStrict({
     extras: { q: vine.string().trim().maxLength(120).optional() },
     defaultLimit: 100,
+    maxLimit: 500,
 });
 
 export default class AdminAttributeTermsController {

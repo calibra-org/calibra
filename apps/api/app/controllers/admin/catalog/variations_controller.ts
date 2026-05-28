@@ -18,7 +18,12 @@ import {
 
 const VARIATION_FIELDS = ["description"] as const;
 
-const adminVariationsListValidator = adminVariationsView.compileStrict({ defaultLimit: 100 });
+/**
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) so the variations grid
+ * can render every version of a variable product in one shot without paginating. Uniform across
+ * the catalog family.
+ */
+const adminVariationsListValidator = adminVariationsView.compileStrict({ defaultLimit: 100, maxLimit: 500 });
 
 export default class AdminVariationsController {
     async index(ctx: HttpContext) {

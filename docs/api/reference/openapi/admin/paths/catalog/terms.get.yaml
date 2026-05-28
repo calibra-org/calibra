@@ -15,7 +15,7 @@ tags: [Admin / Catalog / Attribute Terms]
 parameters:
     - { name: attribute_id, in: path, required: true, schema: { type: integer } }
     - $ref: "../../../common/components/parameters/table-view/Page.yaml"
-    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit500.yaml"
     - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
     - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
     - $ref: "../../../common/components/parameters/table-view/Sort.yaml"

@@ -257,12 +257,15 @@ silently dropping. The wire param for free-text search is `q` everywhere it exis
   aggregate-based filters stay as declared endpoint extras
 - `GET /api/v1/admin/catalog/products` — sort + pagination + col filters; `name` and
   `stock_quantity` use the primitive's `sortRaw` hook for joined-subquery ORDER BYs;
-  `applyListSort` / `SORTABLE_COLUMNS` are gone
+  `applyListSort` / `SORTABLE_COLUMNS` are gone; `maxLimit: 500` (the reviews product-lookup
+  stopgap pulls `limit=200`)
 - `GET /api/v1/admin/catalog/brands` / `categories` / `tags` — `used_count` is an orderable
-  column via `sortRaw`; `q` searches slug + translated name; `defaultLimit: 100`
-- `GET /api/v1/admin/catalog/attributes` + `attributes/:id/terms`
-- `GET /api/v1/admin/catalog/variations` — sub-resource scoped by `product_id` + soft-delete
-- `GET /api/v1/admin/catalog/tax-classes` / `shipping-classes`
+  column via `sortRaw`; `q` searches slug + translated name; `defaultLimit: 100`, `maxLimit: 500`
+  (selector / tree pickers fetch the whole set in one shot, e.g. `useCategoriesTree` → `limit=500`)
+- `GET /api/v1/admin/catalog/attributes` + `attributes/:id/terms` — `maxLimit: 500` (selector lists)
+- `GET /api/v1/admin/catalog/variations` — sub-resource scoped by `product_id` + soft-delete;
+  `maxLimit: 500` (the grid renders every version of a product in one shot)
+- `GET /api/v1/admin/catalog/tax-classes` / `shipping-classes` — `maxLimit: 500` (selector lists)
 - `GET /api/v1/admin/payment-attempts`
 - `GET /api/v1/admin/coupons` — bulk of per-column filters move; tab / `q` /
   has_*_constraints / brand pivot stay as extras

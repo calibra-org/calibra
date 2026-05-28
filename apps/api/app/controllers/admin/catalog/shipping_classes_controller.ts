@@ -9,7 +9,11 @@ import { createShippingClassValidator, updateShippingClassValidator } from "#val
 
 const SHIPPING_FIELDS = ["name", "description"] as const;
 
-const adminShippingClassesListValidator = adminShippingClassesView.compileStrict({ defaultLimit: 100 });
+/**
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) so shipping-class
+ * selectors fetch the whole set in one shot. Uniform across the catalog family.
+ */
+const adminShippingClassesListValidator = adminShippingClassesView.compileStrict({ defaultLimit: 100, maxLimit: 500 });
 
 export default class AdminShippingClassesController {
     async index(ctx: HttpContext) {

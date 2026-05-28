@@ -13,14 +13,17 @@ const TAXONOMY_FIELDS = ["name", "slug", "description"] as const;
 
 /**
  * Default page size large enough that selector / combobox UIs render the full set without
- * forcing a `?limit=` override on the wire. Hard cap stays at the TableView max (100); callers
- * that need more than 100 must paginate. `q` is a controller-side multi-column ILIKE across
- * the brand slug and the translated name (the runtime can't model "match across translations
- * in any locale" as a per-field predicate).
+ * forcing a `?limit=` override on the wire. `maxLimit` is raised to 500 (above the TableView
+ * default cap of 100) because the brand sidebar picker and the brands page fetch the whole set
+ * in one shot (`useBrandsList` defaults to `limit=500`, the list page requests `limit=200`);
+ * the cap is uniform across the taxonomy family so selectors behave identically. `q` is a
+ * controller-side multi-column ILIKE across the brand slug and the translated name (the runtime
+ * can't model "match across translations in any locale" as a per-field predicate).
  */
 const adminBrandsListValidator = adminBrandsView.compileStrict({
     extras: { q: vine.string().trim().maxLength(120).optional() },
     defaultLimit: 100,
+    maxLimit: 500,
 });
 
 export default class AdminBrandsController {
@@ -37,10 +40,14 @@ export default class AdminBrandsController {
 
         if (parsed.q !== undefined && parsed.q.length > 0) {
             const needle = `%${parsed.q.toLowerCase()}%`;
-            builder.where((sub) => {
-                sub.whereILike("product_brands.slug", needle).orWhereIn("product_brands.id", (nested) => {
-                    nested.select("brand_id").from("product_brand_translations").whereRaw("LOWER(name) LIKE ?", [needle]);
-                });
+            /** `slug` lives on the translations table, not `product_brands`, so both the name and
+             * slug needles match against `product_brand_translations`. */
+            builder.whereIn("product_brands.id", (nested) => {
+                nested
+                    .select("brand_id")
+                    .from("product_brand_translations")
+                    .whereRaw("LOWER(name) LIKE ?", [needle])
+                    .orWhereRaw("LOWER(slug) LIKE ?", [needle]);
             });
         }
 

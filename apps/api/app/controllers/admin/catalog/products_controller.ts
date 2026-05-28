@@ -36,8 +36,14 @@ import {
  * free-text search, `category`/`brand`/`tag` for pivot filters the runtime doesn't auto-traverse,
  * `with_trashed`/`only_trashed` for soft-delete scope, `include=facet_counts` for the toolbar's
  * facet badges). Strict mode: any other top-level query key returns 422.
+ *
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) because the review
+ * product-lookup (`useReviewProductLookup`) pulls the first 200 products in one shot to resolve
+ * `#id → title` for the reviews table; that stopgap requests `limit=200`, which the default cap
+ * would reject. Aligned with the catalog family's 500 ceiling.
  */
 const adminProductsListTableViewValidator = adminProductsView.compileStrict({
+    maxLimit: 500,
     extras: {
         q: vine.string().trim().maxLength(120).optional(),
         category: vine.number().positive().optional(),
