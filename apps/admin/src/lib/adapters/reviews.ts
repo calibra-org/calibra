@@ -22,21 +22,16 @@ export interface ProductLookupEntry {
 export interface AdapterContext {
     /** Joined product info keyed by product id. Missing entries fall back to `#{id}`. */
     products?: Map<number, ProductLookupEntry>;
-    /** Ids the operator soft-deleted via the client-side trash store. */
-    trashedIds?: ReadonlySet<number>;
     /** Replies stored client-side until the API exposes a reply field. */
     replies?: Record<number, { body: string; updatedAt: string } | undefined>;
 }
 
 /**
- * SDK `AdminReview` → admin view `AdminReview`. The API and view models use slightly different
- * status names: API uses `rejected`, the view uses `spam` (kept for compatibility with the WP
- * vocabulary the operator UI was built against). The view also exposes a `trash` status that
- * lives entirely on the client until soft-delete lands in `apps/api` — see `lib/reviews/trash`.
+ * SDK `AdminReview` → admin view `AdminReview`. Status maps 1:1 — the API and the view share the
+ * same four moderation states (`pending` / `approved` / `spam` / `trash`).
  */
 export function toAdminReview(r: SdkAdminReview, ctx: AdapterContext = {}): AdminReview {
-    const baseStatus: ReviewStatus = r.status === "rejected" ? "spam" : r.status === "approved" ? "approved" : "pending";
-    const status: ReviewStatus = ctx.trashedIds?.has(r.id) === true ? "trash" : baseStatus;
+    const status: ReviewStatus = r.status;
     const product = ctx.products?.get(r.product_id);
     const reply = ctx.replies?.[r.id];
     return {

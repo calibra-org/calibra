@@ -258,16 +258,19 @@ export function CouponsListClient() {
      * flag for the table's empty-state branch. */
     const hasActiveFilters =
         tv.q.length > 0 ||
+        tv.tab !== "any" ||
         Object.values(facetValues).some((arr) => Array.isArray(arr) && arr.length > 0) ||
         Object.values(toggleValues).some((v) => v === true);
 
     const clearAllFilters = useCallback(() => {
-        tv.setQ("");
-        tv.clearFilters();
-        tv.setExpiring_soon(false);
-        tv.setHas_product_constraints(false);
-        tv.setHas_category_constraints(false);
-        tv.setHas_email_restrictions(false);
+        tv.resetFilters({
+            q: "",
+            tab: "any",
+            expiring_soon: false,
+            has_product_constraints: false,
+            has_category_constraints: false,
+            has_email_restrictions: false,
+        });
     }, [tv]);
 
     return (

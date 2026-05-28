@@ -1,9 +1,10 @@
 operationId: adminReviewPatch
 summary: Moderate a review
 description: >
-    Approves or rejects a pending review. Setting `status: approved` also recomputes the parent
-    product's `average_rating` and `review_count`. Admins can also edit the review's `body` or
-    `rating` for typo / abuse-cleanup fixes.
+    Moves a review between the four moderation states (`pending` / `approved` / `spam` / `trash`).
+    Setting `status: approved` also recomputes the parent product's `average_rating` and
+    `review_count`. Admins can also edit the review's `body` or `rating` for typo / abuse-cleanup
+    fixes.
 tags: [Admin / Catalog / Reviews]
 
 parameters:
@@ -16,7 +17,7 @@ requestBody:
             schema:
                 type: object
                 properties:
-                    status: { type: string, enum: [pending, approved, rejected] }
+                    status: { type: string, enum: [pending, approved, spam, trash] }
                     body: { type: string }
                     rating: { type: integer, minimum: 1, maximum: 5 }
                     verified: { type: boolean }

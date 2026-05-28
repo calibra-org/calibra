@@ -12,7 +12,6 @@ import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view"
 import type { AdminReview, LocalizedString, Paginated, ReviewStatus } from "#/lib/types";
 
 import { loadReplies, subscribeToReplies } from "./replies";
-import { loadTrashedIds, subscribeToTrash } from "./trash";
 
 type Schemas = AdminSchemas["schemas"];
 
@@ -34,9 +33,8 @@ interface ProductRowEnvelope {
  * remaining knobs are CLIENT-only and never reach the wire (sending them would 422):
  *
  * - `search` — multi-column free-text the API has no equivalent for (post-filter).
- * - `tab` — the `spam` vs `trash` split (both are `status=rejected` server-side; the distinction is
- *   the local trash store), plus the "All excludes trash" rule. The server status filter still
- *   lives in `query.filter`; `tab` only refines the client post-filter.
+ * - `tab` — only carries the "All excludes trash" rule (status itself is filtered server-side via
+ *   `query.filter[]=status:eq:…`); on the "All"/`any` tab the client hides trashed rows.
  * - sort — applied client-side because columns like `reviewer` / `product` are derived from a
  *   client lookup the server can't ORDER BY. `query.sort` is read here but NOT sent.
  */
@@ -47,20 +45,14 @@ export interface ReviewsListParams {
 }
 
 /**
- * Subscribes to the client-side trash + reply stores so dependent queries re-run when the
- * operator toggles either. Mirrors the favorites hook used by the products list.
+ * Subscribes to the client-side reply store so dependent queries re-run when the operator edits
+ * a reply. (Replies are still local until the API ships a reply field; trash/spam are now real
+ * server statuses.)
  */
-function useClientReviewExtras(): {
-    trashedIds: ReadonlySet<number>;
-    replies: Record<number, { body: string; updatedAt: string } | undefined>;
-} {
-    const [trashedIds, setTrashedIds] = useState<ReadonlySet<number>>(() => loadTrashedIds());
+function useClientReviewReplies(): Record<number, { body: string; updatedAt: string } | undefined> {
     const [replies, setReplies] = useState(() => loadReplies());
-
-    useEffect(() => subscribeToTrash(() => setTrashedIds(loadTrashedIds())), []);
     useEffect(() => subscribeToReplies(() => setReplies(loadReplies())), []);
-
-    return { trashedIds, replies };
+    return replies;
 }
 
 /**
@@ -94,15 +86,14 @@ export function useReviewProductLookup() {
 }
 
 /**
- * Paginated admin reviews list. The view distinguishes `spam` and `trash` while the API only
- * knows `rejected` — both collapse to that on the wire and the adapter remaps trashed ids back
- * via the client-side store. Server-bound filters ride `query` as `filter[]`; free-text search,
- * the spam/trash split, and sort happen client-side (see {@link ReviewsListParams}).
+ * Paginated admin reviews list. Status (`pending`/`approved`/`spam`/`trash`) is filtered
+ * server-side via `query.filter[]=status:eq:…`; only free-text search and sort are client-side
+ * (computed columns the server can't ORDER BY) — see {@link ReviewsListParams}.
  */
 export function useReviewsList(params: ReviewsListParams = {}) {
     const locale = useLocale() as Locale;
     const query: TableViewQuery = params.query ?? { page: 1, limit: 20, filter: [], filterOr: [], sort: [] };
-    const { trashedIds, replies } = useClientReviewExtras();
+    const replies = useClientReviewReplies();
     const { data: productLookup } = useReviewProductLookup();
 
     /** Send filter[] + page + limit only — sort stays client-side (computed columns) and reviews
@@ -121,26 +112,19 @@ export function useReviewsList(params: ReviewsListParams = {}) {
                 sortSpec,
                 tab: params.tab,
                 search: params.search ?? "",
-                /**
-                 * Pull the trashed-ids set into the cache key so flipping the trash tab refetches
-                 * with the right post-filter without colliding with the un-trashed list.
-                 */
-                trashSize: trashedIds.size,
             },
         ],
         queryFn: () => apiGet<ReviewListEnvelope>("reviews", { locale, query: sdkQuery }),
         placeholderData: keepPreviousData,
         select: (payload): Paginated<AdminReview> => {
-            const ctx: AdapterContext = { products: productLookup, trashedIds, replies };
+            const ctx: AdapterContext = { products: productLookup, replies };
             const rowsAll = (payload.data ?? []).map((row) => toAdminReview(row, ctx));
 
             const tabFilter = (row: AdminReview): boolean => {
-                if (params.tab === "trash") return row.status === "trash";
-                if (params.tab === "spam") return row.status === "spam";
-                if (params.tab === "approved") return row.status === "approved";
-                if (params.tab === "pending") return row.status === "pending";
-                /** `any` and `undefined` exclude the trash bucket — WordPress hides trashed rows from "All". */
-                return row.status !== "trash";
+                /** Specific tabs are already narrowed server-side via `filter[]=status:eq:…`. Only
+                 *  the "All" view applies the WordPress rule that hides trashed rows. */
+                if (params.tab === undefined || params.tab === "any") return row.status !== "trash";
+                return true;
             };
 
             const term = params.search?.trim().toLowerCase() ?? "";
@@ -203,22 +187,21 @@ function sortValue(row: AdminReview, id: string): number | string {
 
 /**
  * Per-status row counts powering the WP-style status tabs. Each call lands on a cached
- * `?limit=1` request so flipping tabs reuses the count without a refetch. `trash` is derived
- * from the local trash store rather than the API.
+ * `?limit=1` request so flipping tabs reuses the count without a refetch. Every bucket — including
+ * `spam` and `trash` — is a real server status query.
  */
 export function useReviewCountsByStatus() {
     const locale = useLocale() as Locale;
-    const { trashedIds } = useClientReviewExtras();
     return useQuery({
-        queryKey: ["admin", "review-counts", { locale, trashSize: trashedIds.size }],
+        queryKey: ["admin", "review-counts", { locale }],
         queryFn: async (): Promise<Partial<Record<"any" | ReviewStatus, number>>> => {
-            const fetchTotal = async (status?: "pending" | "approved" | "rejected"): Promise<number | undefined> => {
+            const fetchTotal = async (statusFilter?: string): Promise<number | undefined> => {
                 try {
                     const payload = await apiGet<ReviewListEnvelope>("reviews", {
                         locale,
                         query: {
                             limit: 1,
-                            ...(status !== undefined ? { "filter[]": `status:eq:${status}` } : {}),
+                            ...(statusFilter !== undefined ? { "filter[]": statusFilter } : {}),
                         },
                     });
                     return payload.meta?.total ?? payload.data?.length ?? 0;
@@ -226,16 +209,15 @@ export function useReviewCountsByStatus() {
                     return undefined;
                 }
             };
-            const [anyTotal, pending, approved, rejected] = await Promise.all([
-                fetchTotal(undefined),
-                fetchTotal("pending"),
-                fetchTotal("approved"),
-                fetchTotal("rejected"),
+            /** "All" follows the WordPress rule and excludes trash; the rest are exact statuses. */
+            const [any, pending, approved, spam, trash] = await Promise.all([
+                fetchTotal("status:neq:trash"),
+                fetchTotal("status:eq:pending"),
+                fetchTotal("status:eq:approved"),
+                fetchTotal("status:eq:spam"),
+                fetchTotal("status:eq:trash"),
             ]);
-            const trashCount = trashedIds.size;
-            const spam = rejected !== undefined ? Math.max(0, rejected - trashCount) : undefined;
-            const adjustedAny = anyTotal !== undefined ? Math.max(0, anyTotal - trashCount) : undefined;
-            return { any: adjustedAny, pending, approved, spam, trash: trashCount };
+            return { any, pending, approved, spam, trash };
         },
         staleTime: 30 * 1000,
     });

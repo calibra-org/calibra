@@ -1,0 +1,15 @@
+operationId: adminProductUnfavorite
+summary: Unstar a product for the current admin
+description: >
+    Removes the product from the requesting admin's favourites (per-user `product_favorites`
+    pivot). Idempotent — unstarring a product that wasn't favourited still returns 204.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "204":
+        description: Removed from favourites (or was never a favourite).
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

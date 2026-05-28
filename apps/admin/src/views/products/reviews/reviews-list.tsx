@@ -58,8 +58,8 @@ const STATUS_TABS: (ReviewStatus | "any")[] = ["any", "pending", "approved", "sp
  * verified because it's a boolean column toggle).
  */
 const FACET_COLUMN_MAP: FacetColumnMap = {
-    rating: { field: "rating", op: "eq" },
-    product: { field: "product_id", op: "eq" },
+    rating: { field: "rating", op: "in" },
+    product: { field: "product_id", op: "in" },
 };
 
 /**
@@ -80,29 +80,22 @@ export function ReviewsList() {
     const { facets, toggles } = useReviewFiltersConfig();
 
     /** Reviews carries NO server extras, so the URL holds only the grammar (filter[]/sort[]/page/
-     *  limit). `q` (search) and the spam-vs-trash split are CLIENT-only local state — putting them
-     *  on the URL-as-wire model would 422 (search) or can't be distinguished server-side (both
-     *  spam and trash are `status=rejected`). */
+     *  limit). `q` (search) is CLIENT-only local state — putting it on the wire would 422. The
+     *  status tab is a real server status (`pending`/`approved`/`spam`/`trash`) in `filter[]`. */
     const tv = useTableView();
     const [q, setQ] = useState("");
-    const [rejectedView, setRejectedView] = useState<"spam" | "trash">("spam");
 
     const ui = useColumnState({ id: TABLE_ID, defaultColumnVisibility: {} });
     const selection = useSelectionState();
 
-    /** The tab's server half lives in `filter[]=status:eq:…`; the spam/trash sub-split is the
-     *  client `rejectedView`. `pending`/`approved`/`rejected` are the only server status values. */
-    const serverStatus = useMemo(() => {
-        const entry = tv.query.filter.find((f) => f.field === "status" && f.op === "eq");
-        return typeof entry?.value === "string" ? entry.value : undefined;
-    }, [tv.query.filter]);
-
+    /** The active tab IS the `filter[]=status:eq:…` value — all four moderation states are real
+     *  server statuses now. No `filter[]` status entry = the "All" tab. */
     const status: ReviewStatus | "any" = useMemo(() => {
-        if (serverStatus === "pending") return "pending";
-        if (serverStatus === "approved") return "approved";
-        if (serverStatus === "rejected") return rejectedView;
+        const entry = tv.query.filter.find((f) => f.field === "status" && f.op === "eq");
+        const value = entry?.value;
+        if (value === "pending" || value === "approved" || value === "spam" || value === "trash") return value;
         return "any";
-    }, [serverStatus, rejectedView]);
+    }, [tv.query.filter]);
 
     /** `rating` + `product` project onto `filter[]`; `verified` is a boolean column toggle. */
     const facetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
@@ -137,15 +130,20 @@ export function ReviewsList() {
     const meta = data?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
 
     const hasActiveFilters = useMemo(
-        () => q.length > 0 || (facetValues.rating?.length ?? 0) > 0 || (facetValues.product?.length ?? 0) > 0 || verifiedActive,
-        [q, facetValues.rating, facetValues.product, verifiedActive],
+        () =>
+            q.length > 0 ||
+            (facetValues.rating?.length ?? 0) > 0 ||
+            (facetValues.product?.length ?? 0) > 0 ||
+            verifiedActive ||
+            status !== "any",
+        [q, facetValues.rating, facetValues.product, verifiedActive, status],
     );
 
-    /** Clear the toolbar filters (search + rating/product/verified) but keep the status tab — drop
-     *  every `filter[]` entry except the `status` one that drives the tab strip. */
+    /** Clear every toolbar filter AND the status tab (back to "All") — search is local state, the
+     *  rest is a single `clearFilters` (drops the status `filter[]` entry too). */
     const clearAllFilters = useCallback(() => {
         setQ("");
-        tv.setFilter(tv.query.filter.filter((f) => f.field === "status"));
+        tv.clearFilters();
     }, [tv]);
 
     /**
@@ -162,11 +160,16 @@ export function ReviewsList() {
      */
     const rows = useMemo(() => {
         if (pendingUndo.size === 0) return baseRows;
-        const baseIds = new Set(baseRows.map((row) => row.id));
-        const merged: AdminReview[] = [...baseRows];
+        /**
+         * Drop every pending row from its natural (refetched) position first, THEN re-insert each
+         * at the slot it occupied when the operator acted. Without the removal, a spam'd row that
+         * the refetch still returns (the "All" query only hides trash, not spam) re-sorts to the
+         * bottom after the invalidation — the row would flash in place, then jump down.
+         */
+        const pendingIds = new Set(pendingUndo.keys());
+        const merged: AdminReview[] = baseRows.filter((row) => !pendingIds.has(row.id));
         const entries = Array.from(pendingUndo.values()).sort((a, b) => a.originalIndex - b.originalIndex);
         for (const entry of entries) {
-            if (baseIds.has(entry.review.id)) continue;
             const insertAt = Math.min(Math.max(0, entry.originalIndex), merged.length);
             merged.splice(insertAt, 0, entry.review);
         }
@@ -195,7 +198,7 @@ export function ReviewsList() {
     const deleteMutation = useDeleteReviews();
 
     const runModerate = useCallback(
-        async (id: number, sdkStatus: "approved" | "pending" | "rejected", okMessage: string) => {
+        async (id: number, sdkStatus: "approved" | "pending" | "spam" | "trash", okMessage: string) => {
             try {
                 await moderate.mutateAsync({ id, status: sdkStatus });
                 toast.add({ title: okMessage, timeout: 2500, data: { tone: "success" } });
@@ -245,7 +248,7 @@ export function ReviewsList() {
         async (review: AdminReview) => {
             pinPending(review, "spam");
             try {
-                await moderate.mutateAsync({ id: review.id, status: "rejected" });
+                await moderate.mutateAsync({ id: review.id, status: "spam" });
             } catch {
                 clearPending(review.id);
                 toast.add({ title: t("saveFailed"), timeout: 4000, data: { tone: "error" } });
@@ -384,22 +387,19 @@ export function ReviewsList() {
         return out;
     }, [facets, facetValues]);
 
-    /** Map a tab click to the server status `filter[]` entry (+ the client spam/trash split).
-     *  `spam` and `trash` both narrow the server to `status=rejected`; the local `rejectedView`
-     *  picks which the adapter-split rows render. */
+    /** Map a tab click to its real server status `filter[]` entry. "All" drops the status filter
+     *  (the client select hides trashed rows for that view). Pending undo strips are contextual to
+     *  the tab they were created on — dismiss them on navigation so the destination tab shows the
+     *  affected row normally (e.g. a just-spammed row appears as a regular row on the Spam tab). */
     const onTabChange = useCallback(
         (value: string) => {
+            setPendingUndo(new Map());
             const others = tv.query.filter.filter((f) => f.field !== "status");
             if (value === "any") {
                 tv.setFilter(others);
                 return;
             }
-            if (value === "pending" || value === "approved") {
-                tv.setFilter([...others, { field: "status", op: "eq", value }]);
-                return;
-            }
-            setRejectedView(value === "trash" ? "trash" : "spam");
-            tv.setFilter([...others, { field: "status", op: "eq", value: "rejected" }]);
+            tv.setFilter([...others, { field: "status", op: "eq", value }]);
         },
         [tv],
     );

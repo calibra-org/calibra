@@ -59,9 +59,8 @@ export function ReplyPanel({ review, onClose, intent = "reply" }: ReplyPanelProp
 
     const onSave = async () => {
         try {
-            const sdkStatus = status === "spam" ? "rejected" : status === "approved" ? "approved" : "pending";
             await Promise.all([
-                moderate.mutateAsync({ id: review.id, status: sdkStatus, rating, body }),
+                moderate.mutateAsync({ id: review.id, status, rating, body }),
                 saveReply.mutateAsync({ id: review.id, body: reply }),
             ]);
             toast.add({ title: t("saved"), timeout: 2500, data: { tone: "success" } });

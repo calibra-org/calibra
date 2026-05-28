@@ -17,7 +17,6 @@ import {
     DataTableToolbar,
     DataTableViewOptions,
     type DateFacetDef,
-    type FacetedFilterDef,
     useColumnState,
     useSelectionState,
 } from "#/components/ui/data-grid";
@@ -31,7 +30,6 @@ import {
     type FacetColumnMap,
     serializeDateFacetForUrl,
     singleSortToTableView,
-    type TableViewFilter,
     tableViewToSingleSort,
     useDateFacetValues,
     useFacetValuesFromQuery,
@@ -66,7 +64,8 @@ const STATUS_TAB_VALUES: ReadonlyArray<string> = [
  * Facet → TableView column mapping. The toolbar's `source` facet projects onto
  * `filter[]=created_via:in:...`; `payment` projects onto `filter[]=payment_method_code_snapshot:in:...`.
  * `country` doesn't appear here because that filter requires a `whereExists` through
- * `order_addresses` the v1 runtime can't model — it stays off the wire entirely.
+ * `order_addresses` the v1 runtime can't model — it rides as the controller-side `country` extra
+ * (see {@link OrdersListExtras}) instead.
  */
 const FACET_COLUMN_MAP: FacetColumnMap = {
     source: { field: "created_via", op: "in" },
@@ -99,6 +98,7 @@ export function OrdersList() {
             q: parseAsString.withDefault(""),
             trashed: parseAsBoolean.withDefault(false),
             created: parseAsString.withDefault(""),
+            country: parseAsString.withDefault(""),
         },
     });
 
@@ -120,14 +120,26 @@ export function OrdersList() {
         return "any";
     }, [tv.query.filter, tv.trashed]);
 
-    const facetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
-    const setFacetValues = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
+    const columnFacetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
+    const setColumnFacet = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
 
-    /** Country facet stays off the wire — there's no controller-side support for it in v1.
-     *  Render it as an empty multi-select so the UI shape stays intact; clicking does nothing
-     *  server-side. When the API gains `?filter[]=billing_country:in:...` support this becomes a
-     *  regular entry in `FACET_COLUMN_MAP`. */
-    const facetValuesWithCountry = useMemo<Record<string, string[]>>(() => ({ ...facetValues, country: [] }), [facetValues]);
+    /** `source` + `payment` ride `filter[]`; `country` is the controller-side billing-country
+     *  `whereExists` extra, projected here onto the same `Record<string, string[]>` shape the
+     *  toolbar wants and stored as a comma-joined extra in the URL. */
+    const facetValues = useMemo<Record<string, string[]>>(
+        () => ({ ...columnFacetValues, country: tv.country.length > 0 ? tv.country.split(",") : [] }),
+        [columnFacetValues, tv.country],
+    );
+    const setFacetValues = useCallback(
+        (key: string, values: string[]) => {
+            if (key === "country") {
+                tv.setCountry(values.join(","));
+                return;
+            }
+            setColumnFacet(key, values);
+        },
+        [setColumnFacet, tv],
+    );
 
     const dateFacetValuesRaw = useMemo(() => ({ created: tv.created }), [tv.created]);
     const dateFacetValues = useDateFacetValues(
@@ -137,14 +149,15 @@ export function OrdersList() {
 
     const setDateFacet = useCallback(
         (_key: string, value: typeof dateFacetValues.created) => {
-            tv.setCreated(serializeDateFacetForUrl(value) ?? "");
+            /** The chip's display string (`created` extra) and the wire predicate (`created_at`
+             *  filter[]) must move together — one `patch`, never two chained writes (they race on
+             *  router.replace and the filter[] gets clobbered, so the date never applies). */
             const remaining = tv.query.filter.filter((f) => f.field !== "created_at");
-            if (value !== null) {
-                const mapped = dateFilterValueToTableViewFilter("created_at", value);
-                tv.setFilter(mapped !== null ? [...remaining, mapped] : remaining);
-            } else {
-                tv.setFilter(remaining);
-            }
+            const mapped = value !== null ? dateFilterValueToTableViewFilter("created_at", value) : null;
+            tv.patch({
+                query: { filter: mapped !== null ? [...remaining, mapped] : remaining },
+                extras: { created: serializeDateFacetForUrl(value) ?? "" },
+            });
         },
         [tv],
     );
@@ -176,6 +189,7 @@ export function OrdersList() {
         query: tv.query,
         q: tv.q.length > 0 ? tv.q : undefined,
         trashed: tv.trashed ? true : undefined,
+        country: tv.country.length > 0 ? tv.country : undefined,
     });
 
     const rows = data?.data ?? [];
@@ -271,44 +285,40 @@ export function OrdersList() {
     const activeChips = useMemo(() => {
         const out: { key: string; value: string; label: string }[] = [];
         for (const facet of facets) {
-            const values = facetValuesWithCountry[facet.paramKey] ?? [];
+            const values = facetValues[facet.paramKey] ?? [];
             for (const value of values) {
                 const option = facet.options.find((opt) => opt.value === value);
                 out.push({ key: facet.paramKey, value, label: `${facet.label}: ${option?.label ?? value}` });
             }
         }
         return out;
-    }, [facets, facetValuesWithCountry]);
+    }, [facets, facetValues]);
 
     const onTabChange = useCallback(
         (value: StatusTabKey) => {
+            /** `status` lives in `filter[]` but `trashed` is an extra — write both in one `patch`
+             *  so the two don't race through separate `router.replace` calls. */
             const others = tv.query.filter.filter((f) => f.field !== "status");
             if (value === "any") {
-                tv.setTrashed(false);
-                tv.setFilter(others);
+                tv.patch({ query: { filter: others }, extras: { trashed: false } });
                 return;
             }
             if (value === "trashed") {
-                tv.setTrashed(true);
-                tv.setFilter(others);
+                tv.patch({ query: { filter: others }, extras: { trashed: true } });
                 return;
             }
-            tv.setTrashed(false);
-            tv.setFilter([...others, { field: "status", op: "eq", value }]);
+            tv.patch({ query: { filter: [...others, { field: "status", op: "eq", value }] }, extras: { trashed: false } });
         },
         [tv],
     );
 
     const hasActiveFilters = useMemo(
-        () => tv.q.length > 0 || tv.query.filter.length > 0 || tv.trashed || tv.created.length > 0,
-        [tv.q, tv.query.filter, tv.trashed, tv.created],
+        () => tv.q.length > 0 || tv.query.filter.length > 0 || tv.trashed || tv.created.length > 0 || tv.country.length > 0,
+        [tv.q, tv.query.filter, tv.trashed, tv.created, tv.country],
     );
 
     const clearAllFilters = useCallback(() => {
-        tv.setQ("");
-        tv.clearFilters();
-        tv.setTrashed(false);
-        tv.setCreated("");
+        tv.resetFilters({ q: "", trashed: false, created: "", country: "" });
     }, [tv]);
 
     /** Keyboard shortcuts living at the page level — DataTable owns j/k/x/e/Enter on focused rows. */
@@ -411,7 +421,7 @@ export function OrdersList() {
                             q={tv.q}
                             onQChange={tv.setQ}
                             facets={facets}
-                            facetValues={facetValuesWithCountry}
+                            facetValues={facetValues}
                             onFacetValuesChange={setFacetValues}
                             dateFacets={dateFacets}
                             dateFacetValues={dateFacetValues}
@@ -451,7 +461,7 @@ export function OrdersList() {
                         <ActiveFilterChips
                             chips={activeChips}
                             onRemove={(key, value) => {
-                                const current = facetValuesWithCountry[key] ?? [];
+                                const current = facetValues[key] ?? [];
                                 setFacetValues(
                                     key,
                                     current.filter((item) => item !== value),

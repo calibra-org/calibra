@@ -9,7 +9,7 @@ import { type AdminProductDetailView, toAdminProductDetail } from "#/lib/adapter
 import { toAdminProduct } from "#/lib/adapters/products";
 import { apiGet } from "#/lib/queries/api-client";
 import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view";
-import type { AdminBrand, AdminCategory, AdminProduct, AdminTag, ProductStatus, StockStatus } from "#/lib/types";
+import type { AdminBrand, AdminCategory, AdminProduct, AdminTag, ProductStatus } from "#/lib/types";
 
 type DetailEnvelope = { data: AdminSchemas["schemas"]["AdminProductDetail"] };
 
@@ -52,19 +52,21 @@ export interface ProductsListParams {
     query?: TableViewQuery;
     q?: string;
     status?: ProductStatus | "any";
-    stock_status?: StockStatus;
+    /** Multi-select facets ride as comma-joined extras (`"instock,onbackorder"` / `"5,8"`) so the
+     *  controller can split + `whereIn` against the inventory / pivot subqueries. */
+    stock_status?: string;
     stock_level?: StockLevel;
-    category?: number;
-    brand?: number;
-    tag?: number;
+    category?: string;
+    brand?: string;
+    tag?: string;
     on_sale?: boolean;
     has_image?: boolean;
     with_trashed?: boolean;
     only_trashed?: boolean;
     ids?: string;
     include?: string;
-    /** Client-only favourite filter — never sent to the API (no server-side support yet). */
-    favoriteIds?: number[];
+    /** When true, narrows to the current admin's starred products (server-side `favorites=1`). */
+    favorites?: boolean;
 }
 
 /**
@@ -74,15 +76,16 @@ export interface ProductsListParams {
 interface ProductsListExtras {
     q?: string;
     status?: ProductStatus;
-    stock_status?: StockStatus;
+    stock_status?: string;
     stock_level?: StockLevel;
-    category?: number;
-    brand?: number;
-    tag?: number;
+    category?: string;
+    brand?: string;
+    tag?: string;
     on_sale?: boolean;
     has_image?: boolean;
     with_trashed?: boolean;
     only_trashed?: boolean;
+    favorites?: boolean;
     ids?: string;
     include?: string;
 }
@@ -116,25 +119,19 @@ export function useProductsList(
         has_image: params.has_image === true ? true : undefined,
         with_trashed: params.with_trashed === true ? true : undefined,
         only_trashed: params.only_trashed === true ? true : undefined,
+        favorites: params.favorites === true ? true : undefined,
         ids: params.ids,
         include: params.include,
     } satisfies ProductsListExtras);
 
     return useQuery<ProductListEnvelope, Error, ProductsListResult>({
-        queryKey: ["admin", "products", "list", { locale, sdkQuery, favoriteIds: params.favoriteIds }],
+        queryKey: ["admin", "products", "list", { locale, sdkQuery }],
         queryFn: () => apiGet<ProductListEnvelope>("products", { locale, query: sdkQuery }),
         placeholderData: keepPreviousData,
         select: (payload): ProductsListResult => {
             const data = (payload.data ?? []).map(toAdminProduct);
-            /**
-             * Favorites is client-side until the API ships it. When `favoriteIds` is provided
-             * (toggle is ON), filter every time — including the empty-set case so the operator
-             * sees "no favorites yet" instead of the full list silently ignoring the toggle.
-             */
-            const filtered =
-                params.favoriteIds === undefined ? data : data.filter((row) => params.favoriteIds?.includes(row.id) === true);
-            const meta = payload.meta ?? { page: query.page, limit: query.limit, total: filtered.length, lastPage: 1 };
-            return { data: filtered, meta, facets: payload.facets };
+            const meta = payload.meta ?? { page: query.page, limit: query.limit, total: data.length, lastPage: 1 };
+            return { data, meta, facets: payload.facets };
         },
     });
 }

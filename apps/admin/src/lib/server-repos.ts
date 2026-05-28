@@ -123,7 +123,7 @@ export async function listProducts(params: ProductListParams = {}): Promise<Pagi
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(sdkStatus !== undefined ? { status: sdkStatus } : {}),
                 ...(params.q ? { q: params.q } : {}),
-                ...(params.category !== undefined ? { category: params.category } : {}),
+                ...(params.category !== undefined ? { category: String(params.category) } : {}),
             },
         },
     });
@@ -231,7 +231,7 @@ export async function listCategories(params: ListParams = {}): Promise<Paginated
     await Promise.all(
         rows.map(async (row) => {
             const res = await api.admin.GET("/api/v1/admin/products", {
-                params: { query: { category: row.id, limit: 1 } },
+                params: { query: { category: String(row.id), limit: 1 } },
             });
             row.productCount = res.data?.meta?.total ?? 0;
         }),
@@ -260,7 +260,7 @@ export async function listTags(params: ListParams = {}): Promise<Paginated<Admin
     await Promise.all(
         rows.map(async (row) => {
             const res = await api.admin.GET("/api/v1/admin/products", {
-                params: { query: { tag: row.id, limit: 1 } },
+                params: { query: { tag: String(row.id), limit: 1 } },
             });
             row.productCount = res.data?.meta?.total ?? 0;
         }),
@@ -296,7 +296,7 @@ export async function listBrands(params: ListParams = {}): Promise<Paginated<Adm
     await Promise.all(
         rows.map(async (row) => {
             const res = await api.admin.GET("/api/v1/admin/products", {
-                params: { query: { brand: row.id, limit: 1 } },
+                params: { query: { brand: String(row.id), limit: 1 } },
             });
             row.productCount = res.data?.meta?.total ?? 0;
         }),

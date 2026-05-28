@@ -32,16 +32,20 @@ export function useProductFilters(): { facets: FacetedFilterDef[]; toggles: Togg
             {
                 paramKey: "type",
                 label: t("type"),
-                multiple: false,
+                multiple: true,
                 options: PRODUCT_TYPES.map((value) => ({ value, label: productTypeT(value) })),
             },
             {
                 paramKey: "stock_status",
                 label: t("stock"),
-                multiple: false,
+                multiple: true,
                 options: STOCK_STATUSES.map((value) => ({ value, label: stockT(value) })),
             },
             {
+                /**
+                 * Stock level buckets are mutually exclusive aggregate views (in-stock / low /
+                 * out-of-stock derived from the same SUM), so this one stays single-select.
+                 */
                 paramKey: "stock_level",
                 label: t("stockLevelLabel"),
                 multiple: false,
@@ -50,7 +54,7 @@ export function useProductFilters(): { facets: FacetedFilterDef[]; toggles: Togg
             {
                 paramKey: "visibility",
                 label: t("visibility"),
-                multiple: false,
+                multiple: true,
                 options: CATALOG_VISIBILITIES.map((value) => ({ value, label: visibilityT(value) })),
             },
             {

@@ -33,11 +33,10 @@ import {
     useSetFacetValue,
     useTableView,
 } from "#/lib/table-view";
-import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
+import type { AdminProduct, ProductStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
 import { buildProductColumns } from "./columns";
-import { useFavorites } from "./favorite-toggle";
 import { useProductFilters } from "./filters";
 import { QuickEditPanel } from "./quick-edit/quick-edit-panel";
 import { useProductsListShortcuts } from "./shortcuts";
@@ -73,7 +72,6 @@ export function ProductsList() {
     const locale = useLocale() as Locale;
     const router = useRouter();
     const queryClient = useQueryClient();
-    const { isFavorite, favorites } = useFavorites();
 
     const { facets, toggles } = useProductFilters();
 
@@ -95,12 +93,9 @@ export function ProductsList() {
             tag: parseAsString.withDefault(""),
             on_sale: parseAsBoolean.withDefault(false),
             has_image: parseAsBoolean.withDefault(false),
+            favorites: parseAsBoolean.withDefault(false),
         },
     });
-
-    /** Favourites is a CLIENT filter — the API has no support for it, so it stays out of the
-     *  URL-as-wire model entirely (local state, never serialized, never sent). */
-    const [fav, setFav] = useState(false);
 
     const ui = useColumnState({
         id: TABLE_ID,
@@ -127,11 +122,11 @@ export function ProductsList() {
     const facetValues = useMemo<Record<string, string[]>>(
         () => ({
             ...columnFacetValues,
-            stock_status: tv.stock_status.length > 0 ? [tv.stock_status] : [],
+            stock_status: csvToArray(tv.stock_status),
             stock_level: tv.stock_level.length > 0 ? [tv.stock_level] : [],
-            category: tv.category.length > 0 ? [tv.category] : [],
-            brand: tv.brand.length > 0 ? [tv.brand] : [],
-            tag: tv.tag.length > 0 ? [tv.tag] : [],
+            category: csvToArray(tv.category),
+            brand: csvToArray(tv.brand),
+            tag: csvToArray(tv.tag),
         }),
         [columnFacetValues, tv.stock_status, tv.stock_level, tv.category, tv.brand, tv.tag],
     );
@@ -142,22 +137,21 @@ export function ProductsList() {
                 setColumnFacet(key, values);
                 return;
             }
-            const next = values[0] ?? "";
             switch (key) {
                 case "stock_status":
-                    tv.setStock_status(next);
+                    tv.setStock_status(values.join(","));
                     break;
                 case "stock_level":
-                    tv.setStock_level(next);
+                    tv.setStock_level(values[0] ?? "");
                     break;
                 case "category":
-                    tv.setCategory(next);
+                    tv.setCategory(values.join(","));
                     break;
                 case "brand":
-                    tv.setBrand(next);
+                    tv.setBrand(values.join(","));
                     break;
                 case "tag":
-                    tv.setTag(next);
+                    tv.setTag(values.join(","));
                     break;
             }
         },
@@ -165,20 +159,20 @@ export function ProductsList() {
     );
 
     /** `featured` is a filterable column toggle → `filter[]=featured:eq:true`; `on_sale` /
-     *  `has_image` are bespoke extras; `fav` is client-only local state. */
+     *  `has_image` / `favorites` are bespoke extras (the last narrows to the admin's starred set). */
     const featuredActive = useMemo(
         () => tv.query.filter.some((f) => f.field === "featured" && f.op === "eq" && f.value === true),
         [tv.query.filter],
     );
     const toggleValues = useMemo<Record<string, boolean>>(
-        () => ({ fav, onSale: tv.on_sale, featured: featuredActive, hasImage: tv.has_image }),
-        [fav, tv.on_sale, featuredActive, tv.has_image],
+        () => ({ fav: tv.favorites, onSale: tv.on_sale, featured: featuredActive, hasImage: tv.has_image }),
+        [tv.favorites, tv.on_sale, featuredActive, tv.has_image],
     );
     const setToggleValue = useCallback(
         (key: string, value: boolean) => {
             switch (key) {
                 case "fav":
-                    setFav(value);
+                    tv.setFavorites(value);
                     break;
                 case "onSale":
                     tv.setOn_sale(value);
@@ -205,15 +199,15 @@ export function ProductsList() {
         query: tv.query,
         q: tv.q.length > 0 ? tv.q : undefined,
         status,
-        stock_status: tv.stock_status.length > 0 ? (tv.stock_status as StockStatus) : undefined,
+        stock_status: tv.stock_status.length > 0 ? tv.stock_status : undefined,
         stock_level: tv.stock_level.length > 0 ? (tv.stock_level as StockLevel) : undefined,
-        category: numericOr(tv.category),
-        brand: numericOr(tv.brand),
-        tag: numericOr(tv.tag),
+        category: tv.category.length > 0 ? tv.category : undefined,
+        brand: tv.brand.length > 0 ? tv.brand : undefined,
+        tag: tv.tag.length > 0 ? tv.tag : undefined,
         on_sale: tv.on_sale ? true : undefined,
         has_image: tv.has_image ? true : undefined,
         only_trashed: onlyTrashed ? true : undefined,
-        favoriteIds: fav ? Array.from(favorites) : undefined,
+        favorites: tv.favorites ? true : undefined,
     });
 
     const rows = data?.data ?? [];
@@ -228,23 +222,43 @@ export function ProductsList() {
             tv.category.length > 0 ||
             tv.brand.length > 0 ||
             tv.tag.length > 0 ||
-            fav ||
+            tv.favorites ||
             tv.on_sale ||
+            tv.has_image ||
+            tv.status.length > 0 ||
+            tv.only_trashed,
+        [
+            tv.q,
+            tv.query.filter,
+            tv.stock_status,
+            tv.stock_level,
+            tv.category,
+            tv.brand,
+            tv.tag,
+            tv.favorites,
+            tv.on_sale,
             tv.has_image,
-        [tv.q, tv.query.filter, tv.stock_status, tv.stock_level, tv.category, tv.brand, tv.tag, fav, tv.on_sale, tv.has_image],
+            tv.status,
+            tv.only_trashed,
+        ],
     );
 
+    /** Single write — clears the `filter[]` facets (type/visibility/featured), every bespoke extra,
+     *  AND the status tab (`status` / `only_trashed`), so "Clear all filters" returns to "All". */
     const clearAllFilters = useCallback(() => {
-        tv.setQ("");
-        tv.clearFilters();
-        tv.setStock_status("");
-        tv.setStock_level("");
-        tv.setCategory("");
-        tv.setBrand("");
-        tv.setTag("");
-        setFav(false);
-        tv.setOn_sale(false);
-        tv.setHas_image(false);
+        tv.resetFilters({
+            q: "",
+            status: "",
+            only_trashed: false,
+            stock_status: "",
+            stock_level: "",
+            category: "",
+            brand: "",
+            tag: "",
+            favorites: false,
+            on_sale: false,
+            has_image: false,
+        });
     }, [tv]);
 
     /**
@@ -273,14 +287,13 @@ export function ProductsList() {
                 onHideColumn,
                 onToggleQuickEdit,
                 onOpenDetail,
-                isFavorite,
                 lowStockThreshold: LOW_STOCK_THRESHOLD,
                 t,
                 statusT,
                 stockT,
                 sortLabels: { asc: t("sortAsc"), desc: t("sortDesc"), hide: t("hideColumn") },
             }),
-        [isFavorite, locale, onHideColumn, onOpenDetail, onToggleQuickEdit, statusT, stockT, t, sort, setSort],
+        [locale, onHideColumn, onOpenDetail, onToggleQuickEdit, statusT, stockT, t, sort, setSort],
     );
 
     const columnVisibilityItems = useMemo(
@@ -313,13 +326,13 @@ export function ProductsList() {
     const onTabChange = useCallback(
         (value: string) => {
             if (!TAB_VALUES.includes(value)) return;
+            /** `status` + `only_trashed` must move together — one `setExtras` write, never two
+             *  chained setters (each captures the same stale snapshot and the writes race). */
             if (value === TRASH_TAB) {
-                tv.setStatus("");
-                tv.setOnly_trashed(true);
+                tv.setExtras({ status: "", only_trashed: true });
                 return;
             }
-            tv.setOnly_trashed(false);
-            tv.setStatus(value === "any" ? "" : value);
+            tv.setExtras({ status: value === "any" ? "" : value, only_trashed: false });
         },
         [tv],
     );
@@ -478,7 +491,7 @@ export function ProductsList() {
                 renderCard={(row) => (
                     <ProductCard
                         row={row.original}
-                        isFavorite={isFavorite(row.original.id)}
+                        isFavorite={row.original.isFavorite}
                         onQuickEdit={(product) => onToggleQuickEdit(String(product.id))}
                         onOpenDetail={onOpenDetail}
                     />
@@ -586,10 +599,9 @@ export function ProductsList() {
     );
 }
 
-function numericOr(value: string): number | undefined {
-    if (value.length === 0) return undefined;
-    const numeric = Number(value);
-    return Number.isFinite(numeric) ? numeric : undefined;
+/** Split a comma-joined facet extra (`"5,8"`) into the `string[]` shape the toolbar facets want. */
+function csvToArray(value: string): string[] {
+    return value.length > 0 ? value.split(",") : [];
 }
 
 interface ProductCardProps {

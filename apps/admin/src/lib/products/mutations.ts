@@ -7,17 +7,24 @@ import { useLocale } from "next-intl";
 import { apiMutate } from "#/lib/queries/api-client";
 import type { AdminProduct, MoneyMinor, ProductStatus, StockStatus } from "#/lib/types";
 
-import { loadFavorites, toggleFavorite } from "./favorites";
-
 export type CatalogVisibility = "visible" | "catalog" | "search" | "hidden";
 
 /**
- * Optimistically toggle a product's favorite flag. The mutation is purely client-side until the
- * API ships the field — see `lib/products/favorites.ts` for the localStorage stub.
+ * Star / unstar a product for the current admin via the server-backed per-user favourites
+ * endpoint (`PUT`/`DELETE /products/:id/favorite`). The caller passes the desired next state; the
+ * star UI updates optimistically and reverts on error. Invalidates the list so the `favorites=1`
+ * filter and the `is_favorite` flags refetch.
  */
 export function useToggleFavorite() {
-    return useMutation<Set<number>, Error, { id: number }>({
-        mutationFn: async ({ id }) => toggleFavorite(id, loadFavorites()),
+    const locale = useLocale() as Locale;
+    const queryClient = useQueryClient();
+    return useMutation<void, Error, { id: number; favorite: boolean }>({
+        mutationFn: async ({ id, favorite }) => {
+            await apiMutate<void>(favorite ? "PUT" : "DELETE", `products/${id}/favorite`, { locale });
+        },
+        onSettled: () => {
+            void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });
+        },
     });
 }
 

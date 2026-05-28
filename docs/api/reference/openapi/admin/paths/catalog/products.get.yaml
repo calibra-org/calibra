@@ -26,11 +26,14 @@ description: >
 
     **Endpoint extensions** (kept as top-level params):
         - `q` — multi-column ILIKE across `product_translations.name` and `products.sku`.
-        - `category`, `brand`, `tag` — single-id whereIn through the respective pivot tables.
-        - `stock_status` — subquery on inventory_items.
+        - `category`, `brand`, `tag` — multi-select: a comma-separated list of ids, `whereIn`
+          through the respective pivot tables (`?category=5,8` matches either category).
+        - `stock_status` — multi-select: a comma-separated list of statuses, `whereIn` subquery
+          on inventory_items (`?stock_status=instock,onbackorder`).
         - `stock_level` — aggregate having-clause grouping (instock / low / outofstock).
         - `on_sale` — schedule-aware sale_starts_at / sale_ends_at window.
         - `has_image` — existence check on product_images.
+        - `favorites` — narrows to the requesting admin's starred products (`product_favorites` pivot).
         - `with_trashed` / `only_trashed` — soft-delete scope.
         - `ids` — comma-separated id whitelist.
         - `include=facet_counts` — adds a `facets` block to the envelope; counts are computed
@@ -51,15 +54,19 @@ parameters:
     - { name: q, in: query, schema: { type: string } }
     - { name: status, in: query, schema: { type: string, enum: [draft, publish, pending, private, archived] } }
     - { name: type, in: query, schema: { type: string, enum: [simple, variable, virtual, downloadable, external, grouped] } }
-    - { name: category, in: query, schema: { type: integer } }
-    - { name: tag, in: query, schema: { type: integer } }
-    - { name: brand, in: query, schema: { type: integer } }
+    - { name: category, in: query, description: "Comma-separated category ids (multi-select).", schema: { type: string } }
+    - { name: tag, in: query, description: "Comma-separated tag ids (multi-select).", schema: { type: string } }
+    - { name: brand, in: query, description: "Comma-separated brand ids (multi-select).", schema: { type: string } }
     - { name: on_sale, in: query, schema: { type: boolean } }
-    - { name: stock_status, in: query, schema: { type: string, enum: [instock, outofstock, onbackorder] } }
+    - { name: stock_status, in: query, description: "Comma-separated stock statuses (multi-select) from instock|outofstock|onbackorder.", schema: { type: string } }
     - { name: stock_level, in: query, schema: { type: string, enum: [instock, low, outofstock] } }
     - { name: catalog_visibility, in: query, schema: { type: string, enum: [visible, catalog, search, hidden] } }
     - { name: featured, in: query, schema: { type: boolean } }
     - { name: has_image, in: query, schema: { type: boolean } }
+    - name: favorites
+      in: query
+      description: When `true`, narrow to products the requesting admin has starred (per-user `product_favorites`).
+      schema: { type: boolean }
     - { name: with_trashed, in: query, schema: { type: boolean } }
     - { name: only_trashed, in: query, schema: { type: boolean } }
     - name: ids

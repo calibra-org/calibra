@@ -15,6 +15,12 @@ export interface ProductTransformerOptions {
      * leaves it null (which is the common case — operators rarely set it per-row).
      */
     defaultLowStockThreshold?: number;
+    /**
+     * Product ids the current admin has favourited, used to stamp `is_favorite` per row. The
+     * controller resolves this once per page from `product_favorites`; absent (or not containing
+     * the id) means `false`.
+     */
+    favoriteProductIds?: ReadonlySet<number>;
 }
 
 export default class ProductTransformer extends BaseTransformer<Product> {
@@ -80,6 +86,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             locale: translation?.locale ?? this.locale,
             featured_image_url: images[0]?.url ?? null,
             gallery_image_urls: images.map((img) => img.url).filter((url): url is string => typeof url === "string"),
+            is_favorite: this.options.favoriteProductIds?.has(Number(p.id)) ?? false,
         };
     }
 

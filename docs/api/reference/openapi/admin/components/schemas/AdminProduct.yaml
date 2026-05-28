@@ -42,6 +42,9 @@ properties:
     short_description: { type: [string, "null"] }
     locale: { type: string }
     featured_image_url: { type: [string, "null"] }
+    is_favorite:
+        type: boolean
+        description: Whether the requesting admin has starred this product (per-user favourite).
     gallery_image_urls:
         type: array
         items: { type: string }
@@ -73,3 +76,4 @@ required:
     - id
     - type
     - status
+    - is_favorite

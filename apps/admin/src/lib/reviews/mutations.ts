@@ -7,9 +7,8 @@ import { useLocale } from "next-intl";
 import { apiMutate } from "#/lib/queries/api-client";
 
 import { deleteReply, saveReply } from "./replies";
-import { moveToTrash, purgeFromTrash, restoreFromTrash } from "./trash";
 
-type SdkStatus = "pending" | "approved" | "rejected";
+type SdkStatus = "pending" | "approved" | "spam" | "trash";
 
 /**
  * Single-review moderation. Wraps `PATCH /admin/reviews/{id}` and also supports field-level
@@ -62,17 +61,17 @@ export function useBulkModerateReviews() {
 }
 
 /**
- * Soft-trash one or more reviews. Tracked client-side via the trash store until the API exposes
- * a soft-delete column — see `lib/reviews/trash`.
- *
- * TODO(api): swap the localStorage write for a real `PATCH /admin/reviews/{id}` with `trashed`,
- * or a dedicated `/trash` endpoint.
+ * Move one or more reviews to Trash — a real moderation state on the API (`status: trash`),
+ * not a client-side flag. Issues sequential PATCH calls (no batch endpoint yet).
  */
 export function useTrashReviews() {
     const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
     return useMutation<unknown, Error, { ids: number[] }>({
         mutationFn: async ({ ids }) => {
-            moveToTrash(ids);
+            for (const id of ids) {
+                await apiMutate<unknown>("PATCH", `reviews/${id}`, { locale, body: { status: "trash" } });
+            }
             return undefined;
         },
         onSuccess: () => {
@@ -82,12 +81,15 @@ export function useTrashReviews() {
     });
 }
 
-/** Restore one or more reviews from the client-side trash. */
+/** Restore one or more reviews out of Trash/Spam back to `pending` for re-moderation. */
 export function useRestoreReviews() {
     const queryClient = useQueryClient();
+    const locale = useLocale() as Locale;
     return useMutation<unknown, Error, { ids: number[] }>({
         mutationFn: async ({ ids }) => {
-            restoreFromTrash(ids);
+            for (const id of ids) {
+                await apiMutate<unknown>("PATCH", `reviews/${id}`, { locale, body: { status: "pending" } });
+            }
             return undefined;
         },
         onSuccess: () => {
@@ -97,24 +99,15 @@ export function useRestoreReviews() {
     });
 }
 
-/**
- * Hard-delete one or more reviews via `DELETE /admin/reviews/{id}`. Used for the permanent
- * removal from Spam / Trash. Falls back to client-side trash purge for ids that already left the
- * API but still lingered in the trash store.
- */
+/** Hard-delete one or more reviews via `DELETE /admin/reviews/{id}` — permanent removal from Spam / Trash. */
 export function useDeleteReviews() {
     const queryClient = useQueryClient();
     const locale = useLocale() as Locale;
     return useMutation<unknown, Error, { ids: number[] }>({
         mutationFn: async ({ ids }) => {
             for (const id of ids) {
-                try {
-                    await apiMutate<unknown>("DELETE", `reviews/${id}`, { locale });
-                } catch {
-                    /** swallow — the trash purge below cleans the local state even if the API row vanished already. */
-                }
+                await apiMutate<unknown>("DELETE", `reviews/${id}`, { locale });
             }
-            purgeFromTrash(ids);
             return undefined;
         },
         onSuccess: () => {

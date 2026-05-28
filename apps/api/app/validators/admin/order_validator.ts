@@ -24,18 +24,28 @@ const lineShape = vine.object({
     quantity: vine.number().positive().max(10_000),
 });
 
+/** Parses a comma-separated query value (`?country=IR,DE`) or repeated-key array into a clean string[]. */
+const csvArray = <T extends string>() =>
+    vine.any().transform((value): T[] => {
+        if (value === undefined || value === null || value === "") return [];
+        const arr = Array.isArray(value) ? value : String(value).split(",");
+        return arr.map((v) => String(v).trim()).filter((v) => v.length > 0) as T[];
+    });
+
 /**
  * Wraps the unified {@link adminOrdersView}'s TableView schema with the endpoint's free-text
- * `q` search box (a multi-column ILIKE the runtime can't model per-field) and the soft-delete
+ * `q` search box (a multi-column ILIKE the runtime can't model per-field), the soft-delete
  * scope toggle (`trashed=true` flips the controller from `whereNull(deleted_at)` to
- * `whereNotNull(deleted_at)`). Everything else — status, customer_id, source, payment, country,
- * created date filter — moves to the TableView `filter[]` grammar. Strict mode: any other
- * top-level query key returns 422.
+ * `whereNotNull(deleted_at)`), and the `country` multi-select (a `whereExists` against the
+ * `order_addresses` billing row the v1 TableView runtime can't model as a column WHERE).
+ * Everything else — status, customer_id, source, payment, created date filter — moves to the
+ * TableView `filter[]` grammar. Strict mode: any other top-level query key returns 422.
  */
 export const adminOrderListValidator = adminOrdersView.compileStrict({
     extras: {
         q: vine.string().trim().minLength(1).maxLength(120).optional(),
         trashed: vine.boolean().optional(),
+        country: csvArray<string>().optional(),
     },
 });
 

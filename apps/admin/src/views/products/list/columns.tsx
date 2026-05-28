@@ -42,7 +42,6 @@ interface ColumnContext {
     /** Called when the row should toggle its inline Quick Edit. Receives the TanStack row id. */
     onToggleQuickEdit: (rowId: string) => void;
     onOpenDetail: (row: AdminProduct) => void;
-    isFavorite: (id: number) => boolean;
     lowStockThreshold: number;
     t: TFunction;
     statusT: TFunction;
@@ -103,7 +102,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                     {ctx.t("columns.favorite")}
                 </span>
             ),
-            cell: ({ row }) => <FavoriteToggle productId={row.original.id} initialIsFavorite={ctx.isFavorite(row.original.id)} />,
+            cell: ({ row }) => <FavoriteToggle productId={row.original.id} initialIsFavorite={row.original.isFavorite} />,
             enableSorting: false,
             size: 48,
         },

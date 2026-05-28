@@ -253,10 +253,10 @@ export function buildCouponColumns(ctx: ColumnContext): ColumnDef<AdminCoupon>[]
 function DiscountTypeChip({ type, t }: { type: AdminCoupon["discountType"]; t: (key: string) => string }) {
     const tone =
         type === "percent"
-            ? "bg-info text-info"
+            ? "bg-info text-info-foreground"
             : type === "free_shipping"
-              ? "bg-success text-success"
-              : "bg-warning text-warning";
+              ? "bg-success text-success-foreground"
+              : "bg-warning text-warning-foreground";
     return (
         <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs ${tone}`}>
             {type === "percent" && <Percent className="size-3" aria-hidden="true" />}

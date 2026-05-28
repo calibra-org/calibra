@@ -1,0 +1,24 @@
+operationId: adminProductFavorite
+summary: Star a product for the current admin
+description: >
+    Marks the product as a favourite for the requesting admin (per-user `product_favorites`
+    pivot). Idempotent — re-starring an already-favourited product is a no-op and still returns
+    200. Replaces the legacy localStorage-only favourites with server-backed state.
+tags: [Admin / Catalog / Products]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+
+responses:
+    "200":
+        description: The product's favourite state after the toggle.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/ProductFavoriteState.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

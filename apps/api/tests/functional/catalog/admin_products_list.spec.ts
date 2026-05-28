@@ -133,4 +133,67 @@ test.group("Admin products list filters", (group) => {
         assert.equal(response.body().meta.total, 1);
         assert.equal(response.body().data[0].id, Number(outOfStock.id));
     });
+
+    test("category=<a>,<b> (multi-select) returns the union of both categories", async ({ client, assert }) => {
+        const inA = await createProduct({ fa: { name: "آ" }, en: { name: "InA" } });
+        const inB = await createProduct({ fa: { name: "ب" }, en: { name: "InB" } });
+        await createProduct({ fa: { name: "ج" }, en: { name: "Neither" } });
+        const catA = await createCategory({ fa: { name: "دسته آ" }, en: { name: "Cat A" }, products: [inA] });
+        const catB = await createCategory({ fa: { name: "دسته ب" }, en: { name: "Cat B" }, products: [inB] });
+        const response = await client
+            .get(`/api/v1/admin/products?category=${Number(catA.id)},${Number(catB.id)}`)
+            .withGuard("api")
+            .loginAs(admin);
+        response.assertStatus(200);
+        assert.equal(response.body().meta.total, 2);
+        const ids = response
+            .body()
+            .data.map((r: { id: number }) => r.id)
+            .sort((x: number, y: number) => x - y);
+        assert.deepEqual(
+            ids,
+            [Number(inA.id), Number(inB.id)].sort((x, y) => x - y),
+        );
+    });
+
+    test("stock_status=instock,outofstock (multi-select) returns the union of both statuses", async ({ client, assert }) => {
+        const a = await createProduct({ fa: { name: "م" }, en: { name: "In" } });
+        const b = await createProduct({ fa: { name: "ن" }, en: { name: "Out" } });
+        const c = await createProduct({ fa: { name: "پ" }, en: { name: "Back" } });
+        await InventoryItem.create({
+            productId: a.id,
+            stockQuantity: 5,
+            manageStock: true,
+            backorders: "no",
+            stockStatus: "instock",
+        });
+        await InventoryItem.create({
+            productId: b.id,
+            stockQuantity: 0,
+            manageStock: true,
+            backorders: "no",
+            stockStatus: "outofstock",
+        });
+        await InventoryItem.create({
+            productId: c.id,
+            stockQuantity: 0,
+            manageStock: true,
+            backorders: "notify",
+            stockStatus: "onbackorder",
+        });
+        const response = await client
+            .get("/api/v1/admin/products?stock_status=instock,outofstock")
+            .withGuard("api")
+            .loginAs(admin);
+        response.assertStatus(200);
+        assert.equal(response.body().meta.total, 2);
+        const ids = response
+            .body()
+            .data.map((r: { id: number }) => r.id)
+            .sort((x: number, y: number) => x - y);
+        assert.deepEqual(
+            ids,
+            [Number(a.id), Number(b.id)].sort((x, y) => x - y),
+        );
+    });
 });

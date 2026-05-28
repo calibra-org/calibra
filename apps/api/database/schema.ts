@@ -1590,6 +1590,17 @@ export class ProductExportSchema extends BaseModel {
   declare userId: bigint | number
 }
 
+export class ProductFavoriteSchema extends BaseModel {
+  static $columns = ['createdAt', 'productId', 'userId'] as const
+  $columns = ProductFavoriteSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare productId: bigint | number
+  @column({ isPrimary: true })
+  declare userId: bigint | number
+}
+
 export class ProductGroupMemberSchema extends BaseModel {
   static $columns = ['createdAt', 'groupProductId', 'memberProductId', 'position', 'updatedAt'] as const
   $columns = ProductGroupMemberSchema.$columns
