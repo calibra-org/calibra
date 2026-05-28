@@ -87,7 +87,7 @@ export function MediaPicker({ open, mode, value, onOpenChange, onSelect }: Media
 
     const query = useMediaList({
         limit,
-        search: debouncedSearch.length > 0 ? debouncedSearch : undefined,
+        q: debouncedSearch.length > 0 ? debouncedSearch : undefined,
         type,
         month,
     });

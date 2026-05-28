@@ -117,7 +117,7 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
 
     const query = useMediaList({
         limit,
-        search: debouncedSearch.length > 0 ? debouncedSearch : undefined,
+        q: debouncedSearch.length > 0 ? debouncedSearch : undefined,
         type,
         month,
     });

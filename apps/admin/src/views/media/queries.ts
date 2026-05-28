@@ -9,11 +9,16 @@ import type { AdminMedia, AdminMediaKind, Paginated } from "#/lib/types";
 
 import type { MediaTypeFilter } from "./types";
 
-/** Listing parameter set used by both the live query and the SSR cache seed key. */
+/**
+ * Listing parameter set used by both the live query and the SSR cache seed key. Field names match
+ * the TableView wire grammar (`q`, not `search`) so this client query and the SSR `listMedia`
+ * server-repo speak one vocabulary, even though the media page keeps its filter state local rather
+ * than URL-backed (a follow-up could adopt `useTableView` here — see PR notes).
+ */
 export interface MediaListParams {
     page?: number;
     limit?: number;
-    search?: string;
+    q?: string;
     type?: MediaTypeFilter;
     month?: string;
 }
@@ -78,18 +83,18 @@ export function useMediaList(params: MediaListParams = {}): UseQueryResult<Pagin
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
     const limit = params.limit ?? 60;
-    const search = params.search;
+    const q = params.q;
     const type = params.type ?? "all";
     const month = params.month;
     return useQuery<MediaListEnvelope, Error, Paginated<AdminMedia>>({
-        queryKey: ["admin", "media", "list", { locale, page, limit, search, type, month }],
+        queryKey: ["admin", "media", "list", { locale, page, limit, q, type, month }],
         queryFn: () =>
             apiGet<MediaListEnvelope>("media", {
                 locale,
                 query: {
                     page,
                     limit,
-                    ...(search !== undefined && search.length > 0 ? { q: search } : {}),
+                    ...(q !== undefined && q.length > 0 ? { q } : {}),
                     ...(type !== "all" ? { type } : {}),
                     ...(month !== undefined && month.length > 0 ? { month } : {}),
                 },
@@ -369,7 +374,7 @@ export function seedMediaListKey({ locale, limit }: { locale: Locale; limit: num
         "admin",
         "media",
         "list",
-        { locale, page: 1, limit, search: undefined, type: "all" as MediaTypeFilter, month: undefined },
+        { locale, page: 1, limit, q: undefined, type: "all" as MediaTypeFilter, month: undefined },
     ] as const;
 }
 
