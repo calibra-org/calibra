@@ -159,7 +159,7 @@ test.group("GET /api/v1/admin/orders (filters)", (group) => {
         await resetPhase05();
     });
 
-    test("payment + source CSV filters trim the result set", async ({ client, assert }) => {
+    test("filter[]=payment_method_code_snapshot:in:... trims the result set", async ({ client, assert }) => {
         const admin = await adminUser();
         const product = await createTaxableProduct({ regularPrice: 500_000 });
         /** All draft orders default to `payment_method_code_snapshot='cod'` via the helper. */
@@ -172,20 +172,26 @@ test.group("GET /api/v1/admin/orders (filters)", (group) => {
         b.paymentMethodCodeSnapshot = "zarinpal";
         await b.save();
 
-        const codOnly = await client.get("/api/v1/admin/orders?payment=cod").loginAs(admin);
+        const codOnly = await client
+            .get("/api/v1/admin/orders")
+            .qs({ "filter[]": "payment_method_code_snapshot:eq:cod" })
+            .loginAs(admin);
         codOnly.assertStatus(200);
         codOnly.assertAgainstApiSpec();
         const codIds = (codOnly.body().data as Array<{ id: number }>).map((row) => row.id);
         assert.includeMembers(codIds, [Number(orderA.id)]);
         assert.notInclude(codIds, Number(orderB.id));
 
-        const csv = await client.get("/api/v1/admin/orders?payment=cod,zarinpal").loginAs(admin);
+        const csv = await client
+            .get("/api/v1/admin/orders")
+            .qs({ "filter[]": "payment_method_code_snapshot:in:cod,zarinpal" })
+            .loginAs(admin);
         csv.assertStatus(200);
         csv.assertAgainstApiSpec();
         const csvIds = (csv.body().data as Array<{ id: number }>).map((row) => row.id);
         assert.includeMembers(csvIds, [Number(orderA.id), Number(orderB.id)]);
 
-        const sourceOnly = await client.get("/api/v1/admin/orders?source=checkout").loginAs(admin);
+        const sourceOnly = await client.get("/api/v1/admin/orders").qs({ "filter[]": "created_via:eq:checkout" }).loginAs(admin);
         sourceOnly.assertStatus(200);
         sourceOnly.assertAgainstApiSpec();
         const sourceIds = (sourceOnly.body().data as Array<{ id: number }>).map((row) => row.id);
@@ -198,13 +204,13 @@ test.group("GET /api/v1/admin/orders (extended list shape)", (group) => {
         await resetPhase05();
     });
 
-    test("surfaces item_count, customer_name, risk_flags, and respects sort=-grand_total", async ({ client, assert }) => {
+    test("surfaces item_count, customer_name, risk_flags, and respects sort[]=grand_total:desc", async ({ client, assert }) => {
         const admin = await adminUser();
         const product = await createTaxableProduct({ regularPrice: 1_000_000 });
         const small = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 1_000_000 });
         const big = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 250, price: 1_000_000 });
 
-        const res = await client.get("/api/v1/admin/orders?sort=-grand_total&perPage=50").loginAs(admin);
+        const res = await client.get("/api/v1/admin/orders").qs({ "sort[]": "grand_total:desc", limit: 50 }).loginAs(admin);
         res.assertStatus(200);
         res.assertAgainstApiSpec();
         const data = res.body().data as Array<{
@@ -215,7 +221,7 @@ test.group("GET /api/v1/admin/orders (extended list shape)", (group) => {
             payment_method_title: string | null;
         }>;
         assert.isAtLeast(data.length, 2);
-        assert.equal(data[0].id, Number(big.id), "highest grand_total first when sort=-grand_total");
+        assert.equal(data[0].id, Number(big.id), "highest grand_total first when sort[]=grand_total:desc");
         const bigRow = data.find((row) => row.id === Number(big.id));
         assert.isDefined(bigRow);
         assert.isAtLeast(bigRow?.item_count ?? 0, 1);
@@ -224,5 +230,165 @@ test.group("GET /api/v1/admin/orders (extended list shape)", (group) => {
         assert.isDefined(smallRow);
         assert.isArray(smallRow?.risk_flags);
         assert.isString(smallRow?.payment_method_title ?? "");
+    });
+});
+
+test.group("GET /api/v1/admin/orders (TableView grammar)", (group) => {
+    group.each.setup(async () => {
+        await resetPhase05();
+    });
+
+    test("filter[]=status:eq:pending narrows to that status", async ({ client, assert }) => {
+        const admin = await adminUser();
+        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
+        const draft = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 1_000_000 });
+        const pending = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 1_000_000 });
+        await client.post(`/api/v1/admin/orders/${pending.id}/status`).loginAs(admin).json({ to_status: "pending" });
+
+        const res = await client.get("/api/v1/admin/orders").qs({ "filter[]": "status:eq:pending" }).loginAs(admin);
+        res.assertStatus(200);
+        res.assertAgainstApiSpec();
+        const ids = (res.body().data as Array<{ id: number; status: string }>).map((row) => row.id);
+        assert.includeMembers(ids, [Number(pending.id)]);
+        assert.notInclude(ids, Number(draft.id));
+    });
+
+    test("filter[]=status:in:draft,pending matches the union", async ({ client, assert }) => {
+        const admin = await adminUser();
+        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
+        const draft = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 1_000_000 });
+        const pending = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 1_000_000 });
+        await client.post(`/api/v1/admin/orders/${pending.id}/status`).loginAs(admin).json({ to_status: "pending" });
+
+        const res = await client.get("/api/v1/admin/orders").qs({ "filter[]": "status:in:draft,pending" }).loginAs(admin);
+        res.assertStatus(200);
+        res.assertAgainstApiSpec();
+        const ids = (res.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(ids, [Number(draft.id), Number(pending.id)]);
+    });
+
+    test("filter[]=grand_total:between:a,b inclusively bounds the value", async ({ client, assert }) => {
+        const admin = await adminUser();
+        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
+        const small = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 1_000_000 });
+        const mid = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 5, price: 1_000_000 });
+        const big = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 50, price: 1_000_000 });
+
+        const res = await client
+            .get("/api/v1/admin/orders")
+            .qs({ "filter[]": "grand_total:between:2000000,10000000" })
+            .loginAs(admin);
+        res.assertStatus(200);
+        res.assertAgainstApiSpec();
+        const ids = (res.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(ids, [Number(mid.id)]);
+        assert.notInclude(ids, Number(small.id));
+        assert.notInclude(ids, Number(big.id));
+    });
+
+    test("filter[]=billing_email:ilike:%@calibra.dev matches a substring", async ({ client, assert }) => {
+        const admin = await adminUser();
+        const product = await createTaxableProduct({ regularPrice: 500_000 });
+        const a = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
+        const b = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
+        const Order = (await import("#models/order")).default;
+        const aRow = await Order.findOrFail(Number(a.id));
+        aRow.billingEmail = "buyer@calibra.dev";
+        await aRow.save();
+        const bRow = await Order.findOrFail(Number(b.id));
+        bRow.billingEmail = "buyer@example.com";
+        await bRow.save();
+
+        const res = await client
+            .get("/api/v1/admin/orders")
+            .qs({ "filter[]": "billing_email:ilike:%@calibra.dev" })
+            .loginAs(admin);
+        res.assertStatus(200);
+        res.assertAgainstApiSpec();
+        const ids = (res.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(ids, [Number(a.id)]);
+        assert.notInclude(ids, Number(b.id));
+    });
+
+    test("filterOr[] entries compose as OR within the AND group", async ({ client, assert }) => {
+        const admin = await adminUser();
+        const product = await createTaxableProduct({ regularPrice: 1_000_000 });
+        const small = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 1_000_000 });
+        const big = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 100, price: 1_000_000 });
+        await client.post(`/api/v1/admin/orders/${small.id}/status`).loginAs(admin).json({ to_status: "pending" });
+
+        /** Match orders whose status is `pending` OR whose total > 50M (the big one). */
+        const res = await client
+            .get("/api/v1/admin/orders")
+            .qs({ "filterOr[]": ["status:eq:pending", "grand_total:gt:50000000"] })
+            .loginAs(admin);
+        res.assertStatus(200);
+        res.assertAgainstApiSpec();
+        const ids = (res.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(ids, [Number(small.id), Number(big.id)]);
+    });
+
+    test("rejects legacy per-list query params with 422 (strict mode)", async ({ client }) => {
+        /** `view.compileStrict({ extras })` enforces the contract: any top-level query key that
+         * is not a TableView wire key (`page` / `limit` / `filter` / `filterOr` / `sort`) nor a
+         * declared endpoint extra (`q` / `trashed` for this endpoint) returns 422. Stale deep
+         * links and old admin UIs surface explicitly instead of silently degrading. */
+        const admin = await adminUser();
+        const res = await client.get("/api/v1/admin/orders").qs({ status: "pending", source: "checkout" }).loginAs(admin);
+        res.assertStatus(422);
+    });
+
+    test("rejects an unknown TableView field with 422", async ({ client }) => {
+        const admin = await adminUser();
+        const res = await client.get("/api/v1/admin/orders").qs({ "filter[]": "evil_field:eq:1" }).loginAs(admin);
+        res.assertStatus(422);
+    });
+
+    test("rejects an op that's not allowed on the column type with 422", async ({ client }) => {
+        const admin = await adminUser();
+        /** `like` is a string op; `created_at` is datetime — should be rejected at validate time. */
+        const res = await client.get("/api/v1/admin/orders").qs({ "filter[]": "created_at:like:foo" }).loginAs(admin);
+        res.assertStatus(422);
+    });
+
+    test("trashed=true returns soft-deleted orders only", async ({ client, assert }) => {
+        const admin = await adminUser();
+        const product = await createTaxableProduct({ regularPrice: 500_000 });
+        const live = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
+        const dead = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
+        await client.delete(`/api/v1/admin/orders/${dead.id}`).loginAs(admin);
+
+        const res = await client.get("/api/v1/admin/orders").qs({ trashed: true }).loginAs(admin);
+        res.assertStatus(200);
+        res.assertAgainstApiSpec();
+        const ids = (res.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(ids, [Number(dead.id)]);
+        assert.notInclude(ids, Number(live.id));
+    });
+
+    test("q=<number> matches order_number OR id", async ({ client, assert }) => {
+        const admin = await adminUser();
+        const product = await createTaxableProduct({ regularPrice: 500_000 });
+        const o = await makeDraftOrder({ customerId: null, productId: Number(product.id), quantity: 1, price: 500_000 });
+
+        const res = await client
+            .get("/api/v1/admin/orders")
+            .qs({ q: String(o.orderNumber) })
+            .loginAs(admin);
+        res.assertStatus(200);
+        res.assertAgainstApiSpec();
+        const ids = (res.body().data as Array<{ id: number }>).map((row) => row.id);
+        assert.includeMembers(ids, [Number(o.id)]);
+    });
+
+    test("requires authentication", async ({ client }) => {
+        const res = await client.get("/api/v1/admin/orders");
+        res.assertStatus(401);
+    });
+
+    test("requires admin role", async ({ client }) => {
+        const { user } = await buyer();
+        const res = await client.get("/api/v1/admin/orders").loginAs(user);
+        res.assertStatus(403);
     });
 });

@@ -1,18 +1,46 @@
 import type { HttpContext } from "@adonisjs/core/http";
+import vine from "@vinejs/vine";
 
 import ProductAttribute from "#models/product_attribute";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
+import { adminAttributesView } from "#table_views/admin/attributes";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductAttributeTransformer from "#transformers/product_attribute_transformer";
 import { createAttributeValidator, updateAttributeValidator } from "#validators/catalog/attribute_validator";
 
 const ATTRIBUTE_FIELDS = ["name"] as const;
 
+/**
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) so the attributes view
+ * (`useAttributesList` requests `limit=200`) can fetch the whole set in one shot. Uniform across
+ * the taxonomy family.
+ */
+const adminAttributesListValidator = adminAttributesView.compileStrict({
+    extras: { q: vine.string().trim().maxLength(120).optional() },
+    defaultLimit: 100,
+    maxLimit: 500,
+});
+
 export default class AdminAttributesController {
     async index(ctx: HttpContext) {
-        const rows = await ProductAttribute.query().preload("translations").orderBy("id");
-        return collection(ProductAttributeTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"));
+        const parsed = await adminAttributesListValidator.validate(ctx.request.qs());
+        const builder = ProductAttribute.query().preload("translations");
+
+        if (parsed.q !== undefined && parsed.q.length > 0) {
+            const needle = `%${parsed.q.toLowerCase()}%`;
+            builder.where((sub) => {
+                sub.whereILike("product_attributes.code", needle).orWhereIn("product_attributes.id", (nested) => {
+                    nested.select("attribute_id").from("product_attribute_translations").whereRaw("LOWER(name) LIKE ?", [needle]);
+                });
+            });
+        }
+
+        const { data: rows, meta } = await adminAttributesView.run<ProductAttribute>(builder, parsed);
+        const { data } = await collection<unknown>(
+            ProductAttributeTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"),
+        );
+        return { data, meta };
     }
 
     async show(ctx: HttpContext) {

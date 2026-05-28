@@ -8,8 +8,8 @@ import CustomerDownload from "#models/customer_download";
 import User from "#models/user";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { aggregateForCustomerIds, fetchCounts, forSingleCustomer } from "#services/customer_stats_service";
-import { parseDateFilter } from "#services/date_filter_parser";
 import phoneService from "#services/phone_service";
+import { type AdminCustomersViewQuery, adminCustomersView } from "#table_views/admin/customers";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
@@ -19,8 +19,6 @@ import {
     adminCustomerListValidator,
     adminCustomerUpdateValidator,
 } from "#validators/admin/customer_validator";
-
-const DEFAULT_PER_PAGE = 20;
 
 const ORDER_COUNTED_STATUSES = ["pending", "on_hold", "processing", "completed", "refunded"];
 const PAID_ORDER_STATUSES = ["processing", "completed", "refunded"];
@@ -33,9 +31,32 @@ export default class AdminCustomersController {
      * Soft-deleted rows are excluded unless `tab=trashed`.
      */
     async index(ctx: HttpContext) {
-        const payload = await ctx.request.validateUsing(adminCustomerListValidator);
-        const page = payload.page ?? 1;
-        const perPage = payload.perPage ?? DEFAULT_PER_PAGE;
+        /** The validator output carries the TableView parsed query plus this endpoint's
+         * extension surface (tab / q / role / tags / cities / opt-ins / aggregate filters / …)
+         * that can't be modeled as per-field predicates inside the TableView grammar. */
+        const payload = (await ctx.request.validateUsing(adminCustomerListValidator)) as AdminCustomersViewQuery & {
+            q?: string;
+            role?: "customer" | "admin";
+            include_stats?: boolean;
+            tab?: "any" | "account" | "guest" | "big" | "new" | "inactive" | "no_address" | "trashed";
+            cities?: string[];
+            regions?: string[];
+            tags?: string[];
+            email_verified?: boolean;
+            opt_in_email?: boolean;
+            opt_in_sms?: boolean;
+            order_count_min?: number;
+            order_count_max?: number;
+            lifetime_spend_min?: number;
+            lifetime_spend_max?: number;
+            aov_min?: number;
+            aov_max?: number;
+            has_national_id?: boolean;
+            with_orders?: boolean;
+            no_orders?: boolean;
+            last_order_after?: string;
+            last_order_before?: string;
+        };
         const tab = payload.tab ?? "any";
 
         const query = Customer.query().preload("user");
@@ -96,8 +117,8 @@ export default class AdminCustomersController {
             );
         }
 
-        if (payload.search) {
-            const needle = `%${payload.search.toLowerCase()}%`;
+        if (payload.q !== undefined) {
+            const needle = `%${payload.q.toLowerCase()}%`;
             query.where((q) => {
                 q.whereRaw("LOWER(first_name) LIKE ?", [needle])
                     .orWhereRaw("LOWER(last_name) LIKE ?", [needle])
@@ -131,24 +152,6 @@ export default class AdminCustomersController {
             query.whereHas("user", (uq) => uq.where("role", roleFilter));
         } else {
             query.where((q) => q.whereNull("customers.user_id").orWhereHas("user", (uq) => uq.where("role", "customer")));
-        }
-        if (payload.is_paying_customer !== undefined) {
-            query.where("is_paying_customer", payload.is_paying_customer);
-        }
-        if (payload.country) {
-            query.where("country_default", payload.country.toUpperCase());
-        }
-        if (payload.countries && payload.countries.length > 0) {
-            query.whereIn(
-                "country_default",
-                payload.countries.map((c) => c.toUpperCase()),
-            );
-        }
-        if (payload.statuses && payload.statuses.length > 0) {
-            query.whereIn("status", payload.statuses);
-        }
-        if (payload.acquisition_channels && payload.acquisition_channels.length > 0) {
-            query.whereIn("acquisition_channel", payload.acquisition_channels);
         }
         if (payload.tags && payload.tags.length > 0) {
             query.whereExists((sub) =>
@@ -196,14 +199,13 @@ export default class AdminCustomersController {
                     .whereNotNull("national_id"),
             );
         }
-        const createdRange = parseDateFilter(payload.created);
-        if (createdRange?.after !== null && createdRange?.after !== undefined) {
-            query.where("customers.created_at", ">=", createdRange.after);
-        }
-        if (createdRange?.before !== null && createdRange?.before !== undefined) {
-            query.where("customers.created_at", "<=", createdRange.before);
-        }
-        const lastOrderRange = parseDateFilter(payload.last_order);
+        /** `last_order_after` / `last_order_before` are ISO date-time strings emitted by the FE's
+         * date-picker → TableView adapter (`dateFilterValueToTableViewFilter`). The picker writes
+         * inclusive bounds — after = period start at 00:00, before = period end at 23:59:59.999
+         * — so the `>=` / `<=` comparison matches the full trailing day. The calendar layer is
+         * the FE's concern; the server sees ISO Gregorian only. */
+        const lastOrderAfter = payload.last_order_after;
+        const lastOrderBefore = payload.last_order_before;
         const wantOrderFilter =
             payload.with_orders === true ||
             payload.order_count_min !== undefined ||
@@ -212,15 +214,16 @@ export default class AdminCustomersController {
             payload.lifetime_spend_max !== undefined ||
             payload.aov_min !== undefined ||
             payload.aov_max !== undefined ||
-            lastOrderRange !== null;
+            lastOrderAfter !== undefined ||
+            lastOrderBefore !== undefined;
         if (wantOrderFilter) {
             query.whereExists((sub) => {
                 sub.from("orders").whereRaw("orders.customer_id = customers.id").whereIn("status", ORDER_COUNTED_STATUSES);
-                if (lastOrderRange?.after !== null && lastOrderRange?.after !== undefined) {
-                    sub.where("orders.created_at", ">=", lastOrderRange.after);
+                if (lastOrderAfter !== undefined) {
+                    sub.where("orders.created_at", ">=", lastOrderAfter);
                 }
-                if (lastOrderRange?.before !== null && lastOrderRange?.before !== undefined) {
-                    sub.where("orders.created_at", "<=", lastOrderRange.before);
+                if (lastOrderBefore !== undefined) {
+                    sub.where("orders.created_at", "<=", lastOrderBefore);
                 }
             });
         }
@@ -230,10 +233,7 @@ export default class AdminCustomersController {
             );
         }
 
-        const orderBy = this.applySort(query, payload.sort ?? null);
-        const paginator = await query.paginate(page, perPage);
-        const meta = paginator.getMeta();
-        const rows = paginator.all();
+        const { data: rows, meta } = await adminCustomersView.run<Customer>(query, payload);
 
         const statsMap =
             payload.include_stats === true && rows.length > 0
@@ -249,13 +249,7 @@ export default class AdminCustomersController {
                     user: c.user ? new UserTransformer(c.user).forAdmin() : null,
                 };
             }),
-            meta: {
-                page: meta.currentPage,
-                perPage: meta.perPage,
-                total: meta.total,
-                lastPage: meta.lastPage,
-            },
-            sort: orderBy,
+            meta,
         };
     }
 
@@ -588,25 +582,6 @@ export default class AdminCustomersController {
                 user: customer.user ? new UserTransformer(customer.user).forAdmin() : null,
             },
         };
-    }
-
-    private applySort(query: ReturnType<typeof Customer.query>, sort: string | null): string {
-        const direction: "asc" | "desc" = sort?.startsWith("-") ? "desc" : "asc";
-        const column = (sort ?? "").replace(/^-/, "");
-        switch (column) {
-            case "last_name":
-                query.orderBy("last_name", direction).orderBy("first_name", direction);
-                return `${direction === "desc" ? "-" : ""}last_name`;
-            case "created_at":
-                query.orderBy("customers.created_at", direction);
-                return `${direction === "desc" ? "-" : ""}created_at`;
-            case "last_seen_at":
-                query.orderBy("customers.last_seen_at", direction);
-                return `${direction === "desc" ? "-" : ""}last_seen_at`;
-            default:
-                query.orderBy("customers.id", "desc");
-                return "-id";
-        }
     }
 
     private async findOrFail(id: unknown): Promise<Customer> {

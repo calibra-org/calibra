@@ -25,7 +25,7 @@ type SdkAdminCustomer = Schemas["AdminCustomer"];
 
 interface SdkPaginated<T> {
     data: T[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -39,12 +39,12 @@ type OrderQueryOptions<TSelected> = Omit<UseQueryOptions<AdminOrder[], Error, TS
  * matches the previous server-side aggregation — enough rows for a 14-day sales chart at typical
  * traffic without paging the API.
  */
-function useAdminOrdersQuery<TSelected = AdminOrder[]>(perPage = 100, options: OrderQueryOptions<TSelected> = {}) {
+function useAdminOrdersQuery<TSelected = AdminOrder[]>(limit = 100, options: OrderQueryOptions<TSelected> = {}) {
     const locale = useLocale() as Locale;
     return useQuery<AdminOrder[], Error, TSelected>({
-        queryKey: ["dashboard", "orders", { locale, perPage }],
+        queryKey: ["dashboard", "orders", { locale, limit }],
         queryFn: async () => {
-            const payload = await apiGet<SdkPaginated<SdkAdminOrderListRow>>("orders", { locale, query: { perPage } });
+            const payload = await apiGet<SdkPaginated<SdkAdminOrderListRow>>("orders", { locale, query: { limit } });
             return (payload.data ?? []).map(toAdminOrderListRow);
         },
         ...options,
@@ -53,12 +53,12 @@ function useAdminOrdersQuery<TSelected = AdminOrder[]>(perPage = 100, options: O
 
 type CustomerQueryOptions<TSelected> = Omit<UseQueryOptions<AdminCustomer[], Error, TSelected>, "queryKey" | "queryFn">;
 
-function useAdminCustomersQuery<TSelected = AdminCustomer[]>(perPage = 10, options: CustomerQueryOptions<TSelected> = {}) {
+function useAdminCustomersQuery<TSelected = AdminCustomer[]>(limit = 10, options: CustomerQueryOptions<TSelected> = {}) {
     const locale = useLocale() as Locale;
     return useQuery<AdminCustomer[], Error, TSelected>({
-        queryKey: ["dashboard", "customers", { locale, perPage }],
+        queryKey: ["dashboard", "customers", { locale, limit }],
         queryFn: async () => {
-            const payload = await apiGet<SdkPaginated<SdkAdminCustomer>>("customers", { locale, query: { perPage } });
+            const payload = await apiGet<SdkPaginated<SdkAdminCustomer>>("customers", { locale, query: { limit } });
             return (payload.data ?? []).map(toAdminCustomer);
         },
         ...options,
@@ -150,7 +150,7 @@ export function useActiveProductsCount() {
         queryFn: async () => {
             const payload = await apiGet<SdkPaginated<SdkAdminProduct>>("products", {
                 locale,
-                query: { perPage: 1, status: "published" },
+                query: { limit: 1, status: "published" },
             });
             return payload.meta?.total ?? 0;
         },

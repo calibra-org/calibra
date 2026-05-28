@@ -2,16 +2,28 @@ import type { HttpContext } from "@adonisjs/core/http";
 
 import ProductShippingClass from "#models/product_shipping_class";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
+import { adminShippingClassesView } from "#table_views/admin/shipping_classes";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductShippingClassTransformer from "#transformers/product_shipping_class_transformer";
 import { createShippingClassValidator, updateShippingClassValidator } from "#validators/catalog/taxonomy_validator";
 
 const SHIPPING_FIELDS = ["name", "description"] as const;
 
+/**
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) so shipping-class
+ * selectors fetch the whole set in one shot. Uniform across the catalog family.
+ */
+const adminShippingClassesListValidator = adminShippingClassesView.compileStrict({ defaultLimit: 100, maxLimit: 500 });
+
 export default class AdminShippingClassesController {
     async index(ctx: HttpContext) {
-        const rows = await ProductShippingClass.query().preload("translations").orderBy("menu_order").orderBy("id");
-        return collection(ProductShippingClassTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"));
+        const parsed = await adminShippingClassesListValidator.validate(ctx.request.qs());
+        const builder = ProductShippingClass.query().preload("translations");
+        const { data: rows, meta } = await adminShippingClassesView.run<ProductShippingClass>(builder, parsed);
+        const { data } = await collection<unknown>(
+            ProductShippingClassTransformer.transform(rows, ctx.i18n.locale).useVariant("forAdmin"),
+        );
+        return { data, meta };
     }
 
     async show(ctx: HttpContext) {

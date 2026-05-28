@@ -124,7 +124,7 @@ test.group("/api/v1/admin/media", (group) => {
         await seedRow({ filename: "summer.jpg", title: "Summer day", alt: "winter spirit in summer" });
         await seedRow({ filename: "spring.jpg", title: "Bloom" });
 
-        const response = await client.get("/api/v1/admin/media").qs({ search: "winter" }).withGuard("api").loginAs(admin);
+        const response = await client.get("/api/v1/admin/media").qs({ q: "winter" }).withGuard("api").loginAs(admin);
         response.assertStatus(200);
         response.assertAgainstApiSpec();
         const body = response.body() as { data: Array<{ filename: string }> };

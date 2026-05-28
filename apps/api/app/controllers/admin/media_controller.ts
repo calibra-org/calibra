@@ -1,12 +1,32 @@
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
+import vine from "@vinejs/vine";
 import { DateTime } from "luxon";
 
 import Media from "#models/media";
 import { deleteFile, save } from "#services/media_storage";
-import { paginated, resource } from "#transformers/api_envelope";
+import { adminMediaView } from "#table_views/admin/media";
+import { collection, resource } from "#transformers/api_envelope";
 import MediaTransformer from "#transformers/media_transformer";
 import { updateMediaValidator } from "#validators/admin/media_validator";
+
+/** Strict mode: declares the bespoke top-level extras that don't fit per-column filtering
+ * (`q` is multi-column ILIKE; `type` is a MIME-group keyword; `month` is a YYYY-MM window;
+ * `uploaded_by` is a controller-side scope). Default page size is 60 (the media grid's natural
+ * row count — ~5 rows of 12 cards). */
+const adminMediaListValidator = adminMediaView.compileStrict({
+    extras: {
+        q: vine.string().trim().maxLength(120).optional(),
+        type: vine.string().trim().maxLength(40).optional(),
+        month: vine
+            .string()
+            .trim()
+            .regex(/^\d{4}-\d{2}$/)
+            .optional(),
+        uploaded_by: vine.number().positive().optional(),
+    },
+    defaultLimit: 60,
+});
 
 /** Maps the WordPress-style filter token to a Postgres-friendly MIME prefix check. */
 const MIME_GROUPS = {
@@ -46,9 +66,6 @@ const MIME_GROUPS = {
 
 type FilterType = keyof typeof MIME_GROUPS | "unattached" | "mine" | "all";
 
-const MAX_PER_PAGE = 200;
-const DEFAULT_PER_PAGE = 60;
-
 /**
  * Admin media library controller. Powers `/api/v1/admin/media`. The listing supports the same
  * filters the WordPress media library does (type, month, search, attached, "mine") so the
@@ -62,12 +79,7 @@ export default class AdminMediaController {
     /** `GET /api/v1/admin/media` — paginated listing with filters. */
     async index(ctx: HttpContext) {
         const { request, auth } = ctx;
-        const page = Math.max(1, Number(request.input("page", 1)) || 1);
-        const perPageRaw = Number(request.input("per_page", request.input("perPage", DEFAULT_PER_PAGE)));
-        const perPage = Math.min(
-            MAX_PER_PAGE,
-            Math.max(1, Number.isFinite(perPageRaw) && perPageRaw > 0 ? perPageRaw : DEFAULT_PER_PAGE),
-        );
+        const parsed = await adminMediaListValidator.validate(request.qs());
 
         const query = Media.query();
 
@@ -97,9 +109,9 @@ export default class AdminMediaController {
             }
         }
 
-        const search = String(request.input("search", "")).trim();
-        if (search.length > 0) {
-            const needle = `%${search.toLowerCase()}%`;
+        const q = String(request.input("q", "")).trim();
+        if (q.length > 0) {
+            const needle = `%${q.toLowerCase()}%`;
             query.where((sub) => {
                 sub.whereRaw("LOWER(filename) like ?", [needle])
                     .orWhereRaw("LOWER(title) like ?", [needle])
@@ -113,10 +125,9 @@ export default class AdminMediaController {
             query.where("uploaded_by_user_id", uploadedBy);
         }
 
-        query.orderBy("created_at", "desc").orderBy("id", "desc");
-
-        const paginator = await query.paginate(page, perPage);
-        return paginated(MediaTransformer.transform(paginator.all()), paginator);
+        const { data: rows, meta } = await adminMediaView.run<Media>(query, parsed);
+        const { data } = await collection<unknown>(MediaTransformer.transform(rows));
+        return { data, meta };
     }
 
     /** `GET /api/v1/admin/media/months` — distinct `YYYY-MM` buckets, for the date dropdown. */

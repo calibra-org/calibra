@@ -32,7 +32,7 @@ export function ImportHistory(): React.JSX.Element {
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await listImportHistory(locale, { perPage: 50 });
+            const response = await listImportHistory(locale, { limit: 50 });
             setRows(response.data);
         } finally {
             setLoading(false);

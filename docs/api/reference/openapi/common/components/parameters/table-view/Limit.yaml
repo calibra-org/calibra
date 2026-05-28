@@ -1,0 +1,9 @@
+name: limit
+in: query
+description: Items per page. Capped at 100. Defaults to 20.
+required: false
+schema:
+    type: integer
+    minimum: 1
+    maximum: 100
+    default: 20

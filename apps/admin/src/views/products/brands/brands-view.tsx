@@ -62,7 +62,7 @@ export function BrandsView({ initialRows }: BrandsViewProps) {
      * `useBrandsList` to refetch on focus or after mutations.
      */
     useEffect(() => {
-        const key = seedBrandsListKey({ locale, perPage: 200 });
+        const key = seedBrandsListKey({ locale, limit: 200 });
         const existing = queryClient.getQueryData(key);
         if (existing !== undefined) return;
         queryClient.setQueryData(key, {
@@ -74,7 +74,7 @@ export function BrandsView({ initialRows }: BrandsViewProps) {
                 image_media_id: row.imageMediaId,
                 image_url: row.logoUrl,
             })),
-            meta: { page: 1, perPage: 200, total: initialRows.length, lastPage: 1 },
+            meta: { page: 1, limit: 200, total: initialRows.length, lastPage: 1 },
         });
         /**
          * Stash the resolved counts in a side cache because the SDK payload doesn't carry
@@ -83,7 +83,7 @@ export function BrandsView({ initialRows }: BrandsViewProps) {
         queryClient.setQueryData(["admin", "brands", "counts", locale], productCountMap(initialRows));
     }, [initialRows, locale, queryClient]);
 
-    const query = useBrandsList({ perPage: 200 });
+    const query = useBrandsList({ limit: 200 });
     const counts = queryClient.getQueryData<Map<number, number>>(["admin", "brands", "counts", locale]);
 
     /**

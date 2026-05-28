@@ -70,7 +70,7 @@ test.group("/api/v1/admin/payment-attempts", (group) => {
 
         const filtered = await client
             .get("/api/v1/admin/payment-attempts")
-            .qs({ gateway_code: "zarinpal" })
+            .qs({ "filter[]": "gateway_code_snapshot:eq:zarinpal" })
             .withGuard("api")
             .loginAs(admin);
         filtered.assertStatus(200);

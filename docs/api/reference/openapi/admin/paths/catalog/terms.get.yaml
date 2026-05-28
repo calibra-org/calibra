@@ -1,13 +1,26 @@
 operationId: adminTermsIndex
 summary: List terms under an attribute
-description: Paginated list of every term nested under the given attribute.
+description: >
+    Paginated list of every term nested under the given attribute, on the unified TableView
+    grammar. Parent-id scope is pre-applied on the builder; `?filter[]=attribute_id:eq:N`
+    cannot cross-walk between attributes.
+
+    **TableView filterable fields**: `id`, `menu_order`, `created_at`.
+
+    **TableView orderable fields**: `id`, `menu_order`, `created_at`.
+
+    Default page size is 100.
 tags: [Admin / Catalog / Attribute Terms]
 
 parameters:
     - { name: attribute_id, in: path, required: true, schema: { type: integer } }
-    - $ref: "../../../common/components/parameters/PageQuery.yaml"
-    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit500.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: q, in: query, schema: { type: string, maxLength: 120 }, description: "Multi-column ILIKE across slug + translated name." }
 
 responses:
     "200":

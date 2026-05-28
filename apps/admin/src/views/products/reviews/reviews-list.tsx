@@ -14,9 +14,9 @@ import {
     DataTable,
     DataTableToolbar,
     DataTableViewOptions,
-    type FacetedFilterDef,
+    useColumnState,
+    useSelectionState,
 } from "#/components/ui/data-grid";
-import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { toast } from "#/components/ui/toast";
@@ -24,6 +24,14 @@ import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
 import { useDeleteReviews, useModerateReview, useRestoreReviews, useTrashReviews } from "#/lib/reviews/mutations";
 import { useReviewCountsByStatus, useReviewsList } from "#/lib/reviews/queries";
+import {
+    type FacetColumnMap,
+    singleSortToTableView,
+    tableViewToSingleSort,
+    useFacetValuesFromQuery,
+    useSetFacetValue,
+    useTableView,
+} from "#/lib/table-view";
 import type { AdminReview, ReviewStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
@@ -44,6 +52,17 @@ const TABLE_ID = "products.reviews";
 const STATUS_TABS: (ReviewStatus | "any")[] = ["any", "pending", "approved", "spam", "trash"];
 
 /**
+ * Reviews has NO controller extras (`compileStrict()`), so every server-bound facet must ride the
+ * grammar as `filter[]`. `rating` and `product` (→ `product_id`) project onto columns here; the
+ * status tab and the `verified` toggle are handled inline (status because of the spam/trash split,
+ * verified because it's a boolean column toggle).
+ */
+const FACET_COLUMN_MAP: FacetColumnMap = {
+    rating: { field: "rating", op: "eq" },
+    product: { field: "product_id", op: "eq" },
+};
+
+/**
  * Top-level client component for the Reviews moderation page. Mirrors the products list shape —
  * URL-backed pagination/sort/filter via {@link useDataTable}, status tabs, faceted toolbar, an
  * inline Reply/Quick-Edit sub-row, and a bulk-action bar tailored to the active tab.
@@ -60,62 +79,74 @@ export function ReviewsList() {
 
     const { facets, toggles } = useReviewFiltersConfig();
 
-    /**
-     * Same trick as the products list: status drives the tab strip but it still needs a URL
-     * facet so `setFacetValues("status", …)` from `onTabChange` round-trips through nuqs. Empty
-     * `options` prevents it from also rendering as a popover.
-     */
-    const facetsWithStatus = useMemo<FacetedFilterDef[]>(
-        () => [...facets, { paramKey: "status", label: "status", multiple: false, options: [] }],
-        [facets],
-    );
+    /** Reviews carries NO server extras, so the URL holds only the grammar (filter[]/sort[]/page/
+     *  limit). `q` (search) and the spam-vs-trash split are CLIENT-only local state — putting them
+     *  on the URL-as-wire model would 422 (search) or can't be distinguished server-side (both
+     *  spam and trash are `status=rejected`). */
+    const tv = useTableView();
+    const [q, setQ] = useState("");
+    const [rejectedView, setRejectedView] = useState<"spam" | "trash">("spam");
 
-    const tableState = useDataTable({
-        id: TABLE_ID,
-        facets: facetsWithStatus,
-        toggles,
-        defaultColumnVisibility: {},
-    });
+    const ui = useColumnState({ id: TABLE_ID, defaultColumnVisibility: {} });
+    const selection = useSelectionState();
+
+    /** The tab's server half lives in `filter[]=status:eq:…`; the spam/trash sub-split is the
+     *  client `rejectedView`. `pending`/`approved`/`rejected` are the only server status values. */
+    const serverStatus = useMemo(() => {
+        const entry = tv.query.filter.find((f) => f.field === "status" && f.op === "eq");
+        return typeof entry?.value === "string" ? entry.value : undefined;
+    }, [tv.query.filter]);
 
     const status: ReviewStatus | "any" = useMemo(() => {
-        const value = tableState.facetValues.status?.[0];
-        if (value === "pending" || value === "approved" || value === "spam" || value === "trash") return value;
+        if (serverStatus === "pending") return "pending";
+        if (serverStatus === "approved") return "approved";
+        if (serverStatus === "rejected") return rejectedView;
         return "any";
-    }, [tableState.facetValues.status]);
+    }, [serverStatus, rejectedView]);
 
-    const ratingValue = (() => {
-        const value = tableState.facetValues.rating?.[0];
-        const n = Number(value);
-        return Number.isFinite(n) && n >= 1 && n <= 5 ? (n as 1 | 2 | 3 | 4 | 5) : undefined;
-    })();
-    const productIdValue = (() => {
-        const value = tableState.facetValues.product?.[0];
-        if (value === undefined) return undefined;
-        const n = Number(value);
-        return Number.isFinite(n) ? n : undefined;
-    })();
-    const verifiedOnly = tableState.toggleValues.verified === true ? true : undefined;
+    /** `rating` + `product` project onto `filter[]`; `verified` is a boolean column toggle. */
+    const facetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
+    const setFacetValues = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
+
+    const verifiedActive = useMemo(
+        () => tv.query.filter.some((f) => f.field === "verified" && f.op === "eq" && f.value === true),
+        [tv.query.filter],
+    );
+    const toggleValues = useMemo<Record<string, boolean>>(() => ({ verified: verifiedActive }), [verifiedActive]);
+    const setToggleValue = useCallback(
+        (key: string, value: boolean) => {
+            if (key !== "verified") return;
+            const others = tv.query.filter.filter((f) => f.field !== "verified");
+            tv.setFilter(value ? [...others, { field: "verified", op: "eq", value: true }] : others);
+        },
+        [tv],
+    );
+
+    const sort = tableViewToSingleSort(tv.query.sort);
+    const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
 
     const { data: statusCounts } = useReviewCountsByStatus();
 
     const { data, isPending, isError, refetch } = useReviewsList({
-        page: tableState.page,
-        perPage: tableState.perPage,
-        sort:
-            tableState.sort !== undefined
-                ? tableState.sort.direction === "desc"
-                    ? `-${tableState.sort.id}`
-                    : tableState.sort.id
-                : undefined,
-        status,
-        rating: ratingValue,
-        productId: productIdValue,
-        verified: verifiedOnly,
-        search: tableState.q.length > 0 ? tableState.q : undefined,
+        query: tv.query,
+        search: q.length > 0 ? q : undefined,
+        tab: status,
     });
 
     const baseRows = data?.data ?? [];
-    const meta = data?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+    const meta = data?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
+
+    const hasActiveFilters = useMemo(
+        () => q.length > 0 || (facetValues.rating?.length ?? 0) > 0 || (facetValues.product?.length ?? 0) > 0 || verifiedActive,
+        [q, facetValues.rating, facetValues.product, verifiedActive],
+    );
+
+    /** Clear the toolbar filters (search + rating/product/verified) but keep the status tab — drop
+     *  every `filter[]` entry except the `status` one that drives the tab strip. */
+    const clearAllFilters = useCallback(() => {
+        setQ("");
+        tv.setFilter(tv.query.filter.filter((f) => f.field === "status"));
+    }, [tv]);
 
     /**
      * Rows that have been trashed or marked-as-spam through the row UI sit in this map. The
@@ -154,8 +185,8 @@ export function ReviewsList() {
     }, []);
 
     const onHideColumn = useCallback(
-        (id: string) => tableState.setColumnVisibility({ ...tableState.columnVisibility, [id]: false }),
-        [tableState.setColumnVisibility, tableState.columnVisibility],
+        (id: string) => ui.setColumnVisibility({ ...ui.columnVisibility, [id]: false }),
+        [ui.setColumnVisibility, ui.columnVisibility],
     );
 
     const moderate = useModerateReview();
@@ -284,8 +315,8 @@ export function ReviewsList() {
         () =>
             buildReviewColumns({
                 locale,
-                sort: tableState.sort,
-                onSort: tableState.setSort,
+                sort,
+                onSort: setSort,
                 onHideColumn,
                 onToggleQuickEdit: (rowId) => onToggleQuickEdit(rowId, "edit"),
                 onApprove,
@@ -320,8 +351,8 @@ export function ReviewsList() {
             onUnspam,
             statusT,
             t,
-            tableState.setSort,
-            tableState.sort,
+            sort,
+            setSort,
         ],
     );
 
@@ -343,7 +374,7 @@ export function ReviewsList() {
     const activeChips = useMemo(() => {
         const out: { key: string; value: string; label: string }[] = [];
         for (const facet of facets) {
-            const values = tableState.facetValues[facet.paramKey] ?? [];
+            const values = facetValues[facet.paramKey] ?? [];
             for (const value of values) {
                 const option = facet.options.find((opt) => opt.value === value);
                 const label = typeof option?.label === "string" ? option.label : value;
@@ -351,15 +382,27 @@ export function ReviewsList() {
             }
         }
         return out;
-    }, [facets, tableState.facetValues]);
+    }, [facets, facetValues]);
 
-    const onTabChange = (value: string) => {
-        if (value === "any") {
-            tableState.setFacetValues("status", []);
-            return;
-        }
-        tableState.setFacetValues("status", [value]);
-    };
+    /** Map a tab click to the server status `filter[]` entry (+ the client spam/trash split).
+     *  `spam` and `trash` both narrow the server to `status=rejected`; the local `rejectedView`
+     *  picks which the adapter-split rows render. */
+    const onTabChange = useCallback(
+        (value: string) => {
+            const others = tv.query.filter.filter((f) => f.field !== "status");
+            if (value === "any") {
+                tv.setFilter(others);
+                return;
+            }
+            if (value === "pending" || value === "approved") {
+                tv.setFilter([...others, { field: "status", op: "eq", value }]);
+                return;
+            }
+            setRejectedView(value === "trash" ? "trash" : "spam");
+            tv.setFilter([...others, { field: "status", op: "eq", value: "rejected" }]);
+        },
+        [tv],
+    );
 
     const headerSubtitle =
         data === undefined ? t("loadingTotal") : t("totalReviews", { count: formatNumber(meta.total, locale) });
@@ -412,23 +455,23 @@ export function ReviewsList() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                perPageOptions={tableState.perPageOptions}
-                onPageChange={tableState.setPage}
-                onPerPageChange={tableState.setPerPage}
-                sort={tableState.sort}
-                onSortChange={tableState.setSort}
-                selectedIds={tableState.selectedIds}
-                onSelectedIdsChange={tableState.setSelected}
-                columnVisibility={tableState.columnVisibility}
-                onColumnVisibilityChange={tableState.setColumnVisibility}
-                columnOrder={tableState.columnOrder}
-                onColumnOrderChange={tableState.setColumnOrder}
-                density={tableState.density}
+                limitOptions={[10, 20, 50, 100]}
+                onPageChange={tv.setPage}
+                onLimitChange={tv.setLimit}
+                sort={sort}
+                onSortChange={setSort}
+                selectedIds={selection.selectedIds}
+                onSelectedIdsChange={selection.setSelected}
+                columnVisibility={ui.columnVisibility}
+                onColumnVisibilityChange={ui.setColumnVisibility}
+                columnOrder={ui.columnOrder}
+                onColumnOrderChange={ui.setColumnOrder}
+                density={ui.density}
                 isLoading={isPending}
                 isError={isError}
                 onRetry={() => refetch()}
-                hasActiveFilters={tableState.hasActiveFilters}
-                onClearFilters={tableState.clearAllFilters}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearAllFilters}
                 expandedRowId={expandedRowId}
                 onExpandedRowIdChange={setExpandedRowId}
                 renderSubComponent={(row: Row<AdminReview>) => (
@@ -453,16 +496,16 @@ export function ReviewsList() {
                     <div className="flex flex-col gap-2">
                         <DataTableToolbar
                             searchPlaceholder={t("searchPlaceholder")}
-                            q={tableState.q}
-                            onQChange={tableState.setQ}
+                            q={q}
+                            onQChange={setQ}
                             facets={facets}
-                            facetValues={tableState.facetValues}
-                            onFacetValuesChange={tableState.setFacetValues}
+                            facetValues={facetValues}
+                            onFacetValuesChange={setFacetValues}
                             toggles={toggles}
-                            toggleValues={tableState.toggleValues}
-                            onToggleChange={tableState.setToggleValue}
-                            hasActiveFilters={tableState.hasActiveFilters}
-                            onClearAll={tableState.clearAllFilters}
+                            toggleValues={toggleValues}
+                            onToggleChange={setToggleValue}
+                            hasActiveFilters={hasActiveFilters}
+                            onClearAll={clearAllFilters}
                             onRefresh={() => {
                                 void queryClient.invalidateQueries({ queryKey: ["admin", "reviews", "list"] });
                             }}
@@ -475,10 +518,10 @@ export function ReviewsList() {
                             rightSlot={
                                 <DataTableViewOptions
                                     columns={columnVisibilityItems}
-                                    visibility={tableState.columnVisibility}
-                                    onVisibilityChange={tableState.setColumnVisibility}
-                                    density={tableState.density}
-                                    onDensityChange={tableState.setDensity}
+                                    visibility={ui.columnVisibility}
+                                    onVisibilityChange={ui.setColumnVisibility}
+                                    density={ui.density}
+                                    onDensityChange={ui.setDensity}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),
@@ -495,8 +538,8 @@ export function ReviewsList() {
                         <ActiveFilterChips
                             chips={activeChips}
                             onRemove={(key, value) => {
-                                const current = tableState.facetValues[key] ?? [];
-                                tableState.setFacetValues(
+                                const current = facetValues[key] ?? [];
+                                setFacetValues(
                                     key,
                                     current.filter((item) => item !== value),
                                 );

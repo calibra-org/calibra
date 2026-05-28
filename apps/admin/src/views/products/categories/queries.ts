@@ -13,7 +13,7 @@ type SdkAdminTaxonomy = Schemas["AdminTaxonomy"];
 
 interface CategoryListEnvelope {
     data: SdkAdminTaxonomy[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 interface CategoryResourceEnvelope {
@@ -41,7 +41,7 @@ const LIST_KEY = ["admin", "categories", "list"] as const;
 
 export interface CategoriesListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     search?: string;
 }
 
@@ -59,14 +59,14 @@ export interface CategoriesListParams {
 export function useCategoriesList(params: CategoriesListParams = {}) {
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
-    const perPage = params.perPage ?? 200;
+    const limit = params.limit ?? 200;
     const search = params.search;
     return useQuery<CategoryListEnvelope, Error, Paginated<AdminCategory>>({
-        queryKey: ["admin", "categories", "list", { locale, page, perPage, search }],
-        queryFn: () => apiGet<CategoryListEnvelope>("categories", { locale, query: { page, perPage, search } }),
+        queryKey: ["admin", "categories", "list", { locale, page, limit, search }],
+        queryFn: () => apiGet<CategoryListEnvelope>("categories", { locale, query: { page, limit, q: search } }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminCategory),
-            meta: payload.meta ?? { page, perPage, total: payload.data?.length ?? 0, lastPage: 1 },
+            meta: payload.meta ?? { page, limit, total: payload.data?.length ?? 0, lastPage: 1 },
         }),
     });
 }

@@ -1,7 +1,7 @@
 operationId: adminCouponsExport
 summary: Export coupons as CSV (admin)
 description: >
-    Sync CSV export. Mirrors the list endpoint's filter set (`tab`, `status`, `search`,
+    Sync CSV export. Mirrors the list endpoint's filter set (`tab`, `status`, `q`,
     `discount_type`, `brand`) so the caller can "export current view." Returns
     `text/csv; charset=utf-8` with a filename hint via `content-disposition`. The number of rows
     emitted is repeated in the `X-Coupon-Export-Count` response header so the client can show a
@@ -11,7 +11,7 @@ parameters:
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: tab, in: query, schema: { type: string, enum: [any, active, disabled, expired, scheduled, used, trashed] } }
     - { name: status, in: query, schema: { type: string, enum: [active, disabled] } }
-    - { name: search, in: query, schema: { type: string } }
+    - { name: q, in: query, schema: { type: string } }
     - {
           name: discount_type,
           in: query,

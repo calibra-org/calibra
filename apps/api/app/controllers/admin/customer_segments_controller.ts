@@ -3,18 +3,22 @@ import type { HttpContext } from "@adonisjs/core/http";
 import { DateTime } from "luxon";
 
 import CustomerSegment from "#models/customer_segment";
+import { adminCustomerSegmentsView } from "#table_views/admin/customer_segments";
 import CustomerSegmentTransformer from "#transformers/customer_segment_transformer";
 import { adminCustomerSegmentValidator } from "#validators/admin/customer_validator";
+
+const adminCustomerSegmentsListValidator = adminCustomerSegmentsView.compileStrict({ defaultLimit: 100 });
 
 export default class AdminCustomerSegmentsController {
     /** GET /api/v1/admin/customer-segments — owner-scoped; pinned first then by name. */
     async index(ctx: HttpContext) {
         const auth = await ctx.auth.authenticate();
-        const segments = await CustomerSegment.query()
-            .where("user_id", Number(auth.id))
-            .orderBy("is_pinned", "desc")
-            .orderBy("name", "asc");
-        return { data: segments.map((s) => new CustomerSegmentTransformer(s).toObject()) };
+        const parsed = await adminCustomerSegmentsListValidator.validate(ctx.request.qs());
+        /** Owner-scope pre-applied as a security invariant — a forged `?filter[]=user_id:eq:N`
+         * cannot read another operator's saved segments. */
+        const builder = CustomerSegment.query().where("user_id", Number(auth.id));
+        const { data: rows, meta } = await adminCustomerSegmentsView.run<CustomerSegment>(builder, parsed);
+        return { data: rows.map((s) => new CustomerSegmentTransformer(s).toObject()), meta };
     }
 
     async store(ctx: HttpContext) {

@@ -13,7 +13,7 @@ type SdkAdminTaxonomy = Schemas["AdminTaxonomy"];
 
 interface TermListEnvelope {
     data: SdkAdminTaxonomy[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 interface TermResourceEnvelope {
@@ -39,7 +39,7 @@ const listKey = (attributeId: number) => ["admin", "attribute-terms", attributeI
 export interface TermsListParams {
     attributeId: number;
     page?: number;
-    perPage?: number;
+    limit?: number;
     search?: string;
 }
 
@@ -52,14 +52,14 @@ export function useAttributeTermsList(params: TermsListParams): UseQueryResult<A
     const locale = useLocale() as Locale;
     const { attributeId } = params;
     const page = params.page ?? 1;
-    const perPage = params.perPage ?? 200;
+    const limit = params.limit ?? 200;
     const search = params.search;
     return useQuery<TermListEnvelope, Error, AdminAttributeTerm[]>({
-        queryKey: ["admin", "attribute-terms", attributeId, "list", { locale, page, perPage, search }],
+        queryKey: ["admin", "attribute-terms", attributeId, "list", { locale, page, limit, search }],
         queryFn: () =>
             apiGet<TermListEnvelope>(`attributes/${attributeId}/terms`, {
                 locale,
-                query: { page, perPage, search },
+                query: { page, limit, q: search },
             }),
         select: (payload) => (payload.data ?? []).map((row) => toAdminTerm(attributeId, row)),
         staleTime: 30_000,
@@ -237,11 +237,11 @@ export function useBulkDeleteAttributeTerms() {
 export function seedAttributeTermsListKey({
     attributeId,
     locale,
-    perPage,
+    limit,
 }: {
     attributeId: number;
     locale: Locale;
-    perPage: number;
+    limit: number;
 }) {
-    return ["admin", "attribute-terms", attributeId, "list", { locale, page: 1, perPage, search: undefined }] as const;
+    return ["admin", "attribute-terms", attributeId, "list", { locale, page: 1, limit, search: undefined }] as const;
 }

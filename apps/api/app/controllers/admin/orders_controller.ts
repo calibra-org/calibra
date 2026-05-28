@@ -12,9 +12,9 @@ import PaymentGateway from "#models/payment_gateway";
 import Product from "#models/product";
 import ProductVariation from "#models/product_variation";
 import { CacheInvalidation } from "#services/cache_invalidation";
-import { parseDateFilter } from "#services/date_filter_parser";
 import { orderNumberService } from "#services/order_number_service";
 import { orderStateMachine } from "#services/order_state_machine";
+import { type AdminOrdersViewQuery, adminOrdersView } from "#table_views/admin/orders";
 import OrderTransformer from "#transformers/order_transformer";
 import {
     adminOrderBatchValidator,
@@ -25,8 +25,6 @@ import {
     adminOrderUpdateValidator,
 } from "#validators/admin/order_validator";
 
-const DEFAULT_PER_PAGE = 20;
-
 /**
  * Admin CRUD over `orders`. List + search + filter, single-resource show, manual creation, header
  * patches, soft-delete, status transitions (delegated to `OrderStateMachine`), and a batch
@@ -35,63 +33,36 @@ const DEFAULT_PER_PAGE = 20;
  */
 export default class AdminOrdersController {
     async index(ctx: HttpContext) {
-        const payload = await ctx.request.validateUsing(adminOrderListValidator);
-        const page = payload.page ?? 1;
-        const perPage = payload.perPage ?? DEFAULT_PER_PAGE;
-        const sort = parseSort(payload.sort);
-        const includeTrashed = payload.status === "trashed";
+        /** Validator output is the view's parsed query plus the endpoint's `q` + `trashed`
+         * extensions — the latter two aren't expressible as TableView fields (multi-column ILIKE
+         * + a controller-side scope flip respectively), so they pass through here. */
+        const payload = (await ctx.request.validateUsing(adminOrderListValidator)) as AdminOrdersViewQuery & {
+            q?: string;
+            trashed?: boolean;
+        };
 
-        const query = Order.query();
-        if (!includeTrashed) query.whereNull("orders.deleted_at");
-        else query.whereNotNull("orders.deleted_at");
+        const builder = Order.query();
+        if (payload.trashed === true) builder.whereNotNull("orders.deleted_at");
+        else builder.whereNull("orders.deleted_at");
 
-        if (payload.status && payload.status !== "trashed") query.where("status", payload.status);
-        if (payload.customer_id !== undefined) query.where("customer_id", payload.customer_id);
-        if (payload.created_via) query.where("created_via", payload.created_via);
-        if (payload.source && payload.source.length > 0) query.whereIn("created_via", payload.source);
-        if (payload.payment && payload.payment.length > 0) query.whereIn("payment_method_code_snapshot", payload.payment);
-        if (payload.country && payload.country.length > 0) {
-            const upper = payload.country.map((code) => code.toUpperCase());
-            query.whereExists((sub) => {
-                sub.from("order_addresses")
-                    .whereRaw('"order_addresses"."order_id" = "orders"."id"')
-                    .where("kind", "billing")
-                    .whereIn(db.raw('UPPER("order_addresses"."country")') as unknown as string, upper);
-            });
-        }
-        if (payload.search) {
-            const needle = `%${payload.search.toLowerCase()}%`;
-            const numeric = Number(payload.search);
-            query.where((q) => {
-                q.whereRaw("LOWER(COALESCE(billing_email, '')) LIKE ?", [needle]);
+        if (payload.q !== undefined) {
+            const needle = `%${payload.q.toLowerCase()}%`;
+            const numeric = Number(payload.q);
+            builder.where((sub) => {
+                sub.whereRaw("LOWER(COALESCE(orders.billing_email, '')) LIKE ?", [needle]);
                 if (Number.isFinite(numeric)) {
-                    q.orWhere("order_number", numeric).orWhere("id", numeric);
+                    sub.orWhere("orders.order_number", numeric).orWhere("orders.id", numeric);
                 }
             });
         }
-        const createdRange = parseDateFilter(payload.created);
-        if (createdRange?.after !== null && createdRange?.after !== undefined) {
-            query.where("created_at", ">=", createdRange.after);
-        }
-        if (createdRange?.before !== null && createdRange?.before !== undefined) {
-            query.where("created_at", "<=", createdRange.before);
-        }
 
-        query.preload("lineItems").preload("couponLines");
-        query.orderBy(sort.column, sort.direction);
-        if (sort.column !== "id") query.orderBy("id", "desc");
+        builder.preload("lineItems").preload("couponLines");
 
-        const paginator = await query.paginate(page, perPage);
-        const meta = paginator.getMeta();
+        const { data, meta } = await adminOrdersView.run<Order>(builder, payload);
 
         return {
-            data: paginator.all().map((o) => new OrderTransformer(o).forList()),
-            meta: {
-                page: meta.currentPage,
-                perPage: meta.perPage,
-                total: meta.total,
-                lastPage: meta.lastPage,
-            },
+            data: data.map((o) => new OrderTransformer(o).forList()),
+            meta,
         };
     }
 
@@ -412,30 +383,3 @@ export default class AdminOrdersController {
         await order.load("meta");
     }
 }
-
-/**
- * Maps the wire `sort=` field (e.g. `date`, `-total`, `order`) to a `(column, direction)` pair
- * the query builder understands. Hyphen prefix → descending. Unknown columns fall back to
- * `(id, desc)` so a stale URL parameter never throws.
- */
-function parseSort(raw: string | null | undefined): { column: string; direction: "asc" | "desc" } {
-    if (typeof raw !== "string" || raw.length === 0) return { column: "id", direction: "desc" };
-    const direction = raw.startsWith("-") ? "desc" : "asc";
-    const key = raw.replace(/^-/, "");
-    const column = SORT_COLUMN_MAP[key];
-    if (column === undefined) return { column: "id", direction: "desc" };
-    return { column, direction };
-}
-
-const SORT_COLUMN_MAP: Record<string, string> = {
-    id: "id",
-    order: "order_number",
-    order_number: "order_number",
-    date: "created_at",
-    created_at: "created_at",
-    total: "grand_total",
-    grand_total: "grand_total",
-    status: "status",
-    paid: "date_paid_at",
-    completed: "date_completed_at",
-};

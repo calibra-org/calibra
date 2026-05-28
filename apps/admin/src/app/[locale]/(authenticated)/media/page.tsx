@@ -22,6 +22,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function MediaPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const [initial, months] = await Promise.all([listMedia({ perPage: 60 }), listMediaMonths()]);
+    const [initial, months] = await Promise.all([listMedia({ limit: 60 }), listMediaMonths()]);
     return <MediaView initialPage={initial} initialMonths={months} />;
 }

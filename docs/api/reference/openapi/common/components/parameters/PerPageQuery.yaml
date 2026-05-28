@@ -1,9 +1,0 @@
-name: perPage
-in: query
-description: Items per page. The API caps it (typically 100) when callers exceed the maximum.
-required: false
-schema:
-    type: integer
-    minimum: 1
-    maximum: 100
-    default: 20

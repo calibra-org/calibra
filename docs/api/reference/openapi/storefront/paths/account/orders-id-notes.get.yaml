@@ -1,27 +1,38 @@
 operationId: accountOrdersNotes
 summary: Customer-visible notes on an order
 description: >
-    Returns only the `visibility = 'customer'` notes for an order owned by the authenticated
-    customer; internal-visibility rows are filtered server-side. The customer variant strips
-    `visibility` and `author_user_id` so a row that somehow slipped through still would not
-    expose them. Cross-tenant access returns 404, never 403.
+    Paginated list of `visibility = 'customer'` notes for an order owned by the authenticated
+    customer on the unified TableView grammar; internal-visibility rows are pre-scoped out at
+    the controller as a security invariant (cannot be flipped via the wire `filter[]`). The
+    customer-variant transformer strips `visibility` and `author_user_id` so a row that somehow
+    slipped through still would not expose them. Cross-tenant access returns 404, never 403.
+
+    **TableView filterable fields**: `id`, `created_at`.
+
+    **TableView orderable fields**: `id`, `created_at`.
 tags: [Account]
 
 parameters:
     - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
 
 responses:
     "200":
-        description: Customer-visible notes.
+        description: Paginated customer-visible notes.
         content:
             application/json:
                 schema:
                     type: object
-                    required: [data]
+                    required: [data, meta]
                     properties:
                         data:
                             type: array
                             items: { $ref: "../../components/schemas/OrderNoteEntry.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "404":

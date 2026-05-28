@@ -5,9 +5,11 @@ properties:
     page:
         type: integer
         description: The 1-indexed page returned.
-    perPage:
+    limit:
         type: integer
-        description: Number of items per page.
+        description: |
+            Number of items per page. Mirrors the `?limit=N` wire param the client can send;
+            servers may clamp to a per-endpoint cap.
     total:
         type: integer
         description: Total number of matching records across all pages.
@@ -16,8 +18,8 @@ properties:
         description: The last 1-indexed page that contains records.
 required:
     - page
-    - perPage
+    - limit
     - total
     - lastPage
 examples:
-    - { page: 1, perPage: 20, total: 137, lastPage: 7 }
+    - { page: 1, limit: 20, total: 137, lastPage: 7 }

@@ -4,10 +4,9 @@ import type { HttpContext } from "@adonisjs/core/http";
 import Order from "#models/order";
 import OrderRefund from "#models/order_refund";
 import { refundService } from "#services/refund_service";
+import { adminRefundsView } from "#table_views/admin/refunds";
 import OrderRefundTransformer from "#transformers/order_refund_transformer";
 import { adminRefundCreateValidator, adminRefundListValidator } from "#validators/admin/refund_validator";
-
-const DEFAULT_PER_PAGE = 25;
 
 /**
  * Admin refund surface. `POST` runs the full {@link refundService} transaction (FOR UPDATE lock →
@@ -18,25 +17,14 @@ const DEFAULT_PER_PAGE = 25;
 export default class AdminRefundsController {
     async index(ctx: HttpContext) {
         const order = await this.findOrderOrFail(ctx.params.order_id);
-        const payload = await ctx.request.validateUsing(adminRefundListValidator);
-        const page = payload.page ?? 1;
-        const perPage = payload.perPage ?? DEFAULT_PER_PAGE;
+        const parsed = await ctx.request.validateUsing(adminRefundListValidator);
 
-        const paginator = await OrderRefund.query()
-            .where("order_id", Number(order.id))
-            .preload("lineItems")
-            .orderBy("id", "desc")
-            .paginate(page, perPage);
+        const builder = OrderRefund.query().where("order_id", Number(order.id)).preload("lineItems");
+        const { data, meta } = await adminRefundsView.run<OrderRefund>(builder, parsed);
 
-        const meta = paginator.getMeta();
         return {
-            data: paginator.all().map((refund) => new OrderRefundTransformer(refund).toObject()),
-            meta: {
-                page: meta.currentPage,
-                perPage: meta.perPage,
-                total: meta.total,
-                lastPage: meta.lastPage,
-            },
+            data: data.map((refund) => new OrderRefundTransformer(refund).toObject()),
+            meta,
         };
     }
 

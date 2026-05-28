@@ -1,0 +1,8 @@
+name: page
+in: query
+description: 1-indexed page number. Defaults to 1.
+required: false
+schema:
+    type: integer
+    minimum: 1
+    default: 1

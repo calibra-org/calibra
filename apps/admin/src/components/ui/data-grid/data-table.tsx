@@ -159,11 +159,11 @@ export interface DataTableProps<TData> {
     /** Tracks state of the in-page selection. Resolved by id, not array index. */
     getRowId: (row: TData) => string;
     meta: PaginationMeta;
-    perPageOptions: readonly number[];
+    limitOptions: readonly number[];
 
     /** Pagination handlers — server-driven. */
     onPageChange: (page: number) => void;
-    onPerPageChange: (perPage: number) => void;
+    onLimitChange: (limit: number) => void;
 
     /**
      * Active sort state and setter. Kept on the props surface so the toolbar and consumer code
@@ -280,9 +280,9 @@ export function DataTable<TData>({
     columns,
     getRowId,
     meta,
-    perPageOptions,
+    limitOptions,
     onPageChange,
-    onPerPageChange,
+    onLimitChange,
     sort: _sort,
     onSortChange: _onSortChange,
     stickyColumns,
@@ -709,9 +709,9 @@ export function DataTable<TData>({
                 {hidePagination ? null : (
                     <DataTablePagination
                         meta={meta}
-                        perPageOptions={perPageOptions}
+                        limitOptions={limitOptions}
                         onPageChange={onPageChange}
-                        onPerPageChange={onPerPageChange}
+                        onLimitChange={onLimitChange}
                         selectedCount={selectedIds.size}
                         labels={labels.pagination}
                         formatNumber={formatNumber}

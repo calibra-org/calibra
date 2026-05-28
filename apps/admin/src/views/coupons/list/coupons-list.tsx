@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { Download, Plus, Tag } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { parseAsStringEnum, useQueryState } from "nuqs";
+import { parseAsBoolean, parseAsString, parseAsStringEnum } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
 import { PageHeader } from "#/components/PageHeader";
@@ -14,11 +14,20 @@ import {
     DataTable,
     type FacetedFilterDef,
     type ToggleFilterDef,
+    useColumnState,
+    useSelectionState,
 } from "#/components/ui/data-grid";
-import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
 import { useBulkUpdateCoupons, useCouponCounts, useCouponsList, useDeleteCoupon } from "#/lib/queries/coupons";
+import {
+    type FacetColumnMap,
+    singleSortToTableView,
+    tableViewToSingleSort,
+    useFacetValuesFromQuery,
+    useSetFacetValue,
+    useTableView,
+} from "#/lib/table-view";
 import type { AdminCoupon, CouponTabKey } from "#/lib/types";
 import { DuplicateCouponDialog } from "#/views/coupons/dialogs/duplicate-dialog";
 import { ExpirySheet } from "#/views/coupons/dialogs/expiry-sheet";
@@ -30,13 +39,54 @@ import { buildCouponColumns } from "./columns";
 const TABLE_ID = "admin.coupons.list";
 const TAB_VALUES: CouponTabKey[] = ["any", "active", "scheduled", "used", "disabled", "expired", "trashed"];
 
+/**
+ * `discount_type` is a filterable column, so it rides the grammar as `filter[]=discount_type:in:…`
+ * rather than a bespoke extra (the controller declares no `discount_type` extra — sending one would
+ * 422). The toolbar facet's `paramKey` projects onto this column via the facet adapters.
+ */
+const FACET_COLUMN_MAP: FacetColumnMap = {
+    discount_type: { field: "discount_type", op: "in" },
+};
+
+/**
+ * Boolean toggles that are filterable columns → `filter[]=<col>:eq:true` (emitted only when on).
+ * The remaining toggles (`expiring_soon`, `has_*`) are controller-side existence checks the runtime
+ * can't model per-column, so they stay top-level extras on {@link useTableView}.
+ */
+const FILTER_COLUMN_TOGGLES = ["free_shipping", "individual_use", "exclude_sale_items"] as const;
+
 import { CouponStatusTabs } from "./status-tabs";
 
 export function CouponsListClient() {
     const locale = useLocale() as Locale;
     const t = useTranslations("Coupons");
 
-    const [tab, setTab] = useQueryState("tab", parseAsStringEnum<CouponTabKey>(TAB_VALUES).withDefault("any"));
+    const tv = useTableView({
+        initial: { limit: 25 },
+        extras: {
+            q: parseAsString.withDefault(""),
+            tab: parseAsStringEnum<CouponTabKey>(TAB_VALUES).withDefault("any"),
+            expiring_soon: parseAsBoolean.withDefault(false),
+            has_product_constraints: parseAsBoolean.withDefault(false),
+            has_category_constraints: parseAsBoolean.withDefault(false),
+            has_email_restrictions: parseAsBoolean.withDefault(false),
+        },
+    });
+
+    const ui = useColumnState({
+        id: TABLE_ID,
+        defaultColumnVisibility: {
+            description: false,
+            startsAt: false,
+            minimumAmount: false,
+            individualUse: false,
+        },
+    });
+    const selection = useSelectionState();
+
+    const tab = tv.tab;
+    const setTab = useCallback((next: CouponTabKey) => tv.setTab(next), [tv]);
+
     const { data: counts } = useCouponCounts();
 
     const facets = useMemo<FacetedFilterDef[]>(
@@ -68,46 +118,71 @@ export function CouponsListClient() {
         [t],
     );
 
-    const tableState = useDataTable({
-        id: TABLE_ID,
-        facets,
-        toggles,
-        defaultPerPage: 25,
-        defaultColumnVisibility: {
-            description: false,
-            startsAt: false,
-            minimumAmount: false,
-            individualUse: false,
-        },
-    });
+    /** `discount_type` projects onto `filter[]=discount_type:in:…` — read from + written to the
+     *  canonical query so the URL holds the grammar, not a bespoke CSV key. */
+    const facetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
+    const setFacetValues = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
 
-    const params = useMemo(
-        () => ({
-            page: tableState.page,
-            perPage: tableState.perPage,
-            search: tableState.q.length > 0 ? tableState.q : undefined,
-            tab,
-            sort:
-                tableState.sort !== undefined
-                    ? tableState.sort.direction === "desc"
-                        ? `-${tableState.sort.id}`
-                        : tableState.sort.id
-                    : undefined,
-            facets: tableState.facetValues,
-            booleans: tableState.toggleValues,
-        }),
-        [
-            tableState.page,
-            tableState.perPage,
-            tableState.q,
-            tableState.sort,
-            tableState.facetValues,
-            tableState.toggleValues,
-            tab,
-        ],
+    /** True when a boolean column toggle has a `<col>:eq:true` entry in `filter[]`. */
+    const hasColumnToggle = useCallback(
+        (col: string) => tv.query.filter.some((f) => f.field === col && f.op === "eq" && f.value === true),
+        [tv.query.filter],
     );
 
-    const { data: result, isPending, isError, refetch } = useCouponsList(params);
+    const toggleValues = useMemo<Record<string, boolean>>(
+        () => ({
+            free_shipping: hasColumnToggle("free_shipping"),
+            individual_use: hasColumnToggle("individual_use"),
+            exclude_sale_items: hasColumnToggle("exclude_sale_items"),
+            expiring_soon: tv.expiring_soon,
+            has_product_constraints: tv.has_product_constraints,
+            has_category_constraints: tv.has_category_constraints,
+            has_email_restrictions: tv.has_email_restrictions,
+        }),
+        [hasColumnToggle, tv.expiring_soon, tv.has_product_constraints, tv.has_category_constraints, tv.has_email_restrictions],
+    );
+    const setToggleValue = useCallback(
+        (key: string, value: boolean) => {
+            if ((FILTER_COLUMN_TOGGLES as readonly string[]).includes(key)) {
+                const others = tv.query.filter.filter((f) => f.field !== key);
+                tv.setFilter(value ? [...others, { field: key, op: "eq", value: true }] : others);
+                return;
+            }
+            switch (key) {
+                case "expiring_soon":
+                    tv.setExpiring_soon(value);
+                    break;
+                case "has_product_constraints":
+                    tv.setHas_product_constraints(value);
+                    break;
+                case "has_category_constraints":
+                    tv.setHas_category_constraints(value);
+                    break;
+                case "has_email_restrictions":
+                    tv.setHas_email_restrictions(value);
+                    break;
+            }
+        },
+        [tv],
+    );
+
+    const sort = tableViewToSingleSort(tv.query.sort);
+    const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
+
+    const {
+        data: result,
+        isPending,
+        isError,
+        refetch,
+    } = useCouponsList({
+        query: tv.query,
+        q: tv.q.length > 0 ? tv.q : undefined,
+        tab,
+        expiring_soon: tv.expiring_soon || undefined,
+        has_product_constraints: tv.has_product_constraints || undefined,
+        has_category_constraints: tv.has_category_constraints || undefined,
+        has_email_restrictions: tv.has_email_restrictions || undefined,
+    });
 
     const deleteMutation = useDeleteCoupon();
     /** Per-row updates piggyback the bulk endpoint so a single mutation hook can serve every
@@ -131,9 +206,9 @@ export function CouponsListClient() {
         () =>
             buildCouponColumns({
                 locale,
-                sort: tableState.sort,
-                onSort: tableState.setSort,
-                onHideColumn: (columnId) => tableState.setColumnVisibility({ ...tableState.columnVisibility, [columnId]: false }),
+                sort,
+                onSort: setSort,
+                onHideColumn: (columnId) => ui.setColumnVisibility({ ...ui.columnVisibility, [columnId]: false }),
                 sortLabels: { asc: t("sort.asc"), desc: t("sort.desc"), hide: t("sort.hide") },
                 t: (key, values) => t(key, values),
                 onCopyCode: copyCode,
@@ -156,20 +231,10 @@ export function CouponsListClient() {
                     });
                 },
             }),
-        [
-            locale,
-            t,
-            tableState.sort,
-            tableState.setSort,
-            tableState.columnVisibility,
-            tableState.setColumnVisibility,
-            copyCode,
-            deleteMutation,
-            bulkMutation,
-        ],
+        [locale, t, sort, setSort, ui.columnVisibility, ui.setColumnVisibility, copyCode, deleteMutation, bulkMutation],
     );
 
-    const meta = result?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+    const meta = result?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
 
     const columnVisibilityItems = useMemo(
         () => [
@@ -192,15 +257,18 @@ export function CouponsListClient() {
     /** `DataGridToolbar` computes hasActiveFilters + chips internally; we keep a local copy of the
      * flag for the table's empty-state branch. */
     const hasActiveFilters =
-        tableState.q.length > 0 ||
-        Object.values(tableState.facetValues).some((arr) => Array.isArray(arr) && arr.length > 0) ||
-        Object.values(tableState.toggleValues).some((v) => v === true);
+        tv.q.length > 0 ||
+        Object.values(facetValues).some((arr) => Array.isArray(arr) && arr.length > 0) ||
+        Object.values(toggleValues).some((v) => v === true);
 
-    const clearAllFilters = () => {
-        tableState.setQ("");
-        for (const facet of facets) tableState.setFacetValues(facet.paramKey, []);
-        for (const toggle of toggles) tableState.setToggleValue(toggle.paramKey, false);
-    };
+    const clearAllFilters = useCallback(() => {
+        tv.setQ("");
+        tv.clearFilters();
+        tv.setExpiring_soon(false);
+        tv.setHas_product_constraints(false);
+        tv.setHas_category_constraints(false);
+        tv.setHas_email_restrictions(false);
+    }, [tv]);
 
     return (
         <section className="flex flex-col gap-4">
@@ -213,8 +281,8 @@ export function CouponsListClient() {
                             <a
                                 href={buildExportUrl({
                                     tab,
-                                    search: tableState.q,
-                                    discountType: tableState.facetValues.discount_type,
+                                    q: tv.q,
+                                    discountType: facetValues.discount_type,
                                 })}
                                 download
                             >
@@ -236,7 +304,6 @@ export function CouponsListClient() {
                 value={tab}
                 onChange={(next) => {
                     setTab(next);
-                    tableState.setPage(1);
                 }}
                 counts={counts}
                 locale={locale}
@@ -248,18 +315,18 @@ export function CouponsListClient() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                perPageOptions={[10, 25, 50, 100]}
-                onPageChange={(page) => tableState.setPage(page)}
-                onPerPageChange={(perPage) => tableState.setPerPage(perPage)}
-                sort={tableState.sort}
-                onSortChange={tableState.setSort}
-                selectedIds={tableState.selectedIds}
-                onSelectedIdsChange={tableState.setSelected}
-                columnVisibility={tableState.columnVisibility}
-                onColumnVisibilityChange={tableState.setColumnVisibility}
-                columnOrder={tableState.columnOrder}
-                onColumnOrderChange={tableState.setColumnOrder}
-                density={tableState.density}
+                limitOptions={[10, 25, 50, 100]}
+                onPageChange={(page) => tv.setPage(page)}
+                onLimitChange={(limit) => tv.setLimit(limit)}
+                sort={sort}
+                onSortChange={setSort}
+                selectedIds={selection.selectedIds}
+                onSelectedIdsChange={selection.setSelected}
+                columnVisibility={ui.columnVisibility}
+                onColumnVisibilityChange={ui.setColumnVisibility}
+                columnOrder={ui.columnOrder}
+                onColumnOrderChange={ui.setColumnOrder}
+                density={ui.density}
                 isLoading={isPending}
                 isError={isError}
                 onRetry={() => refetch()}
@@ -308,19 +375,19 @@ export function CouponsListClient() {
                 )}
                 toolbar={
                     <DataGridToolbar
-                        q={tableState.q}
-                        onQChange={tableState.setQ}
+                        q={tv.q}
+                        onQChange={tv.setQ}
                         facets={facets}
-                        facetValues={tableState.facetValues}
-                        onFacetValuesChange={tableState.setFacetValues}
+                        facetValues={facetValues}
+                        onFacetValuesChange={setFacetValues}
                         toggles={toggles}
-                        toggleValues={tableState.toggleValues}
-                        onToggleChange={tableState.setToggleValue}
+                        toggleValues={toggleValues}
+                        onToggleChange={setToggleValue}
                         columns={columnVisibilityItems}
-                        columnVisibility={tableState.columnVisibility}
-                        onColumnVisibilityChange={tableState.setColumnVisibility}
-                        density={tableState.density}
-                        onDensityChange={tableState.setDensity}
+                        columnVisibility={ui.columnVisibility}
+                        onColumnVisibilityChange={ui.setColumnVisibility}
+                        density={ui.density}
+                        onDensityChange={ui.setDensity}
                         onRefresh={() => refetch()}
                         labels={buildDataGridToolbarLabels(t, t("search"))}
                     />
@@ -432,11 +499,15 @@ function buildDuplicatePayload(coupon: AdminCoupon): import("#/lib/queries/coupo
  * Build a same-origin export URL with the current filter state forwarded as query params. The
  * admin proxy already attaches the bearer token so a plain `<a download>` works — no SDK call
  * needed for the CSV stream.
+ *
+ * The export endpoint (`AdminCouponsController#exportCsv`) reads its own param vocabulary —
+ * `q` + `tab` + a `discount_type` CSV — NOT the list's `filter[]` grammar, so the URL here is 1:1
+ * with what that endpoint parses. Bringing export onto `filter[]` would need a backend change.
  */
-function buildExportUrl(args: { tab?: string; search?: string; discountType?: string[] }): string {
+function buildExportUrl(args: { tab?: string; q?: string; discountType?: string[] }): string {
     const params = new URLSearchParams();
     if (args.tab && args.tab !== "any") params.set("tab", args.tab);
-    if (args.search && args.search.length > 0) params.set("search", args.search);
+    if (args.q && args.q.length > 0) params.set("q", args.q);
     if (args.discountType && args.discountType.length > 0) params.set("discount_type", args.discountType.join(","));
     const qs = params.toString();
     return qs.length > 0 ? `/api/admin/coupons/export?${qs}` : "/api/admin/coupons/export";

@@ -8,7 +8,8 @@ import { useLocale } from "next-intl";
 import { type AdminProductDetailView, toAdminProductDetail } from "#/lib/adapters/product-detail";
 import { toAdminProduct } from "#/lib/adapters/products";
 import { apiGet } from "#/lib/queries/api-client";
-import type { AdminBrand, AdminCategory, AdminProduct, AdminTag, ProductStatus, ProductType, StockStatus } from "#/lib/types";
+import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view";
+import type { AdminBrand, AdminCategory, AdminProduct, AdminTag, ProductStatus, StockStatus } from "#/lib/types";
 
 type DetailEnvelope = { data: AdminSchemas["schemas"]["AdminProductDetail"] };
 
@@ -19,7 +20,7 @@ export type CatalogVisibility = "visible" | "catalog" | "search" | "hidden";
 
 export interface ProductListMeta {
     page: number;
-    perPage: number;
+    limit: number;
     total: number;
     lastPage: number;
 }
@@ -35,29 +36,55 @@ interface TaxonomyEnvelope {
     meta?: ProductListMeta;
 }
 
+/**
+ * Inputs accepted by {@link useProductsList}. `query` carries the unified TableView grammar — the
+ * filterable columns `type` / `catalog_visibility` / `featured` ride inside `query.filter` as
+ * `filter[]` entries, NOT here. The fields below are the only true top-level extras the controller
+ * declares (`apps/api/app/controllers/admin/catalog/products_controller.ts`): bespoke predicates
+ * the runtime can't model as a column WHERE (pivot joins, stock aggregates, soft-delete scope,
+ * multi-column search, response-shape flags). Keys are the EXACT wire keys so params == URL == request.
+ *
+ * `status` stays an extra (not a `filter[]` column) because the tab strip's `trash` pseudo-value
+ * is expressed via `only_trashed`, not a `status` column value — keeping it bespoke avoids leaking
+ * that special case into the grammar.
+ */
 export interface ProductsListParams {
-    page?: number;
-    perPage?: number;
-    sort?: string;
+    query?: TableViewQuery;
+    q?: string;
     status?: ProductStatus | "any";
-    type?: ProductType;
-    stockStatus?: StockStatus;
-    stockLevel?: StockLevel;
-    catalogVisibility?: CatalogVisibility;
-    categoryId?: number;
-    brandId?: number;
-    tagId?: number;
-    onSale?: boolean;
-    featured?: boolean;
-    hasImage?: boolean;
-    withTrashed?: boolean;
-    onlyTrashed?: boolean;
-    createdFrom?: string;
-    createdTo?: string;
-    ids?: number[];
+    stock_status?: StockStatus;
+    stock_level?: StockLevel;
+    category?: number;
+    brand?: number;
+    tag?: number;
+    on_sale?: boolean;
+    has_image?: boolean;
+    with_trashed?: boolean;
+    only_trashed?: boolean;
+    ids?: string;
+    include?: string;
+    /** Client-only favourite filter — never sent to the API (no server-side support yet). */
     favoriteIds?: number[];
-    search?: string;
-    includeFacetCounts?: boolean;
+}
+
+/**
+ * Top-level extras the products endpoint accepts. Keys mirror the controller's `compileStrict`
+ * extras verbatim; `satisfies` flags a typo'd key before it can 422.
+ */
+interface ProductsListExtras {
+    q?: string;
+    status?: ProductStatus;
+    stock_status?: StockStatus;
+    stock_level?: StockLevel;
+    category?: number;
+    brand?: number;
+    tag?: number;
+    on_sale?: boolean;
+    has_image?: boolean;
+    with_trashed?: boolean;
+    only_trashed?: boolean;
+    ids?: string;
+    include?: string;
 }
 
 export interface ProductsListResult {
@@ -67,82 +94,35 @@ export interface ProductsListResult {
 }
 
 /**
- * Paginated admin products list. Speaks the same status vocabulary as the API
- * (`draft | publish | pending | private`) end-to-end now — the lossy mapping that dropped
- * `pending` and `private` to `undefined` lived here until {@link https://github.com/calibra-org/calibra/pull/41 #41}.
- *
- * Trash semantics: `onlyTrashed` is mutually-exclusive with `withTrashed`; passing `onlyTrashed`
- * narrows the list to soft-deleted rows. Passing neither hides them.
+ * Paginated admin products list. The query object handed to the SDK is byte-for-byte what the URL
+ * holds — both derive from {@link tableViewQueryToSdkQuery}. Status vocabulary is the API's
+ * (`draft | publish | pending | private`); `any` collapses to "no filter".
  */
 export function useProductsList(
     params: ProductsListParams = {},
 ): ReturnType<typeof useQuery<ProductListEnvelope, Error, ProductsListResult>> {
     const locale = useLocale() as Locale;
-    const page = params.page ?? 1;
-    const perPage = params.perPage ?? 20;
+    const query: TableViewQuery = params.query ?? { page: 1, limit: 20, filter: [], filterOr: [], sort: [] };
     const status = params.status === undefined || params.status === "any" ? undefined : params.status;
-    const includeParts: string[] = [];
-    if (params.includeFacetCounts === true) includeParts.push("facet_counts");
-    const include = includeParts.length > 0 ? includeParts.join(",") : undefined;
+    const sdkQuery = tableViewQueryToSdkQuery(query, {
+        q: params.q,
+        status,
+        stock_status: params.stock_status,
+        stock_level: params.stock_level,
+        category: params.category,
+        brand: params.brand,
+        tag: params.tag,
+        on_sale: params.on_sale === true ? true : undefined,
+        has_image: params.has_image === true ? true : undefined,
+        with_trashed: params.with_trashed === true ? true : undefined,
+        only_trashed: params.only_trashed === true ? true : undefined,
+        ids: params.ids,
+        include: params.include,
+    } satisfies ProductsListExtras);
 
     return useQuery<ProductListEnvelope, Error, ProductsListResult>({
-        queryKey: [
-            "admin",
-            "products",
-            "list",
-            {
-                locale,
-                page,
-                perPage,
-                sort: params.sort ?? "",
-                status,
-                type: params.type,
-                stockStatus: params.stockStatus,
-                stockLevel: params.stockLevel,
-                catalogVisibility: params.catalogVisibility,
-                categoryId: params.categoryId,
-                brandId: params.brandId,
-                tagId: params.tagId,
-                onSale: params.onSale === true ? true : undefined,
-                featured: params.featured === true ? true : undefined,
-                hasImage: params.hasImage === true ? true : undefined,
-                withTrashed: params.withTrashed === true ? true : undefined,
-                onlyTrashed: params.onlyTrashed === true ? true : undefined,
-                createdFrom: params.createdFrom,
-                createdTo: params.createdTo,
-                ids: params.ids?.join(","),
-                search: params.search,
-                favoriteIds: params.favoriteIds,
-                include,
-            },
-        ],
-        queryFn: () =>
-            apiGet<ProductListEnvelope>("products", {
-                locale,
-                query: {
-                    page,
-                    perPage,
-                    sort: params.sort,
-                    status,
-                    type: params.type,
-                    stock_status: params.stockStatus,
-                    stock_level: params.stockLevel,
-                    catalog_visibility: params.catalogVisibility,
-                    category: params.categoryId,
-                    brand: params.brandId,
-                    tag: params.tagId,
-                    on_sale: params.onSale === true ? true : undefined,
-                    featured: params.featured === true ? true : undefined,
-                    has_image: params.hasImage === true ? true : undefined,
-                    with_trashed: params.withTrashed === true ? true : undefined,
-                    only_trashed: params.onlyTrashed === true ? true : undefined,
-                    created_from: params.createdFrom,
-                    created_to: params.createdTo,
-                    ids: params.ids !== undefined && params.ids.length > 0 ? params.ids.join(",") : undefined,
-                    search: params.search,
-                    include,
-                },
-            }),
+        queryKey: ["admin", "products", "list", { locale, sdkQuery, favoriteIds: params.favoriteIds }],
+        queryFn: () => apiGet<ProductListEnvelope>("products", { locale, query: sdkQuery }),
         placeholderData: keepPreviousData,
         select: (payload): ProductsListResult => {
             const data = (payload.data ?? []).map(toAdminProduct);
@@ -153,7 +133,7 @@ export function useProductsList(
              */
             const filtered =
                 params.favoriteIds === undefined ? data : data.filter((row) => params.favoriteIds?.includes(row.id) === true);
-            const meta = payload.meta ?? { page, perPage, total: filtered.length, lastPage: 1 };
+            const meta = payload.meta ?? { page: query.page, limit: query.limit, total: filtered.length, lastPage: 1 };
             return { data: filtered, meta, facets: payload.facets };
         },
     });
@@ -167,7 +147,7 @@ interface AdminProductFacetEntry<T extends string | number = string> {
 
 /**
  * Lightweight facets query. Pulls all categories/brands/tags via their list endpoints (one shot,
- * `perPage=100`) and feeds them into the toolbar's faceted-filter options.
+ * `limit=100`) and feeds them into the toolbar's faceted-filter options.
  */
 export function useProductFacets() {
     const locale = useLocale() as Locale;
@@ -175,13 +155,13 @@ export function useProductFacets() {
         queryKey: ["admin", "product-facets", { locale }],
         queryFn: async () => {
             const [cats, brands, tags] = await Promise.all([
-                apiGet<TaxonomyEnvelope>("categories", { locale, query: { perPage: 100 } }).catch(
+                apiGet<TaxonomyEnvelope>("categories", { locale, query: { limit: 100 } }).catch(
                     () => ({ data: [] }) as TaxonomyEnvelope,
                 ),
-                apiGet<TaxonomyEnvelope>("brands", { locale, query: { perPage: 100 } }).catch(
+                apiGet<TaxonomyEnvelope>("brands", { locale, query: { limit: 100 } }).catch(
                     () => ({ data: [] }) as TaxonomyEnvelope,
                 ),
-                apiGet<TaxonomyEnvelope>("tags", { locale, query: { perPage: 100 } }).catch(
+                apiGet<TaxonomyEnvelope>("tags", { locale, query: { limit: 100 } }).catch(
                     () => ({ data: [] }) as TaxonomyEnvelope,
                 ),
             ]);
@@ -424,21 +404,33 @@ interface TaxonomyEnvelopeAdmin<T> {
 export type TaxonomySort = "-used_count" | "used_count" | "menu_order" | "-menu_order";
 
 /**
+ * Translate the local `TaxonomySort` shorthand into the TableView wire form
+ * (`?sort[]=field:dir`). Kept colocated with the consumer hooks so it disappears when the
+ * picker UI eventually composes a `TableViewQuery` directly.
+ */
+function toTableViewSort(sort: TaxonomySort | undefined): string[] | undefined {
+    if (sort === undefined) return undefined;
+    const dir = sort.startsWith("-") ? "desc" : "asc";
+    const field = sort.replace(/^-/, "");
+    return [`${field}:${dir}`];
+}
+
+/**
  * Fetches the full categories tree for the product-detail picker. Caps at 500 rows by default —
  * the bulk seeder ships 56 leaves, so this comfortably covers any store the admin is going to
- * curate by hand. `sort` defaults to `menu_order`; pass `-used_count` to power the "Most used"
- * tab without paying for a second query.
+ * curate by hand. `sort` defaults to the endpoint's `menu_order` default; pass `-used_count`
+ * to power the "Most used" tab without paying for a second query.
  */
-export function useCategoriesTree(options?: { sort?: TaxonomySort; perPage?: number }) {
+export function useCategoriesTree(options?: { sort?: TaxonomySort; limit?: number }) {
     const locale = useLocale() as Locale;
     const sort = options?.sort;
-    const perPage = options?.perPage ?? 500;
+    const limit = options?.limit ?? 500;
     return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminCategory[]>({
-        queryKey: ["admin", "categories", "picker", { locale, sort: sort ?? "", perPage }],
+        queryKey: ["admin", "categories", "picker", { locale, sort: sort ?? "", limit }],
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("categories", {
                 locale,
-                query: { perPage, ...(sort !== undefined ? { sort } : {}) },
+                query: { limit, ...(sort !== undefined ? { "sort[]": toTableViewSort(sort) } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerCategory),
         staleTime: 30 * 1000,
@@ -447,20 +439,20 @@ export function useCategoriesTree(options?: { sort?: TaxonomySort; perPage?: num
 
 /** Top-N most-used categories for the "پر استفاده‌ها" tab. Cached server-side for 2m. */
 export function useMostUsedCategories(limit = 20) {
-    return useCategoriesTree({ sort: "-used_count", perPage: limit });
+    return useCategoriesTree({ sort: "-used_count", limit: limit });
 }
 
 /** Flat brands list. `parent_id` is always null upstream; the picker renders them at depth 0. */
-export function useBrandsList(options?: { sort?: TaxonomySort; perPage?: number }) {
+export function useBrandsList(options?: { sort?: TaxonomySort; limit?: number }) {
     const locale = useLocale() as Locale;
     const sort = options?.sort;
-    const perPage = options?.perPage ?? 500;
+    const limit = options?.limit ?? 500;
     return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminBrand[]>({
-        queryKey: ["admin", "brands", "picker", { locale, sort: sort ?? "", perPage }],
+        queryKey: ["admin", "brands", "picker", { locale, sort: sort ?? "", limit }],
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("brands", {
                 locale,
-                query: { perPage, ...(sort !== undefined ? { sort } : {}) },
+                query: { limit, ...(sort !== undefined ? { "sort[]": toTableViewSort(sort) } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerBrand),
         staleTime: 30 * 1000,
@@ -469,7 +461,7 @@ export function useBrandsList(options?: { sort?: TaxonomySort; perPage?: number 
 
 /** Top-N most-used brands for the brand sidebar's "Most used" tab. */
 export function useMostUsedBrands(limit = 20) {
-    return useBrandsList({ sort: "-used_count", perPage: limit });
+    return useBrandsList({ sort: "-used_count", limit: limit });
 }
 
 /**
@@ -477,16 +469,16 @@ export function useMostUsedBrands(limit = 20) {
  * tag as a check-row (mirroring the brands picker), and so saved tag ids resolve to the right
  * Persian name without a per-id round-trip.
  */
-export function useTagsList(options?: { sort?: TaxonomySort; perPage?: number }) {
+export function useTagsList(options?: { sort?: TaxonomySort; limit?: number }) {
     const locale = useLocale() as Locale;
     const sort = options?.sort;
-    const perPage = options?.perPage ?? 500;
+    const limit = options?.limit ?? 500;
     return useQuery<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>, Error, AdminTag[]>({
-        queryKey: ["admin", "tags", "picker", { locale, sort: sort ?? "", perPage }],
+        queryKey: ["admin", "tags", "picker", { locale, sort: sort ?? "", limit }],
         queryFn: () =>
             apiGet<TaxonomyEnvelopeAdmin<SdkAdminTaxonomy>>("tags", {
                 locale,
-                query: { perPage, ...(sort !== undefined ? { sort } : {}) },
+                query: { limit, ...(sort !== undefined ? { "sort[]": toTableViewSort(sort) } : {}) },
             }),
         select: (envelope) => (envelope.data ?? []).map(toPickerTag),
         staleTime: 30 * 1000,
@@ -495,7 +487,7 @@ export function useTagsList(options?: { sort?: TaxonomySort; perPage?: number })
 
 /** Top-N most-used tags for the tags sidebar's "Most used" tab. */
 export function useMostUsedTags(limit = 20) {
-    return useTagsList({ sort: "-used_count", perPage: limit });
+    return useTagsList({ sort: "-used_count", limit: limit });
 }
 
 /**

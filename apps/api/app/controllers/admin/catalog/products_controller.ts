@@ -1,5 +1,6 @@
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
+import vine from "@vinejs/vine";
 import { DateTime } from "luxon";
 
 import { BusinessRuleException } from "#exceptions/domain_exceptions";
@@ -18,7 +19,8 @@ import {
     withTransaction,
 } from "#services/catalog_writer";
 import SettingsService from "#services/settings_service";
-import { paginated, resource } from "#transformers/api_envelope";
+import { adminProductsView } from "#table_views/admin/products";
+import { collection, resource } from "#transformers/api_envelope";
 import ProductTransformer, { type ProductTransformerOptions } from "#transformers/product_transformer";
 import {
     batchProductsValidator,
@@ -28,6 +30,42 @@ import {
     updateProductValidator,
 } from "#validators/catalog/product_validator";
 
+/**
+ * The products list endpoint speaks the unified TableView grammar (`page` / `limit` / `sort[]` /
+ * `filter[]` / `filterOr[]`) plus a handful of endpoint-specific extras (`q` for multi-column
+ * free-text search, `category`/`brand`/`tag` for pivot filters the runtime doesn't auto-traverse,
+ * `with_trashed`/`only_trashed` for soft-delete scope, `include=facet_counts` for the toolbar's
+ * facet badges). Strict mode: any other top-level query key returns 422.
+ *
+ * `maxLimit` is raised to 500 (above the TableView default cap of 100) because the review
+ * product-lookup (`useReviewProductLookup`) pulls the first 200 products in one shot to resolve
+ * `#id → title` for the reviews table; that stopgap requests `limit=200`, which the default cap
+ * would reject. Aligned with the catalog family's 500 ceiling.
+ */
+const adminProductsListTableViewValidator = adminProductsView.compileStrict({
+    maxLimit: 500,
+    extras: {
+        q: vine.string().trim().maxLength(120).optional(),
+        category: vine.number().positive().optional(),
+        tag: vine.number().positive().optional(),
+        brand: vine.number().positive().optional(),
+        type: vine.string().trim().maxLength(40).optional(),
+        status: vine.string().trim().maxLength(40).optional(),
+        stock_status: vine.string().trim().maxLength(40).optional(),
+        stock_level: vine.string().trim().maxLength(40).optional(),
+        catalog_visibility: vine.enum(["visible", "catalog", "search", "hidden"] as const).optional(),
+        featured: vine.boolean().optional(),
+        on_sale: vine.boolean().optional(),
+        has_image: vine.boolean().optional(),
+        with_trashed: vine.boolean().optional(),
+        only_trashed: vine.boolean().optional(),
+        created_from: vine.string().trim().maxLength(40).optional(),
+        created_to: vine.string().trim().maxLength(40).optional(),
+        ids: vine.string().trim().maxLength(2000).optional(),
+        include: vine.string().trim().maxLength(120).optional(),
+    },
+});
+
 const PRODUCT_TRANSLATION_FIELDS = [
     "name",
     "slug",
@@ -36,8 +74,6 @@ const PRODUCT_TRANSLATION_FIELDS = [
     "purchase_note",
     "external_button_text",
 ] as const;
-
-const SORTABLE_COLUMNS = new Set(["name", "sku", "regular_price", "created_at", "updated_at", "menu_order", "stock_quantity"]);
 
 const FACET_COUNT_KEYS = ["type", "stock_status", "category", "brand", "tag", "catalog_visibility"] as const;
 
@@ -49,44 +85,52 @@ export default class AdminProductsController {
      * `GET /api/v1/admin/products` — paginated admin list.
      *
      * Filter params (all optional, all server-side AND-composed):
-     * - `status`, `type`, `category`, `tag`, `brand`, `stock_status` — discrete facets
+     * - `status`, `type`, `catalog_visibility` — discrete facet keywords
+     * - `category`, `tag`, `brand` — pivot-table whereIn filters (controller-side)
      * - `with_trashed=1` / `only_trashed=1` — soft-delete inclusion
      * - `on_sale=1` — schedule-aware on-sale predicate
-     * - `catalog_visibility` — visible|catalog|search|hidden
      * - `has_image=1` — at least one row in product_images
      * - `created_from`, `created_to` — ISO date-only inclusive bounds
+     * - `stock_status` — single keyword whereIn against inventory_items
      * - `stock_level=instock|low|outofstock` — aggregate over inventory_items
      * - `featured=1` — featured-only
-     * - `search=<q>` — ILIKE on product_translations.name OR products.sku
+     * - `q=<needle>` — ILIKE on product_translations.name OR products.sku
      * - `ids=<csv>` — id whitelist (used by "export selected" + facet count callers)
-     * - `sort=<field>` / `sort=-<field>` — whitelist: name|sku|regular_price|created_at|updated_at|menu_order|stock_quantity
      * - `include=facet_counts` — adds a `facets` block to the response envelope
+     *
+     * Sort is the TableView `sort[]=field:dir` grammar; `name` and `stock_quantity` use the
+     * view's `sortRaw` hook to target joined-subquery ORDER BYs.
      */
     async index(ctx: HttpContext) {
         const { request } = ctx;
-        const page = Math.max(1, Number(request.input("page", 1)) || 1);
-        const perPage = Math.min(200, Math.max(1, Number(request.input("per_page", request.input("perPage", 20))) || 20));
+        /** Parse the TableView portion (page/limit/filter[]/filterOr[]/sort[]). Bespoke
+         * predicates live below in applyListFilters (pivot joins for category/brand/tag, the
+         * multi-column `q` ILIKE, soft-delete scope, stock-level aggregate). */
+        const qs = request.qs();
+        const parsed = await adminProductsListTableViewValidator.validate(qs);
 
         const query = Product.query()
             .preload("translations")
             .preload("images", (q) => q.preload("media"))
             .preload("inventoryItems");
         this.applyListFilters(query, request);
-        this.applyListSort(query, request);
 
-        const paginator = await query.paginate(page, perPage);
+        const { data: rows, meta } = await adminProductsView.run<Product>(query, parsed);
         const transformerOptions = await this.transformerOptions();
-        const envelope = paginated(
-            ProductTransformer.transform(paginator.all(), ctx.i18n.locale, transformerOptions).useVariant("forAdmin"),
-            paginator,
+        const { data } = await collection<unknown>(
+            ProductTransformer.transform(rows, ctx.i18n.locale, transformerOptions).useVariant("forAdmin"),
         );
+        const envelope: { data: unknown[]; meta: typeof meta; facets?: Record<string, Record<string, number>> } = {
+            data,
+            meta,
+        };
 
         const includes = String(request.input("include", ""))
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean);
         if (includes.includes("facet_counts")) {
-            (envelope as { facets?: Record<string, Record<string, number>> }).facets = await this.computeFacetCounts(request);
+            envelope.facets = await this.computeFacetCounts(request);
         }
 
         return envelope;
@@ -196,42 +240,15 @@ export default class AdminProductsController {
             if (list.length > 0) query.whereIn("id", list);
         }
 
-        const search = request.input("search");
-        if (search) {
-            const needle = `%${String(search)}%`;
+        const q = request.input("q");
+        if (q) {
+            const needle = `%${String(q)}%`;
             query.where((scope) => {
                 scope
                     .whereIn("id", (sub) => sub.select("product_id").from("product_translations").whereILike("name", needle))
                     .orWhereILike("sku", needle);
             });
         }
-    }
-
-    private applyListSort(query: ReturnType<typeof Product.query>, request: HttpContext["request"]) {
-        const raw = String(request.input("sort", "")).trim();
-        if (raw.length === 0) {
-            query.orderBy("id", "desc");
-            return;
-        }
-        const direction = raw.startsWith("-") ? "desc" : "asc";
-        const column = raw.replace(/^-/, "");
-        if (!SORTABLE_COLUMNS.has(column)) {
-            query.orderBy("id", "desc");
-            return;
-        }
-        if (column === "name") {
-            query.orderByRaw(
-                `(SELECT MIN(name) FROM product_translations WHERE product_translations.product_id = products.id) ${direction}`,
-            );
-            return;
-        }
-        if (column === "stock_quantity") {
-            query.orderByRaw(
-                `(SELECT COALESCE(SUM(stock_quantity), 0) FROM inventory_items WHERE inventory_items.product_id = products.id) ${direction}`,
-            );
-            return;
-        }
-        query.orderBy(column, direction);
     }
 
     private async computeFacetCounts(request: HttpContext["request"]): Promise<Record<string, Record<string, number>>> {

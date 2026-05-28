@@ -100,14 +100,14 @@ export function cancelExport(id: number, locale: string): Promise<{ data: Produc
 
 export function listExportHistory(
     locale: string,
-    options: { page?: number; perPage?: number; status?: string; from?: string; to?: string } = {},
-): Promise<{ data: ProductExportRow[]; meta: { page: number; perPage: number; total: number; lastPage: number } }> {
+    options: { page?: number; limit?: number; status?: string; from?: string; to?: string } = {},
+): Promise<{ data: ProductExportRow[]; meta: { page: number; limit: number; total: number; lastPage: number } }> {
     return getProxy(
         "products/export/history",
         locale,
         buildExportQueryString({
             page: options.page,
-            per_page: options.perPage,
+            per_page: options.limit,
             status: options.status,
             from: options.from,
             to: options.to,

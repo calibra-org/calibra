@@ -1,21 +1,29 @@
 import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
-import { createAttributeWithTerm, createProduct } from "./helpers.js";
+import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
 
 test.group("Admin variations CRUD", (group) => {
-    group.each.setup(async () => testUtils.db().truncate());
+    let admin: Awaited<ReturnType<typeof createAdmin>>;
+    group.each.setup(async () => {
+        admin = await createAdmin();
+        return await testUtils.db().truncate();
+    });
 
     test("creating a variation requires parent type=variable", async ({ client }) => {
         const product = await createProduct({
             fa: { name: "ساده", slug: "simple-fa" },
             en: { name: "Simple", slug: "simple-en" },
         });
-        const response = await client.post(`/api/v1/admin/products/${product.id}/variations`).json({
-            sku: "VAR-1",
-            regular_price: 1_000_000,
-        });
+        const response = await client
+            .post(`/api/v1/admin/products/${product.id}/variations`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                sku: "VAR-1",
+                regular_price: 1_000_000,
+            });
         response.assertStatus(422);
     });
 
@@ -39,11 +47,15 @@ test.group("Admin variations CRUD", (group) => {
             visible: true,
             usedForVariation: false,
         });
-        const response = await client.post(`/api/v1/admin/products/${product.id}/variations`).json({
-            sku: "VAR-2",
-            regular_price: 1_000_000,
-            attribute_pins: [{ attribute_id: Number(attribute.id), term_id: Number(term.id) }],
-        });
+        const response = await client
+            .post(`/api/v1/admin/products/${product.id}/variations`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                sku: "VAR-2",
+                regular_price: 1_000_000,
+                attribute_pins: [{ attribute_id: Number(attribute.id), term_id: Number(term.id) }],
+            });
         response.assertStatus(422);
         assert.equal(response.body().error, "attribute_pin_not_variation_attribute");
     });
@@ -54,11 +66,15 @@ test.group("Admin variations CRUD", (group) => {
             en: { name: "Parent", slug: "parent-en" },
             type: "variable",
         });
-        const response = await client.post(`/api/v1/admin/products/${product.id}/variations`).json({
-            sku: "VAR-3",
-            regular_price: 1_000_000,
-            manage_stock_mode: "parent",
-        });
+        const response = await client
+            .post(`/api/v1/admin/products/${product.id}/variations`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                sku: "VAR-3",
+                regular_price: 1_000_000,
+                manage_stock_mode: "parent",
+            });
         response.assertStatus(201);
         response.assertAgainstApiSpec();
     });

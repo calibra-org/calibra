@@ -96,7 +96,7 @@ export const retryFailedValidator = vine.compile(
 export const importHistoryQueryValidator = vine.compile(
     vine.object({
         page: vine.number().positive().optional(),
-        per_page: vine.number().range([1, 200]).optional(),
+        limit: vine.number().range([1, 200]).optional(),
         status: vine
             .enum([
                 "queued",

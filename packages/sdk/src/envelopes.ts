@@ -13,13 +13,14 @@ export interface Resource<T> {
 
 /**
  * Paginated list response envelope. Matches the `PaginationMeta` schema in the OpenAPI spec
- * (`page`, `perPage`, `total`, `lastPage`).
+ * (`page`, `limit`, `total`, `lastPage`). The request wire grammar uses `?limit=N` and the
+ * response key is the same identifier so callers can echo the param straight back out.
  */
 export interface Paginated<T> {
     data: T[];
     meta: {
         page: number;
-        perPage: number;
+        limit: number;
         total: number;
         lastPage: number;
     };

@@ -7,61 +7,68 @@ import { useLocale } from "next-intl";
 
 import { toAdminCoupon } from "#/lib/adapters/coupons";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
+import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view";
 import type { AdminCoupon, AdminCouponCounts, CouponTabKey, Paginated } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];
 
 interface CouponListEnvelope {
     data: Schemas["AdminCoupon"][];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
+/**
+ * Inputs accepted by {@link useCouponsList}. `query` carries the unified TableView grammar — the
+ * per-column facet (`discount_type`) and the boolean column toggles (`free_shipping` /
+ * `individual_use` / `exclude_sale_items`) live inside `query.filter` as `filter[]` entries, NOT
+ * here. The fields below are the only true top-level extras the controller declares: tab scope,
+ * free-text search, and the existence-check predicates the runtime can't model as a column WHERE.
+ */
 export interface CouponsListParams {
-    page?: number;
-    perPage?: number;
-    search?: string;
+    query?: TableViewQuery;
+    q?: string;
     tab?: CouponTabKey;
-    sort?: string;
-    /** Faceted filter values keyed by URL-param. Values are joined as comma-separated lists. */
-    facets?: Record<string, string[] | undefined>;
-    booleans?: Record<string, boolean | undefined>;
-    ranges?: Record<string, number | undefined>;
-    dates?: Record<string, string | undefined>;
+    expiring_soon?: boolean;
+    has_product_constraints?: boolean;
+    has_category_constraints?: boolean;
+    has_email_restrictions?: boolean;
 }
 
-function buildQuery(params: CouponsListParams): Record<string, string | number | boolean | undefined> {
-    const out: Record<string, string | number | boolean | undefined> = {
-        page: params.page ?? 1,
-        perPage: params.perPage ?? 25,
-    };
-    if (params.search && params.search.length > 0) out.search = params.search;
-    if (params.tab && params.tab !== "any") out.tab = params.tab;
-    if (params.sort && params.sort.length > 0) out.sort = params.sort;
-    for (const [key, values] of Object.entries(params.facets ?? {})) {
-        if (Array.isArray(values) && values.length > 0) out[key] = values.join(",");
-    }
-    for (const [key, value] of Object.entries(params.booleans ?? {})) {
-        if (value !== undefined) out[key] = value;
-    }
-    for (const [key, value] of Object.entries(params.ranges ?? {})) {
-        if (value !== undefined && Number.isFinite(value)) out[key] = value;
-    }
-    for (const [key, value] of Object.entries(params.dates ?? {})) {
-        if (value) out[key] = value;
-    }
-    return out;
+/**
+ * Top-level extras the coupons endpoint accepts. Keys mirror the controller's `compileStrict`
+ * extras verbatim (`apps/api/app/controllers/admin/coupons_controller.ts`); `satisfies` flags a
+ * typo'd key before it can 422.
+ */
+interface CouponsListExtras {
+    q?: string;
+    tab?: CouponTabKey;
+    expiring_soon?: boolean;
+    has_product_constraints?: boolean;
+    has_category_constraints?: boolean;
+    has_email_restrictions?: boolean;
 }
+
+const PER_PAGE_DEFAULT = 25;
 
 export function useCouponsList(params: CouponsListParams = {}) {
     const locale = useLocale() as Locale;
+    const query: TableViewQuery = params.query ?? { page: 1, limit: PER_PAGE_DEFAULT, filter: [], filterOr: [], sort: [] };
+    const sdkQuery = tableViewQueryToSdkQuery(query, {
+        q: params.q,
+        tab: params.tab !== undefined && params.tab !== "any" ? params.tab : undefined,
+        expiring_soon: params.expiring_soon === true ? true : undefined,
+        has_product_constraints: params.has_product_constraints === true ? true : undefined,
+        has_category_constraints: params.has_category_constraints === true ? true : undefined,
+        has_email_restrictions: params.has_email_restrictions === true ? true : undefined,
+    } satisfies CouponsListExtras);
     return useQuery<CouponListEnvelope, Error, Paginated<AdminCoupon>>({
-        queryKey: ["admin", "coupons", "list", { locale, params }],
-        queryFn: () => apiGet<CouponListEnvelope>("coupons", { locale, query: buildQuery(params) }),
+        queryKey: ["admin", "coupons", "list", { locale, sdkQuery }],
+        queryFn: () => apiGet<CouponListEnvelope>("coupons", { locale, query: sdkQuery }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminCoupon),
             meta: payload.meta ?? {
-                page: params.page ?? 1,
-                perPage: params.perPage ?? 25,
+                page: query.page,
+                limit: query.limit,
                 total: payload.data?.length ?? 0,
                 lastPage: 1,
             },
@@ -237,13 +244,13 @@ interface RedemptionsEnvelope {
         discount_minor: number;
         redeemed_at: string;
     }[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
-export function useCouponRedemptions(id: number, page = 1, perPage = 10) {
+export function useCouponRedemptions(id: number, page = 1, limit = 10) {
     const locale = useLocale() as Locale;
     return useQuery<RedemptionsEnvelope>({
-        queryKey: ["admin", "coupons", "redemptions", { locale, id, page, perPage }],
-        queryFn: () => apiGet<RedemptionsEnvelope>(`coupons/${id}/redemptions`, { locale, query: { page, perPage } }),
+        queryKey: ["admin", "coupons", "redemptions", { locale, id, page, limit }],
+        queryFn: () => apiGet<RedemptionsEnvelope>(`coupons/${id}/redemptions`, { locale, query: { page, limit } }),
     });
 }

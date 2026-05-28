@@ -1,5 +1,7 @@
 import vine from "@vinejs/vine";
 
+import { adminOrderNotesView } from "#table_views/admin/order_notes";
+
 export const adminNoteCreateValidator = vine.compile(
     vine.object({
         body: vine.string().trim().minLength(1).maxLength(10_000),
@@ -8,10 +10,13 @@ export const adminNoteCreateValidator = vine.compile(
     }),
 );
 
-export const adminNoteListValidator = vine.compile(
-    vine.object({
+/**
+ * Wraps the TableView schema with the `type` keyword (`any`/`customer`/`internal`). `type` is
+ * the UI tab name; the controller flips it into a `visibility:eq:...` predicate. Strict mode:
+ * any other top-level query key returns 422.
+ */
+export const adminNoteListValidator = adminOrderNotesView.compileStrict({
+    extras: {
         type: vine.enum(["any", "customer", "internal"] as const).optional(),
-        page: vine.number().positive().optional(),
-        perPage: vine.number().positive().max(100).optional(),
-    }),
-);
+    },
+});

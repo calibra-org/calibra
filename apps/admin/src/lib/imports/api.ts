@@ -122,13 +122,13 @@ export function cancelImport(id: number, locale: string): Promise<{ data: Produc
 export function listImportErrors(
     id: number,
     locale: string,
-    options: { page?: number; perPage?: number; severity?: "error" | "warning"; includeResolved?: boolean } = {},
-): Promise<{ data: ProductImportErrorRow[]; meta: { page: number; perPage: number; total: number; lastPage: number } }> {
+    options: { page?: number; limit?: number; severity?: "error" | "warning"; includeResolved?: boolean } = {},
+): Promise<{ data: ProductImportErrorRow[]; meta: { page: number; limit: number; total: number; lastPage: number } }> {
     return apiGet(`products/import/${id}/errors`, {
         locale,
         query: {
             page: options.page,
-            per_page: options.perPage,
+            per_page: options.limit,
             severity: options.severity,
             include_resolved: options.includeResolved,
         },
@@ -159,19 +159,19 @@ export function listImportHistory(
     locale: string,
     options: {
         page?: number;
-        perPage?: number;
+        limit?: number;
         status?: string;
         userId?: number;
         presetId?: number;
         from?: string;
         to?: string;
     } = {},
-): Promise<{ data: ProductImportRow[]; meta: { page: number; perPage: number; total: number; lastPage: number } }> {
+): Promise<{ data: ProductImportRow[]; meta: { page: number; limit: number; total: number; lastPage: number } }> {
     return apiGet("products/import/history", {
         locale,
         query: {
             page: options.page,
-            per_page: options.perPage,
+            per_page: options.limit,
             status: options.status,
             user_id: options.userId,
             preset_id: options.presetId,
@@ -184,11 +184,11 @@ export function listImportHistory(
 export function listImportChanges(
     id: number,
     locale: string,
-    options: { sku?: string; page?: number; perPage?: number } = {},
-): Promise<{ data: ProductImportChangeRow[]; meta: { page: number; perPage: number; total: number; lastPage: number } }> {
+    options: { sku?: string; page?: number; limit?: number } = {},
+): Promise<{ data: ProductImportChangeRow[]; meta: { page: number; limit: number; total: number; lastPage: number } }> {
     return apiGet(`products/import/${id}/changes`, {
         locale,
-        query: { sku: options.sku, page: options.page, per_page: options.perPage },
+        query: { sku: options.sku, page: options.page, per_page: options.limit },
     });
 }
 

@@ -5,9 +5,12 @@ import { DateTime } from "luxon";
 
 import type Customer from "#models/customer";
 import CustomerDownload from "#models/customer_download";
+import { accountDownloadsView } from "#table_views/account/downloads";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
 
 const SIGNED_URL_TTL_MINUTES = 15;
+
+const accountDownloadsListValidator = accountDownloadsView.compileStrict({ defaultLimit: 100 });
 
 export default class DownloadsController {
     /**
@@ -16,13 +19,16 @@ export default class DownloadsController {
      */
     async index(ctx: HttpContext) {
         const customer = await this.requireCustomer(ctx);
+        const parsed = await accountDownloadsListValidator.validate(ctx.request.qs());
         const now = DateTime.utc();
-        const rows = await CustomerDownload.query()
+        /** Two security invariants pre-applied: customer-scope (can't read another customer's
+         * grants) AND the active-grant predicate (expired rows never leak through this endpoint
+         * regardless of the wire `filter[]`). */
+        const builder = CustomerDownload.query()
             .where("customer_id", Number(customer.id))
-            .where((q) => q.whereNull("expires_at").orWhere("expires_at", ">", now.toSQL()!))
-            .orderBy("granted_at", "desc");
-
-        return { data: rows.map((r) => new CustomerDownloadTransformer(r).toObject()) };
+            .where((q) => q.whereNull("expires_at").orWhere("expires_at", ">", now.toSQL()!));
+        const { data: rows, meta } = await accountDownloadsView.run<CustomerDownload>(builder, parsed);
+        return { data: rows.map((r) => new CustomerDownloadTransformer(r).toObject()), meta };
     }
 
     /**

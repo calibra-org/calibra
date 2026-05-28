@@ -2,18 +2,25 @@ operationId: adminPaymentAttemptsIndex
 summary: List payment attempts
 description: >
     Paginated audit log of every `payment_attempts` row — every init + callback writes here.
-    Filter by order, gateway, status, or date range. Read-only on the admin surface; the
-    payment service is the sole writer.
+    Filter, sort, and paginate via the unified TableView wire grammar (`filter[]=field:op:value`,
+    `sort[]=field:dir`, `page`, `limit`). Read-only on the admin surface; the payment service is
+    the sole writer.
+
+
+    **TableView filterable fields**: `id`, `order_id`, `gateway_id`, `gateway_code_snapshot`,
+    `status`, `amount_minor`, `created_at`, `initiated_at`, `verified_at`.
+
+
+    **TableView orderable fields**: `id`, `status`, `amount_minor`, `created_at`, `initiated_at`,
+    `verified_at`.
 tags: [Admin / Payments]
 
 parameters:
-    - $ref: "../../../common/components/parameters/PageQuery.yaml"
-    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
-    - { name: order_id, in: query, schema: { type: integer } }
-    - { name: payment_gateway_id, in: query, schema: { type: integer } }
-    - { name: status, in: query, schema: { type: string, enum: [initialized, pending, succeeded, failed, cancelled] } }
-    - { name: created_from, in: query, schema: { type: string, format: date-time } }
-    - { name: created_to, in: query, schema: { type: string, format: date-time } }
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
 
 responses:
     "200":

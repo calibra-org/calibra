@@ -17,6 +17,7 @@ import {
     toAdminCustomerTimeline,
 } from "#/lib/adapters/customers";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
+import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view";
 import type {
     AdminCustomer,
     AdminCustomerCounts,
@@ -25,80 +26,92 @@ import type {
     AdminCustomerNote,
     AdminCustomerSegment,
     AdminCustomerStatsDetail,
-    AdminCustomerStatus,
     AdminCustomerStatusHistory,
     AdminCustomerTagRow,
     AdminCustomerTimelineEntry,
     Paginated,
 } from "#/lib/types";
 
-type SortableColumn = "last_name" | "created_at" | "last_seen_at";
-
 export type CustomerTabKey = "any" | "account" | "guest" | "big" | "new" | "inactive" | "no_address" | "trashed";
 
+/**
+ * Inputs accepted by {@link useCustomersList}. `query` carries the unified TableView grammar
+ * (filter / filterOr / sort / page / limit). Every other field is a top-level extra whose key is
+ * the EXACT wire key the controller's `compileStrict` declares
+ * (`apps/api/app/validators/admin/customer_validator.ts`) — so the params object, the URL, and the
+ * request all read identically. These cover what TableView can't model: tab-strip scopes,
+ * free-text search across many columns, join-traversing facets (tags/cities), aggregate-based
+ * filters (with_orders, last_order_*), and the `include_stats` response-shape flag.
+ */
 export interface CustomersListParams {
-    page?: number;
-    perPage?: number;
-    search?: string;
-    sort?: `${SortableColumn}` | `-${SortableColumn}`;
+    query?: TableViewQuery;
+    q?: string;
     tab?: CustomerTabKey;
-    includeStats?: boolean;
-    countries?: string[];
+    include_stats?: boolean;
     cities?: string[];
     tags?: string[];
-    statuses?: AdminCustomerStatus[];
-    acquisitionChannels?: string[];
-    optInEmail?: boolean;
-    optInSms?: boolean;
-    /** Unified date filter string (`<op>:<value>`); applied to `customers.created_at`. */
-    created?: string;
-    /** Unified date filter string applied to the customer's most-recent counted order. */
-    lastOrder?: string;
-    hasNationalId?: boolean;
-    withOrders?: boolean;
-    noOrders?: boolean;
+    opt_in_email?: boolean;
+    opt_in_sms?: boolean;
+    /** Inclusive ISO date-time bounds for the customer's most-recent counted order. The
+     * picker primitive computes these via {@link dateFilterValueToTableViewFilter}. */
+    last_order_after?: string;
+    last_order_before?: string;
+    has_national_id?: boolean;
+    with_orders?: boolean;
+    no_orders?: boolean;
 }
 
 interface ListEnvelope {
     data: Parameters<typeof toAdminCustomer>[0][];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
-function listQuery(params: CustomersListParams): Record<string, string | number | boolean | undefined> {
-    const csv = (arr?: string[]) => (arr && arr.length > 0 ? arr.join(",") : undefined);
-    return {
-        page: params.page ?? 1,
-        perPage: params.perPage ?? 20,
-        search: params.search,
-        sort: params.sort,
-        tab: params.tab,
-        include_stats: params.includeStats,
-        countries: csv(params.countries),
-        cities: csv(params.cities),
-        tags: csv(params.tags),
-        statuses: csv(params.statuses),
-        acquisition_channels: csv(params.acquisitionChannels),
-        opt_in_email: params.optInEmail,
-        opt_in_sms: params.optInSms,
-        created: params.created,
-        last_order: params.lastOrder,
-        has_national_id: params.hasNationalId,
-        with_orders: params.withOrders,
-        no_orders: params.noOrders,
-    };
+/**
+ * Top-level extras the customers endpoint accepts. Keys mirror the controller's `compileStrict`
+ * extras verbatim; the `satisfies` at the call site flags a typo'd key before it can 422.
+ */
+interface CustomersListExtras {
+    q?: string;
+    tab?: CustomerTabKey;
+    include_stats?: boolean;
+    cities?: string;
+    tags?: string;
+    opt_in_email?: boolean;
+    opt_in_sms?: boolean;
+    last_order_after?: string;
+    last_order_before?: string;
+    has_national_id?: boolean;
+    with_orders?: boolean;
+    no_orders?: boolean;
 }
 
 export function useCustomersList(params: CustomersListParams = {}) {
     const locale = useLocale() as Locale;
-    const query = listQuery({ ...params, includeStats: params.includeStats ?? true });
+    const includeStats = params.include_stats ?? true;
+    const query: TableViewQuery = params.query ?? { page: 1, limit: 20, filter: [], filterOr: [], sort: [] };
+    const csv = (arr?: string[]) => (arr && arr.length > 0 ? arr.join(",") : undefined);
+    const sdkQuery = tableViewQueryToSdkQuery(query, {
+        q: params.q,
+        tab: params.tab,
+        include_stats: includeStats,
+        cities: csv(params.cities),
+        tags: csv(params.tags),
+        opt_in_email: params.opt_in_email,
+        opt_in_sms: params.opt_in_sms,
+        last_order_after: params.last_order_after,
+        last_order_before: params.last_order_before,
+        has_national_id: params.has_national_id,
+        with_orders: params.with_orders,
+        no_orders: params.no_orders,
+    } satisfies CustomersListExtras);
     return useQuery<ListEnvelope, Error, Paginated<AdminCustomer>>({
-        queryKey: ["admin", "customers", "list", { locale, ...query }],
-        queryFn: () => apiGet<ListEnvelope>("customers", { locale, query }),
+        queryKey: ["admin", "customers", "list", { locale, sdkQuery }],
+        queryFn: () => apiGet<ListEnvelope>("customers", { locale, query: sdkQuery }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminCustomer),
             meta: payload.meta ?? {
-                page: Number(query.page),
-                perPage: Number(query.perPage),
+                page: query.page,
+                limit: query.limit,
                 total: payload.data?.length ?? 0,
                 lastPage: 1,
             },
@@ -189,7 +202,7 @@ export function useCustomerTagSuggestions(q: string) {
     const locale = useLocale() as Locale;
     return useQuery<{ data: Parameters<typeof toAdminCustomerTag>[0][] }, Error, AdminCustomerTagRow[]>({
         queryKey: ["admin", "customer-tags", { locale, q }],
-        queryFn: () => apiGet("customer-tags", { locale, query: { q, perPage: 50 } }),
+        queryFn: () => apiGet("customer-tags", { locale, query: { q, limit: 50 } }),
         select: (payload) => payload.data.map(toAdminCustomerTag),
     });
 }

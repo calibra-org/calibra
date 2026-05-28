@@ -3,7 +3,7 @@ summary: Customer marketing-consent history (admin)
 tags: [Admin / Customers]
 parameters:
     - $ref: "../../../common/components/parameters/PageQuery.yaml"
-    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: id, in: path, required: true, schema: { type: integer } }
 responses:

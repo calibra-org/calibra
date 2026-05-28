@@ -1,0 +1,16 @@
+name: filter[]
+in: query
+description: >
+    AND-joined filter constraints. Each entry is `field:operator:value`, with
+    `field:value` accepted as shorthand for `field:eq:value`. Void operators
+    (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple
+    constraints on different fields combine with AND. The endpoint description
+    enumerates the allowed `field` set and the operator validity per field type.
+required: false
+style: form
+explode: true
+schema:
+    type: array
+    items:
+        type: string
+        pattern: "^[^:]+(?::[^:]+){1,2}$"

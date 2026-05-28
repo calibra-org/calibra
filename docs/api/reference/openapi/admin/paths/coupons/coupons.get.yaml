@@ -1,33 +1,36 @@
 operationId: adminCouponsIndex
 summary: List coupons (admin)
-description: Paginated list of coupons. Filter by status, discount type, or free-text search across the code.
+description: >
+    Paginated list of coupons. Per-column filters + sort + pagination go through the unified
+    TableView wire grammar. Bespoke filters (tab strip, free-text search, has_*_constraints
+    existence checks, brand pivot whereIn, redemptions_min/max aggregate, expiring_soon
+    horizon) stay as top-level params.
+
+
+    **TableView filterable fields**: `id`, `code`, `status`, `discount_type`, `amount`,
+    `minimum_amount`, `maximum_amount`, `free_shipping`, `individual_use`, `exclude_sale_items`,
+    `usage_limit`, `usage_limit_per_user`, `starts_at`, `expires_at`, `created_at`.
+
+
+    **TableView orderable fields**: `id`, `code`, `amount`, `starts_at`, `expires_at`,
+    `created_at`, `updated_at`.
+
+
+    Legacy `?perPage=` is mirrored to `limit`; legacy `?sort=` is no longer honoured (use
+    `sort[]=field:dir`). Per-column filters previously at `?status=`, `?discount_type=`,
+    `?free_shipping=`, `?min_amount_min=`, `?starts_after=`, etc. should move to
+    `filter[]=status:eq:X`, `filter[]=minimum_amount:gte:N`, `filter[]=starts_at:gte:DATE`,
+    and so on.
 tags: [Admin / Coupons]
 
 parameters:
-    - $ref: "../../../common/components/parameters/PageQuery.yaml"
-    - $ref: "../../../common/components/parameters/PerPageQuery.yaml"
-    - { name: search, in: query, schema: { type: string }, description: Matches across coupon code and translated description. }
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
+    - { name: q, in: query, schema: { type: string }, description: Matches across coupon code and translated description. }
     - { name: tab, in: query, schema: { type: string, enum: [any, active, disabled, expired, scheduled, used, trashed] } }
-    - { name: status, in: query, schema: { type: string, enum: [active, disabled] } }
-    - {
-          name: discount_type,
-          in: query,
-          schema: { type: array, items: { type: string, enum: [fixed_cart, fixed_product, percent, free_shipping] } },
-          style: form,
-          explode: false,
-          description: "Comma-separated list (`?discount_type=fixed_cart,percent`)."
-      }
-    - { name: free_shipping, in: query, schema: { type: boolean } }
-    - { name: individual_use, in: query, schema: { type: boolean } }
-    - { name: exclude_sale_items, in: query, schema: { type: boolean } }
-    - { name: min_amount_min, in: query, schema: { type: integer } }
-    - { name: min_amount_max, in: query, schema: { type: integer } }
-    - { name: max_amount_min, in: query, schema: { type: integer } }
-    - { name: max_amount_max, in: query, schema: { type: integer } }
-    - { name: starts_after, in: query, schema: { type: string, format: date-time } }
-    - { name: starts_before, in: query, schema: { type: string, format: date-time } }
-    - { name: expires_after, in: query, schema: { type: string, format: date-time } }
-    - { name: expires_before, in: query, schema: { type: string, format: date-time } }
     - { name: redemptions_min, in: query, schema: { type: integer } }
     - { name: redemptions_max, in: query, schema: { type: integer } }
     - { name: has_product_constraints, in: query, schema: { type: boolean } }
@@ -41,12 +44,6 @@ parameters:
           style: form,
           explode: false,
           description: Comma-separated brand ids.
-      }
-    - {
-          name: sort,
-          in: query,
-          schema: { type: string },
-          description: "`column` for asc, `-column` for desc. Allowed: `code`, `discount_type`, `amount_minor`, `amount_percent`, `starts_at`, `expires_at`, `created_at`.",
       }
 
 responses:

@@ -136,7 +136,7 @@ test.group("admin_orders.spec", (group) => {
         await orderStateMachine.transition(b, OrderStatus.Pending);
         await orderStateMachine.transition(b, OrderStatus.Cancelled);
 
-        const list = await client.get("/api/v1/admin/orders?status=pending").loginAs(admin);
+        const list = await client.get("/api/v1/admin/orders?filter[]=status:eq:pending").loginAs(admin);
         list.assertStatus(200);
         list.assertAgainstApiSpec();
         assert.equal(list.body().data.length, 1);

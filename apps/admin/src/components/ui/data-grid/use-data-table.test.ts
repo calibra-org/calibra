@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_PER_PAGE_OPTIONS, emptyPaginationMeta, isAllVisibleSelected, parseSort, serializeSort } from "./use-data-table";
+import { DEFAULT_LIMIT_OPTIONS, emptyPaginationMeta, parseSort, serializeSort } from "./use-data-table";
+import { isAllVisibleSelected } from "./use-selection-state";
 
 describe("parseSort / serializeSort", () => {
     it("parses an empty URL value as undefined", () => {
@@ -57,18 +58,18 @@ describe("isAllVisibleSelected", () => {
 });
 
 describe("emptyPaginationMeta", () => {
-    it("uses the supplied perPage value", () => {
+    it("uses the supplied limit value", () => {
         const meta = emptyPaginationMeta(50);
-        expect(meta.perPage).toBe(50);
+        expect(meta.limit).toBe(50);
         expect(meta.total).toBe(0);
         expect(meta.lastPage).toBe(1);
         expect(meta.page).toBe(1);
     });
 });
 
-describe("DEFAULT_PER_PAGE_OPTIONS", () => {
+describe("DEFAULT_LIMIT_OPTIONS", () => {
     it("starts at 10 and includes a 100-row option", () => {
-        expect(DEFAULT_PER_PAGE_OPTIONS[0]).toBe(10);
-        expect(DEFAULT_PER_PAGE_OPTIONS).toContain(100);
+        expect(DEFAULT_LIMIT_OPTIONS[0]).toBe(10);
+        expect(DEFAULT_LIMIT_OPTIONS).toContain(100);
     });
 });

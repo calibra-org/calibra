@@ -53,7 +53,7 @@ export function MediaPicker({ open, mode, value, onOpenChange, onSelect }: Media
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [type, setType] = useState<MediaTypeFilter>("all");
     const [month, setMonth] = useState("");
-    const [perPage, setPerPage] = useState(PER_PAGE);
+    const [limit, setLimit] = useState(PER_PAGE);
 
     /** Reset state every time the dialog opens so a stale selection doesn't leak between rows. */
     useEffect(() => {
@@ -64,7 +64,7 @@ export function MediaPicker({ open, mode, value, onOpenChange, onSelect }: Media
         setDebouncedSearch("");
         setType("all");
         setMonth("");
-        setPerPage(PER_PAGE);
+        setLimit(PER_PAGE);
     }, [open, value]);
 
     useEffect(() => {
@@ -74,20 +74,20 @@ export function MediaPicker({ open, mode, value, onOpenChange, onSelect }: Media
 
     const setSearchWithReset = useCallback((next: string) => {
         setSearch(next);
-        setPerPage(PER_PAGE);
+        setLimit(PER_PAGE);
     }, []);
     const setTypeWithReset = useCallback((next: MediaTypeFilter) => {
         setType(next);
-        setPerPage(PER_PAGE);
+        setLimit(PER_PAGE);
     }, []);
     const setMonthWithReset = useCallback((next: string) => {
         setMonth(next);
-        setPerPage(PER_PAGE);
+        setLimit(PER_PAGE);
     }, []);
 
     const query = useMediaList({
-        perPage,
-        search: debouncedSearch.length > 0 ? debouncedSearch : undefined,
+        limit,
+        q: debouncedSearch.length > 0 ? debouncedSearch : undefined,
         type,
         month,
     });
@@ -98,11 +98,11 @@ export function MediaPicker({ open, mode, value, onOpenChange, onSelect }: Media
     const total = query.data?.meta.total ?? rows.length;
     const canLoadMore = rows.length < total;
 
-    const previousPerPage = useRef(perPage);
-    const isLoadingMore = query.isFetching && previousPerPage.current !== perPage;
+    const previousLimit = useRef(limit);
+    const isLoadingMore = query.isFetching && previousLimit.current !== limit;
     useEffect(() => {
-        if (!query.isFetching) previousPerPage.current = perPage;
-    }, [perPage, query.isFetching]);
+        if (!query.isFetching) previousLimit.current = limit;
+    }, [limit, query.isFetching]);
 
     const isFiltering = debouncedSearch.length > 0 || type !== "all" || month.length > 0;
 
@@ -114,7 +114,7 @@ export function MediaPicker({ open, mode, value, onOpenChange, onSelect }: Media
     );
 
     const handleLoadMore = useCallback(() => {
-        setPerPage((current) => current + PER_PAGE);
+        setLimit((current) => current + PER_PAGE);
     }, []);
 
     const handleUploaded = useCallback(

@@ -3,7 +3,10 @@ import type { HttpContext } from "@adonisjs/core/http";
 
 import Order from "#models/order";
 import OrderStatusHistory from "#models/order_status_history";
+import { adminOrderHistoryView } from "#table_views/admin/order_history";
 import OrderStatusHistoryTransformer from "#transformers/order_status_history_transformer";
+
+const adminOrderHistoryListValidator = adminOrderHistoryView.compileStrict({ defaultLimit: 100 });
 
 /**
  * Admin status-history endpoint. Rows are written by `OrderStateMachine.transition()`; this
@@ -13,9 +16,12 @@ import OrderStatusHistoryTransformer from "#transformers/order_status_history_tr
 export default class AdminOrderHistoryController {
     async index(ctx: HttpContext) {
         const order = await this.findOrderOrFail(ctx.params.order_id);
-        const rows = await OrderStatusHistory.query().where("order_id", Number(order.id)).orderBy("occurred_at", "asc");
+        const parsed = await adminOrderHistoryListValidator.validate(ctx.request.qs());
+        const builder = OrderStatusHistory.query().where("order_id", Number(order.id));
+        const { data: rows, meta } = await adminOrderHistoryView.run<OrderStatusHistory>(builder, parsed);
         return {
             data: rows.map((row) => new OrderStatusHistoryTransformer(row).forAdmin()),
+            meta,
         };
     }
 

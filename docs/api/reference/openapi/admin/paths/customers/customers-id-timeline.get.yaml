@@ -1,23 +1,30 @@
 operationId: adminCustomerTimeline
 summary: Unified activity timeline for a customer (admin)
 description: >
-    Merges orders + notes + status flips + marketing-consent flips + impersonations into a single
-    feed, sorted newest first. The `types` query parameter (comma-separated) filters to a subset;
-    `limit` caps the total row count (default 50, max 200).
+    Merges orders + notes + status flips + marketing-consent flips + impersonations into a
+    single feed, sorted newest first, then paginates the merged result. The `types` query
+    parameter (comma-separated) filters to a subset; `page` and `limit` are TableView-shaped
+    (default page=1, limit=50, max limit=200). Strict mode: any other top-level query key
+    returns 422.
+
+    Internally this is stitched across six tables in-controller rather than going through a
+    TableView (no single model the runtime could point at), but the response shape and wire
+    grammar match every other paginated list endpoint.
 tags: [Admin / Customers]
 parameters:
-    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
     - { name: types, in: query, schema: { type: string }, description: "Comma-separated subset of [order, note, status, marketing, impersonation]." }
-    - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200 } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
 responses:
     "200":
-        description: Timeline rows.
+        description: Paginated timeline rows.
         content:
             application/json:
                 schema:
                     type: object
-                    required: [data]
+                    required: [data, meta]
                     properties:
                         data:
                             type: array
@@ -38,6 +45,7 @@ responses:
                                                   id: { type: string }
                                                   email: { type: string }
                                               required: [id, email]
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
     "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
     "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
     "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

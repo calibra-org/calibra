@@ -1,26 +1,39 @@
 operationId: adminVariationsIndex
 summary: List a product's variations
 description: >
-    Flat list of every variation row for the parent product. Not paginated — the variations
-    table is small enough (tens to a few hundred rows for SKU-heavy products) that pagination
-    would just add noise to the editor's inline data-grid. 404s if the product doesn't exist.
+    Paginated list of every variation row for the parent product on the unified TableView
+    grammar. Parent-id + soft-delete scope is pre-applied on the builder; just-deleted rows
+    don't reappear on the next refetch. 404s if the product doesn't exist.
+
+    **TableView filterable fields**: `id`, `sku`, `regular_price`, `sale_price`, `menu_order`,
+    `status`, `created_at`.
+
+    **TableView orderable fields**: `id`, `sku`, `regular_price`, `menu_order`, `created_at`.
+
+    Default page size is 100.
 tags: [Admin / Catalog / Variations]
 
 parameters:
     - { name: product_id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit500.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
 
 responses:
     "200":
-        description: Variation list.
+        description: Paginated variation list.
         content:
             application/json:
                 schema:
                     type: object
-                    required: [data]
+                    required: [data, meta]
                     properties:
                         data:
                             type: array
                             items: { $ref: "../../components/schemas/AdminProductVariation.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
     "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
     "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
     "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

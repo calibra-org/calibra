@@ -11,7 +11,7 @@ describe("envelope helpers", () => {
     it("unwrapPaginated returns the data array, discarding meta", () => {
         const envelope: Paginated<number> = {
             data: [1, 2, 3],
-            meta: { page: 1, perPage: 24, total: 3, lastPage: 1 },
+            meta: { page: 1, limit: 24, total: 3, lastPage: 1 },
         };
         expect(unwrapPaginated(envelope)).toEqual([1, 2, 3]);
     });

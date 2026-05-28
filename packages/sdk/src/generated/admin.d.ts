@@ -13,7 +13,21 @@ export interface paths {
         };
         /**
          * List orders (admin)
-         * @description Paginated list of every non-deleted order. Filter by status, customer, date range, and free-text search across `order_number`, `billing_email`, and customer name. Drafts are included by default — pass `include_drafts=false` to exclude them.
+         * @description Paginated list of orders. Filter, sort, and paginate via the unified TableView wire grammar (`filter[]=field:op:value`, `filterOr[]=…`, `sort[]=field:dir`).
+         *
+         *     **Filterable fields** (with allowed operators per type):
+         *         `id` (bigint), `order_number` (bigint), `status` (enum: draft, pending, on_hold,
+         *         processing, completed, cancelled, refunded, failed), `customer_id` (bigint),
+         *         `created_via` (string), `payment_method_code_snapshot` (string), `billing_email`
+         *         (string), `created_at` (datetime), `grand_total` (bigint), `date_paid_at` (datetime),
+         *         `date_completed_at` (datetime).
+         *
+         *
+         *     **Orderable fields**: `id`, `order_number`, `status`, `created_at`, `updated_at`, `grand_total`, `date_paid_at`, `date_completed_at`.
+         *
+         *     Two extras outside the TableView grammar: `q` is a free-text search across `billing_email`, `order_number`, and `id`. `trashed=true` flips the soft-delete scope so only deleted orders are returned (default scope excludes deleted rows).
+         *
+         *     All pre-TableView per-list query params (`status=`, `customer_id=`, `source=`, `payment=`, `country=`, `created=`, `sort=`, `perPage=`) are no longer accepted and return `422`.
          */
         get: operations["adminOrdersIndex"];
         put?: never;
@@ -529,7 +543,9 @@ export interface paths {
         };
         /**
          * List an order's status-history audit rows
-         * @description Returns every `order_status_history` row for the order, ordered ascending by `occurred_at`. Rows are written by {@link OrderStateMachine.transition}; this endpoint is read-only — admins cannot mutate audit history.
+         * @description Paginated `order_status_history` rows for the order on the unified TableView grammar, by default ordered ascending by `occurred_at`. Rows are written by {@link OrderStateMachine.transition}; this endpoint is read-only.
+         *     **TableView filterable fields**: `id`, `from_status`, `to_status`, `actor_user_id`, `occurred_at`.
+         *     **TableView orderable fields**: `id`, `occurred_at`.
          */
         get: operations["adminOrderHistoryIndex"];
         put?: never;
@@ -716,7 +732,13 @@ export interface paths {
         };
         /**
          * List coupons (admin)
-         * @description Paginated list of coupons. Filter by status, discount type, or free-text search across the code.
+         * @description Paginated list of coupons. Per-column filters + sort + pagination go through the unified TableView wire grammar. Bespoke filters (tab strip, free-text search, has_*_constraints existence checks, brand pivot whereIn, redemptions_min/max aggregate, expiring_soon horizon) stay as top-level params.
+         *
+         *     **TableView filterable fields**: `id`, `code`, `status`, `discount_type`, `amount`, `minimum_amount`, `maximum_amount`, `free_shipping`, `individual_use`, `exclude_sale_items`, `usage_limit`, `usage_limit_per_user`, `starts_at`, `expires_at`, `created_at`.
+         *
+         *     **TableView orderable fields**: `id`, `code`, `amount`, `starts_at`, `expires_at`, `created_at`, `updated_at`.
+         *
+         *     Legacy `?perPage=` is mirrored to `limit`; legacy `?sort=` is no longer honoured (use `sort[]=field:dir`). Per-column filters previously at `?status=`, `?discount_type=`, `?free_shipping=`, `?min_amount_min=`, `?starts_after=`, etc. should move to `filter[]=status:eq:X`, `filter[]=minimum_amount:gte:N`, `filter[]=starts_at:gte:DATE`, and so on.
          */
         get: operations["adminCouponsIndex"];
         put?: never;
@@ -834,7 +856,7 @@ export interface paths {
         };
         /**
          * Export coupons as CSV (admin)
-         * @description Sync CSV export. Mirrors the list endpoint's filter set (`tab`, `status`, `search`, `discount_type`, `brand`) so the caller can "export current view." Returns `text/csv; charset=utf-8` with a filename hint via `content-disposition`. The number of rows emitted is repeated in the `X-Coupon-Export-Count` response header so the client can show a confirmation toast without re-parsing the body.
+         * @description Sync CSV export. Mirrors the list endpoint's filter set (`tab`, `status`, `q`, `discount_type`, `brand`) so the caller can "export current view." Returns `text/csv; charset=utf-8` with a filename hint via `content-disposition`. The number of rows emitted is repeated in the `X-Coupon-Export-Count` response header so the client can show a confirmation toast without re-parsing the body.
          */
         get: operations["adminCouponsExport"];
         put?: never;
@@ -1115,7 +1137,32 @@ export interface paths {
         };
         /**
          * List customers (admin)
-         * @description Paginated list of every customer. Free-text search runs over `users.email`, `customers.first_name`, `customers.last_name`, `customers.phone`, address `city`/`postcode`, and Iran `national_id`. Twenty-plus filter dimensions (tab, country list, city, tags, status, acquisition channel, marketing opt-ins, date ranges, order count/spend/AOV ranges). Pass `include_stats=1` to fold lifetime metrics into each row via a single GROUP BY query (no N+1).
+         * @description Paginated list of customers. Simple per-column filters and sort go through the unified TableView wire grammar (`filter[]=field:op:value`, `filterOr[]=…`, `sort[]=field:dir`). Endpoint-specific extensions stay as top-level params for filters that don't fit the grammar.
+         *
+         *     **TableView filterable fields**:
+         *         `id`, `first_name`, `last_name`, `is_paying_customer`, `country_default`, `status`,
+         *         `acquisition_channel`, `created_at`, `user_id`.
+         *
+         *
+         *     **TableView orderable fields**: `id`, `first_name`, `last_name`, `created_at`, `updated_at`.
+         *
+         *     **Endpoint extensions** (outside TableView):
+         *         - `q` — free-text search over `users.email`, `customers.first_name`, `last_name`,
+         *           `phone`, address `city`/`postcode`, and Iran `national_id`.
+         *         - `tab` — bespoke scope (any / account / guest / big / new / inactive / no_address /
+         *           trashed). The `big` bucket uses a 90th-percentile spend threshold over paid orders.
+         *         - `role` — restrict via the joined `users.role` (`customer` / `admin`).
+         *         - `tags`, `cities`, `regions` — multi-value joins through the respective pivot/related
+         *           tables.
+         *         - `opt_in_email`, `opt_in_sms`, `email_verified`, `has_national_id` — existence checks on
+         *           marketing prefs / iran profile.
+         *         - `with_orders`, `no_orders`, `order_count_{min,max}`, `lifetime_spend_{min,max}`,
+         *           `aov_{min,max}`, `last_order_{after,before}` — aggregate filters scoped through the orders table.
+         *         - `include_stats=true` folds per-customer lifetime metrics into each row via one
+         *           GROUP BY query.
+         *
+         *
+         *     All pre-TableView per-column query params (`is_paying_customer=`, `country=`, `countries=`, `statuses=`, `acquisition_channels=`, `created=`, `sort=`, `perPage=`, `search=`) are no longer accepted at their original shape — `is_paying_customer` / `country` / `statuses` / `acquisition_channels` / `created` move to `filter[]`, `sort` moves to `sort[]`, `perPage` becomes `limit`, and `search` becomes `q`.
          */
         get: operations["adminCustomersIndex"];
         put?: never;
@@ -1361,7 +1408,9 @@ export interface paths {
         };
         /**
          * List notes on a customer (admin)
-         * @description Internal notes, newest first. The `author` is the admin who wrote each note.
+         * @description Paginated internal notes for one customer on the unified TableView grammar. Customer-id scope is pre-applied at the controller (security invariant); `?filter[]=customer_id:eq:N` cannot cross-walk between customers.
+         *     **TableView filterable fields**: `id`, `author_user_id`, `created_at`.
+         *     **TableView orderable fields**: `id`, `created_at`. Default sort is newest-first.
          */
         get: operations["adminCustomerNotesIndex"];
         put?: never;
@@ -1517,7 +1566,9 @@ export interface paths {
         };
         /**
          * List customer segments (admin, owner-scoped)
-         * @description Only segments owned by the calling admin are returned. Pinned segments come first.
+         * @description Paginated list of segments owned by the calling admin, on the unified TableView grammar. Owner-scope pre-applied at the controller (security invariant) — a forged `?filter[]=user_id:eq:N` cannot read another operator's saved segments. Pinned segments come first by default.
+         *     **TableView filterable fields**: `id`, `name`, `is_pinned`, `created_at`, `last_used_at`.
+         *     **TableView orderable fields**: `id`, `name`, `is_pinned`, `created_at`, `last_used_at`.
          */
         get: operations["adminCustomerSegmentsIndex"];
         put?: never;
@@ -1766,7 +1817,8 @@ export interface paths {
         };
         /**
          * Unified activity timeline for a customer (admin)
-         * @description Merges orders + notes + status flips + marketing-consent flips + impersonations into a single feed, sorted newest first. The `types` query parameter (comma-separated) filters to a subset; `limit` caps the total row count (default 50, max 200).
+         * @description Merges orders + notes + status flips + marketing-consent flips + impersonations into a single feed, sorted newest first, then paginates the merged result. The `types` query parameter (comma-separated) filters to a subset; `page` and `limit` are TableView-shaped (default page=1, limit=50, max limit=200). Strict mode: any other top-level query key returns 422.
+         *     Internally this is stitched across six tables in-controller rather than going through a TableView (no single model the runtime could point at), but the response shape and wire grammar match every other paginated list endpoint.
          */
         get: operations["adminCustomerTimeline"];
         put?: never;
@@ -1824,7 +1876,10 @@ export interface paths {
         };
         /**
          * List payment gateways
-         * @description Returns every payment gateway in the registry — both enabled and disabled — ordered by `sort_order`. The capabilities map is reported back per row so the admin UI can hide refund affordances on gateways that don't support them.
+         * @description Paginated list of every payment gateway in the registry — both enabled and disabled — on the unified TableView grammar. The capabilities map is reported back per row so the admin UI can hide refund affordances on gateways that don't support them.
+         *     **TableView filterable fields**: `id`, `code`, `enabled`, `ordering`.
+         *     **TableView orderable fields**: `id`, `code`, `enabled`, `ordering`.
+         *     Legacy `?enabled=true` is no longer accepted — use `?filter[]=enabled:eq:true`. Default page size is 100.
          */
         get: operations["adminPaymentGatewaysIndex"];
         put?: never;
@@ -1904,7 +1959,11 @@ export interface paths {
         };
         /**
          * List payment attempts
-         * @description Paginated audit log of every `payment_attempts` row — every init + callback writes here. Filter by order, gateway, status, or date range. Read-only on the admin surface; the payment service is the sole writer.
+         * @description Paginated audit log of every `payment_attempts` row — every init + callback writes here. Filter, sort, and paginate via the unified TableView wire grammar (`filter[]=field:op:value`, `sort[]=field:dir`, `page`, `limit`). Read-only on the admin surface; the payment service is the sole writer.
+         *
+         *     **TableView filterable fields**: `id`, `order_id`, `gateway_id`, `gateway_code_snapshot`, `status`, `amount_minor`, `created_at`, `initiated_at`, `verified_at`.
+         *
+         *     **TableView orderable fields**: `id`, `status`, `amount_minor`, `created_at`, `initiated_at`, `verified_at`.
          */
         get: operations["adminPaymentAttemptsIndex"];
         put?: never;
@@ -2019,7 +2078,30 @@ export interface paths {
         };
         /**
          * List products (admin)
-         * @description Paginated list of every non-deleted product, including drafts and archived rows. Filter by status, type, free-text search, category/tag/brand, on-sale flag (schedule-aware), catalog visibility, stock status / level, created date range, image presence, soft-delete state, and arbitrary id whitelists. Optional facet counts are returned when `include=facet_counts`.
+         * @description Paginated list of products. Sort + pagination + simple per-column filters go through the unified TableView wire grammar (`filter[]=field:op:value`, `sort[]=field:dir`, `page`, `limit`). The endpoint's bespoke surface — category/tag/brand pivot whereIn subqueries, multi-column free-text search, stock_status/stock_level subquery / aggregate filters, has_image existence, on_sale schedule-aware window, soft-delete scope toggles, id whitelists, and the optional `include=facet_counts` response shape — stays as top-level params because they need bespoke whereIn / aggregate / response-shape semantics the v1 TableView runtime can't model.
+         *
+         *     **TableView filterable fields**:
+         *         `id`, `sku`, `gtin`, `type`, `status`, `catalog_visibility`, `featured`, `virtual`,
+         *         `downloadable`, `regular_price`, `sale_price`, `tax_class_id`, `menu_order`,
+         *         `created_at`. Operator validity per type (see the shared `filter[]` parameter docs).
+         *
+         *
+         *     **TableView orderable fields**: `id`, `sku`, `regular_price`, `menu_order`, `created_at`, `updated_at`. (The legacy `sort=name` and `sort=stock_quantity` cases — which required orderByRaw across product_translations and inventory_items — are not exposed through TableView; sort by `sku` or `created_at` instead, or filter via the dedicated stock facets.)
+         *
+         *     **Endpoint extensions** (kept as top-level params):
+         *         - `q` — multi-column ILIKE across `product_translations.name` and `products.sku`.
+         *         - `category`, `brand`, `tag` — single-id whereIn through the respective pivot tables.
+         *         - `stock_status` — subquery on inventory_items.
+         *         - `stock_level` — aggregate having-clause grouping (instock / low / outofstock).
+         *         - `on_sale` — schedule-aware sale_starts_at / sale_ends_at window.
+         *         - `has_image` — existence check on product_images.
+         *         - `with_trashed` / `only_trashed` — soft-delete scope.
+         *         - `ids` — comma-separated id whitelist.
+         *         - `include=facet_counts` — adds a `facets` block to the envelope; counts are computed
+         *           per facet with each facet temporarily skipped from the predicate set.
+         *
+         *
+         *     Legacy `?sort=` / `?perPage=` query params are silently dropped — use `sort[]=` and `limit` instead.
          */
         get: operations["adminProductsIndex"];
         put?: never;
@@ -2267,7 +2349,10 @@ export interface paths {
         };
         /**
          * List a product's variations
-         * @description Flat list of every variation row for the parent product. Not paginated — the variations table is small enough (tens to a few hundred rows for SKU-heavy products) that pagination would just add noise to the editor's inline data-grid. 404s if the product doesn't exist.
+         * @description Paginated list of every variation row for the parent product on the unified TableView grammar. Parent-id + soft-delete scope is pre-applied on the builder; just-deleted rows don't reappear on the next refetch. 404s if the product doesn't exist.
+         *     **TableView filterable fields**: `id`, `sku`, `regular_price`, `sale_price`, `menu_order`, `status`, `created_at`.
+         *     **TableView orderable fields**: `id`, `sku`, `regular_price`, `menu_order`, `created_at`.
+         *     Default page size is 100.
          */
         get: operations["adminVariationsIndex"];
         put?: never;
@@ -2357,7 +2442,10 @@ export interface paths {
         };
         /**
          * List attributes (admin)
-         * @description Paginated list of every catalog attribute. Terms live under each attribute and are fetched separately.
+         * @description Paginated list of every catalog attribute on the unified TableView grammar. Terms live under each attribute and are fetched separately via `GET /admin/attributes/{id}/terms`.
+         *     **TableView filterable fields**: `id`, `code`, `order_by`, `has_archives`, `created_at`.
+         *     **TableView orderable fields**: `id`, `code`, `created_at`.
+         *     Default page size is 100.
          */
         get: operations["adminAttributesIndex"];
         put?: never;
@@ -2449,7 +2537,10 @@ export interface paths {
         };
         /**
          * List terms under an attribute
-         * @description Paginated list of every term nested under the given attribute.
+         * @description Paginated list of every term nested under the given attribute, on the unified TableView grammar. Parent-id scope is pre-applied on the builder; `?filter[]=attribute_id:eq:N` cannot cross-walk between attributes.
+         *     **TableView filterable fields**: `id`, `menu_order`, `created_at`.
+         *     **TableView orderable fields**: `id`, `menu_order`, `created_at`.
+         *     Default page size is 100.
          */
         get: operations["adminTermsIndex"];
         put?: never;
@@ -2519,7 +2610,11 @@ export interface paths {
         };
         /**
          * List categories (admin)
-         * @description Paginated list of every non-deleted category. Use `parent_id` to fetch one level of the hierarchy.
+         * @description Paginated list of every category on the unified TableView grammar. Use `?filter[]=parent_id:eq:N` (or `:isnull` for top-level rows) for one level of the hierarchy.
+         *     **TableView filterable fields**: `id`, `parent_id`, `menu_order`, `created_at`.
+         *     **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`, `used_count`.
+         *     `slug` lives on the translations table, so it is sort-only (ordered by the per-row translated slug via a correlated subquery); free-text slug matching is available through `?q=`.
+         *     `used_count` sorts by the live `product_category_links` count via a correlated subquery. Default page size is 100 (large enough for tree pickers' typical full set).
          */
         get: operations["adminCategoriesIndex"];
         put?: never;
@@ -2611,7 +2706,11 @@ export interface paths {
         };
         /**
          * List tags (admin)
-         * @description Paginated list of every non-deleted tag.
+         * @description Paginated list of every tag on the unified TableView grammar.
+         *     **TableView filterable fields**: `id`, `menu_order`, `created_at`.
+         *     **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`, `used_count`.
+         *     `slug` lives on the translations table, so it is sort-only (ordered by the per-row translated slug via a correlated subquery); free-text slug matching is available through `?q=`.
+         *     `used_count` sorts by the live `product_tag_links` count via a correlated subquery. Default page size is 100.
          */
         get: operations["adminTagsIndex"];
         put?: never;
@@ -2703,7 +2802,11 @@ export interface paths {
         };
         /**
          * List brands (admin)
-         * @description Paginated list of every non-deleted brand.
+         * @description Paginated list of every non-deleted brand on the unified TableView grammar.
+         *     **TableView filterable fields**: `id`, `menu_order`, `created_at`.
+         *     **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`, `used_count`.
+         *     `slug` lives on the translations table, so it is sort-only (ordered by the per-row translated slug via a correlated subquery); free-text slug matching is available through `?q=`.
+         *     `used_count` sorts by the live `product_brand_links` count via a correlated subquery; use `?sort[]=used_count:desc` to rank brands most-used first. Default page size is 100 (large enough to render the typical full set into selector / combobox UIs without a `?limit=` override). Legacy `?perPage=` / `?sort=-used_count` / `?search=` no longer parse.
          */
         get: operations["adminBrandsIndex"];
         put?: never;
@@ -2795,7 +2898,10 @@ export interface paths {
         };
         /**
          * List shipping classes
-         * @description Paginated list of shipping classes.
+         * @description Paginated list of shipping classes on the unified TableView grammar.
+         *     **TableView filterable fields**: `id`, `slug`, `menu_order`, `created_at`.
+         *     **TableView orderable fields**: `id`, `slug`, `menu_order`, `created_at`.
+         *     Default page size is 100.
          */
         get: operations["adminShippingClassesIndex"];
         put?: never;
@@ -2887,7 +2993,9 @@ export interface paths {
         };
         /**
          * List tax classes
-         * @description Returns every tax class. Not paginated — the dataset is small (typically <20 rows).
+         * @description Paginated list of tax classes on the unified TableView grammar. The dataset is small (typically <20 rows by convention) so the default page size of 100 returns the full set without forcing a `?limit=` override.
+         *     **TableView filterable fields**: `id`, `name`, `slug`.
+         *     **TableView orderable fields**: `id`, `name`, `slug`.
          */
         get: operations["adminTaxClassesIndex"];
         put?: never;
@@ -2979,7 +3087,13 @@ export interface paths {
         };
         /**
          * List product reviews (admin)
-         * @description Paginated list of every review, including pending and rejected rows. Filter by status, product, rating, or verification.
+         * @description Paginated list of every review, including pending and rejected rows. Filter, sort, and paginate via the unified TableView wire grammar (`filter[]=field:op:value`, `sort[]=field:dir`, `page`, `limit`).
+         *
+         *     **TableView filterable fields**: `id`, `product_id`, `customer_id`, `rating`, `status` (`pending`/`approved`/`rejected`), `verified`, `created_at`.
+         *
+         *     **TableView orderable fields**: `id`, `rating`, `created_at`.
+         *
+         *     Response shape moved from un-paginated `{ data }` to `{ data, meta }` — this is the breaking change of the moderation-queue migration. FE consumers were updated to read `meta.total` instead of falling back to `data.length`.
          */
         get: operations["adminReviewsIndex"];
         put?: never;
@@ -3041,7 +3155,13 @@ export interface paths {
         };
         /**
          * List media library entries (admin)
-         * @description Paginated listing of every media row, ordered newest first. Filters match the WordPress `/wp-admin/upload.php` filter pills — type group, month bucket, search, attached/unattached, "mine".
+         * @description Paginated media library listing. Sort + pagination + per-column filters go through the unified TableView grammar; the WordPress-style filter pills (`type` MIME-group expansion, `month` YYYY-MM bucket, multi-column `q`, `unattached` / `mine` existence checks, `uploaded_by`) stay as top-level params because their semantics need bespoke whereIn / subquery / OR logic the v1 runtime can't model.
+         *
+         *     **TableView filterable fields**: `id`, `kind`, `mime`, `size_bytes`, `width`, `height`, `uploaded_by_user_id`, `created_at`, `filename`.
+         *
+         *     **TableView orderable fields**: `id`, `size_bytes`, `created_at`, `filename`.
+         *
+         *     Default `limit` is 60 (the media grid's natural row count); legacy `?perPage=` / `?per_page=` keep working as aliases for `limit` so the existing FE doesn't need a wire refactor in this PR.
          */
         get: operations["adminMediaIndex"];
         put?: never;
@@ -3176,7 +3296,7 @@ export interface components {
          * @description Pagination metadata returned alongside any paginated `data` array.
          * @example {
          *       "page": 1,
-         *       "perPage": 20,
+         *       "limit": 20,
          *       "total": 137,
          *       "lastPage": 7
          *     }
@@ -3184,8 +3304,11 @@ export interface components {
         PaginationMeta: {
             /** @description The 1-indexed page returned. */
             page: number;
-            /** @description Number of items per page. */
-            perPage: number;
+            /**
+             * @description Number of items per page. Mirrors the `?limit=N` wire param the client can send;
+             *     servers may clamp to a per-endpoint cap.
+             */
+            limit: number;
             /** @description Total number of matching records across all pages. */
             total: number;
             /** @description The last 1-indexed page that contains records. */
@@ -4551,14 +4674,24 @@ export interface components {
         };
     };
     parameters: {
-        /** @description 1-indexed page number. Defaults to 1 when omitted. */
-        PageQuery: number;
-        /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-        PerPageQuery: number;
+        /** @description 1-indexed page number. Defaults to 1. */
+        Page: number;
+        /** @description Items per page. Capped at 100. Defaults to 20. */
+        Limit: number;
+        /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+        Filter: string[];
+        /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+        FilterOr: string[];
+        /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+        Sort: string[];
         /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
         LocaleHeader: "fa" | "en";
+        /** @description 1-indexed page number. Defaults to 1 when omitted. */
+        PageQuery: number;
         /** @description Client-generated idempotency token (≤ 64 chars) for write operations that must be safe to retry: `POST /checkout/submit`, `POST /payment/init/:order_key`, admin `POST .../refunds`. A retry with the same key returns the original result without re-running side effects. Keys are scoped per-resource (per-order for refunds, per-cart for submit). */
         IdempotencyKeyHeader: string;
+        /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+        Limit500: number;
     };
     requestBodies: never;
     headers: never;
@@ -4569,24 +4702,20 @@ export interface operations {
     adminOrdersIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                status?: "draft" | "pending" | "on_hold" | "processing" | "completed" | "cancelled" | "refunded" | "failed";
-                customer_id?: number;
-                search?: string;
-                /** @description Unified date filter — `<op>:<value>` where op ∈ `in|before|after|within`; value ∈ `YYYY-MM-DD`, `YYYY-MM`, `YYYY-Q1..Q4`, `YYYY-H1|H2`, `YYYY`. Use `within:YYYY-MM-DD..YYYY-MM-DD` for closed ranges. Year < 1700 parses as Jalali and converts to Gregorian server-side. */
-                created?: string;
-                include_drafts?: boolean;
-                /** @description Sort key. Hyphen prefix for descending. Allowed keys&#58; `id`, `order_number`, `created_at`, `grand_total`, `status`, `paid`, `completed`. */
-                sort?: string;
-                /** @description CSV of created_via values to include (`checkout,admin,api,import`). */
-                source?: string;
-                /** @description CSV of payment method codes to include (matched against `payment_method_code_snapshot`). */
-                payment?: string;
-                /** @description CSV of ISO-3166 alpha-2 country codes to filter the billing address by. */
-                country?: string;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Free-text search across `billing_email`, `order_number`, and numeric `id`. */
+                q?: string;
+                /** @description When `true`, return only soft-deleted orders instead of live ones. */
+                trashed?: boolean;
             };
             header?: never;
             path?: never;
@@ -5563,7 +5692,18 @@ export interface operations {
     };
     adminOrderHistoryIndex: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+            };
             header?: never;
             path: {
                 order_id: number;
@@ -5572,7 +5712,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Full status history. */
+            /** @description Paginated status history. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -5589,6 +5729,7 @@ export interface operations {
                             /** Format: date-time */
                             occurred_at?: string;
                         }[];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -5602,8 +5743,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -5713,8 +5854,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -5847,27 +5988,19 @@ export interface operations {
     adminCouponsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
                 /** @description Matches across coupon code and translated description. */
-                search?: string;
+                q?: string;
                 tab?: "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
-                status?: "active" | "disabled";
-                /** @description Comma-separated list (`?discount_type=fixed_cart,percent`). */
-                discount_type?: ("fixed_cart" | "fixed_product" | "percent" | "free_shipping")[];
-                free_shipping?: boolean;
-                individual_use?: boolean;
-                exclude_sale_items?: boolean;
-                min_amount_min?: number;
-                min_amount_max?: number;
-                max_amount_min?: number;
-                max_amount_max?: number;
-                starts_after?: string;
-                starts_before?: string;
-                expires_after?: string;
-                expires_before?: string;
                 redemptions_min?: number;
                 redemptions_max?: number;
                 has_product_constraints?: boolean;
@@ -5876,8 +6009,6 @@ export interface operations {
                 expiring_soon?: boolean;
                 /** @description Comma-separated brand ids. */
                 brand?: number[];
-                /** @description `column` for asc, `-column` for desc. Allowed: `code`, `discount_type`, `amount_minor`, `amount_percent`, `starts_at`, `expires_at`, `created_at`. */
-                sort?: string;
             };
             header?: never;
             path?: never;
@@ -6042,7 +6173,7 @@ export interface operations {
             query?: {
                 tab?: "any" | "active" | "disabled" | "expired" | "scheduled" | "used" | "trashed";
                 status?: "active" | "disabled";
-                search?: string;
+                q?: string;
                 discount_type?: ("fixed_cart" | "fixed_product" | "percent" | "free_shipping")[];
                 brand?: number[];
             };
@@ -6220,8 +6351,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -6432,36 +6563,35 @@ export interface operations {
     adminCustomersIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                search?: string;
-                /** @description One of `last_name`, `created_at`, `last_seen_at`; prefix with `-` for descending. */
-                sort?: string;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Free-text search across the customer's joined identity columns. */
+                q?: string;
                 include_stats?: boolean;
                 /** @description Selects the tab bucket. Counterpart of the `/counts` endpoint. */
                 tab?: "any" | "account" | "guest" | "big" | "new" | "inactive" | "no_address" | "trashed";
-                is_paying_customer?: boolean;
-                /** @description ISO-3166-1 alpha-2 country code. */
-                country?: string;
-                /** @description Comma-separated ISO-3166-1 alpha-2 list. */
-                countries?: string;
+                /** @description Restrict via the joined `users.role`. Defaults to `customer` + null user. */
+                role?: "customer" | "admin";
                 /** @description Comma-separated city names (case-insensitive). */
                 cities?: string;
                 regions?: string;
                 /** @description Comma-separated tag names. */
                 tags?: string;
-                /** @description Comma-separated subset of [active, suspended, deleted]. */
-                statuses?: string;
-                acquisition_channels?: string;
                 email_verified?: boolean;
                 opt_in_email?: boolean;
                 opt_in_sms?: boolean;
-                /** @description Unified date filter — `<op>:<value>` where op ∈ `in|before|after|within`; value ∈ `YYYY-MM-DD`, `YYYY-MM`, `YYYY-Q1..Q4`, `YYYY-H1|H2`, `YYYY`. Use `within:YYYY-MM-DD..YYYY-MM-DD` for closed ranges. Year < 1700 parses as Jalali and converts to Gregorian server-side. */
-                created?: string;
-                /** @description Same shape as `created`, filters by the customer's last counted order date. */
-                last_order?: string;
+                /** @description Inclusive ISO date-time lower bound on the customer's most-recent counted order date. */
+                last_order_after?: string;
+                /** @description Inclusive ISO date-time upper bound on the customer's most-recent counted order date. */
+                last_order_before?: string;
                 order_count_min?: number;
                 order_count_max?: number;
                 lifetime_spend_min?: number;
@@ -6490,7 +6620,6 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["AdminCustomer"][];
                         meta: components["schemas"]["PaginationMeta"];
-                        sort?: string;
                     };
                 };
             };
@@ -6782,8 +6911,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: never;
             path: {
@@ -6824,7 +6953,18 @@ export interface operations {
     };
     adminCustomerNotesIndex: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+            };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
                 "Accept-Language"?: components["parameters"]["LocaleHeader"];
@@ -6836,7 +6976,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Notes list. */
+            /** @description Paginated notes list. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -6844,6 +6984,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminCustomerNote"][];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -7023,8 +7164,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
                 q?: string;
             };
             header?: {
@@ -7125,7 +7266,18 @@ export interface operations {
     };
     adminCustomerSegmentsIndex: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+            };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
                 "Accept-Language"?: components["parameters"]["LocaleHeader"];
@@ -7135,7 +7287,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Segments list. */
+            /** @description Paginated segments list. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -7143,6 +7295,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminCustomerSegment"][];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -7330,8 +7483,8 @@ export interface operations {
             query?: {
                 /** @description 1-indexed page number. Defaults to 1 when omitted. */
                 page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -7589,9 +7742,11 @@ export interface operations {
     adminCustomerTimeline: {
         parameters: {
             query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                limit?: number;
                 /** @description Comma-separated subset of [order, note, status, marketing, impersonation]. */
                 types?: string;
-                limit?: number;
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -7604,7 +7759,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Timeline rows. */
+            /** @description Paginated timeline rows. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -7623,6 +7778,7 @@ export interface operations {
                                 email: string;
                             };
                         }[];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -7679,7 +7835,18 @@ export interface operations {
     };
     adminPaymentGatewaysIndex: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+            };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
                 "Accept-Language"?: components["parameters"]["LocaleHeader"];
@@ -7689,7 +7856,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Gateway list. */
+            /** @description Paginated gateway list. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -7697,6 +7864,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminPaymentGateway"][];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -7780,15 +7948,16 @@ export interface operations {
     adminPaymentAttemptsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                order_id?: number;
-                payment_gateway_id?: number;
-                status?: "initialized" | "pending" | "succeeded" | "failed" | "cancelled";
-                created_from?: string;
-                created_to?: string;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
             };
             header?: never;
             path?: never;
@@ -7872,11 +8041,17 @@ export interface operations {
     adminProductsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                search?: string;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                q?: string;
                 status?: "draft" | "publish" | "pending" | "private" | "archived";
                 type?: "simple" | "variable" | "virtual" | "downloadable" | "external" | "grouped";
                 category?: number;
@@ -7890,9 +8065,6 @@ export interface operations {
                 has_image?: boolean;
                 with_trashed?: boolean;
                 only_trashed?: boolean;
-                created_from?: string;
-                created_to?: string;
-                sort?: string;
                 ids?: string;
                 include?: string;
             };
@@ -8388,7 +8560,18 @@ export interface operations {
     };
     adminVariationsIndex: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+            };
             header?: never;
             path: {
                 product_id: number;
@@ -8397,7 +8580,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Variation list. */
+            /** @description Paginated variation list. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -8405,6 +8588,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminProductVariation"][];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -8611,11 +8795,18 @@ export interface operations {
     adminAttributesIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                search?: string;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Multi-column ILIKE across slug + translated name. */
+                q?: string;
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -8810,10 +9001,18 @@ export interface operations {
     adminTermsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Multi-column ILIKE across slug + translated name. */
+                q?: string;
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -8980,15 +9179,18 @@ export interface operations {
     adminCategoriesIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                /** @description Filter children of a parent. Pass `0` for top-level rows. */
-                parent_id?: number;
-                search?: string;
-                /** @description Optional ordering. `-used_count` ranks the rows most-used-first (categories with the most attached products), `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
-                sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Multi-column ILIKE across slug + translated name. */
+                q?: string;
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -9007,7 +9209,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxonomy"][];
-                        meta?: components["schemas"]["PaginationMeta"];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -9174,13 +9376,18 @@ export interface operations {
     adminTagsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                search?: string;
-                /** @description Optional ordering. `-used_count` ranks tags most-used-first; `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
-                sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Multi-column ILIKE across slug + translated name. */
+                q?: string;
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -9199,7 +9406,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxonomy"][];
-                        meta?: components["schemas"]["PaginationMeta"];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -9362,13 +9569,18 @@ export interface operations {
     adminBrandsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                search?: string;
-                /** @description Optional ordering. `-used_count` ranks brands most-used-first; `used_count` ranks ascending. Default (omitted) is `menu_order` then `id`. Cached for 2 minutes; invalidated on any taxonomy write. */
-                sort?: "used_count" | "-used_count" | "menu_order" | "-menu_order";
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Multi-column ILIKE across slug + translated name. */
+                q?: string;
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -9387,7 +9599,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxonomy"][];
-                        meta?: components["schemas"]["PaginationMeta"];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -9551,10 +9763,16 @@ export interface operations {
     adminShippingClassesIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
             };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
@@ -9736,7 +9954,18 @@ export interface operations {
     };
     adminTaxClassesIndex: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 500 on selector / tree / taxonomy endpoints whose UIs fetch the whole set in one shot (the standard cap on every other list endpoint is 100). Defaults to the endpoint's natural page size. */
+                limit?: components["parameters"]["Limit500"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+            };
             header?: {
                 /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
                 "Accept-Language"?: components["parameters"]["LocaleHeader"];
@@ -9746,7 +9975,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Tax-class list. */
+            /** @description Paginated tax-class list. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -9754,6 +9983,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminTaxClass"][];
+                        meta: components["schemas"]["PaginationMeta"];
                     };
                 };
             };
@@ -9938,14 +10168,16 @@ export interface operations {
     adminReviewsIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
-                status?: "pending" | "approved" | "rejected";
-                product_id?: number;
-                rating?: number;
-                verified?: boolean;
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
             };
             header?: never;
             path?: never;
@@ -10033,16 +10265,22 @@ export interface operations {
     adminMediaIndex: {
         parameters: {
             query?: {
-                /** @description 1-indexed page number. Defaults to 1 when omitted. */
-                page?: components["parameters"]["PageQuery"];
-                /** @description Items per page. The API caps it (typically 100) when callers exceed the maximum. */
-                perPage?: components["parameters"]["PerPageQuery"];
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
                 /** @description MIME group (`image` / `audio` / `video` / `document` / `spreadsheet` / `archive`), `unattached` for rows not linked to any product image, or `mine` for rows uploaded by the calling user. */
                 type?: "all" | "image" | "audio" | "video" | "document" | "spreadsheet" | "archive" | "unattached" | "mine";
                 /** @description Filter to a single calendar month, formatted `YYYY-MM` (UTC). */
                 month?: string;
                 /** @description Case-insensitive substring match against filename, title, alt, and URL. */
-                search?: string;
+                q?: string;
                 /** @description Restrict to rows uploaded by the given user id. */
                 uploaded_by?: number;
             };

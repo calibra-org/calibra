@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { parseAsBoolean, parseAsString } from "nuqs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { OrderStatusBadge } from "#/components/OrderStatusBadge";
@@ -17,14 +18,26 @@ import {
     DataTableViewOptions,
     type DateFacetDef,
     type FacetedFilterDef,
+    useColumnState,
+    useSelectionState,
 } from "#/components/ui/data-grid";
-import { useDataTable } from "#/components/ui/data-grid/use-data-table";
-import { serializeDateFilter } from "#/components/ui/date-picker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/toast";
 import { formatDateTime, formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
 import { useMarkShipped, useOrderCounts, useOrdersList } from "#/lib/queries/orders";
+import {
+    dateFilterValueToTableViewFilter,
+    type FacetColumnMap,
+    serializeDateFacetForUrl,
+    singleSortToTableView,
+    type TableViewFilter,
+    tableViewToSingleSort,
+    useDateFacetValues,
+    useFacetValuesFromQuery,
+    useSetFacetValue,
+    useTableView,
+} from "#/lib/table-view";
 import type { AdminOrder } from "#/lib/types";
 
 import { RiskFlagsRow } from "../shared/risk-flag-chip";
@@ -38,11 +51,34 @@ import { type StatusTabKey, StatusTabs } from "./status-tabs";
 
 const TABLE_ID = "orders.list";
 
+const STATUS_TAB_VALUES: ReadonlyArray<string> = [
+    "draft",
+    "pending",
+    "on_hold",
+    "processing",
+    "completed",
+    "cancelled",
+    "refunded",
+    "failed",
+];
+
+/**
+ * Facet → TableView column mapping. The toolbar's `source` facet projects onto
+ * `filter[]=created_via:in:...`; `payment` projects onto `filter[]=payment_method_code_snapshot:in:...`.
+ * `country` doesn't appear here because that filter requires a `whereExists` through
+ * `order_addresses` the v1 runtime can't model — it stays off the wire entirely.
+ */
+const FACET_COLUMN_MAP: FacetColumnMap = {
+    source: { field: "created_via", op: "in" },
+    payment: { field: "payment_method_code_snapshot", op: "in" },
+};
+
 /**
  * The Orders workbench. Stitches together the status tabs, the toolbar, the DataTable, the bulk
  * action bar, and the quick preview drawer. Pagination/sort/search/facets all flow through
- * {@link useDataTable} so the URL is the source of truth — refreshes and deep links restore the
- * same view. Status lives as a facet for the same reason; the visible UI is the tab strip.
+ * {@link useTableView} so the URL is the source of truth — refreshes and deep links restore the
+ * same view. Status lives in the TableView `filter[]` (as `status:eq:X`) so the wire grammar
+ * matches the URL exactly; the visible UI is the tab strip.
  */
 export function OrdersList() {
     const t = useTranslations("Orders.list");
@@ -51,86 +87,99 @@ export function OrdersList() {
     const router = useRouter();
     const queryClient = useQueryClient();
 
-    const { facets, toggles } = useOrderFilters();
-    const facetsWithStatus = useMemo<FacetedFilterDef[]>(
-        () => [...facets, { paramKey: "status", label: "status", multiple: false, options: [] }],
-        [facets],
-    );
-
+    const { facets } = useOrderFilters();
     const dateFacets = useMemo<DateFacetDef[]>(
-        () => [
-            {
-                paramKey: "created",
-                label: t("filters.created"),
-                calendar: "auto",
-            },
-        ],
+        () => [{ paramKey: "created", label: t("filters.created"), calendar: "auto" }],
         [t],
     );
 
-    const tableState = useDataTable({
+    const tv = useTableView({
+        initial: { limit: 25 },
+        extras: {
+            q: parseAsString.withDefault(""),
+            trashed: parseAsBoolean.withDefault(false),
+            created: parseAsString.withDefault(""),
+        },
+    });
+
+    const ui = useColumnState({
         id: TABLE_ID,
-        facets: facetsWithStatus,
-        toggles,
-        dateFacets,
-        defaultPerPage: 25,
         defaultColumnVisibility: { shipTo: false, items: false, coupon: false, source: false },
     });
 
-    const createdValue = tableState.dateFacetValues.created;
-    const createdParam = useMemo(
-        () => (createdValue === null ? undefined : serializeDateFilter(createdValue).main),
-        [createdValue],
+    const selection = useSelectionState();
+
+    /** Derive the tab strip value from the canonical TableView filter[]. `trashed` lives as an
+     *  extras-backed flag (not a filter entry) because the server treats it as a scope flip
+     *  rather than a per-column predicate. */
+    const status: StatusTabKey = useMemo(() => {
+        if (tv.trashed) return "trashed";
+        const entry = tv.query.filter.find((f) => f.field === "status" && f.op === "eq");
+        const value = entry?.value;
+        if (typeof value === "string" && STATUS_TAB_VALUES.includes(value)) return value as StatusTabKey;
+        return "any";
+    }, [tv.query.filter, tv.trashed]);
+
+    const facetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
+    const setFacetValues = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
+
+    /** Country facet stays off the wire — there's no controller-side support for it in v1.
+     *  Render it as an empty multi-select so the UI shape stays intact; clicking does nothing
+     *  server-side. When the API gains `?filter[]=billing_country:in:...` support this becomes a
+     *  regular entry in `FACET_COLUMN_MAP`. */
+    const facetValuesWithCountry = useMemo<Record<string, string[]>>(() => ({ ...facetValues, country: [] }), [facetValues]);
+
+    const dateFacetValuesRaw = useMemo(() => ({ created: tv.created }), [tv.created]);
+    const dateFacetValues = useDateFacetValues(
+        dateFacetValuesRaw,
+        useMemo(() => ({ created: { field: "created_at", calendar: "auto" as const } }), []),
     );
 
-    const status: StatusTabKey = useMemo(() => {
-        const value = tableState.facetValues.status?.[0];
-        if (value === "trashed") return "trashed";
-        if (
-            value === "draft" ||
-            value === "pending" ||
-            value === "on_hold" ||
-            value === "processing" ||
-            value === "completed" ||
-            value === "cancelled" ||
-            value === "refunded" ||
-            value === "failed"
-        )
-            return value;
-        return "any";
-    }, [tableState.facetValues.status]);
+    const setDateFacet = useCallback(
+        (_key: string, value: typeof dateFacetValues.created) => {
+            tv.setCreated(serializeDateFacetForUrl(value) ?? "");
+            const remaining = tv.query.filter.filter((f) => f.field !== "created_at");
+            if (value !== null) {
+                const mapped = dateFilterValueToTableViewFilter("created_at", value);
+                tv.setFilter(mapped !== null ? [...remaining, mapped] : remaining);
+            } else {
+                tv.setFilter(remaining);
+            }
+        },
+        [tv],
+    );
+
+    /** Sort projection — single-sort UI ↔ TableViewSort[] array. */
+    const sort = tableViewToSingleSort(tv.query.sort);
+    const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
 
     const { data: counts } = useOrderCounts();
 
     /**
      * Read `?customer_id=` from the current URL so a `View this customer's orders` link from the
-     * customers detail page lands here pre-filtered. `useSearchParams` re-renders on URL change,
-     * so updating the link or stripping the param updates the list without a remount.
+     * customers detail page lands here pre-filtered. The current implementation pushes a
+     * `customer_id:eq:N` entry through `tv.setFilter` once on mount — the page builds its own
+     * cross-link rather than declaring `customer_id` as a top-level extra.
      */
     const searchParams = useSearchParams();
     const customerIdParam = searchParams?.get("customer_id");
     const customerIdFilter = customerIdParam !== null && customerIdParam.length > 0 ? Number(customerIdParam) : undefined;
+    useEffect(() => {
+        if (customerIdFilter === undefined || !Number.isFinite(customerIdFilter)) return;
+        const existing = tv.query.filter.find((f) => f.field === "customer_id");
+        if (existing !== undefined && existing.value === customerIdFilter) return;
+        const others = tv.query.filter.filter((f) => f.field !== "customer_id");
+        tv.setFilter([...others, { field: "customer_id", op: "eq", value: customerIdFilter }]);
+    }, [customerIdFilter, tv.query.filter, tv.setFilter]);
 
     const { data, isPending, isError, refetch } = useOrdersList({
-        page: tableState.page,
-        perPage: tableState.perPage,
-        sort:
-            tableState.sort !== undefined
-                ? tableState.sort.direction === "desc"
-                    ? `-${tableState.sort.id}`
-                    : tableState.sort.id
-                : undefined,
-        status,
-        search: tableState.q.length > 0 ? tableState.q : undefined,
-        sources: tableState.facetValues.source,
-        payments: tableState.facetValues.payment,
-        countries: tableState.facetValues.country,
-        created: createdParam,
-        customerId: customerIdFilter !== undefined && Number.isFinite(customerIdFilter) ? customerIdFilter : undefined,
+        query: tv.query,
+        q: tv.q.length > 0 ? tv.q : undefined,
+        trashed: tv.trashed ? true : undefined,
     });
 
     const rows = data?.data ?? [];
-    const meta = data?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+    const meta = data?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
 
     /**
      * Quick preview drawer. Stores the currently-previewed order so we can render the drawer even
@@ -182,16 +231,16 @@ export function OrdersList() {
     );
 
     const onHideColumn = useCallback(
-        (id: string) => tableState.setColumnVisibility({ ...tableState.columnVisibility, [id]: false }),
-        [tableState.setColumnVisibility, tableState.columnVisibility],
+        (id: string) => ui.setColumnVisibility({ ...ui.columnVisibility, [id]: false }),
+        [ui.setColumnVisibility, ui.columnVisibility],
     );
 
     const columns: ColumnDef<AdminOrder>[] = useMemo(
         () =>
             buildOrderColumns({
                 locale,
-                sort: tableState.sort,
-                onSort: tableState.setSort,
+                sort,
+                onSort: setSort,
                 onHideColumn,
                 onOpenPreview: openPreview,
                 onOpenDetail,
@@ -201,18 +250,7 @@ export function OrdersList() {
                 statusT,
                 sortLabels: { asc: t("sortAsc"), desc: t("sortDesc"), hide: t("hideColumn") },
             }),
-        [
-            locale,
-            tableState.sort,
-            tableState.setSort,
-            onHideColumn,
-            openPreview,
-            onOpenDetail,
-            onMarkCompleted,
-            markingId,
-            t,
-            statusT,
-        ],
+        [locale, sort, setSort, onHideColumn, openPreview, onOpenDetail, onMarkCompleted, markingId, t, statusT],
     );
 
     const columnVisibilityItems = useMemo(
@@ -233,22 +271,45 @@ export function OrdersList() {
     const activeChips = useMemo(() => {
         const out: { key: string; value: string; label: string }[] = [];
         for (const facet of facets) {
-            const values = tableState.facetValues[facet.paramKey] ?? [];
+            const values = facetValuesWithCountry[facet.paramKey] ?? [];
             for (const value of values) {
                 const option = facet.options.find((opt) => opt.value === value);
                 out.push({ key: facet.paramKey, value, label: `${facet.label}: ${option?.label ?? value}` });
             }
         }
         return out;
-    }, [facets, tableState.facetValues]);
+    }, [facets, facetValuesWithCountry]);
 
-    const onTabChange = (value: StatusTabKey) => {
-        if (value === "any") {
-            tableState.setFacetValues("status", []);
-            return;
-        }
-        tableState.setFacetValues("status", [value]);
-    };
+    const onTabChange = useCallback(
+        (value: StatusTabKey) => {
+            const others = tv.query.filter.filter((f) => f.field !== "status");
+            if (value === "any") {
+                tv.setTrashed(false);
+                tv.setFilter(others);
+                return;
+            }
+            if (value === "trashed") {
+                tv.setTrashed(true);
+                tv.setFilter(others);
+                return;
+            }
+            tv.setTrashed(false);
+            tv.setFilter([...others, { field: "status", op: "eq", value }]);
+        },
+        [tv],
+    );
+
+    const hasActiveFilters = useMemo(
+        () => tv.q.length > 0 || tv.query.filter.length > 0 || tv.trashed || tv.created.length > 0,
+        [tv.q, tv.query.filter, tv.trashed, tv.created],
+    );
+
+    const clearAllFilters = useCallback(() => {
+        tv.setQ("");
+        tv.clearFilters();
+        tv.setTrashed(false);
+        tv.setCreated("");
+    }, [tv]);
 
     /** Keyboard shortcuts living at the page level — DataTable owns j/k/x/e/Enter on focused rows. */
     const [helpOpen, setHelpOpen] = useState(false);
@@ -324,43 +385,40 @@ export function OrdersList() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                perPageOptions={tableState.perPageOptions}
-                onPageChange={tableState.setPage}
-                onPerPageChange={tableState.setPerPage}
-                sort={tableState.sort}
-                onSortChange={tableState.setSort}
-                selectedIds={tableState.selectedIds}
-                onSelectedIdsChange={tableState.setSelected}
-                columnVisibility={tableState.columnVisibility}
-                onColumnVisibilityChange={tableState.setColumnVisibility}
-                columnOrder={tableState.columnOrder}
-                onColumnOrderChange={tableState.setColumnOrder}
-                density={tableState.density}
+                limitOptions={[10, 20, 50, 100]}
+                onPageChange={tv.setPage}
+                onLimitChange={tv.setLimit}
+                sort={sort}
+                onSortChange={setSort}
+                selectedIds={selection.selectedIds}
+                onSelectedIdsChange={selection.setSelected}
+                columnVisibility={ui.columnVisibility}
+                onColumnVisibilityChange={ui.setColumnVisibility}
+                columnOrder={ui.columnOrder}
+                onColumnOrderChange={ui.setColumnOrder}
+                density={ui.density}
                 isLoading={isPending}
                 isError={isError}
                 onRetry={() => refetch()}
-                hasActiveFilters={tableState.hasActiveFilters}
-                onClearFilters={tableState.clearAllFilters}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearAllFilters}
                 onRowOpen={onOpenDetail}
                 renderCard={(row) => <OrderCard order={row.original} locale={locale} onOpenPreview={openPreview} />}
                 toolbar={
                     <div className="flex flex-col gap-2">
                         <DataTableToolbar
                             searchPlaceholder={t("searchPlaceholder")}
-                            q={tableState.q}
-                            onQChange={tableState.setQ}
+                            q={tv.q}
+                            onQChange={tv.setQ}
                             facets={facets}
-                            facetValues={tableState.facetValues}
-                            onFacetValuesChange={tableState.setFacetValues}
-                            toggles={toggles}
-                            toggleValues={tableState.toggleValues}
-                            onToggleChange={tableState.setToggleValue}
+                            facetValues={facetValuesWithCountry}
+                            onFacetValuesChange={setFacetValues}
                             dateFacets={dateFacets}
-                            dateFacetValues={tableState.dateFacetValues}
-                            onDateFacetChange={tableState.setDateFilterValue}
+                            dateFacetValues={dateFacetValues}
+                            onDateFacetChange={setDateFacet}
                             locale={locale}
-                            hasActiveFilters={tableState.hasActiveFilters}
-                            onClearAll={tableState.clearAllFilters}
+                            hasActiveFilters={hasActiveFilters}
+                            onClearAll={clearAllFilters}
                             onRefresh={() => {
                                 void queryClient.invalidateQueries({ queryKey: ["admin", "orders", "list"] });
                             }}
@@ -373,10 +431,10 @@ export function OrdersList() {
                             rightSlot={
                                 <DataTableViewOptions
                                     columns={columnVisibilityItems}
-                                    visibility={tableState.columnVisibility}
-                                    onVisibilityChange={tableState.setColumnVisibility}
-                                    density={tableState.density}
-                                    onDensityChange={tableState.setDensity}
+                                    visibility={ui.columnVisibility}
+                                    onVisibilityChange={ui.setColumnVisibility}
+                                    density={ui.density}
+                                    onDensityChange={ui.setDensity}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),
@@ -393,8 +451,8 @@ export function OrdersList() {
                         <ActiveFilterChips
                             chips={activeChips}
                             onRemove={(key, value) => {
-                                const current = tableState.facetValues[key] ?? [];
-                                tableState.setFacetValues(
+                                const current = facetValuesWithCountry[key] ?? [];
+                                setFacetValues(
                                     key,
                                     current.filter((item) => item !== value),
                                 );

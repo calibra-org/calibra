@@ -76,6 +76,20 @@
             "cancelled": "لغوشده",
             "refunded": "بازپرداخت‌شده",
             "failed": "ناموفق"
+        },
+        "table_view": {
+            "field_not_filterable": "فیلتر روی «{field}» مجاز نیست",
+            "field_not_orderable": "مرتب‌سازی بر اساس «{field}» مجاز نیست",
+            "operator_invalid": "عملگر «{op}» نامعتبر است",
+            "operator_not_allowed_on_field": "عملگر «{op}» برای فیلد «{field}» (نوع {type}) مجاز نیست",
+            "value_required": "عملگر «{op}» به یک مقدار نیاز دارد",
+            "between_requires_two": "عملگر «between» دقیقاً دو مقدار جداشده با ویرگول می‌خواهد",
+            "between_no_nulls": "عملگر «between» مقدار null نمی‌پذیرد",
+            "in_requires_list": "عملگر «{op}» به یک فهرست غیرخالی جداشده با ویرگول نیاز دارد",
+            "void_op_no_value": "عملگر «{op}» مقدار نمی‌پذیرد",
+            "expression_invalid": "عبارت فیلتر «{raw}» نامعتبر است",
+            "sort_dir_invalid": "جهت مرتب‌سازی «{dir}» نامعتبر است",
+            "field_duplicate": "فیلد «{field}» قبلاً در این گروه شرط دارد"
         }
     }
 }

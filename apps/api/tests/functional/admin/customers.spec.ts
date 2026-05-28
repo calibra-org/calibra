@@ -58,7 +58,7 @@ test.group("/api/v1/admin/customers", (group) => {
         /** Default list excludes admins per Customer ≠ User: only the two plain customers come back. */
         assert.equal(list.body().data.length, 2);
 
-        const search = await client.get("/api/v1/admin/customers").qs({ search: "alice" }).withGuard("api").loginAs(admin);
+        const search = await client.get("/api/v1/admin/customers").qs({ q: "alice" }).withGuard("api").loginAs(admin);
         search.assertStatus(200);
         search.assertAgainstApiSpec();
         const matched = search.body().data as Array<{ user: { email: string } | null }>;
@@ -170,7 +170,7 @@ test.group("/api/v1/admin/customers", (group) => {
 
         const response = await client
             .get("/api/v1/admin/customers")
-            .qs({ include_stats: true, perPage: 5 })
+            .qs({ include_stats: true, limit: 5 })
             .withGuard("api")
             .loginAs(admin);
         response.assertStatus(200);
@@ -198,11 +198,7 @@ test.group("/api/v1/admin/customers", (group) => {
 
         const tabs = ["any", "account", "guest", "new"] as const;
         for (const tab of tabs) {
-            const response = await client
-                .get("/api/v1/admin/customers")
-                .qs({ tab, perPage: 100 })
-                .withGuard("api")
-                .loginAs(admin);
+            const response = await client.get("/api/v1/admin/customers").qs({ tab, limit: 100 }).withGuard("api").loginAs(admin);
             response.assertStatus(200);
             const body = response.body() as { data: Array<{ user: { role?: string } | null }> };
             for (const row of body.data) {
@@ -219,7 +215,7 @@ test.group("/api/v1/admin/customers", (group) => {
 
         const response = await client
             .get("/api/v1/admin/customers")
-            .qs({ tab: "guest", perPage: 100 })
+            .qs({ tab: "guest", limit: 100 })
             .withGuard("api")
             .loginAs(admin);
         response.assertStatus(200);
@@ -241,7 +237,7 @@ test.group("/api/v1/admin/customers", (group) => {
 
         const response = await client
             .get("/api/v1/admin/customers")
-            .qs({ tab: "big", perPage: 100 })
+            .qs({ tab: "big", limit: 100 })
             .withGuard("api")
             .loginAs(admin);
         response.assertStatus(200);
@@ -256,7 +252,7 @@ test.group("/api/v1/admin/customers", (group) => {
         const del = await client.delete(`/api/v1/admin/customers/${customer.id}`).withGuard("api").loginAs(admin);
         del.assertStatus(204);
 
-        const visible = await client.get("/api/v1/admin/customers").qs({ perPage: 100 }).withGuard("api").loginAs(admin);
+        const visible = await client.get("/api/v1/admin/customers").qs({ limit: 100 }).withGuard("api").loginAs(admin);
         visible.assertStatus(200);
         const visibleEmails = (visible.body() as { data: Array<{ user: { email: string } | null }> }).data.map(
             (r) => r.user?.email,
@@ -265,7 +261,7 @@ test.group("/api/v1/admin/customers", (group) => {
 
         const trashed = await client
             .get("/api/v1/admin/customers")
-            .qs({ tab: "trashed", perPage: 100 })
+            .qs({ tab: "trashed", limit: 100 })
             .withGuard("api")
             .loginAs(admin);
         trashed.assertStatus(200);

@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { PackagePlus, Plus, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { parseAsBoolean, parseAsString } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
 import { ShortcutsDialog } from "#/components/shortcuts-dialog";
@@ -15,16 +16,24 @@ import {
     DataTable,
     DataTableToolbar,
     DataTableViewOptions,
-    type FacetedFilterDef,
+    useColumnState,
+    useSelectionState,
 } from "#/components/ui/data-grid";
-import { useDataTable } from "#/components/ui/data-grid/use-data-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
-import { type CatalogVisibility, type StockLevel, useProductCountsByStatus, useProductsList } from "#/lib/products/queries";
-import type { AdminProduct, ProductStatus, ProductType, StockStatus } from "#/lib/types";
+import { type StockLevel, useProductCountsByStatus, useProductsList } from "#/lib/products/queries";
+import {
+    type FacetColumnMap,
+    singleSortToTableView,
+    tableViewToSingleSort,
+    useFacetValuesFromQuery,
+    useSetFacetValue,
+    useTableView,
+} from "#/lib/table-view";
+import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
 import { buildProductColumns } from "./columns";
@@ -39,6 +48,17 @@ const TRASH_TAB = "trash" as const;
 const TAB_VALUES: readonly string[] = [...STATUS_TABS, TRASH_TAB];
 type TabValue = ProductStatus | "any" | typeof TRASH_TAB;
 const LOW_STOCK_THRESHOLD = 5;
+
+/**
+ * Toolbar facets that are filterable columns ride the grammar as `filter[]=<col>:in:…` (read from +
+ * written to `query.filter`). `type` is the `type` column; `visibility` projects onto the
+ * `catalog_visibility` column. Every other facet (`stock_status`, `stock_level`, pivots) is a
+ * bespoke extra the runtime can't model as a column WHERE.
+ */
+const FACET_COLUMN_MAP: FacetColumnMap = {
+    type: { field: "type", op: "in" },
+    visibility: { field: "catalog_visibility", op: "in" },
+};
 
 /**
  * Top-level client component for the Products list page. Wires the {@link DataTable} abstraction
@@ -58,77 +78,174 @@ export function ProductsList() {
     const { facets, toggles } = useProductFilters();
 
     /**
-     * Status + Trash live in URL-backed facets even though the tab strip drives them — that way
-     * deep links and the browser back button restore the exact tab. They're registered with
-     * empty option lists so they don't render as toolbar chips / popovers.
+     * URL-as-wire state. `page` / `limit` / `sort[]` plus the column facets (`type`,
+     * `catalog_visibility`, `featured`) come from the TableView grammar in `query`; everything
+     * below is a bespoke top-level extra keyed by its EXACT wire key so the URL, the params, and
+     * the request read identically. The tab strip is computed from `status` + `only_trashed`.
      */
-    const facetsWithStatus = useMemo<FacetedFilterDef[]>(
-        () => [
-            ...facets,
-            { paramKey: "status", label: "status", multiple: false, options: [] },
-            { paramKey: "trashed", label: "trashed", multiple: false, options: [] },
-        ],
-        [facets],
-    );
+    const tv = useTableView({
+        extras: {
+            q: parseAsString.withDefault(""),
+            status: parseAsString.withDefault(""),
+            only_trashed: parseAsBoolean.withDefault(false),
+            stock_status: parseAsString.withDefault(""),
+            stock_level: parseAsString.withDefault(""),
+            category: parseAsString.withDefault(""),
+            brand: parseAsString.withDefault(""),
+            tag: parseAsString.withDefault(""),
+            on_sale: parseAsBoolean.withDefault(false),
+            has_image: parseAsBoolean.withDefault(false),
+        },
+    });
 
-    const tableState = useDataTable({
+    /** Favourites is a CLIENT filter — the API has no support for it, so it stays out of the
+     *  URL-as-wire model entirely (local state, never serialized, never sent). */
+    const [fav, setFav] = useState(false);
+
+    const ui = useColumnState({
         id: TABLE_ID,
-        facets: facetsWithStatus,
-        toggles,
         defaultColumnVisibility: { tags: false, views: false, inventory: false, salePeriod: false, createdAt: false },
     });
 
-    const onlyTrashed = tableState.facetValues.trashed?.[0] === "1";
+    const selection = useSelectionState();
+
+    const onlyTrashed = tv.only_trashed;
     const status: ProductStatus | "any" = useMemo(() => {
         if (onlyTrashed) return "any";
-        const value = tableState.facetValues.status?.[0];
+        const value = tv.status;
         if (value === "publish" || value === "draft" || value === "pending" || value === "private") return value;
         return "any";
-    }, [tableState.facetValues.status, onlyTrashed]);
+    }, [tv.status, onlyTrashed]);
 
     const activeTab: TabValue = onlyTrashed ? TRASH_TAB : status;
 
-    const productTypeValue = tableState.facetValues.type?.[0] as ProductType | undefined;
-    const stockStatusValue = tableState.facetValues.stock?.[0] as StockStatus | undefined;
-    const stockLevelValue = tableState.facetValues.stockLevel?.[0] as StockLevel | undefined;
-    const visibilityValue = tableState.facetValues.visibility?.[0] as CatalogVisibility | undefined;
-    const categoryId = numericFirst(tableState.facetValues.category);
-    const brandId = numericFirst(tableState.facetValues.brand);
-    const tagId = numericFirst(tableState.facetValues.tag);
-    const favOnly = tableState.toggleValues.fav === true;
-    const onSale = tableState.toggleValues.onSale === true;
-    const featured = tableState.toggleValues.featured === true;
-    const hasImage = tableState.toggleValues.hasImage === true;
+    /** `type` + `visibility` read from `filter[]` (grammar-first); the remaining facets are
+     *  bespoke extras projected onto the same `Record<string, string[]>` shape the toolbar wants. */
+    const columnFacetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
+    const setColumnFacet = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
+
+    const facetValues = useMemo<Record<string, string[]>>(
+        () => ({
+            ...columnFacetValues,
+            stock_status: tv.stock_status.length > 0 ? [tv.stock_status] : [],
+            stock_level: tv.stock_level.length > 0 ? [tv.stock_level] : [],
+            category: tv.category.length > 0 ? [tv.category] : [],
+            brand: tv.brand.length > 0 ? [tv.brand] : [],
+            tag: tv.tag.length > 0 ? [tv.tag] : [],
+        }),
+        [columnFacetValues, tv.stock_status, tv.stock_level, tv.category, tv.brand, tv.tag],
+    );
+
+    const setFacetValues = useCallback(
+        (key: string, values: string[]) => {
+            if (key === "type" || key === "visibility") {
+                setColumnFacet(key, values);
+                return;
+            }
+            const next = values[0] ?? "";
+            switch (key) {
+                case "stock_status":
+                    tv.setStock_status(next);
+                    break;
+                case "stock_level":
+                    tv.setStock_level(next);
+                    break;
+                case "category":
+                    tv.setCategory(next);
+                    break;
+                case "brand":
+                    tv.setBrand(next);
+                    break;
+                case "tag":
+                    tv.setTag(next);
+                    break;
+            }
+        },
+        [setColumnFacet, tv],
+    );
+
+    /** `featured` is a filterable column toggle → `filter[]=featured:eq:true`; `on_sale` /
+     *  `has_image` are bespoke extras; `fav` is client-only local state. */
+    const featuredActive = useMemo(
+        () => tv.query.filter.some((f) => f.field === "featured" && f.op === "eq" && f.value === true),
+        [tv.query.filter],
+    );
+    const toggleValues = useMemo<Record<string, boolean>>(
+        () => ({ fav, onSale: tv.on_sale, featured: featuredActive, hasImage: tv.has_image }),
+        [fav, tv.on_sale, featuredActive, tv.has_image],
+    );
+    const setToggleValue = useCallback(
+        (key: string, value: boolean) => {
+            switch (key) {
+                case "fav":
+                    setFav(value);
+                    break;
+                case "onSale":
+                    tv.setOn_sale(value);
+                    break;
+                case "featured": {
+                    const others = tv.query.filter.filter((f) => f.field !== "featured");
+                    tv.setFilter(value ? [...others, { field: "featured", op: "eq", value: true }] : others);
+                    break;
+                }
+                case "hasImage":
+                    tv.setHas_image(value);
+                    break;
+            }
+        },
+        [tv],
+    );
+
+    const sort = tableViewToSingleSort(tv.query.sort);
+    const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
 
     const { data: statusCounts } = useProductCountsByStatus();
 
     const { data, isPending, isError, refetch } = useProductsList({
-        page: tableState.page,
-        perPage: tableState.perPage,
-        sort:
-            tableState.sort !== undefined
-                ? tableState.sort.direction === "desc"
-                    ? `-${tableState.sort.id}`
-                    : tableState.sort.id
-                : undefined,
+        query: tv.query,
+        q: tv.q.length > 0 ? tv.q : undefined,
         status,
-        type: productTypeValue,
-        stockStatus: stockStatusValue,
-        stockLevel: stockLevelValue,
-        catalogVisibility: visibilityValue,
-        categoryId,
-        brandId,
-        tagId,
-        onSale: onSale ? true : undefined,
-        featured: featured ? true : undefined,
-        hasImage: hasImage ? true : undefined,
-        onlyTrashed: onlyTrashed ? true : undefined,
-        favoriteIds: favOnly ? Array.from(favorites) : undefined,
-        search: tableState.q.length > 0 ? tableState.q : undefined,
+        stock_status: tv.stock_status.length > 0 ? (tv.stock_status as StockStatus) : undefined,
+        stock_level: tv.stock_level.length > 0 ? (tv.stock_level as StockLevel) : undefined,
+        category: numericOr(tv.category),
+        brand: numericOr(tv.brand),
+        tag: numericOr(tv.tag),
+        on_sale: tv.on_sale ? true : undefined,
+        has_image: tv.has_image ? true : undefined,
+        only_trashed: onlyTrashed ? true : undefined,
+        favoriteIds: fav ? Array.from(favorites) : undefined,
     });
 
     const rows = data?.data ?? [];
-    const meta = data?.meta ?? { page: tableState.page, perPage: tableState.perPage, total: 0, lastPage: 1 };
+    const meta = data?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
+
+    const hasActiveFilters = useMemo(
+        () =>
+            tv.q.length > 0 ||
+            tv.query.filter.length > 0 ||
+            tv.stock_status.length > 0 ||
+            tv.stock_level.length > 0 ||
+            tv.category.length > 0 ||
+            tv.brand.length > 0 ||
+            tv.tag.length > 0 ||
+            fav ||
+            tv.on_sale ||
+            tv.has_image,
+        [tv.q, tv.query.filter, tv.stock_status, tv.stock_level, tv.category, tv.brand, tv.tag, fav, tv.on_sale, tv.has_image],
+    );
+
+    const clearAllFilters = useCallback(() => {
+        tv.setQ("");
+        tv.clearFilters();
+        tv.setStock_status("");
+        tv.setStock_level("");
+        tv.setCategory("");
+        tv.setBrand("");
+        tv.setTag("");
+        setFav(false);
+        tv.setOn_sale(false);
+        tv.setHas_image(false);
+    }, [tv]);
 
     /**
      * Quick Edit expansion is keyed by the TanStack row id (a stringified product id). Driving
@@ -143,16 +260,16 @@ export function ProductsList() {
     const onOpenDetail = useCallback((row: AdminProduct) => router.push(`/products/${row.id}` as never), [router]);
 
     const onHideColumn = useCallback(
-        (id: string) => tableState.setColumnVisibility({ ...tableState.columnVisibility, [id]: false }),
-        [tableState.setColumnVisibility, tableState.columnVisibility],
+        (id: string) => ui.setColumnVisibility({ ...ui.columnVisibility, [id]: false }),
+        [ui.setColumnVisibility, ui.columnVisibility],
     );
 
     const columns: ColumnDef<AdminProduct>[] = useMemo(
         () =>
             buildProductColumns({
                 locale,
-                sort: tableState.sort,
-                onSort: tableState.setSort,
+                sort,
+                onSort: setSort,
                 onHideColumn,
                 onToggleQuickEdit,
                 onOpenDetail,
@@ -163,18 +280,7 @@ export function ProductsList() {
                 stockT,
                 sortLabels: { asc: t("sortAsc"), desc: t("sortDesc"), hide: t("hideColumn") },
             }),
-        [
-            isFavorite,
-            locale,
-            onHideColumn,
-            onOpenDetail,
-            onToggleQuickEdit,
-            statusT,
-            stockT,
-            t,
-            tableState.setSort,
-            tableState.sort,
-        ],
+        [isFavorite, locale, onHideColumn, onOpenDetail, onToggleQuickEdit, statusT, stockT, t, sort, setSort],
     );
 
     const columnVisibilityItems = useMemo(
@@ -195,29 +301,28 @@ export function ProductsList() {
     const activeChips = useMemo(() => {
         const out: { key: string; value: string; label: string }[] = [];
         for (const facet of facets) {
-            const values = tableState.facetValues[facet.paramKey] ?? [];
+            const values = facetValues[facet.paramKey] ?? [];
             for (const value of values) {
                 const option = facet.options.find((opt) => opt.value === value);
                 out.push({ key: facet.paramKey, value, label: `${facet.label}: ${option?.label ?? value}` });
             }
         }
         return out;
-    }, [facets, tableState.facetValues]);
+    }, [facets, facetValues]);
 
-    const onTabChange = (value: string) => {
-        if (!TAB_VALUES.includes(value)) return;
-        if (value === TRASH_TAB) {
-            tableState.setFacetValues("status", []);
-            tableState.setFacetValues("trashed", ["1"]);
-            return;
-        }
-        tableState.setFacetValues("trashed", []);
-        if (value === "any") {
-            tableState.setFacetValues("status", []);
-            return;
-        }
-        tableState.setFacetValues("status", [value]);
-    };
+    const onTabChange = useCallback(
+        (value: string) => {
+            if (!TAB_VALUES.includes(value)) return;
+            if (value === TRASH_TAB) {
+                tv.setStatus("");
+                tv.setOnly_trashed(true);
+                return;
+            }
+            tv.setOnly_trashed(false);
+            tv.setStatus(value === "any" ? "" : value);
+        },
+        [tv],
+    );
 
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     useProductsListShortcuts({
@@ -231,7 +336,7 @@ export function ProductsList() {
             void queryClient.invalidateQueries({ queryKey: ["admin", "product-counts"] });
         },
         onOpenShortcuts: () => setShortcutsOpen(true),
-        onClearSelection: () => tableState.setSelected(new Set<string>()),
+        onClearSelection: () => selection.setSelected(new Set<string>()),
     });
 
     const shortcutGroups = useMemo(() => {
@@ -263,7 +368,7 @@ export function ProductsList() {
     const headerSubtitle =
         data === undefined ? t("loadingTotal") : t("totalProducts", { count: formatNumber(meta.total, locale) });
 
-    const hasNoFiltersOrSearch = !tableState.hasActiveFilters && tableState.q.length === 0 && !onlyTrashed;
+    const hasNoFiltersOrSearch = !hasActiveFilters && !onlyTrashed;
     const showOnboardingHint = hasNoFiltersOrSearch && !isPending && !isError && rows.length === 0;
 
     return (
@@ -347,23 +452,23 @@ export function ProductsList() {
                 columns={columns}
                 getRowId={(row) => String(row.id)}
                 meta={meta}
-                perPageOptions={tableState.perPageOptions}
-                onPageChange={tableState.setPage}
-                onPerPageChange={tableState.setPerPage}
-                sort={tableState.sort}
-                onSortChange={tableState.setSort}
-                selectedIds={tableState.selectedIds}
-                onSelectedIdsChange={tableState.setSelected}
-                columnVisibility={tableState.columnVisibility}
-                onColumnVisibilityChange={tableState.setColumnVisibility}
-                columnOrder={tableState.columnOrder}
-                onColumnOrderChange={tableState.setColumnOrder}
-                density={tableState.density}
+                limitOptions={[10, 20, 50, 100]}
+                onPageChange={tv.setPage}
+                onLimitChange={tv.setLimit}
+                sort={sort}
+                onSortChange={setSort}
+                selectedIds={selection.selectedIds}
+                onSelectedIdsChange={selection.setSelected}
+                columnVisibility={ui.columnVisibility}
+                onColumnVisibilityChange={ui.setColumnVisibility}
+                columnOrder={ui.columnOrder}
+                onColumnOrderChange={ui.setColumnOrder}
+                density={ui.density}
                 isLoading={isPending}
                 isError={isError}
                 onRetry={() => refetch()}
-                hasActiveFilters={tableState.hasActiveFilters}
-                onClearFilters={tableState.clearAllFilters}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearAllFilters}
                 onRowOpen={onOpenDetail}
                 expandedRowId={expandedRowId}
                 onExpandedRowIdChange={setExpandedRowId}
@@ -382,16 +487,16 @@ export function ProductsList() {
                     <div className="flex flex-col gap-2">
                         <DataTableToolbar
                             searchPlaceholder={t("searchPlaceholder")}
-                            q={tableState.q}
-                            onQChange={tableState.setQ}
+                            q={tv.q}
+                            onQChange={tv.setQ}
                             facets={facets}
-                            facetValues={tableState.facetValues}
-                            onFacetValuesChange={tableState.setFacetValues}
+                            facetValues={facetValues}
+                            onFacetValuesChange={setFacetValues}
                             toggles={toggles}
-                            toggleValues={tableState.toggleValues}
-                            onToggleChange={tableState.setToggleValue}
-                            hasActiveFilters={tableState.hasActiveFilters}
-                            onClearAll={tableState.clearAllFilters}
+                            toggleValues={toggleValues}
+                            onToggleChange={setToggleValue}
+                            hasActiveFilters={hasActiveFilters}
+                            onClearAll={clearAllFilters}
                             onRefresh={() => {
                                 void queryClient.invalidateQueries({ queryKey: ["admin", "products", "list"] });
                             }}
@@ -404,10 +509,10 @@ export function ProductsList() {
                             rightSlot={
                                 <DataTableViewOptions
                                     columns={columnVisibilityItems}
-                                    visibility={tableState.columnVisibility}
-                                    onVisibilityChange={tableState.setColumnVisibility}
-                                    density={tableState.density}
-                                    onDensityChange={tableState.setDensity}
+                                    visibility={ui.columnVisibility}
+                                    onVisibilityChange={ui.setColumnVisibility}
+                                    density={ui.density}
+                                    onDensityChange={ui.setDensity}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),
@@ -424,8 +529,8 @@ export function ProductsList() {
                         <ActiveFilterChips
                             chips={activeChips}
                             onRemove={(key, value) => {
-                                const current = tableState.facetValues[key] ?? [];
-                                tableState.setFacetValues(
+                                const current = facetValues[key] ?? [];
+                                setFacetValues(
                                     key,
                                     current.filter((item) => item !== value),
                                 );
@@ -481,9 +586,9 @@ export function ProductsList() {
     );
 }
 
-function numericFirst(values: string[] | undefined): number | undefined {
-    if (values === undefined || values.length === 0) return undefined;
-    const numeric = Number(values[0]);
+function numericOr(value: string): number | undefined {
+    if (value.length === 0) return undefined;
+    const numeric = Number(value);
     return Number.isFinite(numeric) ? numeric : undefined;
 }
 

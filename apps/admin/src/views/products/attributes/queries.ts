@@ -13,7 +13,7 @@ type SdkAdminAttribute = Schemas["AdminAttribute"];
 
 interface AttributeListEnvelope {
     data: SdkAdminAttribute[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 interface AttributeResourceEnvelope {
@@ -44,7 +44,7 @@ const LIST_KEY = ["admin", "attributes", "list"] as const;
 
 export interface AttributesListParams {
     page?: number;
-    perPage?: number;
+    limit?: number;
     search?: string;
 }
 
@@ -56,11 +56,11 @@ export interface AttributesListParams {
 export function useAttributesList(params: AttributesListParams = {}): UseQueryResult<AdminAttribute[], Error> {
     const locale = useLocale() as Locale;
     const page = params.page ?? 1;
-    const perPage = params.perPage ?? 200;
+    const limit = params.limit ?? 200;
     const search = params.search;
     return useQuery<AttributeListEnvelope, Error, AdminAttribute[]>({
-        queryKey: ["admin", "attributes", "list", { locale, page, perPage, search }],
-        queryFn: () => apiGet<AttributeListEnvelope>("attributes", { locale, query: { page, perPage, search } }),
+        queryKey: ["admin", "attributes", "list", { locale, page, limit, search }],
+        queryFn: () => apiGet<AttributeListEnvelope>("attributes", { locale, query: { page, limit, q: search } }),
         select: (payload) => (payload.data ?? []).map(toAdminAttribute),
         staleTime: 30_000,
     });
@@ -216,6 +216,6 @@ export function useBulkDeleteAttributes() {
 }
 
 /** Used by `attributes-view.tsx` to seed the React Query cache from the SSR page payload. */
-export function seedAttributesListKey({ locale, perPage }: { locale: Locale; perPage: number }) {
-    return ["admin", "attributes", "list", { locale, page: 1, perPage, search: undefined }] as const;
+export function seedAttributesListKey({ locale, limit }: { locale: Locale; limit: number }) {
+    return ["admin", "attributes", "list", { locale, page: 1, limit, search: undefined }] as const;
 }

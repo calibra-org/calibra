@@ -106,18 +106,18 @@ export default class AdminCustomerMarketingController {
     async history(ctx: HttpContext) {
         const customer = await this.findCustomerOrFail(ctx.params.id);
         const page = Number(ctx.request.input("page", 1));
-        const perPage = Math.min(Number(ctx.request.input("perPage", 25)), 100);
+        const limit = Math.min(Number(ctx.request.input("limit", 25)), 100);
         const paginator = await CustomerMarketingConsentHistory.query()
             .where("customer_id", Number(customer.id))
             .preload("actor")
             .orderBy("occurred_at", "desc")
-            .paginate(page, perPage);
+            .paginate(page, limit);
         const meta = paginator.getMeta();
         return {
             data: paginator.all().map((r) => new CustomerMarketingConsentHistoryTransformer(r).toObject()),
             meta: {
                 page: meta.currentPage,
-                perPage: meta.perPage,
+                limit: meta.perPage,
                 total: meta.total,
                 lastPage: meta.lastPage,
             },

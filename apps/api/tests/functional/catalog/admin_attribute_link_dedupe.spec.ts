@@ -1,7 +1,7 @@
 import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
-import { createAttributeWithTerm, createProduct } from "./helpers.js";
+import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductAttributeTerm from "#models/product_attribute_term";
 import ProductAttributeTermTranslation from "#models/product_attribute_term_translation";
@@ -14,7 +14,11 @@ import ProductAttributeTermTranslation from "#models/product_attribute_term_tran
  * unioned — so the save succeeds with one row regardless of what the wire shape looked like.
  */
 test.group("Admin product attribute_links dedupe", (group) => {
-    group.each.setup(async () => testUtils.db().truncate());
+    let admin: Awaited<ReturnType<typeof createAdmin>>;
+    group.each.setup(async () => {
+        admin = await createAdmin();
+        return await testUtils.db().truncate();
+    });
 
     test("PATCH with duplicate attribute_links collapses to one row, term_ids unioned", async ({ client, assert }) => {
         const p = await createProduct({
@@ -49,20 +53,24 @@ test.group("Admin product attribute_links dedupe", (group) => {
             slug: "material-fabric",
         });
 
-        const response = await client.patch(`/api/v1/admin/products/${p.id}`).json({
-            attribute_links: [
-                {
-                    attribute_id: Number(attribute.id),
-                    used_for_variation: false,
-                    term_ids: [Number(termA.id)],
-                },
-                {
-                    attribute_id: Number(attribute.id),
-                    used_for_variation: true,
-                    term_ids: [Number(termB.id)],
-                },
-            ],
-        });
+        const response = await client
+            .patch(`/api/v1/admin/products/${p.id}`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                attribute_links: [
+                    {
+                        attribute_id: Number(attribute.id),
+                        used_for_variation: false,
+                        term_ids: [Number(termA.id)],
+                    },
+                    {
+                        attribute_id: Number(attribute.id),
+                        used_for_variation: true,
+                        term_ids: [Number(termB.id)],
+                    },
+                ],
+            });
         response.assertStatus(200);
         response.assertAgainstApiSpec();
 
@@ -96,9 +104,13 @@ test.group("Admin product attribute_links dedupe", (group) => {
             term_ids: [Number(term.id)],
         };
 
-        const response = await client.patch(`/api/v1/admin/products/${p.id}`).json({
-            attribute_links: [link, link, link],
-        });
+        const response = await client
+            .patch(`/api/v1/admin/products/${p.id}`)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({
+                attribute_links: [link, link, link],
+            });
         response.assertStatus(200);
         const rows = await ProductAttributeLink.query().where("product_id", String(p.id));
         assert.lengthOf(rows, 1);

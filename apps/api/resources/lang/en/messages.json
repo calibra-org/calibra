@@ -76,6 +76,20 @@
             "cancelled": "Cancelled",
             "refunded": "Refunded",
             "failed": "Failed"
+        },
+        "table_view": {
+            "field_not_filterable": "Filtering by \"{field}\" is not allowed",
+            "field_not_orderable": "Ordering by \"{field}\" is not allowed",
+            "operator_invalid": "Invalid operator \"{op}\"",
+            "operator_not_allowed_on_field": "Operator \"{op}\" is not allowed on field \"{field}\" (type {type})",
+            "value_required": "Operator \"{op}\" requires a value",
+            "between_requires_two": "Operator \"between\" requires exactly two comma-separated values",
+            "between_no_nulls": "Operator \"between\" does not accept null bounds",
+            "in_requires_list": "Operator \"{op}\" requires a non-empty comma-separated list",
+            "void_op_no_value": "Operator \"{op}\" does not accept a value",
+            "expression_invalid": "Invalid filter expression \"{raw}\"",
+            "sort_dir_invalid": "Invalid sort direction \"{dir}\"",
+            "field_duplicate": "Field \"{field}\" already has a constraint in this group"
         }
     }
 }

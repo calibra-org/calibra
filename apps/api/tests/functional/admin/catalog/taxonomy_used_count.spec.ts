@@ -99,7 +99,7 @@ test.group("admin taxonomy index — sort=-used_count (categories)", (group) => 
                 .insert({ product_id: Number(products[i]!.id), category_id: Number(middle.id) });
         }
 
-        const res = await client.get("/api/v1/admin/categories?sort=-used_count").withGuard("api").loginAs(admin);
+        const res = await client.get("/api/v1/admin/categories?sort[]=used_count:desc").withGuard("api").loginAs(admin);
         res.assertStatus(200);
         res.assertAgainstApiSpec();
         const body = res.body() as { data: Array<{ id: number; used_count: number | null }> };
@@ -118,7 +118,7 @@ test.group("admin taxonomy index — sort=-used_count (categories)", (group) => 
         for (const p of products) {
             await db.table("product_category_links").insert({ product_id: Number(p.id), category_id: Number(popular.id) });
         }
-        const res = await client.get("/api/v1/admin/categories?sort=used_count").withGuard("api").loginAs(admin);
+        const res = await client.get("/api/v1/admin/categories?sort[]=used_count:asc").withGuard("api").loginAs(admin);
         res.assertStatus(200);
         const body = res.body() as { data: Array<{ id: number; used_count: number | null }> };
         const order = body.data.map((row) => row.id);
@@ -139,10 +139,10 @@ test.group("admin taxonomy index — sort=-used_count (categories)", (group) => 
         assert.equal(body.data.find((row) => row.id === Number(cat.id))?.used_count, 1);
     });
 
-    test("respects perPage cap on most-used path", async ({ client, assert }) => {
+    test("respects limit cap on most-used path", async ({ client, assert }) => {
         const admin = await createAdmin();
         for (let i = 0; i < 6; i += 1) await seedCategory(`c${i}`);
-        const res = await client.get("/api/v1/admin/categories?sort=-used_count&perPage=3").withGuard("api").loginAs(admin);
+        const res = await client.get("/api/v1/admin/categories?sort[]=used_count:desc&limit=3").withGuard("api").loginAs(admin);
         res.assertStatus(200);
         const body = res.body() as { data: unknown[] };
         assert.equal(body.data.length, 3);
@@ -151,9 +151,9 @@ test.group("admin taxonomy index — sort=-used_count (categories)", (group) => 
     test("warm cache survives a fresh request and stays spec-clean", async ({ client }) => {
         const admin = await createAdmin();
         await seedCategory("alpha");
-        const first = await client.get("/api/v1/admin/categories?sort=-used_count").withGuard("api").loginAs(admin);
+        const first = await client.get("/api/v1/admin/categories?sort[]=used_count:desc").withGuard("api").loginAs(admin);
         first.assertStatus(200);
-        const second = await client.get("/api/v1/admin/categories?sort=-used_count").withGuard("api").loginAs(admin);
+        const second = await client.get("/api/v1/admin/categories?sort[]=used_count:desc").withGuard("api").loginAs(admin);
         second.assertStatus(200);
         second.assertAgainstApiSpec();
     });
@@ -174,7 +174,7 @@ test.group("admin taxonomy index — sort=-used_count (tags)", (group) => {
         }
         await db.table("product_tag_links").insert({ product_id: Number(products[0]!.id), tag_id: Number(cold.id) });
 
-        const res = await client.get("/api/v1/admin/tags?sort=-used_count").withGuard("api").loginAs(admin);
+        const res = await client.get("/api/v1/admin/tags?sort[]=used_count:desc").withGuard("api").loginAs(admin);
         res.assertStatus(200);
         res.assertAgainstApiSpec();
         const body = res.body() as { data: Array<{ id: number; used_count: number | null }> };
@@ -199,7 +199,7 @@ test.group("admin taxonomy index — sort=-used_count (brands)", (group) => {
         }
         await db.table("product_brand_links").insert({ product_id: Number(products[0]!.id), brand_id: Number(b.id) });
 
-        const res = await client.get("/api/v1/admin/brands?sort=-used_count").withGuard("api").loginAs(admin);
+        const res = await client.get("/api/v1/admin/brands?sort[]=used_count:desc").withGuard("api").loginAs(admin);
         res.assertStatus(200);
         res.assertAgainstApiSpec();
         const body = res.body() as { data: Array<{ id: number; used_count: number | null }> };
@@ -213,7 +213,7 @@ test.group("admin taxonomy index — sort=-used_count (brands)", (group) => {
         const product = (await seedProducts(1))[0]!;
         await db.table("product_brand_links").insert({ product_id: Number(product.id), brand_id: Number(a.id) });
 
-        const first = await client.get("/api/v1/admin/brands?sort=-used_count").withGuard("api").loginAs(admin);
+        const first = await client.get("/api/v1/admin/brands?sort[]=used_count:desc").withGuard("api").loginAs(admin);
         first.assertStatus(200);
         const firstBody = first.body() as { data: Array<{ id: number; used_count: number | null }> };
         assert.equal(firstBody.data.find((row) => row.id === Number(a.id))?.used_count, 1);
@@ -225,7 +225,7 @@ test.group("admin taxonomy index — sort=-used_count (brands)", (group) => {
             .loginAs(admin);
         create.assertStatus(201);
 
-        const after = await client.get("/api/v1/admin/brands?sort=-used_count").withGuard("api").loginAs(admin);
+        const after = await client.get("/api/v1/admin/brands?sort[]=used_count:desc").withGuard("api").loginAs(admin);
         after.assertStatus(200);
         const afterBody = after.body() as { data: Array<{ id: number }> };
         assert.equal(afterBody.data.length, 2);

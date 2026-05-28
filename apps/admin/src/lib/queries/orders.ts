@@ -7,6 +7,7 @@ import { useLocale } from "next-intl";
 
 import { type SdkAdminOrderListRow, toAdminOrderDetail, toAdminOrderListRow } from "#/lib/adapters/orders";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
+import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view";
 import type { AdminOrder, OrderStatus, Paginated } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];
@@ -17,7 +18,7 @@ interface OrderEnvelope {
 
 interface OrderListEnvelope {
     data: SdkAdminOrderListRow[];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 /** Surface for the admin tab strip — `all` plus one count per backend status, plus `trashed`. */
@@ -30,78 +31,51 @@ interface OrderCountsEnvelope {
     data: OrderCountsMap;
 }
 
+/**
+ * Inputs accepted by {@link useOrdersList}. `query` carries the unified TableView grammar
+ * (filter / filterOr / sort / page / limit); `q` and `trashed` are the endpoint extras outside
+ * the grammar — `q` is a free-text search across `billing_email`, `order_number`, and numeric
+ * `id`; `trashed` flips the soft-delete scope so only deleted orders return.
+ */
 export interface OrdersListParams {
-    page?: number;
-    perPage?: number;
-    status?: OrderStatus | "any" | "trashed";
-    search?: string;
-    sort?: string;
-    createdVia?: string;
-    /** Multi-select source filter (mirrors the toolbar facet). Serialised as `?source=a,b,c`. */
-    sources?: string[];
-    /** Multi-select payment-method filter — values are payment_gateway.code snapshots. */
-    payments?: string[];
-    /** Multi-select billing-country filter (ISO-3166 alpha-2). */
-    countries?: string[];
-    /** Unified date filter string (`<op>:<value>`); see `apps/api/.../date_filter_parser.ts`. */
-    created?: string;
-    customerId?: number;
+    query?: TableViewQuery;
+    q?: string;
+    trashed?: boolean;
 }
 
 /**
- * Paginated admin orders list. `status === "any"` (and `undefined`) skip the filter; non-`any`
- * values feed the API's `status=` query. Search is forwarded verbatim. Every filter dimension
- * lives in the query key so toggles refetch instead of mutating the same cache entry.
+ * Top-level extras the orders endpoint accepts outside the TableView grammar. Keys must match the
+ * controller's `compileStrict({ extras })` exactly (`apps/api/app/validators/admin/order_validator.ts`)
+ * — any other key 422s. The `satisfies` on the call site flags a typo'd key at compile time.
+ */
+interface OrdersListExtras {
+    q?: string;
+    trashed?: boolean;
+}
+
+const PER_PAGE_DEFAULT = 25;
+
+/**
+ * Paginated admin orders list. The query object handed to the SDK is byte-for-byte what the URL
+ * holds — both derive from {@link tableViewQueryToSdkQuery}. `q` (multi-column ILIKE) and `trashed`
+ * (soft-delete scope flip) are the only extras; everything else rides as `filter[]` / `sort[]`.
  */
 export function useOrdersList(params: OrdersListParams = {}) {
     const locale = useLocale() as Locale;
-    const page = params.page ?? 1;
-    const perPage = params.perPage ?? 25;
-    const status = params.status === "any" ? undefined : params.status;
-    const search = params.search;
-    const sort = params.sort;
-    const createdVia = params.createdVia;
-    const created = params.created;
-    const customerId = params.customerId;
-    /** Serialise multi-select facets as CSV; absent / empty arrays drop out of the URL entirely. */
-    const sources = csvOrUndefined(params.sources);
-    const payments = csvOrUndefined(params.payments);
-    const countries = csvOrUndefined(params.countries);
+    const query: TableViewQuery = params.query ?? { page: 1, limit: PER_PAGE_DEFAULT, filter: [], filterOr: [], sort: [] };
+    const sdkQuery = tableViewQueryToSdkQuery(query, {
+        q: params.q,
+        trashed: params.trashed === true ? true : undefined,
+    } satisfies OrdersListExtras);
     return useQuery<OrderListEnvelope, Error, Paginated<AdminOrder>>({
-        queryKey: [
-            "admin",
-            "orders",
-            "list",
-            { locale, page, perPage, status, search, sort, createdVia, sources, payments, countries, created, customerId },
-        ],
-        queryFn: () =>
-            apiGet<OrderListEnvelope>("orders", {
-                locale,
-                query: {
-                    page,
-                    perPage,
-                    status,
-                    search,
-                    sort,
-                    created_via: createdVia,
-                    source: sources,
-                    payment: payments,
-                    country: countries,
-                    created,
-                    customer_id: customerId,
-                },
-            }),
+        queryKey: ["admin", "orders", "list", { locale, sdkQuery }],
+        queryFn: () => apiGet<OrderListEnvelope>("orders", { locale, query: sdkQuery }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminOrderListRow),
-            meta: payload.meta ?? { page, perPage, total: payload.data?.length ?? 0, lastPage: 1 },
+            meta: payload.meta ?? { page: query.page, limit: query.limit, total: payload.data?.length ?? 0, lastPage: 1 },
         }),
         placeholderData: (previous) => previous,
     });
-}
-
-function csvOrUndefined(values: string[] | undefined): string | undefined {
-    if (values === undefined || values.length === 0) return undefined;
-    return values.join(",");
 }
 
 /**
@@ -305,7 +279,7 @@ export function useOrderNotes(orderId: number) {
         Error
     >({
         queryKey: ["admin", "orders", "notes", orderId, { locale }],
-        queryFn: () => apiGet(`orders/${orderId}/notes?perPage=100`, { locale }),
+        queryFn: () => apiGet(`orders/${orderId}/notes?limit=100`, { locale }),
         enabled: orderId > 0,
     });
 }
@@ -328,7 +302,7 @@ export function useOrderRefunds(orderId: number) {
         Error
     >({
         queryKey: ["admin", "orders", "refunds", orderId, { locale }],
-        queryFn: () => apiGet(`orders/${orderId}/refunds?perPage=100`, { locale }),
+        queryFn: () => apiGet(`orders/${orderId}/refunds?limit=100`, { locale }),
         enabled: orderId > 0,
     });
 }

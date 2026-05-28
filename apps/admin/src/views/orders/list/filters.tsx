@@ -1,10 +1,10 @@
 "use client";
 
-import { AlertOctagon, Banknote, Globe, ShoppingBag } from "lucide-react";
+import { Banknote, Globe, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
-import type { FacetedFilterDef, ToggleFilterDef } from "#/components/ui/data-grid";
+import type { FacetedFilterDef } from "#/components/ui/data-grid";
 
 const PAYMENT_METHODS = ["cod", "bank_transfer", "zarinpal", "idpay", "nextpay", "payir", "zibal"] as const;
 const SOURCES = ["checkout", "admin", "api", "import"] as const;
@@ -17,7 +17,7 @@ const COUNTRIES = ["IR", "TR", "AE", "DE"] as const;
  * endpoint for orders; when one ships, hydrate `options` from a `useOrderFacets()` query the same
  * way the products list does.
  */
-export function useOrderFilters(): { facets: FacetedFilterDef[]; toggles: ToggleFilterDef[] } {
+export function useOrderFilters(): { facets: FacetedFilterDef[] } {
     const t = useTranslations("Orders.list.filters");
     const sourceT = useTranslations("Orders.list.source");
     const paymentT = useTranslations("Orders.list.payment");
@@ -49,18 +49,7 @@ export function useOrderFilters(): { facets: FacetedFilterDef[]; toggles: Toggle
         [paymentT, sourceT, t],
     );
 
-    const toggles = useMemo<ToggleFilterDef[]>(
-        () => [
-            {
-                paramKey: "needsAttention",
-                label: t("needsAttention"),
-                icon: <AlertOctagon className="size-3.5" aria-hidden="true" />,
-            },
-        ],
-        [t],
-    );
-
-    return { facets, toggles };
+    return { facets };
 }
 
 function safeT(t: (key: never) => string, key: string, fallback: string): string {

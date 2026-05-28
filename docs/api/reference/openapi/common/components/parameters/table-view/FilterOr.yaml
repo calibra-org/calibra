@@ -1,0 +1,14 @@
+name: filterOr[]
+in: query
+description: >
+    OR-joined filter constraints — at least one must match. Combined with
+    `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as
+    `filter[]`.
+required: false
+style: form
+explode: true
+schema:
+    type: array
+    items:
+        type: string
+        pattern: "^[^:]+(?::[^:]+){1,2}$"

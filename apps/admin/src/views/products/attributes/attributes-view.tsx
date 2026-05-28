@@ -60,7 +60,7 @@ export function AttributesView({ initialRows, termPreviews, termCounts }: Attrib
     const queryClient = useQueryClient();
 
     useEffect(() => {
-        const key = seedAttributesListKey({ locale, perPage: 200 });
+        const key = seedAttributesListKey({ locale, limit: 200 });
         const existing = queryClient.getQueryData(key);
         if (existing !== undefined) return;
         queryClient.setQueryData(key, {
@@ -72,13 +72,13 @@ export function AttributesView({ initialRows, termPreviews, termCounts }: Attrib
                 name: row.name[locale],
                 locale,
             })),
-            meta: { page: 1, perPage: 200, total: initialRows.length, lastPage: 1 },
+            meta: { page: 1, limit: 200, total: initialRows.length, lastPage: 1 },
         });
         /** Side cache for term counts — see brands/tags views for the same pattern. */
         queryClient.setQueryData(["admin", "attributes", "counts", locale], termCounts);
     }, [initialRows, termCounts, locale, queryClient]);
 
-    const query = useAttributesList({ perPage: 200 });
+    const query = useAttributesList({ limit: 200 });
     const counts = queryClient.getQueryData<Record<number, number>>(["admin", "attributes", "counts", locale]) ?? termCounts;
 
     const rows = useMemo<AdminAttribute[]>(() => {

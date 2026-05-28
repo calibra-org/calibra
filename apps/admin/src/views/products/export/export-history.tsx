@@ -35,7 +35,7 @@ export function ExportHistory(): React.JSX.Element {
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const { data } = await listExportHistory(locale, { perPage: 50 });
+            const { data } = await listExportHistory(locale, { limit: 50 });
             setRows(data);
         } finally {
             setLoading(false);

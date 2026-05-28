@@ -1,22 +1,35 @@
 operationId: adminTaxClassesIndex
 summary: List tax classes
-description: Returns every tax class. Not paginated — the dataset is small (typically <20 rows).
+description: >
+    Paginated list of tax classes on the unified TableView grammar. The dataset is small
+    (typically <20 rows by convention) so the default page size of 100 returns the full set
+    without forcing a `?limit=` override.
+
+    **TableView filterable fields**: `id`, `name`, `slug`.
+
+    **TableView orderable fields**: `id`, `name`, `slug`.
 tags: [Admin / Catalog / Tax Classes]
 
 parameters:
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit500.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
     - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
 
 responses:
     "200":
-        description: Tax-class list.
+        description: Paginated tax-class list.
         content:
             application/json:
                 schema:
                     type: object
-                    required: [data]
+                    required: [data, meta]
                     properties:
                         data:
                             type: array
                             items: { $ref: "../../components/schemas/AdminTaxClass.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
     "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
     "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

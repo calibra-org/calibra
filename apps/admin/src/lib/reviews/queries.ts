@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 
 import { type AdapterContext, toAdminReview } from "#/lib/adapters/reviews";
 import { apiGet } from "#/lib/queries/api-client";
+import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view";
 import type { AdminReview, LocalizedString, Paginated, ReviewStatus } from "#/lib/types";
 
 import { loadReplies, subscribeToReplies } from "./replies";
@@ -17,22 +18,32 @@ type Schemas = AdminSchemas["schemas"];
 
 interface ReviewListEnvelope {
     data: Schemas["AdminReview"][];
-    meta?: { page: number; perPage: number; total: number; lastPage: number };
+    meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
 interface ProductRowEnvelope {
     data: { id: number; name: string; slug: string; translations?: { locale: string; name?: string; slug?: string }[] }[];
 }
 
+/**
+ * Inputs accepted by {@link useReviewsList}.
+ *
+ * **Load-bearing constraint:** the reviews controller declares NO extras (`compileStrict()` with an
+ * empty extras map) — it accepts ONLY the TableView grammar. So everything server-bound rides in
+ * `query` as `filter[]` (status / rating / product_id / verified); `page` / `limit` ride too. The
+ * remaining knobs are CLIENT-only and never reach the wire (sending them would 422):
+ *
+ * - `search` — multi-column free-text the API has no equivalent for (post-filter).
+ * - `tab` — the `spam` vs `trash` split (both are `status=rejected` server-side; the distinction is
+ *   the local trash store), plus the "All excludes trash" rule. The server status filter still
+ *   lives in `query.filter`; `tab` only refines the client post-filter.
+ * - sort — applied client-side because columns like `reviewer` / `product` are derived from a
+ *   client lookup the server can't ORDER BY. `query.sort` is read here but NOT sent.
+ */
 export interface ReviewsListParams {
-    page?: number;
-    perPage?: number;
-    sort?: string;
-    status?: ReviewStatus | "any";
-    rating?: 1 | 2 | 3 | 4 | 5;
-    productId?: number;
-    verified?: boolean;
+    query?: TableViewQuery;
     search?: string;
+    tab?: ReviewStatus | "any";
 }
 
 /**
@@ -65,7 +76,7 @@ export function useReviewProductLookup() {
     return useQuery({
         queryKey: ["admin", "reviews", "product-lookup", { locale }],
         queryFn: async (): Promise<Map<number, { name: LocalizedString; slug: LocalizedString }>> => {
-            const payload = await apiGet<ProductRowEnvelope>("products", { locale, query: { perPage: 200 } });
+            const payload = await apiGet<ProductRowEnvelope>("products", { locale, query: { limit: 200 } });
             const out = new Map<number, { name: LocalizedString; slug: LocalizedString }>();
             for (const row of payload.data) {
                 const fa = row.translations?.find((t) => t.locale === "fa") ??
@@ -85,24 +96,19 @@ export function useReviewProductLookup() {
 /**
  * Paginated admin reviews list. The view distinguishes `spam` and `trash` while the API only
  * knows `rejected` — both collapse to that on the wire and the adapter remaps trashed ids back
- * via the client-side store. Free-text search and `trash` filtering happen client-side because
- * the API has no equivalent yet (see TODOs).
+ * via the client-side store. Server-bound filters ride `query` as `filter[]`; free-text search,
+ * the spam/trash split, and sort happen client-side (see {@link ReviewsListParams}).
  */
 export function useReviewsList(params: ReviewsListParams = {}) {
     const locale = useLocale() as Locale;
-    const page = params.page ?? 1;
-    const perPage = params.perPage ?? 20;
+    const query: TableViewQuery = params.query ?? { page: 1, limit: 20, filter: [], filterOr: [], sort: [] };
     const { trashedIds, replies } = useClientReviewExtras();
     const { data: productLookup } = useReviewProductLookup();
 
-    const sdkStatus: "pending" | "approved" | "rejected" | undefined =
-        params.status === "approved"
-            ? "approved"
-            : params.status === "pending"
-              ? "pending"
-              : params.status === "spam" || params.status === "trash"
-                ? "rejected"
-                : undefined;
+    /** Send filter[] + page + limit only — sort stays client-side (computed columns) and reviews
+     *  has no extras to carry search/tab. */
+    const sdkQuery = tableViewQueryToSdkQuery({ ...query, sort: [] });
+    const sortSpec = sortSpecFromQuery(query);
 
     return useQuery<ReviewListEnvelope, Error, Paginated<AdminReview>>({
         queryKey: [
@@ -111,13 +117,9 @@ export function useReviewsList(params: ReviewsListParams = {}) {
             "list",
             {
                 locale,
-                page,
-                perPage,
-                sort: params.sort ?? "",
-                sdkStatus,
-                rating: params.rating,
-                productId: params.productId,
-                verified: params.verified,
+                sdkQuery,
+                sortSpec,
+                tab: params.tab,
                 search: params.search ?? "",
                 /**
                  * Pull the trashed-ids set into the cache key so flipping the trash tab refetches
@@ -126,28 +128,17 @@ export function useReviewsList(params: ReviewsListParams = {}) {
                 trashSize: trashedIds.size,
             },
         ],
-        queryFn: () =>
-            apiGet<ReviewListEnvelope>("reviews", {
-                locale,
-                query: {
-                    page,
-                    perPage,
-                    status: sdkStatus,
-                    rating: params.rating,
-                    product_id: params.productId,
-                    verified: params.verified,
-                },
-            }),
+        queryFn: () => apiGet<ReviewListEnvelope>("reviews", { locale, query: sdkQuery }),
         placeholderData: keepPreviousData,
         select: (payload): Paginated<AdminReview> => {
             const ctx: AdapterContext = { products: productLookup, trashedIds, replies };
             const rowsAll = (payload.data ?? []).map((row) => toAdminReview(row, ctx));
 
             const tabFilter = (row: AdminReview): boolean => {
-                if (params.status === "trash") return row.status === "trash";
-                if (params.status === "spam") return row.status === "spam";
-                if (params.status === "approved") return row.status === "approved";
-                if (params.status === "pending") return row.status === "pending";
+                if (params.tab === "trash") return row.status === "trash";
+                if (params.tab === "spam") return row.status === "spam";
+                if (params.tab === "approved") return row.status === "approved";
+                if (params.tab === "pending") return row.status === "pending";
                 /** `any` and `undefined` exclude the trash bucket — WordPress hides trashed rows from "All". */
                 return row.status !== "trash";
             };
@@ -166,11 +157,18 @@ export function useReviewsList(params: ReviewsListParams = {}) {
             };
 
             const filtered = rowsAll.filter((row) => tabFilter(row) && searchFilter(row));
-            const sorted = sortReviews(filtered, params.sort);
-            const meta = payload.meta ?? { page, perPage, total: filtered.length, lastPage: 1 };
+            const sorted = sortReviews(filtered, sortSpec);
+            const meta = payload.meta ?? { page: query.page, limit: query.limit, total: filtered.length, lastPage: 1 };
             return { data: sorted, meta };
         },
     });
+}
+
+/** Collapse the TableView sort array into the legacy `-field` / `field` spec the client sorter reads. */
+function sortSpecFromQuery(query: TableViewQuery): string | undefined {
+    const first = query.sort[0];
+    if (first === undefined) return undefined;
+    return first.dir === "desc" ? `-${first.field}` : first.field;
 }
 
 function sortReviews(rows: AdminReview[], spec: string | undefined): AdminReview[] {
@@ -205,7 +203,7 @@ function sortValue(row: AdminReview, id: string): number | string {
 
 /**
  * Per-status row counts powering the WP-style status tabs. Each call lands on a cached
- * `?perPage=1` request so flipping tabs reuses the count without a refetch. `trash` is derived
+ * `?limit=1` request so flipping tabs reuses the count without a refetch. `trash` is derived
  * from the local trash store rather than the API.
  */
 export function useReviewCountsByStatus() {
@@ -218,7 +216,10 @@ export function useReviewCountsByStatus() {
                 try {
                     const payload = await apiGet<ReviewListEnvelope>("reviews", {
                         locale,
-                        query: { perPage: 1, status },
+                        query: {
+                            limit: 1,
+                            ...(status !== undefined ? { "filter[]": `status:eq:${status}` } : {}),
+                        },
                     });
                     return payload.meta?.total ?? payload.data?.length ?? 0;
                 } catch {

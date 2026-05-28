@@ -1,22 +1,35 @@
 operationId: adminCustomerNotesIndex
 summary: List notes on a customer (admin)
-description: Internal notes, newest first. The `author` is the admin who wrote each note.
+description: >
+    Paginated internal notes for one customer on the unified TableView grammar. Customer-id
+    scope is pre-applied at the controller (security invariant); `?filter[]=customer_id:eq:N`
+    cannot cross-walk between customers.
+
+    **TableView filterable fields**: `id`, `author_user_id`, `created_at`.
+
+    **TableView orderable fields**: `id`, `created_at`. Default sort is newest-first.
 tags: [Admin / Customers]
 parameters:
-    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
     - { name: customer_id, in: path, required: true, schema: { type: integer } }
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
 responses:
     "200":
-        description: Notes list.
+        description: Paginated notes list.
         content:
             application/json:
                 schema:
                     type: object
-                    required: [data]
+                    required: [data, meta]
                     properties:
                         data:
                             type: array
                             items: { $ref: "../../components/schemas/AdminCustomerNote.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
     "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
     "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
     "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
