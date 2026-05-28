@@ -16,7 +16,6 @@ import {
     DataTable,
     DataTableToolbar,
     DataTableViewOptions,
-    type FacetedFilterDef,
     useColumnState,
     useSelectionState,
 } from "#/components/ui/data-grid";
@@ -25,9 +24,16 @@ import { OnboardingHint } from "#/components/ui/onboarding-hint";
 import { Tabs, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
-import { type CatalogVisibility, type StockLevel, useProductCountsByStatus, useProductsList } from "#/lib/products/queries";
-import { singleSortToTableView, tableViewToSingleSort, useTableView } from "#/lib/table-view";
-import type { AdminProduct, ProductStatus, ProductType, StockStatus } from "#/lib/types";
+import { type StockLevel, useProductCountsByStatus, useProductsList } from "#/lib/products/queries";
+import {
+    type FacetColumnMap,
+    singleSortToTableView,
+    tableViewToSingleSort,
+    useFacetValuesFromQuery,
+    useSetFacetValue,
+    useTableView,
+} from "#/lib/table-view";
+import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
 import { buildProductColumns } from "./columns";
@@ -42,6 +48,17 @@ const TRASH_TAB = "trash" as const;
 const TAB_VALUES: readonly string[] = [...STATUS_TABS, TRASH_TAB];
 type TabValue = ProductStatus | "any" | typeof TRASH_TAB;
 const LOW_STOCK_THRESHOLD = 5;
+
+/**
+ * Toolbar facets that are filterable columns ride the grammar as `filter[]=<col>:in:…` (read from +
+ * written to `query.filter`). `type` is the `type` column; `visibility` projects onto the
+ * `catalog_visibility` column. Every other facet (`stock_status`, `stock_level`, pivots) is a
+ * bespoke extra the runtime can't model as a column WHERE.
+ */
+const FACET_COLUMN_MAP: FacetColumnMap = {
+    type: { field: "type", op: "in" },
+    visibility: { field: "catalog_visibility", op: "in" },
+};
 
 /**
  * Top-level client component for the Products list page. Wires the {@link DataTable} abstraction
@@ -61,30 +78,29 @@ export function ProductsList() {
     const { facets, toggles } = useProductFilters();
 
     /**
-     * Every wire param the products endpoint accepts lives as a typed nuqs extra on
-     * {@link useTableView}. `page` / `limit` / `sort[]` come from the TableView grammar; the
-     * scalar facets (`type`, `stock`, `category`, …) and toggles travel as endpoint extras the
-     * server's `compileStrict({ extras })` declared. The tab strip is computed from `status` +
-     * `onlyTrashed`.
+     * URL-as-wire state. `page` / `limit` / `sort[]` plus the column facets (`type`,
+     * `catalog_visibility`, `featured`) come from the TableView grammar in `query`; everything
+     * below is a bespoke top-level extra keyed by its EXACT wire key so the URL, the params, and
+     * the request read identically. The tab strip is computed from `status` + `only_trashed`.
      */
     const tv = useTableView({
         extras: {
             q: parseAsString.withDefault(""),
             status: parseAsString.withDefault(""),
-            onlyTrashed: parseAsBoolean.withDefault(false),
-            type: parseAsString.withDefault(""),
-            stock: parseAsString.withDefault(""),
-            stockLevel: parseAsString.withDefault(""),
-            visibility: parseAsString.withDefault(""),
+            only_trashed: parseAsBoolean.withDefault(false),
+            stock_status: parseAsString.withDefault(""),
+            stock_level: parseAsString.withDefault(""),
             category: parseAsString.withDefault(""),
             brand: parseAsString.withDefault(""),
             tag: parseAsString.withDefault(""),
-            fav: parseAsBoolean.withDefault(false),
-            onSale: parseAsBoolean.withDefault(false),
-            featured: parseAsBoolean.withDefault(false),
-            hasImage: parseAsBoolean.withDefault(false),
+            on_sale: parseAsBoolean.withDefault(false),
+            has_image: parseAsBoolean.withDefault(false),
         },
     });
+
+    /** Favourites is a CLIENT filter — the API has no support for it, so it stays out of the
+     *  URL-as-wire model entirely (local state, never serialized, never sent). */
+    const [fav, setFav] = useState(false);
 
     const ui = useColumnState({
         id: TABLE_ID,
@@ -93,7 +109,7 @@ export function ProductsList() {
 
     const selection = useSelectionState();
 
-    const onlyTrashed = tv.onlyTrashed;
+    const onlyTrashed = tv.only_trashed;
     const status: ProductStatus | "any" = useMemo(() => {
         if (onlyTrashed) return "any";
         const value = tv.status;
@@ -103,37 +119,36 @@ export function ProductsList() {
 
     const activeTab: TabValue = onlyTrashed ? TRASH_TAB : status;
 
-    /** Project the scalar extras onto the `facetValues: Record<string, string[]>` shape the
-     *  toolbar's chip-display contracts expect. Single-element arrays for set extras; empty
-     *  arrays otherwise. */
+    /** `type` + `visibility` read from `filter[]` (grammar-first); the remaining facets are
+     *  bespoke extras projected onto the same `Record<string, string[]>` shape the toolbar wants. */
+    const columnFacetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
+    const setColumnFacet = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
+
     const facetValues = useMemo<Record<string, string[]>>(
         () => ({
-            type: tv.type.length > 0 ? [tv.type] : [],
-            stock: tv.stock.length > 0 ? [tv.stock] : [],
-            stockLevel: tv.stockLevel.length > 0 ? [tv.stockLevel] : [],
-            visibility: tv.visibility.length > 0 ? [tv.visibility] : [],
+            ...columnFacetValues,
+            stock_status: tv.stock_status.length > 0 ? [tv.stock_status] : [],
+            stock_level: tv.stock_level.length > 0 ? [tv.stock_level] : [],
             category: tv.category.length > 0 ? [tv.category] : [],
             brand: tv.brand.length > 0 ? [tv.brand] : [],
             tag: tv.tag.length > 0 ? [tv.tag] : [],
         }),
-        [tv.type, tv.stock, tv.stockLevel, tv.visibility, tv.category, tv.brand, tv.tag],
+        [columnFacetValues, tv.stock_status, tv.stock_level, tv.category, tv.brand, tv.tag],
     );
 
     const setFacetValues = useCallback(
         (key: string, values: string[]) => {
+            if (key === "type" || key === "visibility") {
+                setColumnFacet(key, values);
+                return;
+            }
             const next = values[0] ?? "";
             switch (key) {
-                case "type":
-                    tv.setType(next);
+                case "stock_status":
+                    tv.setStock_status(next);
                     break;
-                case "stock":
-                    tv.setStock(next);
-                    break;
-                case "stockLevel":
-                    tv.setStockLevel(next);
-                    break;
-                case "visibility":
-                    tv.setVisibility(next);
+                case "stock_level":
+                    tv.setStock_level(next);
                     break;
                 case "category":
                     tv.setCategory(next);
@@ -146,27 +161,35 @@ export function ProductsList() {
                     break;
             }
         },
-        [tv],
+        [setColumnFacet, tv],
     );
 
+    /** `featured` is a filterable column toggle → `filter[]=featured:eq:true`; `on_sale` /
+     *  `has_image` are bespoke extras; `fav` is client-only local state. */
+    const featuredActive = useMemo(
+        () => tv.query.filter.some((f) => f.field === "featured" && f.op === "eq" && f.value === true),
+        [tv.query.filter],
+    );
     const toggleValues = useMemo<Record<string, boolean>>(
-        () => ({ fav: tv.fav, onSale: tv.onSale, featured: tv.featured, hasImage: tv.hasImage }),
-        [tv.fav, tv.onSale, tv.featured, tv.hasImage],
+        () => ({ fav, onSale: tv.on_sale, featured: featuredActive, hasImage: tv.has_image }),
+        [fav, tv.on_sale, featuredActive, tv.has_image],
     );
     const setToggleValue = useCallback(
         (key: string, value: boolean) => {
             switch (key) {
                 case "fav":
-                    tv.setFav(value);
+                    setFav(value);
                     break;
                 case "onSale":
-                    tv.setOnSale(value);
+                    tv.setOn_sale(value);
                     break;
-                case "featured":
-                    tv.setFeatured(value);
+                case "featured": {
+                    const others = tv.query.filter.filter((f) => f.field !== "featured");
+                    tv.setFilter(value ? [...others, { field: "featured", op: "eq", value: true }] : others);
                     break;
+                }
                 case "hasImage":
-                    tv.setHasImage(value);
+                    tv.setHas_image(value);
                     break;
             }
         },
@@ -176,34 +199,21 @@ export function ProductsList() {
     const sort = tableViewToSingleSort(tv.query.sort);
     const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
 
-    const productTypeValue = tv.type.length > 0 ? (tv.type as ProductType) : undefined;
-    const stockStatusValue = tv.stock.length > 0 ? (tv.stock as StockStatus) : undefined;
-    const stockLevelValue = tv.stockLevel.length > 0 ? (tv.stockLevel as StockLevel) : undefined;
-    const visibilityValue = tv.visibility.length > 0 ? (tv.visibility as CatalogVisibility) : undefined;
-    const categoryId = numericOr(tv.category);
-    const brandId = numericOr(tv.brand);
-    const tagId = numericOr(tv.tag);
-
     const { data: statusCounts } = useProductCountsByStatus();
 
     const { data, isPending, isError, refetch } = useProductsList({
-        page: tv.query.page,
-        limit: tv.query.limit,
-        sort: sort !== undefined ? (sort.direction === "desc" ? `-${sort.id}` : sort.id) : undefined,
+        query: tv.query,
+        q: tv.q.length > 0 ? tv.q : undefined,
         status,
-        type: productTypeValue,
-        stockStatus: stockStatusValue,
-        stockLevel: stockLevelValue,
-        catalogVisibility: visibilityValue,
-        categoryId,
-        brandId,
-        tagId,
-        onSale: tv.onSale ? true : undefined,
-        featured: tv.featured ? true : undefined,
-        hasImage: tv.hasImage ? true : undefined,
-        onlyTrashed: onlyTrashed ? true : undefined,
-        favoriteIds: tv.fav ? Array.from(favorites) : undefined,
-        search: tv.q.length > 0 ? tv.q : undefined,
+        stock_status: tv.stock_status.length > 0 ? (tv.stock_status as StockStatus) : undefined,
+        stock_level: tv.stock_level.length > 0 ? (tv.stock_level as StockLevel) : undefined,
+        category: numericOr(tv.category),
+        brand: numericOr(tv.brand),
+        tag: numericOr(tv.tag),
+        on_sale: tv.on_sale ? true : undefined,
+        has_image: tv.has_image ? true : undefined,
+        only_trashed: onlyTrashed ? true : undefined,
+        favoriteIds: fav ? Array.from(favorites) : undefined,
     });
 
     const rows = data?.data ?? [];
@@ -212,46 +222,29 @@ export function ProductsList() {
     const hasActiveFilters = useMemo(
         () =>
             tv.q.length > 0 ||
-            tv.type.length > 0 ||
-            tv.stock.length > 0 ||
-            tv.stockLevel.length > 0 ||
-            tv.visibility.length > 0 ||
+            tv.query.filter.length > 0 ||
+            tv.stock_status.length > 0 ||
+            tv.stock_level.length > 0 ||
             tv.category.length > 0 ||
             tv.brand.length > 0 ||
             tv.tag.length > 0 ||
-            tv.fav ||
-            tv.onSale ||
-            tv.featured ||
-            tv.hasImage,
-        [
-            tv.q,
-            tv.type,
-            tv.stock,
-            tv.stockLevel,
-            tv.visibility,
-            tv.category,
-            tv.brand,
-            tv.tag,
-            tv.fav,
-            tv.onSale,
-            tv.featured,
-            tv.hasImage,
-        ],
+            fav ||
+            tv.on_sale ||
+            tv.has_image,
+        [tv.q, tv.query.filter, tv.stock_status, tv.stock_level, tv.category, tv.brand, tv.tag, fav, tv.on_sale, tv.has_image],
     );
 
     const clearAllFilters = useCallback(() => {
         tv.setQ("");
-        tv.setType("");
-        tv.setStock("");
-        tv.setStockLevel("");
-        tv.setVisibility("");
+        tv.clearFilters();
+        tv.setStock_status("");
+        tv.setStock_level("");
         tv.setCategory("");
         tv.setBrand("");
         tv.setTag("");
-        tv.setFav(false);
-        tv.setOnSale(false);
-        tv.setFeatured(false);
-        tv.setHasImage(false);
+        setFav(false);
+        tv.setOn_sale(false);
+        tv.setHas_image(false);
     }, [tv]);
 
     /**
@@ -322,10 +315,10 @@ export function ProductsList() {
             if (!TAB_VALUES.includes(value)) return;
             if (value === TRASH_TAB) {
                 tv.setStatus("");
-                tv.setOnlyTrashed(true);
+                tv.setOnly_trashed(true);
                 return;
             }
-            tv.setOnlyTrashed(false);
+            tv.setOnly_trashed(false);
             tv.setStatus(value === "any" ? "" : value);
         },
         [tv],

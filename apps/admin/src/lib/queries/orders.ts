@@ -7,7 +7,7 @@ import { useLocale } from "next-intl";
 
 import { type SdkAdminOrderListRow, toAdminOrderDetail, toAdminOrderListRow } from "#/lib/adapters/orders";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
-import { tableViewQueryToSdkQuery, type TableViewQuery } from "#/lib/table-view";
+import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view";
 import type { AdminOrder, OrderStatus, Paginated } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];

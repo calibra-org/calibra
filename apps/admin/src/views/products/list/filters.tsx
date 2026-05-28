@@ -36,13 +36,13 @@ export function useProductFilters(): { facets: FacetedFilterDef[]; toggles: Togg
                 options: PRODUCT_TYPES.map((value) => ({ value, label: productTypeT(value) })),
             },
             {
-                paramKey: "stock",
+                paramKey: "stock_status",
                 label: t("stock"),
                 multiple: false,
                 options: STOCK_STATUSES.map((value) => ({ value, label: stockT(value) })),
             },
             {
-                paramKey: "stockLevel",
+                paramKey: "stock_level",
                 label: t("stockLevelLabel"),
                 multiple: false,
                 options: STOCK_LEVELS.map((value) => ({ value, label: stockLevelT(value) })),

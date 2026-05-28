@@ -7,7 +7,7 @@ import { useLocale } from "next-intl";
 
 import { toAdminCoupon } from "#/lib/adapters/coupons";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
-import { tableViewQueryToSdkQuery, type TableViewQuery } from "#/lib/table-view";
+import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view";
 import type { AdminCoupon, AdminCouponCounts, CouponTabKey, Paginated } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];

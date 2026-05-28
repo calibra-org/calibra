@@ -139,13 +139,7 @@ export function CouponsListClient() {
             has_category_constraints: tv.has_category_constraints,
             has_email_restrictions: tv.has_email_restrictions,
         }),
-        [
-            hasColumnToggle,
-            tv.expiring_soon,
-            tv.has_product_constraints,
-            tv.has_category_constraints,
-            tv.has_email_restrictions,
-        ],
+        [hasColumnToggle, tv.expiring_soon, tv.has_product_constraints, tv.has_category_constraints, tv.has_email_restrictions],
     );
     const setToggleValue = useCallback(
         (key: string, value: boolean) => {
@@ -175,7 +169,12 @@ export function CouponsListClient() {
     const sort = tableViewToSingleSort(tv.query.sort);
     const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
 
-    const { data: result, isPending, isError, refetch } = useCouponsList({
+    const {
+        data: result,
+        isPending,
+        isError,
+        refetch,
+    } = useCouponsList({
         query: tv.query,
         q: tv.q.length > 0 ? tv.q : undefined,
         tab,

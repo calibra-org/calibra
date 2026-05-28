@@ -6,7 +6,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { parseAsString, parseAsStringEnum } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
-import { calendarForLocale } from "#/components/ui/date-picker/date-lib";
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
 import {
@@ -19,6 +18,7 @@ import {
     useColumnState,
     useSelectionState,
 } from "#/components/ui/data-grid";
+import { calendarForLocale } from "#/components/ui/date-picker/date-lib";
 import { formatNumber } from "#/lib/format";
 import {
     type CustomerTabKey,

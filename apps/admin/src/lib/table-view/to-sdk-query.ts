@@ -24,10 +24,7 @@ export type TableViewExtras = Record<string, string | number | boolean | undefin
  * Empty-string and `undefined` extras are stripped so the request stays clean; the TableView
  * serializer already omits default page/limit and never emits empty predicates.
  */
-export function tableViewQueryToSdkQuery(
-    query: TableViewQuery,
-    extras: TableViewExtras = {},
-): Record<string, SdkQueryValue> {
+export function tableViewQueryToSdkQuery(query: TableViewQuery, extras: TableViewExtras = {}): Record<string, SdkQueryValue> {
     const out: Record<string, SdkQueryValue> = {};
     for (const [k, v] of serializeTableViewQuery(query)) {
         const existing = out[k];
