@@ -224,7 +224,9 @@ export function ProductsList() {
             tv.tag.length > 0 ||
             tv.favorites ||
             tv.on_sale ||
-            tv.has_image,
+            tv.has_image ||
+            tv.status.length > 0 ||
+            tv.only_trashed,
         [
             tv.q,
             tv.query.filter,
@@ -236,14 +238,18 @@ export function ProductsList() {
             tv.favorites,
             tv.on_sale,
             tv.has_image,
+            tv.status,
+            tv.only_trashed,
         ],
     );
 
-    /** Single write — clears the `filter[]` facets (type/visibility/featured) and every bespoke
-     *  extra at once. Keeps the status tab (`status` / `only_trashed`), which isn't a filter. */
+    /** Single write — clears the `filter[]` facets (type/visibility/featured), every bespoke extra,
+     *  AND the status tab (`status` / `only_trashed`), so "Clear all filters" returns to "All". */
     const clearAllFilters = useCallback(() => {
         tv.resetFilters({
             q: "",
+            status: "",
+            only_trashed: false,
             stock_status: "",
             stock_level: "",
             category: "",
@@ -320,13 +326,13 @@ export function ProductsList() {
     const onTabChange = useCallback(
         (value: string) => {
             if (!TAB_VALUES.includes(value)) return;
+            /** `status` + `only_trashed` must move together — one `setExtras` write, never two
+             *  chained setters (each captures the same stale snapshot and the writes race). */
             if (value === TRASH_TAB) {
-                tv.setStatus("");
-                tv.setOnly_trashed(true);
+                tv.setExtras({ status: "", only_trashed: true });
                 return;
             }
-            tv.setOnly_trashed(false);
-            tv.setStatus(value === "any" ? "" : value);
+            tv.setExtras({ status: value === "any" ? "" : value, only_trashed: false });
         },
         [tv],
     );

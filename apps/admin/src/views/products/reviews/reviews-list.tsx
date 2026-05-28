@@ -137,15 +137,21 @@ export function ReviewsList() {
     const meta = data?.meta ?? { page: tv.query.page, limit: tv.query.limit, total: 0, lastPage: 1 };
 
     const hasActiveFilters = useMemo(
-        () => q.length > 0 || (facetValues.rating?.length ?? 0) > 0 || (facetValues.product?.length ?? 0) > 0 || verifiedActive,
-        [q, facetValues.rating, facetValues.product, verifiedActive],
+        () =>
+            q.length > 0 ||
+            (facetValues.rating?.length ?? 0) > 0 ||
+            (facetValues.product?.length ?? 0) > 0 ||
+            verifiedActive ||
+            status !== "any",
+        [q, facetValues.rating, facetValues.product, verifiedActive, status],
     );
 
-    /** Clear the toolbar filters (search + rating/product/verified) but keep the status tab — drop
-     *  every `filter[]` entry except the `status` one that drives the tab strip. */
+    /** Clear every toolbar filter AND the status tab (back to "All") in one write — search +
+     *  rejected-view are local state, the rest is a single `clearFilters`. */
     const clearAllFilters = useCallback(() => {
         setQ("");
-        tv.setFilter(tv.query.filter.filter((f) => f.field === "status"));
+        setRejectedView("spam");
+        tv.clearFilters();
     }, [tv]);
 
     /**

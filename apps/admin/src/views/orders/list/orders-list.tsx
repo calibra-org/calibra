@@ -295,19 +295,18 @@ export function OrdersList() {
 
     const onTabChange = useCallback(
         (value: StatusTabKey) => {
+            /** `status` lives in `filter[]` but `trashed` is an extra — write both in one `patch`
+             *  so the two don't race through separate `router.replace` calls. */
             const others = tv.query.filter.filter((f) => f.field !== "status");
             if (value === "any") {
-                tv.setTrashed(false);
-                tv.setFilter(others);
+                tv.patch({ query: { filter: others }, extras: { trashed: false } });
                 return;
             }
             if (value === "trashed") {
-                tv.setTrashed(true);
-                tv.setFilter(others);
+                tv.patch({ query: { filter: others }, extras: { trashed: true } });
                 return;
             }
-            tv.setTrashed(false);
-            tv.setFilter([...others, { field: "status", op: "eq", value }]);
+            tv.patch({ query: { filter: [...others, { field: "status", op: "eq", value }] }, extras: { trashed: false } });
         },
         [tv],
     );

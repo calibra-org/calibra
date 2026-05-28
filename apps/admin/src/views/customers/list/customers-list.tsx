@@ -316,10 +316,11 @@ export function CustomersListClient() {
         return out;
     }, [facets, facetValues]);
 
-    const hasActiveFilters = tv.q.length > 0 || Object.values(facetValues).some((arr) => Array.isArray(arr) && arr.length > 0);
+    const hasActiveFilters =
+        tv.q.length > 0 || tv.tab !== "any" || Object.values(facetValues).some((arr) => Array.isArray(arr) && arr.length > 0);
 
     const clearAllFilters = useCallback(() => {
-        tv.resetFilters({ q: "", last_order_after: "", last_order_before: "" });
+        tv.resetFilters({ q: "", tab: "any", last_order_after: "", last_order_before: "" });
     }, [tv]);
 
     /** No-op toggle map; this page has no boolean toggles but the toolbar still wants the shape. */
