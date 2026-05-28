@@ -43,7 +43,7 @@ export function BulkActions({ selectedIds, onClear, tabStatus }: BulkActionsProp
     const restoreMutation = useRestoreReviews();
     const deleteMutation = useDeleteReviews();
 
-    const setStatus = async (status: "approved" | "pending" | "rejected", okMessage: string) => {
+    const setStatus = async (status: "approved" | "pending" | "spam", okMessage: string) => {
         try {
             await moderateMutation.mutateAsync({ ids, status });
             toast.add({ title: okMessage, timeout: 2500, data: { tone: "success" } });
@@ -132,7 +132,7 @@ export function BulkActions({ selectedIds, onClear, tabStatus }: BulkActionsProp
                                 <XCircle className="size-3.5" aria-hidden="true" />
                                 {t("bulk.unapprove")}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatus("rejected", t("bulkSpam"))}>
+                            <DropdownMenuItem onClick={() => setStatus("spam", t("bulkSpam"))}>
                                 <XCircle className="size-3.5" aria-hidden="true" />
                                 {t("bulk.spam")}
                             </DropdownMenuItem>

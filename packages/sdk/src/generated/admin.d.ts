@@ -3168,7 +3168,7 @@ export interface paths {
         head?: never;
         /**
          * Moderate a review
-         * @description Approves or rejects a pending review. Setting `status: approved` also recomputes the parent product's `average_rating` and `review_count`. Admins can also edit the review's `body` or `rating` for typo / abuse-cleanup fixes.
+         * @description Moves a review between the four moderation states (`pending` / `approved` / `spam` / `trash`). Setting `status: approved` also recomputes the parent product's `average_rating` and `review_count`. Admins can also edit the review's `body` or `rating` for typo / abuse-cleanup fixes.
          */
         patch: operations["adminReviewPatch"];
         trace?: never;
@@ -4612,7 +4612,7 @@ export interface components {
             body: string;
             rating: number;
             /** @enum {string} */
-            status: "pending" | "approved" | "rejected";
+            status: "pending" | "approved" | "spam" | "trash";
             /** @description True when the reviewer has a paid order containing this product. */
             verified?: boolean;
             /** Format: date-time */
@@ -10331,7 +10331,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** @enum {string} */
-                    status?: "pending" | "approved" | "rejected";
+                    status?: "pending" | "approved" | "spam" | "trash";
                     body?: string;
                     rating?: number;
                     verified?: boolean;

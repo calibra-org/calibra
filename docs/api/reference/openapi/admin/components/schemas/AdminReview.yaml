@@ -9,7 +9,7 @@ properties:
     reviewer_email: { type: [string, "null"] }
     body: { type: string }
     rating: { type: integer, minimum: 1, maximum: 5 }
-    status: { type: string, enum: [pending, approved, rejected] }
+    status: { type: string, enum: [pending, approved, spam, trash] }
     verified: { type: boolean, description: "True when the reviewer has a paid order containing this product." }
     created_at: { type: string, format: date-time }
 required:
