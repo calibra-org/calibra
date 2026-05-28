@@ -2090,11 +2090,14 @@ export interface paths {
          *
          *     **Endpoint extensions** (kept as top-level params):
          *         - `q` — multi-column ILIKE across `product_translations.name` and `products.sku`.
-         *         - `category`, `brand`, `tag` — single-id whereIn through the respective pivot tables.
-         *         - `stock_status` — subquery on inventory_items.
+         *         - `category`, `brand`, `tag` — multi-select: a comma-separated list of ids, `whereIn`
+         *           through the respective pivot tables (`?category=5,8` matches either category).
+         *         - `stock_status` — multi-select: a comma-separated list of statuses, `whereIn` subquery
+         *           on inventory_items (`?stock_status=instock,onbackorder`).
          *         - `stock_level` — aggregate having-clause grouping (instock / low / outofstock).
          *         - `on_sale` — schedule-aware sale_starts_at / sale_ends_at window.
          *         - `has_image` — existence check on product_images.
+         *         - `favorites` — narrows to the requesting admin's starred products (`product_favorites` pivot).
          *         - `with_trashed` / `only_trashed` — soft-delete scope.
          *         - `ids` — comma-separated id whitelist.
          *         - `include=facet_counts` — adds a `facets` block to the envelope; counts are computed
@@ -2335,6 +2338,30 @@ export interface paths {
          */
         post: operations["adminProductRestore"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/favorite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Star a product for the current admin
+         * @description Marks the product as a favourite for the requesting admin (per-user `product_favorites` pivot). Idempotent — re-starring an already-favourited product is a no-op and still returns 200. Replaces the legacy localStorage-only favourites with server-backed state.
+         */
+        put: operations["adminProductFavorite"];
+        post?: never;
+        /**
+         * Unstar a product for the current admin
+         * @description Removes the product from the requesting admin's favourites (per-user `product_favorites` pivot). Idempotent — unstarring a product that wasn't favourited still returns 204.
+         */
+        delete: operations["adminProductUnfavorite"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4297,6 +4324,8 @@ export interface components {
             short_description?: string | null;
             locale?: string;
             featured_image_url?: string | null;
+            /** @description Whether the requesting admin has starred this product (per-user favourite). */
+            is_favorite: boolean;
             /** @description Full media URLs of all gallery images, ordered by position. */
             gallery_image_urls?: string[];
             /** @description Aggregated stock across all product-level inventory locations. */
@@ -4445,6 +4474,14 @@ export interface components {
             updated_at?: string | null;
             /** Format: date-time */
             deleted_at?: string | null;
+        };
+        /**
+         * ProductFavoriteState
+         * @description The favourite state of a single product for the requesting admin, returned by the `PUT /products/{id}/favorite` toggle so the client can confirm the persisted value.
+         */
+        ProductFavoriteState: {
+            id: number;
+            is_favorite: boolean;
         };
         /**
          * AdminProductVariation
@@ -4716,6 +4753,8 @@ export interface operations {
                 q?: string;
                 /** @description When `true`, return only soft-deleted orders instead of live ones. */
                 trashed?: boolean;
+                /** @description Multi-select billing-country filter — a comma-separated list of ISO-2 codes (`?country=IR,DE`). Matches orders whose billing `order_addresses` row is in any of the given countries via a `whereExists` subquery (not a TableView column WHERE). */
+                country?: string;
             };
             header?: never;
             path?: never;
@@ -8054,15 +8093,21 @@ export interface operations {
                 q?: string;
                 status?: "draft" | "publish" | "pending" | "private" | "archived";
                 type?: "simple" | "variable" | "virtual" | "downloadable" | "external" | "grouped";
-                category?: number;
-                tag?: number;
-                brand?: number;
+                /** @description Comma-separated category ids (multi-select). */
+                category?: string;
+                /** @description Comma-separated tag ids (multi-select). */
+                tag?: string;
+                /** @description Comma-separated brand ids (multi-select). */
+                brand?: string;
                 on_sale?: boolean;
-                stock_status?: "instock" | "outofstock" | "onbackorder";
+                /** @description Comma-separated stock statuses (multi-select) from instock|outofstock|onbackorder. */
+                stock_status?: string;
                 stock_level?: "instock" | "low" | "outofstock";
                 catalog_visibility?: "visible" | "catalog" | "search" | "hidden";
                 featured?: boolean;
                 has_image?: boolean;
+                /** @description When `true`, narrow to products the requesting admin has starred (per-user `product_favorites`). */
+                favorites?: boolean;
                 with_trashed?: boolean;
                 only_trashed?: boolean;
                 ids?: string;
@@ -8556,6 +8601,55 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    adminProductFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The product's favourite state after the toggle. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProductFavoriteState"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminProductUnfavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed from favourites (or was never a favourite). */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     adminVariationsIndex: {
