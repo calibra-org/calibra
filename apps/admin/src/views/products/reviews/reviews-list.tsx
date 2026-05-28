@@ -388,9 +388,12 @@ export function ReviewsList() {
     }, [facets, facetValues]);
 
     /** Map a tab click to its real server status `filter[]` entry. "All" drops the status filter
-     *  (the client select hides trashed rows for that view). */
+     *  (the client select hides trashed rows for that view). Pending undo strips are contextual to
+     *  the tab they were created on — dismiss them on navigation so the destination tab shows the
+     *  affected row normally (e.g. a just-spammed row appears as a regular row on the Spam tab). */
     const onTabChange = useCallback(
         (value: string) => {
+            setPendingUndo(new Map());
             const others = tv.query.filter.filter((f) => f.field !== "status");
             if (value === "any") {
                 tv.setFilter(others);
