@@ -20,7 +20,14 @@ import {
 import { formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
 import { useBulkUpdateCoupons, useCouponCounts, useCouponsList, useDeleteCoupon } from "#/lib/queries/coupons";
-import { singleSortToTableView, tableViewToSingleSort, useTableView } from "#/lib/table-view";
+import {
+    type FacetColumnMap,
+    singleSortToTableView,
+    tableViewToSingleSort,
+    useFacetValuesFromQuery,
+    useSetFacetValue,
+    useTableView,
+} from "#/lib/table-view";
 import type { AdminCoupon, CouponTabKey } from "#/lib/types";
 import { DuplicateCouponDialog } from "#/views/coupons/dialogs/duplicate-dialog";
 import { ExpirySheet } from "#/views/coupons/dialogs/expiry-sheet";
@@ -31,6 +38,22 @@ import { buildCouponColumns } from "./columns";
 
 const TABLE_ID = "admin.coupons.list";
 const TAB_VALUES: CouponTabKey[] = ["any", "active", "scheduled", "used", "disabled", "expired", "trashed"];
+
+/**
+ * `discount_type` is a filterable column, so it rides the grammar as `filter[]=discount_type:in:…`
+ * rather than a bespoke extra (the controller declares no `discount_type` extra — sending one would
+ * 422). The toolbar facet's `paramKey` projects onto this column via the facet adapters.
+ */
+const FACET_COLUMN_MAP: FacetColumnMap = {
+    discount_type: { field: "discount_type", op: "in" },
+};
+
+/**
+ * Boolean toggles that are filterable columns → `filter[]=<col>:eq:true` (emitted only when on).
+ * The remaining toggles (`expiring_soon`, `has_*`) are controller-side existence checks the runtime
+ * can't model per-column, so they stay top-level extras on {@link useTableView}.
+ */
+const FILTER_COLUMN_TOGGLES = ["free_shipping", "individual_use", "exclude_sale_items"] as const;
 
 import { CouponStatusTabs } from "./status-tabs";
 
@@ -43,10 +66,6 @@ export function CouponsListClient() {
         extras: {
             q: parseAsString.withDefault(""),
             tab: parseAsStringEnum<CouponTabKey>(TAB_VALUES).withDefault("any"),
-            discount_type: parseAsString.withDefault(""),
-            free_shipping: parseAsBoolean.withDefault(false),
-            individual_use: parseAsBoolean.withDefault(false),
-            exclude_sale_items: parseAsBoolean.withDefault(false),
             expiring_soon: parseAsBoolean.withDefault(false),
             has_product_constraints: parseAsBoolean.withDefault(false),
             has_category_constraints: parseAsBoolean.withDefault(false),
@@ -99,32 +118,29 @@ export function CouponsListClient() {
         [t],
     );
 
-    /** Project the scalar extras onto the per-facet/toggle maps the toolbar expects. */
-    const facetValues = useMemo<Record<string, string[]>>(
-        () => ({ discount_type: tv.discount_type.length > 0 ? tv.discount_type.split(",").filter(Boolean) : [] }),
-        [tv.discount_type],
-    );
-    const setFacetValues = useCallback(
-        (key: string, values: string[]) => {
-            if (key === "discount_type") tv.setDiscount_type(values.join(","));
-        },
-        [tv],
+    /** `discount_type` projects onto `filter[]=discount_type:in:…` — read from + written to the
+     *  canonical query so the URL holds the grammar, not a bespoke CSV key. */
+    const facetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
+    const setFacetValues = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
+
+    /** True when a boolean column toggle has a `<col>:eq:true` entry in `filter[]`. */
+    const hasColumnToggle = useCallback(
+        (col: string) => tv.query.filter.some((f) => f.field === col && f.op === "eq" && f.value === true),
+        [tv.query.filter],
     );
 
     const toggleValues = useMemo<Record<string, boolean>>(
         () => ({
-            free_shipping: tv.free_shipping,
-            individual_use: tv.individual_use,
-            exclude_sale_items: tv.exclude_sale_items,
+            free_shipping: hasColumnToggle("free_shipping"),
+            individual_use: hasColumnToggle("individual_use"),
+            exclude_sale_items: hasColumnToggle("exclude_sale_items"),
             expiring_soon: tv.expiring_soon,
             has_product_constraints: tv.has_product_constraints,
             has_category_constraints: tv.has_category_constraints,
             has_email_restrictions: tv.has_email_restrictions,
         }),
         [
-            tv.free_shipping,
-            tv.individual_use,
-            tv.exclude_sale_items,
+            hasColumnToggle,
             tv.expiring_soon,
             tv.has_product_constraints,
             tv.has_category_constraints,
@@ -133,16 +149,12 @@ export function CouponsListClient() {
     );
     const setToggleValue = useCallback(
         (key: string, value: boolean) => {
+            if ((FILTER_COLUMN_TOGGLES as readonly string[]).includes(key)) {
+                const others = tv.query.filter.filter((f) => f.field !== key);
+                tv.setFilter(value ? [...others, { field: key, op: "eq", value: true }] : others);
+                return;
+            }
             switch (key) {
-                case "free_shipping":
-                    tv.setFree_shipping(value);
-                    break;
-                case "individual_use":
-                    tv.setIndividual_use(value);
-                    break;
-                case "exclude_sale_items":
-                    tv.setExclude_sale_items(value);
-                    break;
                 case "expiring_soon":
                     tv.setExpiring_soon(value);
                     break;
@@ -163,20 +175,15 @@ export function CouponsListClient() {
     const sort = tableViewToSingleSort(tv.query.sort);
     const setSort = useCallback((next: typeof sort) => tv.setSort(singleSortToTableView(next)), [tv.setSort]);
 
-    const params = useMemo(
-        () => ({
-            page: tv.query.page,
-            limit: tv.query.limit,
-            search: tv.q.length > 0 ? tv.q : undefined,
-            tab,
-            sort: sort !== undefined ? (sort.direction === "desc" ? `-${sort.id}` : sort.id) : undefined,
-            facets: facetValues,
-            booleans: toggleValues,
-        }),
-        [tv.query.page, tv.query.limit, tv.q, sort, facetValues, toggleValues, tab],
-    );
-
-    const { data: result, isPending, isError, refetch } = useCouponsList(params);
+    const { data: result, isPending, isError, refetch } = useCouponsList({
+        query: tv.query,
+        q: tv.q.length > 0 ? tv.q : undefined,
+        tab,
+        expiring_soon: tv.expiring_soon || undefined,
+        has_product_constraints: tv.has_product_constraints || undefined,
+        has_category_constraints: tv.has_category_constraints || undefined,
+        has_email_restrictions: tv.has_email_restrictions || undefined,
+    });
 
     const deleteMutation = useDeleteCoupon();
     /** Per-row updates piggyback the bulk endpoint so a single mutation hook can serve every
@@ -257,10 +264,7 @@ export function CouponsListClient() {
 
     const clearAllFilters = useCallback(() => {
         tv.setQ("");
-        tv.setDiscount_type("");
-        tv.setFree_shipping(false);
-        tv.setIndividual_use(false);
-        tv.setExclude_sale_items(false);
+        tv.clearFilters();
         tv.setExpiring_soon(false);
         tv.setHas_product_constraints(false);
         tv.setHas_category_constraints(false);
@@ -278,7 +282,7 @@ export function CouponsListClient() {
                             <a
                                 href={buildExportUrl({
                                     tab,
-                                    search: tv.q,
+                                    q: tv.q,
                                     discountType: facetValues.discount_type,
                                 })}
                                 download
@@ -496,11 +500,15 @@ function buildDuplicatePayload(coupon: AdminCoupon): import("#/lib/queries/coupo
  * Build a same-origin export URL with the current filter state forwarded as query params. The
  * admin proxy already attaches the bearer token so a plain `<a download>` works — no SDK call
  * needed for the CSV stream.
+ *
+ * The export endpoint (`AdminCouponsController#exportCsv`) reads its own param vocabulary —
+ * `q` + `tab` + a `discount_type` CSV — NOT the list's `filter[]` grammar, so the URL here is 1:1
+ * with what that endpoint parses. Bringing export onto `filter[]` would need a backend change.
  */
-function buildExportUrl(args: { tab?: string; search?: string; discountType?: string[] }): string {
+function buildExportUrl(args: { tab?: string; q?: string; discountType?: string[] }): string {
     const params = new URLSearchParams();
     if (args.tab && args.tab !== "any") params.set("tab", args.tab);
-    if (args.search && args.search.length > 0) params.set("search", args.search);
+    if (args.q && args.q.length > 0) params.set("q", args.q);
     if (args.discountType && args.discountType.length > 0) params.set("discount_type", args.discountType.join(","));
     const qs = params.toString();
     return qs.length > 0 ? `/api/admin/coupons/export?${qs}` : "/api/admin/coupons/export";
