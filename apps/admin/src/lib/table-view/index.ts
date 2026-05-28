@@ -28,6 +28,7 @@ export {
     TABLE_VIEW_DEFAULT_PAGE,
     toUrlSearchParams,
 } from "./serialize";
+export { type SdkQueryValue, type TableViewExtras, tableViewQueryToSdkQuery } from "./to-sdk-query";
 export { type UseTableViewOptions, type UseTableViewReturn, useTableView } from "./use-table-view";
 export type {
     TableViewFilter,
