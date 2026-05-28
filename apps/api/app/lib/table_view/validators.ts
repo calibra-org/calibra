@@ -45,8 +45,8 @@ interface SortRuleOptions {
  * dropped at runtime. The validator mutates the field value into a
  * `Record<field, TableViewFilter>` shape the runtime consumes directly — no second parse pass.
  *
- * The wire grammar mirrors the technance grammar verbatim; see
- * `apps/api/docs/adr/0001-table-views.md` §4 for the contract.
+ * The wire grammar mirrors the technance grammar verbatim; see the primitive README for the
+ * contract.
  */
 function filterRuleFn(rawValue: unknown, options: FilterRuleOptions, field: FieldContext): void {
     if (isEmpty(rawValue)) {

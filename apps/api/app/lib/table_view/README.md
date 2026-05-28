@@ -4,8 +4,6 @@ Server-side primitive that gives every list endpoint a single filter / sort / pa
 grammar. Mirrors the technance-backend `table-view` package; the client twin lives at
 [`apps/admin/src/lib/table-view/`](../../../../admin/src/lib/table-view/).
 
-Design rationale, decisions, and migration plan: [ADR 0001](../../../docs/adr/0001-table-views.md).
-
 ## Wire grammar
 
 ```
