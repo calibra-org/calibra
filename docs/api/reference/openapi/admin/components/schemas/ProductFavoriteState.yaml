@@ -1,0 +1,11 @@
+title: ProductFavoriteState
+description: >
+    The favourite state of a single product for the requesting admin, returned by the
+    `PUT /products/{id}/favorite` toggle so the client can confirm the persisted value.
+type: object
+required:
+    - id
+    - is_favorite
+properties:
+    id: { type: integer }
+    is_favorite: { type: boolean }

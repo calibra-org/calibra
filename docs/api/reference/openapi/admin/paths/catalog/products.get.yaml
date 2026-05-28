@@ -33,6 +33,7 @@ description: >
         - `stock_level` — aggregate having-clause grouping (instock / low / outofstock).
         - `on_sale` — schedule-aware sale_starts_at / sale_ends_at window.
         - `has_image` — existence check on product_images.
+        - `favorites` — narrows to the requesting admin's starred products (`product_favorites` pivot).
         - `with_trashed` / `only_trashed` — soft-delete scope.
         - `ids` — comma-separated id whitelist.
         - `include=facet_counts` — adds a `facets` block to the envelope; counts are computed
@@ -62,6 +63,10 @@ parameters:
     - { name: catalog_visibility, in: query, schema: { type: string, enum: [visible, catalog, search, hidden] } }
     - { name: featured, in: query, schema: { type: boolean } }
     - { name: has_image, in: query, schema: { type: boolean } }
+    - name: favorites
+      in: query
+      description: When `true`, narrow to products the requesting admin has starred (per-user `product_favorites`).
+      schema: { type: boolean }
     - { name: with_trashed, in: query, schema: { type: boolean } }
     - { name: only_trashed, in: query, schema: { type: boolean } }
     - name: ids

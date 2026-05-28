@@ -443,6 +443,11 @@ paths:
     /api/v1/admin/products/{id}/restore:
         post:
             $ref: "./admin/paths/catalog/products-id-restore.post.yaml"
+    /api/v1/admin/products/{id}/favorite:
+        put:
+            $ref: "./admin/paths/catalog/products-id-favorite.put.yaml"
+        delete:
+            $ref: "./admin/paths/catalog/products-id-favorite.delete.yaml"
     /api/v1/admin/products/{product_id}/variations:
         get:
             $ref: "./admin/paths/catalog/variations.get.yaml"

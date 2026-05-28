@@ -43,6 +43,8 @@ export interface AdminProduct {
     manageStock: boolean;
     lowStock: boolean;
     featured: boolean;
+    /** Whether the requesting admin has starred this product (per-user favourite). */
+    isFavorite: boolean;
     categoryIds: number[];
     brandId: number | null;
     tagIds: number[];

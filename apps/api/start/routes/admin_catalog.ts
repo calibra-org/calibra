@@ -26,6 +26,8 @@ router
         router.delete("/products/:id", [AdminProductsController, "destroy"]).as("admin.products.destroy");
         router.post("/products/:id/duplicate", [AdminProductsController, "duplicate"]).as("admin.products.duplicate");
         router.post("/products/:id/restore", [AdminProductsController, "restore"]).as("admin.products.restore");
+        router.put("/products/:id/favorite", [AdminProductsController, "favorite"]).as("admin.products.favorite");
+        router.delete("/products/:id/favorite", [AdminProductsController, "unfavorite"]).as("admin.products.unfavorite");
 
         router.get("/products/:product_id/variations", [AdminVariationsController, "index"]).as("admin.variations.index");
         router.post("/products/:product_id/variations", [AdminVariationsController, "store"]).as("admin.variations.store");

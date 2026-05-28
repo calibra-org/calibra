@@ -77,6 +77,7 @@ export function toAdminProduct(p: SdkAdminProduct): AdminProduct {
         manageStock,
         lowStock,
         featured: Boolean(p.featured),
+        isFavorite: Boolean((p as { is_favorite?: boolean }).is_favorite),
         categoryIds: [],
         brandId: null,
         tagIds: [],

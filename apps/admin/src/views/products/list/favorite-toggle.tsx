@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { toast } from "#/components/ui/toast";
-import { loadFavorites } from "#/lib/products/favorites";
 import { useToggleFavorite } from "#/lib/products/mutations";
 import { cn } from "#/lib/utils";
 
@@ -35,7 +34,7 @@ export function FavoriteToggle({ productId, initialIsFavorite }: FavoriteToggleP
             const next = !isFavorite;
             setIsFavorite(next);
             try {
-                await mutateAsync({ id: productId });
+                await mutateAsync({ id: productId, favorite: next });
                 toast.add({
                     title: next ? t("favoriteAdded") : t("favoriteRemoved"),
                     timeout: 2000,
@@ -64,21 +63,4 @@ export function FavoriteToggle({ productId, initialIsFavorite }: FavoriteToggleP
             <Star className={cn("size-4 transition-transform", isFavorite && "fill-warning")} aria-hidden="true" />
         </button>
     );
-}
-
-/** Hook variant for callers that need to read the current favorites set. */
-export function useFavorites(): { favorites: Set<number>; isFavorite: (id: number) => boolean } {
-    const [favorites, setFavorites] = useState<Set<number>>(new Set());
-    useEffect(() => {
-        setFavorites(loadFavorites());
-        const onStorage = (event: StorageEvent) => {
-            if (event.key === "admin.products.favorites") setFavorites(loadFavorites());
-        };
-        window.addEventListener("storage", onStorage);
-        return () => window.removeEventListener("storage", onStorage);
-    }, []);
-    return {
-        favorites,
-        isFavorite: (id: number) => favorites.has(id),
-    };
 }

@@ -37,7 +37,6 @@ import type { AdminProduct, ProductStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
 import { buildProductColumns } from "./columns";
-import { useFavorites } from "./favorite-toggle";
 import { useProductFilters } from "./filters";
 import { QuickEditPanel } from "./quick-edit/quick-edit-panel";
 import { useProductsListShortcuts } from "./shortcuts";
@@ -73,7 +72,6 @@ export function ProductsList() {
     const locale = useLocale() as Locale;
     const router = useRouter();
     const queryClient = useQueryClient();
-    const { isFavorite, favorites } = useFavorites();
 
     const { facets, toggles } = useProductFilters();
 
@@ -95,12 +93,9 @@ export function ProductsList() {
             tag: parseAsString.withDefault(""),
             on_sale: parseAsBoolean.withDefault(false),
             has_image: parseAsBoolean.withDefault(false),
+            favorites: parseAsBoolean.withDefault(false),
         },
     });
-
-    /** Favourites is a CLIENT filter — the API has no support for it, so it stays out of the
-     *  URL-as-wire model entirely (local state, never serialized, never sent). */
-    const [fav, setFav] = useState(false);
 
     const ui = useColumnState({
         id: TABLE_ID,
@@ -164,20 +159,20 @@ export function ProductsList() {
     );
 
     /** `featured` is a filterable column toggle → `filter[]=featured:eq:true`; `on_sale` /
-     *  `has_image` are bespoke extras; `fav` is client-only local state. */
+     *  `has_image` / `favorites` are bespoke extras (the last narrows to the admin's starred set). */
     const featuredActive = useMemo(
         () => tv.query.filter.some((f) => f.field === "featured" && f.op === "eq" && f.value === true),
         [tv.query.filter],
     );
     const toggleValues = useMemo<Record<string, boolean>>(
-        () => ({ fav, onSale: tv.on_sale, featured: featuredActive, hasImage: tv.has_image }),
-        [fav, tv.on_sale, featuredActive, tv.has_image],
+        () => ({ fav: tv.favorites, onSale: tv.on_sale, featured: featuredActive, hasImage: tv.has_image }),
+        [tv.favorites, tv.on_sale, featuredActive, tv.has_image],
     );
     const setToggleValue = useCallback(
         (key: string, value: boolean) => {
             switch (key) {
                 case "fav":
-                    setFav(value);
+                    tv.setFavorites(value);
                     break;
                 case "onSale":
                     tv.setOn_sale(value);
@@ -212,7 +207,7 @@ export function ProductsList() {
         on_sale: tv.on_sale ? true : undefined,
         has_image: tv.has_image ? true : undefined,
         only_trashed: onlyTrashed ? true : undefined,
-        favoriteIds: fav ? Array.from(favorites) : undefined,
+        favorites: tv.favorites ? true : undefined,
     });
 
     const rows = data?.data ?? [];
@@ -227,10 +222,21 @@ export function ProductsList() {
             tv.category.length > 0 ||
             tv.brand.length > 0 ||
             tv.tag.length > 0 ||
-            fav ||
+            tv.favorites ||
             tv.on_sale ||
             tv.has_image,
-        [tv.q, tv.query.filter, tv.stock_status, tv.stock_level, tv.category, tv.brand, tv.tag, fav, tv.on_sale, tv.has_image],
+        [
+            tv.q,
+            tv.query.filter,
+            tv.stock_status,
+            tv.stock_level,
+            tv.category,
+            tv.brand,
+            tv.tag,
+            tv.favorites,
+            tv.on_sale,
+            tv.has_image,
+        ],
     );
 
     const clearAllFilters = useCallback(() => {
@@ -241,7 +247,7 @@ export function ProductsList() {
         tv.setCategory("");
         tv.setBrand("");
         tv.setTag("");
-        setFav(false);
+        tv.setFavorites(false);
         tv.setOn_sale(false);
         tv.setHas_image(false);
     }, [tv]);
@@ -272,14 +278,13 @@ export function ProductsList() {
                 onHideColumn,
                 onToggleQuickEdit,
                 onOpenDetail,
-                isFavorite,
                 lowStockThreshold: LOW_STOCK_THRESHOLD,
                 t,
                 statusT,
                 stockT,
                 sortLabels: { asc: t("sortAsc"), desc: t("sortDesc"), hide: t("hideColumn") },
             }),
-        [isFavorite, locale, onHideColumn, onOpenDetail, onToggleQuickEdit, statusT, stockT, t, sort, setSort],
+        [locale, onHideColumn, onOpenDetail, onToggleQuickEdit, statusT, stockT, t, sort, setSort],
     );
 
     const columnVisibilityItems = useMemo(
@@ -477,7 +482,7 @@ export function ProductsList() {
                 renderCard={(row) => (
                     <ProductCard
                         row={row.original}
-                        isFavorite={isFavorite(row.original.id)}
+                        isFavorite={row.original.isFavorite}
                         onQuickEdit={(product) => onToggleQuickEdit(String(product.id))}
                         onOpenDetail={onOpenDetail}
                     />

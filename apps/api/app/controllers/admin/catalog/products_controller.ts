@@ -69,6 +69,7 @@ const adminProductsListTableViewValidator = adminProductsView.compileStrict({
         status: vine.string().trim().maxLength(40).optional(),
         stock_status: csvList().optional(),
         stock_level: vine.string().trim().maxLength(40).optional(),
+        favorites: vine.boolean().optional(),
         catalog_visibility: vine.enum(["visible", "catalog", "search", "hidden"] as const).optional(),
         featured: vine.boolean().optional(),
         on_sale: vine.boolean().optional(),
@@ -131,8 +132,26 @@ export default class AdminProductsController {
             .preload("inventoryItems");
         this.applyListFilters(query, request);
 
+        /** Favourites is per-admin-user, so it needs `ctx.auth` (which applyListFilters — shared
+         * with the user-agnostic facet-count subqueries — doesn't get). Narrow to the current
+         * operator's starred products via the `product_favorites` pivot. */
+        const currentUserId = ctx.auth.user?.id === undefined ? undefined : Number(ctx.auth.user.id);
+        if (truthy(request.input("favorites"))) {
+            if (currentUserId === undefined) {
+                query.whereRaw("1 = 0");
+            } else {
+                query.whereIn("id", (sub) =>
+                    sub.select("product_id").from("product_favorites").where("user_id", currentUserId),
+                );
+            }
+        }
+
         const { data: rows, meta } = await adminProductsView.run<Product>(query, parsed);
         const transformerOptions = await this.transformerOptions();
+        transformerOptions.favoriteProductIds = await this.loadFavoriteProductIds(
+            currentUserId,
+            rows.map((r) => Number(r.id)),
+        );
         const { data } = await collection<unknown>(
             ProductTransformer.transform(rows, ctx.i18n.locale, transformerOptions).useVariant("forAdmin"),
         );
@@ -848,6 +867,45 @@ export default class AdminProductsController {
                 skipped_force: skippedForceIds,
             },
         };
+    }
+
+    /**
+     * `PUT /api/v1/admin/products/:id/favorite` — star the product for the current admin.
+     * Idempotent: a second PUT is a no-op (the `(user_id, product_id)` PK absorbs the conflict).
+     */
+    async favorite(ctx: HttpContext) {
+        const productId = Number(ctx.params.id);
+        const product = await Product.query().where("id", productId).whereNull("deleted_at").first();
+        if (!product) {
+            return ctx.response.status(404).json({ errors: [{ message: "product_not_found" }] });
+        }
+        await db
+            .table("product_favorites")
+            .insert({ user_id: Number(ctx.auth.user!.id), product_id: productId, created_at: DateTime.utc().toSQL() })
+            .onConflict(["user_id", "product_id"])
+            .ignore();
+        return { data: { id: productId, is_favorite: true } };
+    }
+
+    /**
+     * `DELETE /api/v1/admin/products/:id/favorite` — unstar the product for the current admin.
+     * Idempotent: deleting a non-existent favourite returns 204 just the same.
+     */
+    async unfavorite(ctx: HttpContext) {
+        const productId = Number(ctx.params.id);
+        await db.from("product_favorites").where({ user_id: Number(ctx.auth.user!.id), product_id: productId }).delete();
+        return ctx.response.status(204);
+    }
+
+    /** Loads the subset of `productIds` the given admin has favourited — drives `is_favorite`. */
+    private async loadFavoriteProductIds(userId: number | undefined, productIds: number[]): Promise<Set<number>> {
+        if (userId === undefined || productIds.length === 0) return new Set();
+        const rows = await db
+            .from("product_favorites")
+            .where("user_id", userId)
+            .whereIn("product_id", productIds)
+            .select("product_id");
+        return new Set(rows.map((r) => Number(r.product_id)));
     }
 
     /**
