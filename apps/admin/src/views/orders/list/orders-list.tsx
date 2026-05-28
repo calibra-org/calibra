@@ -17,7 +17,6 @@ import {
     DataTableToolbar,
     DataTableViewOptions,
     type DateFacetDef,
-    type FacetedFilterDef,
     useColumnState,
     useSelectionState,
 } from "#/components/ui/data-grid";
@@ -31,7 +30,6 @@ import {
     type FacetColumnMap,
     serializeDateFacetForUrl,
     singleSortToTableView,
-    type TableViewFilter,
     tableViewToSingleSort,
     useDateFacetValues,
     useFacetValuesFromQuery,

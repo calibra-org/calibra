@@ -150,15 +150,30 @@ test.group("Admin products list filters", (group) => {
             .body()
             .data.map((r: { id: number }) => r.id)
             .sort((x: number, y: number) => x - y);
-        assert.deepEqual(ids, [Number(inA.id), Number(inB.id)].sort((x, y) => x - y));
+        assert.deepEqual(
+            ids,
+            [Number(inA.id), Number(inB.id)].sort((x, y) => x - y),
+        );
     });
 
     test("stock_status=instock,outofstock (multi-select) returns the union of both statuses", async ({ client, assert }) => {
         const a = await createProduct({ fa: { name: "م" }, en: { name: "In" } });
         const b = await createProduct({ fa: { name: "ن" }, en: { name: "Out" } });
         const c = await createProduct({ fa: { name: "پ" }, en: { name: "Back" } });
-        await InventoryItem.create({ productId: a.id, stockQuantity: 5, manageStock: true, backorders: "no", stockStatus: "instock" });
-        await InventoryItem.create({ productId: b.id, stockQuantity: 0, manageStock: true, backorders: "no", stockStatus: "outofstock" });
+        await InventoryItem.create({
+            productId: a.id,
+            stockQuantity: 5,
+            manageStock: true,
+            backorders: "no",
+            stockStatus: "instock",
+        });
+        await InventoryItem.create({
+            productId: b.id,
+            stockQuantity: 0,
+            manageStock: true,
+            backorders: "no",
+            stockStatus: "outofstock",
+        });
         await InventoryItem.create({
             productId: c.id,
             stockQuantity: 0,
@@ -176,6 +191,9 @@ test.group("Admin products list filters", (group) => {
             .body()
             .data.map((r: { id: number }) => r.id)
             .sort((x: number, y: number) => x - y);
-        assert.deepEqual(ids, [Number(a.id), Number(b.id)].sort((x, y) => x - y));
+        assert.deepEqual(
+            ids,
+            [Number(a.id), Number(b.id)].sort((x, y) => x - y),
+        );
     });
 });

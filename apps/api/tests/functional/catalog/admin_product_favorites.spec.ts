@@ -20,14 +20,20 @@ test.group("Admin product favorites", (group) => {
         const a = await createProduct({ fa: { name: "آ" }, en: { name: "A" } });
         const b = await createProduct({ fa: { name: "ب" }, en: { name: "B" } });
 
-        const put = await client.put(`/api/v1/admin/products/${Number(a.id)}/favorite`).withGuard("api").loginAs(admin);
+        const put = await client
+            .put(`/api/v1/admin/products/${Number(a.id)}/favorite`)
+            .withGuard("api")
+            .loginAs(admin);
         put.assertStatus(200);
         put.assertAgainstApiSpec();
         assert.equal(put.body().data.id, Number(a.id));
         assert.equal(put.body().data.is_favorite, true);
 
         /** Idempotent — re-starring is a no-op, still 200. */
-        const again = await client.put(`/api/v1/admin/products/${Number(a.id)}/favorite`).withGuard("api").loginAs(admin);
+        const again = await client
+            .put(`/api/v1/admin/products/${Number(a.id)}/favorite`)
+            .withGuard("api")
+            .loginAs(admin);
         again.assertStatus(200);
 
         const fav = await client.get("/api/v1/admin/products?favorites=1").withGuard("api").loginAs(admin);
@@ -38,20 +44,27 @@ test.group("Admin product favorites", (group) => {
 
         const all = await client.get("/api/v1/admin/products").withGuard("api").loginAs(admin);
         all.assertStatus(200);
-        const flag = new Map(
-            (all.body().data as Array<{ id: number; is_favorite: boolean }>).map((r) => [r.id, r.is_favorite]),
-        );
+        const flag = new Map((all.body().data as Array<{ id: number; is_favorite: boolean }>).map((r) => [r.id, r.is_favorite]));
         assert.equal(flag.get(Number(a.id)), true);
         assert.equal(flag.get(Number(b.id)), false);
     });
 
     test("DELETE unstars the product (idempotent 204)", async ({ client, assert }) => {
         const a = await createProduct({ fa: { name: "آ" }, en: { name: "A" } });
-        await client.put(`/api/v1/admin/products/${Number(a.id)}/favorite`).withGuard("api").loginAs(admin);
+        await client
+            .put(`/api/v1/admin/products/${Number(a.id)}/favorite`)
+            .withGuard("api")
+            .loginAs(admin);
 
-        const del = await client.delete(`/api/v1/admin/products/${Number(a.id)}/favorite`).withGuard("api").loginAs(admin);
+        const del = await client
+            .delete(`/api/v1/admin/products/${Number(a.id)}/favorite`)
+            .withGuard("api")
+            .loginAs(admin);
         del.assertStatus(204);
-        const again = await client.delete(`/api/v1/admin/products/${Number(a.id)}/favorite`).withGuard("api").loginAs(admin);
+        const again = await client
+            .delete(`/api/v1/admin/products/${Number(a.id)}/favorite`)
+            .withGuard("api")
+            .loginAs(admin);
         again.assertStatus(204);
 
         const fav = await client.get("/api/v1/admin/products?favorites=1").withGuard("api").loginAs(admin);
@@ -61,7 +74,10 @@ test.group("Admin product favorites", (group) => {
     test("favorites are per-user — one admin's stars don't leak to another", async ({ client, assert }) => {
         const other = await createAdmin();
         const a = await createProduct({ fa: { name: "آ" }, en: { name: "A" } });
-        await client.put(`/api/v1/admin/products/${Number(a.id)}/favorite`).withGuard("api").loginAs(admin);
+        await client
+            .put(`/api/v1/admin/products/${Number(a.id)}/favorite`)
+            .withGuard("api")
+            .loginAs(admin);
 
         const otherFav = await client.get("/api/v1/admin/products?favorites=1").withGuard("api").loginAs(other);
         otherFav.assertStatus(200);
@@ -82,7 +98,10 @@ test.group("Admin product favorites", (group) => {
             role: "customer",
             locale: "fa",
         });
-        const res = await client.put(`/api/v1/admin/products/${Number(a.id)}/favorite`).withGuard("api").loginAs(nonAdmin);
+        const res = await client
+            .put(`/api/v1/admin/products/${Number(a.id)}/favorite`)
+            .withGuard("api")
+            .loginAs(nonAdmin);
         res.assertStatus(403);
     });
 });

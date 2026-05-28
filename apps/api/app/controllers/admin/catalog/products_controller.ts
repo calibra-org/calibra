@@ -140,9 +140,7 @@ export default class AdminProductsController {
             if (currentUserId === undefined) {
                 query.whereRaw("1 = 0");
             } else {
-                query.whereIn("id", (sub) =>
-                    sub.select("product_id").from("product_favorites").where("user_id", currentUserId),
-                );
+                query.whereIn("id", (sub) => sub.select("product_id").from("product_favorites").where("user_id", currentUserId));
             }
         }
 
@@ -214,9 +212,7 @@ export default class AdminProductsController {
         if (skipFacet !== "brand") {
             const brandIds = csvNumbers(request.input("brand"));
             if (brandIds.length > 0) {
-                query.whereIn("id", (sub) =>
-                    sub.select("product_id").from("product_brand_links").whereIn("brand_id", brandIds),
-                );
+                query.whereIn("id", (sub) => sub.select("product_id").from("product_brand_links").whereIn("brand_id", brandIds));
             }
         }
 
@@ -893,7 +889,10 @@ export default class AdminProductsController {
      */
     async unfavorite(ctx: HttpContext) {
         const productId = Number(ctx.params.id);
-        await db.from("product_favorites").where({ user_id: Number(ctx.auth.user!.id), product_id: productId }).delete();
+        await db
+            .from("product_favorites")
+            .where({ user_id: Number(ctx.auth.user!.id), product_id: productId })
+            .delete();
         return ctx.response.status(204);
     }
 
