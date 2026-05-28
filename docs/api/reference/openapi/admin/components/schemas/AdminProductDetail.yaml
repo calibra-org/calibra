@@ -76,33 +76,6 @@ allOf:
                   Per-product attributes (name + chip values) that have no global taxonomy
                   counterpart and never feed variation generation.
               items: { $ref: "./AdminCustomAttribute.yaml" }
-          categories:
-              type: array
-              items:
-                  type: object
-                  required: [id]
-                  properties:
-                      id: { type: integer }
-                      name: { type: [string, "null"] }
-                      slug: { type: [string, "null"] }
-          tags:
-              type: array
-              items:
-                  type: object
-                  required: [id]
-                  properties:
-                      id: { type: integer }
-                      name: { type: [string, "null"] }
-                      slug: { type: [string, "null"] }
-          brands:
-              type: array
-              items:
-                  type: object
-                  required: [id]
-                  properties:
-                      id: { type: integer }
-                      name: { type: [string, "null"] }
-                      slug: { type: [string, "null"] }
           translations:
               type: array
               items:

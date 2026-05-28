@@ -1,0 +1,13 @@
+title: ProductTaxonomyRef
+description: >
+    A lightweight taxonomy reference (category, tag, or brand) attached to a product. Carries
+    just enough to render a linkable chip in the admin product list — the id for deep-linking
+    to the term's detail sheet, plus the locale-resolved name and slug. `name` / `slug` are
+    null only for a term that has no translation row in the active locale.
+type: object
+required:
+    - id
+properties:
+    id: { type: integer }
+    name: { type: [string, "null"], description: Resolved from the active locale. }
+    slug: { type: [string, "null"] }

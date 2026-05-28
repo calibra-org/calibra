@@ -4281,6 +4281,16 @@ export interface components {
             days: number;
         };
         /**
+         * ProductTaxonomyRef
+         * @description A lightweight taxonomy reference (category, tag, or brand) attached to a product. Carries just enough to render a linkable chip in the admin product list — the id for deep-linking to the term's detail sheet, plus the locale-resolved name and slug. `name` / `slug` are null only for a term that has no translation row in the active locale.
+         */
+        ProductTaxonomyRef: {
+            id: number;
+            /** @description Resolved from the active locale. */
+            name?: string | null;
+            slug?: string | null;
+        };
+        /**
          * AdminProduct
          * @description Admin product card. The detail variant {@link AdminProductDetail} adds the full image gallery, every translation row, the variation list, and the attribute → terms map. Money fields are in Rial minor units.
          */
@@ -4328,6 +4338,12 @@ export interface components {
             is_favorite: boolean;
             /** @description Full media URLs of all gallery images, ordered by position. */
             gallery_image_urls?: string[];
+            /** @description Categories this product belongs to, for the list's linkable chips. */
+            categories?: components["schemas"]["ProductTaxonomyRef"][];
+            /** @description Tags attached to this product. */
+            tags?: components["schemas"]["ProductTaxonomyRef"][];
+            /** @description Brands attached to this product (the brand taxonomy is many-to-many). */
+            brands?: components["schemas"]["ProductTaxonomyRef"][];
             /** @description Aggregated stock across all product-level inventory locations. */
             inventory?: {
                 total?: number;
@@ -4425,21 +4441,6 @@ export interface components {
             }[];
             /** @description Per-product attributes (name + chip values) that have no global taxonomy counterpart and never feed variation generation. */
             custom_attributes?: components["schemas"]["AdminCustomAttribute"][];
-            categories?: {
-                id: number;
-                name?: string | null;
-                slug?: string | null;
-            }[];
-            tags?: {
-                id: number;
-                name?: string | null;
-                slug?: string | null;
-            }[];
-            brands?: {
-                id: number;
-                name?: string | null;
-                slug?: string | null;
-            }[];
             translations?: {
                 locale?: string;
                 name?: string;
