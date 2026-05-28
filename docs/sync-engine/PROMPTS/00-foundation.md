@@ -262,8 +262,17 @@ customer's detail) where a full local mirror is cheap. Not in scope for Phases 1
 7. CONVENTIONS (apply to EVERY phase — from the repo AGENTS.md set)
 ----------------------------------------------------------------
 
-- **Worktree:** start each phase with `pnpm spin sync-engine-phase-<n>` (worktree +
-  draft PR). Verify with `pnpm spin doctor sync-engine-phase-<n> --json`.
+- **Parallel-track branching (load-bearing):** the ENTIRE sync engine lives on the
+  long-lived `sync-engine` branch (cut from `origin/main`) so it never destabilizes `main`
+  or other in-flight PRs. Per phase:
+    1. `pnpm spin sync-engine-phase-<n>` — spins a worktree + draft PR off `origin/main`.
+    2. In the worktree: `git fetch origin && git merge origin/sync-engine` — folds in
+       `00-foundation.md` + every previously-merged phase (the spin started from `main`,
+       so this is the step that actually puts you on the parallel track).
+    3. Retarget the draft PR to the parallel branch: `gh pr edit <PR#> --base sync-engine`.
+    4. Merge the phase PR **into `sync-engine`**, NEVER into `main`.
+  `sync-engine` is promoted to `main` only via ONE final integration PR once the engine is
+  proven (Phase 6 soak). Verify a spin with `pnpm spin doctor sync-engine-phase-<n> --json`.
 - **Commit scopes (exact):** `api`, `admin`, `sdk`, `ui` (=packages/shared), `agents`.
   A sync-engine change in `apps/api` is `feat(api): …`, in `apps/admin` is
   `feat(admin): …`. Conventional Commits, subject-only unless the WHY needs a 2–4 line

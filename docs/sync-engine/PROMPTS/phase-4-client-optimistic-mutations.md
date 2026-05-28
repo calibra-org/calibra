@@ -13,11 +13,16 @@ READ THE FOUNDATION DOC FIRST: `00-foundation.md`. Depends on Phase 1
 `X-Client-Tx-Id` header), Phase 2 (`SyncAction` wire shape), and Phase 3 (the delta
 applier + `SyncProvider` + per-channel watermark — the confirmation signal lives here).
 
-Start a fresh worktree:
+Start the phase on the **parallel `sync-engine` track** — do NOT land on `main`:
 
     pnpm spin sync-engine-phase-4
+    cd <worktree-from-spin-handoff>
+    git fetch origin && git merge origin/sync-engine   # fold in 00-foundation + Phases 1–3
 
-Verify with `pnpm spin doctor sync-engine-phase-4 --json`. Commit + push; PR refreshes.
+`pnpm spin` cuts the branch from `origin/main` and opens a draft PR targeting `main`;
+retarget it: `gh pr edit <PR#> --base sync-engine`. Verify with
+`pnpm spin doctor sync-engine-phase-4 --json`. Commit + push; merge the phase PR **into
+`sync-engine`**, NEVER into `main` (see `00-foundation.md` §7). Draft PR refreshes on push.
 
 ----------------------------------------------------------------
 1. READ FIRST (verified paths)

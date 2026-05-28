@@ -14,12 +14,21 @@ tenant, Transmit/SSE, REST not GraphQL) and the realities that override the stal
 `docs/sync-engine/` dossier. Do NOT follow the dossier's multi-merchant / GraphQL /
 WebSocket assumptions.
 
-Start a fresh worktree:
+Start the phase on the **parallel `sync-engine` track** — do NOT land on `main`:
 
     pnpm spin sync-engine-phase-1
+    cd <worktree-from-spin-handoff>
+    git fetch origin && git merge origin/sync-engine   # fold in 00-foundation (+ prior merged phases)
 
-Verify with `pnpm spin doctor sync-engine-phase-1 --json` before starting. Commit + push
-to that branch; the draft PR refreshes on each push.
+`pnpm spin` cuts the branch from `origin/main` and opens a draft PR targeting `main`;
+retarget it to the parallel branch so the engine integrates in isolation:
+
+    gh pr edit <PR#> --base sync-engine
+
+Verify with `pnpm spin doctor sync-engine-phase-1 --json`. Commit + push; merge the phase
+PR **into `sync-engine`**, NEVER into `main` (the whole track lands on `main` only via the
+final integration PR once proven — see `00-foundation.md` §7). The draft PR refreshes on
+each push.
 
 ----------------------------------------------------------------
 1. READ FIRST (verified paths)

@@ -12,11 +12,16 @@ READ THE FOUNDATION DOC FIRST: `00-foundation.md` (§6 — the cache IS
 the substrate). Depends on Phase 1 (`lastSyncId` envelope) + Phase 2 (channels, delta +
 cursor endpoints, `SyncAction` SDK type).
 
-Start a fresh worktree:
+Start the phase on the **parallel `sync-engine` track** — do NOT land on `main`:
 
     pnpm spin sync-engine-phase-3
+    cd <worktree-from-spin-handoff>
+    git fetch origin && git merge origin/sync-engine   # fold in 00-foundation + Phases 1–2
 
-Verify with `pnpm spin doctor sync-engine-phase-3 --json`. Commit + push; PR refreshes.
+`pnpm spin` cuts the branch from `origin/main` and opens a draft PR targeting `main`;
+retarget it: `gh pr edit <PR#> --base sync-engine`. Verify with
+`pnpm spin doctor sync-engine-phase-3 --json`. Commit + push; merge the phase PR **into
+`sync-engine`**, NEVER into `main` (see `00-foundation.md` §7). Draft PR refreshes on push.
 
 ----------------------------------------------------------------
 1. READ FIRST (verified paths)

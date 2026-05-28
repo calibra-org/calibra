@@ -10,11 +10,17 @@ earns the "ship it" decision; nothing is removed until the engine is proven.
 READ THE FOUNDATION DOC FIRST: `00-foundation.md` (§4 goodies, §5
 phase map, §7 conventions). Depends on Phases 1–4 (and 5 if shipped).
 
-Start a fresh worktree:
+Start the phase on the **parallel `sync-engine` track** — do NOT land on `main`:
 
     pnpm spin sync-engine-phase-6
+    cd <worktree-from-spin-handoff>
+    git fetch origin && git merge origin/sync-engine   # fold in 00-foundation + Phases 1–5
 
-Verify with `pnpm spin doctor sync-engine-phase-6 --json`. Commit + push; PR refreshes.
+`pnpm spin` cuts the branch from `origin/main` and opens a draft PR targeting `main`;
+retarget it: `gh pr edit <PR#> --base sync-engine`. Verify with
+`pnpm spin doctor sync-engine-phase-6 --json`. Commit + push; merge the phase PR **into
+`sync-engine`**. PROMOTING `sync-engine` → `main` is the SINGLE final integration PR, done
+AFTER this phase's pilot soak (a STOP-and-ask gate, §6 below). Draft PR refreshes on push.
 
 ----------------------------------------------------------------
 1. READ FIRST (verified paths)
