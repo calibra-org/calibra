@@ -832,6 +832,13 @@
             "trashDescription": "آیا مطمئن هستید که می‌خواهید «{name}» را به زباله‌دان منتقل کنید؟",
             "cancel": "انصراف",
             "allCategories": "همه دسته‌بندی‌ها",
+            "taxonomyAll": { "category": "همه دسته‌بندی‌ها", "tag": "همه برچسب‌ها", "brand": "همه برندها" },
+            "taxonomySheet": {
+                "category": "ویرایش دسته‌بندی",
+                "tag": "ویرایش برچسب",
+                "brand": "ویرایش برند",
+                "loadError": "بارگذاری اطلاعات با خطا مواجه شد"
+            },
             "selectedCount": "{count} انتخاب‌شده",
             "selectedOf": "{selected} از {total} انتخاب‌شده",
             "showing": "نمایش {from}–{to} از {total}",

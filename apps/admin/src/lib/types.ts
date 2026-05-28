@@ -24,6 +24,16 @@ export type StockStatus = "instock" | "outofstock" | "onbackorder";
 
 export type CatalogVisibility = "visible" | "catalog" | "search" | "hidden";
 
+/** Kinds of product taxonomy that share the same chip + detail-sheet treatment. */
+export type TaxonomyKind = "category" | "tag" | "brand";
+
+/** A taxonomy term attached to a product, carried on the list row for linkable chips. */
+export interface TaxonomyRef {
+    id: number;
+    name: string;
+    slug: string;
+}
+
 export interface AdminProduct {
     id: number;
     sku: string;
@@ -45,6 +55,11 @@ export interface AdminProduct {
     featured: boolean;
     /** Whether the requesting admin has starred this product (per-user favourite). */
     isFavorite: boolean;
+    /** Full taxonomy refs (id + resolved name + slug) for the list's linkable chips. */
+    categories: TaxonomyRef[];
+    tags: TaxonomyRef[];
+    brands: TaxonomyRef[];
+    /** Flat id projections kept for the quick-edit + bulk-edit forms; derived from the refs. */
     categoryIds: number[];
     brandId: number | null;
     tagIds: number[];

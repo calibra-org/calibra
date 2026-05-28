@@ -832,6 +832,13 @@
             "trashDescription": "Are you sure you want to move \"{name}\" to the trash?",
             "cancel": "Cancel",
             "allCategories": "All categories",
+            "taxonomyAll": { "category": "All categories", "tag": "All tags", "brand": "All brands" },
+            "taxonomySheet": {
+                "category": "Edit category",
+                "tag": "Edit tag",
+                "brand": "Edit brand",
+                "loadError": "Couldn't load this item"
+            },
             "selectedCount": "{count} selected",
             "selectedOf": "{selected} of {total} selected",
             "showing": "Showing {from}–{to} of {total}",
