@@ -47,10 +47,16 @@ type SdkAdminTaxonomy = Schemas["AdminTaxonomy"];
 type SdkAdminAttribute = Schemas["AdminAttribute"];
 type SdkAdminPaymentGateway = Schemas["AdminPaymentGateway"];
 
+/**
+ * Server-side list inputs. Field names match the TableView wire grammar (`q`, not `search`) so the
+ * SSR seed and the client hooks speak one vocabulary. These helpers keep the strongly-typed
+ * `api.admin.GET` client (typed against the OpenAPI spec) rather than the generic
+ * `tableViewQueryToSdkQuery` codec — that preserves param-level type safety the codec would erase.
+ */
 interface ListParams {
     page?: number;
     limit?: number;
-    search?: string;
+    q?: string;
 }
 
 /**
@@ -91,7 +97,7 @@ const SDK_PRODUCT_STATUS_MAP: Record<ProductStatus, "draft" | "publish" | "pendi
 
 interface ProductListParams extends ListParams {
     status?: ProductStatus | "any";
-    categoryId?: number;
+    category?: number;
 }
 
 function toAdminProductFromDetail(p: SdkAdminProductDetail): AdminProduct {
@@ -116,8 +122,8 @@ export async function listProducts(params: ProductListParams = {}): Promise<Pagi
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(sdkStatus !== undefined ? { status: sdkStatus } : {}),
-                ...(params.search ? { q: params.search } : {}),
-                ...(params.categoryId !== undefined ? { category: params.categoryId } : {}),
+                ...(params.q ? { q: params.q } : {}),
+                ...(params.category !== undefined ? { category: params.category } : {}),
             },
         },
     });
@@ -211,7 +217,7 @@ export async function listCategories(params: ListParams = {}): Promise<Paginated
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { q: params.search } : {}),
+                ...(params.q ? { q: params.q } : {}),
             },
         },
     });
@@ -245,7 +251,7 @@ export async function listTags(params: ListParams = {}): Promise<Paginated<Admin
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { q: params.search } : {}),
+                ...(params.q ? { q: params.q } : {}),
             },
         },
     });
@@ -281,7 +287,7 @@ export async function listBrands(params: ListParams = {}): Promise<Paginated<Adm
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { q: params.search } : {}),
+                ...(params.q ? { q: params.q } : {}),
             },
         },
     });
@@ -438,7 +444,7 @@ export async function listMedia(params: MediaListParams = {}): Promise<Paginated
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { q: params.search } : {}),
+                ...(params.q ? { q: params.q } : {}),
                 ...(params.type !== undefined && params.type !== "all" ? { type: params.type } : {}),
                 ...(params.month !== undefined ? { month: params.month } : {}),
                 ...(params.uploadedBy !== undefined ? { uploaded_by: params.uploadedBy } : {}),
@@ -512,7 +518,7 @@ export async function listCustomers(params: ListParams = {}): Promise<Paginated<
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { q: params.search } : {}),
+                ...(params.q ? { q: params.q } : {}),
             },
         },
     });
@@ -545,7 +551,7 @@ export async function listOrders(params: OrderListParams = {}): Promise<Paginate
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
                 ...(params.status && params.status !== "any" ? { "filter[]": [`status:eq:${params.status}`] } : {}),
-                ...(params.search ? { q: params.search } : {}),
+                ...(params.q ? { q: params.q } : {}),
             },
         },
     });
@@ -590,7 +596,7 @@ export async function listCoupons(params: CouponListParams = {}): Promise<Pagina
             query: {
                 ...(params.page !== undefined ? { page: params.page } : {}),
                 ...(params.limit !== undefined ? { limit: params.limit } : {}),
-                ...(params.search ? { q: params.search } : {}),
+                ...(params.q ? { q: params.q } : {}),
             },
         },
     });
