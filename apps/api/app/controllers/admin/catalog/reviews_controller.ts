@@ -2,7 +2,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 
 import ProductReview from "#models/product_review";
 import { adminReviewsView } from "#table_views/admin/reviews";
-import { resource } from "#transformers/api_envelope";
+import { collection, resource } from "#transformers/api_envelope";
 import ProductReviewTransformer from "#transformers/product_review_transformer";
 import { moderateReviewValidator } from "#validators/catalog/review_validator";
 
@@ -12,9 +12,9 @@ const adminReviewsListValidator = adminReviewsView.compileStrict();
 export default class AdminReviewsController {
     async index(ctx: HttpContext) {
         const parsed = await adminReviewsListValidator.validate(ctx.request.qs());
-        const { data, meta } = await adminReviewsView.run<ProductReview>(ProductReview.query(), parsed);
-        const transformed = await ProductReviewTransformer.transform(data).useVariant("forAdmin");
-        return { data: transformed, meta };
+        const { data: rows, meta } = await adminReviewsView.run<ProductReview>(ProductReview.query(), parsed);
+        const { data } = await collection<unknown>(ProductReviewTransformer.transform(rows).useVariant("forAdmin"));
+        return { data, meta };
     }
 
     async update(ctx: HttpContext) {

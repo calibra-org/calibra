@@ -15,7 +15,7 @@ import CouponTranslation from "#models/coupon_translation";
 import { exportCouponsToCsv } from "#services/coupon_csv_exporter";
 import { runCouponTest } from "#services/coupon_test_runner";
 import { adminCouponsView } from "#table_views/admin/coupons";
-import { paginated, resource } from "#transformers/api_envelope";
+import { collection, paginated, resource } from "#transformers/api_envelope";
 import CouponRedemptionTransformer from "#transformers/coupon_redemption_transformer";
 import CouponTransformer, { type CouponListStats } from "#transformers/coupon_transformer";
 import { adminCouponTestValidator } from "#validators/coupons/coupon_test_validator";
@@ -157,8 +157,8 @@ export default class AdminCouponsController {
         const stats = await fetchCouponListStats(rows.map((c) => Number(c.id)));
         CouponTransformer.setStats(stats);
         try {
-            const transformed = await CouponTransformer.transform(rows).useVariant("forList");
-            return { data: transformed, meta };
+            const { data } = await collection<unknown>(CouponTransformer.transform(rows).useVariant("forList"));
+            return { data, meta };
         } finally {
             CouponTransformer.setStats(new Map());
         }
