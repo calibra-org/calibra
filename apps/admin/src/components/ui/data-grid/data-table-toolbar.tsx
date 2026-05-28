@@ -20,8 +20,8 @@ interface DataTableToolbarProps {
     facetValues: Record<string, string[]>;
     onFacetValuesChange: (key: string, values: string[]) => void;
     toggles?: ToggleFilterDef[];
-    toggleValues: Record<string, boolean>;
-    onToggleChange: (key: string, value: boolean) => void;
+    toggleValues?: Record<string, boolean>;
+    onToggleChange?: (key: string, value: boolean) => void;
     /** Date-picker filter chips. Renders one {@link DateFilterChip} per entry. */
     dateFacets?: DateFacetDef[];
     dateFacetValues?: Record<string, DateFilterValue | null>;
@@ -59,7 +59,7 @@ export function DataTableToolbar({
     facetValues,
     onFacetValuesChange,
     toggles = [],
-    toggleValues,
+    toggleValues = {},
     onToggleChange,
     dateFacets = [],
     dateFacetValues = {},
@@ -131,7 +131,7 @@ export function DataTableToolbar({
                     <button
                         key={toggle.paramKey}
                         type="button"
-                        onClick={() => onToggleChange(toggle.paramKey, !active)}
+                        onClick={() => onToggleChange?.(toggle.paramKey, !active)}
                         className={cn(
                             "inline-flex h-8 items-center gap-2 rounded-md border border-input border-dashed bg-background px-2.5 text-sm outline-none transition-colors",
                             "hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring",

@@ -7,7 +7,7 @@ import { useLocale } from "next-intl";
 
 import { type SdkAdminOrderListRow, toAdminOrderDetail, toAdminOrderListRow } from "#/lib/adapters/orders";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
-import { serializeTableViewQuery, type TableViewQuery } from "#/lib/table-view";
+import { tableViewQueryToSdkQuery, type TableViewQuery } from "#/lib/table-view";
 import type { AdminOrder, OrderStatus, Paginated } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];
@@ -43,54 +43,39 @@ export interface OrdersListParams {
     trashed?: boolean;
 }
 
+/**
+ * Top-level extras the orders endpoint accepts outside the TableView grammar. Keys must match the
+ * controller's `compileStrict({ extras })` exactly (`apps/api/app/validators/admin/order_validator.ts`)
+ * — any other key 422s. The `satisfies` on the call site flags a typo'd key at compile time.
+ */
+interface OrdersListExtras {
+    q?: string;
+    trashed?: boolean;
+}
+
 const PER_PAGE_DEFAULT = 25;
 
 /**
- * Paginated admin orders list. Wire shape is the unified TableView grammar
- * (`filter[]` / `filterOr[]` / `sort[]` / `page` / `limit`) plus `q` + `trashed`. Every filter
- * dimension lives in the query key so toggles refetch instead of mutating the same cache entry.
+ * Paginated admin orders list. The query object handed to the SDK is byte-for-byte what the URL
+ * holds — both derive from {@link tableViewQueryToSdkQuery}. `q` (multi-column ILIKE) and `trashed`
+ * (soft-delete scope flip) are the only extras; everything else rides as `filter[]` / `sort[]`.
  */
 export function useOrdersList(params: OrdersListParams = {}) {
     const locale = useLocale() as Locale;
     const query: TableViewQuery = params.query ?? { page: 1, limit: PER_PAGE_DEFAULT, filter: [], filterOr: [], sort: [] };
-    const q = params.q;
-    const trashed = params.trashed;
-    /** Serialise the TableView query into repeated `filter[]=`/`filterOr[]=`/`sort[]=` entries
-     * the API's VineJS schema understands. */
-    const serialised = serializeTableViewQuery(query);
+    const sdkQuery = tableViewQueryToSdkQuery(query, {
+        q: params.q,
+        trashed: params.trashed === true ? true : undefined,
+    } satisfies OrdersListExtras);
     return useQuery<OrderListEnvelope, Error, Paginated<AdminOrder>>({
-        queryKey: ["admin", "orders", "list", { locale, serialised, q, trashed }],
-        queryFn: () =>
-            apiGet<OrderListEnvelope>("orders", {
-                locale,
-                query: {
-                    ...buildQueryRecord(serialised),
-                    q,
-                    trashed: trashed === true ? true : undefined,
-                },
-            }),
+        queryKey: ["admin", "orders", "list", { locale, sdkQuery }],
+        queryFn: () => apiGet<OrderListEnvelope>("orders", { locale, query: sdkQuery }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminOrderListRow),
             meta: payload.meta ?? { page: query.page, limit: query.limit, total: payload.data?.length ?? 0, lastPage: 1 },
         }),
         placeholderData: (previous) => previous,
     });
-}
-
-/** Collapse `[name, value][]` (with repeated names) into a record where repeated names become arrays. */
-function buildQueryRecord(entries: Array<[string, string]>): Record<string, string | string[]> {
-    const out: Record<string, string | string[]> = {};
-    for (const [k, v] of entries) {
-        const existing = out[k];
-        if (existing === undefined) {
-            out[k] = v;
-        } else if (Array.isArray(existing)) {
-            existing.push(v);
-        } else {
-            out[k] = [existing, v];
-        }
-    }
-    return out;
 }
 
 /**

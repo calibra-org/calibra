@@ -87,7 +87,7 @@ export function OrdersList() {
     const router = useRouter();
     const queryClient = useQueryClient();
 
-    const { facets, toggles } = useOrderFilters();
+    const { facets } = useOrderFilters();
     const dateFacets = useMemo<DateFacetDef[]>(
         () => [{ paramKey: "created", label: t("filters.created"), calendar: "auto" }],
         [t],
@@ -99,7 +99,6 @@ export function OrdersList() {
             q: parseAsString.withDefault(""),
             trashed: parseAsBoolean.withDefault(false),
             created: parseAsString.withDefault(""),
-            needsAttention: parseAsBoolean.withDefault(false),
         },
     });
 
@@ -146,14 +145,6 @@ export function OrdersList() {
             } else {
                 tv.setFilter(remaining);
             }
-        },
-        [tv],
-    );
-
-    const toggleValues = useMemo<Record<string, boolean>>(() => ({ needsAttention: tv.needsAttention }), [tv.needsAttention]);
-    const setToggleValue = useCallback(
-        (key: string, value: boolean) => {
-            if (key === "needsAttention") tv.setNeedsAttention(value);
         },
         [tv],
     );
@@ -309,14 +300,13 @@ export function OrdersList() {
     );
 
     const hasActiveFilters = useMemo(
-        () => tv.q.length > 0 || tv.query.filter.length > 0 || tv.needsAttention || tv.trashed || tv.created.length > 0,
-        [tv.q, tv.query.filter, tv.needsAttention, tv.trashed, tv.created],
+        () => tv.q.length > 0 || tv.query.filter.length > 0 || tv.trashed || tv.created.length > 0,
+        [tv.q, tv.query.filter, tv.trashed, tv.created],
     );
 
     const clearAllFilters = useCallback(() => {
         tv.setQ("");
         tv.clearFilters();
-        tv.setNeedsAttention(false);
         tv.setTrashed(false);
         tv.setCreated("");
     }, [tv]);
@@ -423,9 +413,6 @@ export function OrdersList() {
                             facets={facets}
                             facetValues={facetValuesWithCountry}
                             onFacetValuesChange={setFacetValues}
-                            toggles={toggles}
-                            toggleValues={toggleValues}
-                            onToggleChange={setToggleValue}
                             dateFacets={dateFacets}
                             dateFacetValues={dateFacetValues}
                             onDateFacetChange={setDateFacet}
