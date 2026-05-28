@@ -33,7 +33,7 @@ import {
     useSetFacetValue,
     useTableView,
 } from "#/lib/table-view";
-import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
+import type { AdminProduct, ProductStatus } from "#/lib/types";
 
 import { BulkActions } from "./bulk-actions";
 import { buildProductColumns } from "./columns";
@@ -127,11 +127,11 @@ export function ProductsList() {
     const facetValues = useMemo<Record<string, string[]>>(
         () => ({
             ...columnFacetValues,
-            stock_status: tv.stock_status.length > 0 ? [tv.stock_status] : [],
+            stock_status: csvToArray(tv.stock_status),
             stock_level: tv.stock_level.length > 0 ? [tv.stock_level] : [],
-            category: tv.category.length > 0 ? [tv.category] : [],
-            brand: tv.brand.length > 0 ? [tv.brand] : [],
-            tag: tv.tag.length > 0 ? [tv.tag] : [],
+            category: csvToArray(tv.category),
+            brand: csvToArray(tv.brand),
+            tag: csvToArray(tv.tag),
         }),
         [columnFacetValues, tv.stock_status, tv.stock_level, tv.category, tv.brand, tv.tag],
     );
@@ -142,22 +142,21 @@ export function ProductsList() {
                 setColumnFacet(key, values);
                 return;
             }
-            const next = values[0] ?? "";
             switch (key) {
                 case "stock_status":
-                    tv.setStock_status(next);
+                    tv.setStock_status(values.join(","));
                     break;
                 case "stock_level":
-                    tv.setStock_level(next);
+                    tv.setStock_level(values[0] ?? "");
                     break;
                 case "category":
-                    tv.setCategory(next);
+                    tv.setCategory(values.join(","));
                     break;
                 case "brand":
-                    tv.setBrand(next);
+                    tv.setBrand(values.join(","));
                     break;
                 case "tag":
-                    tv.setTag(next);
+                    tv.setTag(values.join(","));
                     break;
             }
         },
@@ -205,11 +204,11 @@ export function ProductsList() {
         query: tv.query,
         q: tv.q.length > 0 ? tv.q : undefined,
         status,
-        stock_status: tv.stock_status.length > 0 ? (tv.stock_status as StockStatus) : undefined,
+        stock_status: tv.stock_status.length > 0 ? tv.stock_status : undefined,
         stock_level: tv.stock_level.length > 0 ? (tv.stock_level as StockLevel) : undefined,
-        category: numericOr(tv.category),
-        brand: numericOr(tv.brand),
-        tag: numericOr(tv.tag),
+        category: tv.category.length > 0 ? tv.category : undefined,
+        brand: tv.brand.length > 0 ? tv.brand : undefined,
+        tag: tv.tag.length > 0 ? tv.tag : undefined,
         on_sale: tv.on_sale ? true : undefined,
         has_image: tv.has_image ? true : undefined,
         only_trashed: onlyTrashed ? true : undefined,
@@ -586,10 +585,9 @@ export function ProductsList() {
     );
 }
 
-function numericOr(value: string): number | undefined {
-    if (value.length === 0) return undefined;
-    const numeric = Number(value);
-    return Number.isFinite(numeric) ? numeric : undefined;
+/** Split a comma-joined facet extra (`"5,8"`) into the `string[]` shape the toolbar facets want. */
+function csvToArray(value: string): string[] {
+    return value.length > 0 ? value.split(",") : [];
 }
 
 interface ProductCardProps {

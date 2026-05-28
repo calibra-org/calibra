@@ -9,7 +9,7 @@ import { type AdminProductDetailView, toAdminProductDetail } from "#/lib/adapter
 import { toAdminProduct } from "#/lib/adapters/products";
 import { apiGet } from "#/lib/queries/api-client";
 import { type TableViewQuery, tableViewQueryToSdkQuery } from "#/lib/table-view";
-import type { AdminBrand, AdminCategory, AdminProduct, AdminTag, ProductStatus, StockStatus } from "#/lib/types";
+import type { AdminBrand, AdminCategory, AdminProduct, AdminTag, ProductStatus } from "#/lib/types";
 
 type DetailEnvelope = { data: AdminSchemas["schemas"]["AdminProductDetail"] };
 
@@ -52,11 +52,13 @@ export interface ProductsListParams {
     query?: TableViewQuery;
     q?: string;
     status?: ProductStatus | "any";
-    stock_status?: StockStatus;
+    /** Multi-select facets ride as comma-joined extras (`"instock,onbackorder"` / `"5,8"`) so the
+     *  controller can split + `whereIn` against the inventory / pivot subqueries. */
+    stock_status?: string;
     stock_level?: StockLevel;
-    category?: number;
-    brand?: number;
-    tag?: number;
+    category?: string;
+    brand?: string;
+    tag?: string;
     on_sale?: boolean;
     has_image?: boolean;
     with_trashed?: boolean;
@@ -74,11 +76,11 @@ export interface ProductsListParams {
 interface ProductsListExtras {
     q?: string;
     status?: ProductStatus;
-    stock_status?: StockStatus;
+    stock_status?: string;
     stock_level?: StockLevel;
-    category?: number;
-    brand?: number;
-    tag?: number;
+    category?: string;
+    brand?: string;
+    tag?: string;
     on_sale?: boolean;
     has_image?: boolean;
     with_trashed?: boolean;

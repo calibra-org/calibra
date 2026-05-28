@@ -42,16 +42,32 @@ import {
  * `#id → title` for the reviews table; that stopgap requests `limit=200`, which the default cap
  * would reject. Aligned with the catalog family's 500 ceiling.
  */
+/**
+ * Multi-select facet validator: accepts a comma-joined string or a repeated-key array and
+ * normalises to a clean `string[]`. Mirrors the customers validator's `csvArray` so single +
+ * multi values both pass strict mode. Run-time narrowing to ids / known statuses happens in the
+ * controller via {@link csvNumbers} / {@link csvStrings}.
+ */
+const csvList = () =>
+    vine.any().transform((value): string[] => {
+        if (value === undefined || value === null || value === "") return [];
+        const arr = Array.isArray(value) ? value : String(value).split(",");
+        return arr.map((v) => String(v).trim()).filter((v) => v.length > 0);
+    });
+
 const adminProductsListTableViewValidator = adminProductsView.compileStrict({
     maxLimit: 500,
     extras: {
         q: vine.string().trim().maxLength(120).optional(),
-        category: vine.number().positive().optional(),
-        tag: vine.number().positive().optional(),
-        brand: vine.number().positive().optional(),
+        /** Pivot + inventory facets accept multi-select either comma-joined (`"5,8"`) or as a
+         *  repeated key — Adonis' qs parser hands the comma form back as an array, so accept both
+         *  via {@link csvList}; the controller splits + `whereIn`s. */
+        category: csvList().optional(),
+        tag: csvList().optional(),
+        brand: csvList().optional(),
         type: vine.string().trim().maxLength(40).optional(),
         status: vine.string().trim().maxLength(40).optional(),
-        stock_status: vine.string().trim().maxLength(40).optional(),
+        stock_status: csvList().optional(),
         stock_level: vine.string().trim().maxLength(40).optional(),
         catalog_visibility: vine.enum(["visible", "catalog", "search", "hidden"] as const).optional(),
         featured: vine.boolean().optional(),
@@ -163,23 +179,25 @@ export default class AdminProductsController {
         if (request.input("featured")) query.where("featured", true);
 
         if (skipFacet !== "category") {
-            const categoryId = Number(request.input("category", 0));
-            if (Number.isFinite(categoryId) && categoryId > 0) {
+            const categoryIds = csvNumbers(request.input("category"));
+            if (categoryIds.length > 0) {
                 query.whereIn("id", (sub) =>
-                    sub.select("product_id").from("product_category_links").where("category_id", categoryId),
+                    sub.select("product_id").from("product_category_links").whereIn("category_id", categoryIds),
                 );
             }
         }
         if (skipFacet !== "tag") {
-            const tagId = Number(request.input("tag", 0));
-            if (Number.isFinite(tagId) && tagId > 0) {
-                query.whereIn("id", (sub) => sub.select("product_id").from("product_tag_links").where("tag_id", tagId));
+            const tagIds = csvNumbers(request.input("tag"));
+            if (tagIds.length > 0) {
+                query.whereIn("id", (sub) => sub.select("product_id").from("product_tag_links").whereIn("tag_id", tagIds));
             }
         }
         if (skipFacet !== "brand") {
-            const brandId = Number(request.input("brand", 0));
-            if (Number.isFinite(brandId) && brandId > 0) {
-                query.whereIn("id", (sub) => sub.select("product_id").from("product_brand_links").where("brand_id", brandId));
+            const brandIds = csvNumbers(request.input("brand"));
+            if (brandIds.length > 0) {
+                query.whereIn("id", (sub) =>
+                    sub.select("product_id").from("product_brand_links").whereIn("brand_id", brandIds),
+                );
             }
         }
 
@@ -202,10 +220,10 @@ export default class AdminProductsController {
         if (createdTo) query.where("created_at", "<=", `${String(createdTo)} 23:59:59.999`);
 
         if (skipFacet !== "stock_status") {
-            const stockStatus = request.input("stock_status");
-            if (stockStatus) {
+            const stockStatuses = csvStrings(request.input("stock_status"));
+            if (stockStatuses.length > 0) {
                 query.whereIn("id", (sub) =>
-                    sub.select("product_id").from("inventory_items").where("stock_status", String(stockStatus)),
+                    sub.select("product_id").from("inventory_items").whereIn("stock_status", stockStatuses),
                 );
             }
         }
@@ -873,6 +891,24 @@ function truthy(value: unknown): boolean {
     if (value === false || value === null || value === undefined) return false;
     const s = String(value).toLowerCase();
     return s === "1" || s === "true" || s === "yes" || s === "on";
+}
+
+/**
+ * Split a multi-select facet query value into trimmed, non-empty strings. Accepts both the
+ * comma-joined form (`?stock_status=instock,onbackorder`) and the repeated-key array form
+ * (`?stock_status=instock&stock_status=onbackorder`) Adonis hands back as an array.
+ */
+function csvStrings(value: unknown): string[] {
+    if (value === undefined || value === null) return [];
+    const arr = Array.isArray(value) ? value : String(value).split(",");
+    return arr.map((v) => String(v).trim()).filter((v) => v.length > 0);
+}
+
+/** {@link csvStrings} narrowed to positive finite integers — pivot id facets (category/brand/tag). */
+function csvNumbers(value: unknown): number[] {
+    return csvStrings(value)
+        .map((v) => Number(v))
+        .filter((n) => Number.isFinite(n) && n > 0);
 }
 
 function assignProductFields(row: Product, payload: Record<string, unknown>): void {

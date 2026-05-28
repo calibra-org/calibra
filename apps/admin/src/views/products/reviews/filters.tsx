@@ -25,7 +25,7 @@ export function useReviewFiltersConfig(): {
             {
                 paramKey: "rating",
                 label: t("rating"),
-                multiple: false,
+                multiple: true,
                 options: ratings.map((row) => ({
                     value: row.value,
                     label: (
@@ -47,7 +47,7 @@ export function useReviewFiltersConfig(): {
             {
                 paramKey: "product",
                 label: t("product"),
-                multiple: false,
+                multiple: true,
                 options: products.map((row) => ({ value: row.value, label: row.label })),
             },
         ],

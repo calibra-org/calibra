@@ -58,8 +58,8 @@ const STATUS_TABS: (ReviewStatus | "any")[] = ["any", "pending", "approved", "sp
  * verified because it's a boolean column toggle).
  */
 const FACET_COLUMN_MAP: FacetColumnMap = {
-    rating: { field: "rating", op: "eq" },
-    product: { field: "product_id", op: "eq" },
+    rating: { field: "rating", op: "in" },
+    product: { field: "product_id", op: "in" },
 };
 
 /**
