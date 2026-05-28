@@ -48,7 +48,7 @@ export function CategoryPicker({ selectedIds, onSelectionChange, placeholder }: 
         async (query: string): Promise<EntityOption[]> => {
             const payload = await apiGet<CategoryListEnvelope>("categories", {
                 locale,
-                query: { search: query, limit: 50 },
+                query: { q: query, limit: 50 },
             });
             return (payload.data ?? []).map((row) => ({
                 id: row.id,
@@ -64,7 +64,7 @@ export function CategoryPicker({ selectedIds, onSelectionChange, placeholder }: 
             if (ids.length === 0) return [];
             const payload = await apiGet<CategoryListEnvelope>("categories", {
                 locale,
-                query: { ids: ids.join(","), limit: ids.length },
+                query: { "filter[]": [`id:in:${ids.join(",")}`], limit: ids.length },
             });
             return (payload.data ?? []).map((row) => ({
                 id: row.id,

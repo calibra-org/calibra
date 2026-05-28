@@ -22,33 +22,47 @@ export interface CouponsListParams {
     search?: string;
     tab?: CouponTabKey;
     sort?: string;
-    /** Faceted filter values keyed by URL-param. Values are joined as comma-separated lists. */
+    /** Faceted filter values keyed by TableView column. Multi-select → `filter[]=col:in:a,b`. */
     facets?: Record<string, string[] | undefined>;
     booleans?: Record<string, boolean | undefined>;
-    ranges?: Record<string, number | undefined>;
-    dates?: Record<string, string | undefined>;
 }
 
-function buildQuery(params: CouponsListParams): Record<string, string | number | boolean | undefined> {
-    const out: Record<string, string | number | boolean | undefined> = {
+/**
+ * Boolean toggles that map to TableView filter columns (`filter[]=col:eq:true`). The remaining
+ * toggles (`expiring_soon`, `has_*_constraints`) are controller-side existence checks the
+ * runtime can't model as per-column predicates, so they ride as top-level boolean extras.
+ */
+const FILTER_COLUMN_TOGGLES = new Set(["free_shipping", "individual_use", "exclude_sale_items"]);
+
+/**
+ * Serialize the toolbar state into the unified TableView wire grammar the migrated
+ * `/admin/coupons` endpoint speaks: `q` for free-text, `sort[]=field:dir`, and
+ * `filter[]=field:op:value` for every per-column facet / toggle. `tab` and the existence-check
+ * toggles stay as declared top-level extras. Toggles only emit when on — an off toggle means
+ * "don't filter", not "filter for false".
+ */
+function buildQuery(params: CouponsListParams): Record<string, string | number | boolean | string[] | undefined> {
+    const filters: string[] = [];
+    const out: Record<string, string | number | boolean | string[] | undefined> = {
         page: params.page ?? 1,
         limit: params.limit ?? 25,
     };
-    if (params.search && params.search.length > 0) out.search = params.search;
+    if (params.search && params.search.length > 0) out.q = params.search;
     if (params.tab && params.tab !== "any") out.tab = params.tab;
-    if (params.sort && params.sort.length > 0) out.sort = params.sort;
+    if (params.sort && params.sort.length > 0) {
+        const dir = params.sort.startsWith("-") ? "desc" : "asc";
+        const field = params.sort.replace(/^-/, "");
+        out["sort[]"] = [`${field}:${dir}`];
+    }
     for (const [key, values] of Object.entries(params.facets ?? {})) {
-        if (Array.isArray(values) && values.length > 0) out[key] = values.join(",");
+        if (Array.isArray(values) && values.length > 0) filters.push(`${key}:in:${values.join(",")}`);
     }
     for (const [key, value] of Object.entries(params.booleans ?? {})) {
-        if (value !== undefined) out[key] = value;
+        if (value !== true) continue;
+        if (FILTER_COLUMN_TOGGLES.has(key)) filters.push(`${key}:eq:true`);
+        else out[key] = true;
     }
-    for (const [key, value] of Object.entries(params.ranges ?? {})) {
-        if (value !== undefined && Number.isFinite(value)) out[key] = value;
-    }
-    for (const [key, value] of Object.entries(params.dates ?? {})) {
-        if (value) out[key] = value;
-    }
+    if (filters.length > 0) out["filter[]"] = filters;
     return out;
 }
 

@@ -89,7 +89,7 @@ export function useMediaList(params: MediaListParams = {}): UseQueryResult<Pagin
                 query: {
                     page,
                     limit,
-                    search,
+                    ...(search !== undefined && search.length > 0 ? { q: search } : {}),
                     ...(type !== "all" ? { type } : {}),
                     ...(month !== undefined && month.length > 0 ? { month } : {}),
                 },
