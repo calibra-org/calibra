@@ -106,6 +106,15 @@ export type UseTableViewReturn<E extends ExtraParsers | undefined = undefined> =
          * setters each capture the same render's snapshot and would clobber each other if chained.
          */
         setExtras(partial: Partial<ExtrasValues<E>>): void;
+        /**
+         * Clear `filter[]` + `filterOr[]` AND reset the supplied extras (to empty/default values),
+         * in a single `router.replace`. This is the correct primitive for a "Clear all filters"
+         * affordance: chaining `clearFilters()` with several per-key extra setters silently fails
+         * because each call captures the same stale render snapshot and the last `router.replace`
+         * wins, leaving every earlier change clobbered. `sort` + `limit` + any extra not listed are
+         * preserved.
+         */
+        resetFilters(extras?: Partial<ExtrasValues<E>>): void;
     };
 
 export function useTableView<E extends ExtraParsers | undefined = undefined>(
@@ -202,6 +211,12 @@ export function useTableView<E extends ExtraParsers | undefined = undefined>(
         [query, extraValues, writeAll],
     );
 
+    const resetFilters = useCallback(
+        (extras: Partial<ExtrasValues<E>> = {}) =>
+            writeAll({ ...query, filter: [], filterOr: [], page: 1 }, { ...extraValues, ...(extras as Record<string, unknown>) }),
+        [query, extraValues, writeAll],
+    );
+
     /** Build the typed `setX` mutators for each declared extra. Each setter merges into the
      * current extras map then writes both the query and the extras in one router.replace, so
      * back-to-back filter toggles don't race on URL state. */
@@ -229,6 +244,7 @@ export function useTableView<E extends ExtraParsers | undefined = undefined>(
         upsertDateFilter,
         clearFilters,
         setExtras,
+        resetFilters,
         ...(extraValues as ExtrasValues<E>),
         ...(extraSetters as ExtrasSetters<E>),
     } as unknown as UseTableViewReturn<E>;

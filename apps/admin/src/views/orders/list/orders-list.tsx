@@ -318,11 +318,7 @@ export function OrdersList() {
     );
 
     const clearAllFilters = useCallback(() => {
-        tv.setQ("");
-        tv.clearFilters();
-        tv.setTrashed(false);
-        tv.setCreated("");
-        tv.setCountry("");
+        tv.resetFilters({ q: "", trashed: false, created: "", country: "" });
     }, [tv]);
 
     /** Keyboard shortcuts living at the page level — DataTable owns j/k/x/e/Enter on focused rows. */

@@ -239,17 +239,20 @@ export function ProductsList() {
         ],
     );
 
+    /** Single write — clears the `filter[]` facets (type/visibility/featured) and every bespoke
+     *  extra at once. Keeps the status tab (`status` / `only_trashed`), which isn't a filter. */
     const clearAllFilters = useCallback(() => {
-        tv.setQ("");
-        tv.clearFilters();
-        tv.setStock_status("");
-        tv.setStock_level("");
-        tv.setCategory("");
-        tv.setBrand("");
-        tv.setTag("");
-        tv.setFavorites(false);
-        tv.setOn_sale(false);
-        tv.setHas_image(false);
+        tv.resetFilters({
+            q: "",
+            stock_status: "",
+            stock_level: "",
+            category: "",
+            brand: "",
+            tag: "",
+            favorites: false,
+            on_sale: false,
+            has_image: false,
+        });
     }, [tv]);
 
     /**
