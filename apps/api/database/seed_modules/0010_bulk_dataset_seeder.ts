@@ -633,6 +633,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             status: "publish" | "draft" | "pending";
             regular_price: number;
             sale_price: number | null;
+            sale_starts_at: Date | null;
+            sale_ends_at: Date | null;
             featured: boolean;
             name_fa: string;
             name_en: string;
@@ -681,6 +683,13 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             const sale = faker.datatype.boolean({ probability: 0.35 })
                 ? Math.floor(regular * faker.number.float({ min: 0.6, max: 0.92 }))
                 : null;
+            /**
+             * On-sale products get an active scheduled window (started in the last 30 days, ends in
+             * the next 30) so the list's "sale period" column renders a real range instead of "—".
+             * Products that aren't on sale leave the window null — that empty cell is correct.
+             */
+            const saleStartsAt = sale === null ? null : faker.date.recent({ days: 30 });
+            const saleEndsAt = sale === null ? null : faker.date.soon({ days: 30 });
 
             const nameFa = spec.namePatternFa.replace("{brand}", brandLabel).replace("{model}", modelLabel);
             const nameEn = spec.namePatternEn.replace("{brand}", brandLabel).replace("{model}", modelLabel);
@@ -775,6 +784,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 status,
                 regular_price: regular,
                 sale_price: sale,
+                sale_starts_at: saleStartsAt,
+                sale_ends_at: saleEndsAt,
                 featured: faker.datatype.boolean({ probability: 0.05 }),
                 name_fa: nameFa,
                 name_en: nameEn,
@@ -802,6 +813,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             downloadable: false,
             regular_price: p.regular_price,
             sale_price: p.sale_price,
+            sale_starts_at: p.sale_starts_at,
+            sale_ends_at: p.sale_ends_at,
             tax_status: "taxable",
             sold_individually: false,
             reviews_allowed: true,
