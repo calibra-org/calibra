@@ -99,7 +99,14 @@ export interface UseTableViewBase {
 
 export type UseTableViewReturn<E extends ExtraParsers | undefined = undefined> = UseTableViewBase &
     ExtrasValues<E> &
-    ExtrasSetters<E>;
+    ExtrasSetters<E> & {
+        /**
+         * Write several extras in one `router.replace`. Use when two keys must move together — e.g.
+         * a date range that maps to `last_order_after` + `last_order_before` — since the per-key
+         * setters each capture the same render's snapshot and would clobber each other if chained.
+         */
+        setExtras(partial: Partial<ExtrasValues<E>>): void;
+    };
 
 export function useTableView<E extends ExtraParsers | undefined = undefined>(
     options: UseTableViewOptions<E> = {},
@@ -187,6 +194,14 @@ export function useTableView<E extends ExtraParsers | undefined = undefined>(
 
     const clearFilters = useCallback(() => writeQuery({ ...query, filter: [], filterOr: [], page: 1 }), [query, writeQuery]);
 
+    /** Batched extra writer — merges `partial` into the current extras and writes once, so keys
+     * that must move together don't race through separate `router.replace` calls. */
+    const setExtras = useCallback(
+        (partial: Partial<ExtrasValues<E>>) =>
+            writeAll({ ...query, page: 1 }, { ...extraValues, ...(partial as Record<string, unknown>) }),
+        [query, extraValues, writeAll],
+    );
+
     /** Build the typed `setX` mutators for each declared extra. Each setter merges into the
      * current extras map then writes both the query and the extras in one router.replace, so
      * back-to-back filter toggles don't race on URL state. */
@@ -213,9 +228,10 @@ export function useTableView<E extends ExtraParsers | undefined = undefined>(
         setLimit,
         upsertDateFilter,
         clearFilters,
+        setExtras,
         ...(extraValues as ExtrasValues<E>),
         ...(extraSetters as ExtrasSetters<E>),
-    } as UseTableViewReturn<E>;
+    } as unknown as UseTableViewReturn<E>;
 }
 
 /** True when the URL has no TableView-shaped params yet — used to honour `initial` once on mount. */

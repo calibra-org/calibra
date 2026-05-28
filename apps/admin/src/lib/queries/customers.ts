@@ -17,7 +17,7 @@ import {
     toAdminCustomerTimeline,
 } from "#/lib/adapters/customers";
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
-import { serializeTableViewQuery, type TableViewQuery } from "#/lib/table-view";
+import { tableViewQueryToSdkQuery, type TableViewQuery } from "#/lib/table-view";
 import type {
     AdminCustomer,
     AdminCustomerCounts,
@@ -36,27 +36,29 @@ export type CustomerTabKey = "any" | "account" | "guest" | "big" | "new" | "inac
 
 /**
  * Inputs accepted by {@link useCustomersList}. `query` carries the unified TableView grammar
- * (filter / filterOr / sort / page / limit). Every other field is an endpoint extension that
- * doesn't fit the TableView surface: tab-strip scopes, free-text search across many columns,
- * join-traversing facets (tags/cities), aggregate-based filters (with_orders, order_count_*,
- * lifetime_spend_*, aov_*), and the `include_stats` response-shape flag.
+ * (filter / filterOr / sort / page / limit). Every other field is a top-level extra whose key is
+ * the EXACT wire key the controller's `compileStrict` declares
+ * (`apps/api/app/validators/admin/customer_validator.ts`) — so the params object, the URL, and the
+ * request all read identically. These cover what TableView can't model: tab-strip scopes,
+ * free-text search across many columns, join-traversing facets (tags/cities), aggregate-based
+ * filters (with_orders, last_order_*), and the `include_stats` response-shape flag.
  */
 export interface CustomersListParams {
     query?: TableViewQuery;
     q?: string;
     tab?: CustomerTabKey;
-    includeStats?: boolean;
+    include_stats?: boolean;
     cities?: string[];
     tags?: string[];
-    optInEmail?: boolean;
-    optInSms?: boolean;
+    opt_in_email?: boolean;
+    opt_in_sms?: boolean;
     /** Inclusive ISO date-time bounds for the customer's most-recent counted order. The
      * picker primitive computes these via {@link dateFilterValueToTableViewFilter}. */
-    lastOrderAfter?: string;
-    lastOrderBefore?: string;
-    hasNationalId?: boolean;
-    withOrders?: boolean;
-    noOrders?: boolean;
+    last_order_after?: string;
+    last_order_before?: string;
+    has_national_id?: boolean;
+    with_orders?: boolean;
+    no_orders?: boolean;
 }
 
 interface ListEnvelope {
@@ -64,64 +66,47 @@ interface ListEnvelope {
     meta?: { page: number; limit: number; total: number; lastPage: number };
 }
 
-function buildQueryRecord(entries: Array<[string, string]>): Record<string, string | string[]> {
-    const out: Record<string, string | string[]> = {};
-    for (const [k, v] of entries) {
-        const existing = out[k];
-        if (existing === undefined) out[k] = v;
-        else if (Array.isArray(existing)) existing.push(v);
-        else out[k] = [existing, v];
-    }
-    return out;
+/**
+ * Top-level extras the customers endpoint accepts. Keys mirror the controller's `compileStrict`
+ * extras verbatim; the `satisfies` at the call site flags a typo'd key before it can 422.
+ */
+interface CustomersListExtras {
+    q?: string;
+    tab?: CustomerTabKey;
+    include_stats?: boolean;
+    cities?: string;
+    tags?: string;
+    opt_in_email?: boolean;
+    opt_in_sms?: boolean;
+    last_order_after?: string;
+    last_order_before?: string;
+    has_national_id?: boolean;
+    with_orders?: boolean;
+    no_orders?: boolean;
 }
 
 export function useCustomersList(params: CustomersListParams = {}) {
     const locale = useLocale() as Locale;
-    const includeStats = params.includeStats ?? true;
+    const includeStats = params.include_stats ?? true;
     const query: TableViewQuery = params.query ?? { page: 1, limit: 20, filter: [], filterOr: [], sort: [] };
-    const serialised = serializeTableViewQuery(query);
     const csv = (arr?: string[]) => (arr && arr.length > 0 ? arr.join(",") : undefined);
+    const sdkQuery = tableViewQueryToSdkQuery(query, {
+        q: params.q,
+        tab: params.tab,
+        include_stats: includeStats,
+        cities: csv(params.cities),
+        tags: csv(params.tags),
+        opt_in_email: params.opt_in_email,
+        opt_in_sms: params.opt_in_sms,
+        last_order_after: params.last_order_after,
+        last_order_before: params.last_order_before,
+        has_national_id: params.has_national_id,
+        with_orders: params.with_orders,
+        no_orders: params.no_orders,
+    } satisfies CustomersListExtras);
     return useQuery<ListEnvelope, Error, Paginated<AdminCustomer>>({
-        queryKey: [
-            "admin",
-            "customers",
-            "list",
-            {
-                locale,
-                serialised,
-                q: params.q,
-                tab: params.tab,
-                includeStats,
-                cities: csv(params.cities),
-                tags: csv(params.tags),
-                optInEmail: params.optInEmail,
-                optInSms: params.optInSms,
-                lastOrderAfter: params.lastOrderAfter,
-                lastOrderBefore: params.lastOrderBefore,
-                hasNationalId: params.hasNationalId,
-                withOrders: params.withOrders,
-                noOrders: params.noOrders,
-            },
-        ],
-        queryFn: () =>
-            apiGet<ListEnvelope>("customers", {
-                locale,
-                query: {
-                    ...buildQueryRecord(serialised),
-                    q: params.q,
-                    tab: params.tab,
-                    include_stats: includeStats,
-                    cities: csv(params.cities),
-                    tags: csv(params.tags),
-                    opt_in_email: params.optInEmail,
-                    opt_in_sms: params.optInSms,
-                    last_order_after: params.lastOrderAfter,
-                    last_order_before: params.lastOrderBefore,
-                    has_national_id: params.hasNationalId,
-                    with_orders: params.withOrders,
-                    no_orders: params.noOrders,
-                },
-            }),
+        queryKey: ["admin", "customers", "list", { locale, sdkQuery }],
+        queryFn: () => apiGet<ListEnvelope>("customers", { locale, query: sdkQuery }),
         select: (payload) => ({
             data: (payload.data ?? []).map(toAdminCustomer),
             meta: payload.meta ?? {

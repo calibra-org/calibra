@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { parseAsString, parseAsStringEnum } from "nuqs";
 import { useCallback, useMemo, useState } from "react";
 
+import { calendarForLocale } from "#/components/ui/date-picker/date-lib";
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
 import {
@@ -29,13 +30,12 @@ import {
     useRestoreCustomer,
 } from "#/lib/queries/customers";
 import {
+    boundsToDateFilterValue,
     dateFilterValueToTableViewFilter,
     type FacetColumnMap,
-    serializeDateFacetForUrl,
     singleSortToTableView,
-    type TableViewFilter,
+    tableViewFilterToDateFilterValue,
     tableViewToSingleSort,
-    useDateFacetValues,
     useFacetValuesFromQuery,
     useSetFacetValue,
     useTableView,
@@ -70,14 +70,6 @@ const FACET_COLUMN_MAP: FacetColumnMap = {
     status: { field: "status", op: "in" },
 };
 
-/**
- * Date-facet keys (separate from `FACET_COLUMN_MAP` because date-pickers carry a richer value
- * shape than multi-select facets). `created` flows through the TableView filter on
- * `created_at`; `lastOrder` is an aggregate over the orders table so it travels as the
- * `last_order_after` / `last_order_before` extras instead.
- */
-const DATE_FACET_KEYS = { created: { field: "created_at", calendar: "auto" as const } };
-
 export function CustomersListClient() {
     const locale = useLocale() as Locale;
     const t = useTranslations("Customers");
@@ -86,20 +78,22 @@ export function CustomersListClient() {
 
     /**
      * One URL-state hook for everything that lives on the wire: pagination, sort, filter[],
-     * filterOr[], plus the customers-specific extras (`q`, `tab`, the date-chip URL strings
-     * `created` / `lastOrder`, and the aggregate `last_order_after` / `last_order_before`
-     * bounds the controller's whereExists subquery applies).
+     * filterOr[], plus the customers-specific extras (`q`, `tab`, and the aggregate
+     * `last_order_after` / `last_order_before` bounds the controller's whereExists subquery
+     * applies). The date chips have NO human URL key of their own — `created` reads back from the
+     * `created_at` filter[], `lastOrder` from the `last_order_*` bounds — so the URL carries only
+     * wire-shaped state.
      */
     const tv = useTableView({
         extras: {
             q: parseAsString.withDefault(""),
             tab: parseAsStringEnum<CustomerTabKey>(TAB_VALUES).withDefault("any"),
-            created: parseAsString.withDefault(""),
-            lastOrder: parseAsString.withDefault(""),
             last_order_after: parseAsString.withDefault(""),
             last_order_before: parseAsString.withDefault(""),
         },
     });
+
+    const calendar = calendarForLocale(locale === "fa" ? "fa" : "en");
 
     const ui = useColumnState({
         id: TABLE_ID,
@@ -148,21 +142,25 @@ export function CustomersListClient() {
     const facetValues = useFacetValuesFromQuery(tv.query, FACET_COLUMN_MAP);
     const setFacetValues = useSetFacetValue(tv.query, tv.setFilter, FACET_COLUMN_MAP);
 
-    /** Date facets need their own URL slot (`?created=…`, `?lastOrder=…`) because the picker
-     *  primitive parses its own grammar (`in:30d`, `within:2026-01-01..2026-05-26`, …). The
-     *  TableView projection lives elsewhere — for `created` it's a filter entry on
-     *  `created_at`; for `lastOrder` it's the aggregate bounds extras pair. */
-    const dateFacetValues = useDateFacetValues(
-        useMemo(() => ({ created: tv.created, lastOrder: tv.lastOrder }), [tv.created, tv.lastOrder]),
-        useMemo(() => ({ ...DATE_FACET_KEYS, lastOrder: { field: "last_order_at", calendar: "auto" as const } }), []),
+    /** Date chips have NO separate URL key — they read back from the wire so URL == request.
+     *  `created` reconstructs from the `created_at` filter[] entry; `lastOrder` from the aggregate
+     *  `last_order_after` / `last_order_before` bounds. Both recover as absolute day ranges (the
+     *  relative period the operator originally picked isn't stored on the wire). */
+    const dateFacetValues = useMemo(
+        () => ({
+            created: tableViewFilterToDateFilterValue(
+                tv.query.filter.find((f) => f.field === "created_at"),
+                calendar,
+            ),
+            lastOrder: boundsToDateFilterValue(tv.last_order_after, tv.last_order_before, calendar),
+        }),
+        [tv.query.filter, tv.last_order_after, tv.last_order_before, calendar],
     );
 
     const setDateFacet = useCallback(
         (key: string, value: typeof dateFacetValues.created) => {
-            const urlForm = serializeDateFacetForUrl(value);
             if (key === "created") {
-                tv.setCreated(urlForm ?? "");
-                /** Sync the TableView filter on `created_at` so the wire and URL agree. */
+                /** Persist the chip purely as a `created_at` filter[] entry — no human URL key. */
                 const remaining = tv.query.filter.filter((f) => f.field !== "created_at");
                 if (value !== null) {
                     const mapped = dateFilterValueToTableViewFilter("created_at", value);
@@ -173,30 +171,25 @@ export function CustomersListClient() {
                 return;
             }
             if (key === "lastOrder") {
-                tv.setLastOrder(urlForm ?? "");
                 /** Aggregate bounds — the controller applies `orders.created_at >= after AND <= before`
-                 *  via a whereExists subquery; can't be a TableView filter on customers. */
+                 *  via a whereExists subquery; can't be a TableView filter on customers. Both bounds
+                 *  write in one `setExtras` so a range doesn't clobber itself. */
                 if (value === null) {
-                    tv.setLast_order_after("");
-                    tv.setLast_order_before("");
+                    tv.setExtras({ last_order_after: "", last_order_before: "" });
                     return;
                 }
                 const mapped = dateFilterValueToTableViewFilter("last_order_at", value);
                 if (mapped === null) {
-                    tv.setLast_order_after("");
-                    tv.setLast_order_before("");
+                    tv.setExtras({ last_order_after: "", last_order_before: "" });
                     return;
                 }
                 if (mapped.op === "between") {
                     const [start, end] = mapped.value as readonly [string, string];
-                    tv.setLast_order_after(start);
-                    tv.setLast_order_before(end);
+                    tv.setExtras({ last_order_after: start, last_order_before: end });
                 } else if (mapped.op === "gte") {
-                    tv.setLast_order_after(mapped.value as string);
-                    tv.setLast_order_before("");
+                    tv.setExtras({ last_order_after: mapped.value as string, last_order_before: "" });
                 } else if (mapped.op === "lte") {
-                    tv.setLast_order_after("");
-                    tv.setLast_order_before(mapped.value as string);
+                    tv.setExtras({ last_order_after: "", last_order_before: mapped.value as string });
                 }
             }
         },
@@ -222,9 +215,9 @@ export function CustomersListClient() {
         query: tv.query,
         q: tv.q.length > 0 ? tv.q : undefined,
         tab: tv.tab,
-        includeStats: true,
-        lastOrderAfter: tv.last_order_after.length > 0 ? tv.last_order_after : undefined,
-        lastOrderBefore: tv.last_order_before.length > 0 ? tv.last_order_before : undefined,
+        include_stats: true,
+        last_order_after: tv.last_order_after.length > 0 ? tv.last_order_after : undefined,
+        last_order_before: tv.last_order_before.length > 0 ? tv.last_order_before : undefined,
     });
 
     const deleteMutation = useDeleteCustomer();
@@ -328,10 +321,7 @@ export function CustomersListClient() {
     const clearAllFilters = useCallback(() => {
         tv.setQ("");
         tv.clearFilters();
-        tv.setCreated("");
-        tv.setLastOrder("");
-        tv.setLast_order_after("");
-        tv.setLast_order_before("");
+        tv.setExtras({ last_order_after: "", last_order_before: "" });
     }, [tv]);
 
     /** No-op toggle map; this page has no boolean toggles but the toolbar still wants the shape. */

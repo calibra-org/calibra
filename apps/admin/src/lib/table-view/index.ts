@@ -5,7 +5,7 @@ export {
     type TableViewSortDir,
     VOID_OPERATORS,
 } from "./constants";
-export { dateFilterValueToTableViewFilter } from "./date-adapter";
+export { boundsToDateFilterValue, dateFilterValueToTableViewFilter, tableViewFilterToDateFilterValue } from "./date-adapter";
 export {
     type DateFacetColumnMap,
     type DateFacetColumnSpec,

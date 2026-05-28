@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { dateFilterValueToTableViewFilter } from "./date-adapter";
+import { boundsToDateFilterValue, dateFilterValueToTableViewFilter, tableViewFilterToDateFilterValue } from "./date-adapter";
 
 /**
  * The adapter is the seam between the date-picker primitive's rich operator vocabulary (`in` /
@@ -148,5 +148,73 @@ describe("dateFilterValueToTableViewFilter / Jalali calendar", () => {
         const bounds = filter?.value as readonly [string, string];
         expect(bounds[0]).toBe("2026-03-21");
         expect(bounds[1]).toBe("2026-03-27T23:59:59.999Z");
+    });
+});
+
+/**
+ * The inverse direction (wire → picker) recovers a day-granularity {@link DateFilterValue} so a
+ * date chip can render straight from the canonical `filter[]` / bounds — no redundant human URL
+ * key. It is intentionally lossy: a relative period collapses to the absolute days it resolved to.
+ */
+describe("tableViewFilterToDateFilterValue (wire → picker)", () => {
+    test("`between` recovers a Gregorian `within` day range, stripping the end-of-day time", () => {
+        expect(
+            tableViewFilterToDateFilterValue(
+                { field: "created_at", op: "between", value: ["2026-05-01", "2026-05-31T23:59:59.999Z"] },
+                "gregorian",
+            ),
+        ).toEqual({ operator: "within", granularity: "day", calendar: "gregorian", start: "2026-05-01", end: "2026-05-31" });
+    });
+
+    test("`gte` recovers `after`, `lte` recovers `before`", () => {
+        expect(tableViewFilterToDateFilterValue({ field: "created_at", op: "gte", value: "2026-05-26" }, "gregorian")).toEqual({
+            operator: "after",
+            granularity: "day",
+            calendar: "gregorian",
+            value: "2026-05-26",
+        });
+        expect(
+            tableViewFilterToDateFilterValue({ field: "created_at", op: "lte", value: "2026-05-26T23:59:59.999Z" }, "gregorian"),
+        ).toEqual({ operator: "before", granularity: "day", calendar: "gregorian", value: "2026-05-26" });
+    });
+
+    test("undefined / non-date ops recover null", () => {
+        expect(tableViewFilterToDateFilterValue(undefined, "gregorian")).toBeNull();
+        expect(tableViewFilterToDateFilterValue({ field: "status", op: "eq", value: "active" }, "gregorian")).toBeNull();
+    });
+
+    test("round-trips a Gregorian `within` range through both adapters", () => {
+        const wire = dateFilterValueToTableViewFilter("created_at", {
+            calendar: "gregorian",
+            operator: "within",
+            granularity: "day",
+            start: "2026-03-01",
+            end: "2026-03-15",
+        });
+        expect(tableViewFilterToDateFilterValue(wire ?? undefined, "gregorian")).toEqual({
+            operator: "within",
+            granularity: "day",
+            calendar: "gregorian",
+            start: "2026-03-01",
+            end: "2026-03-15",
+        });
+    });
+});
+
+describe("boundsToDateFilterValue (aggregate after/before → picker)", () => {
+    test("both bounds → `within`", () => {
+        expect(boundsToDateFilterValue("2026-01-01", "2026-01-31T23:59:59.999Z", "gregorian")).toEqual({
+            operator: "within",
+            granularity: "day",
+            calendar: "gregorian",
+            start: "2026-01-01",
+            end: "2026-01-31",
+        });
+    });
+
+    test("only `after` → `after`; only `before` → `before`; neither → null", () => {
+        expect(boundsToDateFilterValue("2026-01-01", "", "gregorian")).toMatchObject({ operator: "after", value: "2026-01-01" });
+        expect(boundsToDateFilterValue("", "2026-01-31", "gregorian")).toMatchObject({ operator: "before", value: "2026-01-31" });
+        expect(boundsToDateFilterValue("", "", "gregorian")).toBeNull();
     });
 });
