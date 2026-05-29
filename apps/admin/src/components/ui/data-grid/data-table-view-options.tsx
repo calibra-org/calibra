@@ -19,14 +19,23 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Settings2 } from "lucide-react";
-import { type ReactNode, useMemo } from "react";
+import { useTranslations } from "next-intl";
+import { type ReactNode, useMemo, useState } from "react";
 
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "#/components/ui/alert-dialog";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Radio, RadioGroup } from "#/components/ui/radio";
 import { ScrollArea } from "#/components/ui/scroll-area";
-import { GripVertical } from "#/icons";
+import { GripVertical, RotateCcw } from "#/icons";
 import { cn } from "#/lib/utils";
 
 import type { DataTableDensity } from "./types";
@@ -52,6 +61,8 @@ interface DataTableViewOptionsProps {
     onColumnOrderChange?: (next: string[]) => void;
     /** Pinned column ids (sticky start/end). They show in the list but can't be dragged. */
     pinnedIds?: string[];
+    /** Restores visibility / order / widths / density to the page defaults. Hidden when omitted. */
+    onReset?: () => void;
     labels: {
         trigger: string;
         columnsHeading: string;
@@ -77,8 +88,11 @@ export function DataTableViewOptions({
     columnOrder,
     onColumnOrderChange,
     pinnedIds,
+    onReset,
     labels,
 }: DataTableViewOptionsProps) {
+    const rt = useTranslations("DataGrid");
+    const [resetOpen, setResetOpen] = useState(false);
     const pinned = useMemo(() => new Set(pinnedIds ?? []), [pinnedIds]);
     const reorderEnabled = onColumnOrderChange !== undefined;
 
@@ -123,73 +137,116 @@ export function DataTableViewOptions({
     };
 
     return (
-        <Popover>
-            <PopoverTrigger
-                render={(props) => (
-                    <Button {...props} variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-muted-foreground">
-                        <Settings2 className="size-4" aria-hidden="true" />
-                        <span className="hidden sm:inline">{labels.trigger}</span>
-                    </Button>
-                )}
-            />
-            <PopoverContent align="end" className="w-64 p-0">
-                <div className="flex flex-col gap-1 p-2">
-                    <p className="px-2 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                        {labels.columnsHeading}
-                    </p>
-                    <ScrollArea viewportClassName="max-h-72">
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            modifiers={[restrictToVerticalAxis]}
-                            onDragEnd={onDragEnd}
-                        >
-                            <SortableContext items={reorderableIds} strategy={verticalListSortingStrategy}>
-                                {/** `pe-2` keeps rows clear of the overlay scrollbar on the inline-end edge. */}
-                                <ul className="flex flex-col pe-2">
-                                    {orderedColumns.map((column) => (
-                                        <ColumnRow
-                                            key={column.id}
-                                            column={column}
-                                            checked={visibility[column.id] !== false}
-                                            reorderable={isReorderable(column)}
-                                            reorderLabel={labels.reorderColumn}
-                                            onToggle={() => toggle(column.id)}
-                                        />
-                                    ))}
-                                </ul>
-                            </SortableContext>
-                        </DndContext>
-                    </ScrollArea>
-                </div>
-                <hr className="border-border" />
-                <div className="flex flex-col gap-1 p-2">
-                    <p className="px-2 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                        {labels.densityHeading}
-                    </p>
-                    <RadioGroup
-                        value={density}
-                        onValueChange={(value) => onDensityChange(value as DataTableDensity)}
-                        className="flex flex-col gap-0.5"
-                    >
-                        {(["comfortable", "cozy", "compact"] as const).map((option) => (
-                            // biome-ignore lint/a11y/noLabelWithoutControl: Radio.Root is a focusable button — wrapping it in a label is the right click-into pattern for Base UI's RadioGroup
-                            <label
-                                key={option}
-                                className={cn(
-                                    "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-sm outline-none",
-                                    "hover:bg-accent hover:text-accent-foreground",
-                                    density === option && "text-foreground",
-                                )}
+        <>
+            <Popover>
+                <PopoverTrigger
+                    render={(props) => (
+                        <Button {...props} variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-muted-foreground">
+                            <Settings2 className="size-4" aria-hidden="true" />
+                            <span className="hidden sm:inline">{labels.trigger}</span>
+                        </Button>
+                    )}
+                />
+                <PopoverContent align="end" className="w-64 p-0">
+                    <div className="flex flex-col gap-1 p-2">
+                        <p className="px-2 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                            {labels.columnsHeading}
+                        </p>
+                        <ScrollArea viewportClassName="max-h-72">
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                modifiers={[restrictToVerticalAxis]}
+                                onDragEnd={onDragEnd}
                             >
-                                <Radio value={option} />
-                                <span className="flex-1">{labels.density[option]}</span>
-                            </label>
-                        ))}
-                    </RadioGroup>
-                </div>
-            </PopoverContent>
-        </Popover>
+                                <SortableContext items={reorderableIds} strategy={verticalListSortingStrategy}>
+                                    {/** `pe-2` keeps rows clear of the overlay scrollbar on the inline-end edge. */}
+                                    <ul className="flex flex-col pe-2">
+                                        {orderedColumns.map((column) => (
+                                            <ColumnRow
+                                                key={column.id}
+                                                column={column}
+                                                checked={visibility[column.id] !== false}
+                                                reorderable={isReorderable(column)}
+                                                reorderLabel={labels.reorderColumn}
+                                                onToggle={() => toggle(column.id)}
+                                            />
+                                        ))}
+                                    </ul>
+                                </SortableContext>
+                            </DndContext>
+                        </ScrollArea>
+                    </div>
+                    <hr className="border-border" />
+                    <div className="flex flex-col gap-1 p-2">
+                        <p className="px-2 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                            {labels.densityHeading}
+                        </p>
+                        <RadioGroup
+                            value={density}
+                            onValueChange={(value) => onDensityChange(value as DataTableDensity)}
+                            className="flex flex-col gap-0.5"
+                        >
+                            {(["comfortable", "cozy", "compact"] as const).map((option) => (
+                                // biome-ignore lint/a11y/noLabelWithoutControl: Radio.Root is a focusable button — wrapping it in a label is the right click-into pattern for Base UI's RadioGroup
+                                <label
+                                    key={option}
+                                    className={cn(
+                                        "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-sm outline-none",
+                                        "hover:bg-accent hover:text-accent-foreground",
+                                        density === option && "text-foreground",
+                                    )}
+                                >
+                                    <Radio value={option} />
+                                    <span className="flex-1">{labels.density[option]}</span>
+                                </label>
+                            ))}
+                        </RadioGroup>
+                    </div>
+                    {onReset !== undefined && (
+                        <>
+                            <hr className="border-border" />
+                            <div className="p-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setResetOpen(true)}
+                                    className="h-8 w-full justify-start gap-2 text-muted-foreground"
+                                >
+                                    <RotateCcw className="size-3.5" aria-hidden="true" />
+                                    {rt("reset")}
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </PopoverContent>
+            </Popover>
+            {onReset !== undefined && (
+                <AlertDialog open={resetOpen} onOpenChange={(next) => (!next ? setResetOpen(false) : undefined)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>{rt("resetTitle")}</AlertDialogTitle>
+                            <AlertDialogDescription>{rt("resetDescription")}</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setResetOpen(false)}>
+                                {rt("resetCancel")}
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    onReset();
+                                    setResetOpen(false);
+                                }}
+                            >
+                                {rt("resetConfirm")}
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
+        </>
     );
 }
 

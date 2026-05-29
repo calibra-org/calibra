@@ -408,6 +408,7 @@ export function CustomersListClient() {
                                     columnOrder={ui.columnOrder}
                                     onColumnOrderChange={ui.setColumnOrder}
                                     pinnedIds={["select", "favorite", "actions"]}
+                                    onReset={ui.reset}
                                     labels={{
                                         trigger: t("toolbar.viewOptions"),
                                         densityHeading: t("toolbar.density"),

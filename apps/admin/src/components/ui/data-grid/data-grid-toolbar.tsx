@@ -50,6 +50,9 @@ export interface DataGridToolbarProps {
     /** Pinned column ids (sticky start/end) — shown in the popover but not draggable. */
     pinnedIds?: string[];
 
+    /** Restores the table's view preferences to the page defaults. Hidden when omitted. */
+    onReset?: () => void;
+
     /** Row-padding density preset, persisted by the parent table. */
     density: DataTableDensity;
     onDensityChange: (next: DataTableDensity) => void;
@@ -92,6 +95,7 @@ export function DataGridToolbar({
     columnOrder,
     onColumnOrderChange,
     pinnedIds,
+    onReset,
     density,
     onDensityChange,
     onRefresh,
@@ -166,6 +170,7 @@ export function DataGridToolbar({
                             columnOrder={columnOrder}
                             onColumnOrderChange={onColumnOrderChange}
                             pinnedIds={pinnedIds}
+                            onReset={onReset}
                             labels={{
                                 trigger: labels.viewOptions,
                                 columnsHeading: labels.columnsHeading,

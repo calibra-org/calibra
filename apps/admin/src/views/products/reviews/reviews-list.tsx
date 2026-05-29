@@ -525,6 +525,7 @@ export function ReviewsList() {
                                     columnOrder={ui.columnOrder}
                                     onColumnOrderChange={ui.setColumnOrder}
                                     pinnedIds={["select", "favorite", "actions"]}
+                                    onReset={ui.reset}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),

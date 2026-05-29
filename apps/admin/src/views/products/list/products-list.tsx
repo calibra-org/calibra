@@ -538,6 +538,7 @@ export function ProductsList() {
                                     columnOrder={ui.columnOrder}
                                     onColumnOrderChange={ui.setColumnOrder}
                                     pinnedIds={["select", "favorite", "image", "name", "actions"]}
+                                    onReset={ui.reset}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),

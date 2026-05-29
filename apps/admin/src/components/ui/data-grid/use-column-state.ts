@@ -52,6 +52,25 @@ export function useColumnState(options: UseColumnStateOptions) {
         {},
     );
 
+    /**
+     * Clears every persisted view preference (visibility, order, widths, density) back to the
+     * page defaults — the escape hatch for the localStorage state when an operator has nudged a
+     * table into a layout they want to undo. Each setter also rewrites its localStorage slot.
+     */
+    const reset = useCallback(() => {
+        setDensity(options.defaultDensity ?? "comfortable");
+        setColumnVisibility(options.defaultColumnVisibility ?? {});
+        setColumnOrder([]);
+        setColumnSizing({});
+    }, [
+        setDensity,
+        setColumnVisibility,
+        setColumnOrder,
+        setColumnSizing,
+        options.defaultDensity,
+        options.defaultColumnVisibility,
+    ]);
+
     return {
         density,
         setDensity,
@@ -61,6 +80,7 @@ export function useColumnState(options: UseColumnStateOptions) {
         setColumnOrder,
         columnSizing,
         setColumnSizing,
+        reset,
     };
 }
 

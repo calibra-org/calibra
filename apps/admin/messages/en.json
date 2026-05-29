@@ -1,4 +1,11 @@
 {
+    "DataGrid": {
+        "reset": "Reset to defaults",
+        "resetTitle": "Reset table view?",
+        "resetDescription": "Column visibility, order, widths and density return to their defaults.",
+        "resetCancel": "Cancel",
+        "resetConfirm": "Reset"
+    },
     "Site": {
         "name": "Calibra Admin",
         "tagline": "Commerce admin panel"

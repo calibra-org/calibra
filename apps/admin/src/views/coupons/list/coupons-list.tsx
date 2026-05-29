@@ -392,6 +392,7 @@ export function CouponsListClient() {
                         columnOrder={ui.columnOrder}
                         onColumnOrderChange={ui.setColumnOrder}
                         pinnedIds={["select", "favorite", "actions"]}
+                        onReset={ui.reset}
                         density={ui.density}
                         onDensityChange={ui.setDensity}
                         onRefresh={() => refetch()}
