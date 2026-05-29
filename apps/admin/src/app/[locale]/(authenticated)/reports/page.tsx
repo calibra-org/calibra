@@ -49,7 +49,7 @@ export default async function ReportsSalesPage({ params }: PageProps) {
             </div>
 
             <Card>
-                <CardHeader className="border-b pb-4">
+                <CardHeader className="pb-2">
                     <CardTitle className="text-base">{salesT("chartTitle")}</CardTitle>
                     <CardDescription>{salesT("subtitle")}</CardDescription>
                 </CardHeader>

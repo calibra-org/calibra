@@ -68,21 +68,21 @@ export function DashboardClient() {
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Card className="xl:col-span-2">
-                    <CardHeader className="border-b pb-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-base">{t("salesTrend")}</CardTitle>
                         <CardDescription>{t("salesTrendSubtitle")}</CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-1">
                         <SalesSeriesWidget />
                     </CardContent>
                 </Card>
 
                 <Card>
-                    <CardHeader className="border-b pb-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-base">{t("ordersByStatus")}</CardTitle>
                         <CardDescription>{t("ordersByStatusSubtitle")}</CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-1">
                         <OrdersByStatusWidget />
                     </CardContent>
                 </Card>
@@ -94,7 +94,7 @@ export function DashboardClient() {
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Card className="xl:col-span-2">
-                    <CardHeader className="flex items-center justify-between border-b pb-4">
+                    <CardHeader className="flex items-center justify-between pb-2">
                         <div>
                             <CardTitle className="text-base">{t("recentOrders")}</CardTitle>
                             <CardDescription>{t("salesTrendSubtitle")}</CardDescription>
@@ -112,18 +112,18 @@ export function DashboardClient() {
                 </Card>
 
                 <Card>
-                    <CardHeader className="border-b pb-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-base">{t("topProducts")}</CardTitle>
                         <CardDescription>{t("topProductsSubtitle")}</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex flex-col gap-4 pt-5">
+                    <CardContent className="flex flex-col gap-3 pt-1">
                         <TopProductsList locale={locale} emptyLabel={tCommon("noResults")} />
                     </CardContent>
                 </Card>
             </div>
 
             <Card>
-                <CardHeader className="flex items-center justify-between border-b pb-4">
+                <CardHeader className="flex items-center justify-between pb-2">
                     <div>
                         <CardTitle className="text-base">{t("recentCustomers")}</CardTitle>
                         <CardDescription>{t("recentCustomersSubtitle")}</CardDescription>

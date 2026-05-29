@@ -27,7 +27,7 @@ export function CustomerInsightsCard() {
 
     return (
         <Card>
-            <CardHeader className="flex items-center justify-between border-b pb-4">
+            <CardHeader className="flex items-center justify-between pb-2">
                 <div className="flex items-center gap-2">
                     <span className="grid size-8 place-items-center rounded-md bg-primary/10 text-primary">
                         <Users className="size-4" aria-hidden="true" />
@@ -44,7 +44,7 @@ export function CustomerInsightsCard() {
                     </Link>
                 </Button>
             </CardHeader>
-            <CardContent className="flex flex-col gap-5 pt-5">
+            <CardContent className="flex flex-col gap-4 pt-1">
                 {isPending ? (
                     <InsightsSkeleton />
                 ) : isError ? (

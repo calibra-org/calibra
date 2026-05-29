@@ -67,7 +67,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
         <form onSubmit={onSubmit} className="flex flex-col gap-6">
             {/* Store Address */}
             <Card>
-                <CardHeader className="border-b pb-4">
+                <CardHeader className="pb-2">
                     <CardTitle className="text-base">{t("storeAddress.title")}</CardTitle>
                     <CardDescription>{t("storeAddress.subtitle")}</CardDescription>
                 </CardHeader>
@@ -142,7 +142,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
 
             {/* General options */}
             <Card>
-                <CardHeader className="border-b pb-4">
+                <CardHeader className="pb-2">
                     <CardTitle className="text-base">{t("generalOptions.title")}</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 gap-x-6 gap-y-5 pt-6 lg:grid-cols-2">
@@ -183,7 +183,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
 
             {/* Taxes and coupons */}
             <Card>
-                <CardHeader className="border-b pb-4">
+                <CardHeader className="pb-2">
                     <CardTitle className="text-base">{t("taxes.title")}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col divide-y pt-2">
@@ -213,7 +213,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
 
             {/* Currency options */}
             <Card>
-                <CardHeader className="border-b pb-4">
+                <CardHeader className="pb-2">
                     <CardTitle className="text-base">{t("currency.title")}</CardTitle>
                     <CardDescription>{t("currency.subtitle")}</CardDescription>
                 </CardHeader>

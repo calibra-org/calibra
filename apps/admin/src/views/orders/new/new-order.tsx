@@ -100,7 +100,7 @@ export function NewOrder({ paymentMethods }: NewOrderProps) {
                         }}
                     />
                     <Card>
-                        <CardHeader className="flex items-center justify-between border-b pb-4">
+                        <CardHeader className="flex items-center justify-between pb-2">
                             <CardTitle className="text-sm">{t("shipping")}</CardTitle>
                             <div className="flex items-center gap-2 text-xs">
                                 <Switch
@@ -123,7 +123,7 @@ export function NewOrder({ paymentMethods }: NewOrderProps) {
                     </Card>
 
                     <Card>
-                        <CardHeader className="flex items-center justify-between border-b pb-4">
+                        <CardHeader className="flex items-center justify-between pb-2">
                             <CardTitle className="text-sm">{t("items")}</CardTitle>
                             <Button
                                 variant="outline"
@@ -184,7 +184,7 @@ export function NewOrder({ paymentMethods }: NewOrderProps) {
                     </Card>
 
                     <Card>
-                        <CardHeader className="border-b pb-4">
+                        <CardHeader className="pb-2">
                             <CardTitle className="text-sm">{t("notes")}</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-4">
@@ -195,7 +195,7 @@ export function NewOrder({ paymentMethods }: NewOrderProps) {
 
                 <aside className="flex flex-col gap-4">
                     <Card>
-                        <CardHeader className="border-b pb-4">
+                        <CardHeader className="pb-2">
                             <CardTitle className="text-sm">{t("payment")}</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-4">
@@ -236,7 +236,7 @@ interface AddressCardProps {
 function AddressCard({ title, addressT, value, onChange }: AddressCardProps) {
     return (
         <Card>
-            <CardHeader className="border-b pb-4">
+            <CardHeader className="pb-2">
                 <CardTitle className="text-sm">{title}</CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
