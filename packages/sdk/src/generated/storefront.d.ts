@@ -142,6 +142,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/currency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Display-currency configuration (public)
+         * @description Returns the resolved display-currency configuration (symbol, position, separators, decimals, base ratio). Both the storefront and admin build a money formatter from this so prices render identically. Cached server-side (~30m); invalidated when an admin saves the General settings.
+         */
+        get: operations["currencyShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/products": {
         parameters: {
             query?: never;
@@ -1375,6 +1413,43 @@ export interface components {
             };
         };
         /**
+         * LocalizedName
+         * @description A display name carried in both supported locales (Persian + English).
+         */
+        LocalizedName: {
+            /** @example تومان */
+            fa: string;
+            /** @example Iranian toman */
+            en: string;
+        };
+        /**
+         * CurrencyConfig
+         * @description Resolved display-currency configuration. Money is stored in BASE (Rial) minor units; the storefront and admin both build a money formatter from this so prices render identically. `base_ratio` is the number of BASE minor units per one major unit of the display currency (IRT → 10). Mirrors WooCommerce's `wc_price()` formatting inputs.
+         */
+        CurrencyConfig: {
+            /**
+             * @description Immutable stored currency code (Rial).
+             * @example IRR
+             */
+            base: string;
+            display: {
+                /** @example IRT */
+                code: string;
+                /** @example تومان */
+                symbol: string;
+                name: components["schemas"]["LocalizedName"];
+                /** @enum {string} */
+                position: "left" | "right" | "left_space" | "right_space";
+                /** @example ٬ */
+                thousand_sep: string;
+                /** @example . */
+                decimal_sep: string;
+                num_decimals: number;
+                /** @description BASE (Rial) minor units per one major unit of the display currency. */
+                base_ratio: number;
+            };
+        };
+        /**
          * Product
          * @description Storefront product card payload — matches `ProductTransformer.toObject()` exactly. Money fields are flat integer minor units (`regular_price`, `sale_price`, `effective_price`); `on_sale` reflects the resolved sale window. Locale-dependent fields (`name`, `short_description`) come from the active locale.
          */
@@ -2330,6 +2405,31 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    currencyShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resolved currency configuration. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CurrencyConfig"];
+                    };
+                };
+            };
         };
     };
     catalogProductsIndex: {
