@@ -44,6 +44,15 @@ export interface DataGridToolbarProps {
     columnVisibility: Record<string, boolean>;
     onColumnVisibilityChange: (next: Record<string, boolean>) => void;
 
+    /** Persisted middle-column order + setter. When both are present the popover gains drag-to-reorder. */
+    columnOrder?: string[];
+    onColumnOrderChange?: (next: string[]) => void;
+    /** Pinned column ids (sticky start/end) — shown in the popover but not draggable. */
+    pinnedIds?: string[];
+
+    /** Restores the table's view preferences to the page defaults. Hidden when omitted. */
+    onReset?: () => void;
+
     /** Row-padding density preset, persisted by the parent table. */
     density: DataTableDensity;
     onDensityChange: (next: DataTableDensity) => void;
@@ -83,6 +92,10 @@ export function DataGridToolbar({
     columns,
     columnVisibility,
     onColumnVisibilityChange,
+    columnOrder,
+    onColumnOrderChange,
+    pinnedIds,
+    onReset,
     density,
     onDensityChange,
     onRefresh,
@@ -154,6 +167,10 @@ export function DataGridToolbar({
                             onVisibilityChange={onColumnVisibilityChange}
                             density={density}
                             onDensityChange={onDensityChange}
+                            columnOrder={columnOrder}
+                            onColumnOrderChange={onColumnOrderChange}
+                            pinnedIds={pinnedIds}
+                            onReset={onReset}
                             labels={{
                                 trigger: labels.viewOptions,
                                 columnsHeading: labels.columnsHeading,

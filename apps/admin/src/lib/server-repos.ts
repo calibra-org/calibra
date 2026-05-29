@@ -20,7 +20,6 @@ import type {
     AdminOrder,
     AdminPaymentGateway,
     AdminProduct,
-    AdminRefund,
     AdminReview,
     AdminSettingsGroup,
     AdminShippingMethod,
@@ -566,19 +565,6 @@ export async function getOrder(id: number): Promise<AdminOrder | null> {
     const { data, error } = await api.admin.GET("/api/v1/admin/orders/{id}", { params: { path: { id } } });
     if (error !== undefined || !data?.data) return null;
     return toAdminOrderDetail(data.data);
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Refunds                                                                    */
-/*                                                                             */
-/*  TODO(spec): no /api/v1/admin/refunds list operation exists yet — refunds   */
-/*  are only nested under /admin/orders/{order_id}/refunds. Until the standalone */
-/*  list endpoint ships, the refunds page renders an empty result. Tracking    */
-/*  under the missing-operationIds follow-up in the PR description.            */
-/* -------------------------------------------------------------------------- */
-
-export async function listRefunds(params: ListParams = {}): Promise<Paginated<AdminRefund>> {
-    return emptyPage<AdminRefund>(params.limit);
 }
 
 /* -------------------------------------------------------------------------- */

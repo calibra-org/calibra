@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { Hash, Plus, Save, Sparkles, Tag as TagIcon, Trash2, Wand2, X } from "lucide-react";
+import { Plus, Save, Sparkles, Tag as TagIcon, Trash2, Wand2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 
@@ -13,6 +13,8 @@ import { Textarea } from "#/components/ui/textarea";
 import { formatNumber } from "#/lib/format";
 import type { AdminTag, LocalizedString } from "#/lib/types";
 
+import { type InspectorVariant, inspectorFormClassName } from "../_taxonomy-shared/inspector-surface";
+import { SlugInput } from "../_taxonomy-shared/slug-input";
 import { slugify } from "../_taxonomy-shared/slugify";
 
 /**
@@ -35,6 +37,8 @@ interface TagInspectorProps {
     onSave: (draft: AdminTagDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
+    /** Outer surface — `card` (default) for the management aside, `plain` inside the detail sheet. */
+    variant?: InspectorVariant;
 }
 
 /**
@@ -52,6 +56,7 @@ export function TagInspector({
     onSave,
     onDelete,
     onClose,
+    variant,
 }: TagInspectorProps) {
     const t = useTranslations("Tags.inspector");
 
@@ -75,6 +80,7 @@ export function TagInspector({
             onSave={onSave}
             onDelete={onDelete}
             onClose={onClose}
+            variant={variant}
         />
     );
 }
@@ -117,9 +123,21 @@ interface InspectorFormProps {
     onSave: (draft: AdminTagDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
+    variant?: InspectorVariant;
 }
 
-function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, onSave, onDelete, onClose }: InspectorFormProps) {
+function InspectorForm({
+    t,
+    draft,
+    selected,
+    locale,
+    submitting,
+    onDraftChange,
+    onSave,
+    onDelete,
+    onClose,
+    variant,
+}: InspectorFormProps) {
     const [slugTouched, setSlugTouched] = useState(false);
     const isNew = draft.id < 0;
 
@@ -156,10 +174,7 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="flex h-full flex-col gap-5 rounded-2xl border border-border/60 bg-card p-5 shadow-sm"
-        >
+        <form onSubmit={handleSubmit} className={inspectorFormClassName(variant)}>
             <header className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex items-center gap-2">
@@ -233,21 +248,12 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                             </button>
                         )}
                     </div>
-                    <div className="relative">
-                        <Hash
-                            className="pointer-events-none absolute start-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
-                            aria-hidden="true"
-                        />
-                        <Input
-                            id="tag-slug"
-                            value={draft.slug[locale] ?? ""}
-                            onChange={handleSlugChange}
-                            placeholder={t("fields.slug.placeholder")}
-                            dir="ltr"
-                            autoComplete="off"
-                            className="ps-9 font-mono"
-                        />
-                    </div>
+                    <SlugInput
+                        id="tag-slug"
+                        value={draft.slug[locale] ?? ""}
+                        onChange={handleSlugChange}
+                        placeholder={t("fields.slug.placeholder")}
+                    />
                     <p className="text-muted-foreground text-xs">{t("fields.slug.hint")}</p>
                 </div>
 
@@ -271,20 +277,18 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
                 )}
             </div>
 
-            <footer className="mt-auto flex items-center justify-between gap-2 pt-2">
-                <div className="inline-flex items-center gap-1 text-muted-foreground text-xs">
-                    <Sparkles className="size-3" aria-hidden="true" />
-                    {isNew ? t("footer.newHint") : t("footer.editHint")}
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
-                        {t("buttons.cancel")}
-                    </Button>
-                    <Button type="submit" disabled={submitting || draft.name[locale]?.trim().length === 0}>
-                        <Save className="size-4" aria-hidden="true" />
-                        {isNew ? t("buttons.create") : t("buttons.save")}
-                    </Button>
-                </div>
+            <p className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+                <Sparkles className="size-3" aria-hidden="true" />
+                {isNew ? t("footer.newHint") : t("footer.editHint")}
+            </p>
+            <footer className="mt-auto flex items-center justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
+                    {t("buttons.cancel")}
+                </Button>
+                <Button type="submit" disabled={submitting || draft.name[locale]?.trim().length === 0}>
+                    <Save className="size-4" aria-hidden="true" />
+                    {isNew ? t("buttons.create") : t("buttons.save")}
+                </Button>
             </footer>
         </form>
     );

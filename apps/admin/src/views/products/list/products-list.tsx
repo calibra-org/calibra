@@ -33,7 +33,9 @@ import {
     useSetFacetValue,
     useTableView,
 } from "#/lib/table-view";
-import type { AdminProduct, ProductStatus } from "#/lib/types";
+import type { AdminProduct, ProductStatus, TaxonomyKind, TaxonomyRef } from "#/lib/types";
+
+import { TaxonomyDetailSheet, type TaxonomyTarget } from "../_taxonomy-shared/taxonomy-detail-sheet";
 
 import { BulkActions } from "./bulk-actions";
 import { buildProductColumns } from "./columns";
@@ -273,6 +275,10 @@ export function ProductsList() {
     );
     const onOpenDetail = useCallback((row: AdminProduct) => router.push(`/products/${row.id}` as never), [router]);
 
+    /** The taxonomy chip the operator clicked; drives the editable aside detail sheet. */
+    const [taxonomyTarget, setTaxonomyTarget] = useState<TaxonomyTarget | null>(null);
+    const onOpenTaxonomy = useCallback((kind: TaxonomyKind, term: TaxonomyRef) => setTaxonomyTarget({ kind, id: term.id }), []);
+
     const onHideColumn = useCallback(
         (id: string) => ui.setColumnVisibility({ ...ui.columnVisibility, [id]: false }),
         [ui.setColumnVisibility, ui.columnVisibility],
@@ -287,13 +293,14 @@ export function ProductsList() {
                 onHideColumn,
                 onToggleQuickEdit,
                 onOpenDetail,
+                onOpenTaxonomy,
                 lowStockThreshold: LOW_STOCK_THRESHOLD,
                 t,
                 statusT,
                 stockT,
                 sortLabels: { asc: t("sortAsc"), desc: t("sortDesc"), hide: t("hideColumn") },
             }),
-        [locale, onHideColumn, onOpenDetail, onToggleQuickEdit, statusT, stockT, t, sort, setSort],
+        [locale, onHideColumn, onOpenDetail, onOpenTaxonomy, onToggleQuickEdit, statusT, stockT, t, sort, setSort],
     );
 
     const columnVisibilityItems = useMemo(
@@ -476,6 +483,8 @@ export function ProductsList() {
                 onColumnVisibilityChange={ui.setColumnVisibility}
                 columnOrder={ui.columnOrder}
                 onColumnOrderChange={ui.setColumnOrder}
+                columnSizing={ui.columnSizing}
+                onColumnSizingChange={ui.setColumnSizing}
                 density={ui.density}
                 isLoading={isPending}
                 isError={isError}
@@ -526,6 +535,10 @@ export function ProductsList() {
                                     onVisibilityChange={ui.setColumnVisibility}
                                     density={ui.density}
                                     onDensityChange={ui.setDensity}
+                                    columnOrder={ui.columnOrder}
+                                    onColumnOrderChange={ui.setColumnOrder}
+                                    pinnedIds={["select", "favorite", "image", "name", "actions"]}
+                                    onReset={ui.reset}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),
@@ -535,6 +548,7 @@ export function ProductsList() {
                                             cozy: t("density.cozy"),
                                             compact: t("density.compact"),
                                         },
+                                        reorderColumn: t("reorderColumn"),
                                     }}
                                 />
                             }
@@ -595,6 +609,8 @@ export function ProductsList() {
                 title={t("shortcuts.title")}
                 groups={shortcutGroups}
             />
+
+            <TaxonomyDetailSheet target={taxonomyTarget} onClose={() => setTaxonomyTarget(null)} />
         </section>
     );
 }

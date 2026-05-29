@@ -466,6 +466,8 @@ export function ReviewsList() {
                 onColumnVisibilityChange={ui.setColumnVisibility}
                 columnOrder={ui.columnOrder}
                 onColumnOrderChange={ui.setColumnOrder}
+                columnSizing={ui.columnSizing}
+                onColumnSizingChange={ui.setColumnSizing}
                 density={ui.density}
                 isLoading={isPending}
                 isError={isError}
@@ -522,6 +524,10 @@ export function ReviewsList() {
                                     onVisibilityChange={ui.setColumnVisibility}
                                     density={ui.density}
                                     onDensityChange={ui.setDensity}
+                                    columnOrder={ui.columnOrder}
+                                    onColumnOrderChange={ui.setColumnOrder}
+                                    pinnedIds={["select", "favorite", "actions"]}
+                                    onReset={ui.reset}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),

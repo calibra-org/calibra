@@ -15,6 +15,8 @@ import { Textarea } from "#/components/ui/textarea";
 import { formatNumber } from "#/lib/format";
 import type { AdminCategory, LocalizedString } from "#/lib/types";
 
+import { type InspectorVariant, inspectorFormClassName } from "../_taxonomy-shared/inspector-surface";
+import { SlugInput } from "../_taxonomy-shared/slug-input";
 import { slugify } from "../_taxonomy-shared/slugify";
 
 import { collectSubtreeIds } from "./build-tree";
@@ -42,6 +44,8 @@ interface CategoryInspectorProps {
     onSave: (draft: AdminCategoryLike) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
+    /** Outer surface — `card` (default) for the management aside, `plain` inside the detail sheet. */
+    variant?: InspectorVariant;
 }
 
 /**
@@ -59,6 +63,7 @@ export function CategoryInspector({
     onSave,
     onDelete,
     onClose,
+    variant,
 }: CategoryInspectorProps) {
     const t = useTranslations("Categories.inspector");
 
@@ -78,6 +83,7 @@ export function CategoryInspector({
             onDelete={onDelete}
             onClose={onClose}
             onCreateNew={onCreateNew}
+            variant={variant}
         />
     );
 }
@@ -121,6 +127,7 @@ interface InspectorFormProps {
     onDelete: (id: number) => void;
     onClose: () => void;
     onCreateNew: (parentId: number | null) => void;
+    variant?: InspectorVariant;
 }
 
 function InspectorForm({
@@ -134,6 +141,7 @@ function InspectorForm({
     onDelete,
     onClose,
     onCreateNew,
+    variant,
 }: InspectorFormProps) {
     const isNew = draft.id < 0;
 
@@ -182,7 +190,7 @@ function InspectorForm({
                 event.preventDefault();
                 onSave(draft);
             }}
-            className="flex h-full flex-col gap-5 rounded-2xl border border-border/60 bg-card p-5 shadow-sm"
+            className={inspectorFormClassName(variant)}
         >
             <header className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
@@ -201,27 +209,47 @@ function InspectorForm({
                     </h2>
                 </div>
                 <div className="flex items-center gap-1">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger
-                            render={(props) => (
-                                <Button {...props} type="button" variant="ghost" size="icon" className="size-8">
-                                    <MoreHorizontal className="size-4" aria-hidden="true" />
-                                </Button>
-                            )}
-                        />
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onCreateNew(isNew ? null : draft.id)}>
-                                <FolderPlus className="size-3.5" aria-hidden="true" />
-                                {isNew ? t("menu.createSibling") : t("menu.createChild")}
-                            </DropdownMenuItem>
-                            {!isNew && (
-                                <DropdownMenuItem onClick={() => onDelete(draft.id)} className="text-destructive">
-                                    <Trash2 className="size-3.5" aria-hidden="true" />
-                                    {t("menu.delete")}
+                    {variant === "plain" ? (
+                        /**
+                         * In the detail sheet "add subcategory" / "create sibling" don't apply (you
+                         * opened one term to edit it), so collapse the overflow menu to a direct
+                         * delete button — matching the brand / tag inspectors.
+                         */
+                        !isNew && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label={t("menu.delete")}
+                                onClick={() => onDelete(draft.id)}
+                                className="size-8 text-muted-foreground hover:text-destructive"
+                            >
+                                <Trash2 className="size-4" aria-hidden="true" />
+                            </Button>
+                        )
+                    ) : (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
+                                render={(props) => (
+                                    <Button {...props} type="button" variant="ghost" size="icon" className="size-8">
+                                        <MoreHorizontal className="size-4" aria-hidden="true" />
+                                    </Button>
+                                )}
+                            />
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => onCreateNew(isNew ? null : draft.id)}>
+                                    <FolderPlus className="size-3.5" aria-hidden="true" />
+                                    {isNew ? t("menu.createSibling") : t("menu.createChild")}
                                 </DropdownMenuItem>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                {!isNew && (
+                                    <DropdownMenuItem onClick={() => onDelete(draft.id)} className="text-destructive">
+                                        <Trash2 className="size-3.5" aria-hidden="true" />
+                                        {t("menu.delete")}
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                     <Button
                         type="button"
                         variant="ghost"
@@ -273,14 +301,11 @@ function InspectorForm({
                             </button>
                         )}
                     </div>
-                    <Input
+                    <SlugInput
                         id="cat-slug"
                         value={draft.slug[locale] ?? ""}
                         onChange={handleSlugChange}
                         placeholder={t("fields.slug.placeholder")}
-                        dir="ltr"
-                        autoComplete="off"
-                        className="font-mono"
                     />
                     <p className="text-muted-foreground text-xs">{t("fields.slug.hint")}</p>
                 </div>
@@ -321,17 +346,15 @@ function InspectorForm({
                 )}
             </div>
 
-            <footer className="mt-auto flex items-center justify-between gap-2 pt-2">
-                <div className="text-muted-foreground text-xs">{isNew ? t("footer.newHint") : t("footer.editHint")}</div>
-                <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" onClick={onClose}>
-                        {t("buttons.cancel")}
-                    </Button>
-                    <Button type="submit" disabled={draft.name[locale]?.trim().length === 0}>
-                        <Save className="size-4" aria-hidden="true" />
-                        {isNew ? t("buttons.create") : t("buttons.save")}
-                    </Button>
-                </div>
+            <p className="text-muted-foreground text-xs">{isNew ? t("footer.newHint") : t("footer.editHint")}</p>
+            <footer className="mt-auto flex items-center justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={onClose}>
+                    {t("buttons.cancel")}
+                </Button>
+                <Button type="submit" disabled={draft.name[locale]?.trim().length === 0}>
+                    <Save className="size-4" aria-hidden="true" />
+                    {isNew ? t("buttons.create") : t("buttons.save")}
+                </Button>
             </footer>
         </form>
     );

@@ -1,4 +1,11 @@
 {
+    "DataGrid": {
+        "reset": "بازنشانی به پیش‌فرض",
+        "resetTitle": "بازنشانی نمای جدول؟",
+        "resetDescription": "نمایش، ترتیب، عرض ستون‌ها و تراکم به حالت پیش‌فرض برمی‌گردد.",
+        "resetCancel": "انصراف",
+        "resetConfirm": "بازنشانی"
+    },
     "Site": {
         "name": "پنل مدیریت کالیبرا",
         "tagline": "پنل مدیریت فروشگاه"
@@ -18,7 +25,6 @@
         "reviews": "نقد و بررسی‌ها",
         "media": "رسانه‌ها",
         "orders": "سفارش‌ها",
-        "refunds": "بازگشت‌ها",
         "coupons": "کوپن‌ها",
         "customers": "مشتری‌ها",
         "tax": "مالیات",
@@ -734,6 +740,15 @@
                 "cozy": "متوسط",
                 "compact": "فشرده"
             },
+            "reorderColumn": "جابجایی ستون",
+            "taxonomyDelete": {
+                "title": "حذف؟",
+                "description": "آیا از حذف «{name}» مطمئن هستید؟ این کار قابل بازگشت نیست.",
+                "untitled": "بدون عنوان",
+                "confirm": "حذف",
+                "pending": "در حال حذف…",
+                "cancel": "انصراف"
+            },
             "clearAll": "پاک کردن همه",
             "clearFilter": "پاک کردن",
             "filters": {
@@ -832,6 +847,13 @@
             "trashDescription": "آیا مطمئن هستید که می‌خواهید «{name}» را به زباله‌دان منتقل کنید؟",
             "cancel": "انصراف",
             "allCategories": "همه دسته‌بندی‌ها",
+            "taxonomyAll": { "category": "همه دسته‌بندی‌ها", "tag": "همه برچسب‌ها", "brand": "همه برندها" },
+            "taxonomySheet": {
+                "category": "ویرایش دسته‌بندی",
+                "tag": "ویرایش برچسب",
+                "brand": "ویرایش برند",
+                "loadError": "بارگذاری اطلاعات با خطا مواجه شد"
+            },
             "selectedCount": "{count} انتخاب‌شده",
             "selectedOf": "{selected} از {total} انتخاب‌شده",
             "showing": "نمایش {from}–{to} از {total}",
@@ -2923,18 +2945,6 @@
         "refunded": "بازگشت‌داده‌شده",
         "failed": "ناموفق",
         "any": "همه"
-    },
-    "Refunds": {
-        "title": "بازگشت وجه",
-        "subtitle": "تمام بازگشت‌های ثبت‌شده در فروشگاه.",
-        "table": {
-            "refundNumber": "شماره",
-            "order": "سفارش",
-            "amount": "مبلغ",
-            "reason": "علت",
-            "refundedBy": "ثبت‌کننده",
-            "processedAt": "زمان"
-        }
     },
     "Coupons": {
         "title": "کدهای تخفیف",

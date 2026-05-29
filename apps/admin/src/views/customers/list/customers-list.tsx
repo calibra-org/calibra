@@ -367,6 +367,8 @@ export function CustomersListClient() {
                 onColumnVisibilityChange={ui.setColumnVisibility}
                 columnOrder={ui.columnOrder}
                 onColumnOrderChange={ui.setColumnOrder}
+                columnSizing={ui.columnSizing}
+                onColumnSizingChange={ui.setColumnSizing}
                 density={ui.density}
                 isLoading={isPending}
                 isError={isError}
@@ -405,6 +407,10 @@ export function CustomersListClient() {
                                     onVisibilityChange={ui.setColumnVisibility}
                                     density={ui.density}
                                     onDensityChange={ui.setDensity}
+                                    columnOrder={ui.columnOrder}
+                                    onColumnOrderChange={ui.setColumnOrder}
+                                    pinnedIds={["select", "favorite", "actions"]}
+                                    onReset={ui.reset}
                                     labels={{
                                         trigger: t("toolbar.viewOptions"),
                                         densityHeading: t("toolbar.density"),

@@ -329,6 +329,8 @@ export function CouponsListClient() {
                 onColumnVisibilityChange={ui.setColumnVisibility}
                 columnOrder={ui.columnOrder}
                 onColumnOrderChange={ui.setColumnOrder}
+                columnSizing={ui.columnSizing}
+                onColumnSizingChange={ui.setColumnSizing}
                 density={ui.density}
                 isLoading={isPending}
                 isError={isError}
@@ -389,6 +391,10 @@ export function CouponsListClient() {
                         columns={columnVisibilityItems}
                         columnVisibility={ui.columnVisibility}
                         onColumnVisibilityChange={ui.setColumnVisibility}
+                        columnOrder={ui.columnOrder}
+                        onColumnOrderChange={ui.setColumnOrder}
+                        pinnedIds={["select", "favorite", "actions"]}
+                        onReset={ui.reset}
                         density={ui.density}
                         onDensityChange={ui.setDensity}
                         onRefresh={() => refetch()}

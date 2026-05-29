@@ -49,6 +49,18 @@ properties:
         type: array
         items: { type: string }
         description: Full media URLs of all gallery images, ordered by position.
+    categories:
+        type: array
+        description: Categories this product belongs to, for the list's linkable chips.
+        items: { $ref: "./ProductTaxonomyRef.yaml" }
+    tags:
+        type: array
+        description: Tags attached to this product.
+        items: { $ref: "./ProductTaxonomyRef.yaml" }
+    brands:
+        type: array
+        description: Brands attached to this product (the brand taxonomy is many-to-many).
+        items: { $ref: "./ProductTaxonomyRef.yaml" }
     inventory:
         type: object
         description: Aggregated stock across all product-level inventory locations.

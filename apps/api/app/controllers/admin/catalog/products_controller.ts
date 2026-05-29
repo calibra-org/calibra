@@ -129,6 +129,9 @@ export default class AdminProductsController {
         const query = Product.query()
             .preload("translations")
             .preload("images", (q) => q.preload("media"))
+            .preload("categories", (q) => q.preload("translations"))
+            .preload("tags", (q) => q.preload("translations"))
+            .preload("brands", (q) => q.preload("translations"))
             .preload("inventoryItems");
         this.applyListFilters(query, request);
 

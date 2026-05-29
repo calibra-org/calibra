@@ -156,6 +156,38 @@ test.group("Admin products list filters", (group) => {
         );
     });
 
+    test("list rows expose category / tag / brand refs with resolved names", async ({ client, assert }) => {
+        const product = await createProduct({ fa: { name: "ابزار دستی" }, en: { name: "Hand Tool" } });
+        const category = await createCategory({ fa: { name: "ابزار" }, en: { name: "Tools" }, products: [product] });
+        const tag = await createTag({ fa: { name: "نو", slug: "no-tax" }, en: { name: "New", slug: "new-tax" } });
+        const brand = await createBrand({ fa: { name: "آکمه", slug: "acme-fa" }, en: { name: "Acme", slug: "acme-en" } });
+        await tag.related("products").attach([String(product.id)]);
+        await brand.related("products").attach([String(product.id)]);
+
+        const response = await client
+            .get("/api/v1/admin/products")
+            .header("Accept-Language", "en")
+            .withGuard("api")
+            .loginAs(admin);
+        response.assertStatus(200);
+        response.assertAgainstApiSpec();
+
+        const row = response.body().data.find((r: { id: number }) => r.id === Number(product.id));
+        assert.isObject(row);
+        assert.deepEqual(
+            row.categories.map((c: { id: number; name: string }) => [c.id, c.name]),
+            [[Number(category.id), "Tools"]],
+        );
+        assert.deepEqual(
+            row.tags.map((tg: { id: number; name: string }) => [tg.id, tg.name]),
+            [[Number(tag.id), "New"]],
+        );
+        assert.deepEqual(
+            row.brands.map((b: { id: number; name: string }) => [b.id, b.name]),
+            [[Number(brand.id), "Acme"]],
+        );
+    });
+
     test("stock_status=instock,outofstock (multi-select) returns the union of both statuses", async ({ client, assert }) => {
         const a = await createProduct({ fa: { name: "م" }, en: { name: "In" } });
         const b = await createProduct({ fa: { name: "ن" }, en: { name: "Out" } });

@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "#/comp
 import { formatDate, formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
 import { useBulkUpdateProducts } from "#/lib/products/mutations";
-import type { AdminProduct, ProductStatus, StockStatus } from "#/lib/types";
+import type { AdminProduct, ProductStatus, StockStatus, TaxonomyKind, TaxonomyRef } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
 import { FavoriteToggle } from "./favorite-toggle";
@@ -42,6 +42,8 @@ interface ColumnContext {
     /** Called when the row should toggle its inline Quick Edit. Receives the TanStack row id. */
     onToggleQuickEdit: (rowId: string) => void;
     onOpenDetail: (row: AdminProduct) => void;
+    /** Opens the editable taxonomy detail sheet for a clicked category/tag/brand chip. */
+    onOpenTaxonomy: (kind: TaxonomyKind, term: TaxonomyRef) => void;
     lowStockThreshold: number;
     t: TFunction;
     statusT: TFunction;
@@ -248,7 +250,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                 <SalePeriodCell from={row.original.saleStartsAt} to={row.original.saleEndsAt} locale={ctx.locale} />
             ),
             enableSorting: false,
-            size: 160,
+            size: 230,
         },
         {
             id: "inventory",
@@ -317,8 +319,11 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                     labels={ctx.sortLabels}
                 />
             ),
-            cell: ({ row }) => <CategoriesCell ids={row.original.categoryIds} t={ctx.t} />,
+            cell: ({ row }) => (
+                <TaxonomyChips terms={row.original.categories} kind="category" onOpen={ctx.onOpenTaxonomy} t={ctx.t} />
+            ),
             enableSorting: false,
+            size: 220,
         },
         {
             id: "tags",
@@ -332,8 +337,9 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                     labels={ctx.sortLabels}
                 />
             ),
-            cell: ({ row }) => <CategoriesCell ids={row.original.tagIds} t={ctx.t} />,
+            cell: ({ row }) => <TaxonomyChips terms={row.original.tags} kind="tag" onOpen={ctx.onOpenTaxonomy} t={ctx.t} />,
             enableSorting: false,
+            size: 200,
         },
         {
             id: "brand",
@@ -347,16 +353,9 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                     labels={ctx.sortLabels}
                 />
             ),
-            cell: ({ row }) =>
-                row.original.brandId !== null ? (
-                    <Badge variant="outline" className="font-normal">
-                        #{row.original.brandId}
-                    </Badge>
-                ) : (
-                    <span className="text-muted-foreground">—</span>
-                ),
+            cell: ({ row }) => <TaxonomyChips terms={row.original.brands} kind="brand" onOpen={ctx.onOpenTaxonomy} t={ctx.t} />,
             enableSorting: false,
-            size: 120,
+            size: 160,
         },
         {
             id: "date",
@@ -531,33 +530,34 @@ function SalePeriodCell({ from, to, locale }: SalePeriodCellProps) {
     if (from === null && to === null) return <span className="text-muted-foreground">—</span>;
     const display = [from, to].map((iso) => (iso === null ? "…" : formatDate(iso, locale))).join("→");
     return (
-        <Badge variant="outline" className="font-normal text-xs">
-            <TagIcon className="size-3" aria-hidden="true" />
-            {display}
+        <Badge variant="outline" className="max-w-full font-normal text-xs" title={display}>
+            <TagIcon className="size-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{display}</span>
         </Badge>
     );
 }
 
-interface CategoriesCellProps {
-    ids: number[];
+interface TaxonomyChipsProps {
+    terms: TaxonomyRef[];
+    kind: TaxonomyKind;
+    onOpen: (kind: TaxonomyKind, term: TaxonomyRef) => void;
     t: TFunction;
 }
 
 /**
- * Renders the first two ids as chips and collapses the remainder into a `+N` chip that pops a
- * full list on hover. Names aren't included in `AdminProduct` (list endpoint doesn't expand
- * relations), so we display ids — when the API adds names to the list shape, swap them in.
+ * Renders a product's taxonomy terms as clickable chips: the first two inline, the remainder
+ * collapsed into a `+N` chip that pops the full set on hover. Each chip opens the editable
+ * taxonomy detail sheet for that term. Falls back to `#<id>` when a term has no name in the
+ * active locale (untranslated term).
  */
-function CategoriesCell({ ids, t }: CategoriesCellProps) {
-    if (ids.length === 0) return <span className="text-muted-foreground">—</span>;
-    const head = ids.slice(0, 2);
-    const tail = ids.slice(2);
+function TaxonomyChips({ terms, kind, onOpen, t }: TaxonomyChipsProps) {
+    if (terms.length === 0) return <span className="text-muted-foreground">—</span>;
+    const head = terms.slice(0, 2);
+    const tail = terms.slice(2);
     return (
         <div className="flex items-center gap-1">
-            {head.map((id) => (
-                <Badge key={id} variant="outline" className="font-normal">
-                    #{id}
-                </Badge>
+            {head.map((term) => (
+                <TaxonomyChip key={term.id} term={term} kind={kind} onOpen={onOpen} />
             ))}
             {tail.length > 0 && (
                 <HoverCard>
@@ -571,17 +571,42 @@ function CategoriesCell({ ids, t }: CategoriesCellProps) {
                         )}
                     />
                     <HoverCardContent>
-                        <p className="mb-1 font-medium text-xs">{t("allCategories")}</p>
+                        <p className="mb-1 font-medium text-xs">{t(`taxonomyAll.${kind}` as never)}</p>
                         <div className="flex flex-wrap gap-1">
-                            {ids.map((id) => (
-                                <Badge key={id} variant="outline" className="font-normal">
-                                    #{id}
-                                </Badge>
+                            {terms.map((term) => (
+                                <TaxonomyChip key={term.id} term={term} kind={kind} onOpen={onOpen} />
                             ))}
                         </div>
                     </HoverCardContent>
                 </HoverCard>
             )}
         </div>
+    );
+}
+
+interface TaxonomyChipProps {
+    term: TaxonomyRef;
+    kind: TaxonomyKind;
+    onOpen: (kind: TaxonomyKind, term: TaxonomyRef) => void;
+}
+
+/** One clickable taxonomy chip. Stops row-open propagation so the click only opens the sheet. */
+function TaxonomyChip({ term, kind, onOpen }: TaxonomyChipProps) {
+    return (
+        <button
+            type="button"
+            onClick={(event) => {
+                event.stopPropagation();
+                onOpen(kind, term);
+            }}
+            className="max-w-[12rem] rounded-full"
+        >
+            <Badge
+                variant="outline"
+                className="max-w-full cursor-pointer truncate font-normal transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+            >
+                {term.name || `#${term.id}`}
+            </Badge>
+        </button>
     );
 }

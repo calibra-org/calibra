@@ -1,9 +1,15 @@
 import type { AdminSchemas } from "@calibra/sdk";
 
-import type { AdminProduct, LocalizedString, MoneyMinor, ProductStatus } from "#/lib/types";
+import type { AdminProduct, LocalizedString, MoneyMinor, ProductStatus, TaxonomyRef } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];
 type SdkAdminProduct = Schemas["AdminProduct"];
+type SdkTaxonomyRef = Schemas["ProductTaxonomyRef"];
+
+/** Drop unnamed terms and coalesce nulls so the chips always have a label + slug to render. */
+function toTaxonomyRefs(terms: SdkTaxonomyRef[] | undefined): TaxonomyRef[] {
+    return (terms ?? []).map((term) => ({ id: term.id, name: term.name ?? "", slug: term.slug ?? "" }));
+}
 
 const VIEW_PRODUCT_STATUS_MAP: Record<string, ProductStatus> = {
     draft: "draft",
@@ -45,6 +51,10 @@ export function toAdminProduct(p: SdkAdminProduct): AdminProduct {
     const updatedAt = (p as { updated_at?: string }).updated_at ?? createdAt;
     const deletedAt = (p as { deleted_at?: string | null }).deleted_at ?? null;
 
+    const categories = toTaxonomyRefs(p.categories);
+    const tags = toTaxonomyRefs(p.tags);
+    const brands = toTaxonomyRefs(p.brands);
+
     /**
      * Stock status is derived from the inventory aggregate, not whatever string the per-row
      * stock_status column happens to hold (rows go stale; the rollup is the source of truth).
@@ -78,9 +88,12 @@ export function toAdminProduct(p: SdkAdminProduct): AdminProduct {
         lowStock,
         featured: Boolean(p.featured),
         isFavorite: Boolean((p as { is_favorite?: boolean }).is_favorite),
-        categoryIds: [],
-        brandId: null,
-        tagIds: [],
+        categories,
+        tags,
+        brands,
+        categoryIds: categories.map((c) => c.id),
+        brandId: brands[0]?.id ?? null,
+        tagIds: tags.map((t) => t.id),
         imageUrl: p.featured_image_url ?? null,
         galleryImageUrls: galleryUrls,
         weightGrams: null,

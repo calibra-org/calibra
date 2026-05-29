@@ -42,6 +42,35 @@ export function useColumnState(options: UseColumnStateOptions) {
      */
     const [columnOrder, setColumnOrder] = useLocalStorageState<string[]>(`admin.dataTable.${options.id}.order`, []);
 
+    /**
+     * Persisted per-column widths (TanStack `columnSizing` shape: `{ [columnId]: pixels }`).
+     * Empty object means "use each column's declared size". The data-table writes this through
+     * `onColumnSizingChange` as the operator drags a resize handle.
+     */
+    const [columnSizing, setColumnSizing] = useLocalStorageState<Record<string, number>>(
+        `admin.dataTable.${options.id}.sizing`,
+        {},
+    );
+
+    /**
+     * Clears every persisted view preference (visibility, order, widths, density) back to the
+     * page defaults — the escape hatch for the localStorage state when an operator has nudged a
+     * table into a layout they want to undo. Each setter also rewrites its localStorage slot.
+     */
+    const reset = useCallback(() => {
+        setDensity(options.defaultDensity ?? "comfortable");
+        setColumnVisibility(options.defaultColumnVisibility ?? {});
+        setColumnOrder([]);
+        setColumnSizing({});
+    }, [
+        setDensity,
+        setColumnVisibility,
+        setColumnOrder,
+        setColumnSizing,
+        options.defaultDensity,
+        options.defaultColumnVisibility,
+    ]);
+
     return {
         density,
         setDensity,
@@ -49,6 +78,9 @@ export function useColumnState(options: UseColumnStateOptions) {
         setColumnVisibility,
         columnOrder,
         setColumnOrder,
+        columnSizing,
+        setColumnSizing,
+        reset,
     };
 }
 

@@ -1,4 +1,11 @@
 {
+    "DataGrid": {
+        "reset": "Reset to defaults",
+        "resetTitle": "Reset table view?",
+        "resetDescription": "Column visibility, order, widths and density return to their defaults.",
+        "resetCancel": "Cancel",
+        "resetConfirm": "Reset"
+    },
     "Site": {
         "name": "Calibra Admin",
         "tagline": "Commerce admin panel"
@@ -18,7 +25,6 @@
         "reviews": "Reviews",
         "media": "Media",
         "orders": "Orders",
-        "refunds": "Refunds",
         "coupons": "Coupons",
         "customers": "Customers",
         "tax": "Tax",
@@ -734,6 +740,15 @@
                 "cozy": "Cozy",
                 "compact": "Compact"
             },
+            "reorderColumn": "Reorder column",
+            "taxonomyDelete": {
+                "title": "Delete?",
+                "description": "Are you sure you want to delete \"{name}\"? This can't be undone.",
+                "untitled": "Untitled",
+                "confirm": "Delete",
+                "pending": "Deleting…",
+                "cancel": "Cancel"
+            },
             "clearAll": "Clear all",
             "clearFilter": "Clear",
             "filters": {
@@ -832,6 +847,13 @@
             "trashDescription": "Are you sure you want to move \"{name}\" to the trash?",
             "cancel": "Cancel",
             "allCategories": "All categories",
+            "taxonomyAll": { "category": "All categories", "tag": "All tags", "brand": "All brands" },
+            "taxonomySheet": {
+                "category": "Edit category",
+                "tag": "Edit tag",
+                "brand": "Edit brand",
+                "loadError": "Couldn't load this item"
+            },
             "selectedCount": "{count} selected",
             "selectedOf": "{selected} of {total} selected",
             "showing": "Showing {from}–{to} of {total}",
@@ -2923,18 +2945,6 @@
         "refunded": "Refunded",
         "failed": "Failed",
         "any": "All"
-    },
-    "Refunds": {
-        "title": "Refunds",
-        "subtitle": "All refunds processed across orders.",
-        "table": {
-            "refundNumber": "Number",
-            "order": "Order",
-            "amount": "Amount",
-            "reason": "Reason",
-            "refundedBy": "Issued by",
-            "processedAt": "Processed"
-        }
     },
     "Coupons": {
         "title": "Coupons",
