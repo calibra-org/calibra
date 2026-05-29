@@ -4,7 +4,8 @@ import type { Locale } from "@calibra/shared/i18n";
 import { formatMoney } from "@calibra/shared/money";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
-import { Controller, useForm } from "react-hook-form";
+import type { ReactNode } from "react";
+import { type Control, Controller, useForm } from "react-hook-form";
 
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
@@ -13,7 +14,6 @@ import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Spinner } from "#/components/ui/spinner";
-import { StickyActionBar } from "#/components/ui/sticky-action-bar";
 import { Switch } from "#/components/ui/switch";
 import { type AdminGeneralSettings, useGeneralSettings, useUpdateGeneralSettings } from "#/lib/queries/general-settings";
 import { cn } from "#/lib/utils";
@@ -27,9 +27,9 @@ export function GeneralSettings() {
     const { data, isLoading } = useGeneralSettings();
     if (isLoading || !data) {
         return (
-            <div className="flex flex-col gap-6">
-                <Skeleton className="h-48 w-full rounded-xl" />
-                <Skeleton className="h-48 w-full rounded-xl" />
+            <div className="flex max-w-3xl flex-col gap-6">
+                <Skeleton className="h-56 w-full rounded-xl" />
+                <Skeleton className="h-44 w-full rounded-xl" />
                 <Skeleton className="h-56 w-full rounded-xl" />
             </div>
         );
@@ -52,10 +52,8 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
 
     const { currencies, provinces, countries } = data.options;
     const values = watch();
-    const sepEqual = values.thousandSep !== undefined && values.thousandSep === values.decimalSep;
-    const preview = values.currencyDisplay
-        ? formatMoney(PREVIEW_AMOUNT, previewConfig(values, currencies), { locale: locale === "fa" ? "fa" : "en" })
-        : "";
+    const sepEqual = values.thousandSep === values.decimalSep;
+    const preview = formatMoney(PREVIEW_AMOUNT, previewConfig(values, currencies), { locale: locale === "fa" ? "fa" : "en" });
 
     const onSubmit = handleSubmit((vals) => {
         if (vals.thousandSep === vals.decimalSep) return;
@@ -65,18 +63,18 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
     const canSave = formState.isDirty && !sepEqual && !update.isPending;
 
     return (
-        <form onSubmit={onSubmit} className="flex flex-col gap-6 pb-4">
+        <form onSubmit={onSubmit} className="flex max-w-3xl flex-col gap-6">
             {/* Store Address */}
             <Card>
                 <CardHeader className="border-b pb-4">
                     <CardTitle className="text-base">{t("storeAddress.title")}</CardTitle>
                     <CardDescription>{t("storeAddress.subtitle")}</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-4 pt-6 md:grid-cols-2">
-                    <Field label={t("storeAddress.address1")} className="md:col-span-2">
+                <CardContent className="grid grid-cols-1 gap-4 pt-6 sm:grid-cols-2">
+                    <Field label={t("storeAddress.address1")} className="sm:col-span-2">
                         <Input {...register("storeAddress1")} />
                     </Field>
-                    <Field label={t("storeAddress.address2")} className="md:col-span-2">
+                    <Field label={t("storeAddress.address2")} className="sm:col-span-2">
                         <Input {...register("storeAddress2")} />
                     </Field>
                     <Field label={t("storeAddress.country")}>
@@ -92,7 +90,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                                         {countries.map((c) => (
                                             <SelectItem key={c.code} value={c.code} disabled={!c.enabled}>
                                                 {c.name[locale]}
-                                                {!c.enabled ? ` — ${t("comingSoon")}` : ""}
+                                                {c.enabled ? "" : ` — ${t("comingSoon")}`}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -128,7 +126,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                         <Input {...register("storeCity")} />
                     </Field>
                     <Field label={t("storeAddress.postcode")}>
-                        <Input {...register("storePostcode")} dir="ltr" />
+                        <Input {...register("storePostcode")} dir="ltr" className="max-w-40" />
                     </Field>
                 </CardContent>
             </Card>
@@ -138,7 +136,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                 <CardHeader className="border-b pb-4">
                     <CardTitle className="text-base">{t("generalOptions.title")}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-4 pt-6">
+                <CardContent className="flex flex-col gap-5 pt-6">
                     <SelectField
                         control={control}
                         name="sellingLocations"
@@ -171,13 +169,6 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                             { value: "geolocation_ajax", label: t("generalOptions.customerGeoCache") },
                         ]}
                     />
-                    <ToggleRow label={t("generalOptions.autocomplete")} description={t("generalOptions.autocompleteHelp")}>
-                        <Controller
-                            control={control}
-                            name="addressAutocomplete"
-                            render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} disabled />}
-                        />
-                    </ToggleRow>
                 </CardContent>
             </Card>
 
@@ -186,7 +177,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                 <CardHeader className="border-b pb-4">
                     <CardTitle className="text-base">{t("taxes.title")}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-1 pt-2">
+                <CardContent className="flex flex-col divide-y pt-2">
                     <ToggleRow label={t("taxes.enable")} description={t("taxes.enableHelp")}>
                         <Controller
                             control={control}
@@ -217,68 +208,94 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                     <CardTitle className="text-base">{t("currency.title")}</CardTitle>
                     <CardDescription>{t("currency.subtitle")}</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-4 pt-6 md:grid-cols-2">
-                    <Field label={t("currency.currency")}>
-                        <Controller
+                <CardContent className="flex flex-col gap-5 pt-6">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Field label={t("currency.currency")}>
+                            <Controller
+                                control={control}
+                                name="currencyDisplay"
+                                render={({ field }) => (
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {currencies.map((c) => (
+                                                <SelectItem key={c.code} value={c.code} disabled={!c.enabled}>
+                                                    {c.name[locale]} ({c.code}){c.enabled ? "" : ` — ${t("comingSoon")}`}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                        </Field>
+                        <SelectField
                             control={control}
-                            name="currencyDisplay"
-                            render={({ field }) => (
-                                <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {currencies.map((c) => (
-                                            <SelectItem key={c.code} value={c.code} disabled={!c.enabled}>
-                                                {c.name[locale]} ({c.code}){!c.enabled ? ` — ${t("comingSoon")}` : ""}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
+                            name="currencyPosition"
+                            label={t("currency.position")}
+                            options={[
+                                { value: "left", label: t("currency.posLeft") },
+                                { value: "right", label: t("currency.posRight") },
+                                { value: "left_space", label: t("currency.posLeftSpace") },
+                                { value: "right_space", label: t("currency.posRightSpace") },
+                            ]}
                         />
-                    </Field>
-                    <SelectField
-                        control={control}
-                        name="currencyPosition"
-                        label={t("currency.position")}
-                        options={[
-                            { value: "left", label: t("currency.posLeft") },
-                            { value: "right", label: t("currency.posRight") },
-                            { value: "left_space", label: t("currency.posLeftSpace") },
-                            { value: "right_space", label: t("currency.posRightSpace") },
-                        ]}
-                    />
-                    <Field label={t("currency.thousandSep")}>
-                        <Input {...register("thousandSep")} dir="ltr" className="text-center" />
-                    </Field>
-                    <Field label={t("currency.decimalSep")} error={sepEqual ? t("currency.sepEqual") : undefined}>
-                        <Input {...register("decimalSep")} dir="ltr" className="text-center" aria-invalid={sepEqual} />
-                    </Field>
-                    <Field label={t("currency.numDecimals")}>
-                        <Input type="number" min={0} max={4} {...register("numDecimals", { valueAsNumber: true })} dir="ltr" />
-                    </Field>
-                    <div className="flex flex-col justify-end gap-1.5">
-                        <span className="text-muted-foreground text-xs">{t("currency.preview")}</span>
-                        <div className="flex h-9 items-center rounded-md border bg-muted/40 px-3 font-medium text-sm" dir="rtl">
-                            {preview}
+                    </div>
+                    <div className="flex flex-wrap items-start gap-4">
+                        <Field label={t("currency.thousandSep")} className="w-24">
+                            <Input {...register("thousandSep")} dir="ltr" className="text-center" />
+                        </Field>
+                        <Field
+                            label={t("currency.decimalSep")}
+                            className="w-24"
+                            error={sepEqual ? t("currency.sepEqual") : undefined}
+                        >
+                            <Input {...register("decimalSep")} dir="ltr" className="text-center" aria-invalid={sepEqual} />
+                        </Field>
+                        <Field label={t("currency.numDecimals")} className="w-24">
+                            <Input
+                                type="number"
+                                min={0}
+                                max={4}
+                                {...register("numDecimals", { valueAsNumber: true })}
+                                dir="ltr"
+                                className="text-center"
+                            />
+                        </Field>
+                        <div className="flex min-w-44 flex-1 flex-col gap-1.5">
+                            <Label className="text-sm">{t("currency.preview")}</Label>
+                            <div
+                                className="flex h-9 items-center rounded-md border border-dashed bg-muted/40 px-3 font-medium text-sm tabular-nums"
+                                dir="rtl"
+                            >
+                                {preview}
+                            </div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <StickyActionBar open={formState.isDirty}>
-                <div className="flex items-center gap-4">
-                    <span className="text-muted-foreground text-sm">{update.isError ? t("saveError") : t("unsaved")}</span>
-                    <Button type="button" variant="ghost" onClick={() => reset()} disabled={update.isPending}>
+            {/* Save bar — sticks to the bottom of the viewport while scrolling the form */}
+            <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 border-t bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+                <span className={cn("text-sm", update.isError ? "text-destructive" : "text-muted-foreground")}>
+                    {update.isError ? t("saveError") : formState.isDirty ? t("unsaved") : ""}
+                </span>
+                <div className="flex items-center gap-2">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => reset()}
+                        disabled={!formState.isDirty || update.isPending}
+                    >
                         {t("discard")}
                     </Button>
-                    <Button type="submit" disabled={!canSave}>
+                    <Button type="submit" disabled={!canSave} className="gap-2">
                         {update.isPending ? <Spinner className="size-4" /> : null}
                         {tRoot("save")}
                     </Button>
                 </div>
-            </StickyActionBar>
+            </div>
         </form>
     );
 }
@@ -292,7 +309,7 @@ function Field({
     label: string;
     error?: string;
     className?: string;
-    children: React.ReactNode;
+    children: ReactNode;
 }) {
     return (
         <div className={cn("flex flex-col gap-1.5", className)}>
@@ -303,22 +320,23 @@ function Field({
     );
 }
 
-function ToggleRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
+function ToggleRow({ label, description, children }: { label: string; description?: string; children: ReactNode }) {
     return (
-        <div className="flex items-center justify-between gap-3 py-2">
-            <div className="flex flex-col">
+        <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+            <div className="flex flex-col gap-0.5">
                 <Label className="text-sm">{label}</Label>
-                {description !== undefined ? <p className="text-muted-foreground text-xs">{description}</p> : null}
+                {description !== undefined ? (
+                    <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
+                ) : null}
             </div>
-            <div className="shrink-0">{children}</div>
+            <div className="shrink-0 pt-0.5">{children}</div>
         </div>
     );
 }
 
 interface SelectFieldProps {
-    // biome-ignore lint/suspicious/noExplicitAny: react-hook-form Control generic is verbose; the field name is type-checked at the call site.
-    control: any;
-    name: string;
+    control: Control<GeneralForm>;
+    name: keyof GeneralForm;
     label: string;
     options: { value: string; label: string }[];
 }
@@ -331,7 +349,7 @@ function SelectField({ control, name, label, options }: SelectFieldProps) {
                 name={name}
                 render={({ field }) => (
                     <Select
-                        value={field.value === "" ? "__empty__" : field.value}
+                        value={field.value === "" ? "__empty__" : String(field.value)}
                         onValueChange={(v) => field.onChange(v === "__empty__" ? "" : v)}
                     >
                         <SelectTrigger>

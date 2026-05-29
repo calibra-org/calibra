@@ -6,18 +6,34 @@ import { createContext, type ReactNode, useContext, useMemo } from "react";
 
 import { FALLBACK_MONEY_CONFIG } from "#/lib/currency/config";
 import { setActiveMoneyConfig } from "#/lib/format";
+import { type AdminGeneralSettings, useGeneralSettings } from "#/lib/queries/general-settings";
 
 const MoneyConfigContext = createContext<MoneyFormatConfig>(FALLBACK_MONEY_CONFIG);
 
+/** Derive the formatter config from the saved General settings (display currency row + format knobs). */
+export function deriveMoneyConfig(settings: AdminGeneralSettings): MoneyFormatConfig {
+    const row = settings.options.currencies.find((c) => c.code === settings.currency.display);
+    return {
+        symbol: row?.symbol ?? "",
+        position: settings.currency.position as MoneyFormatConfig["position"],
+        thousandSep: settings.currency.thousand_sep,
+        decimalSep: settings.currency.decimal_sep,
+        decimals: settings.currency.num_decimals,
+        baseRatio: row?.base_ratio && row.base_ratio > 0 ? row.base_ratio : 1,
+    };
+}
+
 /**
- * Provides the store's resolved money-format config to the whole admin. Mounted once in the
- * authenticated layout from a server-side fetch, so every cell/column/card formats prices through
- * the same currency config — no hardcoded ÷10 or baked-in symbols. Also points the pure
- * `formatMoney` singleton (used by non-context column builders) at the same config.
+ * App-wide money-format config. Seeded from a server fetch (`config`) for the first paint, then kept
+ * live by the shared General-settings query — so when an operator saves a new currency, the mutation
+ * updates that query and **every** price across the admin re-renders without a reload. Also points
+ * the pure `formatMoney` singleton (used by non-context column builders) at the same config.
  */
 export function MoneyFormatProvider({ config, children }: { config: MoneyFormatConfig; children: ReactNode }) {
-    setActiveMoneyConfig(config);
-    return <MoneyConfigContext.Provider value={config}>{children}</MoneyConfigContext.Provider>;
+    const { data } = useGeneralSettings();
+    const resolved = data ? deriveMoneyConfig(data) : config;
+    setActiveMoneyConfig(resolved);
+    return <MoneyConfigContext.Provider value={resolved}>{children}</MoneyConfigContext.Provider>;
 }
 
 export interface MoneyFormatter {

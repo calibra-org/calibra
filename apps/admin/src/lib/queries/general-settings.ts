@@ -18,6 +18,8 @@ export function useGeneralSettings() {
         queryKey: KEY(locale),
         queryFn: ({ signal }) => apiGet<{ data: AdminGeneralSettings }>("settings/general", { locale, signal }),
         select: (res) => res.data,
+        /** Drives the app-wide money config; refetch is unnecessary until a save updates the cache. */
+        staleTime: 5 * 60 * 1000,
     });
 }
 

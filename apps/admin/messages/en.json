@@ -3579,9 +3579,7 @@
                 "customerNone": "No location",
                 "customerBase": "Shop base address",
                 "customerGeo": "Geolocate",
-                "customerGeoCache": "Geolocate (with page caching)",
-                "autocomplete": "Enable address autocomplete",
-                "autocompleteHelp": "Requires an address provider (not available in the Iran scope)."
+                "customerGeoCache": "Geolocate (with page caching)"
             },
             "taxes": {
                 "title": "Taxes and coupons",

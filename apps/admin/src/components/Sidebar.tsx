@@ -70,7 +70,7 @@ const groups: NavGroup[] = [
             { href: "/tax", labelKey: "tax", icon: Wallet },
             { href: "/shipping", labelKey: "shipping", icon: Truck },
             { href: "/payments", labelKey: "payments", icon: CreditCard },
-            { href: "/settings", labelKey: "settings", icon: Settings },
+            { href: "/settings/general", labelKey: "settings", icon: Settings },
             { href: "/reports", labelKey: "reports", icon: BarChart3 },
         ],
     },
@@ -85,6 +85,8 @@ function isActive(pathname: string, href: string): boolean {
         if (pathname === "/products/new") return true;
         return /^\/products\/\d+(?:\/|$)/.test(pathname);
     }
+    /** Settings links straight to the General tab; keep the parent active across every settings tab. */
+    if (href === "/settings/general") return pathname === "/settings" || pathname.startsWith("/settings/");
     return pathname === href || pathname.startsWith(`${href}/`);
 }
 

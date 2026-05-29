@@ -13,7 +13,6 @@ export const generalFormSchema = z.object({
     sellingLocations: z.enum(["all", "all_except", "specific"]),
     shippingLocations: z.enum(["", "all", "specific", "disabled"]),
     defaultCustomerLocation: z.enum(["none", "base", "geolocation", "geolocation_ajax"]),
-    addressAutocomplete: z.boolean(),
     taxesEnabled: z.boolean(),
     couponsEnabled: z.boolean(),
     calcDiscountsSequentially: z.boolean(),
@@ -38,7 +37,6 @@ export function toForm(settings: AdminGeneralSettings): GeneralForm {
         sellingLocations: settings.general_options.selling_locations,
         shippingLocations: settings.general_options.shipping_locations,
         defaultCustomerLocation: settings.general_options.default_customer_location,
-        addressAutocomplete: settings.general_options.address_autocomplete,
         taxesEnabled: settings.taxes_and_coupons.taxes_enabled,
         couponsEnabled: settings.taxes_and_coupons.coupons_enabled,
         calcDiscountsSequentially: settings.taxes_and_coupons.calc_discounts_sequentially,
@@ -65,7 +63,6 @@ export function toUpdate(values: GeneralForm): AdminGeneralSettingsUpdate {
             selling_locations: values.sellingLocations,
             shipping_locations: values.shippingLocations,
             default_customer_location: values.defaultCustomerLocation,
-            address_autocomplete: values.addressAutocomplete,
         },
         taxes_and_coupons: {
             taxes_enabled: values.taxesEnabled,
