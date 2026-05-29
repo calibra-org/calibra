@@ -13,6 +13,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { formatNumber } from "#/lib/format";
 import type { AdminTag, LocalizedString } from "#/lib/types";
 
+import { type InspectorVariant, inspectorFormClassName } from "../_taxonomy-shared/inspector-surface";
 import { slugify } from "../_taxonomy-shared/slugify";
 
 /**
@@ -35,6 +36,8 @@ interface TagInspectorProps {
     onSave: (draft: AdminTagDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
+    /** Outer surface — `card` (default) for the management aside, `plain` inside the detail sheet. */
+    variant?: InspectorVariant;
 }
 
 /**
@@ -52,6 +55,7 @@ export function TagInspector({
     onSave,
     onDelete,
     onClose,
+    variant,
 }: TagInspectorProps) {
     const t = useTranslations("Tags.inspector");
 
@@ -75,6 +79,7 @@ export function TagInspector({
             onSave={onSave}
             onDelete={onDelete}
             onClose={onClose}
+            variant={variant}
         />
     );
 }
@@ -117,9 +122,21 @@ interface InspectorFormProps {
     onSave: (draft: AdminTagDraft) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
+    variant?: InspectorVariant;
 }
 
-function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, onSave, onDelete, onClose }: InspectorFormProps) {
+function InspectorForm({
+    t,
+    draft,
+    selected,
+    locale,
+    submitting,
+    onDraftChange,
+    onSave,
+    onDelete,
+    onClose,
+    variant,
+}: InspectorFormProps) {
     const [slugTouched, setSlugTouched] = useState(false);
     const isNew = draft.id < 0;
 
@@ -156,10 +173,7 @@ function InspectorForm({ t, draft, selected, locale, submitting, onDraftChange, 
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="flex h-full flex-col gap-5 rounded-2xl border border-border/60 bg-card p-5 shadow-sm"
-        >
+        <form onSubmit={handleSubmit} className={inspectorFormClassName(variant)}>
             <header className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex items-center gap-2">

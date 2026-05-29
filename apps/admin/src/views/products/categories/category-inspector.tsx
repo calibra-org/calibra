@@ -15,6 +15,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { formatNumber } from "#/lib/format";
 import type { AdminCategory, LocalizedString } from "#/lib/types";
 
+import { type InspectorVariant, inspectorFormClassName } from "../_taxonomy-shared/inspector-surface";
 import { slugify } from "../_taxonomy-shared/slugify";
 
 import { collectSubtreeIds } from "./build-tree";
@@ -42,6 +43,8 @@ interface CategoryInspectorProps {
     onSave: (draft: AdminCategoryLike) => void;
     onDelete: (id: number) => void;
     onClose: () => void;
+    /** Outer surface — `card` (default) for the management aside, `plain` inside the detail sheet. */
+    variant?: InspectorVariant;
 }
 
 /**
@@ -59,6 +62,7 @@ export function CategoryInspector({
     onSave,
     onDelete,
     onClose,
+    variant,
 }: CategoryInspectorProps) {
     const t = useTranslations("Categories.inspector");
 
@@ -78,6 +82,7 @@ export function CategoryInspector({
             onDelete={onDelete}
             onClose={onClose}
             onCreateNew={onCreateNew}
+            variant={variant}
         />
     );
 }
@@ -121,6 +126,7 @@ interface InspectorFormProps {
     onDelete: (id: number) => void;
     onClose: () => void;
     onCreateNew: (parentId: number | null) => void;
+    variant?: InspectorVariant;
 }
 
 function InspectorForm({
@@ -134,6 +140,7 @@ function InspectorForm({
     onDelete,
     onClose,
     onCreateNew,
+    variant,
 }: InspectorFormProps) {
     const isNew = draft.id < 0;
 
@@ -182,7 +189,7 @@ function InspectorForm({
                 event.preventDefault();
                 onSave(draft);
             }}
-            className="flex h-full flex-col gap-5 rounded-2xl border border-border/60 bg-card p-5 shadow-sm"
+            className={inspectorFormClassName(variant)}
         >
             <header className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-1">

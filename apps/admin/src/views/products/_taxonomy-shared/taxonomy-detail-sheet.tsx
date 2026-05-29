@@ -121,6 +121,7 @@ function BrandSheetBody({ id, onClose }: { id: number; onClose: () => void }) {
     return (
         <SheetState isPending={isPending} isError={isError} ready={draft !== null}>
             <BrandInspector
+                variant="plain"
                 draft={draft}
                 selected={draft}
                 locale={locale}
@@ -167,6 +168,7 @@ function TagSheetBody({ id, onClose }: { id: number; onClose: () => void }) {
     return (
         <SheetState isPending={isPending} isError={isError} ready={draft !== null}>
             <TagInspector
+                variant="plain"
                 draft={draft}
                 selected={draft}
                 locale={locale}
@@ -219,6 +221,7 @@ function CategorySheetBody({ id, onClose }: { id: number; onClose: () => void })
     return (
         <SheetState isPending={isPending} isError={isError} ready={draft !== null}>
             <CategoryInspector
+                variant="plain"
                 rows={list.data?.data ?? []}
                 selected={draft}
                 draft={draft}
