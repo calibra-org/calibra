@@ -1,6 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
+import { Package, ReceiptText, TrendingUp, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -46,21 +47,29 @@ export function OrdersView() {
             label: t("metrics.orders"),
             value: num(totals?.orders ?? 0),
             delta: buildDelta(totals?.orders ?? 0, prior?.orders, cmp),
+            icon: ReceiptText,
+            tone: "default",
         },
         {
             label: t("metrics.netSales"),
             value: money(totals?.net_sales ?? 0),
             delta: buildDelta(totals?.net_sales ?? 0, prior?.net_sales, cmp),
+            icon: Wallet,
+            tone: "success",
         },
         {
             label: t("metrics.aov"),
             value: money(totals?.avg_order_value ?? 0),
             delta: buildDelta(totals?.avg_order_value ?? 0, prior?.avg_order_value, cmp),
+            icon: TrendingUp,
+            tone: "success",
         },
         {
             label: t("metrics.avgItems"),
             value: num(totals?.avg_items_per_order ?? 0),
             delta: buildDelta(totals?.avg_items_per_order ?? 0, prior?.avg_items_per_order, cmp),
+            icon: Package,
+            tone: "info",
         },
     ];
 

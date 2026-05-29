@@ -1,62 +1,133 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 
-import { Card, CardContent } from "#/components/ui/card";
+import { Sparkline } from "#/components/Sparkline";
+import { CardContent, CardRoot } from "#/components/ui/card";
 import { cn } from "#/lib/utils";
+
+/**
+ * Visual category for the tile — drives the icon-block background + accent and the sparkline
+ * stroke colour. Pick the tone that matches the metric's meaning, not its current direction
+ * (`returns` is always `danger` even when it's zero; `net_sales` is always `success`).
+ */
+export type StatCardTone = "default" | "success" | "info" | "warning" | "danger" | "neutral";
+
+export interface StatCardDelta {
+    /** Signed change vs the comparison window. Positive renders the up-arrow + green chip. */
+    value: number;
+    /** `percent` renders `+12.3%`; `absolute` renders `+12` (suited to counts like new customers). */
+    unit?: "percent" | "absolute";
+    /** Caption next to the chip, e.g. `"vs last week"` / `"از ۳۰ روز پیش"`. */
+    comparison: string;
+}
 
 interface StatCardProps {
     label: string;
     value: string;
-    delta?: {
-        /** Signed percentage change vs the comparison window. */
-        percent: number;
-        /** Human label for the comparison window (e.g. `"vs last week"`). */
-        comparison: string;
-    };
-    /**
-     * Optional one-line caption rendered below the delta (or value, if no delta is supplied).
-     * Use it to declare what the metric means — e.g. "Registered in the last 24h".
-     */
+    delta?: StatCardDelta;
+    /** Optional one-line caption rendered under the value (or under the delta when both are set). */
     description?: string;
     icon?: ComponentType<SVGProps<SVGSVGElement>>;
+    /** Drives the icon-block colour. Default is the primary brand colour. */
+    tone?: StatCardTone;
+    /** Daily series rendered as an inline sparkline beneath the delta. */
+    sparkline?: number[];
+    sparklineLabel?: string;
+    className?: string;
 }
 
-export function StatCard({ label, value, delta, description, icon: Icon }: StatCardProps) {
-    const trendingUp = (delta?.percent ?? 0) >= 0;
+/**
+ * Pair-of-classes lookup for each tone — applied to the colored 40×40 icon block on the start
+ * edge of the card. Uses the design-system semantic tokens (`--primary`/`--success`/`--info`/
+ * `--warning`/`--danger`) so dark mode inherits automatically.
+ */
+const ICON_STYLES: Record<StatCardTone, string> = {
+    default: "bg-primary/12 text-primary",
+    success: "bg-success/14 text-success",
+    info: "bg-info/14 text-info",
+    warning: "bg-warning/16 text-warning",
+    danger: "bg-danger/14 text-danger",
+    neutral: "bg-muted text-muted-foreground",
+};
+
+/** Sparkline tone derived from the StatCard tone so the inline series matches the icon accent. */
+const SPARK_TONES: Record<StatCardTone, "positive" | "negative" | "neutral"> = {
+    default: "neutral",
+    success: "positive",
+    info: "neutral",
+    warning: "neutral",
+    danger: "negative",
+    neutral: "neutral",
+};
+
+/**
+ * Universal KPI tile used across the dashboard and the analytics reports. Horizontal layout: a
+ * 40×40 tone-coloured icon block on the start edge, then a stacked content column (label, value,
+ * delta pill + comparison, optional description, optional sparkline). Padding is tight (`p-4`)
+ * and the value renders with tabular numerals so a row of tiles always aligns. The sparkline is
+ * a regular flex child — never absolute-positioned — so it can't collide with the delta line.
+ */
+export function StatCard({
+    label,
+    value,
+    delta,
+    description,
+    icon: Icon,
+    tone = "default",
+    sparkline,
+    sparklineLabel,
+    className,
+}: StatCardProps) {
+    const trendingUp = (delta?.value ?? 0) >= 0;
     const TrendIcon = trendingUp ? TrendingUp : TrendingDown;
+    const formattedDelta = delta
+        ? delta.unit === "absolute"
+            ? `${trendingUp ? "+" : ""}${Math.round(delta.value)}`
+            : `${trendingUp ? "+" : ""}${delta.value.toFixed(1)}%`
+        : null;
+    const showSparkline = sparkline !== undefined && sparkline.length > 0;
 
     return (
-        <Card className="gap-3 py-5">
-            <CardContent className="flex flex-col gap-3">
-                <div className="flex items-start justify-between">
+        <CardRoot className={cn("overflow-hidden", className)}>
+            <CardContent className="flex items-start gap-3 p-4">
+                {Icon !== undefined && (
+                    <div className={cn("grid size-10 shrink-0 place-items-center rounded-lg", ICON_STYLES[tone])}>
+                        <Icon className="size-5" aria-hidden="true" />
+                    </div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{label}</span>
-                    {Icon !== undefined && (
-                        <div className="grid size-9 place-items-center rounded-md bg-accent text-accent-foreground">
-                            <Icon className="size-4" aria-hidden="true" />
+                    <span className="font-semibold text-2xl tabular-nums leading-tight tracking-tight">{value}</span>
+                    {delta !== undefined && (
+                        <div className="flex items-center gap-1.5 text-xs">
+                            <span
+                                className={cn(
+                                    "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium",
+                                    trendingUp ? "bg-success/10 text-success" : "bg-danger/10 text-danger",
+                                )}
+                            >
+                                <TrendIcon className="size-3" aria-hidden="true" />
+                                <span className="tabular-nums">{formattedDelta}</span>
+                            </span>
+                            <span className="truncate text-muted-foreground">{delta.comparison}</span>
+                        </div>
+                    )}
+                    {description !== undefined && (
+                        <span className="text-muted-foreground text-xs leading-snug">{description}</span>
+                    )}
+                    {showSparkline && (
+                        <div className="mt-1">
+                            <Sparkline
+                                values={sparkline}
+                                width={140}
+                                height={28}
+                                tone={SPARK_TONES[tone]}
+                                ariaLabel={sparklineLabel}
+                            />
                         </div>
                     )}
                 </div>
-
-                <div className="font-semibold text-2xl tracking-tight">{value}</div>
-
-                {delta !== undefined && (
-                    <div className="flex items-center gap-1.5 text-xs">
-                        <span
-                            className={cn(
-                                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium",
-                                trendingUp ? "bg-success/10 text-success" : "bg-danger/10 text-danger",
-                            )}
-                        >
-                            <TrendIcon className="size-3" aria-hidden="true" />
-                            {trendingUp ? "+" : ""}
-                            {delta.percent.toFixed(1)}%
-                        </span>
-                        <span className="text-muted-foreground">{delta.comparison}</span>
-                    </div>
-                )}
-
-                {description !== undefined && <span className="text-muted-foreground text-xs leading-snug">{description}</span>}
             </CardContent>
-        </Card>
+        </CardRoot>
     );
 }

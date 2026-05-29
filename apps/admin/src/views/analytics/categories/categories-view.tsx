@@ -1,6 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
+import { Package, ReceiptText, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -34,16 +35,22 @@ export function CategoriesView() {
             label: t("metrics.itemsSold"),
             value: num(totals?.items_sold ?? 0),
             delta: buildDelta(totals?.items_sold ?? 0, prior?.items_sold, cmp),
+            icon: Package,
+            tone: "info",
         },
         {
             label: t("metrics.netSales"),
             value: money(totals?.net_sales ?? 0),
             delta: buildDelta(totals?.net_sales ?? 0, prior?.net_sales, cmp),
+            icon: Wallet,
+            tone: "success",
         },
         {
             label: t("metrics.orders"),
             value: num(totals?.orders ?? 0),
             delta: buildDelta(totals?.orders ?? 0, prior?.orders, cmp),
+            icon: ReceiptText,
+            tone: "default",
         },
     ];
 

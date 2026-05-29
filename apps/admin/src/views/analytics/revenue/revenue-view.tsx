@@ -1,6 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
+import { BadgePercent, CircleDollarSign, Receipt, TrendingUp, Truck, Undo2, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -33,32 +34,50 @@ export function RevenueView() {
             label: t("metrics.grossSales"),
             value: money(totals?.gross_sales ?? 0),
             delta: buildDelta(totals?.gross_sales ?? 0, prior?.gross_sales, cmp),
+            icon: TrendingUp,
+            tone: "success",
         },
         {
             label: t("metrics.returns"),
             value: money(totals?.returns ?? 0),
             delta: buildDelta(totals?.returns ?? 0, prior?.returns, cmp),
+            icon: Undo2,
+            tone: "danger",
         },
         {
             label: t("metrics.coupons"),
             value: money(totals?.coupons ?? 0),
             delta: buildDelta(totals?.coupons ?? 0, prior?.coupons, cmp),
+            icon: BadgePercent,
+            tone: "warning",
         },
         {
             label: t("metrics.netSales"),
             value: money(totals?.net_sales ?? 0),
             delta: buildDelta(totals?.net_sales ?? 0, prior?.net_sales, cmp),
+            icon: Wallet,
+            tone: "success",
         },
-        { label: t("metrics.taxes"), value: money(totals?.taxes ?? 0), delta: buildDelta(totals?.taxes ?? 0, prior?.taxes, cmp) },
+        {
+            label: t("metrics.taxes"),
+            value: money(totals?.taxes ?? 0),
+            delta: buildDelta(totals?.taxes ?? 0, prior?.taxes, cmp),
+            icon: Receipt,
+            tone: "info",
+        },
         {
             label: t("metrics.shipping"),
             value: money(totals?.shipping ?? 0),
             delta: buildDelta(totals?.shipping ?? 0, prior?.shipping, cmp),
+            icon: Truck,
+            tone: "neutral",
         },
         {
             label: t("metrics.totalSales"),
             value: money(totals?.total_sales ?? 0),
             delta: buildDelta(totals?.total_sales ?? 0, prior?.total_sales, cmp),
+            icon: CircleDollarSign,
+            tone: "success",
         },
     ];
 

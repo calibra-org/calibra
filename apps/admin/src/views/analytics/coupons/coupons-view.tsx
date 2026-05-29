@@ -1,6 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
+import { BadgePercent, CircleDollarSign } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -34,11 +35,15 @@ export function CouponsView() {
             label: t("metrics.discountedOrders"),
             value: num(totals?.discounted_orders ?? 0),
             delta: buildDelta(totals?.discounted_orders ?? 0, prior?.discounted_orders, cmp),
+            icon: BadgePercent,
+            tone: "warning",
         },
         {
             label: t("metrics.amount"),
             value: money(totals?.amount ?? 0),
             delta: buildDelta(totals?.amount ?? 0, prior?.amount, cmp),
+            icon: CircleDollarSign,
+            tone: "warning",
         },
     ];
 

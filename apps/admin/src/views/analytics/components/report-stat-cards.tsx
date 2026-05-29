@@ -2,7 +2,7 @@
 
 import type { ComponentType, SVGProps } from "react";
 
-import { StatCard } from "#/components/StatCard";
+import { StatCard, type StatCardTone } from "#/components/StatCard";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Link } from "#/lib/i18n/navigation";
 import { cn } from "#/lib/utils";
@@ -10,9 +10,12 @@ import { cn } from "#/lib/utils";
 export interface ReportStat {
     label: string;
     value: string;
-    delta?: { percent: number; comparison: string };
+    delta?: { value: number; comparison: string };
     description?: string;
     icon?: ComponentType<SVGProps<SVGSVGElement>>;
+    /** Drives the icon-block colour so each metric is visually distinct on a row of tiles. */
+    tone?: StatCardTone;
+    sparkline?: number[];
     /** When set, the tile becomes a deep-link into the matching report (Overview pattern). */
     href?: string;
 }
@@ -33,7 +36,7 @@ export function ReportStatCards({ items, isLoading, columns }: { items: ReportSt
             <div className={cn("grid grid-cols-1 gap-3", colClass)}>
                 {Array.from({ length: columns ?? items.length ?? 4 }).map((_, i) => (
                     // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
-                    <Skeleton key={i} className="h-28 rounded-lg" />
+                    <Skeleton key={i} className="h-24 rounded-lg" />
                 ))}
             </div>
         );
@@ -53,6 +56,8 @@ export function ReportStatCards({ items, isLoading, columns }: { items: ReportSt
                             delta={item.delta}
                             description={item.description}
                             icon={item.icon}
+                            tone={item.tone}
+                            sparkline={item.sparkline}
                         />
                     </Link>
                 ) : (
@@ -63,6 +68,8 @@ export function ReportStatCards({ items, isLoading, columns }: { items: ReportSt
                         delta={item.delta}
                         description={item.description}
                         icon={item.icon}
+                        tone={item.tone}
+                        sparkline={item.sparkline}
                     />
                 ),
             )}
@@ -73,6 +80,6 @@ export function ReportStatCards({ items, isLoading, columns }: { items: ReportSt
 /** Build a StatCard delta from a current/prior pair, or `undefined` when there's no comparison. */
 export function buildDelta(current: number, prior: number | undefined, comparison: string): ReportStat["delta"] {
     if (prior === undefined) return undefined;
-    if (prior === 0) return { percent: current === 0 ? 0 : 100, comparison };
-    return { percent: Math.round(((current - prior) / prior) * 1000) / 10, comparison };
+    if (prior === 0) return { value: current === 0 ? 0 : 100, comparison };
+    return { value: Math.round(((current - prior) / prior) * 1000) / 10, comparison };
 }

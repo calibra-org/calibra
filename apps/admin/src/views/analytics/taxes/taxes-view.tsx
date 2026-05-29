@@ -1,6 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
+import { Calculator, Receipt, ReceiptText, Truck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -34,21 +35,29 @@ export function TaxesView() {
             label: t("metrics.totalTax"),
             value: money(totals?.taxes ?? 0),
             delta: buildDelta(totals?.taxes ?? 0, prior?.taxes, cmp),
+            icon: Calculator,
+            tone: "info",
         },
         {
             label: t("metrics.orderTax"),
             value: money(totals?.order_tax ?? 0),
             delta: buildDelta(totals?.order_tax ?? 0, prior?.order_tax, cmp),
+            icon: Receipt,
+            tone: "neutral",
         },
         {
             label: t("metrics.shippingTax"),
             value: money(totals?.shipping_tax ?? 0),
             delta: buildDelta(totals?.shipping_tax ?? 0, prior?.shipping_tax, cmp),
+            icon: Truck,
+            tone: "neutral",
         },
         {
             label: t("metrics.orders"),
             value: num(totals?.orders ?? 0),
             delta: buildDelta(totals?.orders ?? 0, prior?.orders, cmp),
+            icon: ReceiptText,
+            tone: "default",
         },
     ];
 

@@ -156,7 +156,7 @@ interface StatCardWrapperProps {
     isPending: boolean;
     isError: boolean;
     value: string;
-    delta?: { percent: number; comparison: string };
+    delta?: { value: number; comparison: string };
     description?: string;
 }
 
@@ -193,7 +193,7 @@ function OrdersTodayCard({ label, comparison, locale }: { label: string; compari
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatNumber(data, locale) : ""}
-            delta={{ percent: 0, comparison }}
+            delta={{ value: 0, comparison }}
         />
     );
 }
@@ -207,7 +207,7 @@ function RevenueTodayCard({ label, comparison, locale }: { label: string; compar
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatMoney(data, locale) : ""}
-            delta={{ percent: 0, comparison }}
+            delta={{ value: 0, comparison }}
         />
     );
 }
@@ -221,7 +221,7 @@ function ActiveProductsCard({ label, comparison, locale }: { label: string; comp
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatNumber(data, locale) : ""}
-            delta={{ percent: 0, comparison }}
+            delta={{ value: 0, comparison }}
         />
     );
 }
@@ -258,7 +258,7 @@ function NewCustomersCard({
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatNumber(data, locale) : ""}
-            delta={{ percent: 0, comparison }}
+            delta={{ value: 0, comparison }}
             description={description}
         />
     );

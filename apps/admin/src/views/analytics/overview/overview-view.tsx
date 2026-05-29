@@ -35,6 +35,7 @@ export function OverviewView() {
             value: money(totals?.total_sales ?? 0),
             delta: buildDelta(totals?.total_sales ?? 0, prior?.total_sales, cmp),
             icon: Wallet,
+            tone: "success",
             href: "/analytics/revenue",
         },
         {
@@ -42,6 +43,7 @@ export function OverviewView() {
             value: money(totals?.net_sales ?? 0),
             delta: buildDelta(totals?.net_sales ?? 0, prior?.net_sales, cmp),
             icon: TrendingUp,
+            tone: "success",
             href: "/analytics/revenue",
         },
         {
@@ -49,6 +51,7 @@ export function OverviewView() {
             value: num(totals?.orders ?? 0),
             delta: buildDelta(totals?.orders ?? 0, prior?.orders, cmp),
             icon: ReceiptText,
+            tone: "default",
             href: "/analytics/orders",
         },
         {
@@ -56,6 +59,7 @@ export function OverviewView() {
             value: num(totals?.products_sold ?? 0),
             delta: buildDelta(totals?.products_sold ?? 0, prior?.products_sold, cmp),
             icon: Package,
+            tone: "info",
             href: "/analytics/products",
         },
         {
@@ -63,6 +67,7 @@ export function OverviewView() {
             value: num(totals?.variations_sold ?? 0),
             delta: buildDelta(totals?.variations_sold ?? 0, prior?.variations_sold, cmp),
             icon: Boxes,
+            tone: "info",
             href: "/analytics/products",
         },
     ];

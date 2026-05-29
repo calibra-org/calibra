@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "#/components/ui/button";
@@ -45,10 +46,10 @@ function Segmented<T extends string>({
 }
 
 /**
- * Shared analytics toolbar: the existing date-filter chip + a comparison-mode segmented control + a
- * chart-interval segmented control. All three write to the URL via {@link useAnalyticsParams}, so the
- * window persists across reports. On the Stock report (a current snapshot) the date / compare /
- * interval controls are hidden — pass `showWindow={false}`.
+ * Shared analytics toolbar: the existing date-filter chip on the start edge + grouped comparison +
+ * interval segmented controls + an icon-only refresh on the end edge. Wraps cleanly on narrower
+ * viewports because the trailing group is one flex child (not 4 individual ones). On the Stock
+ * report — a current snapshot — the windowed controls are hidden by `showWindow={false}`.
  */
 export function AnalyticsToolbar({ showWindow = true }: { showWindow?: boolean }) {
     const t = useTranslations("Analytics");
@@ -80,18 +81,26 @@ export function AnalyticsToolbar({ showWindow = true }: { showWindow?: boolean }
                 allowedOperators={["within", "in", "before", "after"]}
                 allowedGranularities={["day", "month", "quarter", "half_year", "year"]}
             />
-            <span className="text-muted-foreground text-xs">{t("compare.label")}</span>
-            <Segmented value={compare} options={compareOptions} onChange={setCompare} />
-            <span className="ms-2 text-muted-foreground text-xs">{t("interval.label")}</span>
-            <Segmented value={intervalMode} options={intervalOptions} onChange={setInterval} />
-            <Button
-                variant="ghost"
-                size="sm"
-                className="ms-auto"
-                onClick={() => queryClient.invalidateQueries({ queryKey: ["analytics"] })}
-            >
-                {t("refresh")}
-            </Button>
+            <div className="ms-auto flex flex-wrap items-center gap-x-3 gap-y-2">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground text-xs">{t("compare.label")}</span>
+                    <Segmented value={compare} options={compareOptions} onChange={setCompare} />
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground text-xs">{t("interval.label")}</span>
+                    <Segmented value={intervalMode} options={intervalOptions} onChange={setInterval} />
+                </div>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    onClick={() => queryClient.invalidateQueries({ queryKey: ["analytics"] })}
+                    aria-label={t("refresh")}
+                    title={t("refresh")}
+                >
+                    <RefreshCw className="size-3.5" aria-hidden="true" />
+                </Button>
+            </div>
         </div>
     );
 }
