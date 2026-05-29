@@ -152,7 +152,7 @@ export function SheetBody({ className, isLoading, children, ...props }: Componen
                     <Skeleton className="h-4 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
                     <Skeleton className="h-4 w-2/3" />
-                    <Skeleton className="h-32 w-full" animation="shimmer" />
+                    <Skeleton className="h-32 w-full" />
                 </div>
             ) : (
                 (children as ReactNode)

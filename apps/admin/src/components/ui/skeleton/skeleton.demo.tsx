@@ -5,7 +5,7 @@ export function SkeletonDemo() {
     return (
         <div className="flex flex-col gap-6">
             <section className="flex flex-col gap-2">
-                <h3 className="font-medium text-sm">Pulse (default)</h3>
+                <h3 className="font-medium text-sm">Text lines</h3>
                 <div className="flex flex-col gap-2">
                     <Skeleton className="h-4 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
@@ -14,8 +14,8 @@ export function SkeletonDemo() {
             </section>
 
             <section className="flex flex-col gap-2">
-                <h3 className="font-medium text-sm">Shimmer (overlay gradient pass)</h3>
-                <Skeleton className="h-32 w-full" animation="shimmer" />
+                <h3 className="font-medium text-sm">Wide block</h3>
+                <Skeleton className="h-32 w-full" />
             </section>
 
             <section className="flex flex-col gap-2">

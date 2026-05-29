@@ -1,23 +1,11 @@
-import { tv, type VariantProps } from "tailwind-variants";
+import { tv } from "tailwind-variants";
 
 /**
- * Skeleton shimmer variants. `pulse` is the default soft fade; `shimmer` overlays a moving
- * gradient — better for wide blocks where a uniform pulse reads as "nothing's happening".
+ * Single shimmer style for every skeleton. The moving highlight lives in `.skeleton-shimmer`
+ * (see `styles/globals.css`) as an animated `background-position` sweep, so it composes with any
+ * width / height / radius the caller sets. There's no `pulse` variant any more — one consistent
+ * loading affordance across the whole app.
  */
 export const skeletonVariants = tv({
-    base: "rounded-md bg-muted motion-reduce:animate-none",
-    variants: {
-        animation: {
-            pulse: "animate-pulse",
-            shimmer: [
-                "relative overflow-hidden",
-                "after:absolute after:inset-0 after:translate-x-[-100%]",
-                "after:bg-gradient-to-r after:from-transparent after:via-foreground/5 after:to-transparent",
-                "after:animate-[shimmer_1.6s_infinite]",
-            ].join(" "),
-        },
-    },
-    defaultVariants: { animation: "pulse" },
+    base: "skeleton-shimmer rounded-md",
 });
-
-export type SkeletonVariants = VariantProps<typeof skeletonVariants>;
