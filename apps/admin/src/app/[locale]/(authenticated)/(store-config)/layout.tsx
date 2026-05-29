@@ -17,7 +17,7 @@ export default async function StoreConfigLayout({ children, params }: LayoutProp
     const { locale } = await params;
     setRequestLocale(locale);
     return (
-        <div className="grid w-full max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
+        <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[210px_minmax(0,1fr)]">
             <aside>
                 <SettingsNav />
             </aside>

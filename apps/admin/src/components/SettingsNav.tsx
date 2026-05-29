@@ -8,24 +8,28 @@ import { Link, usePathname } from "#/lib/i18n/navigation";
 import { cn } from "#/lib/utils";
 
 interface SettingsTab {
+    /** Link target — each section's real first page (never a redirect-only index route). */
     href: string;
+    /** Path prefix used for active-state matching across the section's subpages. */
+    match: string;
     labelKey: string;
     icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
 /**
  * Store-configuration tabs. Tax / shipping / payments live here (folded out of the main sidebar)
- * alongside the General tab, each linking to its dedicated section.
+ * alongside the General tab. Each `href` targets the section's first real page directly, bypassing
+ * the redirect-only index routes (which trip a Next dev `performance.measure` error).
  */
 const TABS: SettingsTab[] = [
-    { href: "/settings/general", labelKey: "general", icon: Settings2 },
-    { href: "/tax", labelKey: "tax", icon: Wallet },
-    { href: "/shipping", labelKey: "shipping", icon: Truck },
-    { href: "/payments", labelKey: "payments", icon: Banknote },
+    { href: "/settings/general", match: "/settings", labelKey: "general", icon: Settings2 },
+    { href: "/tax/classes", match: "/tax", labelKey: "tax", icon: Wallet },
+    { href: "/shipping/zones", match: "/shipping", labelKey: "shipping", icon: Truck },
+    { href: "/payments", match: "/payments", labelKey: "payments", icon: Banknote },
 ];
 
-function isActive(pathname: string, href: string): boolean {
-    return pathname === href || pathname.startsWith(`${href}/`);
+function isActive(pathname: string, match: string): boolean {
+    return pathname === match || pathname.startsWith(`${match}/`);
 }
 
 export function SettingsNav() {
@@ -34,8 +38,8 @@ export function SettingsNav() {
     const pathname = usePathname();
     return (
         <nav aria-label={tNav("groupsNav")} className="flex flex-col gap-1 text-sm">
-            {TABS.map(({ href, labelKey, icon: Icon }) => {
-                const active = isActive(pathname, href);
+            {TABS.map(({ href, match, labelKey, icon: Icon }) => {
+                const active = isActive(pathname, match);
                 return (
                     <Link
                         key={href}

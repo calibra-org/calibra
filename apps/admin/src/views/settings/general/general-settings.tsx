@@ -145,7 +145,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                 <CardHeader className="border-b pb-4">
                     <CardTitle className="text-base">{t("generalOptions.title")}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-5 pt-6">
+                <CardContent className="grid grid-cols-1 gap-x-6 gap-y-5 pt-6 lg:grid-cols-2">
                     <SelectField
                         control={control}
                         name="sellingLocations"
