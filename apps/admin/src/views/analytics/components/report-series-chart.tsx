@@ -65,7 +65,7 @@ export function ReportSeriesChart({
     const hasData = data.some((d) => d.value !== 0 || (d.compare ?? 0) !== 0);
 
     return (
-        <CardRoot className="gap-0 py-0">
+        <CardRoot className="gap-0 p-0">
             <CardHeader className="px-5 pt-5 pb-3">
                 <CardTitle className="text-base">{title}</CardTitle>
             </CardHeader>
