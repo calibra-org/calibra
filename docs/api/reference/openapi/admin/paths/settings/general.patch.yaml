@@ -1,0 +1,32 @@
+operationId: adminSettingsGeneralUpdate
+summary: Update General settings (admin)
+description: >
+    Partial update of the General-tab settings. Only changed keys are written (same-value writes are
+    no-ops — no audit row). Saving a currency-affecting key invalidates the public currency cache.
+    Returns the fresh settings + option lists.
+tags: [Admin / Settings]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                $ref: "../../components/schemas/AdminGeneralSettingsUpdate.yaml"
+
+responses:
+    "200":
+        description: Updated General settings + option lists.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/AdminGeneralSettings.yaml"
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

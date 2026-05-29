@@ -1,4 +1,6 @@
 import cache from "@adonisjs/cache/services/main";
+import db from "@adonisjs/lucid/services/db";
+import { DateTime } from "luxon";
 
 import Setting, { type SettingValueType } from "#models/setting";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
@@ -23,8 +25,20 @@ export default class SettingsService {
         return fallback;
     }
 
+    /**
+     * Upsert a single setting row. Uses a raw `INSERT … ON CONFLICT (group_key, key) DO UPDATE`
+     * (same shape as the seeder) rather than `Setting.updateOrCreate` — the `settings` table has a
+     * composite primary key `(group_key, key)`, and Lucid's model `.save()` keys its UPDATE off a
+     * single primary column, which would clobber every row in the group. `value` is JSONB so it is
+     * stringified to reach Postgres as a JSON literal.
+     */
     async set(group: string, key: string, value: unknown, type: SettingValueType): Promise<void> {
-        await Setting.updateOrCreate({ groupKey: group, key }, { value, type });
+        const now = DateTime.utc().toSQL();
+        await db
+            .table("settings")
+            .insert({ group_key: group, key, value: JSON.stringify(value), type, created_at: now, updated_at: now })
+            .onConflict(["group_key", "key"])
+            .merge(["value", "type", "updated_at"]);
         await this.invalidate(group);
     }
 

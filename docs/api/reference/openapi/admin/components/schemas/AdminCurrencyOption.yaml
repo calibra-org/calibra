@@ -1,0 +1,28 @@
+title: AdminCurrencyOption
+description: >
+    One row of the supported-currency reference set, used to populate the currency picker. Only the
+    Iranian Rial family is `enabled`; disabled rows render greyed-out (extensibility is visible, not
+    hidden). `base_ratio` is BASE (Rial) minor units per major unit — `0` for non-Rial currencies
+    that have no defined ratio yet.
+type: object
+required: [code, symbol, name, decimals, position, base_ratio, enabled]
+properties:
+    code:
+        type: string
+        examples: ["IRT"]
+    symbol:
+        type: string
+        examples: ["تومان"]
+    name:
+        $ref: "../../../common/components/schemas/LocalizedName.yaml"
+    decimals:
+        type: integer
+        minimum: 0
+    position:
+        type: string
+        enum: [left, right, left_space, right_space]
+    base_ratio:
+        type: integer
+        minimum: 0
+    enabled:
+        type: boolean

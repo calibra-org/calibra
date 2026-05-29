@@ -5,9 +5,30 @@ import { baseMinorToMajor, formatMoney, type MoneyFormatConfig, parseMajorToBase
 /** Non-breaking space — formatMoney puts it between number and symbol (matches WC `&nbsp;`). */
 const SP = "\u00a0";
 
-const TOMAN: MoneyFormatConfig = { symbol: "تومان", position: "right_space", thousandSep: "٬", decimalSep: ".", decimals: 0, baseRatio: 10 };
-const RIAL: MoneyFormatConfig = { symbol: "ریال", position: "right_space", thousandSep: "٬", decimalSep: ".", decimals: 0, baseRatio: 1 };
-const CENTS: MoneyFormatConfig = { symbol: "$", position: "left", thousandSep: ",", decimalSep: ".", decimals: 2, baseRatio: 100 };
+const TOMAN: MoneyFormatConfig = {
+    symbol: "تومان",
+    position: "right_space",
+    thousandSep: "٬",
+    decimalSep: ".",
+    decimals: 0,
+    baseRatio: 10,
+};
+const RIAL: MoneyFormatConfig = {
+    symbol: "ریال",
+    position: "right_space",
+    thousandSep: "٬",
+    decimalSep: ".",
+    decimals: 0,
+    baseRatio: 1,
+};
+const CENTS: MoneyFormatConfig = {
+    symbol: "$",
+    position: "left",
+    thousandSep: ",",
+    decimalSep: ".",
+    decimals: 2,
+    baseRatio: 100,
+};
 
 test.group("money / formatMoney — display currency + ratio", () => {
     test("Toman divides BASE Rial by base_ratio (10), 0 decimals", ({ assert }) => {
@@ -49,9 +70,12 @@ test.group("money / formatMoney — separators + decimals", () => {
 test.group("money / formatMoney — symbol position", () => {
     const n = 1_250_000;
     test("left", ({ assert }) => assert.equal(formatMoney(n, { ...TOMAN, position: "left" }, { locale: "en" }), "تومان125٬000"));
-    test("right", ({ assert }) => assert.equal(formatMoney(n, { ...TOMAN, position: "right" }, { locale: "en" }), "125٬000تومان"));
-    test("left_space", ({ assert }) => assert.equal(formatMoney(n, { ...TOMAN, position: "left_space" }, { locale: "en" }), `تومان${SP}125٬000`));
-    test("right_space", ({ assert }) => assert.equal(formatMoney(n, { ...TOMAN, position: "right_space" }, { locale: "en" }), `125٬000${SP}تومان`));
+    test("right", ({ assert }) =>
+        assert.equal(formatMoney(n, { ...TOMAN, position: "right" }, { locale: "en" }), "125٬000تومان"));
+    test("left_space", ({ assert }) =>
+        assert.equal(formatMoney(n, { ...TOMAN, position: "left_space" }, { locale: "en" }), `تومان${SP}125٬000`));
+    test("right_space", ({ assert }) =>
+        assert.equal(formatMoney(n, { ...TOMAN, position: "right_space" }, { locale: "en" }), `125٬000${SP}تومان`));
 });
 
 test.group("money / convert — round-trip", () => {

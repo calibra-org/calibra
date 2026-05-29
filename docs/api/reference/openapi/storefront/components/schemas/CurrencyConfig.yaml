@@ -1,0 +1,41 @@
+title: CurrencyConfig
+description: >
+    Resolved display-currency configuration. Money is stored in BASE (Rial) minor units; the
+    storefront and admin both build a money formatter from this so prices render identically.
+    `base_ratio` is the number of BASE minor units per one major unit of the display currency
+    (IRT → 10). Mirrors WooCommerce's `wc_price()` formatting inputs.
+type: object
+required: [base, display]
+properties:
+    base:
+        type: string
+        description: Immutable stored currency code (Rial).
+        examples: ["IRR"]
+    display:
+        type: object
+        required: [code, symbol, name, position, thousand_sep, decimal_sep, num_decimals, base_ratio]
+        properties:
+            code:
+                type: string
+                examples: ["IRT"]
+            symbol:
+                type: string
+                examples: ["تومان"]
+            name:
+                $ref: "../../../common/components/schemas/LocalizedName.yaml"
+            position:
+                type: string
+                enum: [left, right, left_space, right_space]
+            thousand_sep:
+                type: string
+                examples: ["٬"]
+            decimal_sep:
+                type: string
+                examples: ["."]
+            num_decimals:
+                type: integer
+                minimum: 0
+            base_ratio:
+                type: integer
+                minimum: 1
+                description: BASE (Rial) minor units per one major unit of the display currency.

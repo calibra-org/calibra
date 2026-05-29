@@ -275,6 +275,35 @@ export class CouponSchema extends BaseModel {
   declare usageLimitPerUser: number | null
 }
 
+export class CurrencySchema extends BaseModel {
+  static $columns = ['baseRatio', 'code', 'createdAt', 'decimals', 'enabled', 'id', 'nameEn', 'nameFa', 'ordering', 'position', 'symbol', 'updatedAt'] as const
+  $columns = CurrencySchema.$columns
+  @column()
+  declare baseRatio: number
+  @column()
+  declare code: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare decimals: number
+  @column()
+  declare enabled: boolean
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare nameEn: string
+  @column()
+  declare nameFa: string
+  @column()
+  declare ordering: number
+  @column()
+  declare position: string
+  @column()
+  declare symbol: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
 export class CustomerAddressSchema extends BaseModel {
   static $columns = ['addressLine1', 'addressLine2', 'attributes', 'city', 'company', 'country', 'createdAt', 'customerId', 'firstName', 'id', 'isDefault', 'kind', 'label', 'lastName', 'phone', 'postcode', 'regionId', 'regionText', 'updatedAt'] as const
   $columns = CustomerAddressSchema.$columns

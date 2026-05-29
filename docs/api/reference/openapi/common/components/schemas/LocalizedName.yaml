@@ -1,0 +1,11 @@
+title: LocalizedName
+description: A display name carried in both supported locales (Persian + English).
+type: object
+required: [fa, en]
+properties:
+    fa:
+        type: string
+        examples: ["تومان"]
+    en:
+        type: string
+        examples: ["Iranian toman"]
