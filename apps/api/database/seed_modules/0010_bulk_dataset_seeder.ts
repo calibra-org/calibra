@@ -257,9 +257,15 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         await this.client.from("order_tax_lines").whereIn("order_id", ordersFilter).delete();
         await this.client.from("order_shipping_lines").whereIn("order_id", ordersFilter).delete();
         await this.client.from("order_coupon_lines").whereIn("order_id", ordersFilter).delete();
+        await this.client
+            .from("order_refund_line_items")
+            .whereIn("refund_id", this.client.from("order_refunds").select("id").whereIn("order_id", ordersFilter))
+            .delete();
+        await this.client.from("order_refunds").whereIn("order_id", ordersFilter).delete();
         await this.client.from("order_status_history").whereIn("order_id", ordersFilter).delete();
         await this.client.from("order_addresses").whereIn("order_id", ordersFilter).delete();
         await this.client.from("orders").whereIn("id", ordersFilter).delete();
+        await this.client.from("coupons").where("code", "like", "BULK_%").delete();
 
         await this.client.from("product_reviews").whereIn("product_id", productsFilter).delete();
 
@@ -1254,7 +1260,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 faker.datatype.boolean({ probability: 0.15 }) && itemsTotal > 1_000_000
                     ? Math.floor(itemsTotal * faker.number.float({ min: 0.05, max: 0.2 }))
                     : 0;
-            const taxTotal = Math.floor((itemsTotal - discountTotal + shippingTotal) * 0.09);
+            const itemsTaxTotal = Math.floor((itemsTotal - discountTotal) * 0.09);
+            const shippingTaxTotal = Math.floor(shippingTotal * 0.09);
+            const taxTotal = itemsTaxTotal + shippingTaxTotal;
             const grandTotal = itemsTotal + shippingTotal + taxTotal - discountTotal;
 
             orderRows.push({
@@ -1268,9 +1276,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 billing_email: customer.email,
                 created_via: "checkout",
                 items_total: itemsTotal,
-                items_tax_total: 0,
+                items_tax_total: itemsTaxTotal,
                 shipping_total: shippingTotal,
-                shipping_tax_total: 0,
+                shipping_tax_total: shippingTaxTotal,
                 fees_total: 0,
                 fees_tax_total: 0,
                 discount_total: discountTotal,
@@ -1378,7 +1386,173 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             historyCount += chunk.length;
         }
 
+        /**
+         * Per-order tax / coupon / refund rows. The orders carry the right totals on the `orders`
+         * row already, but the analytics report tables (Coupons, Taxes, Revenue's Returns column)
+         * join through these line tables — without them, three reports show empty groups.
+         */
+        const taxRateRow = (await this.client.from("tax_rates").select(["id", "rate"]).first()) as
+            | { id: number | string; rate: string | number }
+            | null
+            | undefined;
+        const taxRateId = taxRateRow ? Number(taxRateRow.id) : null;
+
+        const taxLineRows: Array<Record<string, unknown>> = [];
+        for (let i = 0; i < insertedOrderIds.length; i += 1) {
+            const order = orderRows[i]!;
+            if ((order.tax_total as number) <= 0) continue;
+            taxLineRows.push({
+                order_id: insertedOrderIds[i]!,
+                tax_rate_id_snapshot: taxRateId,
+                rate_code_snapshot: "VAT-9",
+                label_snapshot: "مالیات بر ارزش افزوده",
+                rate_percent_snapshot: 9,
+                compound_snapshot: false,
+                tax_total: order.items_tax_total as number,
+                shipping_tax_total: order.shipping_tax_total as number,
+                created_at: order.created_at as string,
+                updated_at: order.updated_at as string,
+            });
+        }
+        for (const chunk of chunked(taxLineRows, BATCH)) {
+            await this.client.table("order_tax_lines").insert(chunk);
+        }
+
+        const bulkCoupons = await this.ensureBulkCoupons(now);
+        const couponLineRows: Array<Record<string, unknown>> = [];
+        for (let i = 0; i < insertedOrderIds.length; i += 1) {
+            const order = orderRows[i]!;
+            if ((order.discount_total as number) <= 0 || bulkCoupons.length === 0) continue;
+            const coupon = faker.helpers.arrayElement(bulkCoupons);
+            couponLineRows.push({
+                order_id: insertedOrderIds[i]!,
+                coupon_id: coupon.id,
+                code_snapshot: coupon.code,
+                discount: order.discount_total as number,
+                discount_tax: 0,
+                created_at: order.created_at as string,
+                updated_at: order.created_at as string,
+            });
+        }
+        for (const chunk of chunked(couponLineRows, BATCH)) {
+            await this.client.table("order_coupon_lines").insert(chunk);
+        }
+
+        const maxRefundRow = (await this.client.from("order_refunds").max("refund_number as max").first()) as
+            | { max: string | number | null }
+            | undefined;
+        let nextRefundNumber = Math.max(200_000, Number(maxRefundRow?.max ?? 0) + 1);
+        const refundRows: Array<Record<string, unknown>> = [];
+        for (let i = 0; i < insertedOrderIds.length; i += 1) {
+            const order = orderRows[i]!;
+            const status = order.status as string;
+            const grandTotal = order.grand_total as number;
+            const taxTotal = order.tax_total as number;
+            const createdAt = order.created_at as string;
+            let amountMinor = 0;
+            let taxAmountMinor = 0;
+            let reason: string | null = null;
+            if (status === "refunded") {
+                amountMinor = grandTotal;
+                taxAmountMinor = taxTotal;
+                reason = faker.helpers.arrayElement(["مرجوعی مشتری", "عدم تطابق محصول", "ایراد فنی"]);
+            } else if ((status === "completed" || status === "processing") && faker.datatype.boolean({ probability: 0.03 })) {
+                const fraction = faker.number.float({ min: 0.2, max: 0.5 });
+                amountMinor = Math.max(1, Math.floor(grandTotal * fraction));
+                taxAmountMinor = Math.floor(taxTotal * fraction);
+                reason = "بازگشت جزئی";
+            }
+            if (amountMinor <= 0) continue;
+            refundRows.push({
+                order_id: insertedOrderIds[i]!,
+                refund_number: nextRefundNumber,
+                amount_minor: amountMinor,
+                tax_amount_minor: taxAmountMinor,
+                reason,
+                restock_requested: false,
+                gateway_refund_id: null,
+                processed_at: createdAt,
+                attributes: { bulk_seed: true },
+                created_at: createdAt,
+                updated_at: createdAt,
+            });
+            nextRefundNumber += 1;
+        }
+        for (const chunk of chunked(refundRows, BATCH)) {
+            await this.client.table("order_refunds").insert(chunk);
+        }
+        if (refundRows.length > 0) {
+            await this.client.raw(`ALTER SEQUENCE refund_number_seq RESTART WITH ${nextRefundNumber}`);
+        }
+
         return { orders: insertedOrderIds.length, lineItems: lineCount, history: historyCount };
+    }
+
+    /**
+     * Upsert a small pool of bulk-tagged coupons (BULK_*) so the seeded orders' coupon lines link
+     * to real coupon rows — that's what makes the Coupons report's `Created` / `Expires` / `Type`
+     * columns render instead of `—`. Idempotent on code: a second run inserts zero new rows.
+     */
+    private async ensureBulkCoupons(now: string): Promise<Array<{ id: number; code: string }>> {
+        const specs: Array<{
+            code: string;
+            type: "percent" | "fixed_cart" | "fixed_product" | "free_shipping";
+            amountMinor: number | null;
+            amountPercent: string | null;
+            freeShipping?: boolean;
+        }> = [
+            { code: "BULK_WELCOME10", type: "percent", amountMinor: null, amountPercent: "10.00" },
+            { code: "BULK_SUMMER15", type: "percent", amountMinor: null, amountPercent: "15.00" },
+            { code: "BULK_VIP20", type: "percent", amountMinor: null, amountPercent: "20.00" },
+            { code: "BULK_FLASH25", type: "percent", amountMinor: null, amountPercent: "25.00" },
+            { code: "BULK_NEW30", type: "percent", amountMinor: null, amountPercent: "30.00" },
+            { code: "BULK_LOYAL12", type: "percent", amountMinor: null, amountPercent: "12.00" },
+            { code: "BULK_CART200K", type: "fixed_cart", amountMinor: 2_000_000, amountPercent: null },
+            { code: "BULK_CART500K", type: "fixed_cart", amountMinor: 5_000_000, amountPercent: null },
+            { code: "BULK_CART1M", type: "fixed_cart", amountMinor: 10_000_000, amountPercent: null },
+            { code: "BULK_CART2M", type: "fixed_cart", amountMinor: 20_000_000, amountPercent: null },
+            { code: "BULK_HOLIDAY", type: "fixed_cart", amountMinor: 3_000_000, amountPercent: null },
+            { code: "BULK_ITEM50K", type: "fixed_product", amountMinor: 500_000, amountPercent: null },
+            { code: "BULK_ITEM100K", type: "fixed_product", amountMinor: 1_000_000, amountPercent: null },
+            { code: "BULK_ITEM250K", type: "fixed_product", amountMinor: 2_500_000, amountPercent: null },
+            { code: "BULK_SHIP", type: "free_shipping", amountMinor: null, amountPercent: null, freeShipping: true },
+        ];
+        const codes = specs.map((s) => s.code);
+        const existing = (await this.client.from("coupons").select(["id", "code"]).whereIn("code", codes)) as Array<{
+            id: number | string;
+            code: string;
+        }>;
+        const existingCodes = new Set(existing.map((r) => String(r.code).toUpperCase()));
+        const toInsert = specs.filter((s) => !existingCodes.has(s.code.toUpperCase()));
+        if (toInsert.length > 0) {
+            const expires = DateTime.fromSQL(now).plus({ years: 2 }).toSQL();
+            const rows = toInsert.map((s) => ({
+                code: s.code,
+                discount_type: s.type,
+                amount_minor: s.amountMinor,
+                amount_percent: s.amountPercent,
+                starts_at: null,
+                expires_at: expires,
+                individual_use: false,
+                exclude_sale_items: false,
+                minimum_amount: null,
+                maximum_amount: null,
+                usage_limit_global: null,
+                usage_limit_per_user: null,
+                limit_usage_to_x_items: null,
+                free_shipping: s.freeShipping ?? false,
+                status: "active",
+                attributes: { bulk_seed: true },
+                created_at: now,
+                updated_at: now,
+            }));
+            await this.client.table("coupons").insert(rows);
+        }
+        const allRows = (await this.client.from("coupons").select(["id", "code"]).whereIn("code", codes)) as Array<{
+            id: number | string;
+            code: string;
+        }>;
+        return allRows.map((r) => ({ id: Number(r.id), code: String(r.code) }));
     }
 
     private async seedReviews(targetCount: number, now: string): Promise<number> {

@@ -26,16 +26,19 @@ export default class MainSeeder extends BaseSeeder {
         await this.runSeeder(await import("#database/seed_modules/0002_attributes_seeder"));
 
         /**
-         * Demo dataset for dev + tests: 250 products / 80 users (+ the FIXED_ADMINS roster) with
-         * derived orders + reviews. Bumped from 100/50 so the admin list shows multiple pages,
-         * every status tab has rows, and the facet popovers (category / brand / tag) all render
-         * with meaningful counts. Still completes in a handful of seconds.
+         * Demo dataset for dev + tests: 1500 products / 3000 users (+ the FIXED_ADMINS roster) +
+         * an explicit **8000 orders** distributed across the last 18 months — overrides the default
+         * 20%-of-customers ratio so the analytics dashboard has dense trend lines (≈15 orders/day),
+         * the Coupons / Taxes / Returns columns show real volume (the seeder also writes
+         * order_tax_lines, order_coupon_lines linked to a 15-coupon BULK_ pool, and order_refunds
+         * for refunded + ≈3% of completed orders), and every list page shows multiple pages with
+         * meaningful facet counts. Still completes in ~15s on dev Postgres.
          *
          * For production-scale data, run `node ace db:bulk-seed` explicitly.
          */
         const { default: BulkDatasetSeeder } = await import("#database/seed_modules/0010_bulk_dataset_seeder");
         const bulk = new BulkDatasetSeeder(this.client);
-        bulk.setOptions({ products: 250, users: 80 });
+        bulk.setOptions({ products: 1500, users: 3000, orders: 8000, reviews: 4800 });
         await bulk.run();
 
         await this.runSeeder(await import("#database/seed_modules/0006_coupons_demo_seeder"));
