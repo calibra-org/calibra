@@ -198,8 +198,6 @@ export default class AdminSettingsGeneralController {
                     value: opts.default_customer_location,
                     type: "string",
                 });
-            if (opts.address_autocomplete !== undefined)
-                writes.push({ group: "general", key: "address_autocomplete", value: opts.address_autocomplete, type: "boolean" });
         }
 
         const tc = payload.taxes_and_coupons;

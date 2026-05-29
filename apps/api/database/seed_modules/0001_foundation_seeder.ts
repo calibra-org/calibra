@@ -418,7 +418,6 @@ const SETTINGS: SettingRow[] = [
     { group: "general", key: "shipping_locations", value: "", type: "string" },
     { group: "general", key: "shipping_locations_specific", value: ["IR"], type: "json" },
     { group: "general", key: "default_customer_location", value: "base", type: "string" },
-    { group: "general", key: "address_autocomplete", value: false, type: "boolean" },
     /**
      * Currency display config (WC Currency options). `currency` above is the immutable stored
      * BASE; `currency_display_default` is the chosen DISPLAY currency (WC `woocommerce_currency`).

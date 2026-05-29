@@ -23,7 +23,6 @@ properties:
             shipping_locations: { type: string, enum: ["", all, specific, disabled] }
             shipping_locations_specific: { type: array, items: { type: string } }
             default_customer_location: { type: string, enum: [none, base, geolocation, geolocation_ajax] }
-            address_autocomplete: { type: boolean }
     taxes_and_coupons:
         type: object
         properties:

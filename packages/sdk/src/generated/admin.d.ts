@@ -4040,7 +4040,6 @@ export interface components {
                 shipping_locations_specific: string[];
                 /** @enum {string} */
                 default_customer_location: "none" | "base" | "geolocation" | "geolocation_ajax";
-                address_autocomplete: boolean;
             };
             taxes_and_coupons: {
                 taxes_enabled: boolean;
@@ -4102,7 +4101,6 @@ export interface components {
                 shipping_locations_specific?: string[];
                 /** @enum {string} */
                 default_customer_location?: "none" | "base" | "geolocation" | "geolocation_ajax";
-                address_autocomplete?: boolean;
             };
             taxes_and_coupons?: {
                 taxes_enabled?: boolean;

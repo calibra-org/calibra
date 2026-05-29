@@ -26,7 +26,6 @@ export const adminGeneralSettingsUpdateValidator = vine.compile(
                 shipping_locations: vine.enum(["", "all", "specific", "disabled"]).optional(),
                 shipping_locations_specific: vine.array(vine.string().trim().maxLength(2)).optional(),
                 default_customer_location: vine.enum(["none", "base", "geolocation", "geolocation_ajax"]).optional(),
-                address_autocomplete: vine.boolean().optional(),
             })
             .optional(),
         taxes_and_coupons: vine

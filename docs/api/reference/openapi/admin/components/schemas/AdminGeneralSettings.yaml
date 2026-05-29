@@ -30,7 +30,6 @@ properties:
             - shipping_locations
             - shipping_locations_specific
             - default_customer_location
-            - address_autocomplete
         properties:
             selling_locations:
                 type: string
@@ -50,7 +49,6 @@ properties:
             default_customer_location:
                 type: string
                 enum: [none, base, geolocation, geolocation_ajax]
-            address_autocomplete: { type: boolean }
     taxes_and_coupons:
         type: object
         required: [taxes_enabled, coupons_enabled, calc_discounts_sequentially]

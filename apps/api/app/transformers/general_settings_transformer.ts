@@ -45,7 +45,6 @@ export function toGeneralSettings(input: GeneralSettingsInput) {
             shipping_locations: str("shipping_locations", ""),
             shipping_locations_specific: list("shipping_locations_specific"),
             default_customer_location: str("default_customer_location", "base"),
-            address_autocomplete: flag(general, "address_autocomplete", false),
         },
         taxes_and_coupons: {
             taxes_enabled: flag(tax, "enabled", true),
