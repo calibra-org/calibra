@@ -735,6 +735,7 @@
                 "compact": "Compact"
             },
             "wrapColumn": "Wrap text to multiple lines",
+            "reorderColumn": "Reorder column",
             "clearAll": "Clear all",
             "clearFilter": "Clear",
             "filters": {

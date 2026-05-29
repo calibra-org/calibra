@@ -538,6 +538,9 @@ export function ProductsList() {
                                     onDensityChange={ui.setDensity}
                                     columnWrap={ui.columnWrap}
                                     onColumnWrapChange={ui.setColumnWrap}
+                                    columnOrder={ui.columnOrder}
+                                    onColumnOrderChange={ui.setColumnOrder}
+                                    pinnedIds={["select", "favorite", "image", "name", "actions"]}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),
@@ -548,6 +551,7 @@ export function ProductsList() {
                                             compact: t("density.compact"),
                                         },
                                         wrapColumn: t("wrapColumn"),
+                                        reorderColumn: t("reorderColumn"),
                                     }}
                                 />
                             }

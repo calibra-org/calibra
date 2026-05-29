@@ -735,6 +735,7 @@
                 "compact": "فشرده"
             },
             "wrapColumn": "شکستن متن در چند خط",
+            "reorderColumn": "جابجایی ستون",
             "clearAll": "پاک کردن همه",
             "clearFilter": "پاک کردن",
             "filters": {

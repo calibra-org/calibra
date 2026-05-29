@@ -1,14 +1,32 @@
 "use client";
 
+import {
+    closestCenter,
+    DndContext,
+    type DragEndEvent,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Settings2 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
 
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Radio, RadioGroup } from "#/components/ui/radio";
 import { ScrollArea } from "#/components/ui/scroll-area";
-import { List } from "#/icons";
+import { GripVertical, List } from "#/icons";
 import { cn } from "#/lib/utils";
 
 import type { DataTableDensity } from "./types";
@@ -29,6 +47,14 @@ interface DataTableViewOptionsProps {
     /** Per-column wrap flags + setter. When omitted, the wrap toggle is hidden. */
     columnWrap?: Record<string, boolean>;
     onColumnWrapChange?: (next: Record<string, boolean>) => void;
+    /**
+     * Persisted middle-column order + setter. When both are present each reorderable row gets a
+     * drag handle and the list becomes the canonical reorder surface (mirrors the header drag).
+     */
+    columnOrder?: string[];
+    onColumnOrderChange?: (next: string[]) => void;
+    /** Pinned column ids (sticky start/end). They show in the list but can't be dragged. */
+    pinnedIds?: string[];
     labels: {
         trigger: string;
         columnsHeading: string;
@@ -36,12 +62,16 @@ interface DataTableViewOptionsProps {
         density: Record<DataTableDensity, string>;
         /** Tooltip for the per-column wrap toggle. Required only when `onColumnWrapChange` is set. */
         wrapColumn?: string;
+        /** Accessible label for the drag handle. Required only when `onColumnOrderChange` is set. */
+        reorderColumn?: string;
     };
 }
 
 /**
- * View options popover: groups column visibility checkboxes and the density radio in one
- * surface so the toolbar's right shoulder stays at a single icon button.
+ * View options popover: column visibility + drag-to-reorder + a density radio in one surface so
+ * the toolbar's right shoulder stays a single icon button. When `onColumnOrderChange` is wired,
+ * reorderable rows carry a drag handle; pinned rows stay put. The reorder emitted here is the
+ * same middle-order the header drag feeds, so both stay in sync.
  */
 export function DataTableViewOptions({
     columns,
@@ -51,13 +81,55 @@ export function DataTableViewOptions({
     onDensityChange,
     columnWrap,
     onColumnWrapChange,
+    columnOrder,
+    onColumnOrderChange,
+    pinnedIds,
     labels,
 }: DataTableViewOptionsProps) {
+    const pinned = useMemo(() => new Set(pinnedIds ?? []), [pinnedIds]);
+    const reorderEnabled = onColumnOrderChange !== undefined;
+
     const toggle = (id: string) => {
         onVisibilityChange({ ...visibility, [id]: visibility[id] === false });
     };
     const toggleWrap = (id: string) => {
         onColumnWrapChange?.({ ...columnWrap, [id]: !(columnWrap?.[id] === true) });
+    };
+
+    /** A column reorders when ordering is enabled, it's hideable, and it isn't pinned to an edge. */
+    const isReorderable = (item: ColumnVisibilityItem) => reorderEnabled && item.canHide && !pinned.has(item.id);
+
+    /**
+     * Show rows in the live order: reorderable columns sorted by the persisted middle order,
+     * then the locked (pinned / non-hideable) rows after them. Pinned ids aren't in `columnOrder`,
+     * so they naturally fall to the tail.
+     */
+    const orderedColumns = useMemo(() => {
+        if (columnOrder === undefined || columnOrder.length === 0) return columns;
+        const rank = (id: string) => {
+            const index = columnOrder.indexOf(id);
+            return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+        };
+        return [...columns].sort((a, b) => rank(a.id) - rank(b.id));
+    }, [columns, columnOrder]);
+
+    const reorderableIds = useMemo(
+        () => orderedColumns.filter((c) => reorderEnabled && c.canHide && !pinned.has(c.id)).map((c) => c.id),
+        [orderedColumns, reorderEnabled, pinned],
+    );
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+
+    const onDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over === null || active.id === over.id || onColumnOrderChange === undefined) return;
+        const from = reorderableIds.indexOf(active.id as string);
+        const to = reorderableIds.indexOf(over.id as string);
+        if (from === -1 || to === -1) return;
+        onColumnOrderChange(arrayMove(reorderableIds, from, to));
     };
 
     return (
@@ -76,52 +148,32 @@ export function DataTableViewOptions({
                         {labels.columnsHeading}
                     </p>
                     <ScrollArea viewportClassName="max-h-72">
-                        <ul className="flex flex-col">
-                            {columns.map((column) => {
-                                const checked = visibility[column.id] !== false;
-                                const wrapped = columnWrap?.[column.id] === true;
-                                return (
-                                    <li key={column.id} className="flex items-center gap-1">
-                                        <button
-                                            type="button"
-                                            disabled={!column.canHide}
-                                            onClick={() => column.canHide && toggle(column.id)}
-                                            className={cn(
-                                                "flex flex-1 cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-sm outline-none",
-                                                "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
-                                                !column.canHide && "cursor-not-allowed opacity-50",
-                                            )}
-                                        >
-                                            <Checkbox
-                                                checked={checked}
-                                                disabled={!column.canHide}
-                                                tabIndex={-1}
-                                                onCheckedChange={() => {
-                                                    /** Handled by the surrounding button. */
-                                                }}
-                                            />
-                                            <span className="flex-1 truncate">{column.label}</span>
-                                        </button>
-                                        {onColumnWrapChange !== undefined && column.canHide && (
-                                            <button
-                                                type="button"
-                                                onClick={() => toggleWrap(column.id)}
-                                                title={labels.wrapColumn}
-                                                aria-label={labels.wrapColumn}
-                                                aria-pressed={wrapped}
-                                                className={cn(
-                                                    "rounded-sm p-1.5 text-muted-foreground outline-none transition-colors",
-                                                    "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
-                                                    wrapped && "bg-primary/10 text-primary",
-                                                )}
-                                            >
-                                                <List className="size-3.5" aria-hidden="true" />
-                                            </button>
-                                        )}
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            modifiers={[restrictToVerticalAxis]}
+                            onDragEnd={onDragEnd}
+                        >
+                            <SortableContext items={reorderableIds} strategy={verticalListSortingStrategy}>
+                                {/** `pe-2` keeps rows clear of the overlay scrollbar on the inline-end edge. */}
+                                <ul className="flex flex-col pe-2">
+                                    {orderedColumns.map((column) => (
+                                        <ColumnRow
+                                            key={column.id}
+                                            column={column}
+                                            checked={visibility[column.id] !== false}
+                                            wrapped={columnWrap?.[column.id] === true}
+                                            reorderable={isReorderable(column)}
+                                            showWrap={onColumnWrapChange !== undefined && column.canHide}
+                                            reorderLabel={labels.reorderColumn}
+                                            wrapLabel={labels.wrapColumn}
+                                            onToggle={() => toggle(column.id)}
+                                            onToggleWrap={() => toggleWrap(column.id)}
+                                        />
+                                    ))}
+                                </ul>
+                            </SortableContext>
+                        </DndContext>
                     </ScrollArea>
                 </div>
                 <hr className="border-border" />
@@ -152,5 +204,93 @@ export function DataTableViewOptions({
                 </div>
             </PopoverContent>
         </Popover>
+    );
+}
+
+interface ColumnRowProps {
+    column: ColumnVisibilityItem;
+    checked: boolean;
+    wrapped: boolean;
+    reorderable: boolean;
+    showWrap: boolean;
+    reorderLabel?: string;
+    wrapLabel?: string;
+    onToggle: () => void;
+    onToggleWrap: () => void;
+}
+
+/** One column row: drag handle (when reorderable) + visibility checkbox + label + wrap toggle. */
+function ColumnRow({
+    column,
+    checked,
+    wrapped,
+    reorderable,
+    showWrap,
+    reorderLabel,
+    wrapLabel,
+    onToggle,
+    onToggleWrap,
+}: ColumnRowProps) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: column.id,
+        disabled: !reorderable,
+    });
+
+    return (
+        <li
+            ref={setNodeRef}
+            style={{ transform: CSS.Translate.toString(transform), transition }}
+            className={cn("flex items-center gap-1 rounded-sm", isDragging && "bg-accent/60")}
+        >
+            {reorderable ? (
+                <button
+                    type="button"
+                    aria-label={reorderLabel}
+                    {...attributes}
+                    {...listeners}
+                    className="grid size-6 shrink-0 cursor-grab touch-none place-items-center text-muted-foreground/50 outline-none hover:text-foreground focus-visible:text-foreground"
+                >
+                    <GripVertical className="size-3.5" aria-hidden="true" />
+                </button>
+            ) : (
+                <span className="size-6 shrink-0" aria-hidden="true" />
+            )}
+            <button
+                type="button"
+                disabled={!column.canHide}
+                onClick={() => column.canHide && onToggle()}
+                className={cn(
+                    "flex flex-1 cursor-pointer items-center gap-2 rounded-sm px-1.5 py-1.5 text-start text-sm outline-none",
+                    "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
+                    !column.canHide && "cursor-not-allowed opacity-50",
+                )}
+            >
+                <Checkbox
+                    checked={checked}
+                    disabled={!column.canHide}
+                    tabIndex={-1}
+                    onCheckedChange={() => {
+                        /** Handled by the surrounding button. */
+                    }}
+                />
+                <span className="flex-1 truncate">{column.label}</span>
+            </button>
+            {showWrap && (
+                <button
+                    type="button"
+                    onClick={onToggleWrap}
+                    title={wrapLabel}
+                    aria-label={wrapLabel}
+                    aria-pressed={wrapped}
+                    className={cn(
+                        "rounded-sm p-1.5 text-muted-foreground outline-none transition-colors",
+                        "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
+                        wrapped && "bg-primary/10 text-primary",
+                    )}
+                >
+                    <List className="size-3.5" aria-hidden="true" />
+                </button>
+            )}
+        </li>
     );
 }
