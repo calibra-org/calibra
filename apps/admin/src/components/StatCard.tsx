@@ -88,21 +88,23 @@ export function StatCard({
     const showSparkline = sparkline !== undefined && sparkline.length > 0;
 
     return (
-        <CardRoot className={cn("overflow-hidden", className)}>
+        <CardRoot className={cn("gap-0 overflow-hidden p-0", className)}>
             <CardContent className="flex items-start gap-3 p-4">
                 {Icon !== undefined && (
-                    <div className={cn("grid size-10 shrink-0 place-items-center rounded-lg", ICON_STYLES[tone])}>
-                        <Icon className="size-5" aria-hidden="true" />
+                    <div className={cn("grid size-9 shrink-0 place-items-center rounded-md", ICON_STYLES[tone])}>
+                        <Icon className="size-4" aria-hidden="true" />
                     </div>
                 )}
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{label}</span>
-                    <span className="font-semibold text-2xl tabular-nums leading-tight tracking-tight">{value}</span>
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="font-medium text-[0.7rem] text-muted-foreground uppercase tracking-wide">{label}</span>
+                    <span className="truncate font-semibold text-foreground text-lg tabular-nums leading-snug tracking-tight">
+                        {value}
+                    </span>
                     {delta !== undefined && (
-                        <div className="flex items-center gap-1.5 text-xs">
+                        <div className="mt-0.5 flex items-center gap-1.5 text-xs">
                             <span
                                 className={cn(
-                                    "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium",
+                                    "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium",
                                     trendingUp ? "bg-success/10 text-success" : "bg-danger/10 text-danger",
                                 )}
                             >
@@ -113,14 +115,14 @@ export function StatCard({
                         </div>
                     )}
                     {description !== undefined && (
-                        <span className="text-muted-foreground text-xs leading-snug">{description}</span>
+                        <span className="mt-0.5 text-muted-foreground text-xs leading-snug">{description}</span>
                     )}
                     {showSparkline && (
-                        <div className="mt-1">
+                        <div className="-mx-0.5 mt-1.5">
                             <Sparkline
                                 values={sparkline}
                                 width={140}
-                                height={28}
+                                height={24}
                                 tone={SPARK_TONES[tone]}
                                 ariaLabel={sparklineLabel}
                             />
