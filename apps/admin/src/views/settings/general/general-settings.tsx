@@ -14,6 +14,7 @@ import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Spinner } from "#/components/ui/spinner";
+import { StickyActionBar } from "#/components/ui/sticky-action-bar";
 import { Switch } from "#/components/ui/switch";
 import { type AdminGeneralSettings, useGeneralSettings, useUpdateGeneralSettings } from "#/lib/queries/general-settings";
 import { cn } from "#/lib/utils";
@@ -276,18 +277,13 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                 </CardContent>
             </Card>
 
-            {/* Save bar — sticks to the bottom of the viewport while scrolling the form */}
-            <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 border-t bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-                <span className={cn("text-sm", update.isError ? "text-destructive" : "text-muted-foreground")}>
-                    {update.isError ? t("saveError") : formState.isDirty ? t("unsaved") : ""}
-                </span>
-                <div className="flex items-center gap-2">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => reset()}
-                        disabled={!formState.isDirty || update.isPending}
-                    >
+            {/* Floating, bottom-center action pill — slides up when there are unsaved changes */}
+            <StickyActionBar open={formState.isDirty}>
+                <div className="flex items-center gap-4">
+                    <span className={cn("text-sm", update.isError ? "text-destructive" : "text-muted-foreground")}>
+                        {update.isError ? t("saveError") : t("unsaved")}
+                    </span>
+                    <Button type="button" variant="ghost" onClick={() => reset()} disabled={update.isPending}>
                         {t("discard")}
                     </Button>
                     <Button type="submit" disabled={!canSave} className="gap-2">
@@ -295,7 +291,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                         {tRoot("save")}
                     </Button>
                 </div>
-            </div>
+            </StickyActionBar>
         </form>
     );
 }
