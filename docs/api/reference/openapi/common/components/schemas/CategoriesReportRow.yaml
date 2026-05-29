@@ -1,0 +1,11 @@
+title: CategoriesReportRow
+description: One category in the Categories report — units / net sales / distinct products sold / orders.
+type: object
+required: [category_id, name, items_sold, net_sales, products, orders]
+properties:
+    category_id: { type: integer }
+    name: { type: string }
+    items_sold: { type: integer, minimum: 0 }
+    net_sales: { $ref: "./Money.yaml" }
+    products: { type: integer, minimum: 0 }
+    orders: { type: integer, minimum: 0 }

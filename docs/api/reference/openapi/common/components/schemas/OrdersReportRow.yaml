@@ -1,0 +1,22 @@
+title: OrdersReportRow
+description: >
+    One order in the Orders report. `net_sales` is net of this order's refunds; `customer_type`
+    classifies the buyer as a first-time (`new`) or `returning` account, or a `guest` checkout.
+type: object
+required: [order_id, order_number, date, status, customer, customer_type, products, items_sold, coupons, net_sales, is_refunded]
+properties:
+    order_id: { type: integer }
+    order_number: { type: integer }
+    date: { type: string, format: date-time }
+    status: { type: string }
+    customer: { type: [string, "null"] }
+    customer_type: { type: string, enum: [new, returning, guest] }
+    products:
+        type: array
+        items: { type: string }
+    items_sold: { type: integer, minimum: 0 }
+    coupons:
+        type: array
+        items: { type: string }
+    net_sales: { $ref: "./Money.yaml" }
+    is_refunded: { type: boolean }

@@ -1,0 +1,42 @@
+operationId: adminReportsSalesStats
+summary: Sales statistics (admin)
+description: >
+    Windowed overall-sales statistics — totals + a zero-filled interval series + an optional
+    comparison window. One endpoint backs the Overview, Revenue, Orders, Products, Categories, and
+    Taxes report tiles + charts. Only `processing` / `completed` / `refunded` orders contribute;
+    returns bucket by refund date, sales by order-created date. Net sales excludes tax + shipping.
+tags: [Admin / Reports]
+
+parameters:
+    - name: date_from
+      in: query
+      required: true
+      description: Inclusive window start (ISO date or datetime, Gregorian).
+      schema: { type: string, maxLength: 40 }
+    - name: date_to
+      in: query
+      required: true
+      description: Inclusive window end (ISO date or datetime, Gregorian).
+      schema: { type: string, maxLength: 40 }
+    - name: interval
+      in: query
+      description: Bucket granularity. Auto-picked from the window length when omitted.
+      schema: { type: string, enum: [day, week, month] }
+    - name: compare_from
+      in: query
+      description: Comparison window start. Both compare bounds must be sent together.
+      schema: { type: string, maxLength: 40 }
+    - name: compare_to
+      in: query
+      schema: { type: string, maxLength: 40 }
+
+responses:
+    "200":
+        description: Sales totals, interval series, and optional comparison window.
+        content:
+            application/json:
+                schema: { $ref: "../../../common/components/schemas/ReportSalesStats.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"

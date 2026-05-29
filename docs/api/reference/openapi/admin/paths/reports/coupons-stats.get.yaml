@@ -1,0 +1,37 @@
+operationId: adminReportsCouponsStats
+summary: Coupon-usage statistics (admin)
+description: >
+    Windowed coupon-usage statistics — discounted-order count and total discount applied, with a
+    zero-filled interval series and an optional comparison window. Backs the Coupons report tiles +
+    chart. Only `processing` / `completed` / `refunded` orders contribute.
+tags: [Admin / Reports]
+
+parameters:
+    - name: date_from
+      in: query
+      required: true
+      schema: { type: string, maxLength: 40 }
+    - name: date_to
+      in: query
+      required: true
+      schema: { type: string, maxLength: 40 }
+    - name: interval
+      in: query
+      schema: { type: string, enum: [day, week, month] }
+    - name: compare_from
+      in: query
+      schema: { type: string, maxLength: 40 }
+    - name: compare_to
+      in: query
+      schema: { type: string, maxLength: 40 }
+
+responses:
+    "200":
+        description: Coupon-usage totals, interval series, and optional comparison window.
+        content:
+            application/json:
+                schema: { $ref: "../../../common/components/schemas/ReportCouponsStats.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"

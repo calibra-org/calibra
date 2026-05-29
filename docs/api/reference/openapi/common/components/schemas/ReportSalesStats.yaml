@@ -1,0 +1,24 @@
+title: ReportSalesStats
+description: >
+    Windowed sales statistics: totals + a zero-filled interval series, plus an optional comparison
+    window (previous period / previous year) carrying the same shape. `generated_at` lets the UI
+    show a freshness indicator. Backs the Overview, Revenue, Orders, Products, Categories, and Taxes
+    report tiles + charts — each surface reads the fields it needs.
+type: object
+required: [totals, intervals, comparison, generated_at]
+properties:
+    totals: { $ref: "./ReportSalesTotals.yaml" }
+    intervals:
+        type: array
+        items: { $ref: "./ReportSalesIntervalPoint.yaml" }
+    comparison:
+        oneOf:
+            - type: "null"
+            - type: object
+              required: [totals, intervals]
+              properties:
+                  totals: { $ref: "./ReportSalesTotals.yaml" }
+                  intervals:
+                      type: array
+                      items: { $ref: "./ReportSalesIntervalPoint.yaml" }
+    generated_at: { type: string, format: date-time }

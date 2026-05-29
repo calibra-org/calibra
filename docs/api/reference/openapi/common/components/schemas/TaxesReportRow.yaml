@@ -1,0 +1,11 @@
+title: TaxesReportRow
+description: One tax rate in the Taxes report — total / order / shipping tax and the orders that paid it.
+type: object
+required: [code, rate, orders, total_tax, order_tax, shipping_tax]
+properties:
+    code: { type: string }
+    rate: { type: number, description: "Rate percent (e.g. 9 for 9%)." }
+    orders: { type: integer, minimum: 0 }
+    total_tax: { $ref: "./Money.yaml" }
+    order_tax: { $ref: "./Money.yaml" }
+    shipping_tax: { $ref: "./Money.yaml" }

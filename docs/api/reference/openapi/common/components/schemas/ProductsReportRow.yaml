@@ -1,0 +1,19 @@
+title: ProductsReportRow
+description: >
+    One product in the Products report. `net_sales` is the post-coupon line total over the window;
+    `stock` is the product's current total stock (null when the product manages no inventory).
+type: object
+required: [product_id, name, sku, items_sold, net_sales, orders, categories, variations, status, stock]
+properties:
+    product_id: { type: integer }
+    name: { type: string }
+    sku: { type: [string, "null"] }
+    items_sold: { type: integer, minimum: 0 }
+    net_sales: { $ref: "./Money.yaml" }
+    orders: { type: integer, minimum: 0 }
+    categories:
+        type: array
+        items: { type: string }
+    variations: { type: integer, minimum: 0 }
+    status: { type: [string, "null"] }
+    stock: { type: [integer, "null"] }

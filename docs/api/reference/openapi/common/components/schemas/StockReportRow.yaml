@@ -1,0 +1,15 @@
+title: StockReportRow
+description: >
+    One inventory item (product or variation) in the Stock report. `stock` is null when the item
+    does not manage stock; `sku` falls back from the variation to the parent product.
+type: object
+required: [inventory_id, product_id, variation_id, name, sku, status, stock, manage_stock]
+properties:
+    inventory_id: { type: integer }
+    product_id: { type: integer }
+    variation_id: { type: [integer, "null"] }
+    name: { type: string }
+    sku: { type: [string, "null"] }
+    status: { type: string, enum: [instock, outofstock, onbackorder] }
+    stock: { type: [integer, "null"] }
+    manage_stock: { type: boolean }

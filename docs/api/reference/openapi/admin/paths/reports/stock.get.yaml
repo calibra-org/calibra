@@ -1,0 +1,53 @@
+operationId: adminReportsStock
+summary: Stock report (admin)
+description: >
+    Current stock snapshot — one row per inventory item (product or variation) with a footer count
+    breakdown. No date dimension. Filter by stock status (including the derived `lowstock`
+    pseudo-status) and a free-text term. `format=csv` downloads the full filtered result.
+tags: [Admin / Reports]
+
+parameters:
+    - name: status
+      in: query
+      description: Stock status filter. `lowstock` is derived (at/under the low-stock threshold).
+      schema: { type: string, enum: [all, instock, outofstock, onbackorder, lowstock], default: all }
+    - name: q
+      in: query
+      description: Free-text filter across product name and SKU.
+      schema: { type: string, maxLength: 120 }
+    - name: order_by
+      in: query
+      schema: { type: string, enum: [name, stock, status] }
+    - name: order_dir
+      in: query
+      schema: { type: string, enum: [asc, desc] }
+    - name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    - name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 25 }
+    - name: format
+      in: query
+      schema: { type: string, enum: [csv] }
+
+responses:
+    "200":
+        description: Paginated stock rows with a footer count breakdown.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta, counts]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../../common/components/schemas/StockReportRow.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+                        counts: { $ref: "../../../common/components/schemas/StockReportCounts.yaml" }
+            text/csv:
+                schema: { type: string }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"

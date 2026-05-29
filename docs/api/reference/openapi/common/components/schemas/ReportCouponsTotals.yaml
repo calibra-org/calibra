@@ -1,0 +1,7 @@
+title: ReportCouponsTotals
+description: Coupon-usage totals for a window — count of orders carrying a coupon and total discount applied.
+type: object
+required: [discounted_orders, amount]
+properties:
+    discounted_orders: { type: integer, minimum: 0 }
+    amount: { $ref: "./Money.yaml" }

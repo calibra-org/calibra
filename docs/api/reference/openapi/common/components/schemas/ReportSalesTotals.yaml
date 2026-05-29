@@ -1,0 +1,37 @@
+title: ReportSalesTotals
+description: >
+    Overall sales aggregates for a window. Net sales excludes tax and shipping; total sales is the
+    all-in figure net of refunds. All monetary fields are Rial minor units; counts are integers.
+type: object
+required:
+    - gross_sales
+    - net_sales
+    - total_sales
+    - coupons
+    - returns
+    - taxes
+    - order_tax
+    - shipping_tax
+    - shipping
+    - orders
+    - items_sold
+    - variations_sold
+    - products_sold
+    - avg_order_value
+    - avg_items_per_order
+properties:
+    gross_sales: { $ref: "./Money.yaml" }
+    net_sales: { $ref: "./Money.yaml" }
+    total_sales: { $ref: "./Money.yaml" }
+    coupons: { $ref: "./Money.yaml" }
+    returns: { $ref: "./Money.yaml" }
+    taxes: { $ref: "./Money.yaml" }
+    order_tax: { $ref: "./Money.yaml" }
+    shipping_tax: { $ref: "./Money.yaml" }
+    shipping: { $ref: "./Money.yaml" }
+    orders: { type: integer, minimum: 0 }
+    items_sold: { type: integer, minimum: 0 }
+    variations_sold: { type: integer, minimum: 0 }
+    products_sold: { type: integer, minimum: 0 }
+    avg_order_value: { $ref: "./Money.yaml" }
+    avg_items_per_order: { type: number, minimum: 0 }

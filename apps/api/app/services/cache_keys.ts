@@ -129,6 +129,16 @@ export const CacheKeys = {
     admin: {
         topProducts: (days: number, limit: number, locale: string): string =>
             `admin:reports:top-products:${days}:${limit}:${locale}`,
+        topCategories: (days: number, limit: number, locale: string): string =>
+            `admin:reports:top-categories:${days}:${limit}:${locale}`,
+        /**
+         * Analytics report cache key. `scope` is the report id (`performance`, `revenue-stats`,
+         * `orders-table`, …); `params` is the full window/sort/page object hashed into one slot so
+         * `?date_from=…&date_to=…` and any reordering collide. Locale-scoped because category /
+         * coupon / tax names resolve per locale.
+         */
+        report: (scope: string, params: Record<string, unknown>, locale: string): string =>
+            `admin:reports:${scope}:${hashFilters(params)}:${locale}`,
         /**
          * Most-used ranking for the admin taxonomy pickers (categories / tags / brands sidebar
          * cards on `/products/{id}`). Hashes the full filter object so `?perPage=10&sort=-used_count`
