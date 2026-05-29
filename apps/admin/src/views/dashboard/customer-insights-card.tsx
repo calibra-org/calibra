@@ -77,8 +77,6 @@ function InsightsBody({
                     delta={{ value: data.totalDelta30d, unit: "absolute", comparison }}
                     icon={Users}
                     tone="info"
-                    sparkline={data.sparklines.total}
-                    sparklineLabel={t("sparklines.total")}
                 />
                 <StatCard
                     label={t("avgOrderCount")}
@@ -93,8 +91,6 @@ function InsightsBody({
                     delta={{ value: data.avgLifetimeSpendDelta30dPct, unit: "percent", comparison }}
                     icon={Wallet}
                     tone="success"
-                    sparkline={data.sparklines.spend}
-                    sparklineLabel={t("sparklines.spend")}
                 />
                 <StatCard
                     label={t("avgOrderValue")}

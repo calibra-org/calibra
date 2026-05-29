@@ -73,6 +73,7 @@ export function CouponsView() {
                 compareLabel={cmp}
                 showCompare={compare !== "none"}
                 isLoading={stats.isPending}
+                tone="warning"
             />
 
             <ReportTableCard<CouponsReportRow>

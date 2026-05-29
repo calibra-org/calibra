@@ -34,15 +34,15 @@ export interface CardProps extends Omit<ComponentProps<"div">, "title"> {
 export function Card({ tone, title, description, action, footer, isLoading, className, children, ...props }: CardProps) {
     const hasHeader = title !== undefined || description !== undefined || action !== undefined;
     return (
-        <CardRoot tone={tone} className={className} {...props}>
+        <CardRoot tone={tone} className={cn("gap-4 py-4", className)} {...props}>
             {hasHeader && (
-                <CardHeader>
+                <CardHeader className="px-4 pb-3">
                     {title !== undefined && <CardTitle tone={tone}>{title}</CardTitle>}
                     {description !== undefined && <CardDescription>{description}</CardDescription>}
                     {action !== undefined && <CardAction>{action}</CardAction>}
                 </CardHeader>
             )}
-            <CardBody className={cn(isLoading && "space-y-2")}>
+            <CardBody className={cn("px-4", isLoading && "space-y-2")}>
                 {isLoading ? (
                     <>
                         <Skeleton className="h-4 w-3/4" />
@@ -53,7 +53,7 @@ export function Card({ tone, title, description, action, footer, isLoading, clas
                     children
                 )}
             </CardBody>
-            {footer !== undefined && <CardFooter>{footer}</CardFooter>}
+            {footer !== undefined && <CardFooter className="px-4">{footer}</CardFooter>}
         </CardRoot>
     );
 }

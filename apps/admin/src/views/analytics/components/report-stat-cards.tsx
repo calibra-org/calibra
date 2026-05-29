@@ -15,7 +15,6 @@ export interface ReportStat {
     icon?: ComponentType<SVGProps<SVGSVGElement>>;
     /** Drives the icon-block colour so each metric is visually distinct on a row of tiles. */
     tone?: StatCardTone;
-    sparkline?: number[];
     /** When set, the tile becomes a deep-link into the matching report (Overview pattern). */
     href?: string;
 }
@@ -48,7 +47,7 @@ export function ReportStatCards({ items, isLoading, columns }: { items: ReportSt
                     <Link
                         key={item.label}
                         href={item.href as never}
-                        className="rounded-lg outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
+                        className="block h-full rounded-lg outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
                     >
                         <StatCard
                             label={item.label}
@@ -57,7 +56,6 @@ export function ReportStatCards({ items, isLoading, columns }: { items: ReportSt
                             description={item.description}
                             icon={item.icon}
                             tone={item.tone}
-                            sparkline={item.sparkline}
                         />
                     </Link>
                 ) : (
@@ -69,7 +67,6 @@ export function ReportStatCards({ items, isLoading, columns }: { items: ReportSt
                         description={item.description}
                         icon={item.icon}
                         tone={item.tone}
-                        sparkline={item.sparkline}
                     />
                 ),
             )}

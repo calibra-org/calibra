@@ -79,6 +79,7 @@ export function CategoriesView() {
                 compareLabel={cmp}
                 showCompare={compare !== "none"}
                 isLoading={stats.isPending}
+                tone="info"
             />
 
             <ReportTableCard<CategoriesReportRow>

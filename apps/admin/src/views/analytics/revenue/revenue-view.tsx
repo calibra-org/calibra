@@ -110,6 +110,7 @@ export function RevenueView() {
                 compareLabel={cmp}
                 showCompare={compare !== "none"}
                 isLoading={stats.isPending}
+                tone="success"
             />
 
             <ReportTableCard<RevenueReportRow>

@@ -167,7 +167,7 @@ interface StatCardWrapperProps {
 function StatCardSlot({ label, icon, isPending, isError, value, delta, description }: StatCardWrapperProps) {
     const displayValue = isPending ? "" : isError ? "—" : value;
     return (
-        <div className="relative">
+        <div className="relative h-full">
             <StatCard
                 label={label}
                 value={displayValue}

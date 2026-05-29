@@ -118,6 +118,7 @@ export function OrdersView() {
                 compareLabel={cmp}
                 showCompare={compare !== "none"}
                 isLoading={stats.isPending}
+                tone="default"
             />
 
             <ReportTableCard<OrdersReportRow>

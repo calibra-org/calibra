@@ -87,6 +87,7 @@ export function TaxesView() {
                 compareLabel={cmp}
                 showCompare={compare !== "none"}
                 isLoading={stats.isPending}
+                tone="info"
             />
 
             <ReportTableCard<TaxesReportRow>

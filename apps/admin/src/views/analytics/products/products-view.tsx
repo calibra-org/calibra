@@ -103,6 +103,7 @@ export function ProductsView() {
                 compareLabel={cmp}
                 showCompare={compare !== "none"}
                 isLoading={stats.isPending}
+                tone="info"
             />
 
             <div className="relative max-w-sm">
