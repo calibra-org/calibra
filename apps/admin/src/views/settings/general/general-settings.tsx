@@ -85,7 +85,9 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                             render={({ field }) => (
                                 <Select value={field.value} onValueChange={field.onChange}>
                                     <SelectTrigger>
-                                        <SelectValue />
+                                        <SelectValue>
+                                            {(value) => countries.find((c) => c.code === value)?.name[locale] ?? ""}
+                                        </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
                                         {countries.map((c) => (
@@ -109,7 +111,13 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                                     onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder={t("storeAddress.statePlaceholder")} />
+                                        <SelectValue>
+                                            {(value) =>
+                                                !value || value === "__none__"
+                                                    ? t("storeAddress.statePlaceholder")
+                                                    : (provinces.find((p) => p.code === value)?.name[locale] ?? "")
+                                            }
+                                        </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="__none__">{t("storeAddress.statePlaceholder")}</SelectItem>
@@ -137,7 +145,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                 <CardHeader className="border-b pb-4">
                     <CardTitle className="text-base">{t("generalOptions.title")}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-5 pt-6">
+                <CardContent className="grid grid-cols-1 gap-x-5 gap-y-4 pt-6 sm:grid-cols-2">
                     <SelectField
                         control={control}
                         name="sellingLocations"
@@ -218,7 +226,12 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                                 render={({ field }) => (
                                     <Select value={field.value} onValueChange={field.onChange}>
                                         <SelectTrigger>
-                                            <SelectValue />
+                                            <SelectValue>
+                                                {(value) => {
+                                                    const c = currencies.find((x) => x.code === value);
+                                                    return c ? `${c.name[locale]} (${c.code})` : "";
+                                                }}
+                                            </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
                                             {currencies.map((c) => (
@@ -349,7 +362,12 @@ function SelectField({ control, name, label, options }: SelectFieldProps) {
                         onValueChange={(v) => field.onChange(v === "__empty__" ? "" : v)}
                     >
                         <SelectTrigger>
-                            <SelectValue />
+                            <SelectValue>
+                                {(value) => {
+                                    const real = value === "__empty__" ? "" : value;
+                                    return options.find((o) => o.value === real)?.label ?? "";
+                                }}
+                            </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             {options.map((o) => (
