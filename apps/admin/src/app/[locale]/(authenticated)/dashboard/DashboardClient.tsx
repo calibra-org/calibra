@@ -2,7 +2,7 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowUpRight, Package, PiggyBank, ReceiptText, RefreshCw, Truck, UserPlus } from "lucide-react";
+import { ArrowUpRight, PiggyBank, ReceiptText, RefreshCw, Truck, UserPlus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 
@@ -18,7 +18,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#
 import { formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
 import {
-    useActiveProductsCount,
     useNewCustomersTodayStats,
     useOrdersByStatus,
     useOrdersTodayStats,
@@ -58,10 +57,9 @@ export function DashboardClient() {
                 </Button>
             </header>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <OrdersTodayCard label={t("ordersToday")} locale={locale} />
                 <RevenueTodayCard label={t("revenueToday")} locale={locale} />
-                <ActiveProductsCard label={t("activeProducts")} locale={locale} />
                 <PendingFulfilmentsCard label={t("pendingFulfilments")} locale={locale} />
                 <NewCustomersCard label={t("newCustomers")} locale={locale} />
             </div>
@@ -201,19 +199,6 @@ function RevenueTodayCard({ label, locale }: { label: string; locale: Locale }) 
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatMoney(data, locale) : ""}
-        />
-    );
-}
-
-function ActiveProductsCard({ label, locale }: { label: string; locale: Locale }) {
-    const { data, isPending, isError } = useActiveProductsCount();
-    return (
-        <StatCardSlot
-            label={label}
-            icon={Package}
-            isPending={isPending}
-            isError={isError}
-            value={data !== undefined ? formatNumber(data, locale) : ""}
         />
     );
 }
