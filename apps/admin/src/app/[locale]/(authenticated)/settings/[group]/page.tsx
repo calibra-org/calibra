@@ -72,7 +72,7 @@ export default async function SettingsGroupPage({ params }: PageProps) {
     const isGeneral = group === "general";
 
     return (
-        <section className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <section className="flex w-full max-w-5xl flex-col gap-6">
             <PageHeader
                 title={t("title")}
                 subtitle={t("subtitle")}
