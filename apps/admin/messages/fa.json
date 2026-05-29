@@ -735,6 +735,14 @@
                 "compact": "فشرده"
             },
             "reorderColumn": "جابجایی ستون",
+            "taxonomyDelete": {
+                "title": "حذف؟",
+                "description": "آیا از حذف «{name}» مطمئن هستید؟ این کار قابل بازگشت نیست.",
+                "untitled": "بدون عنوان",
+                "confirm": "حذف",
+                "pending": "در حال حذف…",
+                "cancel": "انصراف"
+            },
             "clearAll": "پاک کردن همه",
             "clearFilter": "پاک کردن",
             "filters": {

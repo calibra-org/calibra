@@ -735,6 +735,14 @@
                 "compact": "Compact"
             },
             "reorderColumn": "Reorder column",
+            "taxonomyDelete": {
+                "title": "Delete?",
+                "description": "Are you sure you want to delete \"{name}\"? This can't be undone.",
+                "untitled": "Untitled",
+                "confirm": "Delete",
+                "pending": "Deleting…",
+                "cancel": "Cancel"
+            },
             "clearAll": "Clear all",
             "clearFilter": "Clear",
             "filters": {

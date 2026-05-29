@@ -15,6 +15,7 @@ import { useCategoriesList, useDeleteCategory, useUpdateCategory } from "../cate
 import { useDeleteTag, useUpdateTag } from "../tags/queries";
 import { type AdminTagDraft, TagInspector } from "../tags/tag-inspector";
 
+import { useDeleteConfirm } from "./use-delete-confirm";
 import { useTaxonomyTerm } from "./use-taxonomy-term";
 
 type SdkAdminTaxonomy = AdminSchemas["schemas"]["AdminTaxonomy"];
@@ -91,6 +92,10 @@ function BrandSheetBody({ id, onClose }: { id: number; onClose: () => void }) {
     const { data: term, isPending, isError } = useTaxonomyTerm("brand", id);
     const update = useUpdateBrand();
     const remove = useDeleteBrand();
+    const confirmDelete = useDeleteConfirm({
+        onConfirm: () => remove.mutate({ id }, { onSuccess: onClose }),
+        pending: remove.isPending,
+    });
     const [draft, setDraft] = useState<AdminBrandDraft | null>(null);
 
     useEffect(() => {
@@ -119,20 +124,23 @@ function BrandSheetBody({ id, onClose }: { id: number; onClose: () => void }) {
         );
 
     return (
-        <SheetState isPending={isPending} isError={isError} ready={draft !== null}>
-            <BrandInspector
-                variant="plain"
-                draft={draft}
-                selected={draft}
-                locale={locale}
-                submitting={update.isPending}
-                onDraftChange={setDraft}
-                onCreateNew={() => undefined}
-                onSave={onSave}
-                onDelete={(delId) => remove.mutate({ id: delId }, { onSuccess: onClose })}
-                onClose={onClose}
-            />
-        </SheetState>
+        <>
+            <SheetState isPending={isPending} isError={isError} ready={draft !== null}>
+                <BrandInspector
+                    variant="plain"
+                    draft={draft}
+                    selected={draft}
+                    locale={locale}
+                    submitting={update.isPending}
+                    onDraftChange={setDraft}
+                    onCreateNew={() => undefined}
+                    onSave={onSave}
+                    onDelete={() => draft !== null && confirmDelete.request(draft.name[locale])}
+                    onClose={onClose}
+                />
+            </SheetState>
+            {confirmDelete.dialog}
+        </>
     );
 }
 
@@ -141,6 +149,10 @@ function TagSheetBody({ id, onClose }: { id: number; onClose: () => void }) {
     const { data: term, isPending, isError } = useTaxonomyTerm("tag", id);
     const update = useUpdateTag();
     const remove = useDeleteTag();
+    const confirmDelete = useDeleteConfirm({
+        onConfirm: () => remove.mutate({ id }, { onSuccess: onClose }),
+        pending: remove.isPending,
+    });
     const [draft, setDraft] = useState<AdminTagDraft | null>(null);
 
     useEffect(() => {
@@ -166,20 +178,23 @@ function TagSheetBody({ id, onClose }: { id: number; onClose: () => void }) {
         );
 
     return (
-        <SheetState isPending={isPending} isError={isError} ready={draft !== null}>
-            <TagInspector
-                variant="plain"
-                draft={draft}
-                selected={draft}
-                locale={locale}
-                submitting={update.isPending}
-                onDraftChange={setDraft}
-                onCreateNew={() => undefined}
-                onSave={onSave}
-                onDelete={(delId) => remove.mutate({ id: delId }, { onSuccess: onClose })}
-                onClose={onClose}
-            />
-        </SheetState>
+        <>
+            <SheetState isPending={isPending} isError={isError} ready={draft !== null}>
+                <TagInspector
+                    variant="plain"
+                    draft={draft}
+                    selected={draft}
+                    locale={locale}
+                    submitting={update.isPending}
+                    onDraftChange={setDraft}
+                    onCreateNew={() => undefined}
+                    onSave={onSave}
+                    onDelete={() => draft !== null && confirmDelete.request(draft.name[locale])}
+                    onClose={onClose}
+                />
+            </SheetState>
+            {confirmDelete.dialog}
+        </>
     );
 }
 
@@ -189,6 +204,10 @@ function CategorySheetBody({ id, onClose }: { id: number; onClose: () => void })
     const list = useCategoriesList({ limit: 200 });
     const update = useUpdateCategory();
     const remove = useDeleteCategory();
+    const confirmDelete = useDeleteConfirm({
+        onConfirm: () => remove.mutate({ id }, { onSuccess: onClose }),
+        pending: remove.isPending,
+    });
     const [draft, setDraft] = useState<AdminCategoryLike | null>(null);
 
     useEffect(() => {
@@ -219,19 +238,22 @@ function CategorySheetBody({ id, onClose }: { id: number; onClose: () => void })
         );
 
     return (
-        <SheetState isPending={isPending} isError={isError} ready={draft !== null}>
-            <CategoryInspector
-                variant="plain"
-                rows={list.data?.data ?? []}
-                selected={draft}
-                draft={draft}
-                locale={locale}
-                onDraftChange={setDraft}
-                onCreateNew={() => undefined}
-                onSave={onSave}
-                onDelete={(delId) => remove.mutate({ id: delId }, { onSuccess: onClose })}
-                onClose={onClose}
-            />
-        </SheetState>
+        <>
+            <SheetState isPending={isPending} isError={isError} ready={draft !== null}>
+                <CategoryInspector
+                    variant="plain"
+                    rows={list.data?.data ?? []}
+                    selected={draft}
+                    draft={draft}
+                    locale={locale}
+                    onDraftChange={setDraft}
+                    onCreateNew={() => undefined}
+                    onSave={onSave}
+                    onDelete={() => draft !== null && confirmDelete.request(draft.name[locale])}
+                    onClose={onClose}
+                />
+            </SheetState>
+            {confirmDelete.dialog}
+        </>
     );
 }
