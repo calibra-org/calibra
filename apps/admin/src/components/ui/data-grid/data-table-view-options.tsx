@@ -8,6 +8,7 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Radio, RadioGroup } from "#/components/ui/radio";
 import { ScrollArea } from "#/components/ui/scroll-area";
+import { List } from "#/icons";
 import { cn } from "#/lib/utils";
 
 import type { DataTableDensity } from "./types";
@@ -25,11 +26,16 @@ interface DataTableViewOptionsProps {
     onVisibilityChange: (next: Record<string, boolean>) => void;
     density: DataTableDensity;
     onDensityChange: (next: DataTableDensity) => void;
+    /** Per-column wrap flags + setter. When omitted, the wrap toggle is hidden. */
+    columnWrap?: Record<string, boolean>;
+    onColumnWrapChange?: (next: Record<string, boolean>) => void;
     labels: {
         trigger: string;
         columnsHeading: string;
         densityHeading: string;
         density: Record<DataTableDensity, string>;
+        /** Tooltip for the per-column wrap toggle. Required only when `onColumnWrapChange` is set. */
+        wrapColumn?: string;
     };
 }
 
@@ -43,10 +49,15 @@ export function DataTableViewOptions({
     onVisibilityChange,
     density,
     onDensityChange,
+    columnWrap,
+    onColumnWrapChange,
     labels,
 }: DataTableViewOptionsProps) {
     const toggle = (id: string) => {
         onVisibilityChange({ ...visibility, [id]: visibility[id] === false });
+    };
+    const toggleWrap = (id: string) => {
+        onColumnWrapChange?.({ ...columnWrap, [id]: !(columnWrap?.[id] === true) });
     };
 
     return (
@@ -68,14 +79,15 @@ export function DataTableViewOptions({
                         <ul className="flex flex-col">
                             {columns.map((column) => {
                                 const checked = visibility[column.id] !== false;
+                                const wrapped = columnWrap?.[column.id] === true;
                                 return (
-                                    <li key={column.id}>
+                                    <li key={column.id} className="flex items-center gap-1">
                                         <button
                                             type="button"
                                             disabled={!column.canHide}
                                             onClick={() => column.canHide && toggle(column.id)}
                                             className={cn(
-                                                "flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-sm outline-none",
+                                                "flex flex-1 cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-sm outline-none",
                                                 "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
                                                 !column.canHide && "cursor-not-allowed opacity-50",
                                             )}
@@ -90,6 +102,22 @@ export function DataTableViewOptions({
                                             />
                                             <span className="flex-1 truncate">{column.label}</span>
                                         </button>
+                                        {onColumnWrapChange !== undefined && column.canHide && (
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleWrap(column.id)}
+                                                title={labels.wrapColumn}
+                                                aria-label={labels.wrapColumn}
+                                                aria-pressed={wrapped}
+                                                className={cn(
+                                                    "rounded-sm p-1.5 text-muted-foreground outline-none transition-colors",
+                                                    "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
+                                                    wrapped && "bg-primary/10 text-primary",
+                                                )}
+                                            >
+                                                <List className="size-3.5" aria-hidden="true" />
+                                            </button>
+                                        )}
                                     </li>
                                 );
                             })}

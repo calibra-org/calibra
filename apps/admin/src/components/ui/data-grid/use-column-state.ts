@@ -42,6 +42,22 @@ export function useColumnState(options: UseColumnStateOptions) {
      */
     const [columnOrder, setColumnOrder] = useLocalStorageState<string[]>(`admin.dataTable.${options.id}.order`, []);
 
+    /**
+     * Persisted per-column widths (TanStack `columnSizing` shape: `{ [columnId]: pixels }`).
+     * Empty object means "use each column's declared size". The data-table writes this through
+     * `onColumnSizingChange` as the operator drags a resize handle.
+     */
+    const [columnSizing, setColumnSizing] = useLocalStorageState<Record<string, number>>(
+        `admin.dataTable.${options.id}.sizing`,
+        {},
+    );
+
+    /**
+     * Persisted per-column wrap flags. A column id mapped to `true` wraps its text to multiple
+     * lines instead of truncating with an ellipsis. Absent / `false` = truncate (the default).
+     */
+    const [columnWrap, setColumnWrap] = useLocalStorageState<Record<string, boolean>>(`admin.dataTable.${options.id}.wrap`, {});
+
     return {
         density,
         setDensity,
@@ -49,6 +65,10 @@ export function useColumnState(options: UseColumnStateOptions) {
         setColumnVisibility,
         columnOrder,
         setColumnOrder,
+        columnSizing,
+        setColumnSizing,
+        columnWrap,
+        setColumnWrap,
     };
 }
 

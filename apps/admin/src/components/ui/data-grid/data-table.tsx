@@ -22,6 +22,7 @@ import { CSS } from "@dnd-kit/utilities";
 import {
     type ColumnDef,
     type ColumnOrderState,
+    type ColumnSizingState,
     type ExpandedState,
     flexRender,
     getCoreRowModel,
@@ -185,6 +186,20 @@ export interface DataTableProps<TData> {
     columnOrder?: string[];
     onColumnOrderChange?: (next: string[]) => void;
 
+    /**
+     * Persisted per-column widths (`{ [columnId]: px }`). When omitted the table keeps resize
+     * state in memory only (still draggable, just not persisted across reloads). Wire it to
+     * {@link useColumnState}'s `columnSizing` to persist.
+     */
+    columnSizing?: Record<string, number>;
+    onColumnSizingChange?: (next: Record<string, number>) => void;
+
+    /**
+     * Per-column wrap flags (`{ [columnId]: true }`). A wrapped column lets its text flow to
+     * multiple lines; every other column truncates with an ellipsis. Defaults to all-truncate.
+     */
+    columnWrap?: Record<string, boolean>;
+
     density: DataTableDensity;
 
     /** Loading + error states from the consumer's query. */
@@ -292,6 +307,9 @@ export function DataTable<TData>({
     onColumnVisibilityChange,
     columnOrder,
     onColumnOrderChange,
+    columnSizing,
+    onColumnSizingChange,
+    columnWrap,
     density,
     isLoading = false,
     isError = false,
@@ -328,6 +346,29 @@ export function DataTable<TData>({
             setInternalExpanded(next);
         }
     };
+
+    /**
+     * Column widths. Controlled + persisted when the caller passes `columnSizing`; otherwise the
+     * table keeps them in memory so resizing still works (just not across reloads).
+     */
+    const [internalSizing, setInternalSizing] = useState<ColumnSizingState>({});
+    const sizingState: ColumnSizingState = columnSizing ?? internalSizing;
+    const applySizing = useCallback(
+        (next: ColumnSizingState) => {
+            if (onColumnSizingChange !== undefined) onColumnSizingChange(next);
+            else setInternalSizing(next);
+        },
+        [onColumnSizingChange],
+    );
+
+    /**
+     * Resize maths invert under RTL (drag-start grows the column toward the inline-start edge).
+     * The locale sets `dir` on `<html>` and a locale switch is a full navigation, so reading it
+     * once at mount is correct. SSR has no `document` → defaults to ltr (no DOM output depends on
+     * this, so there's no hydration mismatch).
+     */
+    const resizeDirection: "ltr" | "rtl" =
+        typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "rtl" : "ltr";
 
     /** Mirror selection state into the shape TanStack Table expects so flexRender access works. */
     const rowSelection = useMemo<RowSelectionState>(() => {
@@ -379,9 +420,19 @@ export function DataTable<TData>({
             rowSelection,
             columnVisibility: visibilityState,
             columnOrder: effectiveColumnOrder,
+            columnSizing: sizingState,
             expanded,
         },
         enableRowSelection: true,
+        enableColumnResizing: true,
+        columnResizeMode: "onChange",
+        columnResizeDirection: resizeDirection,
+        /** Floor/ceiling + a reasonable default so unsized columns don't collapse or sprawl. */
+        defaultColumn: { minSize: 80, size: 150, maxSize: 640 },
+        onColumnSizingChange: (updater) => {
+            const next = typeof updater === "function" ? updater(sizingState) : updater;
+            applySizing(next);
+        },
         manualPagination: true,
         manualSorting: true,
         manualFiltering: true,
@@ -462,10 +513,12 @@ export function DataTable<TData>({
             .map<PlannableColumn>((id) => {
                 const def = columns.find((c) => c.id === id);
                 const metaSticky = (def?.meta as { sticky?: "start" | "end" } | undefined)?.sticky;
-                return { id, size: def?.size, metaSticky };
+                /** Use the live (possibly resized) width so the pinned-cluster offsets stay aligned. */
+                const size = sizingState[id] ?? def?.size;
+                return { id, size, metaSticky };
             });
         return buildStickyPlan(visible, resolvedStickyConfig);
-    }, [effectiveColumnOrder, visibilityState, columns, resolvedStickyConfig]);
+    }, [effectiveColumnOrder, visibilityState, columns, resolvedStickyConfig, sizingState]);
 
     const visibleRows = table.getRowModel().rows;
     const cellClass = DENSITY_CLASSES[density].cell;
@@ -570,7 +623,13 @@ export function DataTable<TData>({
                             onDragEnd={onDragEnd}
                         >
                             <SortableContext items={sortableHeaderIds} strategy={horizontalListSortingStrategy}>
-                                <Table className="w-full border-collapse">
+                                {/**
+                                 * `table-fixed` + an explicit total width make per-column widths
+                                 * authoritative (content can't stretch a column) so resize handles
+                                 * and overflow-clip behave predictably. `min-w-full` keeps the table
+                                 * filling the viewport when the columns sum to less than it.
+                                 */}
+                                <Table className="min-w-full table-fixed border-collapse" style={{ width: table.getTotalSize() }}>
                                     <TableHeader>
                                         {table.getHeaderGroups().map((headerGroup) => (
                                             <TableRow key={headerGroup.id} className="border-border border-b">
@@ -677,6 +736,7 @@ export function DataTable<TData>({
                                                     rowOverride={renderRowOverride?.(row)}
                                                     onRowOpen={onRowOpen}
                                                     stickyPlan={stickyPlan}
+                                                    columnWrap={columnWrap}
                                                 />
                                             ))
                                         )}
@@ -759,9 +819,9 @@ function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: Sor
         disabled: isPinned,
     });
 
-    const explicitWidth = header.column.columnDef.size;
-    const widthStyle: CSSProperties =
-        explicitWidth !== undefined ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth } : {};
+    /** Live width from TanStack (declared `size`, or the operator's resized value). */
+    const width = header.getSize();
+    const widthStyle: CSSProperties = { width, minWidth: width };
     const dragStyle: CSSProperties = isPinned
         ? {}
         : {
@@ -794,7 +854,7 @@ function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: Sor
                      * ties — without that bump, body sticky cells with z-index 11 used to paint
                      * OVER the non-pinned header during vertical scroll.
                      */
-                    "relative sticky top-0 z-[15] bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
+                    "relative sticky top-0 z-[15] overflow-hidden bg-muted/95 text-start text-xs backdrop-blur supports-[backdrop-filter]:bg-muted/70",
                     "group/header",
                     sticky?.className,
                     /** Full-height vertical separator (pseudo-element so it survives sticky + backdrop-filter combos). */
@@ -814,6 +874,22 @@ function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: Sor
                 style={{ ...(sticky?.style ?? {}), ...widthStyle, ...dragStyle }}
             >
                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                {header.column.getCanResize() && (
+                    /** Decorative pointer-only resize affordance — width is also adjustable from the column-settings popover. */
+                    <span
+                        aria-hidden="true"
+                        data-resizing={header.column.getIsResizing()}
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        onDoubleClick={() => header.column.resetSize()}
+                        onClick={(event) => event.stopPropagation()}
+                        className={cn(
+                            "absolute inset-y-0 end-0 z-20 block w-1.5 cursor-col-resize touch-none select-none",
+                            "bg-transparent opacity-0 transition-opacity hover:bg-primary/40 group-hover/header:opacity-100",
+                            "data-[resizing=true]:bg-primary data-[resizing=true]:opacity-100",
+                        )}
+                    />
+                )}
             </TableHead>
         </ColumnDragHandleProvider>
     );
@@ -829,6 +905,7 @@ interface BodyRowProps<TData> {
     rowOverride?: ReactNode;
     onRowOpen?: (row: TData) => void;
     stickyPlan: StickyPlan;
+    columnWrap?: Record<string, boolean>;
 }
 
 function DataTableBodyRow<TData>({
@@ -840,6 +917,7 @@ function DataTableBodyRow<TData>({
     rowOverride,
     onRowOpen,
     stickyPlan,
+    columnWrap,
 }: BodyRowProps<TData>) {
     const isExpanded = row.getIsExpanded();
     const visibleCellCount = row.getVisibleCells().length;
@@ -906,17 +984,24 @@ function DataTableBodyRow<TData>({
             }}
         >
             {row.getVisibleCells().map((cell) => {
-                const explicitWidth = cell.column.columnDef.size;
+                const width = cell.column.getSize();
                 const placement = stickyPlan.get(cell.column.id);
                 const sticky = resolveStickyCell(placement);
-                const widthStyle: CSSProperties =
-                    explicitWidth !== undefined ? { width: explicitWidth, minWidth: explicitWidth, maxWidth: explicitWidth } : {};
+                const widthStyle: CSSProperties = { width, minWidth: width };
+                const wrap = columnWrap?.[cell.column.id] === true;
                 return (
                     <TableCell
                         key={cell.id}
                         {...(sticky?.dataAttrs ?? {})}
                         className={cn(
                             cellClass,
+                            /**
+                             * Clip overflow so a too-wide cell never spills into its neighbour. Wrapped
+                             * columns let text flow to multiple lines (top-aligned); the default keeps
+                             * the inherited `whitespace-nowrap` so single-line text truncates.
+                             */
+                            "overflow-hidden",
+                            wrap ? "whitespace-normal break-words align-top" : "",
                             /** Mirror of the header pseudo-divider — same opacity so header + body grid read as one. */
                             "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
                             "first:before:hidden",

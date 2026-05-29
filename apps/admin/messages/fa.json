@@ -734,6 +734,7 @@
                 "cozy": "متوسط",
                 "compact": "فشرده"
             },
+            "wrapColumn": "شکستن متن در چند خط",
             "clearAll": "پاک کردن همه",
             "clearFilter": "پاک کردن",
             "filters": {

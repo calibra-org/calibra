@@ -734,6 +734,7 @@
                 "cozy": "Cozy",
                 "compact": "Compact"
             },
+            "wrapColumn": "Wrap text to multiple lines",
             "clearAll": "Clear all",
             "clearFilter": "Clear",
             "filters": {

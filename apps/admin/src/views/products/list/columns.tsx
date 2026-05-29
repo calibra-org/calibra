@@ -250,7 +250,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                 <SalePeriodCell from={row.original.saleStartsAt} to={row.original.saleEndsAt} locale={ctx.locale} />
             ),
             enableSorting: false,
-            size: 160,
+            size: 230,
         },
         {
             id: "inventory",
@@ -323,6 +323,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                 <TaxonomyChips terms={row.original.categories} kind="category" onOpen={ctx.onOpenTaxonomy} t={ctx.t} />
             ),
             enableSorting: false,
+            size: 220,
         },
         {
             id: "tags",
@@ -338,6 +339,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
             ),
             cell: ({ row }) => <TaxonomyChips terms={row.original.tags} kind="tag" onOpen={ctx.onOpenTaxonomy} t={ctx.t} />,
             enableSorting: false,
+            size: 200,
         },
         {
             id: "brand",
@@ -528,9 +530,9 @@ function SalePeriodCell({ from, to, locale }: SalePeriodCellProps) {
     if (from === null && to === null) return <span className="text-muted-foreground">—</span>;
     const display = [from, to].map((iso) => (iso === null ? "…" : formatDate(iso, locale))).join("→");
     return (
-        <Badge variant="outline" className="font-normal text-xs">
-            <TagIcon className="size-3" aria-hidden="true" />
-            {display}
+        <Badge variant="outline" className="max-w-full font-normal text-xs" title={display}>
+            <TagIcon className="size-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{display}</span>
         </Badge>
     );
 }
