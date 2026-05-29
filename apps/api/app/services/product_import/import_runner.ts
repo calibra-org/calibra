@@ -6,6 +6,7 @@ import { DateTime } from "luxon";
 import ProductImport from "#models/product_import";
 import ProductImportChange from "#models/product_import_change";
 import ProductImportError from "#models/product_import_error";
+import { resolveCurrencyConfig } from "#services/currency_config_service";
 import { recordImportRows } from "#services/metrics/domain_metrics";
 import { parseFile } from "#services/product_import/csv_parser";
 import { writeErrorReport } from "#services/product_import/error_report";
@@ -85,6 +86,8 @@ export async function runImport(opts: RunOptions): Promise<void> {
         const counters = newCounters();
         let queuedImageCount = 0;
         const warningRowSet = await buildWarningRowSet(parsed.rows, mapping);
+        /** Resolve the store display currency once — `*_major` CSV values convert via its base_ratio. */
+        const baseRatio = (await resolveCurrencyConfig()).baseRatio;
 
         for (let offset = 0; offset < parsed.rows.length; offset += CHUNK_SIZE) {
             if (await isCancellationRequested(opts.importId)) {
@@ -113,6 +116,7 @@ export async function runImport(opts: RunOptions): Promise<void> {
                 updateExisting: importRow.updateExisting,
                 locale: opts.locale,
                 counters,
+                baseRatio,
                 skipNew: opts.skipNew === true,
                 skipUpdates: opts.skipUpdates === true,
                 warningRowSet: opts.skipWarningRows === true ? warningRowSet : EMPTY_SET,
@@ -195,6 +199,8 @@ interface ChunkContext {
     updateExisting: boolean;
     locale: string;
     counters: ReturnType<typeof newCounters>;
+    /** Store display-currency base_ratio — converts `*_major` CSV values to BASE minor units. */
+    baseRatio: number;
     /** Filters from the review step. The chunk loop checks these per row before committing. */
     skipNew: boolean;
     skipUpdates: boolean;
@@ -287,7 +293,7 @@ async function runChunk(ctx: ChunkContext): Promise<ChunkResult> {
                         skipped++;
                         return;
                     }
-                    const outcome = await applyUpdate(trx, existing, projection.dto, ctx.locale, counters);
+                    const outcome = await applyUpdate(trx, existing, projection.dto, ctx.locale, counters, ctx.baseRatio);
                     queuedImageCount += outcome.queuedImageCount;
                     await recordChanges(trx, ctx.importId, outcome.productId, sku, "update", rowNumber, outcome.changes);
                     updated++;
@@ -304,7 +310,7 @@ async function runChunk(ctx: ChunkContext): Promise<ChunkResult> {
                         failed++;
                         return;
                     }
-                    const outcome = await applyCreate(trx, projection.dto, ctx.locale, counters);
+                    const outcome = await applyCreate(trx, projection.dto, ctx.locale, counters, ctx.baseRatio);
                     queuedImageCount += outcome.queuedImageCount;
                     await recordChanges(
                         trx,

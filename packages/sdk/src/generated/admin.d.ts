@@ -1128,6 +1128,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/settings/general": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get General settings (admin)
+         * @description Returns the editable General-tab settings (store address, selling/shipping locations, taxes & coupon toggles, display-currency config) plus the reference lists (currencies, IR provinces, countries) that back the form's selects.
+         */
+        get: operations["adminSettingsGeneralShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Update General settings (admin)
+         * @description Partial update of the General-tab settings. Only changed keys are written (same-value writes are no-ops — no audit row). Saving a currency-affecting key invalidates the public currency cache. Returns the fresh settings + option lists.
+         */
+        patch: operations["adminSettingsGeneralUpdate"];
+        trace?: never;
+    };
     "/api/v1/admin/customers": {
         parameters: {
             query?: never;
@@ -3948,6 +3990,133 @@ export interface components {
             counties: components["schemas"]["RegionalCounty"][];
         };
         /**
+         * LocalizedName
+         * @description A display name carried in both supported locales (Persian + English).
+         */
+        LocalizedName: {
+            /** @example تومان */
+            fa: string;
+            /** @example Iranian toman */
+            en: string;
+        };
+        /**
+         * AdminCurrencyOption
+         * @description One row of the supported-currency reference set, used to populate the currency picker. Only the Iranian Rial family is `enabled`; disabled rows render greyed-out (extensibility is visible, not hidden). `base_ratio` is BASE (Rial) minor units per major unit — `0` for non-Rial currencies that have no defined ratio yet.
+         */
+        AdminCurrencyOption: {
+            /** @example IRT */
+            code: string;
+            /** @example تومان */
+            symbol: string;
+            name: components["schemas"]["LocalizedName"];
+            decimals: number;
+            /** @enum {string} */
+            position: "left" | "right" | "left_space" | "right_space";
+            base_ratio: number;
+            enabled: boolean;
+        };
+        /**
+         * AdminGeneralSettings
+         * @description The admin Settings → General (WooCommerce "General") tab — store address, selling/shipping location options, taxes & coupon toggles, and display-currency configuration — plus the reference lists (currencies, IR provinces, countries) that back the form's selects. Iran-only scope: only `IR` and the Rial-family currencies are enabled.
+         */
+        AdminGeneralSettings: {
+            store_address: {
+                address_1: string;
+                address_2: string;
+                city: string;
+                /** @description ISO-3166-2:IR province code (`IR-NN`) or empty string. */
+                state: string;
+                postcode: string;
+                /** @example IR */
+                country: string;
+            };
+            general_options: {
+                /** @enum {string} */
+                selling_locations: "all" | "all_except" | "specific";
+                selling_locations_specific: string[];
+                selling_locations_excluded: string[];
+                /** @enum {string} */
+                shipping_locations: "" | "all" | "specific" | "disabled";
+                shipping_locations_specific: string[];
+                /** @enum {string} */
+                default_customer_location: "none" | "base" | "geolocation" | "geolocation_ajax";
+            };
+            taxes_and_coupons: {
+                taxes_enabled: boolean;
+                coupons_enabled: boolean;
+                calc_discounts_sequentially: boolean;
+            };
+            currency: {
+                /**
+                 * @description Immutable stored currency (Rial).
+                 * @example IRR
+                 */
+                base: string;
+                /**
+                 * @description Chosen display currency (WooCommerce `woocommerce_currency`).
+                 * @example IRT
+                 */
+                display: string;
+                /** @enum {string} */
+                position: "left" | "right" | "left_space" | "right_space";
+                thousand_sep: string;
+                decimal_sep: string;
+                num_decimals: number;
+            };
+            options: {
+                currencies: components["schemas"]["AdminCurrencyOption"][];
+                provinces: {
+                    /** @example IR-24 */
+                    code: string;
+                    name: components["schemas"]["LocalizedName"];
+                }[];
+                countries: {
+                    /** @example IR */
+                    code: string;
+                    name: components["schemas"]["LocalizedName"];
+                    enabled: boolean;
+                }[];
+            };
+        };
+        /**
+         * AdminGeneralSettingsUpdate
+         * @description Partial update for the General settings tab. Every section and field is optional — the server writes only what changed (same-value writes are no-ops). Cross-field rules: `currency.display` must be an enabled currency, and `thousand_sep` must differ from `decimal_sep`.
+         */
+        AdminGeneralSettingsUpdate: {
+            store_address?: {
+                address_1?: string;
+                address_2?: string;
+                city?: string;
+                state?: string;
+                postcode?: string;
+                country?: string;
+            };
+            general_options?: {
+                /** @enum {string} */
+                selling_locations?: "all" | "all_except" | "specific";
+                selling_locations_specific?: string[];
+                selling_locations_excluded?: string[];
+                /** @enum {string} */
+                shipping_locations?: "" | "all" | "specific" | "disabled";
+                shipping_locations_specific?: string[];
+                /** @enum {string} */
+                default_customer_location?: "none" | "base" | "geolocation" | "geolocation_ajax";
+            };
+            taxes_and_coupons?: {
+                taxes_enabled?: boolean;
+                coupons_enabled?: boolean;
+                calc_discounts_sequentially?: boolean;
+            };
+            currency?: {
+                display?: string;
+                /** @enum {string} */
+                position?: "left" | "right" | "left_space" | "right_space";
+                thousand_sep?: string;
+                decimal_sep?: string;
+                num_decimals?: number;
+            };
+        };
+        /**
          * CustomerBase
          * @description Customer commerce identity — matches `CustomerTransformer.toObject()` exactly. This is the shape returned by `POST /auth/login`, `POST /auth/register`, and anywhere the API serialises a customer without country-scoped extension rows. The `CustomerProfile` schema extends this with `profile_extensions` (used by `GET /account/me`).
          */
@@ -6597,6 +6766,65 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminSettingsGeneralShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description General settings + option lists. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminGeneralSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminSettingsGeneralUpdate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminGeneralSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated General settings + option lists. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminGeneralSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             422: components["responses"]["ValidationError"];
         };
     };

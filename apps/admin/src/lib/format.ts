@@ -1,9 +1,12 @@
 import type { Locale } from "@calibra/shared/i18n";
+import { formatMoney as formatMoneyWithConfig, type MoneyFormatConfig } from "@calibra/shared/money";
+
+import { FALLBACK_MONEY_CONFIG } from "#/lib/currency/config";
 
 /**
- * Locale-aware formatters used across the admin. Money is stored in Rial minor units; depending
- * on the display preference the formatter renders Toman (divide by 10) or Rial (raw). Persian
- * locale renders with Persian digits (e.g. `۱۲۳`); English renders with ASCII digits.
+ * Locale-aware formatters used across the admin. Money is stored in BASE (Rial) minor units and
+ * rendered through the store's resolved currency config — no hardcoded ÷10 or baked-in symbols.
+ * Persian locale renders Persian digits (`۱۲۳`); English renders ASCII.
  */
 
 const persianDigit = "۰۱۲۳۴۵۶۷۸۹";
@@ -14,26 +17,35 @@ function toLocaleDigits(value: string, locale: Locale): string {
     return value.replace(/[0-9]/g, (digit) => persianDigit[asciiDigit.indexOf(digit)] ?? digit);
 }
 
-export interface FormatMoneyOptions {
-    /** `"IRT"` (Toman, divides by 10) or `"IRR"` (Rial, raw). Defaults to `"IRT"`. */
-    display?: "IRT" | "IRR";
-    /** When `true`, appends the currency symbol after the amount. Defaults to `true`. */
-    withSymbol?: boolean;
+/**
+ * Active store currency config. The {@link MoneyFormatProvider} (client) and the authenticated
+ * layout (server) call {@link setActiveMoneyConfig} so the pure `formatMoney` below — used in
+ * column builders and cells that can't read React context — stays config-driven. The config is
+ * store-global (one currency), so a module singleton is safe across requests.
+ */
+let activeMoneyConfig: MoneyFormatConfig = FALLBACK_MONEY_CONFIG;
+
+/** Point the admin's pure money formatter at the store's resolved currency config. */
+export function setActiveMoneyConfig(config: MoneyFormatConfig): void {
+    activeMoneyConfig = config;
 }
 
-/**
- * Format a Rial-minor amount for display. Iranian retail convention shows Toman (major), so the
- * default divisor is 10. Use `display: "IRR"` for receipts that need the raw Rial value.
- */
+export interface FormatMoneyOptions {
+    /** When `true`, appends the currency symbol. Defaults to `true`. */
+    withSymbol?: boolean;
+    /**
+     * @deprecated Display currency is now store config, not a per-call choice. Ignored — kept so
+     * existing call sites compile during the currency migration.
+     */
+    display?: "IRT" | "IRR";
+}
+
+/** Format a stored BASE-minor (Rial) amount using the active store currency config. */
 export function formatMoney(minor: number, locale: Locale, options: FormatMoneyOptions = {}): string {
-    const { display = "IRT", withSymbol = true } = options;
-    const amount = display === "IRT" ? minor / 10 : minor;
-    const rounded = Math.round(amount);
-    const grouped = new Intl.NumberFormat("en-US").format(rounded);
-    const localized = toLocaleDigits(grouped, locale);
-    if (!withSymbol) return localized;
-    const symbol = locale === "fa" ? (display === "IRT" ? "تومان" : "ریال") : display === "IRT" ? "Toman" : "Rial";
-    return locale === "fa" ? `${localized} ${symbol}` : `${localized} ${symbol}`;
+    return formatMoneyWithConfig(minor, activeMoneyConfig, {
+        locale: locale === "fa" ? "fa" : "en",
+        withSymbol: options.withSymbol ?? true,
+    });
 }
 
 export function formatNumber(value: number, locale: Locale): string {

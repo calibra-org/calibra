@@ -18,6 +18,10 @@
             "types": "./src/digits.ts",
             "import": "./src/digits.ts"
         },
+        "./money": {
+            "types": "./src/money.ts",
+            "import": "./src/money.ts"
+        },
         "./jalali": {
             "types": "./src/jalali.ts",
             "import": "./src/jalali.ts"

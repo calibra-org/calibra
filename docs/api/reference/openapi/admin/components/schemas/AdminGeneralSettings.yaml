@@ -1,0 +1,105 @@
+title: AdminGeneralSettings
+description: >
+    The admin Settings → General (WooCommerce "General") tab — store address, selling/shipping
+    location options, taxes & coupon toggles, and display-currency configuration — plus the
+    reference lists (currencies, IR provinces, countries) that back the form's selects. Iran-only
+    scope: only `IR` and the Rial-family currencies are enabled.
+type: object
+required: [store_address, general_options, taxes_and_coupons, currency, options]
+properties:
+    store_address:
+        type: object
+        required: [address_1, address_2, city, state, postcode, country]
+        properties:
+            address_1: { type: string }
+            address_2: { type: string }
+            city: { type: string }
+            state:
+                type: string
+                description: ISO-3166-2:IR province code (`IR-NN`) or empty string.
+            postcode: { type: string }
+            country:
+                type: string
+                examples: ["IR"]
+    general_options:
+        type: object
+        required:
+            - selling_locations
+            - selling_locations_specific
+            - selling_locations_excluded
+            - shipping_locations
+            - shipping_locations_specific
+            - default_customer_location
+        properties:
+            selling_locations:
+                type: string
+                enum: [all, all_except, specific]
+            selling_locations_specific:
+                type: array
+                items: { type: string }
+            selling_locations_excluded:
+                type: array
+                items: { type: string }
+            shipping_locations:
+                type: string
+                enum: ["", all, specific, disabled]
+            shipping_locations_specific:
+                type: array
+                items: { type: string }
+            default_customer_location:
+                type: string
+                enum: [none, base, geolocation, geolocation_ajax]
+    taxes_and_coupons:
+        type: object
+        required: [taxes_enabled, coupons_enabled, calc_discounts_sequentially]
+        properties:
+            taxes_enabled: { type: boolean }
+            coupons_enabled: { type: boolean }
+            calc_discounts_sequentially: { type: boolean }
+    currency:
+        type: object
+        required: [base, display, position, thousand_sep, decimal_sep, num_decimals]
+        properties:
+            base:
+                type: string
+                description: Immutable stored currency (Rial).
+                examples: ["IRR"]
+            display:
+                type: string
+                description: Chosen display currency (WooCommerce `woocommerce_currency`).
+                examples: ["IRT"]
+            position:
+                type: string
+                enum: [left, right, left_space, right_space]
+            thousand_sep: { type: string }
+            decimal_sep: { type: string }
+            num_decimals:
+                type: integer
+                minimum: 0
+    options:
+        type: object
+        required: [currencies, provinces, countries]
+        properties:
+            currencies:
+                type: array
+                items:
+                    $ref: "./AdminCurrencyOption.yaml"
+            provinces:
+                type: array
+                items:
+                    type: object
+                    required: [code, name]
+                    properties:
+                        code: { type: string, examples: ["IR-24"] }
+                        name:
+                            $ref: "../../../common/components/schemas/LocalizedName.yaml"
+            countries:
+                type: array
+                items:
+                    type: object
+                    required: [code, name, enabled]
+                    properties:
+                        code: { type: string, examples: ["IR"] }
+                        name:
+                            $ref: "../../../common/components/schemas/LocalizedName.yaml"
+                        enabled: { type: boolean }

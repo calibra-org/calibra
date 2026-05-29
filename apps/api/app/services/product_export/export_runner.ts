@@ -2,6 +2,7 @@ import logger from "@adonisjs/core/services/logger";
 import { DateTime } from "luxon";
 
 import ProductExport from "#models/product_export";
+import { resolveCurrencyConfig } from "#services/currency_config_service";
 import { recordExportRows } from "#services/metrics/domain_metrics";
 import { publishExportEvent } from "#services/product_export/export_event_bus";
 import type { ExportableProduct } from "#services/product_export/export_field_resolver";
@@ -85,7 +86,8 @@ export async function runExport(opts: RunExportOptions): Promise<void> {
         row.filePath = writer.key;
         await row.save();
 
-        const emitter = createRowEmitter(columns, normalizeEmitterOptions(formatOptions));
+        const baseRatio = (await resolveCurrencyConfig()).baseRatio;
+        const emitter = createRowEmitter(columns, normalizeEmitterOptions(formatOptions, baseRatio));
         writer.stream.write(emitter.writeHeader());
 
         let processed = 0;
@@ -224,8 +226,9 @@ export async function runExport(opts: RunExportOptions): Promise<void> {
     }
 }
 
-function normalizeEmitterOptions(opts: Partial<EmitterOptions> & Record<string, unknown>): EmitterOptions {
+function normalizeEmitterOptions(opts: Partial<EmitterOptions> & Record<string, unknown>, baseRatio: number): EmitterOptions {
     return {
+        base_ratio: baseRatio,
         format: opts.format === "json" ? "json" : "csv",
         delimiter: (opts.delimiter as EmitterOptions["delimiter"] | undefined) ?? ",",
         enclosure: (opts.enclosure as string | undefined) ?? '"',

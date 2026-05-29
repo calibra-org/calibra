@@ -1,38 +1,59 @@
 "use client";
 
-import type { Locale } from "@calibra/shared/i18n";
 import { useTranslations } from "next-intl";
+import type { ComponentType, SVGProps } from "react";
 
+import { Banknote, Settings2, Truck, Wallet } from "#/icons";
 import { Link, usePathname } from "#/lib/i18n/navigation";
-import type { AdminSettingsGroup } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
-interface SettingsNavProps {
-    groups: AdminSettingsGroup[];
-    locale: Locale;
+interface SettingsTab {
+    /** Link target — each section's real first page (never a redirect-only index route). */
+    href: string;
+    /** Path prefix used for active-state matching across the section's subpages. */
+    match: string;
+    labelKey: string;
+    icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
-export function SettingsNav({ groups, locale }: SettingsNavProps) {
-    const t = useTranslations("Settings");
+/**
+ * Store-configuration tabs. Tax / shipping / payments live here (folded out of the main sidebar)
+ * alongside the General tab. Each `href` targets the section's first real page directly, bypassing
+ * the redirect-only index routes (which trip a Next dev `performance.measure` error).
+ */
+const TABS: SettingsTab[] = [
+    { href: "/settings/general", match: "/settings", labelKey: "general", icon: Settings2 },
+    { href: "/tax/classes", match: "/tax", labelKey: "tax", icon: Wallet },
+    { href: "/shipping/zones", match: "/shipping", labelKey: "shipping", icon: Truck },
+    { href: "/payments", match: "/payments", labelKey: "payments", icon: Banknote },
+];
+
+function isActive(pathname: string, match: string): boolean {
+    return pathname === match || pathname.startsWith(`${match}/`);
+}
+
+export function SettingsNav() {
+    const tGroups = useTranslations("Settings.groups");
+    const tNav = useTranslations("Settings");
     const pathname = usePathname();
     return (
-        <nav aria-label={t("groupsNav")} className="flex flex-col gap-1 text-sm">
-            {groups.map((group) => {
-                const href = `/settings/${group.key}`;
-                const active = pathname === href;
+        <nav aria-label={tNav("groupsNav")} className="flex flex-col gap-1 text-sm">
+            {TABS.map(({ href, match, labelKey, icon: Icon }) => {
+                const active = isActive(pathname, match);
                 return (
                     <Link
-                        key={group.key}
+                        key={href}
                         href={href as never}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                            "rounded-md px-3 py-2 transition-colors",
+                            "flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors",
                             active
                                 ? "bg-accent font-medium text-accent-foreground"
                                 : "text-muted-foreground hover:bg-accent/60 hover:text-accent-foreground",
                         )}
                     >
-                        {group.title[locale]}
+                        <Icon className="size-4 shrink-0" aria-hidden="true" />
+                        <span>{tGroups(labelKey)}</span>
                     </Link>
                 );
             })}

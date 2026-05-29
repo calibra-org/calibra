@@ -22,6 +22,7 @@ export default class MainSeeder extends BaseSeeder {
 
     async run() {
         await this.runSeeder(await import("#database/seed_modules/0001_foundation_seeder"));
+        await this.runSeeder(await import("#database/seed_modules/0013_currencies_seeder"));
         await this.runSeeder(await import("#database/seed_modules/0002_attributes_seeder"));
 
         /**

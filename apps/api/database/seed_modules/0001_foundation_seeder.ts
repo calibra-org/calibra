@@ -398,9 +398,42 @@ const SETTINGS: SettingRow[] = [
     { group: "general", key: "currency_display_default", value: "IRT", type: "string" },
     { group: "general", key: "country_default", value: "IR", type: "string" },
     { group: "general", key: "locale_default", value: "fa", type: "string" },
+    /**
+     * Store address (WooCommerce General → Store Address). `store_state` holds a region code
+     * (`IR-NN`) or "" — resolved against the seeded IR provinces in the `regions` table.
+     */
+    { group: "general", key: "store_address_1", value: "", type: "string" },
+    { group: "general", key: "store_address_2", value: "", type: "string" },
+    { group: "general", key: "store_city", value: "", type: "string" },
+    { group: "general", key: "store_state", value: "", type: "string" },
+    { group: "general", key: "store_postcode", value: "", type: "string" },
+    /**
+     * General options (WC selling/shipping locations + default customer location). Iran-only
+     * scope: selling defaults to the specific country list `["IR"]`; the model extends to more
+     * countries without a migration.
+     */
+    { group: "general", key: "selling_locations", value: "specific", type: "string" },
+    { group: "general", key: "selling_locations_specific", value: ["IR"], type: "json" },
+    { group: "general", key: "selling_locations_excluded", value: [], type: "json" },
+    { group: "general", key: "shipping_locations", value: "", type: "string" },
+    { group: "general", key: "shipping_locations_specific", value: ["IR"], type: "json" },
+    { group: "general", key: "default_customer_location", value: "base", type: "string" },
+    /**
+     * Currency display config (WC Currency options). `currency` above is the immutable stored
+     * BASE; `currency_display_default` is the chosen DISPLAY currency (WC `woocommerce_currency`).
+     * The four format knobs override the display currency's reference-row defaults.
+     */
+    { group: "general", key: "currency_position", value: "right_space", type: "string" },
+    { group: "general", key: "price_thousand_sep", value: "٬", type: "string" },
+    { group: "general", key: "price_decimal_sep", value: ".", type: "string" },
+    { group: "general", key: "price_num_decimals", value: 0, type: "number" },
     { group: "tax", key: "prices_include_tax", value: true, type: "boolean" },
     { group: "tax", key: "display_shop", value: "incl", type: "string" },
     { group: "tax", key: "display_cart", value: "incl", type: "string" },
+    /** Taxes & coupons toggles (WC General → Taxes and coupons). */
+    { group: "tax", key: "enabled", value: true, type: "boolean" },
+    { group: "tax", key: "coupons_enabled", value: true, type: "boolean" },
+    { group: "tax", key: "calc_discounts_sequentially", value: false, type: "boolean" },
     { group: "inventory", key: "hold_stock_minutes", value: 60, type: "number" },
     /**
      * Global fallback when an `inventory_items.low_stock_threshold` row leaves its threshold

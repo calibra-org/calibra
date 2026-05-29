@@ -54,6 +54,8 @@ tags:
       description: Authenticated customer profile, addresses, downloads, and order history.
     - name: Payment
       description: PSP init + gateway callback endpoints (storefront-facing).
+    - name: Currency
+      description: Public display-currency configuration for the money formatter.
 
 components:
     securitySchemes:
@@ -81,6 +83,12 @@ paths:
     /api/v1/auth/me:
         get:
             $ref: "./storefront/paths/auth/me.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+
+    /api/v1/currency:
+        get:
+            $ref: "./storefront/paths/currency/currency.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
 

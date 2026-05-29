@@ -71,11 +71,12 @@ export async function applyUpdate(
     dto: ProductImportDTO,
     locale: string,
     counters: NewRowCounters,
+    baseRatio: number,
 ): Promise<WriteOutcome> {
     const changes: ChangeRecord[] = [];
     const productUpdates: Record<string, unknown> = {};
 
-    applyProductFields(productUpdates, changes, existing, dto);
+    applyProductFields(productUpdates, changes, existing, dto, baseRatio);
 
     if (Object.keys(productUpdates).length > 0) {
         productUpdates.updated_at = DateTime.utc().toSQL();
@@ -139,6 +140,7 @@ export async function applyCreate(
     dto: ProductImportDTO,
     locale: string,
     counters: NewRowCounters,
+    baseRatio: number,
 ): Promise<WriteOutcome> {
     const now = DateTime.utc().toSQL();
     const insertRow: Record<string, unknown> = {
@@ -151,10 +153,12 @@ export async function applyCreate(
         downloadable: false,
         regular_price:
             dto.regular_price_major !== undefined && dto.regular_price_major !== null
-                ? Math.round(dto.regular_price_major * 10)
+                ? Math.round(dto.regular_price_major * baseRatio)
                 : null,
         sale_price:
-            dto.sale_price_major !== undefined && dto.sale_price_major !== null ? Math.round(dto.sale_price_major * 10) : null,
+            dto.sale_price_major !== undefined && dto.sale_price_major !== null
+                ? Math.round(dto.sale_price_major * baseRatio)
+                : null,
         sale_starts_at: dto.sale_price_start ?? null,
         sale_ends_at: dto.sale_price_end ?? null,
         tax_status: dto.tax_status ?? "taxable",
@@ -213,7 +217,7 @@ export async function applyCreate(
     const queuedImageCount = dto.images?.length ?? 0;
     return {
         productId,
-        changes: buildCreateChanges(dto, productId, name),
+        changes: buildCreateChanges(dto, productId, name, baseRatio),
         queuedImageCount,
     };
 }
@@ -223,6 +227,7 @@ function applyProductFields(
     changes: ChangeRecord[],
     existing: ProductRow,
     dto: ProductImportDTO,
+    baseRatio: number,
 ): void {
     if (dto.type !== undefined && dto.type !== existing.type) {
         target.type = dto.type;
@@ -241,7 +246,7 @@ function applyProductFields(
         changes.push({ field: "featured", oldValue: String(existing.featured), newValue: String(dto.featured) });
     }
     if (dto.regular_price_major !== undefined) {
-        const minor = dto.regular_price_major === null ? null : Math.round(dto.regular_price_major * 10);
+        const minor = dto.regular_price_major === null ? null : Math.round(dto.regular_price_major * baseRatio);
         if (Number(existing.regular_price ?? -1) !== Number(minor ?? -1)) {
             target.regular_price = minor;
             changes.push({
@@ -252,7 +257,7 @@ function applyProductFields(
         }
     }
     if (dto.sale_price_major !== undefined) {
-        const minor = dto.sale_price_major === null ? null : Math.round(dto.sale_price_major * 10);
+        const minor = dto.sale_price_major === null ? null : Math.round(dto.sale_price_major * baseRatio);
         if (Number(existing.sale_price ?? -1) !== Number(minor ?? -1)) {
             target.sale_price = minor;
             changes.push({
@@ -396,7 +401,7 @@ function stockSummary(dto: ProductImportDTO): string {
     return parts.join(", ");
 }
 
-function buildCreateChanges(dto: ProductImportDTO, productId: number, name: string): ChangeRecord[] {
+function buildCreateChanges(dto: ProductImportDTO, productId: number, name: string, baseRatio: number): ChangeRecord[] {
     const changes: ChangeRecord[] = [
         { field: "product", oldValue: null, newValue: String(productId) },
         { field: "name", oldValue: null, newValue: name },
@@ -405,7 +410,7 @@ function buildCreateChanges(dto: ProductImportDTO, productId: number, name: stri
         changes.push({
             field: "regular_price",
             oldValue: null,
-            newValue: String(Math.round(dto.regular_price_major * 10)),
+            newValue: String(Math.round(dto.regular_price_major * baseRatio)),
         });
     }
     if (dto.sku !== undefined && dto.sku !== null) {

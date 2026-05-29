@@ -65,8 +65,8 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
         catalogVisibility: product.catalogVisibility,
         sku: product.sku,
         gtin: product.gtin ?? "",
-        regularPriceMajor: product.regularPrice / 10,
-        salePriceMajor: product.salePrice === null ? null : product.salePrice / 10,
+        regularPriceMinor: product.regularPrice,
+        salePriceMinor: product.salePrice,
         saleStartsAt: product.saleStartsAt,
         saleEndsAt: product.saleEndsAt,
         manageStock: product.manageStock,
@@ -103,8 +103,8 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                     catalogVisibility: values.catalogVisibility,
                     sku: values.sku,
                     gtin: values.gtin.length > 0 ? values.gtin : null,
-                    regularPrice: Math.round(values.regularPriceMajor * 10),
-                    salePrice: values.salePriceMajor === null ? null : Math.round(values.salePriceMajor * 10),
+                    regularPrice: values.regularPriceMinor,
+                    salePrice: values.salePriceMinor,
                     saleStartsAt: values.saleStartsAt,
                     saleEndsAt: values.saleEndsAt,
                     manageStock: values.manageStock,
@@ -221,34 +221,43 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
 
                 <Controller
                     control={control}
-                    name="regularPriceMajor"
+                    name="regularPriceMinor"
                     render={({ field }) => (
                         <Field
-                            id="regularPriceMajor"
+                            id="regularPriceMinor"
                             label={t("regularPrice")}
-                            error={errors.regularPriceMajor?.message}
+                            error={errors.regularPriceMinor?.message}
                             span="col-span-6 md:col-span-3"
                         >
-                            <CurrencyInput
-                                id="regularPriceMajor"
-                                value={field.value}
-                                onChange={(value) => field.onChange(value ?? 0)}
+                            <MoneyInput
+                                id="regularPriceMinor"
+                                valueMinor={field.value}
+                                onChangeMinor={(value) => field.onChange(value ?? 0)}
+                                min={0}
+                                step={1000}
                             />
                         </Field>
                     )}
                 />
                 <Controller
                     control={control}
-                    name="salePriceMajor"
+                    name="salePriceMinor"
                     render={({ field }) => (
                         <Field
-                            id="salePriceMajor"
+                            id="salePriceMinor"
                             label={t("salePrice")}
-                            error={errors.salePriceMajor?.message}
+                            error={errors.salePriceMinor?.message}
                             hint={t("salePriceHint")}
                             span="col-span-6 md:col-span-3"
                         >
-                            <CurrencyInput id="salePriceMajor" value={field.value} onChange={field.onChange} nullable />
+                            <MoneyInput
+                                id="salePriceMinor"
+                                valueMinor={field.value}
+                                onChangeMinor={field.onChange}
+                                nullable
+                                min={0}
+                                step={1000}
+                            />
                         </Field>
                     )}
                 />
@@ -502,33 +511,6 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
                 />
             </div>
         </form>
-    );
-}
-
-interface CurrencyInputProps {
-    id: string;
-    value: number | null | undefined;
-    onChange: (value: number | null) => void;
-    nullable?: boolean;
-}
-
-/**
- * Toman-major input. Schema is already in Toman; convert to/from minor at the edge so the
- * shared MoneyInput stays the single source of truth for the Toman ↔ Rial conversion.
- */
-function CurrencyInput({ id, value, onChange, nullable }: CurrencyInputProps) {
-    const t = useTranslations("Products.list.quickEdit");
-    const valueMinor = value === null || value === undefined ? null : Math.round(value * 10);
-    return (
-        <MoneyInput
-            id={id}
-            valueMinor={valueMinor}
-            onChangeMinor={(next) => onChange(next === null ? null : next / 10)}
-            nullable={nullable}
-            min={0}
-            step={1000}
-            suffix={t("currency")}
-        />
     );
 }
 

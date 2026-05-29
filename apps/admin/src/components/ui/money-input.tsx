@@ -1,21 +1,21 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { baseMinorToMajor, parseMajorToBaseMinor } from "@calibra/shared/money";
 
 import { NumberField } from "#/components/ui/number-field";
-import { rialToToman, tomanToRial } from "#/lib/money";
+import { useMoney } from "#/lib/currency/provider";
 
 export interface MoneyInputProps {
     id?: string;
-    /** Money amount in MINOR units (Rial). 1 Toman = 10 Rial. */
+    /** Money amount in BASE MINOR units (Rial). */
     valueMinor: number | null | undefined;
-    /** Receives the new MINOR-unit value, or `null` when cleared (only emitted if `nullable`). */
+    /** Receives the new BASE-MINOR value, or `null` when cleared (only emitted if `nullable`). */
     onChangeMinor: (next: number | null) => void;
     nullable?: boolean;
-    /** Display suffix; defaults to the localized "Toman" chip. */
+    /** Display suffix; defaults to the store display-currency symbol. */
     suffix?: string;
     min?: number;
-    /** Toman step. Defaults to 1000 — keeps wheel-scroll changes meaningful. */
+    /** Step in display-currency MAJOR units. Defaults to 1000 — keeps wheel-scroll meaningful. */
     step?: number;
     placeholder?: string;
     disabled?: boolean;
@@ -24,10 +24,10 @@ export interface MoneyInputProps {
 }
 
 /**
- * The Toman ↔ Rial round-trip is the source of truth for every money input in the admin.
- * Display: minor ÷ 10. Commit: Toman × 10 (rounded). When a caller forgets to use this, money
- * fields silently drift by a factor of 10 — never write a raw `<Input type="number">` for
- * pricing.
+ * The single source of truth for every money input in the admin. The external contract is always
+ * BASE MINOR units (Rial); internally it shows the store's DISPLAY currency major value using the
+ * configured `base_ratio` + symbol (no hardcoded ÷10). Never write a raw `<Input type="number">`
+ * for pricing — money would silently drift when the store currency changes.
  */
 export function MoneyInput({
     id,
@@ -42,17 +42,16 @@ export function MoneyInput({
     "aria-invalid": ariaInvalid,
     className,
 }: MoneyInputProps) {
-    const t = useTranslations("Common.money");
+    const { config } = useMoney();
+    const decimals = Math.max(0, config.decimals);
+    const factor = 10 ** decimals;
     /**
-     * Toman is the operator-facing unit; admins type and read whole numbers (1 Rial precision
-     * is invisible noise). Round the display value before handing it to NumberField so seeds
-     * like 6,376,171 Rial render as "637,617" instead of "637,617.1" — but commit unchanged
-     * when the operator doesn't touch the field, so the original sub-Toman value isn't
-     * silently rewritten until they actually edit.
+     * Round the display value to the currency's decimals before handing it to NumberField, but
+     * commit only when the operator edits — so an untouched sub-unit value isn't rewritten.
      */
-    const major = rialToToman(valueMinor ?? null);
-    const displayMajor = major === null ? null : Math.round(major);
-    const resolvedSuffix = suffix ?? t("tomanShort");
+    const major = valueMinor === null || valueMinor === undefined ? null : baseMinorToMajor(valueMinor, config);
+    const displayMajor = major === null ? null : Math.round(major * factor) / factor;
+    const resolvedSuffix = suffix ?? config.symbol;
     return (
         <NumberField
             id={id}
@@ -63,7 +62,7 @@ export function MoneyInput({
                     else onChangeMinor(0);
                     return;
                 }
-                onChangeMinor(tomanToRial(next));
+                onChangeMinor(parseMajorToBaseMinor(next, config));
             }}
             nullable={nullable}
             min={min}
@@ -74,12 +73,11 @@ export function MoneyInput({
             aria-invalid={ariaInvalid}
             className={className}
             /**
-             * Live grouping (1,234,567) + no fractional Toman so the input doesn't render
-             * "835617000000000" mid-edit. Locale pins to en-US so the thousand separator stays
-             * a comma even when the operator's UI is Persian — Persian's `٬` separator would
-             * clash with the LTR digit-entry mode the input forces.
+             * Live grouping (1,234,567); fraction digits track the currency config. Locale pins to
+             * en-US so the thousand separator stays a comma in the LTR digit-entry mode the input
+             * forces — the configured Persian `٬` would clash mid-edit.
              */
-            format={{ maximumFractionDigits: 0, useGrouping: true }}
+            format={{ maximumFractionDigits: decimals, useGrouping: true }}
         />
     );
 }

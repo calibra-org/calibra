@@ -2,6 +2,7 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 
 import { apiServer } from "#/lib/api";
 import { Link } from "#/lib/i18n/navigation";
+import { formatPrice, getMoneyFormatConfig } from "#/lib/money";
 
 interface PageProps {
     params: Promise<{ locale: string }>;
@@ -14,9 +15,10 @@ export default async function HomePage({ params }: PageProps) {
     const t = await getTranslations("Home");
     const productsT = await getTranslations("Products");
     const api = await apiServer();
-    const { data } = await api.storefront.GET("/api/v1/products", {
-        params: { query: { limit: 8, featured: true } },
-    });
+    const [{ data }, moneyConfig] = await Promise.all([
+        api.storefront.GET("/api/v1/products", { params: { query: { limit: 8, featured: true } } }),
+        getMoneyFormatConfig(),
+    ]);
     const featured = data?.data ?? [];
 
     return (
@@ -52,7 +54,7 @@ export default async function HomePage({ params }: PageProps) {
                                     </div>
                                     <span className="line-clamp-2 font-medium text-sm">{product.name ?? product.sku}</span>
                                     <span className="text-muted-foreground text-xs tabular-nums">
-                                        {formatRial(product.effective_price ?? product.regular_price, locale)}
+                                        {formatPrice(product.effective_price ?? product.regular_price, moneyConfig, locale)}
                                     </span>
                                 </Link>
                             </li>
@@ -62,11 +64,6 @@ export default async function HomePage({ params }: PageProps) {
             )}
         </section>
     );
-}
-
-function formatRial(value: number | null | undefined, locale: string): string {
-    if (value === null || value === undefined) return "";
-    return new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US").format(value);
 }
 
 void getLocale;

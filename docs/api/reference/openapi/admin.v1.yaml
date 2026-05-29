@@ -71,6 +71,8 @@ tags:
           Cross-cutting dashboard summaries (customer summary, …). Pairs a current snapshot with a
           30-day delta and a daily sparkline so the dashboard tiles can render without further
           rollup math on the client.
+    - name: Admin / Settings
+      description: Store configuration — the General (همگانی) tab, currency, store address, taxes & coupons.
 
 components:
     securitySchemes:
@@ -256,6 +258,14 @@ paths:
             $ref: "./admin/paths/insights/regional-province.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
+
+    /api/v1/admin/settings/general:
+        get:
+            $ref: "./admin/paths/settings/general.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./admin/paths/settings/general.patch.yaml"
 
     /api/v1/admin/customers:
         get:

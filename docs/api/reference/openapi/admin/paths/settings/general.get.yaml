@@ -1,0 +1,24 @@
+operationId: adminSettingsGeneralShow
+summary: Get General settings (admin)
+description: >
+    Returns the editable General-tab settings (store address, selling/shipping locations, taxes &
+    coupon toggles, display-currency config) plus the reference lists (currencies, IR provinces,
+    countries) that back the form's selects.
+tags: [Admin / Settings]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: General settings + option lists.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/AdminGeneralSettings.yaml"
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

@@ -20,6 +20,7 @@ export const CacheTags = {
     catalogTaxonomy: "catalog:taxonomy",
     shippingZones: "shipping:zones",
     settingsGroup: (group: string): `settings:${string}` => `settings:${group}`,
+    currency: "currency:config",
     adminReports: "admin:reports",
     adminCustomers: "admin:customers",
     adminCustomer: (customerId: number | string | bigint): `admin:customer:${string}` => `admin:customer:${String(customerId)}`,
@@ -121,6 +122,9 @@ export const CacheKeys = {
     },
     settings: {
         group: (group: string): string => `settings:group:${group}`,
+    },
+    currency: {
+        config: (locale: string): string => `currency:config:${locale}`,
     },
     admin: {
         topProducts: (days: number, limit: number, locale: string): string =>

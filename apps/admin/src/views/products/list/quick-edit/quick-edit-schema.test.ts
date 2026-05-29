@@ -29,8 +29,8 @@ describe("quickEditSchema", () => {
         catalogVisibility: "visible" as const,
         sku: "PX9P",
         gtin: "",
-        regularPriceMajor: 199_900,
-        salePriceMajor: null,
+        regularPriceMinor: 1_999_000,
+        salePriceMinor: null,
         saleStartsAt: null,
         saleEndsAt: null,
         manageStock: false,
@@ -57,11 +57,11 @@ describe("quickEditSchema", () => {
     });
 
     it("rejects a negative price", () => {
-        const result = quickEditSchema.safeParse({ ...valid, regularPriceMajor: -1 });
+        const result = quickEditSchema.safeParse({ ...valid, regularPriceMinor: -1 });
         expect(result.success).toBe(false);
     });
 
     it("accepts a sale price of null", () => {
-        expect(quickEditSchema.safeParse({ ...valid, salePriceMajor: null }).success).toBe(true);
+        expect(quickEditSchema.safeParse({ ...valid, salePriceMinor: null }).success).toBe(true);
     });
 });

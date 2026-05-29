@@ -1,0 +1,23 @@
+operationId: currencyShow
+summary: Display-currency configuration (public)
+description: >
+    Returns the resolved display-currency configuration (symbol, position, separators, decimals,
+    base ratio). Both the storefront and admin build a money formatter from this so prices render
+    identically. Cached server-side (~30m); invalidated when an admin saves the General settings.
+tags: [Currency]
+security: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Resolved currency configuration.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/CurrencyConfig.yaml"

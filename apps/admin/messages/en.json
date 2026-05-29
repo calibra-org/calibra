@@ -3544,9 +3544,68 @@
             "products": "Products",
             "tax": "Tax",
             "shipping": "Shipping",
+            "payments": "Payments",
             "account": "Accounts",
             "email": "Email",
             "advanced": "Advanced"
+        },
+        "general": {
+            "comingSoon": "coming soon",
+            "unsaved": "Unsaved changes",
+            "discard": "Discard",
+            "saveError": "Couldn't save — try again.",
+            "storeAddress": {
+                "title": "Store Address",
+                "subtitle": "This address is used to calculate tax and shipping rates.",
+                "address1": "Address line 1",
+                "address2": "Address line 2",
+                "city": "City",
+                "country": "Country",
+                "state": "Province",
+                "statePlaceholder": "No province",
+                "postcode": "Postcode"
+            },
+            "generalOptions": {
+                "title": "General options",
+                "selling": "Selling locations",
+                "sellingAll": "Sell to all countries",
+                "sellingAllExcept": "Sell to all countries except…",
+                "sellingSpecific": "Sell to specific countries",
+                "shipping": "Shipping locations",
+                "shippingSell": "Ship to all countries you sell to",
+                "shippingAll": "Ship to all countries",
+                "shippingSpecific": "Ship to specific countries",
+                "shippingDisabled": "Disable shipping & shipping calculations",
+                "customer": "Default customer location",
+                "customerNone": "No location",
+                "customerBase": "Shop base address",
+                "customerGeo": "Geolocate",
+                "customerGeoCache": "Geolocate (with page caching)"
+            },
+            "taxes": {
+                "title": "Taxes and coupons",
+                "enable": "Enable taxes",
+                "enableHelp": "Rates will be configurable and tax is calculated at checkout.",
+                "coupons": "Enable the use of coupon codes",
+                "couponsHelp": "Coupons can be applied from the cart and checkout pages only.",
+                "sequential": "Calculate coupon discounts sequentially",
+                "sequentialHelp": "When multiple coupons apply, each discount is calculated on the previously discounted amount."
+            },
+            "currency": {
+                "title": "Currency options",
+                "subtitle": "The following options affect how prices are displayed on the storefront.",
+                "currency": "Currency",
+                "position": "Currency position",
+                "posLeft": "Left",
+                "posRight": "Right",
+                "posLeftSpace": "Left (with space)",
+                "posRightSpace": "Right (with space)",
+                "thousandSep": "Thousand separator",
+                "decimalSep": "Decimal separator",
+                "numDecimals": "Number of decimals",
+                "preview": "Preview",
+                "sepEqual": "Thousand and decimal separators must differ."
+            }
         }
     },
     "Reports": {

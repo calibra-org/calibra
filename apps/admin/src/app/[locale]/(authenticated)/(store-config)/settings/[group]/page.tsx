@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { PageHeader } from "#/components/PageHeader";
-import { SettingsNav } from "#/components/SettingsNav";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
@@ -12,9 +11,10 @@ import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
-import { getSettingsGroup, listSettingsGroups } from "#/lib/server-repos";
+import { getSettingsGroup } from "#/lib/server-repos";
 import type { AdminSettingField, SettingsGroupKey } from "#/lib/types";
 import { cn } from "#/lib/utils";
+import { GeneralSettings } from "#/views/settings/general/general-settings";
 
 interface PageProps {
     params: Promise<{ locale: string; group: string }>;
@@ -66,18 +66,20 @@ export default async function SettingsGroupPage({ params }: PageProps) {
     if (!isSettingsGroupKey(group)) notFound();
     const groupData = await getSettingsGroup(group);
     if (groupData === null) notFound();
-    const groups = await listSettingsGroups();
     const t = await getTranslations("Settings");
+    const isGeneral = group === "general";
 
     return (
-        <section className="flex flex-col gap-6">
-            <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<Button>{t("save")}</Button>} />
+        <div className="flex flex-col gap-6">
+            <PageHeader
+                title={t("title")}
+                subtitle={t("subtitle")}
+                actions={isGeneral ? undefined : <Button>{t("save")}</Button>}
+            />
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
-                <aside>
-                    <SettingsNav groups={groups} locale={locale} />
-                </aside>
-
+            {isGeneral ? (
+                <GeneralSettings />
+            ) : (
                 <Card>
                     <CardHeader className="border-b pb-4">
                         <CardTitle className="text-base">{groupData.title[locale]}</CardTitle>
@@ -108,7 +110,7 @@ export default async function SettingsGroupPage({ params }: PageProps) {
                         })}
                     </CardContent>
                 </Card>
-            </div>
-        </section>
+            )}
+        </div>
     );
 }

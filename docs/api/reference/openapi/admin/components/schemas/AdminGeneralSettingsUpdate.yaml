@@ -1,0 +1,39 @@
+title: AdminGeneralSettingsUpdate
+description: >
+    Partial update for the General settings tab. Every section and field is optional — the server
+    writes only what changed (same-value writes are no-ops). Cross-field rules: `currency.display`
+    must be an enabled currency, and `thousand_sep` must differ from `decimal_sep`.
+type: object
+properties:
+    store_address:
+        type: object
+        properties:
+            address_1: { type: string, maxLength: 255 }
+            address_2: { type: string, maxLength: 255 }
+            city: { type: string, maxLength: 120 }
+            state: { type: string, maxLength: 16 }
+            postcode: { type: string, maxLength: 20 }
+            country: { type: string, maxLength: 2 }
+    general_options:
+        type: object
+        properties:
+            selling_locations: { type: string, enum: [all, all_except, specific] }
+            selling_locations_specific: { type: array, items: { type: string } }
+            selling_locations_excluded: { type: array, items: { type: string } }
+            shipping_locations: { type: string, enum: ["", all, specific, disabled] }
+            shipping_locations_specific: { type: array, items: { type: string } }
+            default_customer_location: { type: string, enum: [none, base, geolocation, geolocation_ajax] }
+    taxes_and_coupons:
+        type: object
+        properties:
+            taxes_enabled: { type: boolean }
+            coupons_enabled: { type: boolean }
+            calc_discounts_sequentially: { type: boolean }
+    currency:
+        type: object
+        properties:
+            display: { type: string, maxLength: 8 }
+            position: { type: string, enum: [left, right, left_space, right_space] }
+            thousand_sep: { type: string, minLength: 1, maxLength: 3 }
+            decimal_sep: { type: string, minLength: 1, maxLength: 3 }
+            num_decimals: { type: integer, minimum: 0, maximum: 4 }

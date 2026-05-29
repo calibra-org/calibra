@@ -65,12 +65,8 @@ export function VersionsBody({ productId, productType }: VersionsBodyProps) {
      */
     const attributeLinks = useWatch({ control, name: "attributeLinks" });
     const productSku = watch("sku") ?? "";
-    const productRegularPriceToman = watch("regularPriceToman");
-    /** Parent product's price in MINOR units — used as the starting value for bulk-price dialogs. */
-    const productPriceMinor: number | null =
-        productRegularPriceToman === null || productRegularPriceToman === undefined
-            ? null
-            : Math.round(productRegularPriceToman * 10);
+    /** Parent product's price in BASE MINOR units — the starting value for bulk-price dialogs. */
+    const productPriceMinor: number | null = watch("regularPriceMinor") ?? null;
 
     const variationAxes = useMemo<AttributeAxis[]>(
         () =>

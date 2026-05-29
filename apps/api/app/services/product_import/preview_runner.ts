@@ -1,5 +1,6 @@
 import db from "@adonisjs/lucid/services/db";
 
+import { resolveCurrencyConfig } from "#services/currency_config_service";
 import { type AnomalyFinding, detectAnomalies, type PreviewRow } from "#services/product_import/anomaly_detector";
 import { parseFile } from "#services/product_import/csv_parser";
 import { type ColumnMapping, type ProjectionError, projectRow } from "#services/product_import/row_projector";
@@ -84,6 +85,8 @@ export async function runPreview(opts: PreviewOptions): Promise<PreviewResult> {
         delimiter: opts.delimiter === "auto" ? "auto" : opts.delimiter,
         encoding: opts.encoding === "auto" ? "auto" : opts.encoding,
     });
+    /** Store display-currency base_ratio — converts `*_major` ↔ BASE minor for the preview diffs. */
+    const baseRatio = (await resolveCurrencyConfig()).baseRatio;
 
     const projectedRows: Array<{
         rowNumber: number;
@@ -138,7 +141,7 @@ export async function runPreview(opts: PreviewOptions): Promise<PreviewResult> {
                 rowNumber: row.rowNumber,
                 dto: row.dto,
                 errors: row.errors,
-                existingRegularPriceMajor: existing === undefined ? null : minorToMajor(existing.regularPrice),
+                existingRegularPriceMajor: existing === undefined ? null : minorToMajor(existing.regularPrice, baseRatio),
             });
             continue;
         }
@@ -160,7 +163,7 @@ export async function runPreview(opts: PreviewOptions): Promise<PreviewResult> {
                 continue;
             }
             update++;
-            const diffs = buildDiffs(existing, row.dto);
+            const diffs = buildDiffs(existing, row.dto, baseRatio);
             if (updates.length < (opts.expandedUpdates ?? DEFAULT_EXPANSION) && diffs.length > 0) {
                 updates.push({ sku, rowNumber: row.rowNumber, diffs });
             }
@@ -184,7 +187,7 @@ export async function runPreview(opts: PreviewOptions): Promise<PreviewResult> {
             rowNumber: row.rowNumber,
             dto: row.dto,
             errors: row.errors,
-            existingRegularPriceMajor: existing === undefined ? null : minorToMajor(existing.regularPrice),
+            existingRegularPriceMajor: existing === undefined ? null : minorToMajor(existing.regularPrice, baseRatio),
         });
     }
 
@@ -234,11 +237,11 @@ async function fetchExistingProducts(skus: string[]): Promise<Map<string, Existi
     return result;
 }
 
-function buildDiffs(existing: ExistingProduct, dto: ReturnType<typeof projectRow>["dto"]): PreviewDiff[] {
+function buildDiffs(existing: ExistingProduct, dto: ReturnType<typeof projectRow>["dto"], baseRatio: number): PreviewDiff[] {
     const diffs: PreviewDiff[] = [];
 
     if (dto.regular_price_major !== undefined) {
-        const newMinor = dto.regular_price_major === null ? null : Math.round(dto.regular_price_major * 10);
+        const newMinor = dto.regular_price_major === null ? null : Math.round(dto.regular_price_major * baseRatio);
         if (newMinor !== existing.regularPrice) {
             diffs.push({
                 field: "regular_price",
@@ -249,7 +252,7 @@ function buildDiffs(existing: ExistingProduct, dto: ReturnType<typeof projectRow
         }
     }
     if (dto.sale_price_major !== undefined) {
-        const newMinor = dto.sale_price_major === null ? null : Math.round(dto.sale_price_major * 10);
+        const newMinor = dto.sale_price_major === null ? null : Math.round(dto.sale_price_major * baseRatio);
         if (newMinor !== existing.salePrice) {
             diffs.push({
                 field: "sale_price",
@@ -277,7 +280,7 @@ function percentChange(oldValue: number | null, newValue: number | null): number
     return ((newValue - oldValue) / oldValue) * 100;
 }
 
-function minorToMajor(minor: number | null): number | null {
+function minorToMajor(minor: number | null, baseRatio: number): number | null {
     if (minor === null) return null;
-    return Math.round(minor / 10);
+    return Math.round(minor / baseRatio);
 }
