@@ -485,7 +485,6 @@ export function ProductsList() {
                 onColumnOrderChange={ui.setColumnOrder}
                 columnSizing={ui.columnSizing}
                 onColumnSizingChange={ui.setColumnSizing}
-                columnWrap={ui.columnWrap}
                 density={ui.density}
                 isLoading={isPending}
                 isError={isError}
@@ -536,8 +535,6 @@ export function ProductsList() {
                                     onVisibilityChange={ui.setColumnVisibility}
                                     density={ui.density}
                                     onDensityChange={ui.setDensity}
-                                    columnWrap={ui.columnWrap}
-                                    onColumnWrapChange={ui.setColumnWrap}
                                     columnOrder={ui.columnOrder}
                                     onColumnOrderChange={ui.setColumnOrder}
                                     pinnedIds={["select", "favorite", "image", "name", "actions"]}
@@ -550,7 +547,6 @@ export function ProductsList() {
                                             cozy: t("density.cozy"),
                                             compact: t("density.compact"),
                                         },
-                                        wrapColumn: t("wrapColumn"),
                                         reorderColumn: t("reorderColumn"),
                                     }}
                                 />

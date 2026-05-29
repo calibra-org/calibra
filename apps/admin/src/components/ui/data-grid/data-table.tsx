@@ -195,12 +195,6 @@ export interface DataTableProps<TData> {
     columnSizing?: Record<string, number>;
     onColumnSizingChange?: (next: Record<string, number>) => void;
 
-    /**
-     * Per-column wrap flags (`{ [columnId]: true }`). A wrapped column lets its text flow to
-     * multiple lines; every other column truncates with an ellipsis. Defaults to all-truncate.
-     */
-    columnWrap?: Record<string, boolean>;
-
     density: DataTableDensity;
 
     /** Loading + error states from the consumer's query. */
@@ -310,7 +304,6 @@ export function DataTable<TData>({
     onColumnOrderChange,
     columnSizing,
     onColumnSizingChange,
-    columnWrap,
     density,
     isLoading = false,
     isError = false,
@@ -760,7 +753,6 @@ export function DataTable<TData>({
                                                 renderRowOverride={renderRowOverride}
                                                 onRowOpen={onRowOpen}
                                                 stickyPlan={stickyPlan}
-                                                columnWrap={columnWrap}
                                             />
                                         )}
                                     </TableBody>
@@ -926,7 +918,6 @@ interface RowListProps<TData> {
     renderRowOverride?: (row: Row<TData>) => ReactNode | undefined;
     onRowOpen?: (row: TData) => void;
     stickyPlan: StickyPlan;
-    columnWrap?: Record<string, boolean>;
 }
 
 /** The body's data rows. Extracted so the resize path can swap in a frozen, memoized copy. */
@@ -938,7 +929,6 @@ function DataTableRowList<TData>({
     renderRowOverride,
     onRowOpen,
     stickyPlan,
-    columnWrap,
 }: RowListProps<TData>) {
     return (
         <>
@@ -953,7 +943,6 @@ function DataTableRowList<TData>({
                     rowOverride={renderRowOverride?.(row)}
                     onRowOpen={onRowOpen}
                     stickyPlan={stickyPlan}
-                    columnWrap={columnWrap}
                 />
             ))}
         </>
@@ -978,7 +967,6 @@ interface BodyRowProps<TData> {
     rowOverride?: ReactNode;
     onRowOpen?: (row: TData) => void;
     stickyPlan: StickyPlan;
-    columnWrap?: Record<string, boolean>;
 }
 
 function DataTableBodyRow<TData>({
@@ -990,7 +978,6 @@ function DataTableBodyRow<TData>({
     rowOverride,
     onRowOpen,
     stickyPlan,
-    columnWrap,
 }: BodyRowProps<TData>) {
     const isExpanded = row.getIsExpanded();
     const visibleCellCount = row.getVisibleCells().length;
@@ -1061,20 +1048,14 @@ function DataTableBodyRow<TData>({
                 const placement = stickyPlan.get(cell.column.id);
                 const sticky = resolveStickyCell(placement);
                 const widthStyle: CSSProperties = { width: widthValue, minWidth: widthValue };
-                const wrap = columnWrap?.[cell.column.id] === true;
                 return (
                     <TableCell
                         key={cell.id}
                         {...(sticky?.dataAttrs ?? {})}
                         className={cn(
                             cellClass,
-                            /**
-                             * Clip overflow so a too-wide cell never spills into its neighbour. Wrapped
-                             * columns let text flow to multiple lines (top-aligned); the default keeps
-                             * the inherited `whitespace-nowrap` so single-line text truncates.
-                             */
+                            /** Clip overflow so a too-wide cell never spills into its neighbour (content truncates). */
                             "overflow-hidden",
-                            wrap ? "whitespace-normal break-words align-top" : "",
                             /** Mirror of the header pseudo-divider — same opacity so header + body grid read as one. */
                             "relative before:absolute before:inset-y-0 before:start-0 before:w-px before:bg-foreground/8 before:content-['']",
                             "first:before:hidden",

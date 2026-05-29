@@ -52,12 +52,6 @@ export function useColumnState(options: UseColumnStateOptions) {
         {},
     );
 
-    /**
-     * Persisted per-column wrap flags. A column id mapped to `true` wraps its text to multiple
-     * lines instead of truncating with an ellipsis. Absent / `false` = truncate (the default).
-     */
-    const [columnWrap, setColumnWrap] = useLocalStorageState<Record<string, boolean>>(`admin.dataTable.${options.id}.wrap`, {});
-
     return {
         density,
         setDensity,
@@ -67,8 +61,6 @@ export function useColumnState(options: UseColumnStateOptions) {
         setColumnOrder,
         columnSizing,
         setColumnSizing,
-        columnWrap,
-        setColumnWrap,
     };
 }
 

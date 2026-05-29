@@ -26,7 +26,7 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Radio, RadioGroup } from "#/components/ui/radio";
 import { ScrollArea } from "#/components/ui/scroll-area";
-import { GripVertical, List } from "#/icons";
+import { GripVertical } from "#/icons";
 import { cn } from "#/lib/utils";
 
 import type { DataTableDensity } from "./types";
@@ -44,9 +44,6 @@ interface DataTableViewOptionsProps {
     onVisibilityChange: (next: Record<string, boolean>) => void;
     density: DataTableDensity;
     onDensityChange: (next: DataTableDensity) => void;
-    /** Per-column wrap flags + setter. When omitted, the wrap toggle is hidden. */
-    columnWrap?: Record<string, boolean>;
-    onColumnWrapChange?: (next: Record<string, boolean>) => void;
     /**
      * Persisted middle-column order + setter. When both are present each reorderable row gets a
      * drag handle and the list becomes the canonical reorder surface (mirrors the header drag).
@@ -60,8 +57,6 @@ interface DataTableViewOptionsProps {
         columnsHeading: string;
         densityHeading: string;
         density: Record<DataTableDensity, string>;
-        /** Tooltip for the per-column wrap toggle. Required only when `onColumnWrapChange` is set. */
-        wrapColumn?: string;
         /** Accessible label for the drag handle. Required only when `onColumnOrderChange` is set. */
         reorderColumn?: string;
     };
@@ -79,8 +74,6 @@ export function DataTableViewOptions({
     onVisibilityChange,
     density,
     onDensityChange,
-    columnWrap,
-    onColumnWrapChange,
     columnOrder,
     onColumnOrderChange,
     pinnedIds,
@@ -91,9 +84,6 @@ export function DataTableViewOptions({
 
     const toggle = (id: string) => {
         onVisibilityChange({ ...visibility, [id]: visibility[id] === false });
-    };
-    const toggleWrap = (id: string) => {
-        onColumnWrapChange?.({ ...columnWrap, [id]: !(columnWrap?.[id] === true) });
     };
 
     /** A column reorders when ordering is enabled, it's hideable, and it isn't pinned to an edge. */
@@ -162,13 +152,9 @@ export function DataTableViewOptions({
                                             key={column.id}
                                             column={column}
                                             checked={visibility[column.id] !== false}
-                                            wrapped={columnWrap?.[column.id] === true}
                                             reorderable={isReorderable(column)}
-                                            showWrap={onColumnWrapChange !== undefined && column.canHide}
                                             reorderLabel={labels.reorderColumn}
-                                            wrapLabel={labels.wrapColumn}
                                             onToggle={() => toggle(column.id)}
-                                            onToggleWrap={() => toggleWrap(column.id)}
                                         />
                                     ))}
                                 </ul>
@@ -210,27 +196,13 @@ export function DataTableViewOptions({
 interface ColumnRowProps {
     column: ColumnVisibilityItem;
     checked: boolean;
-    wrapped: boolean;
     reorderable: boolean;
-    showWrap: boolean;
     reorderLabel?: string;
-    wrapLabel?: string;
     onToggle: () => void;
-    onToggleWrap: () => void;
 }
 
-/** One column row: drag handle (when reorderable) + visibility checkbox + label + wrap toggle. */
-function ColumnRow({
-    column,
-    checked,
-    wrapped,
-    reorderable,
-    showWrap,
-    reorderLabel,
-    wrapLabel,
-    onToggle,
-    onToggleWrap,
-}: ColumnRowProps) {
+/** One column row: drag handle (when reorderable) + visibility checkbox + label. */
+function ColumnRow({ column, checked, reorderable, reorderLabel, onToggle }: ColumnRowProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: column.id,
         disabled: !reorderable,
@@ -245,7 +217,7 @@ function ColumnRow({
             {reorderable ? (
                 <button
                     type="button"
-                    aria-label={reorderLabel}
+                    aria-label={reorderLabel ?? "Reorder column"}
                     {...attributes}
                     {...listeners}
                     className="grid size-6 shrink-0 cursor-grab touch-none place-items-center text-muted-foreground/50 outline-none hover:text-foreground focus-visible:text-foreground"
@@ -275,22 +247,6 @@ function ColumnRow({
                 />
                 <span className="flex-1 truncate">{column.label}</span>
             </button>
-            {showWrap && (
-                <button
-                    type="button"
-                    onClick={onToggleWrap}
-                    title={wrapLabel}
-                    aria-label={wrapLabel}
-                    aria-pressed={wrapped}
-                    className={cn(
-                        "rounded-sm p-1.5 text-muted-foreground outline-none transition-colors",
-                        "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
-                        wrapped && "bg-primary/10 text-primary",
-                    )}
-                >
-                    <List className="size-3.5" aria-hidden="true" />
-                </button>
-            )}
         </li>
     );
 }
