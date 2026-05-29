@@ -5,15 +5,18 @@ import { useLocale } from "next-intl";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 
 import { FALLBACK_MONEY_CONFIG } from "#/lib/currency/config";
+import { setActiveMoneyConfig } from "#/lib/format";
 
 const MoneyConfigContext = createContext<MoneyFormatConfig>(FALLBACK_MONEY_CONFIG);
 
 /**
  * Provides the store's resolved money-format config to the whole admin. Mounted once in the
  * authenticated layout from a server-side fetch, so every cell/column/card formats prices through
- * the same currency config — no hardcoded ÷10 or baked-in symbols.
+ * the same currency config — no hardcoded ÷10 or baked-in symbols. Also points the pure
+ * `formatMoney` singleton (used by non-context column builders) at the same config.
  */
 export function MoneyFormatProvider({ config, children }: { config: MoneyFormatConfig; children: ReactNode }) {
+    setActiveMoneyConfig(config);
     return <MoneyConfigContext.Provider value={config}>{children}</MoneyConfigContext.Provider>;
 }
 
