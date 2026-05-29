@@ -19,7 +19,22 @@ export default function Loading() {
             </header>
             <Skeleton className="h-9 w-72" />
             <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-[28rem] w-full rounded-lg" />
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+                <div className="flex items-center gap-4 border-border border-b px-4 py-3">
+                    {["a", "b", "c", "d", "e"].map((k) => (
+                        <Skeleton key={k} className="h-3.5 flex-1" />
+                    ))}
+                </div>
+                {["1", "2", "3", "4", "5", "6", "7", "8"].map((r) => (
+                    <div key={r} className="flex items-center gap-4 border-border border-b px-4 py-4 last:border-0">
+                        <Skeleton className="size-10 shrink-0 rounded-md" />
+                        <Skeleton className="h-4 flex-[3]" />
+                        <Skeleton className="h-4 flex-1" />
+                        <Skeleton className="h-4 flex-1" />
+                        <Skeleton className="h-4 flex-1" />
+                    </div>
+                ))}
+            </div>
         </section>
     );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Skeleton } from "#/components/ui/skeleton";
 import { cn } from "#/lib/utils";
 
 interface DataTableSkeletonProps {
@@ -11,9 +12,9 @@ interface DataTableSkeletonProps {
     rowHeightClass?: string;
 }
 
-/** Pulsing skeleton rows shaped like the real layout. Don't use a spinner. */
+/** Shimmer skeleton rows shaped like the real columns. Don't use a spinner. */
 export function DataTableSkeleton({ rowCount = 8, columnWidths, rowHeightClass = "h-14" }: DataTableSkeletonProps) {
-    const total = columnWidths.reduce((acc, n) => acc + n, 0);
+    const total = columnWidths.reduce((acc, n) => acc + n, 0) || 1;
     return (
         <div className="divide-y divide-border">
             {Array.from({ length: rowCount }).map((_, rowIndex) => (
@@ -23,9 +24,11 @@ export function DataTableSkeleton({ rowCount = 8, columnWidths, rowHeightClass =
                         <div
                             // biome-ignore lint/suspicious/noArrayIndexKey: deterministic skeleton order
                             key={columnIndex}
-                            className="h-3 animate-pulse rounded bg-muted"
+                            className="flex"
                             style={{ width: `${(width / total) * 100}%` }}
-                        />
+                        >
+                            <Skeleton className="h-3.5 w-full" />
+                        </div>
                     ))}
                 </div>
             ))}

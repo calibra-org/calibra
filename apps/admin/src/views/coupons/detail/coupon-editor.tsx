@@ -273,7 +273,33 @@ export function CouponEditor({ id }: CouponEditorProps) {
     };
 
     if (isPending && !isNew) {
-        return <Skeleton className="h-96 w-full" />;
+        return (
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
+                    <Skeleton className="h-5 w-32" />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {["a", "b", "c", "d"].map((k) => (
+                            <div key={k} className="flex flex-col gap-2">
+                                <Skeleton className="h-3.5 w-24" />
+                                <Skeleton className="h-9 w-full" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
+                    <Skeleton className="h-5 w-28" />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {["e", "f"].map((k) => (
+                            <div key={k} className="flex flex-col gap-2">
+                                <Skeleton className="h-3.5 w-24" />
+                                <Skeleton className="h-9 w-full" />
+                            </div>
+                        ))}
+                    </div>
+                    <Skeleton className="h-20 w-full" />
+                </div>
+            </div>
+        );
     }
 
     const codeAvailable = isNew
