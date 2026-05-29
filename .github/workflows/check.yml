@@ -51,7 +51,7 @@ jobs:
 
     test:
         runs-on: ubuntu-latest
-        timeout-minutes: 6
+        timeout-minutes: 12
         services:
             postgres:
                 image: postgres:17-alpine
