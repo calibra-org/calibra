@@ -1,14 +1,11 @@
-import { Exception } from "@adonisjs/core/exceptions";
 import cache from "@adonisjs/cache/services/main";
+import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import { CacheKeys, CacheTags } from "#services/cache_keys";
 import {
-    type IntervalUnit,
-    type PaginatedRows,
-    type StockStatusFilter,
     computeCategoriesTable,
     computeCouponsTable,
     computeCouponsWindow,
@@ -19,7 +16,10 @@ import {
     computeStockTable,
     computeTaxesTable,
     computeTopCategories,
+    type IntervalUnit,
+    type PaginatedRows,
     resolveInterval,
+    type StockStatusFilter,
 } from "#services/reports/analytics_service";
 import {
     adminReportStatsValidator,
@@ -198,7 +198,14 @@ export default class AdminReportsController {
     /** Orders table — one row per order (net of its refunds), classified new / returning / guest. */
     async ordersTable(ctx: HttpContext) {
         return this.runTable(ctx, "orders-table", ["date", "items_sold", "net_sales"], "date", (from, to, opts) =>
-            computeOrdersTable(from, to, opts.orderBy as "date" | "items_sold" | "net_sales", opts.orderDir, opts.page, opts.limit),
+            computeOrdersTable(
+                from,
+                to,
+                opts.orderBy as "date" | "items_sold" | "net_sales",
+                opts.orderDir,
+                opts.page,
+                opts.limit,
+            ),
         );
     }
 
@@ -211,7 +218,15 @@ export default class AdminReportsController {
         const orderDir = payload.order_dir ?? "desc";
 
         const compute = (page: number, limit: number) =>
-            computeProductsTable(from, to, { q: payload.q, categoryId: payload.category_id, orderBy: orderBy as "items_sold" | "net_sales" | "orders", orderDir, page, limit, locale });
+            computeProductsTable(from, to, {
+                q: payload.q,
+                categoryId: payload.category_id,
+                orderBy: orderBy as "items_sold" | "net_sales" | "orders",
+                orderDir,
+                page,
+                limit,
+                locale,
+            });
 
         if (payload.format === "csv") {
             const result = await compute(1, CSV_ROW_CAP);
@@ -235,7 +250,13 @@ export default class AdminReportsController {
         const orderDir = payload.order_dir ?? "desc";
 
         const compute = (page: number, limit: number) =>
-            computeCategoriesTable(from, to, { orderBy: orderBy as "items_sold" | "net_sales" | "orders", orderDir, page, limit, locale });
+            computeCategoriesTable(from, to, {
+                orderBy: orderBy as "items_sold" | "net_sales" | "orders",
+                orderDir,
+                page,
+                limit,
+                locale,
+            });
 
         if (payload.format === "csv") {
             const result = await compute(1, CSV_ROW_CAP);
@@ -311,14 +332,33 @@ export default class AdminReportsController {
         const orderDir = payload.order_dir ?? "asc";
 
         const compute = (page: number, limit: number) =>
-            computeStockTable({ status, q: payload.q, orderBy: orderBy as "stock" | "status" | "name", orderDir, page, limit, locale });
+            computeStockTable({
+                status,
+                q: payload.q,
+                orderBy: orderBy as "stock" | "status" | "name",
+                orderDir,
+                page,
+                limit,
+                locale,
+            });
 
         if (payload.format === "csv") {
             const result = await compute(1, CSV_ROW_CAP);
             return this.csv(ctx, "stock-report", result.data as unknown as Record<string, unknown>[]);
         }
         return cache.getOrSet({
-            key: CacheKeys.admin.report("stock-table", { status, q: payload.q ?? null, orderBy, orderDir, page: payload.page ?? 1, limit: payload.limit ?? TABLE_PAGE_LIMIT }, locale),
+            key: CacheKeys.admin.report(
+                "stock-table",
+                {
+                    status,
+                    q: payload.q ?? null,
+                    orderBy,
+                    orderDir,
+                    page: payload.page ?? 1,
+                    limit: payload.limit ?? TABLE_PAGE_LIMIT,
+                },
+                locale,
+            ),
             ttl: "1m",
             grace: "30s",
             tags: [CacheTags.adminReports, CacheTags.catalogProducts],
@@ -358,7 +398,8 @@ export default class AdminReportsController {
             ttl: "5m",
             grace: "1h",
             tags: [CacheTags.adminReports],
-            factory: () => runner(from, to, { orderBy, orderDir, page: payload.page ?? 1, limit: payload.limit ?? TABLE_PAGE_LIMIT }),
+            factory: () =>
+                runner(from, to, { orderBy, orderDir, page: payload.page ?? 1, limit: payload.limit ?? TABLE_PAGE_LIMIT }),
         });
     }
 
@@ -392,7 +433,13 @@ export default class AdminReportsController {
         payload: { date_from: string; date_to: string; compare_from?: string; compare_to?: string },
         unit: IntervalUnit,
     ) {
-        return { from: payload.date_from, to: payload.date_to, interval: unit, cf: payload.compare_from ?? null, ct: payload.compare_to ?? null };
+        return {
+            from: payload.date_from,
+            to: payload.date_to,
+            interval: unit,
+            cf: payload.compare_from ?? null,
+            ct: payload.compare_to ?? null,
+        };
     }
 
     private tableKeyParams(
@@ -411,16 +458,16 @@ export default class AdminReportsController {
     }
 
     /** Serialize report rows to a CSV download. Array columns are joined with `;`; headers are the row keys. */
-    private csv(ctx: HttpContext, name: string, rows: Record<string, unknown>[]) {
+    private csv(ctx: HttpContext, filename: string, rows: Record<string, unknown>[]) {
         const headers = rows.length > 0 ? Object.keys(rows[0]!) : [];
-        const escape = (v: unknown): string => {
-            const s = Array.isArray(v) ? v.join("; ") : v === null || v === undefined ? "" : String(v);
-            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+        const escapeCell = (value: unknown): string => {
+            const cell = Array.isArray(value) ? value.join("; ") : value === null || value === undefined ? "" : String(value);
+            return /[",\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell;
         };
-        const lines = [headers.join(","), ...rows.map((row) => headers.map((h) => escape(row[h])).join(","))];
+        const lines = [headers.join(","), ...rows.map((row) => headers.map((h) => escapeCell(row[h])).join(","))];
         const body = `﻿${lines.join("\n")}`;
         ctx.response.header("Content-Type", "text/csv; charset=utf-8");
-        ctx.response.header("Content-Disposition", `attachment; filename="${name}.csv"`);
+        ctx.response.header("Content-Disposition", `attachment; filename="${filename}.csv"`);
         return body;
     }
 

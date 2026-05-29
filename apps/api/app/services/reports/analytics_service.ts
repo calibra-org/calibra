@@ -292,7 +292,9 @@ export async function computeCouponsWindow(from: Date, to: Date, unit: IntervalU
         { from, to },
     );
 
-    const intervalsResult = await db.rawQuery<{ rows: { bucket: string | Date; discounted_orders: string | number; amount: string | number }[] }>(
+    const intervalsResult = await db.rawQuery<{
+        rows: { bucket: string | Date; discounted_orders: string | number; amount: string | number }[];
+    }>(
         `
         WITH buckets AS (
             SELECT date_trunc(:unit, gs)::date AS bucket
@@ -447,7 +449,15 @@ export interface ProductsReportRow {
 export async function computeProductsTable(
     from: Date,
     to: Date,
-    opts: { q?: string; categoryId?: number; orderBy: "items_sold" | "net_sales" | "orders"; orderDir: "asc" | "desc"; page: number; limit: number; locale: string },
+    opts: {
+        q?: string;
+        categoryId?: number;
+        orderBy: "items_sold" | "net_sales" | "orders";
+        orderDir: "asc" | "desc";
+        page: number;
+        limit: number;
+        locale: string;
+    },
 ): Promise<PaginatedRows<ProductsReportRow>> {
     const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
         `
@@ -526,7 +536,13 @@ export interface CategoriesReportRow {
 export async function computeCategoriesTable(
     from: Date,
     to: Date,
-    opts: { orderBy: "items_sold" | "net_sales" | "orders"; orderDir: "asc" | "desc"; page: number; limit: number; locale: string },
+    opts: {
+        orderBy: "items_sold" | "net_sales" | "orders";
+        orderDir: "asc" | "desc";
+        page: number;
+        limit: number;
+        locale: string;
+    },
 ): Promise<PaginatedRows<CategoriesReportRow>> {
     const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
         `
@@ -664,7 +680,11 @@ export interface TopCategoryRow {
 }
 
 /** Top categories by units sold over a trailing window (Overview leaderboard sibling of top-products). */
-export async function computeTopCategories(days: number, limit: number, locale: string): Promise<{ data: TopCategoryRow[]; range: { start_date: string; end_date: string; days: number } }> {
+export async function computeTopCategories(
+    days: number,
+    limit: number,
+    locale: string,
+): Promise<{ data: TopCategoryRow[]; range: { start_date: string; end_date: string; days: number } }> {
     const since = new Date(Date.now() - days * 86_400_000);
     const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
         `
