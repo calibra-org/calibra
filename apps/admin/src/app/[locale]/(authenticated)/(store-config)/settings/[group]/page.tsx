@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { PageHeader } from "#/components/PageHeader";
-import { SettingsNav } from "#/components/SettingsNav";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
@@ -71,53 +70,47 @@ export default async function SettingsGroupPage({ params }: PageProps) {
     const isGeneral = group === "general";
 
     return (
-        <section className="flex w-full max-w-5xl flex-col gap-6">
+        <div className="flex flex-col gap-6">
             <PageHeader
                 title={t("title")}
                 subtitle={t("subtitle")}
                 actions={isGeneral ? undefined : <Button>{t("save")}</Button>}
             />
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
-                <aside>
-                    <SettingsNav />
-                </aside>
-
-                {isGeneral ? (
-                    <GeneralSettings />
-                ) : (
-                    <Card>
-                        <CardHeader className="border-b pb-4">
-                            <CardTitle className="text-base">{groupData.title[locale]}</CardTitle>
-                            <CardDescription>{groupData.subtitle[locale]}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-6 pt-6">
-                            {groupData.fields.map((field) => {
-                                const isToggle = field.type === "switch";
-                                return (
-                                    <div
-                                        key={field.key}
-                                        className={cn(
-                                            "flex flex-col gap-1.5",
-                                            isToggle && "flex-row items-center justify-between gap-3",
-                                        )}
-                                    >
-                                        <div className={cn("flex flex-col", isToggle && "flex-1")}>
-                                            <Label htmlFor={`${group}-${field.key}`} className="text-sm">
-                                                {field.label[locale]}
-                                            </Label>
-                                            <p className="text-muted-foreground text-xs">{field.description[locale]}</p>
-                                        </div>
-                                        <div className={cn(isToggle ? "shrink-0" : "max-w-md")}>
-                                            <FieldControl field={field} locale={locale} prefix={group} />
-                                        </div>
+            {isGeneral ? (
+                <GeneralSettings />
+            ) : (
+                <Card>
+                    <CardHeader className="border-b pb-4">
+                        <CardTitle className="text-base">{groupData.title[locale]}</CardTitle>
+                        <CardDescription>{groupData.subtitle[locale]}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-6 pt-6">
+                        {groupData.fields.map((field) => {
+                            const isToggle = field.type === "switch";
+                            return (
+                                <div
+                                    key={field.key}
+                                    className={cn(
+                                        "flex flex-col gap-1.5",
+                                        isToggle && "flex-row items-center justify-between gap-3",
+                                    )}
+                                >
+                                    <div className={cn("flex flex-col", isToggle && "flex-1")}>
+                                        <Label htmlFor={`${group}-${field.key}`} className="text-sm">
+                                            {field.label[locale]}
+                                        </Label>
+                                        <p className="text-muted-foreground text-xs">{field.description[locale]}</p>
                                     </div>
-                                );
-                            })}
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
-        </section>
+                                    <div className={cn(isToggle ? "shrink-0" : "max-w-md")}>
+                                        <FieldControl field={field} locale={locale} prefix={group} />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </CardContent>
+                </Card>
+            )}
+        </div>
     );
 }
