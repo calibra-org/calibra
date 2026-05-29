@@ -72,14 +72,14 @@ export default async function SettingsGroupPage({ params }: PageProps) {
     const isGeneral = group === "general";
 
     return (
-        <section className="flex flex-col gap-6">
+        <section className="mx-auto flex w-full max-w-5xl flex-col gap-6">
             <PageHeader
                 title={t("title")}
                 subtitle={t("subtitle")}
                 actions={isGeneral ? undefined : <Button>{t("save")}</Button>}
             />
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
                 <aside>
                     <SettingsNav groups={groups} locale={locale} />
                 </aside>

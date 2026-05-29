@@ -28,7 +28,7 @@ export function GeneralSettings() {
     const { data, isLoading } = useGeneralSettings();
     if (isLoading || !data) {
         return (
-            <div className="flex max-w-3xl flex-col gap-6">
+            <div className="flex flex-col gap-6">
                 <Skeleton className="h-56 w-full rounded-xl" />
                 <Skeleton className="h-44 w-full rounded-xl" />
                 <Skeleton className="h-56 w-full rounded-xl" />
@@ -64,7 +64,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
     const canSave = formState.isDirty && !sepEqual && !update.isPending;
 
     return (
-        <form onSubmit={onSubmit} className="flex max-w-3xl flex-col gap-6">
+        <form onSubmit={onSubmit} className="flex flex-col gap-6">
             {/* Store Address */}
             <Card>
                 <CardHeader className="border-b pb-4">
@@ -145,7 +145,7 @@ function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
                 <CardHeader className="border-b pb-4">
                     <CardTitle className="text-base">{t("generalOptions.title")}</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-x-5 gap-y-4 pt-6 sm:grid-cols-2">
+                <CardContent className="flex flex-col gap-5 pt-6">
                     <SelectField
                         control={control}
                         name="sellingLocations"
