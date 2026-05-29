@@ -31,7 +31,16 @@
         "shipping": "ارسال",
         "payments": "روش‌های پرداخت",
         "settings": "تنظیمات",
-        "reports": "گزارش‌ها"
+        "reports": "گزارش‌ها",
+        "analytics": "تحلیل و گزارش",
+        "analyticsOverview": "بررسی اجمالی",
+        "analyticsRevenue": "درآمد",
+        "analyticsOrders": "سفارش‌ها",
+        "analyticsProducts": "محصولات",
+        "analyticsCategories": "دسته‌ها",
+        "analyticsCoupons": "کدهای تخفیف",
+        "analyticsTaxes": "مالیات",
+        "analyticsStock": "انبار"
     },
     "Topbar": {
         "search": "جستجو…",
@@ -545,42 +554,114 @@
             "seo": "سئو"
         },
         "fields": {
-            "sku": { "label": "SKU" },
-            "name": { "label": "نام محصول" },
-            "type": { "label": "نوع محصول" },
-            "status": { "label": "وضعیت" },
-            "short_description": { "label": "توضیحات کوتاه" },
-            "description": { "label": "توضیحات کامل" },
-            "visibility": { "label": "قابلیت مشاهده" },
-            "featured": { "label": "محصول ویژه" },
-            "allow_reviews": { "label": "اجازه دیدگاه" },
-            "purchase_note": { "label": "یادداشت خرید" },
-            "menu_order": { "label": "ترتیب نمایش" },
-            "regular_price": { "label": "قیمت اصلی" },
-            "sale_price": { "label": "قیمت ویژه" },
-            "sale_price_start": { "label": "شروع تخفیف" },
-            "sale_price_end": { "label": "پایان تخفیف" },
-            "tax_status": { "label": "وضعیت مالیات" },
-            "tax_class": { "label": "کلاس مالیاتی" },
-            "manage_stock": { "label": "مدیریت موجودی" },
-            "stock_quantity": { "label": "تعداد موجودی" },
-            "stock_status": { "label": "وضعیت موجودی" },
-            "backorders_allowed": { "label": "پیش‌خرید" },
-            "sold_individually": { "label": "فروش تکی" },
-            "weight": { "label": "وزن" },
-            "length": { "label": "طول" },
-            "width": { "label": "عرض" },
-            "height": { "label": "ارتفاع" },
-            "shipping_class": { "label": "کلاس ارسال" },
-            "categories": { "label": "دسته‌بندی" },
-            "tags": { "label": "برچسب" },
-            "brand": { "label": "برند" },
-            "images": { "label": "تصاویر" },
-            "parent_sku": { "label": "SKU والد" },
-            "upsells": { "label": "محصولات پیشنهادی" },
-            "cross_sells": { "label": "محصولات مرتبط" },
-            "external_url": { "label": "آدرس خارجی" },
-            "button_text": { "label": "متن دکمه" }
+            "sku": {
+                "label": "SKU"
+            },
+            "name": {
+                "label": "نام محصول"
+            },
+            "type": {
+                "label": "نوع محصول"
+            },
+            "status": {
+                "label": "وضعیت"
+            },
+            "short_description": {
+                "label": "توضیحات کوتاه"
+            },
+            "description": {
+                "label": "توضیحات کامل"
+            },
+            "visibility": {
+                "label": "قابلیت مشاهده"
+            },
+            "featured": {
+                "label": "محصول ویژه"
+            },
+            "allow_reviews": {
+                "label": "اجازه دیدگاه"
+            },
+            "purchase_note": {
+                "label": "یادداشت خرید"
+            },
+            "menu_order": {
+                "label": "ترتیب نمایش"
+            },
+            "regular_price": {
+                "label": "قیمت اصلی"
+            },
+            "sale_price": {
+                "label": "قیمت ویژه"
+            },
+            "sale_price_start": {
+                "label": "شروع تخفیف"
+            },
+            "sale_price_end": {
+                "label": "پایان تخفیف"
+            },
+            "tax_status": {
+                "label": "وضعیت مالیات"
+            },
+            "tax_class": {
+                "label": "کلاس مالیاتی"
+            },
+            "manage_stock": {
+                "label": "مدیریت موجودی"
+            },
+            "stock_quantity": {
+                "label": "تعداد موجودی"
+            },
+            "stock_status": {
+                "label": "وضعیت موجودی"
+            },
+            "backorders_allowed": {
+                "label": "پیش‌خرید"
+            },
+            "sold_individually": {
+                "label": "فروش تکی"
+            },
+            "weight": {
+                "label": "وزن"
+            },
+            "length": {
+                "label": "طول"
+            },
+            "width": {
+                "label": "عرض"
+            },
+            "height": {
+                "label": "ارتفاع"
+            },
+            "shipping_class": {
+                "label": "کلاس ارسال"
+            },
+            "categories": {
+                "label": "دسته‌بندی"
+            },
+            "tags": {
+                "label": "برچسب"
+            },
+            "brand": {
+                "label": "برند"
+            },
+            "images": {
+                "label": "تصاویر"
+            },
+            "parent_sku": {
+                "label": "SKU والد"
+            },
+            "upsells": {
+                "label": "محصولات پیشنهادی"
+            },
+            "cross_sells": {
+                "label": "محصولات مرتبط"
+            },
+            "external_url": {
+                "label": "آدرس خارجی"
+            },
+            "button_text": {
+                "label": "متن دکمه"
+            }
         },
         "step3": {
             "title": "در حال وارد کردن",
@@ -847,7 +928,11 @@
             "trashDescription": "آیا مطمئن هستید که می‌خواهید «{name}» را به زباله‌دان منتقل کنید؟",
             "cancel": "انصراف",
             "allCategories": "همه دسته‌بندی‌ها",
-            "taxonomyAll": { "category": "همه دسته‌بندی‌ها", "tag": "همه برچسب‌ها", "brand": "همه برندها" },
+            "taxonomyAll": {
+                "category": "همه دسته‌بندی‌ها",
+                "tag": "همه برچسب‌ها",
+                "brand": "همه برندها"
+            },
             "taxonomySheet": {
                 "category": "ویرایش دسته‌بندی",
                 "tag": "ویرایش برچسب",
@@ -1152,7 +1237,10 @@
                 "emptyHint": "هنوز تصویری به گالری اضافه نشده است."
             },
             "categories": {
-                "tabs": { "all": "همه دسته‌ها", "mostUsed": "پر استفاده‌ها" },
+                "tabs": {
+                    "all": "همه دسته‌ها",
+                    "mostUsed": "پر استفاده‌ها"
+                },
                 "searchPlaceholder": "جستجو در دسته‌ها",
                 "treeLabel": "دسته‌بندی‌های محصول",
                 "expandAll": "گسترش همه",
@@ -1166,7 +1254,10 @@
                 "empty": "هنوز دسته‌ای ساخته نشده است."
             },
             "brands": {
-                "tabs": { "all": "همه برندها", "mostUsed": "پر استفاده‌ها" },
+                "tabs": {
+                    "all": "همه برندها",
+                    "mostUsed": "پر استفاده‌ها"
+                },
                 "searchPlaceholder": "جستجو در برندها",
                 "treeLabel": "برندهای محصول",
                 "clearSelection": "حذف انتخاب",
@@ -1178,7 +1269,10 @@
                 "empty": "هنوز برندی ساخته نشده است."
             },
             "tags": {
-                "tabs": { "all": "همه برچسب‌ها", "mostUsed": "پر استفاده‌ها" },
+                "tabs": {
+                    "all": "همه برچسب‌ها",
+                    "mostUsed": "پر استفاده‌ها"
+                },
                 "searchPlaceholder": "جستجو در برچسب‌ها",
                 "treeLabel": "برچسب‌های محصول",
                 "addNew": "افزودن برچسب جدید",
@@ -2418,6 +2512,9 @@
             "monthLabel": "{month}"
         },
         "monthNames": {
+            "10": "اکتبر",
+            "11": "نوامبر",
+            "12": "دسامبر",
             "01": "ژانویه",
             "02": "فوریه",
             "03": "مارس",
@@ -2426,10 +2523,7 @@
             "06": "ژوئن",
             "07": "ژوئیه",
             "08": "اوت",
-            "09": "سپتامبر",
-            "10": "اکتبر",
-            "11": "نوامبر",
-            "12": "دسامبر"
+            "09": "سپتامبر"
         },
         "upload": {
             "openButton": "افزودن رسانه",
@@ -3405,7 +3499,9 @@
             },
             "timelineSection": {
                 "title": "خط زمانی فعالیت",
-                "filter": { "all": "همه" },
+                "filter": {
+                    "all": "همه"
+                },
                 "kind": {
                     "order": "سفارش",
                     "note": "یادداشت",
@@ -3413,13 +3509,19 @@
                     "marketing": "بازاریابی",
                     "impersonation": "ورود ادمین"
                 },
-                "order": { "summary": "سفارش #{number} — {status} — {total}" },
+                "order": {
+                    "summary": "سفارش #{number} — {status} — {total}"
+                },
                 "status": {
                     "summary": "{from} ← {to}",
                     "summaryWithReason": "{from} ← {to} — {reason}"
                 },
-                "marketing": { "summary": "{channel}: {onOff}" },
-                "impersonation": { "summary": "ادمین به‌عنوان این مشتری وارد شد" }
+                "marketing": {
+                    "summary": "{channel}: {onOff}"
+                },
+                "impersonation": {
+                    "summary": "ادمین به‌عنوان این مشتری وارد شد"
+                }
             },
             "marketing": "ترجیحات بازاریابی",
             "marketingHint": "تغییر این ترجیحات، تاریخ رضایت جدیدی ثبت می‌کند.",
@@ -3699,5 +3801,140 @@
             "half_year": "نیم‌سال",
             "year": "سال"
         }
+    },
+    "Analytics": {
+        "reports": {
+            "overview": "بررسی اجمالی",
+            "revenue": "درآمد",
+            "orders": "سفارش‌ها",
+            "products": "محصولات",
+            "categories": "دسته‌ها",
+            "coupons": "کدهای تخفیف",
+            "taxes": "مالیات",
+            "stock": "انبار"
+        },
+        "metrics": {
+            "totalSales": "فروش کل",
+            "netSales": "فروش خالص",
+            "grossSales": "فروش ناخالص",
+            "orders": "سفارش‌ها",
+            "productsSold": "محصولات فروخته‌شده",
+            "variationsSold": "متغیرهای فروخته‌شده",
+            "itemsSold": "موارد فروخته‌شده",
+            "returns": "برگشتی",
+            "coupons": "کدهای تخفیف",
+            "shipping": "حمل و نقل",
+            "taxes": "مالیات",
+            "totalTax": "مجموع مالیات",
+            "orderTax": "مالیات سفارش",
+            "shippingTax": "مالیات حمل و نقل",
+            "aov": "میانگین مقدار سفارش",
+            "avgItems": "میانگین موارد هر سفارش",
+            "discountedOrders": "سفارش‌های تخفیف‌دار",
+            "amount": "مقدار"
+        },
+        "table": {
+            "date": "تاریخ",
+            "orderNumber": "سفارش",
+            "status": "وضعیت",
+            "customer": "مشتری",
+            "customerType": "نوع مشتری",
+            "products": "محصول‌ها",
+            "coupons": "کدهای تخفیف",
+            "refunded": "بازگشت",
+            "category": "دسته",
+            "productsCount": "محصولات",
+            "couponCode": "کد تخفیف",
+            "amountDiscounted": "مبلغ با تخفیف",
+            "created": "ایجاد شد",
+            "expires": "انقضا",
+            "type": "نوع",
+            "taxCode": "کد مالیات",
+            "rate": "نرخ",
+            "productTitle": "عنوان محصول",
+            "sku": "شناسه محصول",
+            "categories": "دسته‌ها",
+            "variations": "متغیرها",
+            "stock": "انبار",
+            "productVariation": "محصول / متغیر"
+        },
+        "compare": {
+            "label": "مقایسه",
+            "none": "بدون",
+            "previousPeriod": "دوره قبل",
+            "previousYear": "سال قبل",
+            "vsPrevPeriod": "نسبت به دوره قبل",
+            "vsPrevYear": "نسبت به سال قبل"
+        },
+        "interval": {
+            "label": "نمایش",
+            "auto": "خودکار",
+            "day": "روزانه",
+            "week": "هفتگی",
+            "month": "ماهانه"
+        },
+        "customerType": {
+            "new": "جدید",
+            "returning": "بازگشتی",
+            "guest": "مهمان"
+        },
+        "orderStatus": {
+            "draft": "پیش‌نویس",
+            "pending": "در انتظار پرداخت",
+            "on_hold": "در انتظار",
+            "processing": "در حال پردازش",
+            "completed": "تکمیل‌شده",
+            "cancelled": "لغوشده",
+            "refunded": "بازگشت‌داده‌شده",
+            "failed": "ناموفق"
+        },
+        "productStatus": {
+            "draft": "پیش‌نویس",
+            "publish": "منتشرشده",
+            "private": "خصوصی",
+            "pending": "در انتظار"
+        },
+        "stockStatus": {
+            "instock": "موجود",
+            "outofstock": "ناموجود",
+            "onbackorder": "پیش‌سفارش"
+        },
+        "stockFilter": {
+            "all": "همه",
+            "instock": "موجود",
+            "lowstock": "کمبود موجودی",
+            "outofstock": "ناموجود",
+            "onbackorder": "پیش‌سفارش"
+        },
+        "stockCounts": {
+            "total": "{n} مورد",
+            "instock": "{n} موجود",
+            "lowstock": "{n} کمبود موجودی",
+            "outofstock": "{n} ناموجود",
+            "onbackorder": "{n} پیش‌سفارش"
+        },
+        "couponType": {
+            "percent": "درصدی",
+            "fixed_cart": "مبلغ ثابت سبد",
+            "fixed_product": "مبلغ ثابت محصول",
+            "free_shipping": "ارسال رایگان"
+        },
+        "leaderboards": {
+            "topProducts": "محصولات برتر",
+            "topCategories": "دسته‌های برتر",
+            "units": "فروخته‌شده"
+        },
+        "dateRange": "بازه تاریخی",
+        "refresh": "تازه‌سازی",
+        "export": "دانلود",
+        "empty": "هیچ داده‌ای برای محدوده تاریخ انتخاب‌شده وجود ندارد",
+        "updated": "به‌روزرسانی {when}",
+        "pageOf": "صفحه {page} از {total}",
+        "rowsTotal": "{total} ردیف",
+        "prev": "قبلی",
+        "next": "بعدی",
+        "searchProducts": "جستجوی محصول",
+        "stockUnknown": "نامعلوم",
+        "totalsLabel": "جمع کل"
     }
 }

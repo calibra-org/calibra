@@ -4,6 +4,7 @@ import {
     BadgePercent,
     BarChart3,
     Box,
+    Boxes,
     Image as ImageIcon,
     LayoutDashboard,
     ListTree,
@@ -14,7 +15,9 @@ import {
     Sparkles,
     Star,
     Tags as TagsIcon,
+    TrendingUp,
     Users,
+    Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentType, SVGProps } from "react";
@@ -29,7 +32,7 @@ interface NavItem {
 }
 
 interface NavGroup {
-    titleKey: "overview" | "catalog" | "sales" | "customersSection" | "configuration";
+    titleKey: "overview" | "catalog" | "sales" | "analytics" | "customersSection" | "configuration";
     items: NavItem[];
 }
 
@@ -58,6 +61,19 @@ const groups: NavGroup[] = [
         ],
     },
     {
+        titleKey: "analytics",
+        items: [
+            { href: "/analytics", labelKey: "analyticsOverview", icon: BarChart3 },
+            { href: "/analytics/revenue", labelKey: "analyticsRevenue", icon: TrendingUp },
+            { href: "/analytics/orders", labelKey: "analyticsOrders", icon: ReceiptText },
+            { href: "/analytics/products", labelKey: "analyticsProducts", icon: Package },
+            { href: "/analytics/categories", labelKey: "analyticsCategories", icon: ListTree },
+            { href: "/analytics/coupons", labelKey: "analyticsCoupons", icon: BadgePercent },
+            { href: "/analytics/taxes", labelKey: "analyticsTaxes", icon: Wallet },
+            { href: "/analytics/stock", labelKey: "analyticsStock", icon: Boxes },
+        ],
+    },
+    {
         titleKey: "customersSection",
         items: [{ href: "/customers", labelKey: "customers", icon: Users }],
     },
@@ -81,6 +97,9 @@ function isActive(pathname: string, href: string): boolean {
     }
     /** Settings links straight to the General tab; keep the parent active across every settings tab. */
     if (href === "/settings/general") return pathname === "/settings" || pathname.startsWith("/settings/");
+    /** Analytics overview is the section root — only active on the exact path so it doesn't stay lit
+     * on every `/analytics/<report>` sub-page (each has its own nav entry). */
+    if (href === "/analytics") return pathname === "/analytics";
     return pathname === href || pathname.startsWith(`${href}/`);
 }
 

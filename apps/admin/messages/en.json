@@ -31,7 +31,16 @@
         "shipping": "Shipping",
         "payments": "Payments",
         "settings": "Settings",
-        "reports": "Reports"
+        "reports": "Reports",
+        "analytics": "Analytics",
+        "analyticsOverview": "Overview",
+        "analyticsRevenue": "Revenue",
+        "analyticsOrders": "Orders",
+        "analyticsProducts": "Products",
+        "analyticsCategories": "Categories",
+        "analyticsCoupons": "Coupons",
+        "analyticsTaxes": "Taxes",
+        "analyticsStock": "Stock"
     },
     "Topbar": {
         "search": "Search…",
@@ -545,42 +554,114 @@
             "seo": "SEO"
         },
         "fields": {
-            "sku": { "label": "SKU" },
-            "name": { "label": "Name" },
-            "type": { "label": "Type" },
-            "status": { "label": "Status" },
-            "short_description": { "label": "Short description" },
-            "description": { "label": "Description" },
-            "visibility": { "label": "Visibility" },
-            "featured": { "label": "Featured" },
-            "allow_reviews": { "label": "Allow reviews" },
-            "purchase_note": { "label": "Purchase note" },
-            "menu_order": { "label": "Menu order" },
-            "regular_price": { "label": "Regular price" },
-            "sale_price": { "label": "Sale price" },
-            "sale_price_start": { "label": "Sale start" },
-            "sale_price_end": { "label": "Sale end" },
-            "tax_status": { "label": "Tax status" },
-            "tax_class": { "label": "Tax class" },
-            "manage_stock": { "label": "Manage stock" },
-            "stock_quantity": { "label": "Stock quantity" },
-            "stock_status": { "label": "Stock status" },
-            "backorders_allowed": { "label": "Backorders" },
-            "sold_individually": { "label": "Sold individually" },
-            "weight": { "label": "Weight" },
-            "length": { "label": "Length" },
-            "width": { "label": "Width" },
-            "height": { "label": "Height" },
-            "shipping_class": { "label": "Shipping class" },
-            "categories": { "label": "Categories" },
-            "tags": { "label": "Tags" },
-            "brand": { "label": "Brand" },
-            "images": { "label": "Images" },
-            "parent_sku": { "label": "Parent SKU" },
-            "upsells": { "label": "Upsells" },
-            "cross_sells": { "label": "Cross-sells" },
-            "external_url": { "label": "External URL" },
-            "button_text": { "label": "Button text" }
+            "sku": {
+                "label": "SKU"
+            },
+            "name": {
+                "label": "Name"
+            },
+            "type": {
+                "label": "Type"
+            },
+            "status": {
+                "label": "Status"
+            },
+            "short_description": {
+                "label": "Short description"
+            },
+            "description": {
+                "label": "Description"
+            },
+            "visibility": {
+                "label": "Visibility"
+            },
+            "featured": {
+                "label": "Featured"
+            },
+            "allow_reviews": {
+                "label": "Allow reviews"
+            },
+            "purchase_note": {
+                "label": "Purchase note"
+            },
+            "menu_order": {
+                "label": "Menu order"
+            },
+            "regular_price": {
+                "label": "Regular price"
+            },
+            "sale_price": {
+                "label": "Sale price"
+            },
+            "sale_price_start": {
+                "label": "Sale start"
+            },
+            "sale_price_end": {
+                "label": "Sale end"
+            },
+            "tax_status": {
+                "label": "Tax status"
+            },
+            "tax_class": {
+                "label": "Tax class"
+            },
+            "manage_stock": {
+                "label": "Manage stock"
+            },
+            "stock_quantity": {
+                "label": "Stock quantity"
+            },
+            "stock_status": {
+                "label": "Stock status"
+            },
+            "backorders_allowed": {
+                "label": "Backorders"
+            },
+            "sold_individually": {
+                "label": "Sold individually"
+            },
+            "weight": {
+                "label": "Weight"
+            },
+            "length": {
+                "label": "Length"
+            },
+            "width": {
+                "label": "Width"
+            },
+            "height": {
+                "label": "Height"
+            },
+            "shipping_class": {
+                "label": "Shipping class"
+            },
+            "categories": {
+                "label": "Categories"
+            },
+            "tags": {
+                "label": "Tags"
+            },
+            "brand": {
+                "label": "Brand"
+            },
+            "images": {
+                "label": "Images"
+            },
+            "parent_sku": {
+                "label": "Parent SKU"
+            },
+            "upsells": {
+                "label": "Upsells"
+            },
+            "cross_sells": {
+                "label": "Cross-sells"
+            },
+            "external_url": {
+                "label": "External URL"
+            },
+            "button_text": {
+                "label": "Button text"
+            }
         },
         "step3": {
             "title": "Importing",
@@ -847,7 +928,11 @@
             "trashDescription": "Are you sure you want to move \"{name}\" to the trash?",
             "cancel": "Cancel",
             "allCategories": "All categories",
-            "taxonomyAll": { "category": "All categories", "tag": "All tags", "brand": "All brands" },
+            "taxonomyAll": {
+                "category": "All categories",
+                "tag": "All tags",
+                "brand": "All brands"
+            },
             "taxonomySheet": {
                 "category": "Edit category",
                 "tag": "Edit tag",
@@ -1152,7 +1237,10 @@
                 "emptyHint": "No gallery images yet."
             },
             "categories": {
-                "tabs": { "all": "All categories", "mostUsed": "Most used" },
+                "tabs": {
+                    "all": "All categories",
+                    "mostUsed": "Most used"
+                },
                 "searchPlaceholder": "Search categories",
                 "treeLabel": "Product categories",
                 "expandAll": "Expand all",
@@ -1166,7 +1254,10 @@
                 "empty": "No categories yet."
             },
             "brands": {
-                "tabs": { "all": "All brands", "mostUsed": "Most used" },
+                "tabs": {
+                    "all": "All brands",
+                    "mostUsed": "Most used"
+                },
                 "searchPlaceholder": "Search brands",
                 "treeLabel": "Product brands",
                 "clearSelection": "Clear selection",
@@ -1178,7 +1269,10 @@
                 "empty": "No brands yet."
             },
             "tags": {
-                "tabs": { "all": "All tags", "mostUsed": "Most used" },
+                "tabs": {
+                    "all": "All tags",
+                    "mostUsed": "Most used"
+                },
                 "searchPlaceholder": "Search tags",
                 "treeLabel": "Product tags",
                 "addNew": "Add new tag",
@@ -2418,6 +2512,9 @@
             "monthLabel": "{month}"
         },
         "monthNames": {
+            "10": "October",
+            "11": "November",
+            "12": "December",
             "01": "January",
             "02": "February",
             "03": "March",
@@ -2426,10 +2523,7 @@
             "06": "June",
             "07": "July",
             "08": "August",
-            "09": "September",
-            "10": "October",
-            "11": "November",
-            "12": "December"
+            "09": "September"
         },
         "upload": {
             "openButton": "Add media",
@@ -3405,7 +3499,9 @@
             },
             "timelineSection": {
                 "title": "Activity timeline",
-                "filter": { "all": "All" },
+                "filter": {
+                    "all": "All"
+                },
                 "kind": {
                     "order": "Order",
                     "note": "Note",
@@ -3413,13 +3509,19 @@
                     "marketing": "Marketing",
                     "impersonation": "Impersonation"
                 },
-                "order": { "summary": "Order #{number} — {status} — {total}" },
+                "order": {
+                    "summary": "Order #{number} — {status} — {total}"
+                },
                 "status": {
                     "summary": "{from} → {to}",
                     "summaryWithReason": "{from} → {to} — {reason}"
                 },
-                "marketing": { "summary": "{channel}: {onOff}" },
-                "impersonation": { "summary": "Admin logged in as this customer" }
+                "marketing": {
+                    "summary": "{channel}: {onOff}"
+                },
+                "impersonation": {
+                    "summary": "Admin logged in as this customer"
+                }
             },
             "marketing": "Marketing preferences",
             "marketingHint": "Toggling these records a new consent timestamp.",
@@ -3699,5 +3801,140 @@
             "half_year": "Half-year",
             "year": "Year"
         }
+    },
+    "Analytics": {
+        "reports": {
+            "overview": "Overview",
+            "revenue": "Revenue",
+            "orders": "Orders",
+            "products": "Products",
+            "categories": "Categories",
+            "coupons": "Coupons",
+            "taxes": "Taxes",
+            "stock": "Stock"
+        },
+        "metrics": {
+            "totalSales": "Total sales",
+            "netSales": "Net sales",
+            "grossSales": "Gross sales",
+            "orders": "Orders",
+            "productsSold": "Products sold",
+            "variationsSold": "Variations sold",
+            "itemsSold": "Items sold",
+            "returns": "Returns",
+            "coupons": "Coupons",
+            "shipping": "Shipping",
+            "taxes": "Taxes",
+            "totalTax": "Total tax",
+            "orderTax": "Order tax",
+            "shippingTax": "Shipping tax",
+            "aov": "Average order value",
+            "avgItems": "Avg items per order",
+            "discountedOrders": "Discounted orders",
+            "amount": "Amount"
+        },
+        "table": {
+            "date": "Date",
+            "orderNumber": "Order",
+            "status": "Status",
+            "customer": "Customer",
+            "customerType": "Customer type",
+            "products": "Products",
+            "coupons": "Coupons",
+            "refunded": "Refunded",
+            "category": "Category",
+            "productsCount": "Products",
+            "couponCode": "Coupon code",
+            "amountDiscounted": "Amount discounted",
+            "created": "Created",
+            "expires": "Expires",
+            "type": "Type",
+            "taxCode": "Tax code",
+            "rate": "Rate",
+            "productTitle": "Product",
+            "sku": "SKU",
+            "categories": "Categories",
+            "variations": "Variations",
+            "stock": "Stock",
+            "productVariation": "Product / Variation"
+        },
+        "compare": {
+            "label": "Compare",
+            "none": "None",
+            "previousPeriod": "Previous period",
+            "previousYear": "Previous year",
+            "vsPrevPeriod": "vs previous period",
+            "vsPrevYear": "vs previous year"
+        },
+        "interval": {
+            "label": "View",
+            "auto": "Auto",
+            "day": "Daily",
+            "week": "Weekly",
+            "month": "Monthly"
+        },
+        "customerType": {
+            "new": "New",
+            "returning": "Returning",
+            "guest": "Guest"
+        },
+        "orderStatus": {
+            "draft": "Draft",
+            "pending": "Pending payment",
+            "on_hold": "On hold",
+            "processing": "Processing",
+            "completed": "Completed",
+            "cancelled": "Cancelled",
+            "refunded": "Refunded",
+            "failed": "Failed"
+        },
+        "productStatus": {
+            "draft": "Draft",
+            "publish": "Published",
+            "private": "Private",
+            "pending": "Pending"
+        },
+        "stockStatus": {
+            "instock": "In stock",
+            "outofstock": "Out of stock",
+            "onbackorder": "Backorder"
+        },
+        "stockFilter": {
+            "all": "All",
+            "instock": "In stock",
+            "lowstock": "Low stock",
+            "outofstock": "Out of stock",
+            "onbackorder": "Backorder"
+        },
+        "stockCounts": {
+            "total": "{n} items",
+            "instock": "{n} in stock",
+            "lowstock": "{n} low stock",
+            "outofstock": "{n} out of stock",
+            "onbackorder": "{n} on backorder"
+        },
+        "couponType": {
+            "percent": "Percentage",
+            "fixed_cart": "Fixed cart",
+            "fixed_product": "Fixed product",
+            "free_shipping": "Free shipping"
+        },
+        "leaderboards": {
+            "topProducts": "Top products",
+            "topCategories": "Top categories",
+            "units": "sold"
+        },
+        "dateRange": "Date range",
+        "refresh": "Refresh",
+        "export": "Export",
+        "empty": "No data for the selected date range",
+        "updated": "Updated {when}",
+        "pageOf": "Page {page} of {total}",
+        "rowsTotal": "{total} rows",
+        "prev": "Previous",
+        "next": "Next",
+        "searchProducts": "Search products",
+        "stockUnknown": "Unknown",
+        "totalsLabel": "Totals"
     }
 }
