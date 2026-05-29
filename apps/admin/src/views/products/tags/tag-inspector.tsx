@@ -1,7 +1,7 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { Hash, Plus, Save, Sparkles, Tag as TagIcon, Trash2, Wand2, X } from "lucide-react";
+import { Plus, Save, Sparkles, Tag as TagIcon, Trash2, Wand2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 
@@ -14,6 +14,7 @@ import { formatNumber } from "#/lib/format";
 import type { AdminTag, LocalizedString } from "#/lib/types";
 
 import { type InspectorVariant, inspectorFormClassName } from "../_taxonomy-shared/inspector-surface";
+import { SlugInput } from "../_taxonomy-shared/slug-input";
 import { slugify } from "../_taxonomy-shared/slugify";
 
 /**
@@ -247,21 +248,12 @@ function InspectorForm({
                             </button>
                         )}
                     </div>
-                    <div className="relative">
-                        <Hash
-                            className="pointer-events-none absolute start-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
-                            aria-hidden="true"
-                        />
-                        <Input
-                            id="tag-slug"
-                            value={draft.slug[locale] ?? ""}
-                            onChange={handleSlugChange}
-                            placeholder={t("fields.slug.placeholder")}
-                            dir="ltr"
-                            autoComplete="off"
-                            className="ps-9 font-mono"
-                        />
-                    </div>
+                    <SlugInput
+                        id="tag-slug"
+                        value={draft.slug[locale] ?? ""}
+                        onChange={handleSlugChange}
+                        placeholder={t("fields.slug.placeholder")}
+                    />
                     <p className="text-muted-foreground text-xs">{t("fields.slug.hint")}</p>
                 </div>
 
@@ -285,12 +277,12 @@ function InspectorForm({
                 )}
             </div>
 
-            <footer className="mt-auto flex items-center justify-between gap-2 pt-2">
+            <footer className="mt-auto flex flex-col gap-3 pt-2">
                 <div className="inline-flex items-center gap-1 text-muted-foreground text-xs">
                     <Sparkles className="size-3" aria-hidden="true" />
                     {isNew ? t("footer.newHint") : t("footer.editHint")}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-end gap-2">
                     <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
                         {t("buttons.cancel")}
                     </Button>
