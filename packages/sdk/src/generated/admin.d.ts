@@ -2111,6 +2111,386 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/reports/top-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Top-selling categories (admin)
+         * @description Ranks product categories by units sold over a trailing window (default 30 days). Only `processing` / `completed` / `refunded` orders contribute. Names resolve for the request locale.
+         */
+        get: operations["adminReportsTopCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/sales-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sales statistics (admin)
+         * @description Windowed overall-sales statistics — totals + a zero-filled interval series + an optional comparison window. One endpoint backs the Overview, Revenue, Orders, Products, Categories, and Taxes report tiles + charts. Only `processing` / `completed` / `refunded` orders contribute; returns bucket by refund date, sales by order-created date. Net sales excludes tax + shipping.
+         */
+        get: operations["adminReportsSalesStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/coupons-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Coupon-usage statistics (admin)
+         * @description Windowed coupon-usage statistics — discounted-order count and total discount applied, with a zero-filled interval series and an optional comparison window. Backs the Coupons report tiles + chart. Only `processing` / `completed` / `refunded` orders contribute.
+         */
+        get: operations["adminReportsCouponsStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/revenue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Revenue report table (admin)
+         * @description Revenue broken down by interval bucket — one row per day / week / month with gross sales, returns, coupons, net sales, taxes, shipping, and total sales, plus a window totals footer. Pass `format=csv` to download the full windowed result instead of a paginated JSON page.
+         */
+        get: operations["adminReportsRevenue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Orders report table (admin)
+         * @description One row per order in the window, net of that order's refunds, classified new / returning / guest. Sortable by date, items sold, or net sales. Pass `format=csv` for a download.
+         */
+        get: operations["adminReportsOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Products report table (admin)
+         * @description Per-product units sold, net sales, and orders over the window, with category, variation count, status, and current stock context. Filterable by search term and category. `format=csv` downloads.
+         */
+        get: operations["adminReportsProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Categories report table (admin)
+         * @description Per-category units sold, net sales, distinct products sold, and orders over the window, rolled up through the product-category pivot. `format=csv` downloads the full result.
+         */
+        get: operations["adminReportsCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Coupons report table (admin)
+         * @description Per-coupon order count and total amount discounted over the window, with created / expires / type pulled from the live coupon row when present. `format=csv` downloads the full result.
+         */
+        get: operations["adminReportsCoupons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/taxes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Taxes report table (admin)
+         * @description Per-tax-rate total / order / shipping tax and the count of orders that paid each rate over the window, from the order tax-line snapshots. `format=csv` downloads the full result.
+         */
+        get: operations["adminReportsTaxes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stock report (admin)
+         * @description Current stock snapshot — one row per inventory item (product or variation) with a footer count breakdown. No date dimension. Filter by stock status (including the derived `lowstock` pseudo-status) and a free-text term. `format=csv` downloads the full filtered result.
+         */
+        get: operations["adminReportsStock"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products": {
         parameters: {
             query?: never;
@@ -4448,6 +4828,223 @@ export interface components {
             end_date: string;
             /** @description Trailing-window length in days that was requested. */
             days: number;
+        };
+        /**
+         * TopCategory
+         * @description One category row inside a top-categories leaderboard. Aggregates units sold and net sales across every product linked to the category within the report window. `name` is resolved for the request locale.
+         * @example {
+         *       "category_id": 12,
+         *       "name": "صنایع دستی",
+         *       "units": 48,
+         *       "net_sales": 920000000
+         *     }
+         */
+        TopCategory: {
+            category_id: number;
+            name: string;
+            units: number;
+            net_sales: components["schemas"]["Money"];
+        };
+        /**
+         * ReportSalesTotals
+         * @description Overall sales aggregates for a window. Net sales excludes tax and shipping; total sales is the all-in figure net of refunds. All monetary fields are Rial minor units; counts are integers.
+         */
+        ReportSalesTotals: {
+            gross_sales: components["schemas"]["Money"];
+            net_sales: components["schemas"]["Money"];
+            total_sales: components["schemas"]["Money"];
+            coupons: components["schemas"]["Money"];
+            returns: components["schemas"]["Money"];
+            taxes: components["schemas"]["Money"];
+            order_tax: components["schemas"]["Money"];
+            shipping_tax: components["schemas"]["Money"];
+            shipping: components["schemas"]["Money"];
+            orders: number;
+            items_sold: number;
+            variations_sold: number;
+            products_sold: number;
+            avg_order_value: components["schemas"]["Money"];
+            avg_items_per_order: number;
+        };
+        /**
+         * ReportSalesIntervalPoint
+         * @description One time-bucket of the sales series. `date` is the bucket's start (UTC calendar date).
+         */
+        ReportSalesIntervalPoint: {
+            /** Format: date */
+            date: string;
+            orders: number;
+            gross_sales: components["schemas"]["Money"];
+            net_sales: components["schemas"]["Money"];
+            total_sales: components["schemas"]["Money"];
+            taxes: components["schemas"]["Money"];
+            shipping: components["schemas"]["Money"];
+            coupons: components["schemas"]["Money"];
+            returns: components["schemas"]["Money"];
+            items_sold: number;
+        };
+        /**
+         * ReportSalesStats
+         * @description Windowed sales statistics: totals + a zero-filled interval series, plus an optional comparison window (previous period / previous year) carrying the same shape. `generated_at` lets the UI show a freshness indicator. Backs the Overview, Revenue, Orders, Products, Categories, and Taxes report tiles + charts — each surface reads the fields it needs.
+         */
+        ReportSalesStats: {
+            totals: components["schemas"]["ReportSalesTotals"];
+            intervals: components["schemas"]["ReportSalesIntervalPoint"][];
+            comparison: null | {
+                totals: components["schemas"]["ReportSalesTotals"];
+                intervals: components["schemas"]["ReportSalesIntervalPoint"][];
+            };
+            /** Format: date-time */
+            generated_at: string;
+        };
+        /**
+         * ReportCouponsTotals
+         * @description Coupon-usage totals for a window — count of orders carrying a coupon and total discount applied.
+         */
+        ReportCouponsTotals: {
+            discounted_orders: number;
+            amount: components["schemas"]["Money"];
+        };
+        /**
+         * ReportCouponsIntervalPoint
+         * @description One time-bucket of the coupon-usage series. `date` is the bucket's start (UTC calendar date).
+         */
+        ReportCouponsIntervalPoint: {
+            /** Format: date */
+            date: string;
+            discounted_orders: number;
+            amount: components["schemas"]["Money"];
+        };
+        /**
+         * ReportCouponsStats
+         * @description Windowed coupon-usage statistics: discounted-order count and total discount amount, with a zero-filled interval series and an optional comparison window. Backs the Coupons report tiles + chart.
+         */
+        ReportCouponsStats: {
+            totals: components["schemas"]["ReportCouponsTotals"];
+            intervals: components["schemas"]["ReportCouponsIntervalPoint"][];
+            comparison: null | {
+                totals: components["schemas"]["ReportCouponsTotals"];
+                intervals: components["schemas"]["ReportCouponsIntervalPoint"][];
+            };
+            /** Format: date-time */
+            generated_at: string;
+        };
+        /**
+         * RevenueReportRow
+         * @description One interval row of the Revenue report. `date` is the bucket's start (UTC calendar date).
+         */
+        RevenueReportRow: {
+            /** Format: date */
+            date: string;
+            orders: number;
+            gross_sales: components["schemas"]["Money"];
+            returns: components["schemas"]["Money"];
+            coupons: components["schemas"]["Money"];
+            net_sales: components["schemas"]["Money"];
+            taxes: components["schemas"]["Money"];
+            shipping: components["schemas"]["Money"];
+            total_sales: components["schemas"]["Money"];
+        };
+        /**
+         * OrdersReportRow
+         * @description One order in the Orders report. `net_sales` is net of this order's refunds; `customer_type` classifies the buyer as a first-time (`new`) or `returning` account, or a `guest` checkout.
+         */
+        OrdersReportRow: {
+            order_id: number;
+            order_number: number;
+            /** Format: date-time */
+            date: string;
+            status: string;
+            customer: string | null;
+            /** @enum {string} */
+            customer_type: "new" | "returning" | "guest";
+            products: string[];
+            items_sold: number;
+            coupons: string[];
+            net_sales: components["schemas"]["Money"];
+            is_refunded: boolean;
+        };
+        /**
+         * ProductsReportRow
+         * @description One product in the Products report. `net_sales` is the post-coupon line total over the window; `stock` is the product's current total stock (null when the product manages no inventory).
+         */
+        ProductsReportRow: {
+            product_id: number;
+            name: string;
+            sku: string | null;
+            items_sold: number;
+            net_sales: components["schemas"]["Money"];
+            orders: number;
+            categories: string[];
+            variations: number;
+            status: string | null;
+            stock: number | null;
+        };
+        /**
+         * CategoriesReportRow
+         * @description One category in the Categories report — units / net sales / distinct products sold / orders.
+         */
+        CategoriesReportRow: {
+            category_id: number;
+            name: string;
+            items_sold: number;
+            net_sales: components["schemas"]["Money"];
+            products: number;
+            orders: number;
+        };
+        /**
+         * CouponsReportRow
+         * @description One coupon code in the Coupons report. `amount` is the total discount applied across orders in the window; `created_at` / `expires_at` / `type` come from the live coupon row when it still exists (null for ad-hoc or deleted coupons).
+         */
+        CouponsReportRow: {
+            coupon_id: number | null;
+            code: string;
+            orders: number;
+            amount: components["schemas"]["Money"];
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            type: string | null;
+        };
+        /**
+         * TaxesReportRow
+         * @description One tax rate in the Taxes report — total / order / shipping tax and the orders that paid it.
+         */
+        TaxesReportRow: {
+            code: string;
+            /** @description Rate percent (e.g. 9 for 9%). */
+            rate: number;
+            orders: number;
+            total_tax: components["schemas"]["Money"];
+            order_tax: components["schemas"]["Money"];
+            shipping_tax: components["schemas"]["Money"];
+        };
+        /**
+         * StockReportRow
+         * @description One inventory item (product or variation) in the Stock report. `stock` is null when the item does not manage stock; `sku` falls back from the variation to the parent product.
+         */
+        StockReportRow: {
+            inventory_id: number;
+            product_id: number;
+            variation_id: number | null;
+            name: string;
+            sku: string | null;
+            /** @enum {string} */
+            status: "instock" | "outofstock" | "onbackorder";
+            stock: number | null;
+            manage_stock: boolean;
+        };
+        /**
+         * StockReportCounts
+         * @description Footer totals for the Stock report — overall count plus a breakdown by status (low stock derived).
+         */
+        StockReportCounts: {
+            total: number;
+            instock: number;
+            lowstock: number;
+            outofstock: number;
+            onbackorder: number;
         };
         /**
          * ProductTaxonomyRef
@@ -8300,6 +8897,341 @@ export interface operations {
                         data: components["schemas"]["TopProduct"][];
                         range: components["schemas"]["ReportRange"];
                     };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsTopCategories: {
+        parameters: {
+            query?: {
+                /** @description Trailing window in days. Defaults to 30; capped at 365. */
+                days?: number;
+                /** @description Maximum number of rows to return. Defaults to 5; capped at 50. */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Top categories ranked by units sold, descending. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TopCategory"][];
+                        range: components["schemas"]["ReportRange"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsSalesStats: {
+        parameters: {
+            query: {
+                /** @description Inclusive window start (ISO date or datetime, Gregorian). */
+                date_from: string;
+                /** @description Inclusive window end (ISO date or datetime, Gregorian). */
+                date_to: string;
+                /** @description Bucket granularity. Auto-picked from the window length when omitted. */
+                interval?: "day" | "week" | "month";
+                /** @description Comparison window start. Both compare bounds must be sent together. */
+                compare_from?: string;
+                compare_to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sales totals, interval series, and optional comparison window. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportSalesStats"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsCouponsStats: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+                interval?: "day" | "week" | "month";
+                compare_from?: string;
+                compare_to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Coupon-usage totals, interval series, and optional comparison window. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportCouponsStats"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsRevenue: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+                interval?: "day" | "week" | "month";
+                page?: number;
+                limit?: number;
+                /** @description When `csv`, returns a `text/csv` attachment of the full windowed result. */
+                format?: "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated revenue rows with a window totals footer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RevenueReportRow"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                        totals: components["schemas"]["ReportSalesTotals"];
+                    };
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsOrders: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+                order_by?: "date" | "items_sold" | "net_sales";
+                order_dir?: "asc" | "desc";
+                page?: number;
+                limit?: number;
+                format?: "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated order rows. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OrdersReportRow"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsProducts: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+                /** @description Free-text filter across product name and SKU. */
+                q?: string;
+                category_id?: number;
+                order_by?: "items_sold" | "net_sales" | "orders";
+                order_dir?: "asc" | "desc";
+                page?: number;
+                limit?: number;
+                format?: "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated product rows. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProductsReportRow"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsCategories: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+                order_by?: "items_sold" | "net_sales" | "orders";
+                order_dir?: "asc" | "desc";
+                page?: number;
+                limit?: number;
+                format?: "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated category rows. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CategoriesReportRow"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsCoupons: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+                order_by?: "orders" | "amount" | "code";
+                order_dir?: "asc" | "desc";
+                page?: number;
+                limit?: number;
+                format?: "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated coupon rows. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CouponsReportRow"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsTaxes: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to: string;
+                order_by?: "total_tax" | "orders" | "code";
+                order_dir?: "asc" | "desc";
+                page?: number;
+                limit?: number;
+                format?: "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated tax-rate rows. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TaxesReportRow"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                    "text/csv": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminReportsStock: {
+        parameters: {
+            query?: {
+                /** @description Stock status filter. `lowstock` is derived (at/under the low-stock threshold). */
+                status?: "all" | "instock" | "outofstock" | "onbackorder" | "lowstock";
+                /** @description Free-text filter across product name and SKU. */
+                q?: string;
+                order_by?: "name" | "stock" | "status";
+                order_dir?: "asc" | "desc";
+                page?: number;
+                limit?: number;
+                format?: "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated stock rows with a footer count breakdown. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StockReportRow"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                        counts: components["schemas"]["StockReportCounts"];
+                    };
+                    "text/csv": string;
                 };
             };
             401: components["responses"]["Unauthorized"];
