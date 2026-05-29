@@ -12,7 +12,7 @@ import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
-import { getSettingsGroup, listSettingsGroups } from "#/lib/server-repos";
+import { getSettingsGroup } from "#/lib/server-repos";
 import type { AdminSettingField, SettingsGroupKey } from "#/lib/types";
 import { cn } from "#/lib/utils";
 import { GeneralSettings } from "#/views/settings/general/general-settings";
@@ -67,7 +67,6 @@ export default async function SettingsGroupPage({ params }: PageProps) {
     if (!isSettingsGroupKey(group)) notFound();
     const groupData = await getSettingsGroup(group);
     if (groupData === null) notFound();
-    const groups = await listSettingsGroups();
     const t = await getTranslations("Settings");
     const isGeneral = group === "general";
 
@@ -81,7 +80,7 @@ export default async function SettingsGroupPage({ params }: PageProps) {
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
                 <aside>
-                    <SettingsNav groups={groups} locale={locale} />
+                    <SettingsNav />
                 </aside>
 
                 {isGeneral ? (

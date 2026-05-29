@@ -3544,6 +3544,7 @@
             "products": "Products",
             "tax": "Tax",
             "shipping": "Shipping",
+            "payments": "Payments",
             "account": "Accounts",
             "email": "Email",
             "advanced": "Advanced"

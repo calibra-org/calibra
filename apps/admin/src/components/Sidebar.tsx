@@ -4,7 +4,6 @@ import {
     BadgePercent,
     BarChart3,
     Box,
-    CreditCard,
     Image as ImageIcon,
     LayoutDashboard,
     ListTree,
@@ -15,9 +14,7 @@ import {
     Sparkles,
     Star,
     Tags as TagsIcon,
-    Truck,
     Users,
-    Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ComponentType, SVGProps } from "react";
@@ -67,9 +64,6 @@ const groups: NavGroup[] = [
     {
         titleKey: "configuration",
         items: [
-            { href: "/tax", labelKey: "tax", icon: Wallet },
-            { href: "/shipping", labelKey: "shipping", icon: Truck },
-            { href: "/payments", labelKey: "payments", icon: CreditCard },
             { href: "/settings/general", labelKey: "settings", icon: Settings },
             { href: "/reports", labelKey: "reports", icon: BarChart3 },
         ],

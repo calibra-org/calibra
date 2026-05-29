@@ -3540,10 +3540,11 @@
         "save": "ذخیره تغییرات",
         "groupsNav": "گروه تنظیمات",
         "groups": {
-            "general": "کلی",
+            "general": "عمومی",
             "products": "محصولات",
             "tax": "مالیات",
             "shipping": "ارسال",
+            "payments": "روش‌های پرداخت",
             "account": "حساب کاربری",
             "email": "ایمیل",
             "advanced": "پیشرفته"
