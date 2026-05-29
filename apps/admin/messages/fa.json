@@ -25,7 +25,6 @@
         "reviews": "نقد و بررسی‌ها",
         "media": "رسانه‌ها",
         "orders": "سفارش‌ها",
-        "refunds": "بازگشت‌ها",
         "coupons": "کوپن‌ها",
         "customers": "مشتری‌ها",
         "tax": "مالیات",
@@ -2946,18 +2945,6 @@
         "refunded": "بازگشت‌داده‌شده",
         "failed": "ناموفق",
         "any": "همه"
-    },
-    "Refunds": {
-        "title": "بازگشت وجه",
-        "subtitle": "تمام بازگشت‌های ثبت‌شده در فروشگاه.",
-        "table": {
-            "refundNumber": "شماره",
-            "order": "سفارش",
-            "amount": "مبلغ",
-            "reason": "علت",
-            "refundedBy": "ثبت‌کننده",
-            "processedAt": "زمان"
-        }
     },
     "Coupons": {
         "title": "کدهای تخفیف",

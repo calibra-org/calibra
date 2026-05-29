@@ -25,7 +25,6 @@
         "reviews": "Reviews",
         "media": "Media",
         "orders": "Orders",
-        "refunds": "Refunds",
         "coupons": "Coupons",
         "customers": "Customers",
         "tax": "Tax",
@@ -2946,18 +2945,6 @@
         "refunded": "Refunded",
         "failed": "Failed",
         "any": "All"
-    },
-    "Refunds": {
-        "title": "Refunds",
-        "subtitle": "All refunds processed across orders.",
-        "table": {
-            "refundNumber": "Number",
-            "order": "Order",
-            "amount": "Amount",
-            "reason": "Reason",
-            "refundedBy": "Issued by",
-            "processedAt": "Processed"
-        }
     },
     "Coupons": {
         "title": "Coupons",

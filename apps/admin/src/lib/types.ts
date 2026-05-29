@@ -269,18 +269,6 @@ export interface AdminOrder {
     shippingInfo: AdminOrderShippingInfo | null;
 }
 
-export interface AdminRefund {
-    id: number;
-    refundNumber: number;
-    orderId: number;
-    orderNumber: number;
-    amount: MoneyMinor;
-    reason: string | null;
-    refundedByName: string;
-    processedAt: string;
-    gatewayRefundId: string | null;
-}
-
 export interface AdminCustomerAddress {
     id: number;
     kind: "billing" | "shipping" | "both";

@@ -10,7 +10,6 @@ import {
     ListTree,
     Package,
     ReceiptText,
-    RefreshCcw,
     Ribbon,
     Settings,
     Sparkles,
@@ -58,7 +57,6 @@ const groups: NavGroup[] = [
         titleKey: "sales",
         items: [
             { href: "/orders", labelKey: "orders", icon: ReceiptText },
-            { href: "/refunds", labelKey: "refunds", icon: RefreshCcw },
             { href: "/coupons", labelKey: "coupons", icon: BadgePercent },
         ],
     },
