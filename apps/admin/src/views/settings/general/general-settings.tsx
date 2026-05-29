@@ -4,7 +4,6 @@ import type { Locale } from "@calibra/shared/i18n";
 import { formatMoney } from "@calibra/shared/money";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "#/components/ui/button";
@@ -16,7 +15,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Spinner } from "#/components/ui/spinner";
 import { StickyActionBar } from "#/components/ui/sticky-action-bar";
 import { Switch } from "#/components/ui/switch";
-import { useGeneralSettings, useUpdateGeneralSettings } from "#/lib/queries/general-settings";
+import { type AdminGeneralSettings, useGeneralSettings, useUpdateGeneralSettings } from "#/lib/queries/general-settings";
 import { cn } from "#/lib/utils";
 
 import { type GeneralForm, generalFormSchema, previewConfig, toForm, toUpdate } from "./schema";
@@ -25,19 +24,7 @@ import { type GeneralForm, generalFormSchema, previewConfig, toForm, toUpdate } 
 const PREVIEW_AMOUNT = 1_250_000;
 
 export function GeneralSettings() {
-    const t = useTranslations("Settings.general");
-    const tRoot = useTranslations("Settings");
-    const locale = useLocale() as Locale;
     const { data, isLoading } = useGeneralSettings();
-    const update = useUpdateGeneralSettings();
-
-    const form = useForm<GeneralForm>({ resolver: zodResolver(generalFormSchema) });
-    const { control, register, handleSubmit, reset, watch, formState } = form;
-
-    useEffect(() => {
-        if (data) reset(toForm(data));
-    }, [data, reset]);
-
     if (isLoading || !data) {
         return (
             <div className="flex flex-col gap-6">
@@ -47,6 +34,21 @@ export function GeneralSettings() {
             </div>
         );
     }
+    return <GeneralSettingsForm data={data} />;
+}
+
+/**
+ * Mounted only once `data` exists so `useForm` seeds `defaultValues` from the first render — the
+ * Select/Switch controls are controlled from the start (no uncontrolled→controlled flip).
+ */
+function GeneralSettingsForm({ data }: { data: AdminGeneralSettings }) {
+    const t = useTranslations("Settings.general");
+    const tRoot = useTranslations("Settings");
+    const locale = useLocale() as Locale;
+    const update = useUpdateGeneralSettings();
+
+    const form = useForm<GeneralForm>({ resolver: zodResolver(generalFormSchema), defaultValues: toForm(data) });
+    const { control, register, handleSubmit, reset, watch, formState } = form;
 
     const { currencies, provinces, countries } = data.options;
     const values = watch();
