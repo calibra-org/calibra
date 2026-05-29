@@ -84,12 +84,73 @@ const REVIEW_OF_ORDERS_RATIO = 0.6;
  * the dev docker-compose Postgres. Inserts go through `multiInsert` in batches of {@link BATCH}
  * rows.
  */
+/**
+ * Tehran-heavy Zipf-like weights for distributing addresses across Iran's provinces. Mirrors the
+ * shape `0012_regional_demo_seeder` uses so the dashboard map's province colouring stays consistent
+ * regardless of which seeder produced the underlying orders.
+ */
+const IRAN_PROVINCE_WEIGHTS: ReadonlyArray<{ code: string; weight: number }> = [
+    { code: "IR-24", weight: 25 },
+    { code: "IR-31", weight: 8 },
+    { code: "IR-11", weight: 7 },
+    { code: "IR-08", weight: 6 },
+    { code: "IR-10", weight: 6 },
+    { code: "IR-04", weight: 5 },
+    { code: "IR-09", weight: 4 },
+    { code: "IR-26", weight: 4 },
+    { code: "IR-23", weight: 3 },
+];
+
 export default class BulkDatasetSeeder extends BaseSeeder {
     private options: BulkSeederOptions = {};
+
+    /**
+     * Tehran-heavy weighted pool of province `regions.id` values. Built once per run from
+     * {@link IRAN_PROVINCE_WEIGHTS} so every IR address the seeder writes gets a `region_id` —
+     * that's what the dashboard's regional map joins on to colour the provinces.
+     */
+    private iranProvincePool: number[] = [];
 
     setOptions(options: BulkSeederOptions): this {
         this.options = { ...this.options, ...options };
         return this;
+    }
+
+    /**
+     * Load Iran's province IDs (top-level `regions` rows under `country_code='IR'`) and assemble
+     * the Tehran-heavy weighted pool the address inserts sample from. The remaining tail provinces
+     * share ~32% of the weight evenly. Idempotent — re-running just rebuilds the array.
+     */
+    private async loadIranProvincePool(): Promise<void> {
+        const provinces = (await this.client
+            .from("regions")
+            .select(["id", "code"])
+            .where("country_code", "IR")
+            .whereNull("parent_id")) as Array<{ id: number | string; code: string }>;
+        if (provinces.length === 0) {
+            this.iranProvincePool = [];
+            return;
+        }
+        const byCode = new Map(provinces.map((p) => [p.code, Number(p.id)]));
+        const pool: number[] = [];
+        const explicit = new Set(IRAN_PROVINCE_WEIGHTS.map((w) => w.code));
+        for (const w of IRAN_PROVINCE_WEIGHTS) {
+            const id = byCode.get(w.code);
+            if (id === undefined) continue;
+            for (let i = 0; i < w.weight; i += 1) pool.push(id);
+        }
+        const tail = provinces.filter((p) => !explicit.has(p.code));
+        const tailWeightEach = Math.max(1, Math.floor(32 / Math.max(1, tail.length)));
+        for (const p of tail) {
+            for (let i = 0; i < tailWeightEach; i += 1) pool.push(Number(p.id));
+        }
+        this.iranProvincePool = pool;
+    }
+
+    /** Sample one province `regions.id` from {@link iranProvincePool}, or `null` if the pool is empty. */
+    private pickIranProvinceId(): number | null {
+        if (this.iranProvincePool.length === 0) return null;
+        return this.iranProvincePool[Math.floor(Math.random() * this.iranProvincePool.length)] ?? null;
     }
 
     /**
@@ -114,6 +175,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         if (this.options.reset) await this.reset();
 
         const now = DateTime.utc().toSQL();
+
+        await this.loadIranProvincePool();
 
         const brandIds = await this.ensureBulkBrands(now);
         const tagIds = await this.ensureBulkTags(now);
@@ -588,6 +651,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                     city: isIr ? faker.helpers.arrayElement(IRANIAN_CITIES) : faker.location.city(),
                     postcode: isIr ? randomIranianPostcode() : faker.location.zipCode(),
                     country: c.country,
+                    region_id: isIr ? this.pickIranProvinceId() : null,
                     phone: isIr ? randomIranianPhone() : faker.phone.number({ style: "international" }),
                     is_default: i === 0,
                     region_text: isIr ? null : faker.location.state(),
@@ -1304,6 +1368,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 city: faker.helpers.arrayElement(IRANIAN_CITIES),
                 postcode: randomIranianPostcode(),
                 country: "IR",
+                region_id: this.pickIranProvinceId(),
                 email: customer.email,
                 phone: randomIranianPhone(),
                 attributes: {},
