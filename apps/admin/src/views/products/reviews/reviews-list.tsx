@@ -522,6 +522,9 @@ export function ReviewsList() {
                                     onVisibilityChange={ui.setColumnVisibility}
                                     density={ui.density}
                                     onDensityChange={ui.setDensity}
+                                    columnOrder={ui.columnOrder}
+                                    onColumnOrderChange={ui.setColumnOrder}
+                                    pinnedIds={["select", "favorite", "actions"]}
                                     labels={{
                                         trigger: t("viewOptions"),
                                         columnsHeading: t("columnsHeading"),

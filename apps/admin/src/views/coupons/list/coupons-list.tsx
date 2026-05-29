@@ -389,6 +389,9 @@ export function CouponsListClient() {
                         columns={columnVisibilityItems}
                         columnVisibility={ui.columnVisibility}
                         onColumnVisibilityChange={ui.setColumnVisibility}
+                        columnOrder={ui.columnOrder}
+                        onColumnOrderChange={ui.setColumnOrder}
+                        pinnedIds={["select", "favorite", "actions"]}
                         density={ui.density}
                         onDensityChange={ui.setDensity}
                         onRefresh={() => refetch()}

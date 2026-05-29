@@ -405,6 +405,9 @@ export function CustomersListClient() {
                                     onVisibilityChange={ui.setColumnVisibility}
                                     density={ui.density}
                                     onDensityChange={ui.setDensity}
+                                    columnOrder={ui.columnOrder}
+                                    onColumnOrderChange={ui.setColumnOrder}
+                                    pinnedIds={["select", "favorite", "actions"]}
                                     labels={{
                                         trigger: t("toolbar.viewOptions"),
                                         densityHeading: t("toolbar.density"),
