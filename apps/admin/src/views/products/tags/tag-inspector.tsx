@@ -277,20 +277,18 @@ function InspectorForm({
                 )}
             </div>
 
-            <footer className="mt-auto flex flex-col gap-3 pt-2">
-                <div className="inline-flex items-center gap-1 text-muted-foreground text-xs">
-                    <Sparkles className="size-3" aria-hidden="true" />
-                    {isNew ? t("footer.newHint") : t("footer.editHint")}
-                </div>
-                <div className="flex items-center justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
-                        {t("buttons.cancel")}
-                    </Button>
-                    <Button type="submit" disabled={submitting || draft.name[locale]?.trim().length === 0}>
-                        <Save className="size-4" aria-hidden="true" />
-                        {isNew ? t("buttons.create") : t("buttons.save")}
-                    </Button>
-                </div>
+            <p className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+                <Sparkles className="size-3" aria-hidden="true" />
+                {isNew ? t("footer.newHint") : t("footer.editHint")}
+            </p>
+            <footer className="mt-auto flex items-center justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
+                    {t("buttons.cancel")}
+                </Button>
+                <Button type="submit" disabled={submitting || draft.name[locale]?.trim().length === 0}>
+                    <Save className="size-4" aria-hidden="true" />
+                    {isNew ? t("buttons.create") : t("buttons.save")}
+                </Button>
             </footer>
         </form>
     );

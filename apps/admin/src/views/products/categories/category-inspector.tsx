@@ -346,17 +346,15 @@ function InspectorForm({
                 )}
             </div>
 
-            <footer className="mt-auto flex flex-col gap-3 pt-2">
-                <div className="text-muted-foreground text-xs">{isNew ? t("footer.newHint") : t("footer.editHint")}</div>
-                <div className="flex items-center justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={onClose}>
-                        {t("buttons.cancel")}
-                    </Button>
-                    <Button type="submit" disabled={draft.name[locale]?.trim().length === 0}>
-                        <Save className="size-4" aria-hidden="true" />
-                        {isNew ? t("buttons.create") : t("buttons.save")}
-                    </Button>
-                </div>
+            <p className="text-muted-foreground text-xs">{isNew ? t("footer.newHint") : t("footer.editHint")}</p>
+            <footer className="mt-auto flex items-center justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={onClose}>
+                    {t("buttons.cancel")}
+                </Button>
+                <Button type="submit" disabled={draft.name[locale]?.trim().length === 0}>
+                    <Save className="size-4" aria-hidden="true" />
+                    {isNew ? t("buttons.create") : t("buttons.save")}
+                </Button>
             </footer>
         </form>
     );
