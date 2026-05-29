@@ -37,6 +37,7 @@ import { AlertTriangle, type LucideIcon } from "lucide-react";
 import {
     type CSSProperties,
     type KeyboardEvent,
+    memo,
     type ReactNode,
     type RefObject,
     useCallback,
@@ -524,6 +525,29 @@ export function DataTable<TData>({
     const cellClass = DENSITY_CLASSES[density].cell;
     const rowHeightClass = DENSITY_CLASSES[density].row;
 
+    /**
+     * Column widths are published as CSS custom properties on the `<table>` element rather than
+     * re-written onto every `<td>` per render. Cells read `var(--col-<id>-size)`, so their inline
+     * style string is constant — a resize tick only mutates these vars on one element instead of
+     * touching hundreds of cells. Recomputes as the operator drags (live `sizingState`).
+     */
+    const columnSizeVars = useMemo<Record<string, number>>(() => {
+        const vars: Record<string, number> = {};
+        for (const header of table.getFlatHeaders()) {
+            vars[`--col-${header.column.id}-size`] = sizingState[header.column.id] ?? header.getSize();
+        }
+        return vars;
+    }, [table, sizingState]);
+
+    /**
+     * Truthy only while a resize drag is in flight. During the drag we render the FROZEN row list
+     * (memoized, never re-renders) so the only work per mouse-move is the browser re-reading the
+     * CSS size vars — React doesn't reconcile a single cell. On release we swap back to the live
+     * list, which renders once with the committed widths.
+     */
+    const isResizing = Boolean(table.getState().columnSizingInfo.isResizingColumn);
+    const RowsComponent = isResizing ? FrozenRowList : DataTableRowList;
+
     const lastFocusedIndex = useRef<number>(0);
     const scrollRef = useRef<HTMLDivElement>(null);
     useStickyEdgeShadows(scrollRef);
@@ -629,7 +653,10 @@ export function DataTable<TData>({
                                  * and overflow-clip behave predictably. `min-w-full` keeps the table
                                  * filling the viewport when the columns sum to less than it.
                                  */}
-                                <Table className="min-w-full table-fixed border-collapse" style={{ width: table.getTotalSize() }}>
+                                <Table
+                                    className="min-w-full table-fixed border-collapse"
+                                    style={{ ...columnSizeVars, width: table.getTotalSize() }}
+                                >
                                     <TableHeader>
                                         {table.getHeaderGroups().map((headerGroup) => (
                                             <TableRow key={headerGroup.id} className="border-border border-b">
@@ -725,20 +752,16 @@ export function DataTable<TData>({
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            visibleRows.map((row, rowIndex) => (
-                                                <DataTableBodyRow
-                                                    key={row.id}
-                                                    row={row}
-                                                    rowIndex={rowIndex}
-                                                    cellClass={cellClass}
-                                                    rowHeightClass={rowHeightClass}
-                                                    renderSubComponent={renderSubComponent}
-                                                    rowOverride={renderRowOverride?.(row)}
-                                                    onRowOpen={onRowOpen}
-                                                    stickyPlan={stickyPlan}
-                                                    columnWrap={columnWrap}
-                                                />
-                                            ))
+                                            <RowsComponent
+                                                rows={visibleRows}
+                                                cellClass={cellClass}
+                                                rowHeightClass={rowHeightClass}
+                                                renderSubComponent={renderSubComponent}
+                                                renderRowOverride={renderRowOverride}
+                                                onRowOpen={onRowOpen}
+                                                stickyPlan={stickyPlan}
+                                                columnWrap={columnWrap}
+                                            />
                                         )}
                                     </TableBody>
                                 </Table>
@@ -819,9 +842,9 @@ function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: Sor
         disabled: isPinned,
     });
 
-    /** Live width from TanStack (declared `size`, or the operator's resized value). */
-    const width = header.getSize();
-    const widthStyle: CSSProperties = { width, minWidth: width };
+    /** Width is read from the table-level CSS var so a resize tick never rewrites this cell's style. */
+    const widthValue = `calc(var(--col-${header.column.id}-size) * 1px)`;
+    const widthStyle: CSSProperties = { width: widthValue, minWidth: widthValue };
     const dragStyle: CSSProperties = isPinned
         ? {}
         : {
@@ -894,6 +917,56 @@ function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: Sor
         </ColumnDragHandleProvider>
     );
 }
+
+interface RowListProps<TData> {
+    rows: Row<TData>[];
+    cellClass: string;
+    rowHeightClass: string;
+    renderSubComponent?: SubRowRenderer<TData>;
+    renderRowOverride?: (row: Row<TData>) => ReactNode | undefined;
+    onRowOpen?: (row: TData) => void;
+    stickyPlan: StickyPlan;
+    columnWrap?: Record<string, boolean>;
+}
+
+/** The body's data rows. Extracted so the resize path can swap in a frozen, memoized copy. */
+function DataTableRowList<TData>({
+    rows,
+    cellClass,
+    rowHeightClass,
+    renderSubComponent,
+    renderRowOverride,
+    onRowOpen,
+    stickyPlan,
+    columnWrap,
+}: RowListProps<TData>) {
+    return (
+        <>
+            {rows.map((row, rowIndex) => (
+                <DataTableBodyRow
+                    key={row.id}
+                    row={row}
+                    rowIndex={rowIndex}
+                    cellClass={cellClass}
+                    rowHeightClass={rowHeightClass}
+                    renderSubComponent={renderSubComponent}
+                    rowOverride={renderRowOverride?.(row)}
+                    onRowOpen={onRowOpen}
+                    stickyPlan={stickyPlan}
+                    columnWrap={columnWrap}
+                />
+            ))}
+        </>
+    );
+}
+
+/**
+ * Frozen variant rendered only while a column is actively being resized: the always-equal
+ * comparator means it never reconciles, so a resize drag costs one CSS-var write on the table
+ * element instead of re-rendering every row. It remounts (rendering once with the final widths)
+ * the moment the drag ends and the live {@link DataTableRowList} takes over again.
+ */
+const FrozenRowList = memo(DataTableRowList, () => true) as typeof DataTableRowList;
 
 interface BodyRowProps<TData> {
     row: Row<TData>;
@@ -984,10 +1057,10 @@ function DataTableBodyRow<TData>({
             }}
         >
             {row.getVisibleCells().map((cell) => {
-                const width = cell.column.getSize();
+                const widthValue = `calc(var(--col-${cell.column.id}-size) * 1px)`;
                 const placement = stickyPlan.get(cell.column.id);
                 const sticky = resolveStickyCell(placement);
-                const widthStyle: CSSProperties = { width, minWidth: width };
+                const widthStyle: CSSProperties = { width: widthValue, minWidth: widthValue };
                 const wrap = columnWrap?.[cell.column.id] === true;
                 return (
                     <TableCell
