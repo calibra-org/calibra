@@ -59,16 +59,11 @@ export function DashboardClient() {
             </header>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                <OrdersTodayCard label={t("ordersToday")} comparison={comparison} locale={locale} />
-                <RevenueTodayCard label={t("revenueToday")} comparison={comparison} locale={locale} />
-                <ActiveProductsCard label={t("activeProducts")} comparison={comparison} locale={locale} />
+                <OrdersTodayCard label={t("ordersToday")} locale={locale} />
+                <RevenueTodayCard label={t("revenueToday")} locale={locale} />
+                <ActiveProductsCard label={t("activeProducts")} locale={locale} />
                 <PendingFulfilmentsCard label={t("pendingFulfilments")} locale={locale} />
-                <NewCustomersCard
-                    label={t("newCustomers")}
-                    comparison={t("newCustomersComparison")}
-                    description={t("newCustomersDescription")}
-                    locale={locale}
-                />
+                <NewCustomersCard label={t("newCustomers")} locale={locale} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -184,7 +179,7 @@ function StatCardSlot({ label, icon, isPending, isError, value, delta, descripti
     );
 }
 
-function OrdersTodayCard({ label, comparison, locale }: { label: string; comparison: string; locale: Locale }) {
+function OrdersTodayCard({ label, locale }: { label: string; locale: Locale }) {
     const { data, isPending, isError } = useOrdersTodayStats();
     return (
         <StatCardSlot
@@ -193,12 +188,11 @@ function OrdersTodayCard({ label, comparison, locale }: { label: string; compari
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatNumber(data, locale) : ""}
-            delta={{ value: 0, comparison }}
         />
     );
 }
 
-function RevenueTodayCard({ label, comparison, locale }: { label: string; comparison: string; locale: Locale }) {
+function RevenueTodayCard({ label, locale }: { label: string; locale: Locale }) {
     const { data, isPending, isError } = useRevenueTodayStats();
     return (
         <StatCardSlot
@@ -207,12 +201,11 @@ function RevenueTodayCard({ label, comparison, locale }: { label: string; compar
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatMoney(data, locale) : ""}
-            delta={{ value: 0, comparison }}
         />
     );
 }
 
-function ActiveProductsCard({ label, comparison, locale }: { label: string; comparison: string; locale: Locale }) {
+function ActiveProductsCard({ label, locale }: { label: string; locale: Locale }) {
     const { data, isPending, isError } = useActiveProductsCount();
     return (
         <StatCardSlot
@@ -221,7 +214,6 @@ function ActiveProductsCard({ label, comparison, locale }: { label: string; comp
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatNumber(data, locale) : ""}
-            delta={{ value: 0, comparison }}
         />
     );
 }
@@ -239,17 +231,7 @@ function PendingFulfilmentsCard({ label, locale }: { label: string; locale: Loca
     );
 }
 
-function NewCustomersCard({
-    label,
-    comparison,
-    description,
-    locale,
-}: {
-    label: string;
-    comparison: string;
-    description: string;
-    locale: Locale;
-}) {
+function NewCustomersCard({ label, locale }: { label: string; locale: Locale }) {
     const { data, isPending, isError } = useNewCustomersTodayStats();
     return (
         <StatCardSlot
@@ -258,8 +240,6 @@ function NewCustomersCard({
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatNumber(data, locale) : ""}
-            delta={{ value: 0, comparison }}
-            description={description}
         />
     );
 }

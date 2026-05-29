@@ -71,7 +71,7 @@ export function AnalyticsToolbar({ showWindow = true }: { showWindow?: boolean }
     ];
 
     return (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
             <DateFilterChip
                 fieldLabel={t("dateRange")}
                 addLabel={t("dateRange")}
@@ -81,12 +81,12 @@ export function AnalyticsToolbar({ showWindow = true }: { showWindow?: boolean }
                 allowedOperators={["within", "in", "before", "after"]}
                 allowedGranularities={["day", "month", "quarter", "half_year", "year"]}
             />
-            <div className="ms-auto flex flex-wrap items-center gap-x-3 gap-y-2">
-                <div className="flex items-center gap-1.5">
+            <div className="ms-auto flex flex-wrap items-center gap-x-4 gap-y-3">
+                <div className="flex items-center gap-2">
                     <span className="text-muted-foreground text-xs">{t("compare.label")}</span>
                     <Segmented value={compare} options={compareOptions} onChange={setCompare} />
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                     <span className="text-muted-foreground text-xs">{t("interval.label")}</span>
                     <Segmented value={intervalMode} options={intervalOptions} onChange={setInterval} />
                 </div>

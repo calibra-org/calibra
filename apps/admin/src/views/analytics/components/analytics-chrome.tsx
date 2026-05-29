@@ -16,9 +16,9 @@ export function AnalyticsChrome({ children }: { children: ReactNode }) {
     const isStock = pathname.startsWith("/analytics/stock");
 
     return (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-7">
             {!isStock && (
-                <div className="sticky top-0 z-10 -mx-6 -mt-6 border-border border-b bg-background/85 px-6 py-3 backdrop-blur">
+                <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-1 border-border border-b bg-background/85 px-6 py-4 backdrop-blur">
                     <AnalyticsToolbar />
                 </div>
             )}

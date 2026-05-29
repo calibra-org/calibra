@@ -7,7 +7,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { StatCard } from "#/components/StatCard";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
-import { Progress } from "#/components/ui/progress";
 import { Skeleton } from "#/components/ui/skeleton";
 import { formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
@@ -100,34 +99,18 @@ function InsightsBody({
                     tone="success"
                 />
             </div>
-            <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{t("pctWithAccount")}</span>
-                    <span className="font-medium tabular-nums">{formatNumber(Math.round(data.pctWithAccount), locale)}%</span>
-                </div>
-                <Progress value={Math.min(100, Math.max(0, data.pctWithAccount))} />
-            </div>
         </>
     );
 }
 
 function InsightsSkeleton() {
     return (
-        <>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
-                    <Skeleton key={i} className="h-28 rounded-lg" />
-                ))}
-            </div>
-            <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                    <Skeleton className="h-3 w-32" />
-                    <Skeleton className="h-3 w-10" />
-                </div>
-                <Skeleton className="h-2 w-full" />
-            </div>
-        </>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
+                <Skeleton key={i} className="h-28 rounded-lg" />
+            ))}
+        </div>
     );
 }
 
