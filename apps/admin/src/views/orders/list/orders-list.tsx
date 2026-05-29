@@ -406,6 +406,8 @@ export function OrdersList() {
                 onColumnVisibilityChange={ui.setColumnVisibility}
                 columnOrder={ui.columnOrder}
                 onColumnOrderChange={ui.setColumnOrder}
+                columnSizing={ui.columnSizing}
+                onColumnSizingChange={ui.setColumnSizing}
                 density={ui.density}
                 isLoading={isPending}
                 isError={isError}
