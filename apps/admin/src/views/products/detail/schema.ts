@@ -9,8 +9,8 @@ import type { AdminProductDetailView } from "#/lib/adapters/product-detail";
  * array for back-compat, but the admin only ever sends a single `{ locale: "fa", … }` entry; the
  * formValuesToPayload adapter handles the wire shape.
  *
- * Money is kept as Toman MAJOR units (the input layer renders Toman; the submit adapter
- * multiplies ×10 to convert back to Rial minor units). Dates are ISO strings (UTC).
+ * Money is kept as BASE MINOR units (Rial) end-to-end — the same unit the API speaks. `MoneyInput`
+ * renders the store display currency from the config; no ×10/÷10 happens here. Dates are ISO (UTC).
  */
 export const productDetailSchema = z
     .object({
@@ -27,8 +27,8 @@ export const productDetailSchema = z
          * always kept in lock-step. On read we lift either truthy column into `isDigital`.
          */
         isDigital: z.boolean(),
-        regularPriceToman: z.number().min(0).nullable(),
-        salePriceToman: z.number().min(0).nullable(),
+        regularPriceMinor: z.number().min(0).nullable(),
+        salePriceMinor: z.number().min(0).nullable(),
         saleStartsAt: z.string().nullable(),
         saleEndsAt: z.string().nullable(),
         taxClassId: z.number().nullable(),
@@ -88,10 +88,10 @@ export const productDetailSchema = z
         defaultVariationId: z.number().nullable(),
     })
     .refine(
-        (data) => data.salePriceToman === null || data.regularPriceToman === null || data.salePriceToman < data.regularPriceToman,
+        (data) => data.salePriceMinor === null || data.regularPriceMinor === null || data.salePriceMinor < data.regularPriceMinor,
         {
             message: "sale_price_must_be_below_regular",
-            path: ["salePriceToman"],
+            path: ["salePriceMinor"],
         },
     );
 
@@ -107,8 +107,8 @@ export function emptyProductDetailValues(): ProductDetailFormValues {
         catalogVisibility: "visible",
         featured: false,
         isDigital: false,
-        regularPriceToman: null,
-        salePriceToman: null,
+        regularPriceMinor: null,
+        salePriceMinor: null,
         saleStartsAt: null,
         saleEndsAt: null,
         taxClassId: null,
@@ -193,8 +193,7 @@ function sanitizeIds(values: number[]): number[] {
 
 /**
  * Maps the loaded server-side product into form values. Picks the `fa` translation when present,
- * falls back to the first available row, then to empty strings. Rial-minor prices become Toman
- * major via /10.
+ * falls back to the first available row, then to empty strings. Prices stay in BASE minor units.
  */
 export function productToFormValues(p: AdminProductDetailView): ProductDetailFormValues {
     const t = p.translations.find((row) => row.locale === "fa") ?? p.translations[0];
@@ -206,8 +205,8 @@ export function productToFormValues(p: AdminProductDetailView): ProductDetailFor
         catalogVisibility: p.catalogVisibility,
         featured: p.featured,
         isDigital: p.virtual || p.downloadable,
-        regularPriceToman: p.regularPriceMinor === null ? null : p.regularPriceMinor / 10,
-        salePriceToman: p.salePriceMinor === null ? null : p.salePriceMinor / 10,
+        regularPriceMinor: p.regularPriceMinor,
+        salePriceMinor: p.salePriceMinor,
         saleStartsAt: p.saleStartsAt,
         saleEndsAt: p.saleEndsAt,
         taxClassId: p.taxClassId,
@@ -256,7 +255,7 @@ export function productToFormValues(p: AdminProductDetailView): ProductDetailFor
 }
 
 /**
- * Map form values to the wire payload the API understands. Toman → Rial. The content fields
+ * Map form values to the wire payload the API understands. Prices are already BASE minor. The content fields
  * (`name`, `slug`, …) get packed into a single-entry `translations[{ locale: "fa", … }]` array —
  * the API still owns the translations table, the admin just stops pretending the catalog is
  * multilingual. If/when the API drops `translations[]` for products, this is the only place that
@@ -272,8 +271,8 @@ export function formValuesToPayload(values: ProductDetailFormValues): Record<str
         featured: values.featured,
         virtual: values.isDigital,
         downloadable: values.isDigital,
-        regular_price: values.regularPriceToman === null ? null : Math.round(values.regularPriceToman * 10),
-        sale_price: values.salePriceToman === null ? null : Math.round(values.salePriceToman * 10),
+        regular_price: values.regularPriceMinor,
+        sale_price: values.salePriceMinor,
         sale_starts_at: values.saleStartsAt,
         sale_ends_at: values.saleEndsAt,
         tax_class_id: values.taxClassId,

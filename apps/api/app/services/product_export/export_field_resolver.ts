@@ -25,6 +25,8 @@ export interface ExportFormatOptions {
     digit_style?: "ascii" | "persian";
     date_format?: "iso" | "jalali" | "ddmmyyyy";
     money_format?: "minor" | "major";
+    /** Store display-currency base_ratio — BASE minor units per major unit (set by the runner). */
+    base_ratio?: number;
 }
 
 /**
@@ -105,7 +107,8 @@ function formatMoney(value: unknown, opts: ExportFormatOptions): string {
     const minor = typeof value === "bigint" ? Number(value) : Number(value);
     if (!Number.isFinite(minor)) return "";
     if (opts.money_format === "major") {
-        const major = Math.round(minor / 10);
+        const ratio = opts.base_ratio && opts.base_ratio > 0 ? opts.base_ratio : 1;
+        const major = Math.round(minor / ratio);
         const grouped = major.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "٬");
         return opts.digit_style === "persian" ? toPersianDigits(grouped) : grouped;
     }

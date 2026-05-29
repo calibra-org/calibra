@@ -469,7 +469,7 @@ function PricingBody({ externalUrlVariant }: { externalUrlVariant: boolean }) {
         <div className="grid grid-cols-12 gap-3">
             <Controller
                 control={control}
-                name="regularPriceToman"
+                name="regularPriceMinor"
                 render={({ field }) => (
                     <Field
                         id="regularPrice"
@@ -479,8 +479,8 @@ function PricingBody({ externalUrlVariant }: { externalUrlVariant: boolean }) {
                     >
                         <MoneyInput
                             id="regularPrice"
-                            valueMinor={field.value === null ? null : Math.round(field.value * 10)}
-                            onChangeMinor={(next) => field.onChange(next === null ? null : next / 10)}
+                            valueMinor={field.value}
+                            onChangeMinor={field.onChange}
                             min={0}
                             step={1000}
                         />
@@ -490,7 +490,7 @@ function PricingBody({ externalUrlVariant }: { externalUrlVariant: boolean }) {
 
             <Controller
                 control={control}
-                name="salePriceToman"
+                name="salePriceMinor"
                 render={({ field }) => (
                     <Field
                         id="salePrice"
@@ -500,8 +500,8 @@ function PricingBody({ externalUrlVariant }: { externalUrlVariant: boolean }) {
                     >
                         <MoneyInput
                             id="salePrice"
-                            valueMinor={field.value === null ? null : Math.round(field.value * 10)}
-                            onChangeMinor={(next) => field.onChange(next === null ? null : next / 10)}
+                            valueMinor={field.value}
+                            onChangeMinor={field.onChange}
                             nullable
                             min={0}
                             step={1000}

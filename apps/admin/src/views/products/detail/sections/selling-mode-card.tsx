@@ -78,9 +78,7 @@ export function SellingModeBody({ productId, locale: _locale }: SellingModeBodyP
                     const keeper = rows.find((r) => r.id === keeperId);
                     if (keeper) {
                         setValue("sku", keeper.sku, { shouldDirty: true });
-                        setValue("regularPriceToman", keeper.regularPriceMinor === null ? null : keeper.regularPriceMinor / 10, {
-                            shouldDirty: true,
-                        });
+                        setValue("regularPriceMinor", keeper.regularPriceMinor, { shouldDirty: true });
                     }
                 }
                 /**

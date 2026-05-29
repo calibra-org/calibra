@@ -24,6 +24,17 @@ export interface ResolvedCurrencyConfig {
 
 const POSITIONS: readonly CurrencyPosition[] = ["left", "right", "left_space", "right_space"];
 
+/** Toman defaults — the resolved config never throws, so a missing row can't crash commerce flows. */
+const DEFAULT_DISPLAY = {
+    code: "IRT",
+    symbol: "تومان",
+    nameEn: "Iranian toman",
+    nameFa: "تومان",
+    decimals: 0,
+    position: "right_space" as CurrencyPosition,
+    baseRatio: 10,
+};
+
 function asPosition(value: unknown, fallback: CurrencyPosition): CurrencyPosition {
     return typeof value === "string" && POSITIONS.includes(value as CurrencyPosition) ? (value as CurrencyPosition) : fallback;
 }
@@ -40,8 +51,8 @@ export async function resolveCurrencyConfig(): Promise<ResolvedCurrencyConfig> {
     const baseCode = typeof general.currency === "string" ? general.currency : "IRR";
     const displayCode = typeof general.currency_display_default === "string" ? general.currency_display_default : "IRT";
 
-    const display = (await Currency.findBy("code", displayCode)) ?? (await Currency.findBy("code", "IRT"));
-    if (!display) throw new Error("No display currency available — currencies table is not seeded");
+    const row = (await Currency.findBy("code", displayCode)) ?? (await Currency.findBy("code", "IRT"));
+    const display = row ?? DEFAULT_DISPLAY;
 
     return {
         baseCode,
