@@ -1,8 +1,8 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin } from "./helpers.js";
 import TaxClass from "#models/tax_class";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("Admin tax-classes CRUD", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;

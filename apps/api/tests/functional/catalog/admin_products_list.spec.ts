@@ -1,8 +1,8 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createBrand, createCategory, createProduct, createTag } from "./helpers.js";
 import InventoryItem from "#models/inventory_item";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 /**
  * Regression coverage for the `category` / `tag` / `brand` / `on_sale` / `stock_status` query

@@ -1,7 +1,7 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createAttributeWithTerm } from "./helpers.js";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("Catalog attributes", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;

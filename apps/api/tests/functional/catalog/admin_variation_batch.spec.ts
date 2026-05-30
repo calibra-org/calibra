@@ -1,9 +1,9 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductVariation from "#models/product_variation";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 /**
  * Cartesian-create coverage for `POST /admin/products/:id/variations/batch` — the workflow the

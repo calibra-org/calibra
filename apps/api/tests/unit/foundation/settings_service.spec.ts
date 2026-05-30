@@ -1,8 +1,8 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import Setting from "#models/setting";
 import SettingsService from "#services/settings_service";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("SettingsService", (group) => {
     group.each.setup(async () => truncateAndCleanup());

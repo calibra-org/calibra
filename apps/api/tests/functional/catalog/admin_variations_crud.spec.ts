@@ -1,8 +1,8 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("Admin variations CRUD", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;

@@ -1,10 +1,10 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createProduct } from "./helpers.js";
 import Product from "#models/product";
 import ProductImage from "#models/product_image";
 import ProductTranslation from "#models/product_translation";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("Admin products CRUD", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;

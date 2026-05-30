@@ -1,9 +1,9 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 import { DateTime } from "luxon";
 
 import { createAdmin, createProduct } from "./helpers.js";
 import Product from "#models/product";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 /**
  * Coverage for the trash / restore / force-delete + counts + new index filter dimensions

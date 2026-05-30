@@ -1,8 +1,8 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 import { DateTime } from "luxon";
 
 import { createProduct } from "./helpers.js";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("GET /api/v1/products/:slug", (group) => {
     group.each.setup(async () => truncateAndCleanup());

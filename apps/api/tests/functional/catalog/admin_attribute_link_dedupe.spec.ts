@@ -1,10 +1,10 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductAttributeTerm from "#models/product_attribute_term";
 import ProductAttributeTermTranslation from "#models/product_attribute_term_translation";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 /**
  * Locks the `syncProductAttributeLinks` dedupe behaviour. A 23505 unique-constraint violation

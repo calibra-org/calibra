@@ -1,10 +1,10 @@
 import { test } from "@japa/runner";
-import { truncateAndCleanup } from "#tests/helpers/truncate";
 import { DateTime } from "luxon";
 
 import { createAttributeWithTerm, createBrand, createCategory, createProduct, createTag } from "./helpers.js";
 import InventoryItem from "#models/inventory_item";
 import ProductAttributeLink from "#models/product_attribute_link";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("GET /api/v1/products", (group) => {
     group.each.setup(async () => truncateAndCleanup());
