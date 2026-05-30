@@ -1,0 +1,51 @@
+operationId: adminReportsRevenue
+summary: Revenue report table (admin)
+description: >
+    Revenue broken down by interval bucket — one row per day / week / month with gross sales,
+    returns, coupons, net sales, taxes, shipping, and total sales, plus a window totals footer.
+    Pass `format=csv` to download the full windowed result instead of a paginated JSON page.
+tags: [Admin / Reports]
+
+parameters:
+    - name: date_from
+      in: query
+      required: true
+      schema: { type: string, maxLength: 40 }
+    - name: date_to
+      in: query
+      required: true
+      schema: { type: string, maxLength: 40 }
+    - name: interval
+      in: query
+      schema: { type: string, enum: [day, week, month] }
+    - name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    - name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 25 }
+    - name: format
+      in: query
+      description: When `csv`, returns a `text/csv` attachment of the full windowed result.
+      schema: { type: string, enum: [csv] }
+
+responses:
+    "200":
+        description: Paginated revenue rows with a window totals footer.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta, totals]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../../common/components/schemas/RevenueReportRow.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+                        totals: { $ref: "../../../common/components/schemas/ReportSalesTotals.yaml" }
+            text/csv:
+                schema: { type: string }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"

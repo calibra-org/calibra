@@ -1,0 +1,34 @@
+operationId: adminReportsTopCategories
+summary: Top-selling categories (admin)
+description: >
+    Ranks product categories by units sold over a trailing window (default 30 days). Only
+    `processing` / `completed` / `refunded` orders contribute. Names resolve for the request locale.
+tags: [Admin / Reports]
+
+parameters:
+    - name: days
+      in: query
+      description: Trailing window in days. Defaults to 30; capped at 365.
+      schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+    - name: limit
+      in: query
+      description: Maximum number of rows to return. Defaults to 5; capped at 50.
+      schema: { type: integer, minimum: 1, maximum: 50, default: 5 }
+
+responses:
+    "200":
+        description: Top categories ranked by units sold, descending.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, range]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../../common/components/schemas/TopCategory.yaml" }
+                        range: { $ref: "../../../common/components/schemas/ReportRange.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"

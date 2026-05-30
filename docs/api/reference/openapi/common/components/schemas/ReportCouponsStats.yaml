@@ -1,0 +1,23 @@
+title: ReportCouponsStats
+description: >
+    Windowed coupon-usage statistics: discounted-order count and total discount amount, with a
+    zero-filled interval series and an optional comparison window. Backs the Coupons report tiles +
+    chart.
+type: object
+required: [totals, intervals, comparison, generated_at]
+properties:
+    totals: { $ref: "./ReportCouponsTotals.yaml" }
+    intervals:
+        type: array
+        items: { $ref: "./ReportCouponsIntervalPoint.yaml" }
+    comparison:
+        oneOf:
+            - type: "null"
+            - type: object
+              required: [totals, intervals]
+              properties:
+                  totals: { $ref: "./ReportCouponsTotals.yaml" }
+                  intervals:
+                      type: array
+                      items: { $ref: "./ReportCouponsIntervalPoint.yaml" }
+    generated_at: { type: string, format: date-time }

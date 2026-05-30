@@ -412,6 +412,56 @@ paths:
             $ref: "./admin/paths/reports/top-products.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/top-categories:
+        get:
+            $ref: "./admin/paths/reports/top-categories.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/sales-stats:
+        get:
+            $ref: "./admin/paths/reports/sales-stats.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/coupons-stats:
+        get:
+            $ref: "./admin/paths/reports/coupons-stats.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/revenue:
+        get:
+            $ref: "./admin/paths/reports/revenue.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/orders:
+        get:
+            $ref: "./admin/paths/reports/orders.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/products:
+        get:
+            $ref: "./admin/paths/reports/products.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/categories:
+        get:
+            $ref: "./admin/paths/reports/categories.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/coupons:
+        get:
+            $ref: "./admin/paths/reports/coupons.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/taxes:
+        get:
+            $ref: "./admin/paths/reports/taxes.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/reports/stock:
+        get:
+            $ref: "./admin/paths/reports/stock.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
 
     /api/v1/admin/products:
         get:

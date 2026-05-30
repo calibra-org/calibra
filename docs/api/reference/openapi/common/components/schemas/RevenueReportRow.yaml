@@ -1,0 +1,14 @@
+title: RevenueReportRow
+description: One interval row of the Revenue report. `date` is the bucket's start (UTC calendar date).
+type: object
+required: [date, orders, gross_sales, returns, coupons, net_sales, taxes, shipping, total_sales]
+properties:
+    date: { type: string, format: date }
+    orders: { type: integer, minimum: 0 }
+    gross_sales: { $ref: "./Money.yaml" }
+    returns: { $ref: "./Money.yaml" }
+    coupons: { $ref: "./Money.yaml" }
+    net_sales: { $ref: "./Money.yaml" }
+    taxes: { $ref: "./Money.yaml" }
+    shipping: { $ref: "./Money.yaml" }
+    total_sales: { $ref: "./Money.yaml" }

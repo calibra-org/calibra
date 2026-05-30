@@ -1,0 +1,51 @@
+operationId: adminReportsOrders
+summary: Orders report table (admin)
+description: >
+    One row per order in the window, net of that order's refunds, classified new / returning /
+    guest. Sortable by date, items sold, or net sales. Pass `format=csv` for a download.
+tags: [Admin / Reports]
+
+parameters:
+    - name: date_from
+      in: query
+      required: true
+      schema: { type: string, maxLength: 40 }
+    - name: date_to
+      in: query
+      required: true
+      schema: { type: string, maxLength: 40 }
+    - name: order_by
+      in: query
+      schema: { type: string, enum: [date, items_sold, net_sales] }
+    - name: order_dir
+      in: query
+      schema: { type: string, enum: [asc, desc] }
+    - name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    - name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 25 }
+    - name: format
+      in: query
+      schema: { type: string, enum: [csv] }
+
+responses:
+    "200":
+        description: Paginated order rows.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../../common/components/schemas/OrdersReportRow.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+            text/csv:
+                schema: { type: string }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"

@@ -1,0 +1,14 @@
+title: TopCategory
+description: >
+    One category row inside a top-categories leaderboard. Aggregates units sold and net sales across
+    every product linked to the category within the report window. `name` is resolved for the
+    request locale.
+type: object
+required: [category_id, name, units, net_sales]
+properties:
+    category_id: { type: integer }
+    name: { type: string }
+    units: { type: integer, minimum: 0 }
+    net_sales: { $ref: "./Money.yaml" }
+examples:
+    - { category_id: 12, name: "صنایع دستی", units: 48, net_sales: 920000000 }

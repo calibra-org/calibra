@@ -1,0 +1,58 @@
+operationId: adminReportsProducts
+summary: Products report table (admin)
+description: >
+    Per-product units sold, net sales, and orders over the window, with category, variation count,
+    status, and current stock context. Filterable by search term and category. `format=csv` downloads.
+tags: [Admin / Reports]
+
+parameters:
+    - name: date_from
+      in: query
+      required: true
+      schema: { type: string, maxLength: 40 }
+    - name: date_to
+      in: query
+      required: true
+      schema: { type: string, maxLength: 40 }
+    - name: q
+      in: query
+      description: Free-text filter across product name and SKU.
+      schema: { type: string, maxLength: 120 }
+    - name: category_id
+      in: query
+      schema: { type: integer, minimum: 1 }
+    - name: order_by
+      in: query
+      schema: { type: string, enum: [items_sold, net_sales, orders] }
+    - name: order_dir
+      in: query
+      schema: { type: string, enum: [asc, desc] }
+    - name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    - name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 25 }
+    - name: format
+      in: query
+      schema: { type: string, enum: [csv] }
+
+responses:
+    "200":
+        description: Paginated product rows.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../../common/components/schemas/ProductsReportRow.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+            text/csv:
+                schema: { type: string }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"

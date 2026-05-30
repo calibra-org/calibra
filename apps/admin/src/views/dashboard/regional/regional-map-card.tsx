@@ -37,7 +37,7 @@ export function RegionalMapCard() {
 
     return (
         <Card>
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 space-y-0 border-b pb-4">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 space-y-0 pb-2">
                 <div>
                     <CardTitle className="text-base">{t("title")}</CardTitle>
                     <CardDescription>{t("subtitle")}</CardDescription>

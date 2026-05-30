@@ -61,7 +61,7 @@ export default async function TopSellersPage({ params }: PageProps) {
             />
 
             <Card>
-                <CardHeader className="border-b pb-4">
+                <CardHeader className="pb-2">
                     <CardTitle className="text-base">{topT("chartTitle")}</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">

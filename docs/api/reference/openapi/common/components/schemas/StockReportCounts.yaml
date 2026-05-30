@@ -1,0 +1,10 @@
+title: StockReportCounts
+description: Footer totals for the Stock report — overall count plus a breakdown by status (low stock derived).
+type: object
+required: [total, instock, lowstock, outofstock, onbackorder]
+properties:
+    total: { type: integer, minimum: 0 }
+    instock: { type: integer, minimum: 0 }
+    lowstock: { type: integer, minimum: 0 }
+    outofstock: { type: integer, minimum: 0 }
+    onbackorder: { type: integer, minimum: 0 }

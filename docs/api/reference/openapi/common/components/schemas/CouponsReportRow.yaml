@@ -1,0 +1,15 @@
+title: CouponsReportRow
+description: >
+    One coupon code in the Coupons report. `amount` is the total discount applied across orders in
+    the window; `created_at` / `expires_at` / `type` come from the live coupon row when it still
+    exists (null for ad-hoc or deleted coupons).
+type: object
+required: [coupon_id, code, orders, amount, created_at, expires_at, type]
+properties:
+    coupon_id: { type: [integer, "null"] }
+    code: { type: string }
+    orders: { type: integer, minimum: 0 }
+    amount: { $ref: "./Money.yaml" }
+    created_at: { type: [string, "null"], format: date-time }
+    expires_at: { type: [string, "null"], format: date-time }
+    type: { type: [string, "null"] }

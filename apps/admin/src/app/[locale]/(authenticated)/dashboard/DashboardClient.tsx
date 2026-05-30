@@ -2,7 +2,7 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowUpRight, Package, PiggyBank, ReceiptText, RefreshCw, Truck, UserPlus } from "lucide-react";
+import { ArrowUpRight, PiggyBank, ReceiptText, RefreshCw, Truck, UserPlus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 
@@ -18,7 +18,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#
 import { formatMoney, formatNumber, formatRelativeTime } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
 import {
-    useActiveProductsCount,
     useNewCustomersTodayStats,
     useOrdersByStatus,
     useOrdersTodayStats,
@@ -58,36 +57,30 @@ export function DashboardClient() {
                 </Button>
             </header>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                <OrdersTodayCard label={t("ordersToday")} comparison={comparison} locale={locale} />
-                <RevenueTodayCard label={t("revenueToday")} comparison={comparison} locale={locale} />
-                <ActiveProductsCard label={t("activeProducts")} comparison={comparison} locale={locale} />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <OrdersTodayCard label={t("ordersToday")} locale={locale} />
+                <RevenueTodayCard label={t("revenueToday")} locale={locale} />
                 <PendingFulfilmentsCard label={t("pendingFulfilments")} locale={locale} />
-                <NewCustomersCard
-                    label={t("newCustomers")}
-                    comparison={t("newCustomersComparison")}
-                    description={t("newCustomersDescription")}
-                    locale={locale}
-                />
+                <NewCustomersCard label={t("newCustomers")} locale={locale} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Card className="xl:col-span-2">
-                    <CardHeader className="border-b pb-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-base">{t("salesTrend")}</CardTitle>
                         <CardDescription>{t("salesTrendSubtitle")}</CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-1">
                         <SalesSeriesWidget />
                     </CardContent>
                 </Card>
 
                 <Card>
-                    <CardHeader className="border-b pb-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-base">{t("ordersByStatus")}</CardTitle>
                         <CardDescription>{t("ordersByStatusSubtitle")}</CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-1">
                         <OrdersByStatusWidget />
                     </CardContent>
                 </Card>
@@ -99,7 +92,7 @@ export function DashboardClient() {
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Card className="xl:col-span-2">
-                    <CardHeader className="flex items-center justify-between border-b pb-4">
+                    <CardHeader className="flex items-center justify-between pb-2">
                         <div>
                             <CardTitle className="text-base">{t("recentOrders")}</CardTitle>
                             <CardDescription>{t("salesTrendSubtitle")}</CardDescription>
@@ -117,18 +110,18 @@ export function DashboardClient() {
                 </Card>
 
                 <Card>
-                    <CardHeader className="border-b pb-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-base">{t("topProducts")}</CardTitle>
                         <CardDescription>{t("topProductsSubtitle")}</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex flex-col gap-4 pt-5">
+                    <CardContent className="flex flex-col gap-3 pt-1">
                         <TopProductsList locale={locale} emptyLabel={tCommon("noResults")} />
                     </CardContent>
                 </Card>
             </div>
 
             <Card>
-                <CardHeader className="flex items-center justify-between border-b pb-4">
+                <CardHeader className="flex items-center justify-between pb-2">
                     <div>
                         <CardTitle className="text-base">{t("recentCustomers")}</CardTitle>
                         <CardDescription>{t("recentCustomersSubtitle")}</CardDescription>
@@ -156,7 +149,7 @@ interface StatCardWrapperProps {
     isPending: boolean;
     isError: boolean;
     value: string;
-    delta?: { percent: number; comparison: string };
+    delta?: { value: number; comparison: string };
     description?: string;
 }
 
@@ -167,7 +160,7 @@ interface StatCardWrapperProps {
 function StatCardSlot({ label, icon, isPending, isError, value, delta, description }: StatCardWrapperProps) {
     const displayValue = isPending ? "" : isError ? "—" : value;
     return (
-        <div className="relative">
+        <div className="relative h-full">
             <StatCard
                 label={label}
                 value={displayValue}
@@ -184,7 +177,7 @@ function StatCardSlot({ label, icon, isPending, isError, value, delta, descripti
     );
 }
 
-function OrdersTodayCard({ label, comparison, locale }: { label: string; comparison: string; locale: Locale }) {
+function OrdersTodayCard({ label, locale }: { label: string; locale: Locale }) {
     const { data, isPending, isError } = useOrdersTodayStats();
     return (
         <StatCardSlot
@@ -193,12 +186,11 @@ function OrdersTodayCard({ label, comparison, locale }: { label: string; compari
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatNumber(data, locale) : ""}
-            delta={{ percent: 0, comparison }}
         />
     );
 }
 
-function RevenueTodayCard({ label, comparison, locale }: { label: string; comparison: string; locale: Locale }) {
+function RevenueTodayCard({ label, locale }: { label: string; locale: Locale }) {
     const { data, isPending, isError } = useRevenueTodayStats();
     return (
         <StatCardSlot
@@ -207,21 +199,6 @@ function RevenueTodayCard({ label, comparison, locale }: { label: string; compar
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatMoney(data, locale) : ""}
-            delta={{ percent: 0, comparison }}
-        />
-    );
-}
-
-function ActiveProductsCard({ label, comparison, locale }: { label: string; comparison: string; locale: Locale }) {
-    const { data, isPending, isError } = useActiveProductsCount();
-    return (
-        <StatCardSlot
-            label={label}
-            icon={Package}
-            isPending={isPending}
-            isError={isError}
-            value={data !== undefined ? formatNumber(data, locale) : ""}
-            delta={{ percent: 0, comparison }}
         />
     );
 }
@@ -239,17 +216,7 @@ function PendingFulfilmentsCard({ label, locale }: { label: string; locale: Loca
     );
 }
 
-function NewCustomersCard({
-    label,
-    comparison,
-    description,
-    locale,
-}: {
-    label: string;
-    comparison: string;
-    description: string;
-    locale: Locale;
-}) {
+function NewCustomersCard({ label, locale }: { label: string; locale: Locale }) {
     const { data, isPending, isError } = useNewCustomersTodayStats();
     return (
         <StatCardSlot
@@ -258,8 +225,6 @@ function NewCustomersCard({
             isPending={isPending}
             isError={isError}
             value={data !== undefined ? formatNumber(data, locale) : ""}
-            delta={{ percent: 0, comparison }}
-            description={description}
         />
     );
 }

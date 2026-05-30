@@ -47,7 +47,7 @@ export default async function PaymentGatewayDetailPage({ params }: PageProps) {
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
-                    <CardHeader className="border-b pb-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-sm">{t("configuration")}</CardTitle>
                         <CardDescription>{gateway.description[locale]}</CardDescription>
                     </CardHeader>
@@ -84,7 +84,7 @@ export default async function PaymentGatewayDetailPage({ params }: PageProps) {
 
                 <div className="flex flex-col gap-6">
                     <Card>
-                        <CardHeader className="border-b pb-4">
+                        <CardHeader className="pb-2">
                             <CardTitle className="text-sm">{t("customerInstructions")}</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-5">

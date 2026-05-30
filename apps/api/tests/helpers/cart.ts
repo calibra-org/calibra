@@ -39,10 +39,17 @@ export async function truncatePhase04Tables(): Promise<void> {
  * Reset every phase-04 table AND repopulate the foundation/shipping/tax seed rows so functional
  * tests see the same world a fresh deployment would. The catalog seeder is intentionally not
  * re-run — tests assemble their own products through {@link createTaxableProduct} et al.
+ *
+ * The foundation seed is the long pole of the CI test suite (hundreds of `updateOrCreate` calls
+ * per reset × hundreds of tests easily blew the 6-min CI timeout). The truncate scope doesn't
+ * touch the foundation tables on its own, but other helpers (e.g. `resetPhase08`) `TRUNCATE …
+ * CASCADE` chains that can wipe `payment_gateways`. A single cheap COUNT probe tells us whether
+ * the foundation needs reseeding — skip it when it's still intact, run it when it isn't.
  */
 export async function resetWithFoundation(): Promise<void> {
     await truncatePhase04Tables();
-    /** Re-run foundation so shipping_zones, tax_rates, settings exist for cart resolution. */
+    const probe = (await db.from("payment_gateways").count("* as c").first()) as { c: number | string } | undefined;
+    if (Number(probe?.c ?? 0) > 0) return;
     const FoundationSeeder = (await import("#database/seed_modules/0001_foundation_seeder")).default;
     const seeder = new FoundationSeeder(db.connection());
     await seeder.run();

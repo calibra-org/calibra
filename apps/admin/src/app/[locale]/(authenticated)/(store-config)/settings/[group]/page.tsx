@@ -81,7 +81,7 @@ export default async function SettingsGroupPage({ params }: PageProps) {
                 <GeneralSettings />
             ) : (
                 <Card>
-                    <CardHeader className="border-b pb-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-base">{groupData.title[locale]}</CardTitle>
                         <CardDescription>{groupData.subtitle[locale]}</CardDescription>
                     </CardHeader>

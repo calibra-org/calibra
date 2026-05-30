@@ -1,13 +1,12 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { ArrowUpRight, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { ArrowUpRight, CircleDollarSign, ShoppingBag, Users, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Sparkline } from "#/components/Sparkline";
+import { StatCard } from "#/components/StatCard";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
-import { Progress } from "#/components/ui/progress";
 import { Skeleton } from "#/components/ui/skeleton";
 import { formatMoney, formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
@@ -15,11 +14,10 @@ import { useCustomerInsights } from "#/lib/queries/insights";
 import type { AdminCustomerInsights } from "#/lib/types";
 
 /**
- * Dashboard"Customer summary"tile. Replaces the inconsistent footer that used to live on the
+ * Dashboard "Customer summary" tile. Replaces the inconsistent footer that used to live on the
  * customers list page. Renders four KPI cells (total customers, mean order count, mean lifetime
- * spend, mean order value) each with a 30-day delta arrow, plus a horizontal progress bar for
- * the percent of customers that have an account. Sparklines are intentionally omitted until a
- * chart lib lands in the workspace catalog — the deltas alone give the operator a usable trend.
+ * spend, mean order value) each with a 30-day delta arrow + an inline sparkline where the API
+ * returns one, plus a horizontal progress bar for the percent of customers that have an account.
  */
 export function CustomerInsightsCard() {
     const locale = useLocale() as Locale;
@@ -29,7 +27,7 @@ export function CustomerInsightsCard() {
 
     return (
         <Card>
-            <CardHeader className="flex items-center justify-between border-b pb-4">
+            <CardHeader className="flex items-center justify-between pb-2">
                 <div className="flex items-center gap-2">
                     <span className="grid size-8 place-items-center rounded-md bg-primary/10 text-primary">
                         <Users className="size-4" aria-hidden="true" />
@@ -46,7 +44,7 @@ export function CustomerInsightsCard() {
                     </Link>
                 </Button>
             </CardHeader>
-            <CardContent className="flex flex-col gap-5 pt-5">
+            <CardContent className="flex flex-col gap-4 pt-1">
                 {isPending ? (
                     <InsightsSkeleton />
                 ) : isError ? (
@@ -68,135 +66,51 @@ function InsightsBody({
     locale: Locale;
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
-    /** Sparkline tones follow the delta sign, except spend which uses positive when growing. */
-    const totalTone = data.totalDelta30d >= 0 ? "positive" : "negative";
-    const spendTone = data.avgLifetimeSpendDelta30dPct >= 0 ? "positive" : "negative";
-
+    const comparison = t("delta30d");
     return (
         <>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <Kpi
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <StatCard
                     label={t("total")}
                     value={formatNumber(data.total, locale)}
-                    delta={data.totalDelta30d}
-                    deltaUnit="absolute"
-                    locale={locale}
-                    comparison={t("delta30d")}
-                    sparkline={data.sparklines.total}
-                    sparklineTone={totalTone}
-                    sparklineLabel={t("sparklines.total")}
+                    delta={{ value: data.totalDelta30d, unit: "absolute", comparison }}
+                    icon={Users}
+                    tone="info"
                 />
-                <Kpi
+                <StatCard
                     label={t("avgOrderCount")}
                     value={formatNumber(Math.round(data.avgOrderCount * 100) / 100, locale)}
-                    delta={data.avgOrderCountDelta30d}
-                    deltaUnit="absolute"
-                    locale={locale}
-                    comparison={t("delta30d")}
+                    delta={{ value: data.avgOrderCountDelta30d, unit: "absolute", comparison }}
+                    icon={ShoppingBag}
+                    tone="default"
                 />
-                <Kpi
+                <StatCard
                     label={t("avgLifetimeSpend")}
                     value={formatMoney(data.avgLifetimeSpend, locale)}
-                    delta={data.avgLifetimeSpendDelta30dPct}
-                    deltaUnit="percent"
-                    locale={locale}
-                    comparison={t("delta30d")}
-                    sparkline={data.sparklines.spend}
-                    sparklineTone={spendTone}
-                    sparklineLabel={t("sparklines.spend")}
+                    delta={{ value: data.avgLifetimeSpendDelta30dPct, unit: "percent", comparison }}
+                    icon={Wallet}
+                    tone="success"
                 />
-                <Kpi
+                <StatCard
                     label={t("avgOrderValue")}
                     value={formatMoney(data.avgOrderValue, locale)}
-                    delta={data.avgOrderValueDelta30dPct}
-                    deltaUnit="percent"
-                    locale={locale}
-                    comparison={t("delta30d")}
+                    delta={{ value: data.avgOrderValueDelta30dPct, unit: "percent", comparison }}
+                    icon={CircleDollarSign}
+                    tone="success"
                 />
             </div>
-            <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{t("pctWithAccount")}</span>
-                    <span className="font-medium tabular-nums">{formatNumber(Math.round(data.pctWithAccount), locale)}%</span>
-                </div>
-                <Progress value={Math.min(100, Math.max(0, data.pctWithAccount))} />
-            </div>
         </>
-    );
-}
-
-interface KpiProps {
-    label: string;
-    value: string;
-    delta: number;
-    /** `absolute` formats the delta as a signed integer (`+12`); `percent` adds a `%` suffix. */
-    deltaUnit: "absolute" | "percent";
-    comparison: string;
-    locale: Locale;
-    /** Optional 30-day daily series — rendered as an inline SVG sparkline behind the value. */
-    sparkline?: number[];
-    sparklineTone?: "positive" | "negative" | "neutral";
-    sparklineLabel?: string;
-}
-
-function Kpi({
-    label,
-    value,
-    delta,
-    deltaUnit,
-    comparison,
-    locale,
-    sparkline,
-    sparklineTone = "neutral",
-    sparklineLabel,
-}: KpiProps) {
-    const isUp = delta >= 0;
-    const TrendIcon = isUp ? TrendingUp : TrendingDown;
-    const absDelta = Math.abs(delta);
-    const formatted =
-        deltaUnit === "percent"
-            ? `${formatNumber(Math.round(absDelta * 10) / 10, locale)}%`
-            : formatNumber(Math.round(absDelta), locale);
-    return (
-        <div className="relative flex flex-col gap-1 overflow-hidden rounded-md border border-border bg-muted/30 px-3 py-3">
-            <span className="text-muted-foreground text-xs">{label}</span>
-            <span className="font-semibold text-lg tabular-nums">{value}</span>
-            <span
-                className={isUp ? "flex items-center gap-1 text-success text-xs" : "flex items-center gap-1 text-danger text-xs"}
-            >
-                <TrendIcon className="size-3" aria-hidden="true" />
-                <span className="tabular-nums">{formatted}</span>
-                <span className="text-muted-foreground">{comparison}</span>
-            </span>
-            {sparkline !== undefined && sparkline.length > 0 && (
-                <div className="pointer-events-none absolute inset-x-2 bottom-1 opacity-70">
-                    <Sparkline values={sparkline} width={120} height={24} tone={sparklineTone} ariaLabel={sparklineLabel} />
-                </div>
-            )}
-        </div>
     );
 }
 
 function InsightsSkeleton() {
     return (
-        <>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={`s-${String(i)}`} className="flex flex-col gap-1.5 rounded-md border border-border px-3 py-3">
-                        <Skeleton className="h-3 w-16" />
-                        <Skeleton className="h-5 w-24" />
-                        <Skeleton className="h-3 w-20" />
-                    </div>
-                ))}
-            </div>
-            <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                    <Skeleton className="h-3 w-32" />
-                    <Skeleton className="h-3 w-10" />
-                </div>
-                <Skeleton className="h-2 w-full" />
-            </div>
-        </>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
+                <Skeleton key={i} className="h-28 rounded-lg" />
+            ))}
+        </div>
     );
 }
 
