@@ -1,13 +1,14 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createAttributeWithTerm } from "./helpers.js";
 
 test.group("Catalog attributes", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("attribute slug never gets a pa_ prefix (created via admin endpoint)", async ({ client, assert }) => {

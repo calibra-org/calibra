@@ -1,11 +1,11 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 import { DateTime } from "luxon";
 
 import { createProduct } from "./helpers.js";
 
 test.group("GET /api/v1/products/:slug", (group) => {
-    group.each.setup(async () => testUtils.db().truncate());
+    group.each.setup(async () => truncateAndCleanup());
 
     test("resolves a single product by its localized fa slug", async ({ client, assert }) => {
         await createProduct({

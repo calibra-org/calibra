@@ -1,5 +1,5 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 import { DateTime } from "luxon";
 
 import { createAttributeWithTerm, createBrand, createCategory, createProduct, createTag } from "./helpers.js";
@@ -7,9 +7,7 @@ import InventoryItem from "#models/inventory_item";
 import ProductAttributeLink from "#models/product_attribute_link";
 
 test.group("GET /api/v1/products", (group) => {
-    group.each.setup(async () => {
-        return await testUtils.db().truncate();
-    });
+    group.each.setup(async () => truncateAndCleanup());
 
     test("returns a paginated envelope with default page=1 limit=20", async ({ client, assert }) => {
         for (let i = 0; i < 5; i += 1) {

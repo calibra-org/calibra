@@ -1,5 +1,5 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
@@ -16,8 +16,9 @@ import ProductAttributeTermTranslation from "#models/product_attribute_term_tran
 test.group("Admin product attribute_links dedupe", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("PATCH with duplicate attribute_links collapses to one row, term_ids unioned", async ({ client, assert }) => {

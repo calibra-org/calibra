@@ -1,5 +1,5 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 import { DateTime } from "luxon";
 
 import { createAdmin, createProduct } from "./helpers.js";
@@ -12,8 +12,9 @@ import Product from "#models/product";
 test.group("Admin products — trash, restore, force-delete, counts", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("DELETE soft-deletes the product (deleted_at is set)", async ({ client, assert }) => {

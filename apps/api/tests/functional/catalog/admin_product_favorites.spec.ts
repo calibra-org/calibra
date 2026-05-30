@@ -1,5 +1,5 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createProduct } from "./helpers.js";
 import User from "#models/user";
@@ -12,8 +12,9 @@ import User from "#models/user";
 test.group("Admin product favorites", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("PUT stars the product; favorites=1 + is_favorite reflect it", async ({ client, assert }) => {

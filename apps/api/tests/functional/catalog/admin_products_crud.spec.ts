@@ -1,5 +1,5 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createProduct } from "./helpers.js";
 import Product from "#models/product";
@@ -9,8 +9,9 @@ import ProductTranslation from "#models/product_translation";
 test.group("Admin products CRUD", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("create with required fields returns the new product with translations", async ({ client, assert }) => {

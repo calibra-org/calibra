@@ -1,11 +1,11 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import Setting from "#models/setting";
 import SettingsService from "#services/settings_service";
 
 test.group("SettingsService", (group) => {
-    group.each.setup(() => testUtils.db().truncate());
+    group.each.setup(async () => truncateAndCleanup());
 
     test("get returns the fallback when no row exists", async ({ assert }) => {
         const service = new SettingsService();

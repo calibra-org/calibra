@@ -1,10 +1,10 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createCategory } from "./helpers.js";
 
 test.group("GET /api/v1/categories", (group) => {
-    group.each.setup(async () => testUtils.db().truncate());
+    group.each.setup(async () => truncateAndCleanup());
 
     test("tree=1 returns nested children", async ({ client, assert }) => {
         const root = await createCategory({ fa: { name: "ریشه", slug: "root-fa" }, en: { name: "Root", slug: "root-en" } });

@@ -1,5 +1,5 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 import { createAdmin, createBrand, createCategory, createProduct, createTag } from "./helpers.js";
 import InventoryItem from "#models/inventory_item";
@@ -13,8 +13,9 @@ import InventoryItem from "#models/inventory_item";
 test.group("Admin products list filters", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("default request returns the paginated envelope", async ({ client, assert }) => {
