@@ -1,11 +1,11 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
 import { createProduct } from "./helpers.js";
 import ProductReview from "#models/product_review";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("Product reviews", (group) => {
-    group.each.setup(async () => testUtils.db().truncate());
+    group.each.setup(async () => truncateAndCleanup());
 
     test("anonymous submit lands as pending", async ({ client, assert }) => {
         const product = await createProduct({

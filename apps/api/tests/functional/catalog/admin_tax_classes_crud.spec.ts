@@ -1,14 +1,15 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
 import { createAdmin } from "./helpers.js";
 import TaxClass from "#models/tax_class";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("Admin tax-classes CRUD", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("index lists every tax class", async ({ client, assert }) => {

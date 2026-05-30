@@ -1,10 +1,10 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
 import { createAdmin, createProduct } from "./helpers.js";
 import Media from "#models/media";
 import Product from "#models/product";
 import ProductDownload from "#models/product_download";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 async function createMedia(label: string) {
     return await Media.create({
@@ -19,8 +19,9 @@ async function createMedia(label: string) {
 test.group("Admin product detail extensions", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("PATCH syncs upsells / cross-sells / grouped members in order", async ({ client, assert }) => {

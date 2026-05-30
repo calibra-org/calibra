@@ -18,7 +18,17 @@ import { CacheTags } from "#services/cache_keys";
  */
 test.group("Catalog storefront caching", (group) => {
     group.each.setup(async () => {
-        return await testUtils.db().truncate();
+        /**
+         * The strict `data.length === 1` assertion in the very first test would fall over if
+         * the previous spec in this Japa process left rows behind. `testUtils.db().truncate()`
+         * only registers the cleanup on the test's teardown, so under sharding (when the prior
+         * spec uses {@link resetWithFoundation}, which doesn't truncate the catalog) this group's
+         * first test would inherit dirty state. Run the cleanup at setup time too — cheap, and
+         * makes the assertion self-contained.
+         */
+        const truncate = await testUtils.db().truncate();
+        await truncate();
+        return truncate;
     });
 
     test("products list — cold miss populates, warm hit hides direct DB change, tag invalidation refreshes", async ({

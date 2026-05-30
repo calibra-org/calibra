@@ -1,9 +1,9 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
 import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductVariation from "#models/product_variation";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 /**
  * Lifecycle for the new `product_variations.status` column powering the Sellable versions
@@ -13,8 +13,9 @@ import ProductVariation from "#models/product_variation";
 test.group("Admin variation status", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("creating a variation defaults status to active", async ({ client, assert }) => {

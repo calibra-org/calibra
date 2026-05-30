@@ -1,14 +1,15 @@
-import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
 import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductCustomAttribute from "#models/product_custom_attribute";
+import { truncateAndCleanup } from "#tests/helpers/truncate";
 
 test.group("Admin product custom attributes", (group) => {
     let admin: Awaited<ReturnType<typeof createAdmin>>;
     group.each.setup(async () => {
+        const cleanup = await truncateAndCleanup();
         admin = await createAdmin();
-        return await testUtils.db().truncate();
+        return cleanup;
     });
 
     test("PATCH appends a custom attribute row and surfaces it on the detail GET", async ({ client, assert }) => {
