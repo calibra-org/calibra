@@ -10,7 +10,16 @@ import { CacheTags } from "#services/cache_keys";
 
 test.group("Catalog taxonomy caching", (group) => {
     group.each.setup(async () => {
-        return await testUtils.db().truncate();
+        /**
+         * Mirror the self-cleaning truncate in {@link cache_products.spec.ts}: the strict
+         * `data.length === 1` assertion would fail if the previous spec in this Japa process
+         * (which under sharding can be any non-truncating helper like {@link resetWithFoundation})
+         * left rows behind. Run truncate at setup as well as teardown so this group's first
+         * test is self-contained.
+         */
+        const truncate = await testUtils.db().truncate();
+        await truncate();
+        return truncate;
     });
 
     test("categories tree — cached, then refreshed when taxonomy tag invalidated", async ({ client, assert }) => {
