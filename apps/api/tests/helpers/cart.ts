@@ -45,11 +45,20 @@ export async function truncatePhase04Tables(): Promise<void> {
  * touch the foundation tables on its own, but other helpers (e.g. `resetPhase08`) `TRUNCATE …
  * CASCADE` chains that can wipe `payment_gateways`. A single cheap COUNT probe tells us whether
  * the foundation needs reseeding — skip it when it's still intact, run it when it isn't.
+ *
+ * When the probe says foundation IS intact, individual rows may still have been mutated by a
+ * previous test (e.g. `shipping_rate_cache.spec.ts` flips every `shipping_zone_methods.enabled`
+ * to `false` to exercise the cache layer). Re-running the full seeder would restore them, but
+ * costs the same hundreds-of-upserts hit the probe was designed to avoid. Instead, restore only
+ * the cheap, well-known foundation invariants by hand — one UPDATE each.
  */
 export async function resetWithFoundation(): Promise<void> {
     await truncatePhase04Tables();
     const probe = (await db.from("payment_gateways").count("* as c").first()) as { c: number | string } | undefined;
-    if (Number(probe?.c ?? 0) > 0) return;
+    if (Number(probe?.c ?? 0) > 0) {
+        await db.from("shipping_zone_methods").where("enabled", false).update({ enabled: true });
+        return;
+    }
     const FoundationSeeder = (await import("#database/seed_modules/0001_foundation_seeder")).default;
     const seeder = new FoundationSeeder(db.connection());
     await seeder.run();
