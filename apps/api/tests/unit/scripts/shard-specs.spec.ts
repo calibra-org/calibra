@@ -47,9 +47,13 @@ function discoverAllSpecs(): string[] {
         const entries = readdirSync(resolve(API_ROOT, root), { withFileTypes: true, recursive: true });
         for (const entry of entries) {
             if (!entry.isFile() || !entry.name.endsWith(".spec.ts")) continue;
-            const parent = entry.parentPath ?? entry.path;
-            const abs = resolve(parent, entry.name);
-            out.push(abs.slice(API_ROOT.length + 1).split(/[\\/]/).join("/"));
+            const abs = resolve(entry.parentPath, entry.name);
+            out.push(
+                abs
+                    .slice(API_ROOT.length + 1)
+                    .split(/[\\/]/)
+                    .join("/"),
+            );
         }
     }
     return out.sort();

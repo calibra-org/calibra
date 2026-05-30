@@ -43,8 +43,7 @@ function discoverSpecs(apiRoot, root) {
     for (const entry of entries) {
         if (!entry.isFile()) continue;
         if (!entry.name.endsWith(".spec.ts")) continue;
-        const parentPath = entry.parentPath ?? entry.path;
-        const absPath = join(parentPath, entry.name);
+        const absPath = join(entry.parentPath, entry.name);
         out.push(relative(apiRoot, absPath).split(sep).join("/"));
     }
     return out;
