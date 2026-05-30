@@ -49,10 +49,16 @@ test.group("shipping_rate_service", (group) => {
     });
 
     test("a postcode-specific zone wins over the country-level zone", async ({ assert }) => {
-        /** Spin up a synthetic zone matching postcode `1234567890` so postcode beats country. */
+        /**
+         * Pick a postcode that no other test cares about — `1234567890` is the canonical Iran-IR
+         * test postcode shared by the cart/orders helpers, and `seedFoundationFixtures` doesn't
+         * truncate the extras this test inserts, so any spec running afterwards with the same
+         * postcode would inherit a `flat_rate`-only zone.
+         */
+        const SYNTHETIC_POSTCODE = "9999987654";
         const zoneId = await db.table("shipping_zones").insert({ name: "Tehran VIP", is_fallback: false }).returning("id");
         const zonePk = Number((zoneId[0] as { id: bigint | number }).id);
-        await db.table("shipping_zone_locations").insert({ zone_id: zonePk, type: "postcode", code: "1234567890" });
+        await db.table("shipping_zone_locations").insert({ zone_id: zonePk, type: "postcode", code: SYNTHETIC_POSTCODE });
 
         const methodRow = await db.from("shipping_methods").where("code", "flat_rate").select("id").first();
         const methodId = Number(methodRow?.id);
@@ -65,7 +71,7 @@ test.group("shipping_rate_service", (group) => {
             settings: JSON.stringify({ cost: 250_000 }),
         });
 
-        const options = await enumerateShippingRates({ country: "IR", regionId: null, postcode: "1234567890" }, 10_000_000);
+        const options = await enumerateShippingRates({ country: "IR", regionId: null, postcode: SYNTHETIC_POSTCODE }, 10_000_000);
         const codes = options.map((option) => option.methodCode).sort();
         /** Tehran VIP is the only method in the postcode zone — Iran-zone methods must not appear. */
         assert.deepEqual(codes, ["flat_rate"]);
