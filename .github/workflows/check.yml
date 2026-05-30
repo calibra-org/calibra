@@ -49,9 +49,28 @@ jobs:
             - run: pnpm install --frozen-lockfile
             - run: pnpm run typecheck
 
-    test:
+    test-frontend:
         runs-on: ubuntu-latest
-        timeout-minutes: 12
+        timeout-minutes: 4
+        steps:
+            - uses: actions/checkout@v4
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: "pnpm"
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm --filter @calibra/sdk --filter @calibra/admin run test
+
+    test-api:
+        runs-on: ubuntu-latest
+        timeout-minutes: 4
+        strategy:
+            fail-fast: false
+            matrix:
+                shard: [1, 2, 3, 4, 5]
         services:
             postgres:
                 image: postgres:17-alpine
@@ -89,7 +108,34 @@ jobs:
               env:
                   PGPASSWORD: calibra
               run: psql -h localhost -U calibra -d calibra -c "CREATE DATABASE calibra_test OWNER calibra;"
-            - run: pnpm run test
+            - name: Compute spec slice for this shard
+              id: slice
+              working-directory: apps/api
+              run: |
+                  paths=$(node scripts/shard-specs.mjs ${{ matrix.shard }} 5)
+                  count=$(echo "$paths" | wc -w)
+                  files=$(echo "$paths" | tr ' ' '\n' | sed 's/^/--files=/' | xargs)
+                  echo "files=$files" >> "$GITHUB_OUTPUT"
+                  echo "shard ${{ matrix.shard }}/5 has $count specs"
+            - name: Run Japa on this shard's slice
+              working-directory: apps/api
+              run: pnpm test ${{ steps.slice.outputs.files }}
+
+    test:
+        needs: [test-frontend, test-api]
+        if: always()
+        runs-on: ubuntu-latest
+        timeout-minutes: 4
+        steps:
+            - name: Aggregate test job results
+              run: |
+                  fe='${{ needs.test-frontend.result }}'
+                  api='${{ needs.test-api.result }}'
+                  echo "test-frontend: $fe"
+                  echo "test-api:      $api"
+                  if [ "$fe" != "success" ] || [ "$api" != "success" ]; then
+                      exit 1
+                  fi
 
     build:
         runs-on: ubuntu-latest
