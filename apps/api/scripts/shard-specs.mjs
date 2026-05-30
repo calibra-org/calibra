@@ -26,6 +26,14 @@ const API_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SUITE_ROOTS = ["tests/unit", "tests/functional"];
 
 /**
+ * Runtime cost multiplier per suite. Functional specs boot the HTTP server, hit the DB, and
+ * validate every 2xx against the merged OpenAPI bundle — empirically ~4× the wall-clock of
+ * a same-byte unit spec. The bin-packer would put a stack of large-but-fast unit specs and a
+ * small-but-slow functional spec into the same shard unless the weight reflects that gap.
+ */
+const SUITE_WEIGHT_FACTOR = { "tests/unit": 1, "tests/functional": 4 };
+
+/**
  * Recursively yield every `*.spec.ts` file under `root`, as paths relative to
  * `apiRoot`. Uses POSIX-style separators in the output so the result is
  * identical on Linux runners and on Windows-WSL developer boxes — Japa's
@@ -105,7 +113,11 @@ if (shardTotal > specs.length) {
     process.exit(1);
 }
 const weighted = specs
-    .map((path) => ({ path, weight: statSync(join(API_ROOT, path)).size }))
+    .map((path) => {
+        const suite = path.startsWith("tests/functional") ? "tests/functional" : "tests/unit";
+        const bytes = statSync(join(API_ROOT, path)).size;
+        return { path, weight: bytes * SUITE_WEIGHT_FACTOR[suite] };
+    })
     .sort((a, b) => b.weight - a.weight || a.path.localeCompare(b.path));
 const bins = packShards(weighted, shardTotal);
 process.stdout.write(`${bins[shardIndex - 1].files.join(" ")}\n`);
