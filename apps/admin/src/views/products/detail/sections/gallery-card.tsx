@@ -17,6 +17,7 @@ import { type CSSProperties, useState } from "react";
 import { useFormContext } from "react-hook-form";
 
 import { MediaPicker } from "#/components/media-picker";
+import { variantUrl } from "#/lib/media-variants";
 import type { AdminMedia } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
@@ -38,7 +39,7 @@ import { useMediaUrlMap } from "./media-url-map";
 export function GalleryBody() {
     const t = useTranslations("Products.detail.gallery");
     const { watch, setValue } = useFormContext<ProductDetailFormValues>();
-    const { getUrl, setMany } = useMediaUrlMap();
+    const { getMedia, setManyMedia } = useMediaUrlMap();
     const [pickerOpen, setPickerOpen] = useState(false);
 
     const ids = watch("imageMediaIds");
@@ -87,7 +88,7 @@ export function GalleryBody() {
 
     const handleAdd = (selection: AdminMedia | AdminMedia[]) => {
         const picked = Array.isArray(selection) ? selection : [selection];
-        setMany(picked.map((media) => ({ id: media.id, url: media.url })));
+        setManyMedia(picked.map((media) => ({ id: media.id, ref: { url: media.url, variants: media.variants } })));
         const existing = new Set(ids);
         const additions = picked.filter((media) => !existing.has(media.id)).map((media) => media.id);
         if (additions.length === 0) return;
@@ -103,7 +104,7 @@ export function GalleryBody() {
                             <GalleryThumb
                                 key={id}
                                 id={id}
-                                url={getUrl(id)}
+                                url={variantUrl(getMedia(id), "thumbnail")}
                                 alt={t("thumbAlt")}
                                 onRemove={() => handleRemove(id)}
                                 onPromote={() => handlePromote(id)}

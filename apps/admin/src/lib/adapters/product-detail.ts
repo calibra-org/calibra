@@ -1,5 +1,7 @@
 import type { AdminSchemas } from "@calibra/sdk";
 
+import type { AdminMediaVariants } from "#/lib/types";
+
 type Schemas = AdminSchemas["schemas"];
 type SdkAdminProductDetail = Schemas["AdminProductDetail"];
 
@@ -29,6 +31,7 @@ export interface ProductImageView {
     position: number;
     url: string | null;
     alt: string | null;
+    variants: AdminMediaVariants | null;
 }
 
 export interface ProductInventoryLocationView {
@@ -168,6 +171,7 @@ export function toAdminProductDetail(p: SdkAdminProductDetail): AdminProductDeta
             position: Number(img.position),
             url: img.url ?? null,
             alt: (img as { alt?: string | null }).alt ?? null,
+            variants: ((img as { variants?: unknown }).variants ?? null) as AdminMediaVariants | null,
         })),
         galleryImageUrls: (p as { gallery_image_urls?: string[] }).gallery_image_urls ?? [],
         inventoryLocations: (inventory?.locations ?? []).map((loc) => ({

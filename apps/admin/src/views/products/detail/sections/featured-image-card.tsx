@@ -7,6 +7,7 @@ import { useFormContext } from "react-hook-form";
 
 import { MediaPicker } from "#/components/media-picker";
 import { Button } from "#/components/ui/button";
+import { variantUrl } from "#/lib/media-variants";
 import type { AdminMedia } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
@@ -27,17 +28,18 @@ export function FeaturedImageBody() {
     const t = useTranslations("Products.detail.featuredImage");
     const tField = useTranslations("Products.detail.fields");
     const { watch, setValue } = useFormContext<ProductDetailFormValues>();
-    const { getUrl, setUrl } = useMediaUrlMap();
+    const { getMedia, setMedia } = useMediaUrlMap();
     const [pickerOpen, setPickerOpen] = useState(false);
 
     const ids = watch("imageMediaIds");
     const featuredId = ids[0] ?? null;
-    const featuredUrl = featuredId === null ? null : getUrl(featuredId);
+    const featuredRef = featuredId === null ? null : getMedia(featuredId);
+    const featuredUrl = featuredRef ? variantUrl(featuredRef, "large") : null;
 
     const handleSelect = (selection: AdminMedia | AdminMedia[]) => {
         const picked = Array.isArray(selection) ? selection[0] : selection;
         if (picked === undefined) return;
-        setUrl(picked.id, picked.url);
+        setMedia(picked.id, { url: picked.url, variants: picked.variants });
         const rest = ids.slice(1).filter((value) => value !== picked.id);
         setValue("imageMediaIds", [picked.id, ...rest], { shouldDirty: true });
     };

@@ -285,7 +285,7 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
     );
 
     const initialMediaSeeds = useMemo(
-        () => (initial?.images ?? []).map((img) => ({ id: img.mediaId, url: img.url })),
+        () => (initial?.images ?? []).map((img) => ({ id: img.mediaId, url: img.url, variants: img.variants })),
         [initial?.images],
     );
 
