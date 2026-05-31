@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
-import { dirname, extname, join, resolve, sep } from "node:path";
+import { basename, dirname, extname, join, resolve, sep } from "node:path";
 import type { MultipartFile } from "@adonisjs/core/bodyparser";
 import app from "@adonisjs/core/services/app";
 import sharp from "sharp";
@@ -132,6 +132,76 @@ export async function save(
         width: processed.width,
         height: processed.height,
         variants: processed.variants,
+    };
+}
+
+/** Extension → MIME for filesystem ingestion (no bodyparser to infer from). */
+const EXT_MIME: Record<string, string> = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
+    ".svg": "image/svg+xml",
+};
+
+/**
+ * Ingest a file already on disk (e.g. a committed seed asset) into media storage — the
+ * request-less twin of {@link save}. Copies the source into `storage/uploads/…`, generates the
+ * configured variants with sharp, and returns the same {@link SavedMediaFile} shape so seeders /
+ * import scripts produce rows identical to real uploads. `baseUrl` is the API origin used to build
+ * absolute public URLs (seeders have no request to derive a host from).
+ */
+export async function ingestFile(
+    sourceAbsPath: string,
+    options: { baseUrl: string; organizeByDate?: boolean; variants?: VariantSpec[]; filename?: string },
+): Promise<SavedMediaFile> {
+    const organizeByDate = options.organizeByDate ?? true;
+    const now = new Date();
+    const yyyy = String(now.getUTCFullYear());
+    const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
+    const dirSegments = organizeByDate ? [yyyy, mm] : [];
+    const relativeDir = dirSegments.join("/");
+
+    const ext = extname(sourceAbsPath).toLowerCase();
+    const stableId = makeStableId();
+    const fileName = `${stableId}${ext}`;
+    const relativePath = relativeDir.length > 0 ? `${relativeDir}/${fileName}` : fileName;
+
+    const absoluteDir = app.makePath(STORAGE_SUBPATH, ...dirSegments);
+    await fs.mkdir(absoluteDir, { recursive: true });
+    const originalAbs = join(absoluteDir, fileName);
+    await fs.copyFile(sourceAbsPath, originalAbs);
+    const stat = await fs.stat(originalAbs);
+
+    const mime = EXT_MIME[ext] ?? null;
+    const kind: "image" | "file" = mime?.startsWith("image/") ? "image" : "file";
+    const base = options.baseUrl.replace(/\/+$/, "");
+    const publicUrl = (rel: string) => `${base}${PUBLIC_PATH_PREFIX}/${rel}`;
+
+    let result = { width: null as number | null, height: null as number | null, variants: {} as Record<string, SavedVariant> };
+    if (options.variants !== undefined && mime?.startsWith("image/") && !NON_RASTER.has(mime)) {
+        const variantUrlFor = (name: string) => {
+            const file = `${stableId}-${name}${ext}`;
+            return publicUrl(relativeDir.length > 0 ? `${relativeDir}/${file}` : file);
+        };
+        try {
+            result = await generateRenditions(originalAbs, ext, options.variants, variantUrlFor);
+        } catch {
+            /* leave dimensions null + no variants on decode failure */
+        }
+    }
+
+    return {
+        url: publicUrl(relativePath),
+        relativePath,
+        filename: options.filename ?? basename(sourceAbsPath),
+        mime,
+        sizeBytes: stat.size,
+        kind,
+        width: result.width,
+        height: result.height,
+        variants: result.variants,
     };
 }
 
