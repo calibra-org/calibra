@@ -275,6 +275,14 @@ paths:
         patch:
             $ref: "./admin/paths/settings/datetime.patch.yaml"
 
+    /api/v1/admin/settings/media:
+        get:
+            $ref: "./admin/paths/settings/media.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./admin/paths/settings/media.patch.yaml"
+
     /api/v1/admin/customers:
         get:
             $ref: "./admin/paths/customers/customers.get.yaml"

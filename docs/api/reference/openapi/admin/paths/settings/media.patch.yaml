@@ -1,0 +1,32 @@
+operationId: adminSettingsMediaUpdate
+summary: Update Media settings (admin)
+description: >
+    Partial update of the image-size presets + upload options. Only changed keys are written
+    (same-value writes are no-ops — no audit row). New uploads pick up the changed sizes on the next
+    upload. Returns the fresh settings.
+tags: [Admin / Settings]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                $ref: "../../components/schemas/AdminMediaSettingsUpdate.yaml"
+
+responses:
+    "200":
+        description: Updated Media settings.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/AdminMediaSettings.yaml"
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

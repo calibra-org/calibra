@@ -1,0 +1,23 @@
+operationId: adminSettingsMediaShow
+summary: Get Media settings (admin)
+description: >
+    Returns the image-size presets (thumbnail / medium / large) the upload pipeline resizes into,
+    plus the upload options (date-folder organization, max upload size).
+tags: [Admin / Settings]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Media settings.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/AdminMediaSettings.yaml"
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
