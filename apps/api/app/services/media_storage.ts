@@ -3,6 +3,9 @@ import { promises as fs } from "node:fs";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import type { MultipartFile } from "@adonisjs/core/bodyparser";
 import app from "@adonisjs/core/services/app";
+import sharp from "sharp";
+
+import type { VariantSpec } from "#transformers/media_settings_transformer";
 
 /**
  * Local-disk media storage. Uploads land under `apps/api/storage/uploads/{yyyy}/{mm}/{slug}.{ext}`
@@ -36,7 +39,31 @@ export interface SavedMediaFile {
     sizeBytes: number;
     /** `"image"` for image MIME types, `"file"` otherwise. */
     kind: "image" | "file";
+    /** Pixel width of the original raster image, or `null` for non-rasters / failed decode. */
+    width: number | null;
+    /** Pixel height of the original raster image, or `null` for non-rasters / failed decode. */
+    height: number | null;
+    /** Generated resized renditions keyed by preset name (`thumbnail` / `medium` / `large`). */
+    variants: Record<string, SavedVariant>;
 }
+
+/** A generated resized rendition's public URL + output dimensions. */
+export interface SavedVariant {
+    url: string;
+    width: number;
+    height: number;
+}
+
+/** Image-processing inputs derived from the Media settings group (see `toMediaUploadConfig`). */
+export interface ImageProcessOptions {
+    /** When `false`, write to the flat `storage/uploads/` root instead of `{yyyy}/{mm}`. */
+    organizeByDate: boolean;
+    /** Resized renditions to generate from the original (skipped for SVG/GIF/non-images). */
+    variants: VariantSpec[];
+}
+
+/** MIME types we never run through sharp — vector + animated formats resize poorly or not at all. */
+const NON_RASTER = new Set(["image/svg+xml", "image/gif"]);
 
 /**
  * Sanitize a user-supplied filename. Strips path separators, collapses whitespace, drops
@@ -60,31 +87,137 @@ function makeStableId(): string {
  * to insert a row. `request.host()` is passed in by the caller so the URL embedded in the DB
  * row matches whatever the browser used (`http://localhost:13467`, behind a reverse proxy, …).
  */
-export async function save(file: MultipartFile, options: { host: string; protocol: string }): Promise<SavedMediaFile> {
+export async function save(
+    file: MultipartFile,
+    options: { host: string; protocol: string; images?: ImageProcessOptions },
+): Promise<SavedMediaFile> {
+    const organizeByDate = options.images?.organizeByDate ?? true;
     const now = new Date();
     const yyyy = String(now.getUTCFullYear());
     const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
+    const dirSegments = organizeByDate ? [yyyy, mm] : [];
+    const relativeDir = dirSegments.join("/");
 
     const originalName = sanitizeFilename(file.clientName);
     const ext = extname(originalName) || (file.extname ? `.${file.extname}` : "");
     const stableId = makeStableId();
-    const relativePath = `${yyyy}/${mm}/${stableId}${ext}`;
+    const fileName = `${stableId}${ext}`;
+    const relativePath = relativeDir.length > 0 ? `${relativeDir}/${fileName}` : fileName;
 
-    const absoluteDir = app.makePath(STORAGE_SUBPATH, yyyy, mm);
+    const absoluteDir = app.makePath(STORAGE_SUBPATH, ...dirSegments);
     await fs.mkdir(absoluteDir, { recursive: true });
-    await file.move(absoluteDir, { name: `${stableId}${ext}`, overwrite: false });
+    await file.move(absoluteDir, { name: fileName, overwrite: false });
 
     const mime = inferMime(file);
     const kind: "image" | "file" = mime?.startsWith("image/") ? "image" : "file";
+    const publicUrl = (rel: string) => `${options.protocol}://${options.host}${PUBLIC_PATH_PREFIX}/${rel}`;
+
+    const processed = await processImage({
+        absoluteDir,
+        relativeDir,
+        stableId,
+        ext,
+        mime,
+        variants: options.images?.variants ?? [],
+        publicUrl,
+    });
 
     return {
-        url: `${options.protocol}://${options.host}${PUBLIC_PATH_PREFIX}/${relativePath}`,
+        url: publicUrl(relativePath),
         relativePath,
         filename: originalName,
         mime,
         sizeBytes: file.size ?? 0,
         kind,
+        width: processed.width,
+        height: processed.height,
+        variants: processed.variants,
     };
+}
+
+interface ProcessImageInput {
+    absoluteDir: string;
+    relativeDir: string;
+    stableId: string;
+    ext: string;
+    mime: string | null;
+    variants: VariantSpec[];
+    publicUrl: (rel: string) => string;
+}
+
+/**
+ * Read the original's dimensions and generate the configured resized renditions with sharp.
+ * Best-effort: a decode failure (corrupt upload, exotic codec) leaves dimensions `null` and
+ * variants empty rather than failing the upload — the original file is already safely on disk.
+ * Non-raster MIME types (SVG, GIF) and non-images skip processing entirely.
+ */
+async function processImage(
+    input: ProcessImageInput,
+): Promise<{ width: number | null; height: number | null; variants: Record<string, SavedVariant> }> {
+    const { absoluteDir, relativeDir, stableId, ext, mime, variants, publicUrl } = input;
+    const empty = { width: null, height: null, variants: {} };
+    if (mime === null || !mime.startsWith("image/") || NON_RASTER.has(mime)) return empty;
+
+    const originalAbs = join(absoluteDir, `${stableId}${ext}`);
+    const variantUrlFor = (name: string) => {
+        const file = `${stableId}-${name}${ext}`;
+        return publicUrl(relativeDir.length > 0 ? `${relativeDir}/${file}` : file);
+    };
+    try {
+        return await generateRenditions(originalAbs, ext, variants, variantUrlFor);
+    } catch {
+        return empty;
+    }
+}
+
+/**
+ * Generate the resized renditions for an already-on-disk original. Shared by the upload path and
+ * the `media:regenerate-variants` backfill. Writes each variant beside the original as
+ * `{base}-{name}{ext}` and returns its public URL (via `variantUrlFor`) + output dimensions.
+ */
+async function generateRenditions(
+    originalAbs: string,
+    ext: string,
+    variants: VariantSpec[],
+    variantUrlFor: (name: string) => string,
+): Promise<{ width: number | null; height: number | null; variants: Record<string, SavedVariant> }> {
+    const base = originalAbs.slice(0, originalAbs.length - ext.length);
+    const meta = await sharp(originalAbs).metadata();
+    const out: Record<string, SavedVariant> = {};
+    for (const v of variants) {
+        const fit: sharp.ResizeOptions = v.crop
+            ? { fit: "cover", position: "centre" }
+            : { fit: "inside", withoutEnlargement: true };
+        const info = await sharp(originalAbs).resize(v.width, v.height, fit).toFile(`${base}-${v.name}${ext}`);
+        out[v.name] = { url: variantUrlFor(v.name), width: info.width, height: info.height };
+    }
+    return { width: meta.width ?? null, height: meta.height ?? null, variants: out };
+}
+
+/**
+ * Regenerate variants for an existing media row from its stored `url`. Returns `null` when the URL
+ * isn't a locally-served upload (external / seeded rows) or the original file is missing on disk.
+ * Used by `node ace media:regenerate-variants` to backfill rows uploaded before the resize pipeline.
+ */
+export async function regenerateVariants(
+    url: string,
+    variants: VariantSpec[],
+): Promise<{ width: number | null; height: number | null; variants: Record<string, SavedVariant> } | null> {
+    const marker = `${PUBLIC_PATH_PREFIX}/`;
+    const idx = url.indexOf(marker);
+    if (idx === -1) return null;
+    const relative = url.slice(idx + marker.length);
+    if (relative.length === 0) return null;
+    const originalAbs = resolveServePath(relative.split("/"));
+    if (originalAbs === null) return null;
+    try {
+        await fs.access(originalAbs);
+    } catch {
+        return null;
+    }
+    const ext = extname(originalAbs);
+    const urlBase = url.slice(0, url.length - ext.length);
+    return generateRenditions(originalAbs, ext, variants, (name) => `${urlBase}-${name}${ext}`);
 }
 
 /**
@@ -133,6 +266,15 @@ export async function deleteFile(url: string): Promise<void> {
         await fs.unlink(target);
     } catch {
         /* swallow */
+    }
+    const ext = extname(target);
+    const base = target.slice(0, target.length - ext.length);
+    for (const name of ["thumbnail", "medium", "large"]) {
+        try {
+            await fs.unlink(`${base}-${name}${ext}`);
+        } catch {
+            /* variant may not exist — swallow */
+        }
     }
     const parent = dirname(target);
     try {
