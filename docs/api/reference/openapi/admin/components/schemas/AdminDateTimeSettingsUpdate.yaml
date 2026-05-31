@@ -1,0 +1,15 @@
+title: AdminDateTimeSettingsUpdate
+description: >
+    Partial update for the Date & Time settings tab. Both fields optional — the server writes only
+    what changed (same-value writes are no-ops). Each is a date-fns format string; patterns are
+    validated against a conservative token allowlist (max length 32) and rejected with 422 otherwise.
+type: object
+properties:
+    date_format:
+        type: string
+        maxLength: 32
+        examples: ["yyyy/MM/dd"]
+    time_format:
+        type: string
+        maxLength: 32
+        examples: ["HH:mm"]

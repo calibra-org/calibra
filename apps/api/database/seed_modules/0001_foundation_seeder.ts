@@ -447,4 +447,25 @@ const SETTINGS: SettingRow[] = [
     { group: "general", key: "checkout_return_url_success", value: "http://localhost:3000/checkout/success", type: "string" },
     { group: "general", key: "checkout_return_url_failed", value: "http://localhost:3000/checkout/failed", type: "string" },
     { group: "payments", key: "callback_base_url", value: "http://localhost:3333", type: "string" },
+    /**
+     * Date & Time formats (Settings → Date & Time). Stored as date-fns format patterns; the admin
+     * renders them per active calendar (Jalali for `fa`, Gregorian for `en`). `d MMMM yyyy` →
+     * "۱۰ خرداد ۱۴۰۵"; `HH:mm` → "۱۲:۳۳".
+     */
+    { group: "datetime", key: "date_format", value: "d MMMM yyyy", type: "string" },
+    { group: "datetime", key: "time_format", value: "HH:mm", type: "string" },
+    /**
+     * Media image sizes + upload organization (Settings → Media). Widths/heights in pixels;
+     * `thumbnail_crop` hard-crops to exact dimensions (others are max-bound). `organize_uploads_by_date`
+     * toggles the `{yyyy}/{mm}` folder layout. `max_upload_mb` caps a single upload.
+     */
+    { group: "media", key: "thumbnail_width", value: 150, type: "number" },
+    { group: "media", key: "thumbnail_height", value: 150, type: "number" },
+    { group: "media", key: "thumbnail_crop", value: true, type: "boolean" },
+    { group: "media", key: "medium_width", value: 300, type: "number" },
+    { group: "media", key: "medium_height", value: 300, type: "number" },
+    { group: "media", key: "large_width", value: 1024, type: "number" },
+    { group: "media", key: "large_height", value: 1024, type: "number" },
+    { group: "media", key: "organize_uploads_by_date", value: true, type: "boolean" },
+    { group: "media", key: "max_upload_mb", value: 20, type: "number" },
 ];

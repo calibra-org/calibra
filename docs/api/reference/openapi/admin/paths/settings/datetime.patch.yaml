@@ -1,0 +1,32 @@
+operationId: adminSettingsDatetimeUpdate
+summary: Update Date & Time settings (admin)
+description: >
+    Partial update of the date/time format patterns. Only changed keys are written (same-value writes
+    are no-ops — no audit row). Patterns are validated against a token allowlist; an invalid pattern
+    returns 422. Returns the fresh settings + preset lists.
+tags: [Admin / Settings]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                $ref: "../../components/schemas/AdminDateTimeSettingsUpdate.yaml"
+
+responses:
+    "200":
+        description: Updated Date & Time settings + preset lists.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/AdminDateTimeSettings.yaml"
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }
