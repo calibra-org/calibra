@@ -17,6 +17,7 @@ function mockRow(id: number, overrides: Partial<AdminMedia> = {}): AdminMedia {
         mime: "image/jpeg",
         width: null,
         height: null,
+        variants: null,
         sizeBytes: null,
         uploadedByUserId: null,
         createdAt: null,

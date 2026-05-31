@@ -131,6 +131,7 @@ function mockRow(overrides: Partial<{ id: number; createdAt: string }>) {
         mime: "image/jpeg",
         width: null,
         height: null,
+        variants: null,
         sizeBytes: null,
         uploadedByUserId: null,
         createdAt: overrides.createdAt ?? null,

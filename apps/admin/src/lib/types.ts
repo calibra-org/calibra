@@ -600,6 +600,18 @@ export interface TopSellersReport {
  */
 export type AdminMediaKind = "image" | "file";
 
+/** A generated resized rendition of an image (server-side, via the Media settings presets). */
+export interface AdminMediaVariant {
+    url: string;
+    width: number;
+    height: number;
+}
+
+export type AdminMediaVariantName = "thumbnail" | "medium" | "large";
+
+/** Variants keyed by preset name; absent for non-image / SVG / legacy rows. */
+export type AdminMediaVariants = Partial<Record<AdminMediaVariantName, AdminMediaVariant>>;
+
 export interface AdminMedia {
     id: number;
     kind: AdminMediaKind;
@@ -612,6 +624,7 @@ export interface AdminMedia {
     mime: string | null;
     width: number | null;
     height: number | null;
+    variants: AdminMediaVariants | null;
     sizeBytes: number | null;
     uploadedByUserId: number | null;
     createdAt: string | null;
