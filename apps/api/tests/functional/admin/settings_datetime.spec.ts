@@ -82,4 +82,25 @@ test.group("/api/v1/admin/settings/datetime", (group) => {
         const res = await client.patch(URL).withGuard("api").loginAs(admin).json({ date_format: "YYYY!bad" });
         res.assertStatus(422);
     });
+
+    test("PATCH rejects time tokens in the date format", async ({ client }) => {
+        const admin = await createAdmin();
+        const res = await client.patch(URL).withGuard("api").loginAs(admin).json({ date_format: "HH:mm" });
+        res.assertStatus(422);
+    });
+
+    test("PATCH rejects date tokens in the time format", async ({ client }) => {
+        const admin = await createAdmin();
+        const res = await client.patch(URL).withGuard("api").loginAs(admin).json({ time_format: "yyyy/MM/dd" });
+        res.assertStatus(422);
+    });
+
+    test("PATCH accepts a valid custom time format", async ({ client, assert }) => {
+        const admin = await createAdmin();
+        const res = await client.patch(URL).withGuard("api").loginAs(admin).json({ time_format: "h:mm a" });
+        res.assertStatus(200);
+        res.assertAgainstApiSpec();
+        const body = res.body() as { data: { time_format: string } };
+        assert.equal(body.data.time_format, "h:mm a");
+    });
 });

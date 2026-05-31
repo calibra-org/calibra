@@ -30,8 +30,12 @@ export default class AdminSettingsDatetimeController {
         const current = await this.settings.all("datetime");
 
         const writes: PlannedWrite[] = [];
-        if (payload.date_format !== undefined) writes.push({ key: "date_format", value: payload.date_format, type: "string" });
-        if (payload.time_format !== undefined) writes.push({ key: "time_format", value: payload.time_format, type: "string" });
+        /** `typeof === "string"` (not `!== undefined`): AdonisJS converts an empty string to `null`,
+         * and a partial PATCH should treat a null/absent field as "no change" rather than storing it. */
+        if (typeof payload.date_format === "string")
+            writes.push({ key: "date_format", value: payload.date_format, type: "string" });
+        if (typeof payload.time_format === "string")
+            writes.push({ key: "time_format", value: payload.time_format, type: "string" });
 
         let changed = false;
         for (const w of writes) {
