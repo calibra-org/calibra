@@ -1,6 +1,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { formatMoney as formatMoneyWithConfig, type MoneyFormatConfig } from "@calibra/shared/money";
 
+import { calendarForLocale, getDateLib } from "#/components/ui/date-picker/date-lib";
 import { FALLBACK_MONEY_CONFIG } from "#/lib/currency/config";
 
 /**
@@ -58,27 +59,63 @@ export function formatPercent(value: number, locale: Locale, fractionDigits = 1)
 }
 
 /**
- * Render an ISO timestamp as a calendar date in the active locale. Persian uses Jalali (`fa-IR-u-ca-persian`),
- * English uses Gregorian. We deliberately don't show seconds — the panel never needs them.
+ * Operator-chosen date/time format patterns (date-fns tokens). Seeded from a server fetch for the
+ * first paint, then kept live by the Date & Time settings query — so saving a new format re-renders
+ * every date across the admin without a reload. Mirrors the {@link setActiveMoneyConfig} singleton.
  */
-export function formatDate(
-    iso: string,
-    locale: Locale,
-    options: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" },
-): string {
-    const date = new Date(iso);
-    const formatter = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR-u-ca-persian" : "en-US", options);
-    return formatter.format(date);
+export interface DateTimeConfig {
+    dateFormat: string;
+    timeFormat: string;
 }
 
+/** Safe defaults used until the stored config loads (match the seeded `datetime` group). */
+export const FALLBACK_DATETIME_CONFIG: DateTimeConfig = { dateFormat: "d MMMM yyyy", timeFormat: "HH:mm" };
+
+let activeDateTimeConfig: DateTimeConfig = FALLBACK_DATETIME_CONFIG;
+
+/** Point the admin's date formatters at the store's saved date/time formats. */
+export function setActiveDateTimeConfig(config: DateTimeConfig): void {
+    activeDateTimeConfig = config;
+}
+
+/** The currently active date/time format config (for previews / callers that need the raw patterns). */
+export function getActiveDateTimeConfig(): DateTimeConfig {
+    return activeDateTimeConfig;
+}
+
+/**
+ * Render a date through a date-fns format `pattern` in the active calendar — Jalali for `fa`
+ * (Persian month names + digits), Gregorian for `en`. Reuses the same `DateLib` instances the date
+ * picker uses, so calendar behaviour is identical everywhere. A malformed pattern falls back to the
+ * default date format rather than throwing.
+ */
+export function formatWithPattern(value: string | Date, pattern: string, locale: Locale): string {
+    const date = value instanceof Date ? value : new Date(value);
+    const lib = getDateLib(calendarForLocale(locale));
+    try {
+        return toLocaleDigits(lib.format(date, pattern), locale);
+    } catch {
+        return toLocaleDigits(lib.format(date, FALLBACK_DATETIME_CONFIG.dateFormat), locale);
+    }
+}
+
+/**
+ * Render an ISO timestamp as a calendar date in the active locale. With no `options`, uses the
+ * operator's saved date-format pattern (the default path — this is what makes the Date & Time
+ * setting drive the panel). Passing explicit `Intl.DateTimeFormatOptions` keeps the legacy
+ * `Intl`-based rendering for the few call sites that need a specific non-configured shape.
+ */
+export function formatDate(iso: string, locale: Locale, options?: Intl.DateTimeFormatOptions): string {
+    if (options !== undefined) {
+        const formatter = new Intl.DateTimeFormat(locale === "fa" ? "fa-IR-u-ca-persian" : "en-US", options);
+        return formatter.format(new Date(iso));
+    }
+    return formatWithPattern(iso, activeDateTimeConfig.dateFormat, locale);
+}
+
+/** Render an ISO timestamp as date + time using the operator's saved date and time patterns. */
 export function formatDateTime(iso: string, locale: Locale): string {
-    return formatDate(iso, locale, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
+    return formatWithPattern(iso, `${activeDateTimeConfig.dateFormat} ${activeDateTimeConfig.timeFormat}`, locale);
 }
 
 /**

@@ -25,6 +25,13 @@ allOf:
                       position: { type: integer }
                       url: { type: [string, "null"] }
                       alt: { type: [string, "null"] }
+                      variants:
+                          type: [object, "null"]
+                          description: Generated resized renditions keyed by preset name; null for non-image / legacy rows.
+                          properties:
+                              thumbnail: { $ref: "./AdminMediaVariant.yaml" }
+                              medium: { $ref: "./AdminMediaVariant.yaml" }
+                              large: { $ref: "./AdminMediaVariant.yaml" }
           variations:
               type: array
               description: Present only when `type=variable`.

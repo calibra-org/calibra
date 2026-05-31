@@ -1,0 +1,29 @@
+title: AdminDateTimeSettings
+description: >
+    The admin Settings → Date & Time tab. `date_format` / `time_format` are date-fns format strings
+    that drive how every date the admin renders is displayed; the calendar is chosen by locale at
+    render time (Jalali for `fa`, Gregorian for `en`), so one stored pattern is correct in both.
+    `presets` is the fixed list of selectable formats the tab's radio groups render.
+type: object
+required: [date_format, time_format, presets]
+properties:
+    date_format:
+        type: string
+        description: Active date format (date-fns pattern).
+        examples: ["d MMMM yyyy"]
+    time_format:
+        type: string
+        description: Active time format (date-fns pattern).
+        examples: ["HH:mm"]
+    presets:
+        type: object
+        required: [date, time]
+        properties:
+            date:
+                type: array
+                items:
+                    $ref: "./AdminFormatPreset.yaml"
+            time:
+                type: array
+                items:
+                    $ref: "./AdminFormatPreset.yaml"

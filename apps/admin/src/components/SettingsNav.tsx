@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { ComponentType, SVGProps } from "react";
 
-import { Banknote, Settings2, Truck, Wallet } from "#/icons";
+import { Banknote, CalendarDays, ImageIcon, Settings2, Truck, Wallet } from "#/icons";
 import { Link, usePathname } from "#/lib/i18n/navigation";
 import { cn } from "#/lib/utils";
 
@@ -22,7 +22,9 @@ interface SettingsTab {
  * the redirect-only index routes (which trip a Next dev `performance.measure` error).
  */
 const TABS: SettingsTab[] = [
-    { href: "/settings/general", match: "/settings", labelKey: "general", icon: Settings2 },
+    { href: "/settings/general", match: "/settings/general", labelKey: "general", icon: Settings2 },
+    { href: "/settings/datetime", match: "/settings/datetime", labelKey: "datetime", icon: CalendarDays },
+    { href: "/settings/media", match: "/settings/media", labelKey: "media", icon: ImageIcon },
     { href: "/tax/classes", match: "/tax", labelKey: "tax", icon: Wallet },
     { href: "/shipping/zones", match: "/shipping", labelKey: "shipping", icon: Truck },
     { href: "/payments", match: "/payments", labelKey: "payments", icon: Banknote },

@@ -12,6 +12,7 @@ import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/toast";
 import { formatDate } from "#/lib/format";
+import { mediaVariantUrl } from "#/lib/media-variants";
 import type { AdminMedia } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
@@ -386,7 +387,7 @@ function PreviewPane({ row, category, previewMissingAlt }: PreviewPaneProps) {
             <div className="flex min-h-[300px] items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/30">
                 {/* biome-ignore lint/performance/noImgElement: external thumbnails, no Next/Image loader configured */}
                 <img
-                    src={row.url}
+                    src={mediaVariantUrl(row, "large")}
                     alt={row.alt ?? row.filename ?? previewMissingAlt}
                     className="max-h-[60vh] w-full object-contain"
                 />

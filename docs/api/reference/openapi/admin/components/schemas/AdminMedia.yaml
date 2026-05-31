@@ -32,6 +32,13 @@ properties:
     mime: { type: [string, "null"] }
     width: { type: [integer, "null"] }
     height: { type: [integer, "null"] }
+    variants:
+        type: [object, "null"]
+        description: Generated resized renditions keyed by preset name. `null` for non-image / unprocessed rows.
+        properties:
+            thumbnail: { $ref: "./AdminMediaVariant.yaml" }
+            medium: { $ref: "./AdminMediaVariant.yaml" }
+            large: { $ref: "./AdminMediaVariant.yaml" }
     size_bytes:
         type: [integer, "null"]
         description: File size in bytes. May be `null` for legacy / externally-sourced rows.

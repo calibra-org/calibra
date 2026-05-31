@@ -1170,6 +1170,90 @@ export interface paths {
         patch: operations["adminSettingsGeneralUpdate"];
         trace?: never;
     };
+    "/api/v1/admin/settings/datetime": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Date & Time settings (admin)
+         * @description Returns the active date/time format patterns plus the fixed preset lists that back the Date & Time tab's radio groups.
+         */
+        get: operations["adminSettingsDatetimeShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Update Date & Time settings (admin)
+         * @description Partial update of the date/time format patterns. Only changed keys are written (same-value writes are no-ops — no audit row). Patterns are validated against a token allowlist; an invalid pattern returns 422. Returns the fresh settings + preset lists.
+         */
+        patch: operations["adminSettingsDatetimeUpdate"];
+        trace?: never;
+    };
+    "/api/v1/admin/settings/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Media settings (admin)
+         * @description Returns the image-size presets (thumbnail / medium / large) the upload pipeline resizes into, plus the upload options (date-folder organization, max upload size).
+         */
+        get: operations["adminSettingsMediaShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Update Media settings (admin)
+         * @description Partial update of the image-size presets + upload options. Only changed keys are written (same-value writes are no-ops — no audit row). New uploads pick up the changed sizes on the next upload. Returns the fresh settings.
+         */
+        patch: operations["adminSettingsMediaUpdate"];
+        trace?: never;
+    };
     "/api/v1/admin/customers": {
         parameters: {
             query?: never;
@@ -4497,6 +4581,99 @@ export interface components {
             };
         };
         /**
+         * AdminFormatPreset
+         * @description A selectable date-or-time format preset offered in the Date & Time settings tab. `pattern` is a date-fns format string (rendered per active calendar — Jalali for `fa`, Gregorian for `en`); `label_key` is the leaf i18n key under `Settings.datetime.preset.*` the admin resolves per locale.
+         */
+        AdminFormatPreset: {
+            /** @example d MMMM yyyy */
+            pattern: string;
+            /** @example dMonthY */
+            label_key: string;
+        };
+        /**
+         * AdminDateTimeSettings
+         * @description The admin Settings → Date & Time tab. `date_format` / `time_format` are date-fns format strings that drive how every date the admin renders is displayed; the calendar is chosen by locale at render time (Jalali for `fa`, Gregorian for `en`), so one stored pattern is correct in both. `presets` is the fixed list of selectable formats the tab's radio groups render.
+         */
+        AdminDateTimeSettings: {
+            /**
+             * @description Active date format (date-fns pattern).
+             * @example d MMMM yyyy
+             */
+            date_format: string;
+            /**
+             * @description Active time format (date-fns pattern).
+             * @example HH:mm
+             */
+            time_format: string;
+            presets: {
+                date: components["schemas"]["AdminFormatPreset"][];
+                time: components["schemas"]["AdminFormatPreset"][];
+            };
+        };
+        /**
+         * AdminDateTimeSettingsUpdate
+         * @description Partial update for the Date & Time settings tab. Both fields optional — the server writes only what changed (same-value writes are no-ops). Each is a date-fns format string; patterns are validated against a conservative token allowlist (max length 32) and rejected with 422 otherwise.
+         */
+        AdminDateTimeSettingsUpdate: {
+            /** @example yyyy/MM/dd */
+            date_format?: string;
+            /** @example HH:mm */
+            time_format?: string;
+        };
+        /**
+         * AdminMediaSettings
+         * @description The admin Settings → Media tab. Image-size presets (thumbnail / medium / large) the upload pipeline resizes every new image into, plus upload options. `thumbnail.crop` hard-crops to exact dimensions; medium/large are bounded (aspect preserved). `uploads.organize_by_date` toggles the `{yyyy}/{mm}` storage folder layout; `max_upload_mb` caps a single upload.
+         */
+        AdminMediaSettings: {
+            thumbnail: {
+                /** @example 150 */
+                width: number;
+                /** @example 150 */
+                height: number;
+                crop: boolean;
+            };
+            medium: {
+                /** @example 300 */
+                width: number;
+                /** @example 300 */
+                height: number;
+            };
+            large: {
+                /** @example 1024 */
+                width: number;
+                /** @example 1024 */
+                height: number;
+            };
+            uploads: {
+                organize_by_date: boolean;
+                /** @example 20 */
+                max_upload_mb: number;
+            };
+        };
+        /**
+         * AdminMediaSettingsUpdate
+         * @description Partial update for the Media settings tab. Every section and field is optional — the server writes only what changed (same-value writes are no-ops). Widths/heights are pixel bounds (1–4096); `max_upload_mb` is 1–100.
+         */
+        AdminMediaSettingsUpdate: {
+            thumbnail?: {
+                width?: number;
+                height?: number;
+                crop?: boolean;
+            };
+            medium?: {
+                width?: number;
+                height?: number;
+            };
+            large?: {
+                width?: number;
+                height?: number;
+            };
+            uploads?: {
+                organize_by_date?: boolean;
+                max_upload_mb?: number;
+            };
+        };
+        /**
          * CustomerBase
          * @description Customer commerce identity — matches `CustomerTransformer.toObject()` exactly. This is the shape returned by `POST /auth/login`, `POST /auth/register`, and anywhere the API serialises a customer without country-scoped extension rows. The `CustomerProfile` schema extends this with `profile_extensions` (used by `GET /account/me`).
          */
@@ -5143,6 +5320,16 @@ export interface components {
             description?: string | null;
         };
         /**
+         * AdminMediaVariant
+         * @description A generated resized rendition of an uploaded image (thumbnail / medium / large). Produced on upload by the resize pipeline from the Media settings presets; absent for non-image uploads, SVG/GIF, and legacy rows uploaded before the pipeline existed.
+         */
+        AdminMediaVariant: {
+            /** Format: uri */
+            url: string;
+            width: number;
+            height: number;
+        };
+        /**
          * AdminCustomAttribute
          * @description Per-product custom attribute row. Unlike global attribute links, custom rows carry the name + values inline (no shared taxonomy) and never feed variation generation — they're a freeform display-only slot for operator-typed metadata like "Material" or "Origin".
          */
@@ -5175,6 +5362,12 @@ export interface components {
                 position: number;
                 url?: string | null;
                 alt?: string | null;
+                /** @description Generated resized renditions keyed by preset name; null for non-image / legacy rows. */
+                variants?: {
+                    thumbnail?: components["schemas"]["AdminMediaVariant"];
+                    medium?: components["schemas"]["AdminMediaVariant"];
+                    large?: components["schemas"]["AdminMediaVariant"];
+                } | null;
             }[];
             /** @description Present only when `type=variable`. */
             variations?: {
@@ -5410,6 +5603,12 @@ export interface components {
             mime?: string | null;
             width?: number | null;
             height?: number | null;
+            /** @description Generated resized renditions keyed by preset name. `null` for non-image / unprocessed rows. */
+            variants?: {
+                thumbnail?: components["schemas"]["AdminMediaVariant"];
+                medium?: components["schemas"]["AdminMediaVariant"];
+                large?: components["schemas"]["AdminMediaVariant"];
+            } | null;
             /** @description File size in bytes. May be `null` for legacy / externally-sourced rows. */
             size_bytes?: number | null;
             /** @description User id of the operator who uploaded the file. `null` for seeded / system-imported rows. */
@@ -7417,6 +7616,124 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminGeneralSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminSettingsDatetimeShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Date & Time settings + preset lists. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminDateTimeSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminSettingsDatetimeUpdate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminDateTimeSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated Date & Time settings + preset lists. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminDateTimeSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminSettingsMediaShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Media settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminMediaSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminSettingsMediaUpdate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminMediaSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated Media settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminMediaSettings"];
                     };
                 };
             };

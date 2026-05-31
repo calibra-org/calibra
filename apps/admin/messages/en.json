@@ -3649,7 +3649,9 @@
             "payments": "Payments",
             "account": "Accounts",
             "email": "Email",
-            "advanced": "Advanced"
+            "advanced": "Advanced",
+            "datetime": "Date & Time",
+            "media": "Media"
         },
         "general": {
             "comingSoon": "coming soon",
@@ -3708,6 +3710,68 @@
                 "preview": "Preview",
                 "sepEqual": "Thousand and decimal separators must differ."
             }
+        },
+        "datetime": {
+            "unsaved": "Unsaved changes",
+            "discard": "Discard",
+            "saveError": "Couldn't save — try again.",
+            "dateTitle": "Date format",
+            "dateSubtitle": "Choose how dates are shown across the panel.",
+            "timeTitle": "Time format",
+            "timeSubtitle": "Choose how times are shown.",
+            "custom": "Custom",
+            "customDate": "Custom date format",
+            "customTime": "Custom time format",
+            "preview": "Preview",
+            "tokensTitle": "Format tokens",
+            "docsLink": "Date & time format documentation",
+            "invalidDateFormat": "Invalid date format — use only year, month, and day tokens.",
+            "invalidTimeFormat": "Invalid time format — use only hour, minute, and second tokens.",
+            "preset": {
+                "dMonthY": "Day Month Year",
+                "monthDY": "Month Day, Year",
+                "ymdSlash": "Year/Month/Day",
+                "ymdDash": "Year-Month-Day",
+                "dmy": "Day/Month/Year",
+                "h24": "24-hour",
+                "h12": "12-hour (AM/PM)",
+                "h24s": "24-hour with seconds",
+                "custom": "Custom"
+            },
+            "tokens": {
+                "yyyy": "Year",
+                "MMMM": "Month name",
+                "MM": "Month (2-digit)",
+                "dd": "Day (2-digit)",
+                "d": "Day",
+                "HH": "Hour (24)",
+                "h": "Hour (12)",
+                "mm": "Minute",
+                "ss": "Second",
+                "a": "AM/PM"
+            }
+        },
+        "media": {
+            "unsaved": "Unsaved changes",
+            "discard": "Discard",
+            "saveError": "Couldn't save — try again.",
+            "imageSizes": "Image sizes",
+            "imageSizesSubtitle": "The sizes below set the maximum dimensions in pixels to use when adding an image to the media library.",
+            "thumbnail": "Thumbnail size",
+            "medium": "Medium size",
+            "large": "Large size",
+            "width": "Width",
+            "maxWidth": "Max width",
+            "height": "Height",
+            "maxHeight": "Max height",
+            "thumbnailCrop": "Crop thumbnails to exact dimensions (normally thumbnails are proportional)",
+            "thumbnailHelp": "Fixed dimensions used across lists and galleries.",
+            "boundedHelp": "Maximum dimensions; aspect ratio is preserved.",
+            "uploads": "Uploading files",
+            "organizeByDate": "Organize uploads into month- and year-based folders",
+            "organizeHelp": "Uploaded files are stored in year/month folders.",
+            "maxUpload": "Maximum upload size",
+            "maxUploadHelp": "The largest size allowed per uploaded file."
         }
     },
     "Reports": {

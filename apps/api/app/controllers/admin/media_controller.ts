@@ -5,8 +5,10 @@ import { DateTime } from "luxon";
 
 import Media from "#models/media";
 import { deleteFile, save } from "#services/media_storage";
+import SettingsService from "#services/settings_service";
 import { adminMediaView } from "#table_views/admin/media";
 import { collection, resource } from "#transformers/api_envelope";
+import { toMediaUploadConfig } from "#transformers/media_settings_transformer";
 import MediaTransformer from "#transformers/media_transformer";
 import { updateMediaValidator } from "#validators/admin/media_validator";
 
@@ -150,10 +152,15 @@ export default class AdminMediaController {
         return resource(MediaTransformer.transform(row));
     }
 
-    /** `POST /api/v1/admin/media` — multipart upload. The single field name is `file`. */
+    /**
+     * `POST /api/v1/admin/media` — multipart upload. The single field name is `file`. Image uploads
+     * are resized into the configured thumbnail/medium/large variants (and the original's real
+     * dimensions are recorded); the size cap and folder layout come from the Media settings.
+     */
     async store(ctx: HttpContext) {
         const { request, response, auth } = ctx;
-        const file = request.file("file", { size: "20mb" });
+        const mediaCfg = toMediaUploadConfig(await new SettingsService().all("media"));
+        const file = request.file("file", { size: `${mediaCfg.maxUploadMb}mb` });
         if (file === null) {
             return response.status(422).json({
                 errors: [{ message: "file field is required", rule: "required", field: "file" }],
@@ -170,7 +177,11 @@ export default class AdminMediaController {
         }
 
         const host = request.host() ?? "localhost";
-        const saved = await save(file, { host, protocol: request.protocol() });
+        const saved = await save(file, {
+            host,
+            protocol: request.protocol(),
+            images: { organizeByDate: mediaCfg.organizeByDate, variants: mediaCfg.variants },
+        });
 
         const row = new Media();
         row.kind = saved.kind;
@@ -182,9 +193,9 @@ export default class AdminMediaController {
         row.alt = null;
         row.caption = null;
         row.description = null;
-        row.width = null;
-        row.height = null;
-        row.attributes = {};
+        row.width = saved.width;
+        row.height = saved.height;
+        row.attributes = Object.keys(saved.variants).length > 0 ? { variants: saved.variants } : {};
         if (auth.user) row.uploadedByUserId = Number(auth.user.id);
         await row.save();
 

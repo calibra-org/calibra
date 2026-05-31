@@ -1,6 +1,7 @@
 import { BaseTransformer } from "@adonisjs/core/transformers";
 
 import type ProductBrand from "#models/product_brand";
+import { pickVariantUrl } from "#services/media_variants";
 import { pickTranslation } from "#transformers/i18n_helpers";
 
 export default class ProductBrandTransformer extends BaseTransformer<ProductBrand> {
@@ -19,7 +20,7 @@ export default class ProductBrandTransformer extends BaseTransformer<ProductBran
         return {
             id: Number(b.id),
             image_media_id: b.imageMediaId === null ? null : Number(b.imageMediaId),
-            image_url: b.image?.url ?? null,
+            image_url: pickVariantUrl(b.image, "thumbnail"),
             menu_order: b.menuOrder,
             used_count: usedCount === undefined || usedCount === null ? null : Number(usedCount),
             name: translation?.name ?? null,

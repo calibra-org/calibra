@@ -5,7 +5,7 @@ import { type UseQueryResult, useMutation, useQuery, useQueryClient } from "@tan
 import { useLocale } from "next-intl";
 
 import { apiGet, apiMutate } from "#/lib/queries/api-client";
-import type { AdminMedia, AdminMediaKind, Paginated } from "#/lib/types";
+import type { AdminMedia, AdminMediaKind, AdminMediaVariants, Paginated } from "#/lib/types";
 
 import type { MediaTypeFilter } from "./types";
 
@@ -49,6 +49,7 @@ interface AdminMediaWire {
     mime: string | null;
     width: number | null;
     height: number | null;
+    variants: AdminMediaVariants | null;
     size_bytes: number | null;
     uploaded_by_user_id: number | null;
     created_at: string | null;
@@ -68,6 +69,7 @@ function toAdminMedia(row: AdminMediaWire): AdminMedia {
         mime: row.mime,
         width: row.width,
         height: row.height,
+        variants: row.variants,
         sizeBytes: row.size_bytes,
         uploadedByUserId: row.uploaded_by_user_id,
         createdAt: row.created_at,
@@ -361,6 +363,7 @@ function adminMediaToWire(row: AdminMedia): AdminMediaWire {
         mime: row.mime,
         width: row.width,
         height: row.height,
+        variants: row.variants,
         size_bytes: row.sizeBytes,
         uploaded_by_user_id: row.uploadedByUserId,
         created_at: row.createdAt,

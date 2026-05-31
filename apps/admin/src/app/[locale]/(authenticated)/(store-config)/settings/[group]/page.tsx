@@ -14,22 +14,28 @@ import { Textarea } from "#/components/ui/textarea";
 import { getSettingsGroup } from "#/lib/server-repos";
 import type { AdminSettingField, SettingsGroupKey } from "#/lib/types";
 import { cn } from "#/lib/utils";
+import { DateTimeSettings } from "#/views/settings/datetime/datetime-settings";
 import { GeneralSettings } from "#/views/settings/general/general-settings";
+import { MediaSettings } from "#/views/settings/media/media-settings";
 
 interface PageProps {
     params: Promise<{ locale: string; group: string }>;
 }
 
 function isSettingsGroupKey(value: string): value is SettingsGroupKey {
-    return ["general", "products", "tax", "shipping", "account", "email", "advanced"].includes(value);
+    return ["general", "datetime", "media", "products", "tax", "shipping", "account", "email", "advanced"].includes(value);
+}
+
+/** Groups with a bespoke client view that fetches its own data + owns its save bar. */
+function isDedicatedView(group: SettingsGroupKey): group is "general" | "datetime" | "media" {
+    return group === "general" || group === "datetime" || group === "media";
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { locale, group } = await params;
     if (!isSettingsGroupKey(group)) return { title: "—" };
-    const g = await getSettingsGroup(group);
-    if (g === null) return { title: "—" };
-    return { title: g.title[locale as Locale] };
+    const t = await getTranslations({ locale: locale as Locale, namespace: "Settings.groups" });
+    return { title: t(group) };
 }
 
 function FieldControl({ field, locale, prefix }: { field: AdminSettingField; locale: Locale; prefix: string }) {
@@ -64,53 +70,51 @@ export default async function SettingsGroupPage({ params }: PageProps) {
     setRequestLocale(rawLocale);
     const locale = rawLocale as Locale;
     if (!isSettingsGroupKey(group)) notFound();
+    const t = await getTranslations("Settings");
+
+    if (isDedicatedView(group)) {
+        return (
+            <div className="flex flex-col gap-6">
+                <PageHeader title={t("title")} subtitle={t("subtitle")} />
+                {group === "general" ? <GeneralSettings /> : group === "datetime" ? <DateTimeSettings /> : <MediaSettings />}
+            </div>
+        );
+    }
+
     const groupData = await getSettingsGroup(group);
     if (groupData === null) notFound();
-    const t = await getTranslations("Settings");
-    const isGeneral = group === "general";
 
     return (
         <div className="flex flex-col gap-6">
-            <PageHeader
-                title={t("title")}
-                subtitle={t("subtitle")}
-                actions={isGeneral ? undefined : <Button>{t("save")}</Button>}
-            />
+            <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<Button>{t("save")}</Button>} />
 
-            {isGeneral ? (
-                <GeneralSettings />
-            ) : (
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-base">{groupData.title[locale]}</CardTitle>
-                        <CardDescription>{groupData.subtitle[locale]}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-6 pt-6">
-                        {groupData.fields.map((field) => {
-                            const isToggle = field.type === "switch";
-                            return (
-                                <div
-                                    key={field.key}
-                                    className={cn(
-                                        "flex flex-col gap-1.5",
-                                        isToggle && "flex-row items-center justify-between gap-3",
-                                    )}
-                                >
-                                    <div className={cn("flex flex-col", isToggle && "flex-1")}>
-                                        <Label htmlFor={`${group}-${field.key}`} className="text-sm">
-                                            {field.label[locale]}
-                                        </Label>
-                                        <p className="text-muted-foreground text-xs">{field.description[locale]}</p>
-                                    </div>
-                                    <div className={cn(isToggle ? "shrink-0" : "max-w-md")}>
-                                        <FieldControl field={field} locale={locale} prefix={group} />
-                                    </div>
+            <Card>
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-base">{groupData.title[locale]}</CardTitle>
+                    <CardDescription>{groupData.subtitle[locale]}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-6 pt-6">
+                    {groupData.fields.map((field) => {
+                        const isToggle = field.type === "switch";
+                        return (
+                            <div
+                                key={field.key}
+                                className={cn("flex flex-col gap-1.5", isToggle && "flex-row items-center justify-between gap-3")}
+                            >
+                                <div className={cn("flex flex-col", isToggle && "flex-1")}>
+                                    <Label htmlFor={`${group}-${field.key}`} className="text-sm">
+                                        {field.label[locale]}
+                                    </Label>
+                                    <p className="text-muted-foreground text-xs">{field.description[locale]}</p>
                                 </div>
-                            );
-                        })}
-                    </CardContent>
-                </Card>
-            )}
+                                <div className={cn(isToggle ? "shrink-0" : "max-w-md")}>
+                                    <FieldControl field={field} locale={locale} prefix={group} />
+                                </div>
+                            </div>
+                        );
+                    })}
+                </CardContent>
+            </Card>
         </div>
     );
 }

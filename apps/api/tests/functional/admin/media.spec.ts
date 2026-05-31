@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import db from "@adonisjs/lucid/services/db";
 import { test } from "@japa/runner";
 import { DateTime } from "luxon";
+import sharp from "sharp";
 
 import Customer from "#models/customer";
 import Media from "#models/media";
@@ -222,5 +223,57 @@ test.group("/api/v1/admin/media", (group) => {
 
         const persisted = await Media.find(body.data.id);
         assert.isNotNull(persisted);
+    });
+
+    test("image upload generates variants and records real dimensions", async ({ client, assert }) => {
+        const admin = await createAdmin();
+        const tmpDir = await fs.mkdtemp("/tmp/media-img-");
+        const tmpFile = `${tmpDir}/photo.png`;
+        await sharp({ create: { width: 800, height: 600, channels: 3, background: { r: 200, g: 30, b: 30 } } })
+            .png()
+            .toFile(tmpFile);
+
+        const response = await client.post("/api/v1/admin/media").withGuard("api").loginAs(admin).file("file", tmpFile);
+        response.assertStatus(201);
+        response.assertAgainstApiSpec();
+        const body = response.body() as {
+            data: {
+                kind: string;
+                width: number | null;
+                height: number | null;
+                variants: Record<string, { url: string; width: number; height: number }> | null;
+            };
+        };
+        assert.equal(body.data.kind, "image");
+        assert.equal(body.data.width, 800);
+        assert.equal(body.data.height, 600);
+        assert.isNotNull(body.data.variants);
+        assert.equal(body.data.variants?.thumbnail?.width, 150);
+        assert.equal(body.data.variants?.thumbnail?.height, 150);
+        assert.isDefined(body.data.variants?.medium);
+        assert.isDefined(body.data.variants?.large);
+        assert.match(body.data.variants?.thumbnail?.url ?? "", /-thumbnail\.png$/);
+
+        await fs.rm(tmpDir, { recursive: true, force: true });
+    });
+
+    test("svg upload is stored without variants", async ({ client, assert }) => {
+        const admin = await createAdmin();
+        const tmpDir = await fs.mkdtemp("/tmp/media-svg-");
+        const tmpFile = `${tmpDir}/icon.svg`;
+        await fs.writeFile(
+            tmpFile,
+            '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>',
+            "utf8",
+        );
+
+        const response = await client.post("/api/v1/admin/media").withGuard("api").loginAs(admin).file("file", tmpFile);
+        response.assertStatus(201);
+        response.assertAgainstApiSpec();
+        const body = response.body() as { data: { variants: unknown; width: number | null } };
+        assert.isNull(body.data.variants);
+        assert.isNull(body.data.width);
+
+        await fs.rm(tmpDir, { recursive: true, force: true });
     });
 });

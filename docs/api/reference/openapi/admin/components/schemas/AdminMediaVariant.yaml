@@ -1,0 +1,13 @@
+title: AdminMediaVariant
+description: >
+    A generated resized rendition of an uploaded image (thumbnail / medium / large). Produced on
+    upload by the resize pipeline from the Media settings presets; absent for non-image uploads,
+    SVG/GIF, and legacy rows uploaded before the pipeline existed.
+type: object
+required: [url, width, height]
+properties:
+    url:
+        type: string
+        format: uri
+    width: { type: integer }
+    height: { type: integer }

@@ -1,0 +1,14 @@
+title: AdminFormatPreset
+description: >
+    A selectable date-or-time format preset offered in the Date & Time settings tab. `pattern` is a
+    date-fns format string (rendered per active calendar — Jalali for `fa`, Gregorian for `en`);
+    `label_key` is the leaf i18n key under `Settings.datetime.preset.*` the admin resolves per locale.
+type: object
+required: [pattern, label_key]
+properties:
+    pattern:
+        type: string
+        examples: ["d MMMM yyyy"]
+    label_key:
+        type: string
+        examples: ["dMonthY"]

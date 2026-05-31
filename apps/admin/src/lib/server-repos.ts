@@ -425,6 +425,7 @@ function toAdminMedia(m: SdkAdminMedia): AdminMedia {
         mime: m.mime ?? null,
         width: m.width ?? null,
         height: m.height ?? null,
+        variants: m.variants ? (m.variants as AdminMedia["variants"]) : null,
         sizeBytes: m.size_bytes ?? null,
         uploadedByUserId: m.uploaded_by_user_id ?? null,
         createdAt: m.created_at ?? null,

@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { Button } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
+import { variantUrl } from "#/lib/media-variants";
 import type { AdminMedia } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
@@ -39,10 +40,10 @@ export function MediaFieldPreview({ label, value, onChange, className, aspectCla
     const handleSelect = (selection: AdminMedia | AdminMedia[]) => {
         if (Array.isArray(selection)) {
             const first = selection[0];
-            if (first !== undefined) onChange({ id: first.id, url: first.url });
+            if (first !== undefined) onChange({ id: first.id, url: variantUrl(first, "thumbnail") });
             return;
         }
-        onChange({ id: selection.id, url: selection.url });
+        onChange({ id: selection.id, url: variantUrl(selection, "thumbnail") });
     };
 
     const handleRemove = () => onChange(null);

@@ -51,3 +51,41 @@ export function Radio({ className, children, ...props }: RadioProps) {
     );
 }
 Radio.displayName = "Radio";
+
+/**
+ * Full-row radio "card". The entire surface is the `Radio.Root` control, so a click anywhere on the
+ * row selects it (not just the 16px dot) and arrow keys move between cards — the accessible,
+ * expected behaviour for a list of selectable options. The visual circle + indicator dot render at
+ * the start; `children` fill the rest of the row.
+ */
+export function RadioCard({ className, children, ...props }: RadioProps) {
+    return (
+        <BaseRadio.Root
+            data-slot="radio-card"
+            className={cn(
+                "group flex w-full cursor-pointer items-center gap-3 rounded-lg border bg-background px-3.5 py-3 text-start outline-none transition-[color,box-shadow,background-color,border-color]",
+                "hover:bg-accent/40",
+                "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                "data-[checked]:border-primary data-[checked]:bg-primary/5",
+                "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+                className,
+            )}
+            {...props}
+        >
+            <span
+                aria-hidden="true"
+                className={cn(
+                    "inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-foreground/30 transition-colors",
+                    "group-hover:border-foreground/60 group-data-[checked]:border-primary",
+                )}
+            >
+                <BaseRadio.Indicator
+                    keepMounted
+                    className="size-2 origin-center transform-gpu rounded-full bg-primary transition-transform duration-150 ease-out data-[checked]:scale-100 data-[unchecked]:scale-0"
+                />
+            </span>
+            {children}
+        </BaseRadio.Root>
+    );
+}
+RadioCard.displayName = "RadioCard";

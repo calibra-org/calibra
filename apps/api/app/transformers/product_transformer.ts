@@ -2,6 +2,7 @@ import { BaseTransformer } from "@adonisjs/core/transformers";
 
 import type InventoryItem from "#models/inventory_item";
 import type Product from "#models/product";
+import { pickVariantUrl, readMediaVariants } from "#services/media_variants";
 import { resolvePrice } from "#services/price_resolver";
 import { pickTranslation } from "#transformers/i18n_helpers";
 
@@ -42,16 +43,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             saleEndsAt: p.saleEndsAt,
         });
 
-        const images = (p.images ?? [])
-            .slice()
-            .sort((a, b) => a.position - b.position)
-            .map((img) => ({
-                id: Number(img.id),
-                media_id: Number(img.mediaId),
-                position: img.position,
-                url: img.media?.url ?? null,
-                alt: img.media?.alt ?? null,
-            }));
+        const sortedImages = (p.images ?? []).slice().sort((a, b) => a.position - b.position);
 
         return {
             id: Number(p.id),
@@ -84,8 +76,10 @@ export default class ProductTransformer extends BaseTransformer<Product> {
             slug: translation?.slug ?? null,
             short_description: translation?.shortDescription ?? null,
             locale: translation?.locale ?? this.locale,
-            featured_image_url: images[0]?.url ?? null,
-            gallery_image_urls: images.map((img) => img.url).filter((url): url is string => typeof url === "string"),
+            featured_image_url: pickVariantUrl(sortedImages[0]?.media, "thumbnail"),
+            gallery_image_urls: sortedImages
+                .map((img) => pickVariantUrl(img.media, "medium"))
+                .filter((url): url is string => typeof url === "string"),
             is_favorite: this.options.favoriteProductIds?.has(Number(p.id)) ?? false,
         };
     }
@@ -104,6 +98,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
                 position: img.position,
                 url: img.media?.url ?? null,
                 alt: img.media?.alt ?? null,
+                variants: readMediaVariants(img.media),
             }));
 
         const variations = (p.variations ?? []).map((v) => {

@@ -327,7 +327,7 @@ export default class AdminInsightsRegionalController {
             primary_image AS (
                 SELECT DISTINCT ON (pi.product_id)
                     pi.product_id,
-                    m.url AS image_url
+                    COALESCE(m.attributes->'variants'->'thumbnail'->>'url', m.url) AS image_url
                 FROM product_images pi
                 INNER JOIN media m ON m.id = pi.media_id
                 ORDER BY pi.product_id, pi.position ASC, pi.id ASC

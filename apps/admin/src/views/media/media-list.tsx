@@ -21,6 +21,7 @@ import type { MouseEvent } from "react";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { formatDate } from "#/lib/format";
+import { mediaVariantUrl } from "#/lib/media-variants";
 import type { AdminMedia } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
@@ -244,7 +245,7 @@ function Thumbnail({ row }: ThumbnailProps) {
         return (
             // biome-ignore lint/performance/noImgElement: external thumbnails, no Next/Image loader configured
             <img
-                src={row.url}
+                src={mediaVariantUrl(row, "thumbnail")}
                 alt={row.alt ?? row.filename}
                 loading="lazy"
                 className="size-10 shrink-0 rounded-md border border-border/40 object-cover"

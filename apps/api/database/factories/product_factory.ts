@@ -36,7 +36,7 @@ export const ProductBrandFactory = factory
 export const MediaFactory = factory
     .define(Media, ({ faker }) => ({
         kind: "image",
-        url: `https://picsum.photos/seed/${faker.string.uuid()}/600/600`,
+        url: `http://localhost/uploads/test/${faker.string.uuid()}.jpg`,
         mime: "image/jpeg",
         width: 600,
         height: 600,

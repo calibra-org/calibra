@@ -26,6 +26,7 @@ export default class MediaTransformer extends BaseTransformer<Media> {
             mime: m.mime,
             width: m.width,
             height: m.height,
+            variants: extractVariants(m.attributes),
             size_bytes: m.sizeBytes !== null && m.sizeBytes !== undefined ? Number(m.sizeBytes) : null,
             uploaded_by_user_id:
                 m.uploadedByUserId !== null && m.uploadedByUserId !== undefined ? Number(m.uploadedByUserId) : null,
@@ -33,6 +34,26 @@ export default class MediaTransformer extends BaseTransformer<Media> {
             updated_at: updated !== null && updated !== undefined ? updated.toISO() : null,
         };
     }
+}
+
+interface MediaVariant {
+    url: string;
+    width: number;
+    height: number;
+}
+
+/**
+ * Pull the generated resize renditions out of the media row's `attributes` JSONB. Returns `null`
+ * for rows with no variants (non-images, SVG/GIF, legacy rows uploaded before the resize pipeline).
+ */
+function extractVariants(attributes: unknown): Record<string, MediaVariant> | null {
+    if (attributes !== null && typeof attributes === "object" && "variants" in attributes) {
+        const variants = (attributes as { variants?: unknown }).variants;
+        if (variants !== null && typeof variants === "object" && Object.keys(variants).length > 0) {
+            return variants as Record<string, MediaVariant>;
+        }
+    }
+    return null;
 }
 
 /**

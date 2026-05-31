@@ -1,3 +1,5 @@
+import { promises as fs } from "node:fs";
+import app from "@adonisjs/core/services/app";
 import hash from "@adonisjs/core/services/hash";
 import { BaseSeeder } from "@adonisjs/lucid/seeders";
 import { faker } from "@faker-js/faker";
@@ -6,7 +8,11 @@ import { faker as fakerFa } from "@faker-js/faker/locale/fa";
 import { DateTime } from "luxon";
 
 import { BULK_CATEGORY_TREE, type CategoryNode, type LeafProductSpec } from "./bulk_catalog_taxonomy.js";
+import { ingestFile } from "#services/media_storage";
+import SettingsService from "#services/settings_service";
 import { slugify } from "#services/slug_service";
+import env from "#start/env";
+import { toMediaUploadConfig } from "#transformers/media_settings_transformer";
 
 const BATCH = 500;
 
@@ -1169,34 +1175,19 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         }
         inventoryCount += inventoryRows.length;
 
-        const mediaRows: Array<Record<string, unknown>> = [];
-        for (const link of productImageLinks) {
-            for (let n = 0; n < link.image_count; n += 1) {
-                mediaRows.push({
-                    kind: "image",
-                    url: `https://picsum.photos/seed/${link.slug}-${n}/600/600`,
-                    mime: "image/jpeg",
-                    width: 600,
-                    height: 600,
-                    alt: link.alt,
-                    title: link.alt,
-                    filename: `${link.slug}-${n}.jpg`,
-                    attributes: {},
-                    created_at: now,
-                    updated_at: now,
-                });
-            }
-        }
-        const insertedMediaIds: number[] = [];
-        for (const chunk of chunked(mediaRows, BATCH)) {
-            const inserted = await this.client.table("media").returning("id").insert(chunk);
-            for (const r of inserted) insertedMediaIds.push(Number(r.id));
-        }
+        /**
+         * Ingest the committed seed images once (through the same sharp variant pipeline as real
+         * uploads), then reuse the resulting pool across products. ~50 distinct local images give
+         * plenty of visual variety while keeping the media library + on-disk storage lean — and the
+         * admin renders the generated thumbnail/medium/large variants out of the box.
+         */
+        const mediaPoolIds = await this.buildMediaPool(now);
 
         let mediaCursor = 0;
         for (const link of productImageLinks) {
             for (let n = 0; n < link.image_count; n += 1) {
-                const mediaId = insertedMediaIds[mediaCursor++];
+                const mediaId = mediaPoolIds.length > 0 ? mediaPoolIds[mediaCursor % mediaPoolIds.length] : undefined;
+                mediaCursor += 1;
                 if (mediaId === undefined) break;
                 imageMediaRows.push({
                     product_id: link.product_id,
@@ -1220,6 +1211,56 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             inventory: inventoryCount,
             tagLinks: tagLinkRows.length,
         };
+    }
+
+    /**
+     * Ingest every committed seed image (`database/seed_assets/products`) through the media pipeline
+     * once — copying it into `storage/uploads`, generating thumbnail/medium/large variants with
+     * sharp, recording real dimensions — and insert one media row per image. Returns the inserted
+     * media ids so products can be linked round-robin. Rows are byte-for-byte what a real operator
+     * upload produces, so the admin renders optimized variants without any seed-specific code path.
+     */
+    private async buildMediaPool(now: string | null): Promise<number[]> {
+        const dir = app.makePath("database/seed_assets/products");
+        let files: string[] = [];
+        try {
+            files = (await fs.readdir(dir)).filter((f) => /\.(jpe?g|png|webp)$/i.test(f)).sort();
+        } catch {
+            console.warn(`Seed image dir missing (${dir}); products will have no images.`);
+            return [];
+        }
+
+        const baseUrl = `http://localhost:${env.get("PORT")}`;
+        const { variants } = toMediaUploadConfig(await new SettingsService().all("media"));
+
+        const rows: Array<Record<string, unknown>> = [];
+        for (const [idx, file] of files.entries()) {
+            const saved = await ingestFile(app.makePath("database/seed_assets/products", file), {
+                baseUrl,
+                variants,
+                filename: file,
+            });
+            rows.push({
+                kind: "image",
+                url: saved.url,
+                mime: saved.mime ?? "image/jpeg",
+                width: saved.width,
+                height: saved.height,
+                alt: `Calibra mock ${idx + 1}`,
+                title: file,
+                filename: file,
+                attributes: { variants: saved.variants },
+                created_at: now,
+                updated_at: now,
+            });
+        }
+
+        const ids: number[] = [];
+        for (const chunk of chunked(rows, BATCH)) {
+            const inserted = await this.client.table("media").returning("id").insert(chunk);
+            for (const r of inserted) ids.push(Number(r.id));
+        }
+        return ids;
     }
 
     private async seedOrders(target: number, now: string): Promise<{ orders: number; lineItems: number; history: number }> {

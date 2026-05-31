@@ -3,6 +3,7 @@
 import { Check, File, FileArchive, FileAudio, FileSpreadsheet, FileText, FileVideo } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { mediaVariantUrl } from "#/lib/media-variants";
 import type { AdminMedia } from "#/lib/types";
 import { cn } from "#/lib/utils";
 import { classifyMediaType, type MediaCategory } from "#/views/media/types";
@@ -44,7 +45,12 @@ export function MediaPickerTile({ row, selected, mode, selectionIndex, onToggle 
             >
                 {category === "image" ? (
                     /* biome-ignore lint/performance/noImgElement: external thumbnails, no Next/Image loader configured */
-                    <img src={row.url} alt={row.alt ?? display} loading="lazy" className="size-full object-cover" />
+                    <img
+                        src={mediaVariantUrl(row, "medium")}
+                        alt={row.alt ?? display}
+                        loading="lazy"
+                        className="size-full object-cover"
+                    />
                 ) : (
                     <FilePlaceholder category={category} filename={display} />
                 )}
