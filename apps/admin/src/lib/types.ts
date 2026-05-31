@@ -552,7 +552,16 @@ export interface AdminPaymentGateway {
     settings: Record<string, string>;
 }
 
-export type SettingsGroupKey = "general" | "products" | "tax" | "shipping" | "account" | "email" | "advanced";
+export type SettingsGroupKey =
+    | "general"
+    | "datetime"
+    | "media"
+    | "products"
+    | "tax"
+    | "shipping"
+    | "account"
+    | "email"
+    | "advanced";
 
 export interface AdminSettingField {
     key: string;
