@@ -5320,6 +5320,16 @@ export interface components {
             description?: string | null;
         };
         /**
+         * AdminMediaVariant
+         * @description A generated resized rendition of an uploaded image (thumbnail / medium / large). Produced on upload by the resize pipeline from the Media settings presets; absent for non-image uploads, SVG/GIF, and legacy rows uploaded before the pipeline existed.
+         */
+        AdminMediaVariant: {
+            /** Format: uri */
+            url: string;
+            width: number;
+            height: number;
+        };
+        /**
          * AdminCustomAttribute
          * @description Per-product custom attribute row. Unlike global attribute links, custom rows carry the name + values inline (no shared taxonomy) and never feed variation generation — they're a freeform display-only slot for operator-typed metadata like "Material" or "Origin".
          */
@@ -5352,6 +5362,12 @@ export interface components {
                 position: number;
                 url?: string | null;
                 alt?: string | null;
+                /** @description Generated resized renditions keyed by preset name; null for non-image / legacy rows. */
+                variants?: {
+                    thumbnail?: components["schemas"]["AdminMediaVariant"];
+                    medium?: components["schemas"]["AdminMediaVariant"];
+                    large?: components["schemas"]["AdminMediaVariant"];
+                } | null;
             }[];
             /** @description Present only when `type=variable`. */
             variations?: {
@@ -5561,16 +5577,6 @@ export interface components {
             verified?: boolean;
             /** Format: date-time */
             created_at?: string;
-        };
-        /**
-         * AdminMediaVariant
-         * @description A generated resized rendition of an uploaded image (thumbnail / medium / large). Produced on upload by the resize pipeline from the Media settings presets; absent for non-image uploads, SVG/GIF, and legacy rows uploaded before the pipeline existed.
-         */
-        AdminMediaVariant: {
-            /** Format: uri */
-            url: string;
-            width: number;
-            height: number;
         };
         /**
          * AdminMedia
