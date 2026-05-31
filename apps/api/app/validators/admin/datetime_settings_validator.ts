@@ -8,7 +8,7 @@ import vine from "@vinejs/vine";
  * just to attempt a format — the frontend formatter still wraps `format()` in try/catch as a second
  * line of defence. Length is capped at 32 (no real format needs more).
  */
-const FORMAT_PATTERN = /^[yMdEHhmsaQ0-9 \/:.,،()'-]{1,32}$/;
+const FORMAT_PATTERN = /^[yMdEHhmsaQ0-9 /:.,،()'-]{1,32}$/;
 
 /**
  * PATCH body for `PATCH /api/v1/admin/settings/datetime`. Both fields optional — the controller

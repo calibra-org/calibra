@@ -79,7 +79,11 @@ test.group("/api/v1/admin/settings/media", (group) => {
     test("same-value PATCH is a no-op (writes no audit row)", async ({ client, assert }) => {
         const admin = await createAdmin();
         const before = await AdminAuditLog.query().where("action", "settings.media.patch").count("* as total");
-        const res = await client.patch(URL).withGuard("api").loginAs(admin).json({ thumbnail: { width: 150 } });
+        const res = await client
+            .patch(URL)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({ thumbnail: { width: 150 } });
         res.assertStatus(200);
         const after = await AdminAuditLog.query().where("action", "settings.media.patch").count("* as total");
         assert.equal(Number(after[0].$extras.total), Number(before[0].$extras.total));
@@ -87,7 +91,11 @@ test.group("/api/v1/admin/settings/media", (group) => {
 
     test("PATCH rejects an out-of-range dimension", async ({ client }) => {
         const admin = await createAdmin();
-        const res = await client.patch(URL).withGuard("api").loginAs(admin).json({ thumbnail: { width: 99999 } });
+        const res = await client
+            .patch(URL)
+            .withGuard("api")
+            .loginAs(admin)
+            .json({ thumbnail: { width: 99999 } });
         res.assertStatus(422);
     });
 });

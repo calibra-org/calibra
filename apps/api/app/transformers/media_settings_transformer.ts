@@ -72,7 +72,12 @@ export function toMediaUploadConfig(media: Record<string, unknown>): MediaUpload
         organizeByDate: flag(media, "organize_uploads_by_date"),
         maxUploadMb: num(media, "max_upload_mb"),
         variants: [
-            { name: "thumbnail", width: num(media, "thumbnail_width"), height: num(media, "thumbnail_height"), crop: flag(media, "thumbnail_crop") },
+            {
+                name: "thumbnail",
+                width: num(media, "thumbnail_width"),
+                height: num(media, "thumbnail_height"),
+                crop: flag(media, "thumbnail_crop"),
+            },
             { name: "medium", width: num(media, "medium_width"), height: num(media, "medium_height"), crop: false },
             { name: "large", width: num(media, "large_width"), height: num(media, "large_height"), crop: false },
         ],

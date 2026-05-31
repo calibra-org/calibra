@@ -55,6 +55,8 @@ export default class RegenerateMediaVariants extends BaseCommand {
             processed += 1;
         }
 
-        this.logger.info(`Regenerated variants for ${processed} image(s); skipped ${skipped} (already done / external / missing).`);
+        this.logger.info(
+            `Regenerated variants for ${processed} image(s); skipped ${skipped} (already done / external / missing).`,
+        );
     }
 }
