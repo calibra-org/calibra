@@ -25,6 +25,14 @@ function readVariants(attributes: unknown): Record<string, { url?: string }> | n
     return null;
 }
 
+/** Raw variants object (`{ thumbnail, medium, large }`) from a media row, or `null` when absent. */
+export function readMediaVariants(
+    media: MediaLike | null | undefined,
+): Record<string, { url: string; width: number; height: number }> | null {
+    if (media === null || media === undefined) return null;
+    return readVariants(media.attributes) as Record<string, { url: string; width: number; height: number }> | null;
+}
+
 /** Best variant URL for `size`, or the original `url`, or `null` when the media is absent. */
 export function pickVariantUrl(media: MediaLike | null | undefined, size: VariantName): string | null {
     if (media === null || media === undefined) return null;

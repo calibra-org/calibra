@@ -2,7 +2,7 @@ import { BaseTransformer } from "@adonisjs/core/transformers";
 
 import type InventoryItem from "#models/inventory_item";
 import type Product from "#models/product";
-import { pickVariantUrl } from "#services/media_variants";
+import { pickVariantUrl, readMediaVariants } from "#services/media_variants";
 import { resolvePrice } from "#services/price_resolver";
 import { pickTranslation } from "#transformers/i18n_helpers";
 
@@ -98,6 +98,7 @@ export default class ProductTransformer extends BaseTransformer<Product> {
                 position: img.position,
                 url: img.media?.url ?? null,
                 alt: img.media?.alt ?? null,
+                variants: readMediaVariants(img.media),
             }));
 
         const variations = (p.variations ?? []).map((v) => {

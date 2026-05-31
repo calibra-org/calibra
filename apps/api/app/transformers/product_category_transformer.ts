@@ -1,6 +1,7 @@
 import { BaseTransformer } from "@adonisjs/core/transformers";
 
 import type ProductCategory from "#models/product_category";
+import { pickVariantUrl } from "#services/media_variants";
 import { pickTranslation } from "#transformers/i18n_helpers";
 
 export default class ProductCategoryTransformer extends BaseTransformer<ProductCategory> {
@@ -21,7 +22,7 @@ export default class ProductCategoryTransformer extends BaseTransformer<ProductC
             parent_id: c.parentId === null ? null : Number(c.parentId),
             display: c.display,
             image_media_id: c.imageMediaId === null ? null : Number(c.imageMediaId),
-            image_url: c.image?.url ?? null,
+            image_url: pickVariantUrl(c.image, "thumbnail"),
             menu_order: c.menuOrder,
             used_count: usedCount === undefined || usedCount === null ? null : Number(usedCount),
             name: translation?.name ?? null,
