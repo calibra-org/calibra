@@ -3725,6 +3725,8 @@
             "preview": "Preview",
             "tokensTitle": "Format tokens",
             "docsLink": "Date & time format documentation",
+            "invalidDateFormat": "Invalid date format — use only year, month, and day tokens.",
+            "invalidTimeFormat": "Invalid time format — use only hour, minute, and second tokens.",
             "preset": {
                 "dMonthY": "Day Month Year",
                 "monthDY": "Month Day, Year",
@@ -3763,9 +3765,13 @@
             "height": "Height",
             "maxHeight": "Max height",
             "thumbnailCrop": "Crop thumbnails to exact dimensions (normally thumbnails are proportional)",
+            "thumbnailHelp": "Fixed dimensions used across lists and galleries.",
+            "boundedHelp": "Maximum dimensions; aspect ratio is preserved.",
             "uploads": "Uploading files",
             "organizeByDate": "Organize uploads into month- and year-based folders",
-            "maxUpload": "Maximum upload size (MB)"
+            "organizeHelp": "Uploaded files are stored in year/month folders.",
+            "maxUpload": "Maximum upload size",
+            "maxUploadHelp": "The largest size allowed per uploaded file."
         }
     },
     "Reports": {

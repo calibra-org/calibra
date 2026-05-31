@@ -3,12 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { Controller, type UseFormRegister, useForm } from "react-hook-form";
+import { type Control, Controller, useForm } from "react-hook-form";
 
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
-import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { NumberField } from "#/components/ui/number-field";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Spinner } from "#/components/ui/spinner";
 import { StickyActionBar } from "#/components/ui/sticky-action-bar";
@@ -23,8 +23,8 @@ export function MediaSettings() {
     if (isLoading || !data) {
         return (
             <div className="flex flex-col gap-6">
-                <Skeleton className="h-72 w-full rounded-xl" />
-                <Skeleton className="h-40 w-full rounded-xl" />
+                <Skeleton className="h-80 w-full rounded-xl" />
+                <Skeleton className="h-44 w-full rounded-xl" />
             </div>
         );
     }
@@ -37,7 +37,7 @@ function MediaSettingsForm({ data }: { data: AdminMediaSettings }) {
     const update = useUpdateMediaSettings();
 
     const form = useForm<MediaForm>({ resolver: zodResolver(mediaFormSchema), defaultValues: toForm(data) });
-    const { control, register, handleSubmit, reset, formState } = form;
+    const { control, handleSubmit, reset, formState } = form;
 
     const onSubmit = handleSubmit((vals) => {
         update.mutate(toUpdate(vals), { onSuccess: () => reset(vals) });
@@ -50,38 +50,49 @@ function MediaSettingsForm({ data }: { data: AdminMediaSettings }) {
             <Card>
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base">{t("imageSizes")}</CardTitle>
-                    <CardDescription>{t("imageSizesSubtitle")}</CardDescription>
+                    <CardDescription className="max-w-prose">{t("imageSizesSubtitle")}</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-6 pt-6">
+                <CardContent className="divide-y pt-2">
                     <SizeRow
-                        label={t("thumbnail")}
-                        register={register}
+                        control={control}
+                        title={t("thumbnail")}
+                        help={t("thumbnailHelp")}
                         widthName="thumbnailWidth"
                         heightName="thumbnailHeight"
-                        t={t}
+                        widthLabel={t("width")}
+                        heightLabel={t("height")}
                     >
-                        <div className="flex items-center gap-2 pt-1.5">
-                            <Controller
-                                control={control}
-                                name="thumbnailCrop"
-                                render={({ field }) => (
+                        <Controller
+                            control={control}
+                            name="thumbnailCrop"
+                            render={({ field }) => (
+                                <div className="mt-4 flex max-w-md items-center gap-2.5">
                                     <Switch id="thumbnailCrop" checked={field.value} onCheckedChange={field.onChange} />
-                                )}
-                            />
-                            <Label htmlFor="thumbnailCrop" className="text-muted-foreground text-xs leading-relaxed">
-                                {t("thumbnailCrop")}
-                            </Label>
-                        </div>
+                                    <Label htmlFor="thumbnailCrop" className="text-muted-foreground text-xs leading-relaxed">
+                                        {t("thumbnailCrop")}
+                                    </Label>
+                                </div>
+                            )}
+                        />
                     </SizeRow>
                     <SizeRow
-                        label={t("medium")}
-                        register={register}
+                        control={control}
+                        title={t("medium")}
+                        help={t("boundedHelp")}
                         widthName="mediumWidth"
                         heightName="mediumHeight"
-                        t={t}
-                        max
+                        widthLabel={t("maxWidth")}
+                        heightLabel={t("maxHeight")}
                     />
-                    <SizeRow label={t("large")} register={register} widthName="largeWidth" heightName="largeHeight" t={t} max />
+                    <SizeRow
+                        control={control}
+                        title={t("large")}
+                        help={t("boundedHelp")}
+                        widthName="largeWidth"
+                        heightName="largeHeight"
+                        widthLabel={t("maxWidth")}
+                        heightLabel={t("maxHeight")}
+                    />
                 </CardContent>
             </Card>
 
@@ -89,33 +100,25 @@ function MediaSettingsForm({ data }: { data: AdminMediaSettings }) {
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base">{t("uploads")}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-5 pt-6">
-                    <div className="flex items-center justify-between gap-4">
-                        <Label htmlFor="organizeByDate" className="text-sm">
-                            {t("organizeByDate")}
-                        </Label>
+                <CardContent className="divide-y pt-2">
+                    <SettingRow title={t("organizeByDate")} help={t("organizeHelp")}>
                         <Controller
                             control={control}
                             name="organizeByDate"
-                            render={({ field }) => (
-                                <Switch id="organizeByDate" checked={field.value} onCheckedChange={field.onChange} />
-                            )}
+                            render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
                         />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="maxUploadMb" className="text-sm">
-                            {t("maxUpload")}
-                        </Label>
-                        <Input
+                    </SettingRow>
+                    <SettingRow title={t("maxUpload")} help={t("maxUploadHelp")} htmlFor="maxUploadMb">
+                        <ControlledNumber
+                            control={control}
+                            name="maxUploadMb"
                             id="maxUploadMb"
-                            type="number"
                             min={1}
                             max={100}
-                            {...register("maxUploadMb", { valueAsNumber: true })}
-                            dir="ltr"
-                            className="max-w-28 text-center"
+                            suffix="MB"
+                            className="w-32"
                         />
-                    </div>
+                    </SettingRow>
                 </CardContent>
             </Card>
 
@@ -138,53 +141,99 @@ function MediaSettingsForm({ data }: { data: AdminMediaSettings }) {
 }
 
 interface SizeRowProps {
-    label: string;
-    register: UseFormRegister<MediaForm>;
+    control: Control<MediaForm>;
+    title: string;
+    help: string;
     widthName: "thumbnailWidth" | "mediumWidth" | "largeWidth";
     heightName: "thumbnailHeight" | "mediumHeight" | "largeHeight";
-    t: (key: string) => string;
-    /** When true, labels read "Max width / Max height" (medium + large are bounded, not cropped). */
-    max?: boolean;
+    widthLabel: string;
+    heightLabel: string;
     children?: ReactNode;
 }
 
-/** One image-size row: a label + width/height number inputs, with optional extra control (crop). */
-function SizeRow({ label, register, widthName, heightName, t, max, children }: SizeRowProps) {
+/**
+ * One image-size block: title + helper anchored to the start, a tight `width × height` cluster of
+ * stepper inputs anchored to the end. `children` (the thumbnail crop toggle) sits under the row.
+ */
+function SizeRow({ control, title, help, widthName, heightName, widthLabel, heightLabel, children }: SizeRowProps) {
     return (
-        <div className="flex flex-col gap-2 border-b pb-5 last:border-b-0 last:pb-0">
-            <div className="flex flex-wrap items-end gap-4">
-                <Label className="w-32 shrink-0 text-sm">{label}</Label>
-                <NumberField label={max ? t("maxWidth") : t("width")}>
-                    <Input
-                        type="number"
-                        min={1}
-                        max={4096}
-                        {...register(widthName, { valueAsNumber: true })}
-                        dir="ltr"
-                        className="w-24 text-center"
-                    />
-                </NumberField>
-                <NumberField label={max ? t("maxHeight") : t("height")}>
-                    <Input
-                        type="number"
-                        min={1}
-                        max={4096}
-                        {...register(heightName, { valueAsNumber: true })}
-                        dir="ltr"
-                        className="w-24 text-center"
-                    />
-                </NumberField>
+        <div className="py-5 first:pt-1 last:pb-1">
+            <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
+                <div className="flex flex-col gap-1">
+                    <span className="font-medium text-sm">{title}</span>
+                    <p className="max-w-xs text-muted-foreground text-xs leading-relaxed">{help}</p>
+                </div>
+                <div className="flex items-end gap-3">
+                    <Caption label={widthLabel}>
+                        <ControlledNumber control={control} name={widthName} min={1} max={4096} suffix="px" className="w-32" />
+                    </Caption>
+                    <span className="pb-2.5 text-muted-foreground text-sm" aria-hidden="true">
+                        ×
+                    </span>
+                    <Caption label={heightLabel}>
+                        <ControlledNumber control={control} name={heightName} min={1} max={4096} suffix="px" className="w-32" />
+                    </Caption>
+                </div>
             </div>
             {children}
         </div>
     );
 }
 
-function NumberField({ label, children }: { label: string; children: ReactNode }) {
+/** Justified label/helper-vs-control row used by the Uploads card (mirrors the toggle rhythm). */
+function SettingRow({ title, help, htmlFor, children }: { title: string; help: string; htmlFor?: string; children: ReactNode }) {
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 py-4 first:pt-1 last:pb-1">
+            <div className="flex flex-col gap-0.5">
+                <Label htmlFor={htmlFor} className="text-sm">
+                    {title}
+                </Label>
+                <p className="max-w-md text-muted-foreground text-xs leading-relaxed">{help}</p>
+            </div>
+            <div className="shrink-0">{children}</div>
+        </div>
+    );
+}
+
+function Caption({ label, children }: { label: string; children: ReactNode }) {
     return (
         <div className="flex flex-col gap-1.5">
-            <Label className="text-muted-foreground text-xs">{label}</Label>
+            <span className="text-muted-foreground text-xs">{label}</span>
             {children}
         </div>
+    );
+}
+
+interface ControlledNumberProps {
+    control: Control<MediaForm>;
+    name: keyof MediaForm;
+    id?: string;
+    min: number;
+    max: number;
+    suffix: ReactNode;
+    className?: string;
+}
+
+/** Bridges the Base UI {@link NumberField} to react-hook-form; transient empty input keeps the last value. */
+function ControlledNumber({ control, name, id, min, max, suffix, className }: ControlledNumberProps) {
+    return (
+        <Controller
+            control={control}
+            name={name}
+            render={({ field, fieldState }) => (
+                <NumberField
+                    id={id}
+                    value={typeof field.value === "number" ? field.value : undefined}
+                    onValueChange={(next) => {
+                        if (next !== null) field.onChange(next);
+                    }}
+                    min={min}
+                    max={max}
+                    suffix={suffix}
+                    className={className}
+                    aria-invalid={fieldState.invalid}
+                />
+            )}
+        />
     );
 }
