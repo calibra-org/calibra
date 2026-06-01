@@ -138,17 +138,21 @@ down: db-down
 
 # === adonisjs ace ============================================================
 
-# Run pending Lucid migrations (db must be up).
-migrate: env-sync
-    pnpm --filter @calibra/api exec node ace migration:run
+# Ensure the two multi-tenant Postgres roles exist (idempotent; needs a superuser DB_SUPERUSER_*).
+bootstrap-roles: env-sync
+    pnpm --filter @calibra/api exec node ace db:bootstrap-roles
 
-# Roll back the last migration batch.
+# Run pending Lucid migrations as calibra_admin (BYPASSRLS). Roles are bootstrapped first.
+migrate: env-sync bootstrap-roles
+    pnpm --filter @calibra/api exec node ace migration:run --connection=postgres_admin
+
+# Roll back the last migration batch (as calibra_admin).
 migrate-rollback: env-sync
-    pnpm --filter @calibra/api exec node ace migration:rollback
+    pnpm --filter @calibra/api exec node ace migration:rollback --connection=postgres_admin
 
-# Run every Lucid seeder (the small dev dataset).
+# Run every Lucid seeder (the small dev dataset) as calibra_admin so it can write across tenants.
 seed: env-sync
-    pnpm --filter @calibra/api exec node ace db:seed
+    pnpm --filter @calibra/api exec node ace db:seed --connection=postgres_admin
 
 # Seed the bulk dataset (~100k products / 500k users / ~100k orders). Idempotent.
 bulk-seed: env-sync

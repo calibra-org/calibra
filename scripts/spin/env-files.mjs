@@ -82,9 +82,22 @@ export async function ensureEnvFiles(meta) {
             `APP_KEY=${meta.appKey}`,
             `DB_HOST=localhost`,
             `DB_PORT=${meta.ports.db}`,
-            `DB_USER=calibra`,
-            `DB_PASSWORD=calibra`,
+            /**
+             * Two-role multi-tenancy split (see apps/api/config/database.ts). The db container's
+             * superuser stays `calibra` and only `db:bootstrap-roles` uses it; the runtime app
+             * connects as `calibra_app` (NOBYPASSRLS, RLS always enforced) and migrations/seeders as
+             * `calibra_admin` (BYPASSRLS). `scripts/spin/migrate.mjs` bootstraps the roles before the
+             * first migrate.
+             */
+            `DB_USER=calibra_app`,
+            `DB_PASSWORD=calibra_app`,
             `DB_DATABASE=calibra`,
+            `DB_ADMIN_USER=calibra_admin`,
+            `DB_ADMIN_PASSWORD=calibra_admin`,
+            `DB_SUPERUSER_USER=calibra`,
+            `DB_SUPERUSER_PASSWORD=calibra`,
+            /** Phone-OTP SMS sender — `log` driver writes the code to Pino in dev. */
+            `SMS_DRIVER=log`,
             `ALLOWED_ORIGINS=http://localhost:${meta.ports.admin},http://localhost:${meta.ports.web}`,
             /**
              * Mailpit (per-spin). The container is brought up by `ensureContainers()` on

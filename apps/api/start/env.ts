@@ -13,12 +13,39 @@ export default await Env.create(new URL("../", import.meta.url), {
     HOST: Env.schema.string({ format: "host" }),
     LOG_LEVEL: Env.schema.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]),
 
-    /** Postgres connection — matches the `docker-compose.yml` defaults out of the box. */
+    /**
+     * Postgres connection — matches the `docker-compose.yml` defaults out of the box.
+     *
+     * Multi-tenancy splits the runtime into two roles (see `config/database.ts`):
+     *  - `DB_USER` / `DB_PASSWORD` is the **runtime app role** (`calibra_app`, NOBYPASSRLS). Every
+     *    request rides this connection so Row-Level Security is always enforced.
+     *  - `DB_ADMIN_USER` / `DB_ADMIN_PASSWORD` is the **admin role** (`calibra_admin`, BYPASSRLS)
+     *    used by migrations, seeders, and the queue worker so they can read/write across tenants.
+     *  - `DB_SUPERUSER_USER` / `DB_SUPERUSER_PASSWORD` is only consumed by `node ace
+     *    db:bootstrap-roles` to CREATE the two roles (BYPASSRLS can only be granted by a superuser).
+     *
+     * The admin/superuser vars are optional so an un-migrated env still boots; when absent the admin
+     * connection falls back to `DB_USER`. Real multi-tenant isolation requires the distinct roles —
+     * the spin, `.env.example`, and `.env.test` set them explicitly.
+     */
     DB_HOST: Env.schema.string({ format: "host" }),
     DB_PORT: Env.schema.number(),
     DB_USER: Env.schema.string(),
     DB_PASSWORD: Env.schema.string.optional(),
     DB_DATABASE: Env.schema.string(),
+    DB_ADMIN_USER: Env.schema.string.optional(),
+    DB_ADMIN_PASSWORD: Env.schema.string.optional(),
+    DB_SUPERUSER_USER: Env.schema.string.optional(),
+    DB_SUPERUSER_PASSWORD: Env.schema.string.optional(),
+
+    /**
+     * SMS delivery for phone-OTP. `log` (default) writes the code to Pino — the dev/test driver,
+     * no external dependency. `provider` slots an Iranian gateway (Kavenegar/SMS.ir/Ghasedak) over
+     * `fetch` once approved. `SMS_FROM` is the config-level sender-identity fallback used until a
+     * tenant's `sms` settings group (Phase 2) overrides it.
+     */
+    SMS_DRIVER: Env.schema.enum.optional(["log", "provider"] as const),
+    SMS_FROM: Env.schema.string.optional(),
 
     /** Comma-separated origins allowed via CORS. Empty falls back to `*` in dev. */
     ALLOWED_ORIGINS: Env.schema.string.optional(),
