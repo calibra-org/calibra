@@ -38,6 +38,7 @@ router.use([
 
 export const middleware = router.named({
     auth: () => import("#middleware/auth_middleware"),
+    platformAuth: () => import("#middleware/platform_auth_middleware"),
     admin: () => import("#middleware/admin_middleware"),
     cart: () => import("#middleware/cart_middleware"),
     idempotency: () => import("#middleware/idempotency_middleware"),

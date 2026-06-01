@@ -11,6 +11,14 @@ import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
 import { meUpdateValidator } from "#validators/account/me_validator";
 
+/** Extract the impersonating platform-user id from a token's abilities, or null for a normal session. */
+function parseImpersonatedBy(abilities: string[] | undefined): number | null {
+    const found = abilities?.find((ability) => ability.startsWith("impersonated_by:"));
+    if (!found) return null;
+    const id = Number(found.split(":")[1]);
+    return Number.isFinite(id) ? id : null;
+}
+
 export default class MeController {
     /**
      * GET /api/v1/account/me — returns the user, the commerce customer, and (for Iranian
@@ -19,16 +27,33 @@ export default class MeController {
      */
     async show(ctx: HttpContext) {
         const user = ctx.auth.getUserOrFail();
+
+        /**
+         * When the session is an impersonation (a platform operator logged in as this shop admin),
+         * the token carries an `impersonated_by:<platformUserId>` ability. Surfacing it lets the
+         * admin panel render the persistent "you are impersonating" banner + exit control.
+         */
+        const impersonatedBy = parseImpersonatedBy(user.currentAccessToken?.abilities);
+
         await user.load("customer", (q) => q.preload("iranProfile"));
         const customer = user.customer;
 
         if (!customer) {
+            /** Shop staff (admins) have no commerce customer row — that's expected, not a 404. */
+            if (user.role === "admin") {
+                return {
+                    user: new UserTransformer(user).toObject(),
+                    customer: null,
+                    impersonated_by: impersonatedBy,
+                };
+            }
             throw new Exception("Customer profile missing", { status: 404, code: "E_CUSTOMER_MISSING" });
         }
 
         return {
             user: new UserTransformer(user).toObject(),
             customer: new CustomerTransformer(customer).withProfileExtensions(),
+            impersonated_by: impersonatedBy,
         };
     }
 
