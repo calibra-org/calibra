@@ -62,12 +62,32 @@ export default class TenantContextMiddleware {
         const trx = await db.connection(resolveTenantConnection(tenant)).transaction();
         try {
             await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(tenant.id)]);
-            const result = await runWithTenant(BigInt(tenant.id), trx, () => next());
-            await trx.commit();
-            return result;
+            await runWithTenant(BigInt(tenant.id), trx, () => next());
         } catch (error) {
-            await trx.rollback();
+            /**
+             * Defensive: AdonisJS catches handler errors at the server level and renders them, so
+             * `next()` usually resolves even on failure (the response status is the real signal —
+             * see below). This catch only fires for errors thrown by the middleware itself.
+             */
+            if (!trx.isCompleted) {
+                await trx.rollback();
+            }
             throw error;
+        }
+
+        /**
+         * Commit only on success. Because the framework swallows handler exceptions into a rendered
+         * error response, a thrown handler leaves `next()` resolved — so the response status is the
+         * authoritative commit/rollback signal. Any 4xx/5xx rolls back the per-request transaction,
+         * guaranteeing a failed request never persists a partial write.
+         */
+        if (trx.isCompleted) {
+            return;
+        }
+        if (ctx.response.getStatus() >= 400) {
+            await trx.rollback();
+        } else {
+            await trx.commit();
         }
     }
 }
