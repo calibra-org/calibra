@@ -55,12 +55,21 @@ export async function bootstrapRoles(client: QueryClientContract, config: Bootst
     const statements = [
         `GRANT USAGE ON SCHEMA public TO ${app}, ${admin}`,
         `GRANT CREATE ON SCHEMA public TO ${admin}`,
+        /**
+         * App role: DML only. Admin role: full DML on tables it doesn't own too — in the canonical
+         * flow calibra_admin owns the tables it migrates, but when a superuser ran the migrations
+         * (dev DBs, fresh validation) the admin role needs explicit grants to read/write across them.
+         */
         `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${app}`,
         `GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO ${app}`,
+        `GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA public TO ${admin}`,
+        `GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO ${admin}`,
         `ALTER DEFAULT PRIVILEGES FOR ROLE ${admin} IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${app}`,
         `ALTER DEFAULT PRIVILEGES FOR ROLE ${admin} IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO ${app}`,
         `ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${app}`,
         `ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO ${app}`,
+        `ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON TABLES TO ${admin}`,
+        `ALTER DEFAULT PRIVILEGES FOR ROLE CURRENT_USER IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO ${admin}`,
     ];
 
     for (const sql of statements) {
