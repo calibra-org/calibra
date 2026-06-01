@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-
 import type { HttpContext } from "@adonisjs/core/http";
 import hash from "@adonisjs/core/services/hash";
 import db from "@adonisjs/lucid/services/db";
@@ -39,7 +38,9 @@ export default class OtpController {
         if (!ok) {
             recordAuthEvent("login_fail");
             return ctx.response.status(422).send({
-                errors: [{ message: ctx.i18n.t("errors.auth.invalid_otp", {}, "Invalid or expired code"), code: "E_INVALID_OTP" }],
+                errors: [
+                    { message: ctx.i18n.t("errors.auth.invalid_otp", {}, "Invalid or expired code"), code: "E_INVALID_OTP" },
+                ],
             });
         }
 

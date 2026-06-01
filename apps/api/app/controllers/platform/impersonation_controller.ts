@@ -35,9 +35,7 @@ export default class ImpersonationController {
         }
         const target = (await query.orderBy("id", "asc").first()) as User | null;
         if (!target) {
-            return ctx.response
-                .status(404)
-                .send({ errors: [{ message: "No shop admin to impersonate", code: "E_NO_TARGET" }] });
+            return ctx.response.status(404).send({ errors: [{ message: "No shop admin to impersonate", code: "E_NO_TARGET" }] });
         }
 
         const token = await User.accessTokens.create(target, [`impersonated_by:${operator.id}`], { expiresIn: "30 mins" });

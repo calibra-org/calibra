@@ -1,6 +1,6 @@
 import hash from "@adonisjs/core/services/hash";
-import db from "@adonisjs/lucid/services/db";
 import { BaseSeeder } from "@adonisjs/lucid/seeders";
+import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import { runWithTenant } from "#services/tenant_context";

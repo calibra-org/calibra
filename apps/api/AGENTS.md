@@ -127,9 +127,30 @@ apps/api/
 - **Every new endpoint ships with a Japa functional test.** Mandatory, no exceptions. Live under `tests/functional/<domain>/<resource>.spec.ts` (mirror the controller layout — e.g. `app/controllers/admin/reports_controller.ts` → `tests/functional/admin/reports.spec.ts`). Cover at minimum: the unauthenticated 401, an unauthorized 403 (if the route is admin-only or otherwise gated), the happy-path 200 with `response.assertAgainstApiSpec()` (this is what enforces the schema is real), and each meaningful query/filter dimension as its own test. Don't open a PR with a new endpoint and "I tested manually with curl" — the spec assertion *is* the contract and CI runs it.
 - **Response shapes are named components, never inlined.** Anything that returns a domain object (product row, report row, range window, …) gets a schema file at `docs/api/reference/openapi/common/components/schemas/<Entity>.yaml` and is `$ref`'d from the path file. Inlined `properties: { ... }` blocks in path files are a code smell — they hide the entity, prevent reuse, bloat the bundle, and produce anonymous types in the generated SDK. The litmus test: if the same shape might appear in a sibling endpoint *ever*, extract now. Examples already in `common/components/schemas/`: `Money`, `PaginationMeta`, `Address`, `Region`, `Translation`, `BasicMessage`, `ValidationErrorMessage`, `TopProduct`, `ReportRange`.
 
+## Multi-tenancy (bridge model)
+
+One shared Postgres holds every tenant. Each per-tenant row carries `tenant_id BIGINT NOT NULL` and is guarded by `ENABLE` + `FORCE ROW LEVEL SECURITY` with a `tenant_isolation` policy keyed off the `app.current_tenant` GUC. A future whale tenant is promoted to its own database by setting `tenants.connection_name` — `resolveTenantConnection()` (`config/database.ts`) is the seam.
+
+- **Two Postgres roles** (`node ace db:bootstrap-roles`, once, as superuser): `calibra_app` (NOBYPASSRLS) is the runtime role on the default `postgres` connection — RLS is *always* enforced for it, so a query with no GUC set returns **zero rows** (fail-closed). `calibra_admin` (BYPASSRLS) is the `postgres_admin` connection — migrations, seeders, and the queue worker run here to read/write across tenants. Env: `DB_USER`/`DB_PASSWORD` (app), `DB_ADMIN_USER`/`DB_ADMIN_PASSWORD` (admin), `DB_SUPERUSER_*` (bootstrap only).
+- **Run migrations + seeders on `postgres_admin`**: `node ace migration:run --connection=postgres_admin`, `node ace db:seed --connection=postgres_admin`. `just migrate` / `just seed` already do this (and bootstrap roles first).
+- **Per-request context**: `tenant_context_middleware` (server-level, before metrics) resolves the tenant from the `X-Calibra-Tenant` header (id or slug, set by the web/admin BFFs) → falling back to `Host` → `tenant_domains`. It opens a transaction, sets `app.current_tenant` via `set_config(..., true)` (≡ `SET LOCAL`, PgBouncer-safe), and runs the request inside `runWithTenant` (`#services/tenant_context`). Platform (`/api/v1/platform/*`) and infra (`/health*`, `/metrics`) routes skip resolution. A tenant indicated-but-missing → 404; suspended/archived → 503; no tenant indicated → request proceeds unscoped (and sees zero per-tenant rows under `calibra_app`).
+- **Tenant-scoped models** use the `TenantScoped` mixin (`#models/concerns/tenant_scoped`): `compose(<Entity>Schema, TenantScoped)`. It stamps `tenant_id` on insert and binds the model to the request transaction so `Model.query()` rides the GUC automatically. Tenant-scoped controllers never import `db` directly for tenant tables — use the model or `currentTrx()`. **Global / platform controllers use `db.connection("postgres_admin")` explicitly.** Phase 1 applied the mixin to `User` + `OtpCode`; remaining per-tenant models are converted in Phase 2.
+- **Caching**: per-tenant keys/tags must be prefixed via `tenantSegment(tenantId)` (`#services/cache_keys`). `settings_service` is converted; Phase 2 sweeps the rest.
+- **Numbering**: per-tenant order/refund numbers come from `nextNumber("order"|"refund")` (`#services/tenant_numbering_service`) — a `tenant_number_counters` row incremented under the request-txn row lock; numbers restart at 1000 per tenant.
+- **Provisioning**: `TenantProvisioningService` / `node ace tenant:create <slug>` create a tenant + subdomain + defaults (tax/shipping/settings/gateway) + owner admin.
+- **Auth**: shoppers + shop staff live in tenant-scoped `users` (per-tenant email/phone uniqueness); phone/email OTP (`/api/v1/auth/otp/{request,verify}`) + email-password login. Platform operators are global `platform_users` authenticated by the standalone `platformAuth` middleware (`pat_` tokens in `platform_access_tokens`) — kept off `ctx.auth` so the tenant-side user type stays `User`. Impersonation mints a short-lived shop-admin token with an `impersonated_by:<id>` ability, audits to `tenant_impersonation_events`, and is surfaced by `/auth/me` + revoked by `/auth/impersonation/stop`.
+
+> Caveat: minting an access token for a user **created in the same request transaction** fails the token table's FK (the provider runs on its own connection and can't see the uncommitted user). Create such users on the admin connection (committed) before minting — see `otp_controller`.
+
 ## Common commands
 
 ```sh
+# Multi-tenancy
+node ace db:bootstrap-roles             # create calibra_app + calibra_admin (once, superuser)
+node ace tenant:create <slug> --owner-email=… --owner-password=…
+just migrate                            # bootstrap-roles + migration:run --connection=postgres_admin
+just seed                               # db:seed --connection=postgres_admin (provisions 3 demo tenants)
+
 # Dev infra (Postgres + pgAdmin in docker)
 just db-up                              # block until db is healthy
 just db-down                            # stop (volumes persist)

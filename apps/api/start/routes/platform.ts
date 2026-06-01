@@ -17,9 +17,7 @@ router
 
         router
             .group(() => {
-                router
-                    .post("/tenants/:id/impersonate", [ImpersonationController, "start"])
-                    .as("platform.tenants.impersonate");
+                router.post("/tenants/:id/impersonate", [ImpersonationController, "start"]).as("platform.tenants.impersonate");
             })
             .use(middleware.platformAuth());
     })

@@ -1,5 +1,4 @@
 import { randomInt } from "node:crypto";
-
 import hash from "@adonisjs/core/services/hash";
 import logger from "@adonisjs/core/services/logger";
 import { DateTime } from "luxon";

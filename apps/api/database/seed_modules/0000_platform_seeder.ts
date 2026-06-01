@@ -18,21 +18,36 @@ export default class PlatformSeeder extends BaseSeeder {
                 name: "Starter",
                 db_tier: "shared",
                 is_default: true,
-                limits: JSON.stringify({ max_products: 500, max_storage_bytes: 1_000_000_000, max_orders_per_month: 1000, max_staff: 2 }),
+                limits: JSON.stringify({
+                    max_products: 500,
+                    max_storage_bytes: 1_000_000_000,
+                    max_orders_per_month: 1000,
+                    max_staff: 2,
+                }),
             },
             {
                 key: "growth",
                 name: "Growth",
                 db_tier: "shared",
                 is_default: false,
-                limits: JSON.stringify({ max_products: 5000, max_storage_bytes: 10_000_000_000, max_orders_per_month: 20000, max_staff: 10 }),
+                limits: JSON.stringify({
+                    max_products: 5000,
+                    max_storage_bytes: 10_000_000_000,
+                    max_orders_per_month: 20000,
+                    max_staff: 10,
+                }),
             },
             {
                 key: "scale",
                 name: "Scale",
                 db_tier: "dedicated",
                 is_default: false,
-                limits: JSON.stringify({ max_products: 100000, max_storage_bytes: 200_000_000_000, max_orders_per_month: 1000000, max_staff: 50 }),
+                limits: JSON.stringify({
+                    max_products: 100000,
+                    max_storage_bytes: 200_000_000_000,
+                    max_orders_per_month: 1000000,
+                    max_staff: 50,
+                }),
             },
         ];
 

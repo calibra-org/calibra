@@ -40,9 +40,7 @@ export default class TenantContextMiddleware {
         if (headerRef) {
             tenant = await resolveTenantByRef(headerRef);
             if (!tenant) {
-                return ctx.response
-                    .status(404)
-                    .send({ errors: [{ message: "Tenant not found", code: "E_TENANT_NOT_FOUND" }] });
+                return ctx.response.status(404).send({ errors: [{ message: "Tenant not found", code: "E_TENANT_NOT_FOUND" }] });
             }
         } else {
             const host = ctx.request.header("Host")?.split(":")[0];

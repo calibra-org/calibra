@@ -1,6 +1,5 @@
-import { BaseModel, beforeCreate } from "@adonisjs/lucid/orm";
-
 import type { NormalizeConstructor } from "@adonisjs/core/types/helpers";
+import { type BaseModel, beforeCreate } from "@adonisjs/lucid/orm";
 import type { LucidRow } from "@adonisjs/lucid/types/model";
 
 import { maybeTenantContext } from "#services/tenant_context";
@@ -38,7 +37,7 @@ export function TenantScoped<T extends NormalizeConstructor<typeof BaseModel>>(s
             if (ctx && (args[0] === undefined || args[0].client === undefined)) {
                 args[0] = { ...(args[0] ?? {}), client: ctx.trx };
             }
-            return super.query(...args);
+            return superclass.query(...args);
         }
     }
 

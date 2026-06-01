@@ -59,8 +59,14 @@ export default class extends BaseSchema {
         this.schema.raw(
             `ALTER TABLE "${this.tableName}" ADD CONSTRAINT "tenants_db_tier_check" CHECK (db_tier IN ('shared', 'dedicated'))`,
         );
+        /**
+         * Slug format: lowercase alphanumerics with single internal dashes — no leading/trailing or
+         * doubled dashes. Written WITHOUT a `?` quantifier on purpose: knex's `raw()` treats a bare
+         * `?` as a bind placeholder and would mangle the pattern. `[a-z0-9]+(-[a-z0-9]+)*` expresses
+         * the same intent.
+         */
         this.schema.raw(
-            `ALTER TABLE "${this.tableName}" ADD CONSTRAINT "tenants_slug_format_check" CHECK ((slug)::text ~ '^[a-z0-9](-?[a-z0-9]+)*$')`,
+            `ALTER TABLE "${this.tableName}" ADD CONSTRAINT "tenants_slug_format_check" CHECK ((slug)::text ~ '^[a-z0-9]+(-[a-z0-9]+)*$')`,
         );
     }
 

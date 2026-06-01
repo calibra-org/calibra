@@ -26,9 +26,7 @@ router
             .group(() => {
                 router.post("/logout", [LogoutController, "handle"]).as("auth.logout");
                 router.get("/me", [MeController, "show"]).as("auth.me");
-                router
-                    .post("/impersonation/stop", [ImpersonationStopController, "handle"])
-                    .as("auth.impersonation.stop");
+                router.post("/impersonation/stop", [ImpersonationStopController, "handle"]).as("auth.impersonation.stop");
             })
             .use(middleware.auth({ guards: ["api"] }));
     })

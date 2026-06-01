@@ -30,12 +30,7 @@ function ident(value: string): string {
     return `"${value.replaceAll('"', '""')}"`;
 }
 
-async function ensureRole(
-    client: QueryClientContract,
-    role: string,
-    password: string,
-    attributes: string,
-): Promise<void> {
+async function ensureRole(client: QueryClientContract, role: string, password: string, attributes: string): Promise<void> {
     const exists = await client.rawQuery("SELECT 1 FROM pg_roles WHERE rolname = ?", [role]);
     const verb = exists.rows.length > 0 ? "ALTER" : "CREATE";
     await client.rawQuery(`${verb} ROLE ${ident(role)} WITH LOGIN ${attributes} PASSWORD ${lit(password)}`);
