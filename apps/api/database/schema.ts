@@ -8,7 +8,7 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class AdminAuditLogSchema extends BaseModel {
-  static $columns = ['action', 'actorUserId', 'entityId', 'entityKind', 'id', 'ipAddress', 'occurredAt', 'payload'] as const
+  static $columns = ['action', 'actorUserId', 'entityId', 'entityKind', 'id', 'ipAddress', 'occurredAt', 'payload', 'tenantId'] as const
   $columns = AdminAuditLogSchema.$columns
   @column()
   declare action: string
@@ -26,6 +26,8 @@ export class AdminAuditLogSchema extends BaseModel {
   declare occurredAt: DateTime
   @column()
   declare payload: any
+  @column()
+  declare tenantId: bigint | number
 }
 
 export class AuthAccessTokenSchema extends BaseModel {
@@ -54,7 +56,7 @@ export class AuthAccessTokenSchema extends BaseModel {
 }
 
 export class CartAppliedCouponSchema extends BaseModel {
-  static $columns = ['cartId', 'codeSnapshot', 'couponId', 'createdAt', 'id', 'updatedAt'] as const
+  static $columns = ['cartId', 'codeSnapshot', 'couponId', 'createdAt', 'id', 'tenantId', 'updatedAt'] as const
   $columns = CartAppliedCouponSchema.$columns
   @column()
   declare cartId: bigint | number
@@ -66,12 +68,14 @@ export class CartAppliedCouponSchema extends BaseModel {
   declare createdAt: DateTime
   @column({ isPrimary: true })
   declare id: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CartItemSchema extends BaseModel {
-  static $columns = ['attributesSnapshot', 'cartId', 'createdAt', 'id', 'priceSnapshot', 'productId', 'quantity', 'updatedAt', 'variationId'] as const
+  static $columns = ['attributesSnapshot', 'cartId', 'createdAt', 'id', 'priceSnapshot', 'productId', 'quantity', 'tenantId', 'updatedAt', 'variationId'] as const
   $columns = CartItemSchema.$columns
   @column()
   declare attributesSnapshot: any
@@ -87,6 +91,8 @@ export class CartItemSchema extends BaseModel {
   declare productId: bigint | number
   @column()
   declare quantity: number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -94,7 +100,7 @@ export class CartItemSchema extends BaseModel {
 }
 
 export class CartSchema extends BaseModel {
-  static $columns = ['abandonedAt', 'attributes', 'country', 'createdAt', 'currency', 'customerId', 'id', 'ipAddress', 'lastActivityAt', 'postcode', 'regionId', 'shippingZoneMethodId', 'token', 'updatedAt', 'userAgent'] as const
+  static $columns = ['abandonedAt', 'attributes', 'country', 'createdAt', 'currency', 'customerId', 'id', 'ipAddress', 'lastActivityAt', 'postcode', 'regionId', 'shippingZoneMethodId', 'tenantId', 'token', 'updatedAt', 'userAgent'] as const
   $columns = CartSchema.$columns
   @column.dateTime()
   declare abandonedAt: DateTime | null
@@ -121,6 +127,8 @@ export class CartSchema extends BaseModel {
   @column()
   declare shippingZoneMethodId: bigint | number | null
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare token: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
@@ -129,7 +137,7 @@ export class CartSchema extends BaseModel {
 }
 
 export class CouponBrandConstraintSchema extends BaseModel {
-  static $columns = ['brandId', 'couponId', 'createdAt', 'id', 'mode', 'updatedAt'] as const
+  static $columns = ['brandId', 'couponId', 'createdAt', 'id', 'mode', 'tenantId', 'updatedAt'] as const
   $columns = CouponBrandConstraintSchema.$columns
   @column()
   declare brandId: bigint | number
@@ -141,12 +149,14 @@ export class CouponBrandConstraintSchema extends BaseModel {
   declare id: bigint | number
   @column()
   declare mode: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CouponCategoryConstraintSchema extends BaseModel {
-  static $columns = ['categoryId', 'couponId', 'createdAt', 'id', 'mode', 'updatedAt'] as const
+  static $columns = ['categoryId', 'couponId', 'createdAt', 'id', 'mode', 'tenantId', 'updatedAt'] as const
   $columns = CouponCategoryConstraintSchema.$columns
   @column()
   declare categoryId: bigint | number
@@ -158,12 +168,14 @@ export class CouponCategoryConstraintSchema extends BaseModel {
   declare id: bigint | number
   @column()
   declare mode: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CouponEmailRestrictionSchema extends BaseModel {
-  static $columns = ['couponId', 'createdAt', 'emailPattern', 'id', 'updatedAt'] as const
+  static $columns = ['couponId', 'createdAt', 'emailPattern', 'id', 'tenantId', 'updatedAt'] as const
   $columns = CouponEmailRestrictionSchema.$columns
   @column()
   declare couponId: bigint | number
@@ -173,12 +185,14 @@ export class CouponEmailRestrictionSchema extends BaseModel {
   declare emailPattern: string
   @column({ isPrimary: true })
   declare id: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CouponProductConstraintSchema extends BaseModel {
-  static $columns = ['couponId', 'createdAt', 'id', 'mode', 'productId', 'updatedAt'] as const
+  static $columns = ['couponId', 'createdAt', 'id', 'mode', 'productId', 'tenantId', 'updatedAt'] as const
   $columns = CouponProductConstraintSchema.$columns
   @column()
   declare couponId: bigint | number
@@ -190,12 +204,14 @@ export class CouponProductConstraintSchema extends BaseModel {
   declare mode: string
   @column()
   declare productId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CouponRedemptionSchema extends BaseModel {
-  static $columns = ['couponId', 'createdAt', 'customerId', 'emailSnapshot', 'id', 'orderId', 'redeemedAt', 'updatedAt'] as const
+  static $columns = ['couponId', 'createdAt', 'customerId', 'emailSnapshot', 'id', 'orderId', 'redeemedAt', 'tenantId', 'updatedAt'] as const
   $columns = CouponRedemptionSchema.$columns
   @column()
   declare couponId: bigint | number
@@ -211,12 +227,14 @@ export class CouponRedemptionSchema extends BaseModel {
   declare orderId: bigint | number
   @column.dateTime()
   declare redeemedAt: DateTime
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CouponTranslationSchema extends BaseModel {
-  static $columns = ['couponId', 'createdAt', 'description', 'locale', 'updatedAt'] as const
+  static $columns = ['couponId', 'createdAt', 'description', 'locale', 'tenantId', 'updatedAt'] as const
   $columns = CouponTranslationSchema.$columns
   @column({ isPrimary: true })
   declare couponId: bigint | number
@@ -226,12 +244,14 @@ export class CouponTranslationSchema extends BaseModel {
   declare description: string | null
   @column()
   declare locale: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CouponSchema extends BaseModel {
-  static $columns = ['amountMinor', 'amountPercent', 'attributes', 'code', 'createdAt', 'deletedAt', 'discountType', 'excludeSaleItems', 'expiresAt', 'freeShipping', 'id', 'individualUse', 'limitUsageToXItems', 'maximumAmount', 'minimumAmount', 'startsAt', 'status', 'updatedAt', 'usageLimitGlobal', 'usageLimitPerUser'] as const
+  static $columns = ['amountMinor', 'amountPercent', 'attributes', 'code', 'createdAt', 'deletedAt', 'discountType', 'excludeSaleItems', 'expiresAt', 'freeShipping', 'id', 'individualUse', 'limitUsageToXItems', 'maximumAmount', 'minimumAmount', 'startsAt', 'status', 'tenantId', 'updatedAt', 'usageLimitGlobal', 'usageLimitPerUser'] as const
   $columns = CouponSchema.$columns
   @column()
   declare amountMinor: bigint | number | null
@@ -267,6 +287,8 @@ export class CouponSchema extends BaseModel {
   declare startsAt: DateTime | null
   @column()
   declare status: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -305,7 +327,7 @@ export class CurrencySchema extends BaseModel {
 }
 
 export class CustomerAddressSchema extends BaseModel {
-  static $columns = ['addressLine1', 'addressLine2', 'attributes', 'city', 'company', 'country', 'createdAt', 'customerId', 'firstName', 'id', 'isDefault', 'kind', 'label', 'lastName', 'phone', 'postcode', 'regionId', 'regionText', 'updatedAt'] as const
+  static $columns = ['addressLine1', 'addressLine2', 'attributes', 'city', 'company', 'country', 'createdAt', 'customerId', 'firstName', 'id', 'isDefault', 'kind', 'label', 'lastName', 'phone', 'postcode', 'regionId', 'regionText', 'tenantId', 'updatedAt'] as const
   $columns = CustomerAddressSchema.$columns
   @column()
   declare addressLine1: string
@@ -343,12 +365,14 @@ export class CustomerAddressSchema extends BaseModel {
   declare regionId: bigint | number | null
   @column()
   declare regionText: string | null
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CustomerDownloadSchema extends BaseModel {
-  static $columns = ['createdAt', 'customerId', 'downloadLimit', 'downloadsUsed', 'expiresAt', 'grantedAt', 'id', 'orderId', 'productDownloadId', 'productId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'customerId', 'downloadLimit', 'downloadsUsed', 'expiresAt', 'grantedAt', 'id', 'orderId', 'productDownloadId', 'productId', 'tenantId', 'updatedAt'] as const
   $columns = CustomerDownloadSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -370,12 +394,14 @@ export class CustomerDownloadSchema extends BaseModel {
   declare productDownloadId: bigint | number | null
   @column()
   declare productId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CustomerImpersonationEventSchema extends BaseModel {
-  static $columns = ['customerId', 'endedAt', 'id', 'impersonatorUserId', 'ipAddress', 'startedAt', 'userAgent'] as const
+  static $columns = ['customerId', 'endedAt', 'id', 'impersonatorUserId', 'ipAddress', 'startedAt', 'tenantId', 'userAgent'] as const
   $columns = CustomerImpersonationEventSchema.$columns
   @column()
   declare customerId: bigint | number
@@ -390,11 +416,13 @@ export class CustomerImpersonationEventSchema extends BaseModel {
   @column.dateTime()
   declare startedAt: DateTime
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare userAgent: string | null
 }
 
 export class CustomerIranProfileSchema extends BaseModel {
-  static $columns = ['attributes', 'corporateNationalId', 'createdAt', 'customerId', 'economicCode', 'legalCompanyNameFa', 'nationalId', 'updatedAt', 'vatTaxpayerStatus'] as const
+  static $columns = ['attributes', 'corporateNationalId', 'createdAt', 'customerId', 'economicCode', 'legalCompanyNameFa', 'nationalId', 'tenantId', 'updatedAt', 'vatTaxpayerStatus'] as const
   $columns = CustomerIranProfileSchema.$columns
   @column()
   declare attributes: any
@@ -410,6 +438,8 @@ export class CustomerIranProfileSchema extends BaseModel {
   declare legalCompanyNameFa: string | null
   @column()
   declare nationalId: string | null
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -417,7 +447,7 @@ export class CustomerIranProfileSchema extends BaseModel {
 }
 
 export class CustomerMarketingConsentHistorySchema extends BaseModel {
-  static $columns = ['actorUserId', 'channel', 'customerId', 'id', 'occurredAt', 'optedIn', 'source'] as const
+  static $columns = ['actorUserId', 'channel', 'customerId', 'id', 'occurredAt', 'optedIn', 'source', 'tenantId'] as const
   $columns = CustomerMarketingConsentHistorySchema.$columns
   @column()
   declare actorUserId: bigint | number | null
@@ -433,10 +463,12 @@ export class CustomerMarketingConsentHistorySchema extends BaseModel {
   declare optedIn: boolean
   @column()
   declare source: string | null
+  @column()
+  declare tenantId: bigint | number
 }
 
 export class CustomerMarketingPrefSchema extends BaseModel {
-  static $columns = ['customerId', 'emailOptIn', 'emailOptInAt', 'emailOptInSource', 'phoneCallOptIn', 'phoneCallOptInAt', 'phoneCallOptInSource', 'smsOptIn', 'smsOptInAt', 'smsOptInSource', 'updatedAt'] as const
+  static $columns = ['customerId', 'emailOptIn', 'emailOptInAt', 'emailOptInSource', 'phoneCallOptIn', 'phoneCallOptInAt', 'phoneCallOptInSource', 'smsOptIn', 'smsOptInAt', 'smsOptInSource', 'tenantId', 'updatedAt'] as const
   $columns = CustomerMarketingPrefSchema.$columns
   @column({ isPrimary: true })
   declare customerId: bigint | number
@@ -458,12 +490,14 @@ export class CustomerMarketingPrefSchema extends BaseModel {
   declare smsOptInAt: DateTime | null
   @column()
   declare smsOptInSource: string | null
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CustomerMergeHistorySchema extends BaseModel {
-  static $columns = ['actorUserId', 'id', 'mergedCustomerId', 'occurredAt', 'primaryCustomerId', 'snapshot', 'strategy'] as const
+  static $columns = ['actorUserId', 'id', 'mergedCustomerId', 'occurredAt', 'primaryCustomerId', 'snapshot', 'strategy', 'tenantId'] as const
   $columns = CustomerMergeHistorySchema.$columns
   @column()
   declare actorUserId: bigint | number | null
@@ -479,10 +513,12 @@ export class CustomerMergeHistorySchema extends BaseModel {
   declare snapshot: any
   @column()
   declare strategy: any
+  @column()
+  declare tenantId: bigint | number
 }
 
 export class CustomerNoteSchema extends BaseModel {
-  static $columns = ['authorUserId', 'body', 'createdAt', 'customerId', 'id', 'updatedAt'] as const
+  static $columns = ['authorUserId', 'body', 'createdAt', 'customerId', 'id', 'tenantId', 'updatedAt'] as const
   $columns = CustomerNoteSchema.$columns
   @column()
   declare authorUserId: bigint | number | null
@@ -494,12 +530,14 @@ export class CustomerNoteSchema extends BaseModel {
   declare customerId: bigint | number
   @column({ isPrimary: true })
   declare id: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class CustomerSegmentSchema extends BaseModel {
-  static $columns = ['createdAt', 'filters', 'id', 'isPinned', 'lastUsedAt', 'name', 'updatedAt', 'userId'] as const
+  static $columns = ['createdAt', 'filters', 'id', 'isPinned', 'lastUsedAt', 'name', 'tenantId', 'updatedAt', 'userId'] as const
   $columns = CustomerSegmentSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -513,6 +551,8 @@ export class CustomerSegmentSchema extends BaseModel {
   declare lastUsedAt: DateTime | null
   @column()
   declare name: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -520,7 +560,7 @@ export class CustomerSegmentSchema extends BaseModel {
 }
 
 export class CustomerStatusHistorySchema extends BaseModel {
-  static $columns = ['actorUserId', 'customerId', 'fromStatus', 'id', 'occurredAt', 'reason', 'toStatus'] as const
+  static $columns = ['actorUserId', 'customerId', 'fromStatus', 'id', 'occurredAt', 'reason', 'tenantId', 'toStatus'] as const
   $columns = CustomerStatusHistorySchema.$columns
   @column()
   declare actorUserId: bigint | number | null
@@ -535,11 +575,13 @@ export class CustomerStatusHistorySchema extends BaseModel {
   @column()
   declare reason: string | null
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare toStatus: string
 }
 
 export class CustomerTagPivotSchema extends BaseModel {
-  static $columns = ['createdAt', 'customerId', 'tagId'] as const
+  static $columns = ['createdAt', 'customerId', 'tagId', 'tenantId'] as const
   $columns = CustomerTagPivotSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -547,10 +589,12 @@ export class CustomerTagPivotSchema extends BaseModel {
   declare customerId: bigint | number
   @column()
   declare tagId: bigint | number
+  @column()
+  declare tenantId: bigint | number
 }
 
 export class CustomerTagSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'name'] as const
+  static $columns = ['createdAt', 'id', 'name', 'tenantId'] as const
   $columns = CustomerTagSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -558,10 +602,12 @@ export class CustomerTagSchema extends BaseModel {
   declare id: bigint | number
   @column()
   declare name: string
+  @column()
+  declare tenantId: bigint | number
 }
 
 export class CustomerSchema extends BaseModel {
-  static $columns = ['acquisitionChannel', 'attributes', 'countryDefault', 'createdAt', 'deletedAt', 'firstName', 'id', 'isPayingCustomer', 'lastName', 'lastSeenAt', 'phone', 'status', 'updatedAt', 'userId'] as const
+  static $columns = ['acquisitionChannel', 'attributes', 'countryDefault', 'createdAt', 'deletedAt', 'firstName', 'id', 'isPayingCustomer', 'lastName', 'lastSeenAt', 'phone', 'status', 'tenantId', 'updatedAt', 'userId'] as const
   $columns = CustomerSchema.$columns
   @column()
   declare acquisitionChannel: string | null
@@ -587,6 +633,8 @@ export class CustomerSchema extends BaseModel {
   declare phone: string | null
   @column()
   declare status: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -594,7 +642,7 @@ export class CustomerSchema extends BaseModel {
 }
 
 export class InventoryItemSchema extends BaseModel {
-  static $columns = ['backorders', 'createdAt', 'id', 'locationId', 'lowStockThreshold', 'manageStock', 'productId', 'stockQuantity', 'stockStatus', 'updatedAt', 'variationId'] as const
+  static $columns = ['backorders', 'createdAt', 'id', 'locationId', 'lowStockThreshold', 'manageStock', 'productId', 'stockQuantity', 'stockStatus', 'tenantId', 'updatedAt', 'variationId'] as const
   $columns = InventoryItemSchema.$columns
   @column()
   declare backorders: string
@@ -614,6 +662,8 @@ export class InventoryItemSchema extends BaseModel {
   declare stockQuantity: number
   @column()
   declare stockStatus: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -621,7 +671,7 @@ export class InventoryItemSchema extends BaseModel {
 }
 
 export class InventoryMovementSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'inventoryItemId', 'kind', 'notes', 'occurredAt', 'quantityDelta', 'refId', 'refKind', 'updatedAt'] as const
+  static $columns = ['createdAt', 'id', 'inventoryItemId', 'kind', 'notes', 'occurredAt', 'quantityDelta', 'refId', 'refKind', 'tenantId', 'updatedAt'] as const
   $columns = InventoryMovementSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -641,12 +691,14 @@ export class InventoryMovementSchema extends BaseModel {
   declare refId: bigint | number | null
   @column()
   declare refKind: string | null
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class MediaSchema extends BaseModel {
-  static $columns = ['alt', 'attributes', 'caption', 'createdAt', 'description', 'filename', 'height', 'id', 'kind', 'mime', 'sizeBytes', 'title', 'updatedAt', 'uploadedByUserId', 'url', 'width'] as const
+  static $columns = ['alt', 'attributes', 'caption', 'createdAt', 'description', 'filename', 'height', 'id', 'kind', 'mime', 'sizeBytes', 'tenantId', 'title', 'updatedAt', 'uploadedByUserId', 'url', 'width'] as const
   $columns = MediaSchema.$columns
   @column()
   declare alt: string | null
@@ -671,6 +723,8 @@ export class MediaSchema extends BaseModel {
   @column()
   declare sizeBytes: bigint | number | null
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare title: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
@@ -683,7 +737,7 @@ export class MediaSchema extends BaseModel {
 }
 
 export class OrderAddressIranExtensionSchema extends BaseModel {
-  static $columns = ['attributes', 'corporateNationalId', 'createdAt', 'economicCode', 'legalCompanyNameFa', 'nationalId', 'orderAddressId', 'updatedAt'] as const
+  static $columns = ['attributes', 'corporateNationalId', 'createdAt', 'economicCode', 'legalCompanyNameFa', 'nationalId', 'orderAddressId', 'tenantId', 'updatedAt'] as const
   $columns = OrderAddressIranExtensionSchema.$columns
   @column()
   declare attributes: any
@@ -699,12 +753,14 @@ export class OrderAddressIranExtensionSchema extends BaseModel {
   declare nationalId: string | null
   @column({ isPrimary: true })
   declare orderAddressId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class OrderAddressSchema extends BaseModel {
-  static $columns = ['addressLine1', 'addressLine2', 'attributes', 'city', 'company', 'country', 'createdAt', 'email', 'firstName', 'id', 'kind', 'lastName', 'orderId', 'phone', 'postcode', 'regionId', 'regionText', 'updatedAt'] as const
+  static $columns = ['addressLine1', 'addressLine2', 'attributes', 'city', 'company', 'country', 'createdAt', 'email', 'firstName', 'id', 'kind', 'lastName', 'orderId', 'phone', 'postcode', 'regionId', 'regionText', 'tenantId', 'updatedAt'] as const
   $columns = OrderAddressSchema.$columns
   @column()
   declare addressLine1: string
@@ -740,12 +796,14 @@ export class OrderAddressSchema extends BaseModel {
   declare regionId: bigint | number | null
   @column()
   declare regionText: string | null
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class OrderCouponLineSchema extends BaseModel {
-  static $columns = ['codeSnapshot', 'couponId', 'createdAt', 'discount', 'discountTax', 'id', 'orderId', 'updatedAt'] as const
+  static $columns = ['codeSnapshot', 'couponId', 'createdAt', 'discount', 'discountTax', 'id', 'orderId', 'tenantId', 'updatedAt'] as const
   $columns = OrderCouponLineSchema.$columns
   @column()
   declare codeSnapshot: string
@@ -761,12 +819,14 @@ export class OrderCouponLineSchema extends BaseModel {
   declare id: bigint | number
   @column()
   declare orderId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class OrderDocumentSchema extends BaseModel {
-  static $columns = ['amountMinor', 'attributes', 'createdAt', 'currency', 'currencyDisplay', 'id', 'issuedAt', 'issuedByUserId', 'locale', 'number', 'orderId', 'pdfMediaId', 'status', 'type', 'updatedAt'] as const
+  static $columns = ['amountMinor', 'attributes', 'createdAt', 'currency', 'currencyDisplay', 'id', 'issuedAt', 'issuedByUserId', 'locale', 'number', 'orderId', 'pdfMediaId', 'status', 'tenantId', 'type', 'updatedAt'] as const
   $columns = OrderDocumentSchema.$columns
   @column()
   declare amountMinor: bigint | number
@@ -795,13 +855,15 @@ export class OrderDocumentSchema extends BaseModel {
   @column()
   declare status: string
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare type: any
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class OrderFeeLineSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'nameSnapshot', 'orderId', 'taxClassIdSnapshot', 'taxable', 'total', 'totalTax', 'updatedAt'] as const
+  static $columns = ['createdAt', 'id', 'nameSnapshot', 'orderId', 'taxClassIdSnapshot', 'taxable', 'tenantId', 'total', 'totalTax', 'updatedAt'] as const
   $columns = OrderFeeLineSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -816,6 +878,8 @@ export class OrderFeeLineSchema extends BaseModel {
   @column()
   declare taxable: boolean
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare total: bigint | number
   @column()
   declare totalTax: bigint | number
@@ -824,7 +888,7 @@ export class OrderFeeLineSchema extends BaseModel {
 }
 
 export class OrderLineItemTaxSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'lineItemId', 'shippingTaxAmount', 'taxAmount', 'taxRateId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'id', 'lineItemId', 'shippingTaxAmount', 'taxAmount', 'taxRateId', 'tenantId', 'updatedAt'] as const
   $columns = OrderLineItemTaxSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -838,12 +902,14 @@ export class OrderLineItemTaxSchema extends BaseModel {
   declare taxAmount: bigint | number
   @column()
   declare taxRateId: bigint | number | null
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class OrderLineItemSchema extends BaseModel {
-  static $columns = ['attributesSnapshot', 'createdAt', 'id', 'nameSnapshot', 'orderId', 'priceSnapshot', 'productId', 'quantity', 'skuSnapshot', 'subtotal', 'subtotalTax', 'taxClassIdSnapshot', 'total', 'totalTax', 'updatedAt', 'variationId'] as const
+  static $columns = ['attributesSnapshot', 'createdAt', 'id', 'nameSnapshot', 'orderId', 'priceSnapshot', 'productId', 'quantity', 'skuSnapshot', 'subtotal', 'subtotalTax', 'taxClassIdSnapshot', 'tenantId', 'total', 'totalTax', 'updatedAt', 'variationId'] as const
   $columns = OrderLineItemSchema.$columns
   @column()
   declare attributesSnapshot: any
@@ -870,6 +936,8 @@ export class OrderLineItemSchema extends BaseModel {
   @column()
   declare taxClassIdSnapshot: bigint | number | null
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare total: bigint | number
   @column()
   declare totalTax: bigint | number
@@ -880,7 +948,7 @@ export class OrderLineItemSchema extends BaseModel {
 }
 
 export class OrderMetaSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'key', 'orderId', 'updatedAt', 'value'] as const
+  static $columns = ['createdAt', 'id', 'key', 'orderId', 'tenantId', 'updatedAt', 'value'] as const
   $columns = OrderMetaSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -890,6 +958,8 @@ export class OrderMetaSchema extends BaseModel {
   declare key: string
   @column()
   declare orderId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -897,7 +967,7 @@ export class OrderMetaSchema extends BaseModel {
 }
 
 export class OrderNoteSchema extends BaseModel {
-  static $columns = ['attributes', 'authorUserId', 'body', 'createdAt', 'id', 'orderId', 'updatedAt', 'visibility'] as const
+  static $columns = ['attributes', 'authorUserId', 'body', 'createdAt', 'id', 'orderId', 'tenantId', 'updatedAt', 'visibility'] as const
   $columns = OrderNoteSchema.$columns
   @column()
   declare attributes: any
@@ -911,6 +981,8 @@ export class OrderNoteSchema extends BaseModel {
   declare id: bigint | number
   @column()
   declare orderId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -918,7 +990,7 @@ export class OrderNoteSchema extends BaseModel {
 }
 
 export class OrderRefundLineItemSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'orderLineItemId', 'quantity', 'refundAmountMinor', 'refundId', 'refundTaxMinor', 'updatedAt'] as const
+  static $columns = ['createdAt', 'id', 'orderLineItemId', 'quantity', 'refundAmountMinor', 'refundId', 'refundTaxMinor', 'tenantId', 'updatedAt'] as const
   $columns = OrderRefundLineItemSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -934,12 +1006,14 @@ export class OrderRefundLineItemSchema extends BaseModel {
   declare refundId: bigint | number
   @column()
   declare refundTaxMinor: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class OrderRefundSchema extends BaseModel {
-  static $columns = ['amountMinor', 'attributes', 'createdAt', 'gatewayRefundId', 'id', 'idempotencyKey', 'orderId', 'processedAt', 'reason', 'refundNumber', 'refundedByUserId', 'restockRequested', 'taxAmountMinor', 'updatedAt'] as const
+  static $columns = ['amountMinor', 'attributes', 'createdAt', 'gatewayRefundId', 'id', 'idempotencyKey', 'orderId', 'processedAt', 'reason', 'refundNumber', 'refundedByUserId', 'restockRequested', 'taxAmountMinor', 'tenantId', 'updatedAt'] as const
   $columns = OrderRefundSchema.$columns
   @column()
   declare amountMinor: bigint | number
@@ -967,12 +1041,14 @@ export class OrderRefundSchema extends BaseModel {
   declare restockRequested: boolean
   @column()
   declare taxAmountMinor: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class OrderShippingLineSchema extends BaseModel {
-  static $columns = ['attributes', 'createdAt', 'id', 'instanceIdSnapshot', 'methodCodeSnapshot', 'methodIdSnapshot', 'orderId', 'titleSnapshot', 'total', 'totalTax', 'updatedAt'] as const
+  static $columns = ['attributes', 'createdAt', 'id', 'instanceIdSnapshot', 'methodCodeSnapshot', 'methodIdSnapshot', 'orderId', 'tenantId', 'titleSnapshot', 'total', 'totalTax', 'updatedAt'] as const
   $columns = OrderShippingLineSchema.$columns
   @column()
   declare attributes: any
@@ -989,6 +1065,8 @@ export class OrderShippingLineSchema extends BaseModel {
   @column()
   declare orderId: bigint | number
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare titleSnapshot: string
   @column()
   declare total: bigint | number
@@ -999,7 +1077,7 @@ export class OrderShippingLineSchema extends BaseModel {
 }
 
 export class OrderStatusHistorySchema extends BaseModel {
-  static $columns = ['changedByUserId', 'createdAt', 'fromStatus', 'id', 'occurredAt', 'orderId', 'reason', 'toStatus', 'updatedAt'] as const
+  static $columns = ['changedByUserId', 'createdAt', 'fromStatus', 'id', 'occurredAt', 'orderId', 'reason', 'tenantId', 'toStatus', 'updatedAt'] as const
   $columns = OrderStatusHistorySchema.$columns
   @column()
   declare changedByUserId: bigint | number | null
@@ -1016,13 +1094,15 @@ export class OrderStatusHistorySchema extends BaseModel {
   @column()
   declare reason: string | null
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare toStatus: any
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class OrderTaxLineSchema extends BaseModel {
-  static $columns = ['compoundSnapshot', 'createdAt', 'id', 'labelSnapshot', 'orderId', 'rateCodeSnapshot', 'ratePercentSnapshot', 'shippingTaxTotal', 'taxRateIdSnapshot', 'taxTotal', 'updatedAt'] as const
+  static $columns = ['compoundSnapshot', 'createdAt', 'id', 'labelSnapshot', 'orderId', 'rateCodeSnapshot', 'ratePercentSnapshot', 'shippingTaxTotal', 'taxRateIdSnapshot', 'taxTotal', 'tenantId', 'updatedAt'] as const
   $columns = OrderTaxLineSchema.$columns
   @column()
   declare compoundSnapshot: boolean
@@ -1044,12 +1124,14 @@ export class OrderTaxLineSchema extends BaseModel {
   declare taxRateIdSnapshot: bigint | number | null
   @column()
   declare taxTotal: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class OrderSchema extends BaseModel {
-  static $columns = ['attributes', 'billingEmail', 'cartHash', 'createdAt', 'createdVia', 'currency', 'currencyDisplay', 'customerId', 'customerNote', 'dateCompletedAt', 'datePaidAt', 'deletedAt', 'discountTaxTotal', 'discountTotal', 'feesTaxTotal', 'feesTotal', 'grandTotal', 'id', 'idempotencyKey', 'ipAddress', 'itemsTaxTotal', 'itemsTotal', 'lastPaymentAttemptId', 'orderKey', 'orderNumber', 'paymentGatewayIdSnapshot', 'paymentMethodCodeSnapshot', 'paymentMethodTitleSnapshot', 'pricesIncludeTax', 'shippingTaxTotal', 'shippingTotal', 'status', 'taxTotal', 'transactionId', 'updatedAt', 'userAgent'] as const
+  static $columns = ['attributes', 'billingEmail', 'cartHash', 'createdAt', 'createdVia', 'currency', 'currencyDisplay', 'customerId', 'customerNote', 'dateCompletedAt', 'datePaidAt', 'deletedAt', 'discountTaxTotal', 'discountTotal', 'feesTaxTotal', 'feesTotal', 'grandTotal', 'id', 'idempotencyKey', 'ipAddress', 'itemsTaxTotal', 'itemsTotal', 'lastPaymentAttemptId', 'orderKey', 'orderNumber', 'paymentGatewayIdSnapshot', 'paymentMethodCodeSnapshot', 'paymentMethodTitleSnapshot', 'pricesIncludeTax', 'shippingTaxTotal', 'shippingTotal', 'status', 'taxTotal', 'tenantId', 'transactionId', 'updatedAt', 'userAgent'] as const
   $columns = OrderSchema.$columns
   @column()
   declare attributes: any
@@ -1118,11 +1200,38 @@ export class OrderSchema extends BaseModel {
   @column()
   declare taxTotal: bigint | number
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare transactionId: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
   declare userAgent: string | null
+}
+
+export class OtpCodeSchema extends BaseModel {
+  static $columns = ['attempts', 'channel', 'codeHash', 'consumedAt', 'createdAt', 'expiresAt', 'id', 'identifier', 'purpose', 'tenantId'] as const
+  $columns = OtpCodeSchema.$columns
+  @column()
+  declare attempts: number
+  @column()
+  declare channel: string
+  @column()
+  declare codeHash: string
+  @column.dateTime()
+  declare consumedAt: DateTime | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare expiresAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare identifier: any
+  @column()
+  declare purpose: string
+  @column()
+  declare tenantId: bigint | number
 }
 
 export class PasswordResetTokenSchema extends BaseModel {
@@ -1145,7 +1254,7 @@ export class PasswordResetTokenSchema extends BaseModel {
 }
 
 export class PaymentAttemptSchema extends BaseModel {
-  static $columns = ['amountMinor', 'createdAt', 'currency', 'errorCode', 'errorMessage', 'gatewayAuthority', 'gatewayCodeSnapshot', 'gatewayId', 'gatewayPayload', 'gatewayTransactionId', 'id', 'idempotencyKey', 'initiatedAt', 'orderId', 'status', 'updatedAt', 'verifiedAt'] as const
+  static $columns = ['amountMinor', 'createdAt', 'currency', 'errorCode', 'errorMessage', 'gatewayAuthority', 'gatewayCodeSnapshot', 'gatewayId', 'gatewayPayload', 'gatewayTransactionId', 'id', 'idempotencyKey', 'initiatedAt', 'orderId', 'status', 'tenantId', 'updatedAt', 'verifiedAt'] as const
   $columns = PaymentAttemptSchema.$columns
   @column()
   declare amountMinor: bigint | number
@@ -1177,6 +1286,8 @@ export class PaymentAttemptSchema extends BaseModel {
   declare orderId: bigint | number
   @column()
   declare status: any
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column.dateTime()
@@ -1184,7 +1295,7 @@ export class PaymentAttemptSchema extends BaseModel {
 }
 
 export class PaymentGatewaySchema extends BaseModel {
-  static $columns = ['attributes', 'code', 'createdAt', 'enabled', 'id', 'ordering', 'settings', 'signedCallback', 'supports', 'updatedAt', 'webhookSecretEnvKey', 'webhookSignatureHeader'] as const
+  static $columns = ['attributes', 'code', 'createdAt', 'enabled', 'id', 'ordering', 'settings', 'signedCallback', 'supports', 'tenantId', 'updatedAt', 'webhookSecretEnvKey', 'webhookSignatureHeader'] as const
   $columns = PaymentGatewaySchema.$columns
   @column()
   declare attributes: any
@@ -1204,6 +1315,8 @@ export class PaymentGatewaySchema extends BaseModel {
   declare signedCallback: boolean
   @column()
   declare supports: any
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -1213,7 +1326,7 @@ export class PaymentGatewaySchema extends BaseModel {
 }
 
 export class PaymentLinkSchema extends BaseModel {
-  static $columns = ['amountMinor', 'attributes', 'code', 'createdAt', 'createdByUserId', 'currency', 'description', 'expiresAt', 'gatewayId', 'id', 'maxUses', 'orderId', 'status', 'updatedAt', 'usedCount'] as const
+  static $columns = ['amountMinor', 'attributes', 'code', 'createdAt', 'createdByUserId', 'currency', 'description', 'expiresAt', 'gatewayId', 'id', 'maxUses', 'orderId', 'status', 'tenantId', 'updatedAt', 'usedCount'] as const
   $columns = PaymentLinkSchema.$columns
   @column()
   declare amountMinor: bigint | number
@@ -1241,14 +1354,85 @@ export class PaymentLinkSchema extends BaseModel {
   declare orderId: bigint | number | null
   @column()
   declare status: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
   declare usedCount: number
 }
 
+export class PlanSchema extends BaseModel {
+  static $columns = ['createdAt', 'dbTier', 'id', 'isDefault', 'key', 'limits', 'name', 'updatedAt'] as const
+  $columns = PlanSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare dbTier: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare isDefault: boolean
+  @column()
+  declare key: string
+  @column()
+  declare limits: any
+  @column()
+  declare name: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class PlatformAccessTokenSchema extends BaseModel {
+  static $columns = ['abilities', 'createdAt', 'expiresAt', 'hash', 'id', 'lastUsedAt', 'name', 'tokenableId', 'type', 'updatedAt'] as const
+  $columns = PlatformAccessTokenSchema.$columns
+  @column()
+  declare abilities: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare expiresAt: DateTime | null
+  @column()
+  declare hash: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime()
+  declare lastUsedAt: DateTime | null
+  @column()
+  declare name: string | null
+  @column()
+  declare tokenableId: bigint | number
+  @column()
+  declare type: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class PlatformUserSchema extends BaseModel {
+  static $columns = ['createdAt', 'deletedAt', 'email', 'id', 'lastLoginAt', 'name', 'passwordHash', 'role', 'updatedAt'] as const
+  $columns = PlatformUserSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+  @column()
+  declare email: any
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column.dateTime()
+  declare lastLoginAt: DateTime | null
+  @column()
+  declare name: string
+  @column()
+  declare passwordHash: string
+  @column()
+  declare role: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
 export class ProcessedWebhookEventSchema extends BaseModel {
-  static $columns = ['createdAt', 'eventId', 'eventKind', 'id', 'orderId', 'outcome', 'payloadHash', 'paymentAttemptId', 'processedAt', 'provider', 'receivedAt', 'updatedAt'] as const
+  static $columns = ['createdAt', 'eventId', 'eventKind', 'id', 'orderId', 'outcome', 'payloadHash', 'paymentAttemptId', 'processedAt', 'provider', 'receivedAt', 'tenantId', 'updatedAt'] as const
   $columns = ProcessedWebhookEventSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1272,12 +1456,14 @@ export class ProcessedWebhookEventSchema extends BaseModel {
   declare provider: string
   @column.dateTime()
   declare receivedAt: DateTime
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductAttributeLinkTermSchema extends BaseModel {
-  static $columns = ['createdAt', 'linkId', 'position', 'termId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'linkId', 'position', 'tenantId', 'termId', 'updatedAt'] as const
   $columns = ProductAttributeLinkTermSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1286,13 +1472,15 @@ export class ProductAttributeLinkTermSchema extends BaseModel {
   @column()
   declare position: number
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare termId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductAttributeLinkSchema extends BaseModel {
-  static $columns = ['attributeId', 'createdAt', 'displayType', 'id', 'position', 'productId', 'updatedAt', 'usedForVariation', 'visible'] as const
+  static $columns = ['attributeId', 'createdAt', 'displayType', 'id', 'position', 'productId', 'tenantId', 'updatedAt', 'usedForVariation', 'visible'] as const
   $columns = ProductAttributeLinkSchema.$columns
   @column()
   declare attributeId: bigint | number
@@ -1306,6 +1494,8 @@ export class ProductAttributeLinkSchema extends BaseModel {
   declare position: number
   @column()
   declare productId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -1315,7 +1505,7 @@ export class ProductAttributeLinkSchema extends BaseModel {
 }
 
 export class ProductAttributeTermTranslationSchema extends BaseModel {
-  static $columns = ['createdAt', 'description', 'locale', 'name', 'slug', 'termId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'description', 'locale', 'name', 'slug', 'tenantId', 'termId', 'updatedAt'] as const
   $columns = ProductAttributeTermTranslationSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1327,6 +1517,8 @@ export class ProductAttributeTermTranslationSchema extends BaseModel {
   declare name: string
   @column()
   declare slug: string
+  @column()
+  declare tenantId: bigint | number
   @column({ isPrimary: true })
   declare termId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -1334,7 +1526,7 @@ export class ProductAttributeTermTranslationSchema extends BaseModel {
 }
 
 export class ProductAttributeTermSchema extends BaseModel {
-  static $columns = ['attributeId', 'attributes', 'createdAt', 'id', 'menuOrder', 'updatedAt'] as const
+  static $columns = ['attributeId', 'attributes', 'createdAt', 'id', 'menuOrder', 'tenantId', 'updatedAt'] as const
   $columns = ProductAttributeTermSchema.$columns
   @column()
   declare attributeId: bigint | number
@@ -1346,12 +1538,14 @@ export class ProductAttributeTermSchema extends BaseModel {
   declare id: bigint | number
   @column()
   declare menuOrder: number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductAttributeTranslationSchema extends BaseModel {
-  static $columns = ['attributeId', 'createdAt', 'locale', 'name', 'updatedAt'] as const
+  static $columns = ['attributeId', 'createdAt', 'locale', 'name', 'tenantId', 'updatedAt'] as const
   $columns = ProductAttributeTranslationSchema.$columns
   @column({ isPrimary: true })
   declare attributeId: bigint | number
@@ -1361,12 +1555,14 @@ export class ProductAttributeTranslationSchema extends BaseModel {
   declare locale: string
   @column()
   declare name: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductAttributeSchema extends BaseModel {
-  static $columns = ['attributes', 'code', 'createdAt', 'hasArchives', 'id', 'orderBy', 'updatedAt'] as const
+  static $columns = ['attributes', 'code', 'createdAt', 'hasArchives', 'id', 'orderBy', 'tenantId', 'updatedAt'] as const
   $columns = ProductAttributeSchema.$columns
   @column()
   declare attributes: any
@@ -1380,12 +1576,14 @@ export class ProductAttributeSchema extends BaseModel {
   declare id: bigint | number
   @column()
   declare orderBy: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductBrandLinkSchema extends BaseModel {
-  static $columns = ['brandId', 'createdAt', 'productId', 'updatedAt'] as const
+  static $columns = ['brandId', 'createdAt', 'productId', 'tenantId', 'updatedAt'] as const
   $columns = ProductBrandLinkSchema.$columns
   @column()
   declare brandId: bigint | number
@@ -1393,12 +1591,14 @@ export class ProductBrandLinkSchema extends BaseModel {
   declare createdAt: DateTime
   @column({ isPrimary: true })
   declare productId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductBrandTranslationSchema extends BaseModel {
-  static $columns = ['brandId', 'createdAt', 'description', 'locale', 'name', 'slug', 'updatedAt'] as const
+  static $columns = ['brandId', 'createdAt', 'description', 'locale', 'name', 'slug', 'tenantId', 'updatedAt'] as const
   $columns = ProductBrandTranslationSchema.$columns
   @column({ isPrimary: true })
   declare brandId: bigint | number
@@ -1412,12 +1612,14 @@ export class ProductBrandTranslationSchema extends BaseModel {
   declare name: string
   @column()
   declare slug: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductBrandSchema extends BaseModel {
-  static $columns = ['attributes', 'createdAt', 'id', 'imageMediaId', 'menuOrder', 'updatedAt'] as const
+  static $columns = ['attributes', 'createdAt', 'id', 'imageMediaId', 'menuOrder', 'tenantId', 'updatedAt'] as const
   $columns = ProductBrandSchema.$columns
   @column()
   declare attributes: any
@@ -1429,12 +1631,14 @@ export class ProductBrandSchema extends BaseModel {
   declare imageMediaId: bigint | number | null
   @column()
   declare menuOrder: number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductCategorySchema extends BaseModel {
-  static $columns = ['attributes', 'createdAt', 'display', 'id', 'imageMediaId', 'menuOrder', 'parentId', 'updatedAt'] as const
+  static $columns = ['attributes', 'createdAt', 'display', 'id', 'imageMediaId', 'menuOrder', 'parentId', 'tenantId', 'updatedAt'] as const
   $columns = ProductCategorySchema.$columns
   @column()
   declare attributes: any
@@ -1450,12 +1654,14 @@ export class ProductCategorySchema extends BaseModel {
   declare menuOrder: number
   @column()
   declare parentId: bigint | number | null
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductCategoryLinkSchema extends BaseModel {
-  static $columns = ['categoryId', 'createdAt', 'productId', 'updatedAt'] as const
+  static $columns = ['categoryId', 'createdAt', 'productId', 'tenantId', 'updatedAt'] as const
   $columns = ProductCategoryLinkSchema.$columns
   @column()
   declare categoryId: bigint | number
@@ -1463,12 +1669,14 @@ export class ProductCategoryLinkSchema extends BaseModel {
   declare createdAt: DateTime
   @column({ isPrimary: true })
   declare productId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductCategoryTranslationSchema extends BaseModel {
-  static $columns = ['categoryId', 'createdAt', 'description', 'locale', 'name', 'slug', 'updatedAt'] as const
+  static $columns = ['categoryId', 'createdAt', 'description', 'locale', 'name', 'slug', 'tenantId', 'updatedAt'] as const
   $columns = ProductCategoryTranslationSchema.$columns
   @column({ isPrimary: true })
   declare categoryId: bigint | number
@@ -1482,12 +1690,14 @@ export class ProductCategoryTranslationSchema extends BaseModel {
   declare name: string
   @column()
   declare slug: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductCrossSellSchema extends BaseModel {
-  static $columns = ['createdAt', 'position', 'productId', 'relatedProductId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'position', 'productId', 'relatedProductId', 'tenantId', 'updatedAt'] as const
   $columns = ProductCrossSellSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1497,12 +1707,14 @@ export class ProductCrossSellSchema extends BaseModel {
   declare productId: bigint | number
   @column()
   declare relatedProductId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductCustomAttributeSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'name', 'position', 'productId', 'updatedAt', 'values', 'visible'] as const
+  static $columns = ['createdAt', 'id', 'name', 'position', 'productId', 'tenantId', 'updatedAt', 'values', 'visible'] as const
   $columns = ProductCustomAttributeSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1514,6 +1726,8 @@ export class ProductCustomAttributeSchema extends BaseModel {
   declare position: number
   @column()
   declare productId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -1523,7 +1737,7 @@ export class ProductCustomAttributeSchema extends BaseModel {
 }
 
 export class ProductDownloadSchema extends BaseModel {
-  static $columns = ['createdAt', 'downloadExpiryDays', 'downloadLimit', 'fileLabel', 'id', 'mediaId', 'position', 'productId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'downloadExpiryDays', 'downloadLimit', 'fileLabel', 'id', 'mediaId', 'position', 'productId', 'tenantId', 'updatedAt'] as const
   $columns = ProductDownloadSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1541,12 +1755,14 @@ export class ProductDownloadSchema extends BaseModel {
   declare position: number
   @column()
   declare productId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductExportFilterPresetSchema extends BaseModel {
-  static $columns = ['columns', 'createdAt', 'filters', 'formatOptions', 'id', 'isDefault', 'lastUsedAt', 'name', 'updatedAt', 'userId'] as const
+  static $columns = ['columns', 'createdAt', 'filters', 'formatOptions', 'id', 'isDefault', 'lastUsedAt', 'name', 'tenantId', 'updatedAt', 'userId'] as const
   $columns = ProductExportFilterPresetSchema.$columns
   @column()
   declare columns: any
@@ -1564,6 +1780,8 @@ export class ProductExportFilterPresetSchema extends BaseModel {
   declare lastUsedAt: DateTime | null
   @column()
   declare name: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -1571,7 +1789,7 @@ export class ProductExportFilterPresetSchema extends BaseModel {
 }
 
 export class ProductExportSchema extends BaseModel {
-  static $columns = ['cancellationRequestedAt', 'columns', 'compressed', 'createdAt', 'downloadExpiresAt', 'downloadTokenHash', 'exception', 'filePath', 'fileSizeBytes', 'filters', 'finishedAt', 'formatOptions', 'id', 'originalFilename', 'presetId', 'processedRows', 'scope', 'startedAt', 'status', 'totalRows', 'updatedAt', 'userId'] as const
+  static $columns = ['cancellationRequestedAt', 'columns', 'compressed', 'createdAt', 'downloadExpiresAt', 'downloadTokenHash', 'exception', 'filePath', 'fileSizeBytes', 'filters', 'finishedAt', 'formatOptions', 'id', 'originalFilename', 'presetId', 'processedRows', 'scope', 'startedAt', 'status', 'tenantId', 'totalRows', 'updatedAt', 'userId'] as const
   $columns = ProductExportSchema.$columns
   @column.dateTime()
   declare cancellationRequestedAt: DateTime | null
@@ -1612,6 +1830,8 @@ export class ProductExportSchema extends BaseModel {
   @column()
   declare status: any
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare totalRows: number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
@@ -1620,18 +1840,20 @@ export class ProductExportSchema extends BaseModel {
 }
 
 export class ProductFavoriteSchema extends BaseModel {
-  static $columns = ['createdAt', 'productId', 'userId'] as const
+  static $columns = ['createdAt', 'productId', 'tenantId', 'userId'] as const
   $columns = ProductFavoriteSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
   declare productId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column({ isPrimary: true })
   declare userId: bigint | number
 }
 
 export class ProductGroupMemberSchema extends BaseModel {
-  static $columns = ['createdAt', 'groupProductId', 'memberProductId', 'position', 'updatedAt'] as const
+  static $columns = ['createdAt', 'groupProductId', 'memberProductId', 'position', 'tenantId', 'updatedAt'] as const
   $columns = ProductGroupMemberSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1641,12 +1863,14 @@ export class ProductGroupMemberSchema extends BaseModel {
   declare memberProductId: bigint | number
   @column()
   declare position: number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductImageSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'mediaId', 'position', 'productId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'id', 'mediaId', 'position', 'productId', 'tenantId', 'updatedAt'] as const
   $columns = ProductImageSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1658,12 +1882,14 @@ export class ProductImageSchema extends BaseModel {
   declare position: number
   @column()
   declare productId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductImportChangeSchema extends BaseModel {
-  static $columns = ['createdAt', 'field', 'id', 'importId', 'newValue', 'oldValue', 'op', 'productId', 'rowNumber', 'sku'] as const
+  static $columns = ['createdAt', 'field', 'id', 'importId', 'newValue', 'oldValue', 'op', 'productId', 'rowNumber', 'sku', 'tenantId'] as const
   $columns = ProductImportChangeSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1685,10 +1911,12 @@ export class ProductImportChangeSchema extends BaseModel {
   declare rowNumber: number
   @column()
   declare sku: string | null
+  @column()
+  declare tenantId: bigint | number
 }
 
 export class ProductImportErrorSchema extends BaseModel {
-  static $columns = ['code', 'columnName', 'createdAt', 'id', 'importId', 'message', 'originalValue', 'retriedAt', 'retriedOutcome', 'rowNumber', 'severity', 'sku', 'updatedAt'] as const
+  static $columns = ['code', 'columnName', 'createdAt', 'id', 'importId', 'message', 'originalValue', 'retriedAt', 'retriedOutcome', 'rowNumber', 'severity', 'sku', 'tenantId', 'updatedAt'] as const
   $columns = ProductImportErrorSchema.$columns
   @column()
   declare code: string
@@ -1714,12 +1942,14 @@ export class ProductImportErrorSchema extends BaseModel {
   declare severity: any
   @column()
   declare sku: string | null
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductImportMappingPresetSchema extends BaseModel {
-  static $columns = ['createdAt', 'createdByUserId', 'headerHash', 'id', 'lastUsedAt', 'mapping', 'name', 'updateExisting', 'updatedAt', 'useCount'] as const
+  static $columns = ['createdAt', 'createdByUserId', 'headerHash', 'id', 'lastUsedAt', 'mapping', 'name', 'tenantId', 'updateExisting', 'updatedAt', 'useCount'] as const
   $columns = ProductImportMappingPresetSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1736,6 +1966,8 @@ export class ProductImportMappingPresetSchema extends BaseModel {
   @column()
   declare name: string
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare updateExisting: boolean
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
@@ -1744,7 +1976,7 @@ export class ProductImportMappingPresetSchema extends BaseModel {
 }
 
 export class ProductImportSchema extends BaseModel {
-  static $columns = ['cancellationRequestedAt', 'createdAt', 'createdCount', 'detectedDelimiter', 'detectedEncoding', 'errorReportPath', 'exception', 'failedCount', 'filePath', 'fileSizeBytes', 'finishedAt', 'headerHash', 'id', 'mapping', 'newCategoriesCount', 'newTagsCount', 'originalFilename', 'presetId', 'processedRows', 'queuedAt', 'queuedImagesCount', 'rolledBackAt', 'rolledBackByUserId', 'skippedCount', 'snapshotPath', 'startedAt', 'status', 'totalRows', 'updateExisting', 'updatedAt', 'updatedCount', 'userId'] as const
+  static $columns = ['cancellationRequestedAt', 'createdAt', 'createdCount', 'detectedDelimiter', 'detectedEncoding', 'errorReportPath', 'exception', 'failedCount', 'filePath', 'fileSizeBytes', 'finishedAt', 'headerHash', 'id', 'mapping', 'newCategoriesCount', 'newTagsCount', 'originalFilename', 'presetId', 'processedRows', 'queuedAt', 'queuedImagesCount', 'rolledBackAt', 'rolledBackByUserId', 'skippedCount', 'snapshotPath', 'startedAt', 'status', 'tenantId', 'totalRows', 'updateExisting', 'updatedAt', 'updatedCount', 'userId'] as const
   $columns = ProductImportSchema.$columns
   @column.dateTime()
   declare cancellationRequestedAt: DateTime | null
@@ -1801,6 +2033,8 @@ export class ProductImportSchema extends BaseModel {
   @column()
   declare status: any
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare totalRows: number
   @column()
   declare updateExisting: boolean
@@ -1813,7 +2047,7 @@ export class ProductImportSchema extends BaseModel {
 }
 
 export class ProductReviewSchema extends BaseModel {
-  static $columns = ['body', 'createdAt', 'customerId', 'id', 'productId', 'rating', 'reviewerEmail', 'reviewerName', 'status', 'updatedAt', 'verified'] as const
+  static $columns = ['body', 'createdAt', 'customerId', 'id', 'productId', 'rating', 'reviewerEmail', 'reviewerName', 'status', 'tenantId', 'updatedAt', 'verified'] as const
   $columns = ProductReviewSchema.$columns
   @column()
   declare body: string
@@ -1833,6 +2067,8 @@ export class ProductReviewSchema extends BaseModel {
   declare reviewerName: string
   @column()
   declare status: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -1840,7 +2076,7 @@ export class ProductReviewSchema extends BaseModel {
 }
 
 export class ProductShippingClassTranslationSchema extends BaseModel {
-  static $columns = ['createdAt', 'description', 'locale', 'name', 'shippingClassId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'description', 'locale', 'name', 'shippingClassId', 'tenantId', 'updatedAt'] as const
   $columns = ProductShippingClassTranslationSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1852,12 +2088,14 @@ export class ProductShippingClassTranslationSchema extends BaseModel {
   declare name: string
   @column({ isPrimary: true })
   declare shippingClassId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductShippingClassSchema extends BaseModel {
-  static $columns = ['attributes', 'createdAt', 'id', 'menuOrder', 'slug', 'updatedAt'] as const
+  static $columns = ['attributes', 'createdAt', 'id', 'menuOrder', 'slug', 'tenantId', 'updatedAt'] as const
   $columns = ProductShippingClassSchema.$columns
   @column()
   declare attributes: any
@@ -1869,12 +2107,14 @@ export class ProductShippingClassSchema extends BaseModel {
   declare menuOrder: number
   @column()
   declare slug: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductTagLinkSchema extends BaseModel {
-  static $columns = ['createdAt', 'productId', 'tagId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'productId', 'tagId', 'tenantId', 'updatedAt'] as const
   $columns = ProductTagLinkSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1882,12 +2122,14 @@ export class ProductTagLinkSchema extends BaseModel {
   declare productId: bigint | number
   @column()
   declare tagId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductTagTranslationSchema extends BaseModel {
-  static $columns = ['createdAt', 'description', 'locale', 'name', 'slug', 'tagId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'description', 'locale', 'name', 'slug', 'tagId', 'tenantId', 'updatedAt'] as const
   $columns = ProductTagTranslationSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1901,12 +2143,14 @@ export class ProductTagTranslationSchema extends BaseModel {
   declare slug: string
   @column({ isPrimary: true })
   declare tagId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductTagSchema extends BaseModel {
-  static $columns = ['attributes', 'createdAt', 'id', 'menuOrder', 'updatedAt'] as const
+  static $columns = ['attributes', 'createdAt', 'id', 'menuOrder', 'tenantId', 'updatedAt'] as const
   $columns = ProductTagSchema.$columns
   @column()
   declare attributes: any
@@ -1916,12 +2160,14 @@ export class ProductTagSchema extends BaseModel {
   declare id: bigint | number
   @column()
   declare menuOrder: number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductTranslationSchema extends BaseModel {
-  static $columns = ['createdAt', 'description', 'externalButtonText', 'locale', 'name', 'productId', 'purchaseNote', 'shortDescription', 'slug', 'updatedAt'] as const
+  static $columns = ['createdAt', 'description', 'externalButtonText', 'locale', 'name', 'productId', 'purchaseNote', 'shortDescription', 'slug', 'tenantId', 'updatedAt'] as const
   $columns = ProductTranslationSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1941,12 +2187,14 @@ export class ProductTranslationSchema extends BaseModel {
   declare shortDescription: string | null
   @column()
   declare slug: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductUpsellSchema extends BaseModel {
-  static $columns = ['createdAt', 'position', 'productId', 'relatedProductId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'position', 'productId', 'relatedProductId', 'tenantId', 'updatedAt'] as const
   $columns = ProductUpsellSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1956,17 +2204,21 @@ export class ProductUpsellSchema extends BaseModel {
   declare productId: bigint | number
   @column()
   declare relatedProductId: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ProductVariationAttributeSchema extends BaseModel {
-  static $columns = ['attributeId', 'createdAt', 'termId', 'updatedAt', 'variationId'] as const
+  static $columns = ['attributeId', 'createdAt', 'tenantId', 'termId', 'updatedAt', 'variationId'] as const
   $columns = ProductVariationAttributeSchema.$columns
   @column()
   declare attributeId: bigint | number
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare tenantId: bigint | number
   @column()
   declare termId: bigint | number | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -1976,7 +2228,7 @@ export class ProductVariationAttributeSchema extends BaseModel {
 }
 
 export class ProductVariationTranslationSchema extends BaseModel {
-  static $columns = ['createdAt', 'description', 'locale', 'updatedAt', 'variationId'] as const
+  static $columns = ['createdAt', 'description', 'locale', 'tenantId', 'updatedAt', 'variationId'] as const
   $columns = ProductVariationTranslationSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -1984,6 +2236,8 @@ export class ProductVariationTranslationSchema extends BaseModel {
   declare description: string | null
   @column()
   declare locale: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column({ isPrimary: true })
@@ -1991,7 +2245,7 @@ export class ProductVariationTranslationSchema extends BaseModel {
 }
 
 export class ProductVariationSchema extends BaseModel {
-  static $columns = ['attributes', 'createdAt', 'deletedAt', 'downloadable', 'gtin', 'heightMm', 'id', 'imageMediaId', 'lengthMm', 'manageStockMode', 'menuOrder', 'productId', 'regularPrice', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'sku', 'status', 'taxClassId', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
+  static $columns = ['attributes', 'createdAt', 'deletedAt', 'downloadable', 'gtin', 'heightMm', 'id', 'imageMediaId', 'lengthMm', 'manageStockMode', 'menuOrder', 'productId', 'regularPrice', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'sku', 'status', 'taxClassId', 'tenantId', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
   $columns = ProductVariationSchema.$columns
   @column()
   declare attributes: any
@@ -2031,6 +2285,8 @@ export class ProductVariationSchema extends BaseModel {
   declare status: string
   @column()
   declare taxClassId: bigint | number | null
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
   @column()
@@ -2042,7 +2298,7 @@ export class ProductVariationSchema extends BaseModel {
 }
 
 export class ProductSchema extends BaseModel {
-  static $columns = ['attributes', 'catalogVisibility', 'createdAt', 'defaultVariationId', 'deletedAt', 'downloadable', 'externalUrl', 'featured', 'globalUniqueId', 'gtin', 'heightMm', 'id', 'lengthMm', 'menuOrder', 'posAvailable', 'regularPrice', 'reviewsAllowed', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'shippingClassId', 'sku', 'soldIndividually', 'status', 'taxClassId', 'taxStatus', 'type', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
+  static $columns = ['attributes', 'catalogVisibility', 'createdAt', 'defaultVariationId', 'deletedAt', 'downloadable', 'externalUrl', 'featured', 'globalUniqueId', 'gtin', 'heightMm', 'id', 'lengthMm', 'menuOrder', 'posAvailable', 'regularPrice', 'reviewsAllowed', 'saleEndsAt', 'salePrice', 'saleStartsAt', 'shippingClassId', 'sku', 'soldIndividually', 'status', 'taxClassId', 'taxStatus', 'tenantId', 'type', 'updatedAt', 'virtual', 'weightGrams', 'widthMm'] as const
   $columns = ProductSchema.$columns
   @column()
   declare attributes: any
@@ -2096,6 +2352,8 @@ export class ProductSchema extends BaseModel {
   declare taxClassId: bigint | number | null
   @column()
   declare taxStatus: string
+  @column()
+  declare tenantId: bigint | number
   @column()
   declare type: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -2203,7 +2461,7 @@ export class RegionSchema extends BaseModel {
 }
 
 export class SettingSchema extends BaseModel {
-  static $columns = ['createdAt', 'groupKey', 'key', 'type', 'updatedAt', 'value'] as const
+  static $columns = ['createdAt', 'groupKey', 'key', 'tenantId', 'type', 'updatedAt', 'value'] as const
   $columns = SettingSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -2211,6 +2469,8 @@ export class SettingSchema extends BaseModel {
   declare groupKey: string
   @column()
   declare key: string
+  @column()
+  declare tenantId: bigint | number
   @column()
   declare type: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -2220,7 +2480,7 @@ export class SettingSchema extends BaseModel {
 }
 
 export class ShippingMethodSchema extends BaseModel {
-  static $columns = ['code', 'createdAt', 'descriptionDefault', 'id', 'settingsSchema', 'titleDefault', 'updatedAt'] as const
+  static $columns = ['code', 'createdAt', 'descriptionDefault', 'id', 'settingsSchema', 'tenantId', 'titleDefault', 'updatedAt'] as const
   $columns = ShippingMethodSchema.$columns
   @column()
   declare code: string
@@ -2233,13 +2493,15 @@ export class ShippingMethodSchema extends BaseModel {
   @column()
   declare settingsSchema: any
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare titleDefault: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class ShippingZoneLocationSchema extends BaseModel {
-  static $columns = ['code', 'createdAt', 'id', 'type', 'updatedAt', 'zoneId'] as const
+  static $columns = ['code', 'createdAt', 'id', 'tenantId', 'type', 'updatedAt', 'zoneId'] as const
   $columns = ShippingZoneLocationSchema.$columns
   @column()
   declare code: string
@@ -2247,6 +2509,8 @@ export class ShippingZoneLocationSchema extends BaseModel {
   declare createdAt: DateTime
   @column({ isPrimary: true })
   declare id: bigint | number
+  @column()
+  declare tenantId: bigint | number
   @column()
   declare type: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -2256,7 +2520,7 @@ export class ShippingZoneLocationSchema extends BaseModel {
 }
 
 export class ShippingZoneMethodSchema extends BaseModel {
-  static $columns = ['createdAt', 'enabled', 'id', 'methodId', 'ordering', 'settings', 'titleOverride', 'updatedAt', 'zoneId'] as const
+  static $columns = ['createdAt', 'enabled', 'id', 'methodId', 'ordering', 'settings', 'tenantId', 'titleOverride', 'updatedAt', 'zoneId'] as const
   $columns = ShippingZoneMethodSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -2271,6 +2535,8 @@ export class ShippingZoneMethodSchema extends BaseModel {
   @column()
   declare settings: any
   @column()
+  declare tenantId: bigint | number
+  @column()
   declare titleOverride: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
@@ -2279,7 +2545,7 @@ export class ShippingZoneMethodSchema extends BaseModel {
 }
 
 export class ShippingZoneSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'isFallback', 'name', 'updatedAt'] as const
+  static $columns = ['createdAt', 'id', 'isFallback', 'name', 'tenantId', 'updatedAt'] as const
   $columns = ShippingZoneSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -2289,12 +2555,14 @@ export class ShippingZoneSchema extends BaseModel {
   declare isFallback: boolean
   @column()
   declare name: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class TaxClassSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'name', 'slug', 'updatedAt'] as const
+  static $columns = ['createdAt', 'id', 'name', 'slug', 'tenantId', 'updatedAt'] as const
   $columns = TaxClassSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -2304,12 +2572,14 @@ export class TaxClassSchema extends BaseModel {
   declare name: string
   @column()
   declare slug: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class TaxRateSchema extends BaseModel {
-  static $columns = ['appliesToShipping', 'cities', 'compound', 'country', 'createdAt', 'id', 'label', 'ordering', 'postcodes', 'priority', 'rate', 'regionId', 'taxClassId', 'updatedAt'] as const
+  static $columns = ['appliesToShipping', 'cities', 'compound', 'country', 'createdAt', 'id', 'label', 'ordering', 'postcodes', 'priority', 'rate', 'regionId', 'taxClassId', 'tenantId', 'updatedAt'] as const
   $columns = TaxRateSchema.$columns
   @column()
   declare appliesToShipping: boolean
@@ -2337,19 +2607,132 @@ export class TaxRateSchema extends BaseModel {
   declare regionId: bigint | number | null
   @column()
   declare taxClassId: bigint | number
+  @column()
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class TenantDomainSchema extends BaseModel {
+  static $columns = ['createdAt', 'domain', 'id', 'isPrimary', 'kind', 'tenantId', 'tlsStatus', 'updatedAt', 'verifiedAt'] as const
+  $columns = TenantDomainSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare domain: any
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare isPrimary: boolean
+  @column()
+  declare kind: string
+  @column()
+  declare tenantId: bigint | number
+  @column()
+  declare tlsStatus: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column.dateTime()
+  declare verifiedAt: DateTime | null
+}
+
+export class TenantImpersonationEventSchema extends BaseModel {
+  static $columns = ['endedAt', 'id', 'ipAddress', 'platformUserId', 'reason', 'startedAt', 'targetUserId', 'tenantId'] as const
+  $columns = TenantImpersonationEventSchema.$columns
+  @column.dateTime()
+  declare endedAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare ipAddress: string | null
+  @column()
+  declare platformUserId: bigint | number | null
+  @column()
+  declare reason: string | null
+  @column.dateTime()
+  declare startedAt: DateTime
+  @column()
+  declare targetUserId: bigint | number
+  @column()
+  declare tenantId: bigint | number
+}
+
+export class TenantNumberCounterSchema extends BaseModel {
+  static $columns = ['createdAt', 'kind', 'nextValue', 'tenantId', 'updatedAt'] as const
+  $columns = TenantNumberCounterSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare kind: string
+  @column()
+  declare nextValue: bigint | number
+  @column({ isPrimary: true })
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class TenantUsageDailySchema extends BaseModel {
+  static $columns = ['createdAt', 'day', 'id', 'metric', 'tenantId', 'updatedAt', 'value'] as const
+  $columns = TenantUsageDailySchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.date()
+  declare day: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare metric: string
+  @column()
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare value: bigint | number
+}
+
+export class TenantSchema extends BaseModel {
+  static $columns = ['attributes', 'connectionName', 'createdAt', 'currencyCode', 'dbTier', 'deletedAt', 'id', 'name', 'planId', 'primaryLocale', 'slug', 'status', 'templateKey', 'updatedAt'] as const
+  $columns = TenantSchema.$columns
+  @column()
+  declare attributes: any
+  @column()
+  declare connectionName: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare currencyCode: string
+  @column()
+  declare dbTier: string
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare name: string
+  @column()
+  declare planId: bigint | number
+  @column()
+  declare primaryLocale: string
+  @column()
+  declare slug: any
+  @column()
+  declare status: string
+  @column()
+  declare templateKey: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'deletedAt', 'email', 'id', 'lastLoginAt', 'locale', 'passwordHash', 'role', 'updatedAt'] as const
+  static $columns = ['createdAt', 'deletedAt', 'email', 'id', 'lastLoginAt', 'locale', 'passwordHash', 'phone', 'role', 'tenantId', 'updatedAt'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column.dateTime()
   declare deletedAt: DateTime | null
   @column()
-  declare email: any
+  declare email: any | null
   @column({ isPrimary: true })
   declare id: bigint | number
   @column.dateTime()
@@ -2359,7 +2742,11 @@ export class UserSchema extends BaseModel {
   @column()
   declare passwordHash: string
   @column()
+  declare phone: string | null
+  @column()
   declare role: string
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }
