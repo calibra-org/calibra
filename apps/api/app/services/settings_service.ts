@@ -1,9 +1,9 @@
 import cache from "@adonisjs/cache/services/main";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import Setting, { type SettingValueType } from "#models/setting";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
+import { currentTenantId, maybeTenantContext, maybeTenantId } from "#services/tenant_context";
 
 /**
  * Caching facade in front of the `settings` table. Reads memoize through the default cache store;
@@ -34,21 +34,33 @@ export default class SettingsService {
      */
     async set(group: string, key: string, value: unknown, type: SettingValueType): Promise<void> {
         const now = DateTime.utc().toSQL();
-        await db
+        const tenantId = currentTenantId();
+        const trx = maybeTenantContext()!.trx;
+        await trx
             .table("settings")
-            .insert({ group_key: group, key, value: JSON.stringify(value), type, created_at: now, updated_at: now })
-            .onConflict(["group_key", "key"])
+            .insert({
+                tenant_id: tenantId,
+                group_key: group,
+                key,
+                value: JSON.stringify(value),
+                type,
+                created_at: now,
+                updated_at: now,
+            })
+            .onConflict(["tenant_id", "group_key", "key"])
             .merge(["value", "type", "updated_at"]);
         await this.invalidate(group);
     }
 
     async all(group: string): Promise<Record<string, unknown>> {
+        const tenantId = maybeTenantId();
+        const ctx = maybeTenantContext();
         return cache.getOrSet({
-            key: CacheKeys.settings.group(group),
+            key: CacheKeys.settings.group(group, tenantId),
             ttl: "24h",
-            tags: [CacheTags.settingsGroup(group)],
+            tags: [CacheTags.settingsGroup(group, tenantId)],
             factory: async () => {
-                const rows = await Setting.query().where("group_key", group);
+                const rows = await Setting.query(ctx ? { client: ctx.trx } : {}).where("group_key", group);
                 const map: Record<string, unknown> = {};
                 for (const row of rows) {
                     map[row.key] = row.value;
@@ -72,7 +84,7 @@ export default class SettingsService {
      * settings group and cache key makes the tag layer unnecessary here.
      */
     async invalidate(group: string, _key?: string): Promise<void> {
-        await cache.delete({ key: CacheKeys.settings.group(group) });
+        await cache.delete({ key: CacheKeys.settings.group(group, maybeTenantId()) });
     }
 
     /** Drop every settings cache entry. Used by tests that need a fully cold cache. */

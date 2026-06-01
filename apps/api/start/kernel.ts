@@ -15,6 +15,12 @@ server.use([
     () => import("#middleware/force_json_response_middleware"),
     () => import("#middleware/detect_user_locale_middleware"),
     /**
+     * Tenant context resolves the request's tenant (X-Calibra-Tenant header → Host) and opens a
+     * transaction with the `app.current_tenant` GUC set, so RLS isolates every downstream query.
+     * Mounted before metrics so Phase 2 can label metrics by tenant.
+     */
+    () => import("#middleware/tenant_context_middleware"),
+    /**
      * Metrics middleware sits at the server level (before the router) so it observes
      * every request, including unmatched 404s and authentication 401s. The `/metrics`
      * scrape endpoint reads from the same in-memory store the middleware writes to.
