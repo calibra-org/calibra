@@ -19,13 +19,14 @@ export interface ResolvedTenant {
 
 const ADMIN_CONNECTION = "postgres_admin";
 
+/** knex object-select maps `{ alias: "table.column" }`. */
 const COLUMNS = {
-    "tenants.id": "id",
-    "tenants.slug": "slug",
-    "tenants.status": "status",
-    "tenants.connection_name": "connectionName",
-    "tenants.currency_code": "currencyCode",
-    "tenants.primary_locale": "primaryLocale",
+    id: "tenants.id",
+    slug: "tenants.slug",
+    status: "tenants.status",
+    connectionName: "tenants.connection_name",
+    currencyCode: "tenants.currency_code",
+    primaryLocale: "tenants.primary_locale",
 };
 
 /**
