@@ -4,6 +4,8 @@ import { test } from "@japa/runner";
 
 import { createAdmin } from "./helpers.js";
 import BulkDatasetSeeder, { FIXED_ADMINS } from "#database/seed_modules/0010_bulk_dataset_seeder";
+import { runWithTenant } from "#services/tenant_context";
+import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 /**
  * Scale-test coverage that runs against a real bulk-seeded dataset (≈1k products / 100 customers
@@ -26,9 +28,19 @@ test.group("Admin products list — bulk-seeded scale", (group) => {
          */
         const truncate = await testUtils.db().truncate();
         await truncate();
-        const seeder = new BulkDatasetSeeder(db.connection());
-        seeder.setOptions({ products: 1_000, users: 100, orders: 50, reset: false });
-        await seeder.run();
+        /**
+         * The bulk seeder is multi-tenant — its per-tenant numbering reads the active tenant context.
+         * Run it inside the test tenant's context (transaction + GUC) so it seeds against `test` and
+         * the committed rows are visible to the read-only HTTP assertions below.
+         */
+        await db.transaction(async (trx) => {
+            await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(TEST_TENANT_ID)]);
+            await runWithTenant(BigInt(TEST_TENANT_ID), trx, async () => {
+                const seeder = new BulkDatasetSeeder(trx);
+                seeder.setOptions({ products: 1_000, users: 100, orders: 50, reset: false });
+                await seeder.run();
+            });
+        });
         admin = await createAdmin();
     });
 

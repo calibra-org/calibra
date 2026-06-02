@@ -76,25 +76,19 @@ export async function ensureTestTenant(): Promise<number> {
  */
 export async function seedTestTenant(): Promise<number> {
     await ensureTestTenant();
+    /**
+     * The `tenant_id` column default reads `app.current_tenant`, supplied per-connection by the
+     * `DB_DEFAULT_TENANT` pool hook in `config/database.ts` (see `.env.test`). Defensively clear any
+     * lingering database-level default from a previously-bootstrapped local DB so it never leaks onto
+     * the dedicated `calibra_app` connection the RLS isolation spec opens — that connection must see a
+     * genuinely unset GUC to prove fail-closed behaviour. Best-effort: ignored when not permitted.
+     */
     const database = env.get("DB_DATABASE").replaceAll('"', '""');
-    const role = env.get("DB_USER").replaceAll('"', '""');
-    /**
-     * Pin the GUC default on the runtime ROLE (the test superuser) rather than the database, so the
-     * `tenant_id` column default fills for factory inserts WITHOUT leaking onto the dedicated
-     * `calibra_app` connection the RLS isolation spec opens — that connection must see a genuinely
-     * unset `app.current_tenant` to prove fail-closed behaviour. Resetting the old database-level
-     * default keeps a previously-bootstrapped DB from carrying both. Requires superuser/owner.
-     */
-    const conn = db.connection();
-    await conn.rawQuery(`ALTER DATABASE "${database}" RESET app.current_tenant`);
-    await conn.rawQuery(`ALTER ROLE "${role}" IN DATABASE "${database}" SET app.current_tenant = '${TEST_TENANT_ID}'`);
-    /**
-     * The role default only applies at LOGIN. Connections opened earlier in runner setup (during
-     * `migrate()`) carry no GUC, so recycle the pools: every subsequent query re-logs-in and inherits
-     * the default. Without this, raw/factory inserts that rely on the `tenant_id` column default fail
-     * the NOT NULL constraint on a fresh database (CI), where no prior database-level default lingers.
-     */
-    await db.manager.closeAll();
+    try {
+        await db.connection().rawQuery(`ALTER DATABASE "${database}" RESET app.current_tenant`);
+    } catch {
+        /* not owner / insufficient privilege — the pool hook still supplies the GUC */
+    }
     return TEST_TENANT_ID;
 }
 

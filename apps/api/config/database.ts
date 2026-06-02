@@ -25,6 +25,29 @@ const sharedDatabase = env.get("DB_DATABASE");
 const host = env.get("DB_HOST");
 const port = env.get("DB_PORT");
 
+/**
+ * TEST-ONLY pool hook. When `DB_DEFAULT_TENANT` is set (only `.env.test`), every connection seeds a
+ * session-level `app.current_tenant` at creation, so the `tenant_id` column default fills for
+ * factory/seeder inserts that run outside a request. This is robust against connection-pool timing —
+ * unlike a login-time role/database default, which connections opened before test bootstrap would
+ * miss. Per-request work overrides it via `SET LOCAL` in `tenant_context_middleware`; the RLS
+ * isolation spec opens a separate `calibra_app` connection WITHOUT this hook to prove fail-closed
+ * behaviour. Empty (no hook) in production, where a session-level default would collapse isolation.
+ */
+const defaultTenant = env.get("DB_DEFAULT_TENANT");
+const testPool = defaultTenant
+    ? {
+          pool: {
+              afterCreate(
+                  connection: { query: (sql: string, cb: (err: Error | null) => void) => void },
+                  done: (err: Error | null, connection: unknown) => void,
+              ) {
+                  connection.query(`SET app.current_tenant = '${defaultTenant}'`, (err) => done(err, connection));
+              },
+          },
+      }
+    : {};
+
 const dbConfig = defineConfig({
     connection: "postgres",
     connections: {
@@ -37,6 +60,7 @@ const dbConfig = defineConfig({
                 password: env.get("DB_PASSWORD"),
                 database: sharedDatabase,
             },
+            ...testPool,
             migrations: {
                 naturalSort: true,
                 paths: ["database/migrations"],
@@ -55,6 +79,7 @@ const dbConfig = defineConfig({
                 password: env.get("DB_ADMIN_PASSWORD") ?? env.get("DB_PASSWORD"),
                 database: sharedDatabase,
             },
+            ...testPool,
             migrations: {
                 naturalSort: true,
                 paths: ["database/migrations"],

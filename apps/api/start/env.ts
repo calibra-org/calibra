@@ -37,6 +37,13 @@ export default await Env.create(new URL("../", import.meta.url), {
     DB_ADMIN_PASSWORD: Env.schema.string.optional(),
     DB_SUPERUSER_USER: Env.schema.string.optional(),
     DB_SUPERUSER_PASSWORD: Env.schema.string.optional(),
+    /**
+     * TEST-ONLY. When set (only in `.env.test`), every pooled connection seeds a session-level
+     * `app.current_tenant` so the `tenant_id` column default fills for factory/seeder inserts that
+     * run outside a request. Per-request work overrides it via `SET LOCAL`. NEVER set in production —
+     * a session default there would collapse tenant isolation.
+     */
+    DB_DEFAULT_TENANT: Env.schema.number.optional(),
 
     /**
      * SMS delivery for phone-OTP. `log` (default) writes the code to Pino — the dev/test driver,
