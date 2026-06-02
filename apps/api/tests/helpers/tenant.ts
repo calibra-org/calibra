@@ -88,6 +88,13 @@ export async function seedTestTenant(): Promise<number> {
     const conn = db.connection();
     await conn.rawQuery(`ALTER DATABASE "${database}" RESET app.current_tenant`);
     await conn.rawQuery(`ALTER ROLE "${role}" IN DATABASE "${database}" SET app.current_tenant = '${TEST_TENANT_ID}'`);
+    /**
+     * The role default only applies at LOGIN. Connections opened earlier in runner setup (during
+     * `migrate()`) carry no GUC, so recycle the pools: every subsequent query re-logs-in and inherits
+     * the default. Without this, raw/factory inserts that rely on the `tenant_id` column default fail
+     * the NOT NULL constraint on a fresh database (CI), where no prior database-level default lingers.
+     */
+    await db.manager.closeAll();
     return TEST_TENANT_ID;
 }
 
