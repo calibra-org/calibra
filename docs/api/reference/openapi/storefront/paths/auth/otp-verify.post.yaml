@@ -1,0 +1,40 @@
+operationId: authOtpVerify
+summary: Verify a one-time code and mint a token
+description: >
+    Verifies the 6-digit `code` for the `identifier`. On success, finds or creates the shopper within
+    the current tenant (two tenants with the same phone get two distinct users) and returns a fresh
+    bearer token. An invalid or expired code returns 422 with `code: E_INVALID_OTP`.
+tags: [Auth]
+security: []
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [identifier, code]
+                properties:
+                    identifier:
+                        type: string
+                        minLength: 3
+                        maxLength: 254
+                        examples: ["09121234567"]
+                    code:
+                        type: string
+                        minLength: 6
+                        maxLength: 6
+                        examples: ["123456"]
+
+responses:
+    "200":
+        description: Code verified. The response carries the user envelope plus a fresh bearer token.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/AuthSession.yaml" }
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

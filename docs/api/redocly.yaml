@@ -3,5 +3,7 @@ apis:
         root: "./reference/openapi/storefront.v1.yaml"
     admin:
         root: "./reference/openapi/admin.v1.yaml"
+    platform:
+        root: "./reference/openapi/platform.v1.yaml"
 extends:
     - recommended

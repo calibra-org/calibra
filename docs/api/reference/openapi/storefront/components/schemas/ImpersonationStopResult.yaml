@@ -1,0 +1,10 @@
+title: ImpersonationStopResult
+description: The `data` envelope returned by `POST /auth/impersonation/stop` — confirms the session ended.
+type: object
+properties:
+    ended:
+        type: boolean
+        description: Always `true` on success; the audit event is closed and the token revoked.
+        examples: [true]
+required:
+    - ended

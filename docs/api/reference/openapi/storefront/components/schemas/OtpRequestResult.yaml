@@ -1,0 +1,13 @@
+title: OtpRequestResult
+description: >
+    The `data` envelope returned by `POST /auth/otp/request`. Carries only the lifetime of the
+    freshly-issued code; the response is identical whether or not the identifier is registered, so a
+    caller can never use it for account enumeration.
+type: object
+properties:
+    expires_in:
+        type: integer
+        description: Seconds until the issued OTP code expires.
+        examples: [300]
+required:
+    - expires_in

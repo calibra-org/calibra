@@ -181,7 +181,7 @@ export default class CheckApiDocs extends BaseCommand {
     async run() {
         const codeRoutes = this.collectCodeRoutes();
 
-        const specs = ["storefront.v1.json", "admin.v1.json"];
+        const specs = ["storefront.v1.json", "admin.v1.json", "platform.v1.json"];
         const specRoutes: SpecOperation[] = [];
         for (const file of specs) {
             const distPath = resolve(this.app.makePath(), "../../docs/api/dist", file);

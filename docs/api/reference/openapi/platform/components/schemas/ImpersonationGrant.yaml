@@ -1,0 +1,16 @@
+title: ImpersonationGrant
+description: >
+    The `data` envelope returned by `POST /platform/tenants/{id}/impersonate` — a short-lived
+    tenant-scoped shop-admin token plus the admin URL the operator should open. The minted token
+    carries an `impersonated_by:<operatorId>` ability and an impersonation audit row is written.
+type: object
+properties:
+    token: { $ref: "./PlatformBearerToken.yaml" }
+    admin_url:
+        type: string
+        format: uri
+        description: The tenant's admin panel URL to open with the impersonation token.
+        examples: ["https://aurora.admin.calibra.app"]
+required:
+    - token
+    - admin_url

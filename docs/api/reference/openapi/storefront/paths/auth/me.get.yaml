@@ -1,10 +1,13 @@
 operationId: authMe
 summary: Identity of the signed-in user
 description: >
-    Returns the user identity bound to the current bearer token. Used by the storefront to
-    hydrate the auth context on page load. The shape mirrors `GET /account/me` minus the
-    customer profile envelope.
+    Returns the user identity bound to the current bearer token. Used by the storefront and admin to
+    hydrate the auth context on page load. `customer` is `null` for shop-staff (admin) users, who have
+    no commerce profile. `impersonated_by` is the platform-operator id when the session is an
+    impersonation, else `null` — the admin panel renders the "you are impersonating" banner from it.
 tags: [Auth]
+security:
+    - BearerAuth: []
 
 responses:
     "200":
@@ -13,10 +16,16 @@ responses:
             application/json:
                 schema:
                     type: object
-                    required: [user, customer]
+                    required: [user, customer, impersonated_by]
                     properties:
                         user: { $ref: "../../components/schemas/AuthUser.yaml" }
-                        customer: { $ref: "../../components/schemas/CustomerProfile.yaml" }
+                        customer:
+                            anyOf:
+                                - type: "null"
+                                - $ref: "../../components/schemas/CustomerProfile.yaml"
+                        impersonated_by:
+                            type: [integer, "null"]
+                            description: Platform-operator id when impersonating, else null.
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "404":

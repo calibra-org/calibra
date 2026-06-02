@@ -71,6 +71,15 @@ paths:
     /api/v1/auth/login:
         post:
             $ref: "./storefront/paths/auth/login.post.yaml"
+    /api/v1/auth/otp/request:
+        post:
+            $ref: "./storefront/paths/auth/otp-request.post.yaml"
+    /api/v1/auth/otp/verify:
+        post:
+            $ref: "./storefront/paths/auth/otp-verify.post.yaml"
+    /api/v1/auth/impersonation/stop:
+        post:
+            $ref: "./storefront/paths/auth/impersonation-stop.post.yaml"
     /api/v1/auth/logout:
         post:
             $ref: "./storefront/paths/auth/logout.post.yaml"

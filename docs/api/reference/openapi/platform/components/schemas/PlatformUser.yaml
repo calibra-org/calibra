@@ -1,0 +1,14 @@
+title: PlatformUser
+description: A control-plane operator identity. Distinct from the tenant-side `AuthUser` — platform users live in the global `platform_users` table.
+type: object
+properties:
+    id: { type: integer, description: platform_users.id }
+    email: { type: string, format: email }
+    name: { type: [string, "null"] }
+    role:
+        type: string
+        description: "Operator role (e.g. owner or support)."
+required:
+    - id
+    - email
+    - role

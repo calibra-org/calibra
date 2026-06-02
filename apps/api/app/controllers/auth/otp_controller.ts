@@ -49,8 +49,13 @@ export default class OtpController {
         const value = isEmail ? identifier.toLowerCase() : identifier;
         const tenantId = Number(currentTenantId());
 
-        /** Existing user lookup rides the request transaction (RLS-scoped to this tenant). */
-        let user = (await User.query().where(column, value).first()) as User | null;
+        /**
+         * Existing user lookup rides the request transaction (RLS-scoped to this tenant). The
+         * explicit `tenant_id` predicate is belt-and-suspenders: it keeps the lookup correct even
+         * where RLS is not enforced (e.g. a superuser connection), so the same phone at two tenants
+         * resolves to two distinct users rather than leaking across the boundary.
+         */
+        let user = (await User.query().where(column, value).where("tenant_id", tenantId).first()) as User | null;
 
         if (user?.deletedAt) {
             recordAuthEvent("login_locked");

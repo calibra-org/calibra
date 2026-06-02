@@ -1,0 +1,53 @@
+openapi: 3.1.0
+
+info:
+    title: Calibra Platform (Control-Plane) API
+    version: "1.0.0"
+    description: >
+        Control-plane REST API for the Calibra multi-tenant SaaS. These endpoints are operated by
+        **platform** staff (not shop staff or shoppers) and live under `/api/v1/platform/*`. They are
+        global — `tenant_context_middleware` skips them, so no tenant RLS context is established.
+
+        ## Conventions
+
+        - **Auth.** Operators authenticate with a `pat_`-prefixed token on the dedicated `platform`
+          guard (`platform_access_tokens`). A shopper/shop-admin bearer token can NEVER authenticate
+          here — it returns 401. Obtain a token from `POST /api/v1/platform/auth/login`.
+        - **Envelopes.** Successful responses return `{ data: ... }`, matching the storefront/admin
+          surfaces.
+        - **Impersonation.** `POST /tenants/{id}/impersonate` mints a short-lived tenant-scoped
+          shop-admin token carrying an `impersonated_by:<operatorId>` ability and audits the action.
+    contact:
+        name: Calibra Backend Team
+        url: https://calibra.dev/support
+        email: support@calibra.dev
+    license:
+        name: "UNLICENSED (Proprietary)"
+
+servers:
+    - url: http://localhost:3333
+      description: Local development
+    - url: https://api.calibra.dev
+      description: Production
+
+tags:
+    - name: Platform Auth
+      description: Control-plane operator login.
+    - name: Platform Tenants
+      description: Tenant operations performed by platform staff, including impersonation.
+
+components:
+    securitySchemes:
+        PlatformAuth:
+            $ref: "./platform/components/securitySchemes/PlatformAuth.yaml"
+
+security:
+    - PlatformAuth: []
+
+paths:
+    /api/v1/platform/auth/login:
+        post:
+            $ref: "./platform/paths/auth/login.post.yaml"
+    /api/v1/platform/tenants/{id}/impersonate:
+        post:
+            $ref: "./platform/paths/tenants/impersonate.post.yaml"

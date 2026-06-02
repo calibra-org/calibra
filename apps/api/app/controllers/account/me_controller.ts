@@ -39,15 +39,16 @@ export default class MeController {
         const customer = user.customer;
 
         if (!customer) {
-            /** Shop staff (admins) have no commerce customer row — that's expected, not a 404. */
-            if (user.role === "admin") {
-                return {
-                    user: new UserTransformer(user).toObject(),
-                    customer: null,
-                    impersonated_by: impersonatedBy,
-                };
-            }
-            throw new Exception("Customer profile missing", { status: 404, code: "E_CUSTOMER_MISSING" });
+            /**
+             * No commerce customer row — expected for shop staff (admins) and for phone-OTP shoppers
+             * who have authenticated but not yet completed a profile. Return the identity with a null
+             * customer rather than 404; the storefront/admin branch on `customer === null`.
+             */
+            return {
+                user: new UserTransformer(user).toObject(),
+                customer: null,
+                impersonated_by: impersonatedBy,
+            };
         }
 
         return {
