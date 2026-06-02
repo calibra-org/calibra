@@ -52,6 +52,7 @@ export default defineConfig({
     ],
 
     preloads: [
+        () => import("#start/tenant_scope"),
         () => import("#start/routes"),
         () => import("#start/kernel"),
         () => import("#start/transmit"),

@@ -4,11 +4,22 @@ import cache from "@adonisjs/cache/services/main";
 import app from "@adonisjs/core/services/app";
 import testUtils from "@adonisjs/core/services/test_utils";
 import limiter from "@adonisjs/limiter/services/main";
-import { apiClient } from "@japa/api-client";
+import { ApiClient, apiClient } from "@japa/api-client";
 import { assert } from "@japa/assert";
 import { openapi } from "@japa/openapi-assertions";
 import { pluginAdonisJS } from "@japa/plugin-adonisjs";
 import type { Config } from "@japa/runner/types";
+
+import { bootstrapTestRoles, ensureTestTenant, seedTestTenant, TEST_TENANT_SLUG } from "#tests/helpers/tenant";
+
+/**
+ * Every functional request carries the default tenant header so tenant-context middleware resolves
+ * the shared test tenant — matching how the web/admin BFFs forward `X-Calibra-Tenant` in production.
+ * A spec that needs a different (or missing/invalid) tenant overrides it with a later `.header(...)`.
+ */
+ApiClient.onRequest((request) => {
+    request.header("X-Calibra-Tenant", TEST_TENANT_SLUG);
+});
 
 /**
  * Path to the test-only merged OpenAPI bundle produced by
@@ -35,7 +46,13 @@ export const plugins: Config["plugins"] = [
  * runs. Configured in `.env.test`.
  */
 export const runnerHooks: Required<Pick<Config, "setup" | "teardown">> = {
-    setup: [() => testUtils.db().migrate()],
+    setup: [
+        () => testUtils.db().migrate(),
+        async () => {
+            await bootstrapTestRoles();
+            await seedTestTenant();
+        },
+    ],
     teardown: [],
 };
 
@@ -49,6 +66,13 @@ export const configureSuite: Config["configureSuite"] = (suite) => {
         group.each.setup(async () => {
             await cache.clear();
             await cache.use("memory").clear();
+            /**
+             * Re-ensure the reserved test tenant before every test. `suite.onGroup` hooks run after a
+             * group's own `each.setup`, so this restores the tenant even after a spec that ran
+             * `testUtils.db().truncate()` (+ reseed) wiped it — keeping the `app.current_tenant` GUC
+             * default pointing at a row that exists for every subsequent per-tenant insert.
+             */
+            await ensureTestTenant();
         });
     });
     if (["browser", "functional", "e2e"].includes(suite.name)) {

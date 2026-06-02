@@ -37,6 +37,11 @@ export function TenantScoped<T extends NormalizeConstructor<typeof BaseModel>>(s
             if (ctx && (args[0] === undefined || args[0].client === undefined)) {
                 args[0] = { ...(args[0] ?? {}), client: ctx.trx };
             }
+            /**
+             * `super.query` (not `superclass.query`) so `this` stays the concrete model (e.g. `User`)
+             * and its `static table` is used — a direct `superclass.query(...)` call would bind `this`
+             * to the mixin class and derive a bogus table name from its constructor name.
+             */
             return superclass.query(...args);
         }
     }

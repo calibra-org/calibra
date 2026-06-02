@@ -3,6 +3,7 @@ import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import OrderRefund from "#models/order_refund";
+import { testTenantId } from "#tests/helpers/tenant";
 
 let counter = 0;
 
@@ -19,6 +20,7 @@ export const OrderRefundFactory = factory
             rows?: Array<{ next: unknown }>;
         };
         return {
+            tenantId: await testTenantId(),
             orderId: 0 as unknown as bigint,
             refundNumber: Number(next.rows?.[0]?.next ?? counter),
             amountMinor: 1_000_000,
