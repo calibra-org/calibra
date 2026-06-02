@@ -171,6 +171,7 @@ just migrate-rollback                   # node ace migration:rollback
 just seed                               # node ace db:seed (runs MainSeeder — small demo dataset)
 just ace 'db:bulk-seed'                 # ~100k products / 500k users + 20 admins / ~100k orders (derived from --users at 20%); idempotent, opt-in
 just ace 'db:bulk-seed --reset'         # wipe just the bulk dataset and re-seed
+node ace db:bulk-seed --connection=postgres_admin --tenants=2   # seed N tenants (reuse oldest, provision more); per-tenant rows + numbering; run on the admin (BYPASSRLS) connection
 just ace 'make:controller orders'       # scaffold a controller
 just ace 'make:model Order -m'          # model + migration in one go
 just ace 'make:validator order'         # VineJS schema

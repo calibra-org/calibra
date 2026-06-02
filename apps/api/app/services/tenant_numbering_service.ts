@@ -44,3 +44,35 @@ export async function nextNumber(kind: CounterKind): Promise<number> {
 
     return Number(result.rows[0].allocated);
 }
+
+/**
+ * Reserve a contiguous block of `count` numbers for `kind` within the current tenant and return the
+ * FIRST number in the block (so the caller assigns `base`, `base + 1`, … `base + count - 1`). One
+ * atomic `UPDATE … RETURNING` advances the counter by `count` under its row lock — the gap-free,
+ * per-tenant equivalent of grabbing a sequence range. Used by bulk inserts (`db:bulk-seed`) that
+ * would otherwise call {@link nextNumber} once per row. Returns the current value unchanged when
+ * `count <= 0`.
+ */
+export async function reserveNumberBlock(kind: CounterKind, count: number): Promise<number> {
+    const tenantId = currentTenantId();
+    const trx = currentTrx();
+    const start = COUNTER_START[kind];
+
+    await trx
+        .table("tenant_number_counters")
+        .insert({ tenant_id: tenantId, kind, next_value: start })
+        .onConflict(["tenant_id", "kind"])
+        .ignore();
+
+    if (count <= 0) {
+        const row = await trx.from("tenant_number_counters").where("tenant_id", String(tenantId)).where("kind", kind).first();
+        return Number(row.next_value);
+    }
+
+    const result = await trx.rawQuery(
+        "UPDATE tenant_number_counters SET next_value = next_value + ?, updated_at = now() WHERE tenant_id = ? AND kind = ? RETURNING next_value - ? AS base",
+        [count, String(tenantId), kind, count],
+    );
+
+    return Number(result.rows[0].base);
+}
