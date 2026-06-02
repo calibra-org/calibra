@@ -21,8 +21,7 @@ import TaxRate from "#models/tax_rate";
  */
 export default class FoundationSeeder extends BaseSeeder {
     async run() {
-        const regionsByCode = await this.seedRegions();
-        await this.seedRegionTranslations(regionsByCode);
+        await this.seedGlobalReference();
 
         const taxClassesBySlug = await this.seedTaxClasses();
         await this.seedTaxRates(taxClassesBySlug);
@@ -35,6 +34,17 @@ export default class FoundationSeeder extends BaseSeeder {
 
         await this.seedPaymentGateways();
         await this.seedSettings();
+    }
+
+    /**
+     * Seed the GLOBAL reference data only — the ISO-3166-2:IR provinces and their translations.
+     * `regions` / `region_translations` carry no `tenant_id` (they sit outside RLS), so they are
+     * shared across every tenant and seeded once. `MainSeeder` calls this before provisioning tenants;
+     * {@link run} also calls it so the per-tenant test fixtures (cart helpers) still get provinces.
+     */
+    async seedGlobalReference(): Promise<void> {
+        const regionsByCode = await this.seedRegions();
+        await this.seedRegionTranslations(regionsByCode);
     }
 
     private async seedRegions(): Promise<Map<string, Region>> {

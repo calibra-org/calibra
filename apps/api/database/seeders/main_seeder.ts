@@ -40,9 +40,11 @@ export default class MainSeeder extends BaseSeeder {
     }
 
     async run() {
-        /** Global reference data first — tenants FK currencies + plans. */
+        /** Global reference data first — tenants FK currencies + plans; regions are shared (no tenant_id). */
         await this.runSeeder(await import("#database/seed_modules/0013_currencies_seeder"));
         await this.runSeeder(await import("#database/seed_modules/0000_platform_seeder"));
+        const { default: FoundationSeeder } = await import("#database/seed_modules/0001_foundation_seeder");
+        await new FoundationSeeder(this.client).seedGlobalReference();
 
         const provisioning = new TenantProvisioningService();
         const admin = db.connection("postgres_admin");
