@@ -12,13 +12,7 @@ export default class extends BaseSchema {
     async up() {
         this.schema.createTable(this.tableName, (table) => {
             table.bigIncrements("id").notNullable();
-            table
-                .bigInteger("tenant_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("tenants")
-                .onDelete("CASCADE");
+            table.bigInteger("tenant_id").unsigned().notNullable().references("id").inTable("tenants").onDelete("CASCADE");
             table.specificType("identifier", "citext").notNullable();
             table.string("channel", 8).notNullable();
             table.string("purpose", 8).notNullable();

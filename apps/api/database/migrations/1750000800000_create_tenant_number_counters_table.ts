@@ -14,13 +14,7 @@ export default class extends BaseSchema {
 
     async up() {
         this.schema.createTable(this.tableName, (table) => {
-            table
-                .bigInteger("tenant_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("tenants")
-                .onDelete("CASCADE");
+            table.bigInteger("tenant_id").unsigned().notNullable().references("id").inTable("tenants").onDelete("CASCADE");
             table.string("kind", 16).notNullable();
             table.bigInteger("next_value").notNullable().defaultTo(1000);
 

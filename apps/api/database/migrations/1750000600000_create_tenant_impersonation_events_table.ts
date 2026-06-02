@@ -19,20 +19,8 @@ export default class extends BaseSchema {
                 .references("id")
                 .inTable("platform_users")
                 .onDelete("SET NULL");
-            table
-                .bigInteger("tenant_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("tenants")
-                .onDelete("CASCADE");
-            table
-                .bigInteger("target_user_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("CASCADE");
+            table.bigInteger("tenant_id").unsigned().notNullable().references("id").inTable("tenants").onDelete("CASCADE");
+            table.bigInteger("target_user_id").unsigned().notNullable().references("id").inTable("users").onDelete("CASCADE");
             table.string("reason").nullable();
             table.string("ip_address", 45).nullable();
             table.timestamp("started_at", { useTz: true }).notNullable().defaultTo(this.now());

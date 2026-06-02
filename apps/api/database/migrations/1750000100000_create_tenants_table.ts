@@ -25,22 +25,11 @@ export default class extends BaseSchema {
             table.specificType("slug", "citext").notNullable();
             table.string("name").notNullable();
             table.string("status", 16).notNullable().defaultTo("active");
-            table
-                .bigInteger("plan_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("plans")
-                .onDelete("RESTRICT");
+            table.bigInteger("plan_id").unsigned().notNullable().references("id").inTable("plans").onDelete("RESTRICT");
             table.string("db_tier", 16).notNullable().defaultTo("shared");
             table.string("connection_name", 64).nullable();
             table.string("template_key", 48).notNullable().defaultTo("default");
-            table
-                .string("currency_code", 8)
-                .notNullable()
-                .references("code")
-                .inTable("currencies")
-                .onDelete("RESTRICT");
+            table.string("currency_code", 8).notNullable().references("code").inTable("currencies").onDelete("RESTRICT");
             table.string("primary_locale", 8).notNullable().defaultTo("fa");
             table.jsonb("attributes").notNullable().defaultTo(this.raw("'{}'::jsonb"));
 

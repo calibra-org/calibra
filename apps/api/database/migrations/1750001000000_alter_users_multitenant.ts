@@ -12,13 +12,7 @@ export default class extends BaseSchema {
 
     async up() {
         this.schema.alterTable(this.tableName, (table) => {
-            table
-                .bigInteger("tenant_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("tenants")
-                .onDelete("CASCADE");
+            table.bigInteger("tenant_id").unsigned().notNullable().references("id").inTable("tenants").onDelete("CASCADE");
             table.string("phone", 32).nullable();
             table.dropUnique(["email"], "users_email_unique");
             table.index(["tenant_id"], "users_tenant_id_idx");

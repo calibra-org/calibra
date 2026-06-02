@@ -347,11 +347,27 @@ const server = http.createServer(async (req, res) => {
             return;
         }
         if (path === "/api/actions/reseed" && method === "POST") {
-            streamShellSse(res, "pnpm", ["--filter", "@calibra/api", "exec", "node", "ace", "db:seed", "--connection=postgres_admin"]);
+            streamShellSse(res, "pnpm", [
+                "--filter",
+                "@calibra/api",
+                "exec",
+                "node",
+                "ace",
+                "db:seed",
+                "--connection=postgres_admin",
+            ]);
             return;
         }
         if (path === "/api/actions/migrate" && method === "POST") {
-            streamShellSse(res, "pnpm", ["--filter", "@calibra/api", "exec", "node", "ace", "migration:run", "--connection=postgres_admin"]);
+            streamShellSse(res, "pnpm", [
+                "--filter",
+                "@calibra/api",
+                "exec",
+                "node",
+                "ace",
+                "migration:run",
+                "--connection=postgres_admin",
+            ]);
             return;
         }
         if (path === "/api/actions/rollback" && method === "POST") {
