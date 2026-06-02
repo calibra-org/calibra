@@ -1,18 +1,23 @@
 import type { HttpContext } from "@adonisjs/core/http";
+import db from "@adonisjs/lucid/services/db";
 
 import Customer from "#models/customer";
 import User from "#models/user";
 import phoneService from "#services/phone_service";
-import { withTenantTransaction } from "#services/tenant_context";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
 import { registerValidator } from "#validators/auth/register_validator";
 
 export default class RegisterController {
     /**
-     * Creates `users` + `customers` in one transaction. The user row is the auth identity (just an
-     * email + hashed password); the customer row holds the commerce profile fields. Returns the
-     * newly-minted access token so the client can move straight into the storefront.
+     * Creates `users` + `customers` atomically. The user row is the auth identity (just an email +
+     * hashed password); the customer row holds the commerce profile fields. Returns the newly-minted
+     * access token so the client can move straight into the storefront.
+     *
+     * Both rows are written on the committed `postgres_admin` connection (not the per-request
+     * transaction): the access-token provider runs on its own connection and its FK to `users(id)`
+     * cannot see a user still pending in the uncommitted request transaction. The model `beforeSave`
+     * still hashes the password, and the tenant-stamp hook fills `tenant_id` from the request context.
      */
     async handle(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(registerValidator);
@@ -20,7 +25,7 @@ export default class RegisterController {
         const country = (payload.country_default ?? "IR").toUpperCase();
         const normalizedPhone = payload.phone ? phoneService.normalize(payload.phone, country) : null;
 
-        const { user, customer } = await withTenantTransaction(async (trx) => {
+        const { user, customer } = await db.connection("postgres_admin").transaction(async (trx) => {
             const createdUser = await User.create(
                 {
                     email: payload.email,
