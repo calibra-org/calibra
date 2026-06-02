@@ -55,8 +55,12 @@ async function ensureSecondTenant(): Promise<void> {
 test.group("Auth OTP", (group) => {
     group.each.setup(async () => {
         await ensureSecondTenant();
+        /**
+         * Clear stale codes only. Each test uses distinct identifiers, so user rows never collide
+         * across tests; deleting users in the shared test tenant would cascade-fail against rows
+         * other specs left behind.
+         */
         await db.connection("postgres_admin").from("otp_codes").delete();
-        await db.connection("postgres_admin").from("users").whereIn("tenant_id", [TEST_TENANT_ID, SECOND_TENANT_ID]).delete();
     });
 
     test("request returns 200 for an unknown identifier (no enumeration)", async ({ client, assert }) => {

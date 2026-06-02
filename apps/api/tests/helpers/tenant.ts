@@ -76,11 +76,18 @@ export async function ensureTestTenant(): Promise<number> {
  */
 export async function seedTestTenant(): Promise<number> {
     await ensureTestTenant();
-    const database = env.get("DB_DATABASE");
-    /** ALTER DATABASE requires superuser/owner — run on the default connection (the superuser in tests). */
-    await db
-        .connection()
-        .rawQuery(`ALTER DATABASE "${database.replaceAll('"', '""')}" SET app.current_tenant = '${TEST_TENANT_ID}'`);
+    const database = env.get("DB_DATABASE").replaceAll('"', '""');
+    const role = env.get("DB_USER").replaceAll('"', '""');
+    /**
+     * Pin the GUC default on the runtime ROLE (the test superuser) rather than the database, so the
+     * `tenant_id` column default fills for factory inserts WITHOUT leaking onto the dedicated
+     * `calibra_app` connection the RLS isolation spec opens — that connection must see a genuinely
+     * unset `app.current_tenant` to prove fail-closed behaviour. Resetting the old database-level
+     * default keeps a previously-bootstrapped DB from carrying both. Requires superuser/owner.
+     */
+    const conn = db.connection();
+    await conn.rawQuery(`ALTER DATABASE "${database}" RESET app.current_tenant`);
+    await conn.rawQuery(`ALTER ROLE "${role}" IN DATABASE "${database}" SET app.current_tenant = '${TEST_TENANT_ID}'`);
     return TEST_TENANT_ID;
 }
 
