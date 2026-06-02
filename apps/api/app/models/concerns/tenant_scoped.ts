@@ -38,11 +38,13 @@ export function TenantScoped<T extends NormalizeConstructor<typeof BaseModel>>(s
                 args[0] = { ...(args[0] ?? {}), client: ctx.trx };
             }
             /**
-             * `super.query` (not `superclass.query`) so `this` stays the concrete model (e.g. `User`)
-             * and its `static table` is used — a direct `superclass.query(...)` call would bind `this`
-             * to the mixin class and derive a bogus table name from its constructor name.
+             * `super.query` keeps `this` bound to the concrete model (e.g. `User`) so its
+             * `static table` is used. A bare `superclass.query(...)` binds `this` to the mixin class
+             * and derives a bogus table name from its constructor name — the ignore below stops Biome
+             * "fixing" it into that broken form.
              */
-            return superclass.query(...args);
+            // biome-ignore lint/complexity/noThisInStatic: super preserves `this` as the concrete model so the correct table resolves
+            return super.query(...args);
         }
     }
 
