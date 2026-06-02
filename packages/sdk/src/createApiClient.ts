@@ -1,4 +1,5 @@
 import { type AdminClient, createAdminClient } from "./createAdminClient";
+import { createPlatformClient, type PlatformClient } from "./createPlatformClient";
 import { createStorefrontClient, type StorefrontClient } from "./createStorefrontClient";
 import { getBaseUrl } from "./getBaseUrl";
 import { HttpClient, type HttpClientOptions } from "./HttpClient";
@@ -23,6 +24,8 @@ export interface ApiClient {
     storefront: StorefrontClient;
     /** Typed admin client — inferred from `admin.v1.yaml`. */
     admin: AdminClient;
+    /** Typed control-plane (platform) client — inferred from `platform.v1.yaml`. */
+    platform: PlatformClient;
 }
 
 /**
@@ -63,5 +66,6 @@ export function createApiClient(options: CreateApiClientOptions = {}): ApiClient
         http,
         storefront: createStorefrontClient(typedOptions),
         admin: createAdminClient(typedOptions),
+        platform: createPlatformClient(typedOptions),
     };
 }

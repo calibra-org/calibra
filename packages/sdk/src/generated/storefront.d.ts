@@ -44,6 +44,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/otp/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request a one-time login code
+         * @description Issues a one-time code to the given `identifier` over the chosen `channel` (SMS or email). The response is identical whether or not the identifier is registered — a new shopper is created on verify, not here — so the endpoint never leaks account-existence signal. Tenant-scoped: the code is bound to the tenant resolved from `X-Calibra-Tenant`.
+         */
+        post: operations["authOtpRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/otp/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify a one-time code and mint a token
+         * @description Verifies the 6-digit `code` for the `identifier`. On success, finds or creates the shopper within the current tenant (two tenants with the same phone get two distinct users) and returns a fresh bearer token. An invalid or expired code returns 422 with `code: E_INVALID_OTP`.
+         */
+        post: operations["authOtpVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/impersonation/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End the current impersonated session
+         * @description Called by the admin panel's "exit impersonation" control. Closes the audit event (`ended_at`) and revokes the short-lived impersonation token. The authenticated user is the impersonated shop admin (`api` guard).
+         */
+        post: operations["authImpersonationStop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/logout": {
         parameters: {
             query?: never;
@@ -113,7 +173,7 @@ export interface paths {
         };
         /**
          * Identity of the signed-in user
-         * @description Returns the user identity bound to the current bearer token. Used by the storefront to hydrate the auth context on page load. The shape mirrors `GET /account/me` minus the customer profile envelope.
+         * @description Returns the user identity bound to the current bearer token. Used by the storefront and admin to hydrate the auth context on page load. `customer` is `null` for shop-staff (admin) users, who have no commerce profile. `impersonated_by` is the platform-operator id when the session is an impersonation, else `null` — the admin panel renders the "you are impersonating" banner from it.
          */
         get: operations["authMe"];
         put?: never;
@@ -1261,8 +1321,11 @@ export interface components {
         AuthUser: {
             /** @description BIGINT id serialised as a string (Lucid default). */
             id: string;
-            /** Format: email */
-            email: string;
+            /**
+             * Format: email
+             * @description Null for phone-OTP shoppers who registered without an email.
+             */
+            email: string | null;
             locale: string;
             role: string;
             /** Format: date-time */
@@ -1373,6 +1436,36 @@ export interface components {
             errors?: {
                 [key: string]: unknown;
             };
+        };
+        /**
+         * OtpRequestResult
+         * @description The `data` envelope returned by `POST /auth/otp/request`. Carries only the lifetime of the freshly-issued code; the response is identical whether or not the identifier is registered, so a caller can never use it for account enumeration.
+         */
+        OtpRequestResult: {
+            /**
+             * @description Seconds until the issued OTP code expires.
+             * @example 300
+             */
+            expires_in: number;
+        };
+        /**
+         * AuthSession
+         * @description The `data` envelope returned by `POST /auth/otp/verify` — the authenticated user identity plus a fresh bearer token. Mirrors the OTP controller's success payload exactly.
+         */
+        AuthSession: {
+            user: components["schemas"]["AuthUser"];
+            token: components["schemas"]["BearerToken"];
+        };
+        /**
+         * ImpersonationStopResult
+         * @description The `data` envelope returned by `POST /auth/impersonation/stop` — confirms the session ended.
+         */
+        ImpersonationStopResult: {
+            /**
+             * @description Always `true` on success; the audit event is closed and the token revoked.
+             * @example true
+             */
+            ended: boolean;
         };
         /**
          * IranAddressExtension
@@ -2299,6 +2392,99 @@ export interface operations {
             422: components["responses"]["ValidationError"];
         };
     };
+    authOtpRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Phone in E.164 (`09121234567`) or an email address.
+                     * @example 09121234567
+                     */
+                    identifier: string;
+                    /**
+                     * @example sms
+                     * @enum {string}
+                     */
+                    channel: "sms" | "email";
+                };
+            };
+        };
+        responses: {
+            /** @description A code was issued (or would have been — the response never reveals existence). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OtpRequestResult"];
+                    };
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    authOtpVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example 09121234567 */
+                    identifier: string;
+                    /** @example 123456 */
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Code verified. The response carries the user envelope plus a fresh bearer token. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AuthSession"];
+                    };
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    authImpersonationStop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The impersonation session was ended and its token revoked. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ImpersonationStopResult"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
     authLogout: {
         parameters: {
             query?: never;
@@ -2399,7 +2585,9 @@ export interface operations {
                 content: {
                     "application/json": {
                         user: components["schemas"]["AuthUser"];
-                        customer: components["schemas"]["CustomerProfile"];
+                        customer: null | components["schemas"]["CustomerProfile"];
+                        /** @description Platform-operator id when impersonating, else null. */
+                        impersonated_by: number | null;
                     };
                 };
             };
@@ -3208,7 +3396,9 @@ export interface operations {
                 content: {
                     "application/json": {
                         user: components["schemas"]["AuthUser"];
-                        customer: components["schemas"]["CustomerProfile"];
+                        customer: null | components["schemas"]["CustomerProfile"];
+                        /** @description Platform-operator id when impersonating, else null. */
+                        impersonated_by: number | null;
                     };
                 };
             };
