@@ -6,19 +6,19 @@ Framework-agnostic TypeScript client for the [`@calibra/api`](../../apps/api) Ad
 
 Re-exported from [`src/index.ts`](src/index.ts):
 
-- `createApiClient(options)` — high-level entry point. Returns `{ http, storefront, admin }` sharing the same baseUrl, locale, and bearer token.
-- `createStorefrontClient(options)` / `createAdminClient(options)` — typed `openapi-fetch` clients pinned to the generated `paths`. Use directly when you only need one surface.
+- `createApiClient(options)` — high-level entry point. Returns `{ http, storefront, admin, platform }` sharing the same baseUrl, locale, and bearer token.
+- `createStorefrontClient(options)` / `createAdminClient(options)` / `createPlatformClient(options)` — typed `openapi-fetch` clients pinned to the generated `paths`. Use directly when you only need one surface. The `platform` surface is the control-plane API (`/api/v1/platform/*`); its token is a `pat_`-prefixed platform token, not a tenant bearer token.
 - `HttpClient` — low-level fetch wrapper. Sanitizes headers, drops `null` / `undefined` query params, throws `BackendError` on non-2xx. Kept as an escape hatch for endpoints not yet in the OpenAPI spec.
 - `BackendError` — error class with message-resolution fallback chain (`body.message` → `body.error` → `statusText` → `"Request failed"`).
 - `getBaseUrl(override?)` — resolves the API origin from `NEXT_PUBLIC_API_BASE_URL` / `API_BASE_URL`. Throws if missing.
 - `unwrapResource(envelope)` / `unwrapPaginated(envelope)` — small helpers for the `{ data }` / `{ data, meta }` envelopes.
-- Types: `StorefrontSchemas` / `AdminSchemas` (alias for `components` in the generated files), matching `*Paths` and `*Operations` aliases, plus the structural `Resource<T>`, `Paginated<T>`, `MoneyMinor`.
+- Types: `StorefrontSchemas` / `AdminSchemas` / `PlatformSchemas` (alias for `components` in the generated files), matching `*Paths` and `*Operations` aliases, plus the structural `Resource<T>`, `Paginated<T>`, `MoneyMinor`.
 
 Anything not re-exported from `src/index.ts` is private to the package.
 
 ## Contract with the API
 
-**The OpenAPI spec is the source of truth.** [`docs/api/reference/openapi/storefront.v1.yaml`](../../docs/api/reference/openapi/storefront.v1.yaml) and `admin.v1.yaml` are bundled into JSON by `@calibra/api-docs`, then turned into typed `paths` / `components` via `openapi-typescript`. The output lives in [`src/generated/`](src/generated) and is committed.
+**The OpenAPI spec is the source of truth.** [`docs/api/reference/openapi/storefront.v1.yaml`](../../docs/api/reference/openapi/storefront.v1.yaml), `admin.v1.yaml`, and `platform.v1.yaml` are bundled into JSON by `@calibra/api-docs`, then turned into typed `paths` / `components` via `openapi-typescript`. The output lives in [`src/generated/`](src/generated) and is committed.
 
 Two response envelopes recur across the API:
 
