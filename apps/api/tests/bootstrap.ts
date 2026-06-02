@@ -4,6 +4,7 @@ import cache from "@adonisjs/cache/services/main";
 import app from "@adonisjs/core/services/app";
 import testUtils from "@adonisjs/core/services/test_utils";
 import limiter from "@adonisjs/limiter/services/main";
+import db from "@adonisjs/lucid/services/db";
 import { ApiClient, apiClient } from "@japa/api-client";
 import { assert } from "@japa/assert";
 import { openapi } from "@japa/openapi-assertions";
@@ -11,6 +12,50 @@ import { pluginAdonisJS } from "@japa/plugin-adonisjs";
 import type { Config } from "@japa/runner/types";
 
 import { bootstrapTestRoles, ensureTestTenant, seedTestTenant, TEST_TENANT_SLUG } from "#tests/helpers/tenant";
+
+/**
+ * Control-plane + reference tables that must SURVIVE `testUtils.db().truncate()`. These hold
+ * cross-tenant reference data (the reserved test tenant, plans, currencies, regions) — truncating
+ * them between tests is wrong regardless: it deletes the fixed-id test tenant, leaving the
+ * database-level `app.current_tenant` GUC pointing at a missing row, which fails every subsequent
+ * per-tenant insert on `tenant_id_fkey`. Adonis' `db:truncate` only excludes the migration tables,
+ * so we widen the exclusion list (see {@link patchTruncateExclusions}).
+ */
+const RESERVED_TRUNCATE_TABLES = [
+    "tenants",
+    "plans",
+    "tenant_domains",
+    "platform_users",
+    "platform_access_tokens",
+    "currencies",
+    "regions",
+    "region_translations",
+];
+
+const TRUNCATE_PATCH_FLAG = Symbol.for("calibra.test.truncatePatched");
+
+/**
+ * Monkeypatch `QueryClient.prototype.truncateAllTables` (test-process only) to prepend
+ * {@link RESERVED_TRUNCATE_TABLES} to whatever exclude list a caller passes. `testUtils.db().truncate()`
+ * runs `db:truncate` in-process via `ace.exec`, which calls `connection.truncateAllTables([migrations…])`
+ * — patching the shared prototype covers every caller (direct truncate, `truncateAndCleanup`,
+ * `testUtils.db().seed()`) and every connection without touching application code.
+ */
+function patchTruncateExclusions(): void {
+    const proto = Object.getPrototypeOf(db.connection()) as {
+        truncateAllTables: (exclude?: string[], schemas?: string[]) => Promise<void>;
+        [TRUNCATE_PATCH_FLAG]?: boolean;
+    };
+    if (proto[TRUNCATE_PATCH_FLAG]) {
+        return;
+    }
+    const original = proto.truncateAllTables;
+    proto.truncateAllTables = function patched(exclude, schemas) {
+        const merged = [...new Set([...(exclude ?? []), ...RESERVED_TRUNCATE_TABLES])];
+        return original.call(this, merged, schemas);
+    };
+    proto[TRUNCATE_PATCH_FLAG] = true;
+}
 
 /**
  * Every functional request carries the default tenant header so tenant-context middleware resolves
@@ -49,6 +94,7 @@ export const runnerHooks: Required<Pick<Config, "setup" | "teardown">> = {
     setup: [
         () => testUtils.db().migrate(),
         async () => {
+            patchTruncateExclusions();
             await bootstrapTestRoles();
             await seedTestTenant();
         },
