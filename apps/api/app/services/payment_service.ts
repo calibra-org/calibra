@@ -1,7 +1,6 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import emitter from "@adonisjs/core/services/emitter";
-import db from "@adonisjs/lucid/services/db";
 import * as Sentry from "@sentry/node";
 import { DateTime } from "luxon";
 
@@ -14,6 +13,7 @@ import { recordPaymentAttempt, recordPaymentPhase } from "#services/metrics/doma
 import { orderStateMachine } from "#services/order_state_machine";
 import { paymentAdapterRegistry } from "#services/payment_adapter_registry";
 import SettingsService from "#services/settings_service";
+import { withTenantTransaction } from "#services/tenant_context";
 import { webhookIdempotencyService } from "#services/webhook_idempotency_service";
 
 const DEFAULT_RETURN_SUCCESS = "http://localhost:3000/checkout/success";
@@ -76,7 +76,7 @@ export class PaymentService {
 
         const { adapter, gateway } = await paymentAdapterRegistry.resolveForGatewayId(gatewayId);
         const returnUrl = await this.buildCallbackUrl(gateway.code, order);
-        const attempt = await db.transaction(async (trx) => {
+        const attempt = await withTenantTransaction(async (trx) => {
             const row = new PaymentAttempt();
             row.useTransaction(trx);
             row.orderId = order.id;
@@ -113,7 +113,7 @@ export class PaymentService {
             throw error;
         }
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             attempt.useTransaction(trx);
             attempt.gatewayPayload = (initResult.payload as Record<string, unknown>) ?? {};
             if (initResult.authority) attempt.gatewayAuthority = initResult.authority;
@@ -186,7 +186,7 @@ export class PaymentService {
         const rawBody = request.raw() ?? JSON.stringify(request.all() ?? {});
         const eventId = String(parsed.authority);
 
-        const result = await db.transaction(async (trx) => {
+        const result = await withTenantTransaction(async (trx) => {
             const attempt = await PaymentAttempt.query({ client: trx })
                 .where("gateway_id", Number(gateway.id))
                 .where("gateway_authority", String(parsed.authority))

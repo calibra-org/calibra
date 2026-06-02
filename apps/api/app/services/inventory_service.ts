@@ -4,6 +4,7 @@ import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import InventoryItem from "#models/inventory_item";
 import InventoryMovement from "#models/inventory_movement";
 import { recordInventoryMovement, recordInventoryOversellAttempt } from "#services/metrics/domain_metrics";
+import { withTenantTransaction } from "#services/tenant_context";
 
 /** Source-system that triggered an inventory movement; recorded on the ledger row. */
 export type InventoryRefKind = "order" | "refund" | "manual";
@@ -30,7 +31,7 @@ export interface InventorySnapshot {
 /**
  * Concurrency-safe inventory ledger. Every reserve/release/decrement/increment writes one row to
  * `inventory_movements` AND mutates the matching `inventory_items.stock_quantity` inside a single
- * `db.transaction()` that locks the row with `SELECT … FOR UPDATE`. Two concurrent reserves on the
+ * `withTenantTransaction()` that locks the row with `SELECT … FOR UPDATE`. Two concurrent reserves on the
  * same product/variation serialize cleanly — no double-spend.
  *
  * `manage_stock=false` makes every mutation a no-op (still snapshot-able). `backorders='no'`
@@ -150,7 +151,7 @@ export default class InventoryService {
         if (externalTrx) {
             await run(externalTrx);
         } else {
-            await db.transaction(run);
+            await withTenantTransaction(run);
         }
     }
 

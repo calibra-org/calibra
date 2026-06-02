@@ -1,11 +1,11 @@
 import crypto from "node:crypto";
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import PasswordResetToken from "#models/password_reset_token";
 import User from "#models/user";
+import { withTenantTransaction } from "#services/tenant_context";
 import { passwordResetValidator } from "#validators/auth/password_validator";
 
 export default class PasswordResetController {
@@ -28,7 +28,7 @@ export default class PasswordResetController {
             });
         }
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             const user = await User.findOrFail(row.userId, { client: trx });
             user.passwordHash = password;
             await user.save();

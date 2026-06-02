@@ -9,6 +9,7 @@ import User from "#models/user";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { aggregateForCustomerIds, fetchCounts, forSingleCustomer } from "#services/customer_stats_service";
 import phoneService from "#services/phone_service";
+import { withTenantTransaction } from "#services/tenant_context";
 import { type AdminCustomersViewQuery, adminCustomersView } from "#table_views/admin/customers";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
 import CustomerTransformer from "#transformers/customer_transformer";
@@ -326,7 +327,7 @@ export default class AdminCustomersController {
         const country = (payload.country_default ?? "IR").toUpperCase();
         const normalizedPhone = payload.phone ? phoneService.normalize(payload.phone, country) : null;
 
-        const customer = await db.transaction(async (trx) => {
+        const customer = await withTenantTransaction(async (trx) => {
             let userId: bigint | number | null = null;
             if (wantsUser && payload.email && payload.password) {
                 const existing = await User.findBy("email", payload.email, { client: trx });
@@ -383,7 +384,7 @@ export default class AdminCustomersController {
                   ? null
                   : phoneService.normalize(payload.phone, country);
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             customer.useTransaction(trx);
             if (payload.first_name !== undefined) customer.firstName = payload.first_name;
             if (payload.last_name !== undefined) customer.lastName = payload.last_name;
@@ -416,7 +417,7 @@ export default class AdminCustomersController {
     async destroy(ctx: HttpContext) {
         const customer = await this.findOrFail(ctx.params.id);
         const now = DateTime.utc();
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             customer.useTransaction(trx);
             customer.deletedAt = now;
             await customer.save();
@@ -445,7 +446,7 @@ export default class AdminCustomersController {
     async batch(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(adminCustomerBatchValidator);
 
-        const result = await db.transaction(async (trx) => {
+        const result = await withTenantTransaction(async (trx) => {
             const created: Customer[] = [];
             const updated: Customer[] = [];
             const deletedIds: Array<bigint | number> = [];
@@ -565,7 +566,7 @@ export default class AdminCustomersController {
         if (!customer) {
             throw new Exception("Customer not found", { status: 404, code: "E_NOT_FOUND" });
         }
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             customer.useTransaction(trx);
             customer.deletedAt = null;
             await customer.save();

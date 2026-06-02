@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { Exception } from "@adonisjs/core/exceptions";
-import db from "@adonisjs/lucid/services/db";
+import type db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 import { OrderStatus } from "#enums/order_status";
@@ -19,6 +19,7 @@ import { checkEligibility, countRedemptions, loadSnapshotForUpdate } from "#serv
 import { recordOrderFinalized } from "#services/metrics/domain_metrics";
 import { OrderFactory } from "#services/order_factory";
 import { orderStateMachine } from "#services/order_state_machine";
+import { withTenantTransaction } from "#services/tenant_context";
 
 const ORDER_KEY_BYTES = 20;
 
@@ -93,7 +94,7 @@ export class OrderFinalizer {
             });
         }
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             draft.useTransaction(trx);
 
             /** Lock the order row so a parallel finalize on the same draft serializes here. */

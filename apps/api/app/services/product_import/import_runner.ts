@@ -16,6 +16,7 @@ import { type ColumnMapping, type ProjectionError, projectRow } from "#services/
 import { type ImportSnapshot, importsLocalPath, snapshotKey, writeSnapshot } from "#services/product_import/storage";
 import { newCounters } from "#services/product_import/taxonomy_resolver";
 import { notifyImportTerminal } from "#services/product_io_notifier";
+import { withTenantTransaction } from "#services/tenant_context";
 
 /**
  * `runImport` — the real run. Streams progress through the in-memory event bus on every chunk,
@@ -280,7 +281,7 @@ async function runChunk(ctx: ChunkContext): Promise<ChunkResult> {
         }
 
         try {
-            await db.transaction(async (trx) => {
+            await withTenantTransaction(async (trx) => {
                 if (existing !== undefined) {
                     if (!ctx.updateExisting) {
                         await recordWarning(

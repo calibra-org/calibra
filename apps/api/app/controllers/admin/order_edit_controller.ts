@@ -15,6 +15,7 @@ import OrderShippingLine from "#models/order_shipping_line";
 import Product from "#models/product";
 import ProductVariation from "#models/product_variation";
 import { CacheInvalidation } from "#services/cache_invalidation";
+import { withTenantTransaction } from "#services/tenant_context";
 import OrderTransformer from "#transformers/order_transformer";
 import {
     adminOrderAddressUpdateValidator,
@@ -43,7 +44,7 @@ export default class AdminOrderEditController {
         const kind = ctx.params.kind === "shipping" ? "shipping" : "billing";
         const payload = await ctx.request.validateUsing(adminOrderAddressUpdateValidator);
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             const existing = await OrderAddress.query({ client: trx })
                 .where("order_id", Number(order.id))
                 .where("kind", kind)
@@ -85,7 +86,7 @@ export default class AdminOrderEditController {
         const order = await this.findOrFail(ctx.params.id);
         const payload = await ctx.request.validateUsing(adminOrderLineItemCreateValidator);
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             const product = await Product.find(payload.product_id, { client: trx });
             if (!product) {
                 throw new Exception("Product not found", { status: 422, code: "E_PRODUCT_MISSING" });

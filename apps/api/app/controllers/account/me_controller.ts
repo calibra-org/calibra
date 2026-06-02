@@ -1,12 +1,12 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 import type Customer from "#models/customer";
 import CustomerIranProfile from "#models/customer_iran_profile";
 import nationalIdService from "#services/national_id_service";
 import phoneService from "#services/phone_service";
+import { withTenantTransaction } from "#services/tenant_context";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
 import { meUpdateValidator } from "#validators/account/me_validator";
@@ -82,7 +82,7 @@ export default class MeController {
                   ? null
                   : phoneService.normalize(payload.phone, country);
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             if (payload.locale) {
                 user.locale = payload.locale;
                 user.useTransaction(trx);

@@ -10,6 +10,7 @@ import { buildCartView, resolveCustomerContext } from "#services/cart_view_build
 import { defaultValidationContext, rulesFor } from "#services/country_address_rules/index";
 import { resolvePrice } from "#services/price_resolver";
 import { findEligibleRate } from "#services/shipping_rate_service";
+import { withTenantTransaction } from "#services/tenant_context";
 import CartTransformer from "#transformers/cart_transformer";
 import {
     addItemValidator,
@@ -47,7 +48,7 @@ export default class CartController {
         const requestedQuantity = product.soldIndividually ? Math.min(payload.quantity, 1) : payload.quantity;
         const priceSnapshot = this.resolveCurrentPrice(product, variation);
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             await trx.from("carts").where("id", Number(cart.id)).forUpdate().first();
 
             const existing = await CartItem.query({ client: trx })

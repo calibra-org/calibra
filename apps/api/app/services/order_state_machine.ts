@@ -1,6 +1,5 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import emitter from "@adonisjs/core/services/emitter";
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
 
@@ -11,6 +10,7 @@ import OrderStatusHistory from "#models/order_status_history";
 import type User from "#models/user";
 import InventoryService, { type InventoryTarget } from "#services/inventory_service";
 import { recordOrderTransition } from "#services/metrics/domain_metrics";
+import { withTenantTransaction } from "#services/tenant_context";
 
 export interface TransitionOptions {
     /** Authenticated actor responsible for the transition; recorded on the audit row. */
@@ -74,7 +74,7 @@ export class OrderStateMachine {
         if (opts.trx) {
             await run(opts.trx);
         } else {
-            await db.transaction(run);
+            await withTenantTransaction(run);
         }
 
         recordOrderTransition(fromStatus, to, "applied");

@@ -1,6 +1,5 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 
 import { OrderStatus } from "#enums/order_status";
 import { GatewayNotImplementedException } from "#exceptions/payment_exceptions";
@@ -11,6 +10,7 @@ import OrderAddressIranExtension from "#models/order_address_iran_extension";
 import PaymentGateway from "#models/payment_gateway";
 import { throwIfErrors, validateAddressForCountry } from "#services/address_country_validator";
 import { orderFactory } from "#services/order_factory";
+import { withTenantTransaction } from "#services/tenant_context";
 import OrderTransformer from "#transformers/order_transformer";
 import { readImplementationStatus } from "#transformers/payment_gateway_transformer";
 import { checkoutDraftValidator } from "#validators/checkout/draft_validator";
@@ -34,7 +34,7 @@ export default class CheckoutDraftController {
         const order = await this.materializeDraft(cart, ctx.i18n.locale);
         const payload = await ctx.request.validateUsing(checkoutDraftValidator);
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             order.useTransaction(trx);
             if (payload.billing_address) {
                 await this.persistAddress(order, "billing", payload.billing_address, payload.billing_iran_extension ?? null);

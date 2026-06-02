@@ -14,6 +14,7 @@ import CouponRedemption from "#models/coupon_redemption";
 import CouponTranslation from "#models/coupon_translation";
 import { exportCouponsToCsv } from "#services/coupon_csv_exporter";
 import { runCouponTest } from "#services/coupon_test_runner";
+import { withTenantTransaction } from "#services/tenant_context";
 import { adminCouponsView } from "#table_views/admin/coupons";
 import { collection, paginated, resource } from "#transformers/api_envelope";
 import CouponRedemptionTransformer from "#transformers/coupon_redemption_transformer";
@@ -289,7 +290,7 @@ export default class AdminCouponsController {
 
     async store(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(createCouponValidator);
-        const coupon = await db.transaction(async (trx) => {
+        const coupon = await withTenantTransaction(async (trx) => {
             const created = await Coupon.create(this.buildAttributes(payload, "create"), { client: trx });
             await this.writeRelations(trx, created.id, payload);
             return created;
@@ -304,7 +305,7 @@ export default class AdminCouponsController {
         if (!coupon) throw notFound();
         const payload = await ctx.request.validateUsing(updateCouponValidator);
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             coupon.useTransaction(trx);
             coupon.merge(this.buildAttributes(payload, "update"));
             await coupon.save();
@@ -335,7 +336,7 @@ export default class AdminCouponsController {
             deleted: [],
         };
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             for (const row of payload.create ?? []) {
                 const created = await Coupon.create(this.buildAttributes(row as CreatePayload, "create"), { client: trx });
                 await this.writeRelations(trx, created.id, row as CreatePayload);

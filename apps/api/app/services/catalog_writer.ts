@@ -1,8 +1,8 @@
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
 
 import { slugify } from "#services/slug_service";
+import { withTenantTransaction } from "#services/tenant_context";
 
 export interface TranslationInput {
     locale: string;
@@ -335,7 +335,7 @@ export async function syncProductImages(
     );
 }
 
-/** A pragmatic catch-all transaction helper so controllers don't repeat `db.transaction(async (trx) => { ... })`. */
+/** A pragmatic catch-all transaction helper so controllers don't repeat `withTenantTransaction(async (trx) => { ... })`. */
 export function withTransaction<T>(fn: (trx: TransactionClientContract) => Promise<T>): Promise<T> {
-    return db.transaction(fn);
+    return withTenantTransaction(fn);
 }

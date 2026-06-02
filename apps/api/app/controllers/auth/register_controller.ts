@@ -1,9 +1,9 @@
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 
 import Customer from "#models/customer";
 import User from "#models/user";
 import phoneService from "#services/phone_service";
+import { withTenantTransaction } from "#services/tenant_context";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
 import { registerValidator } from "#validators/auth/register_validator";
@@ -20,7 +20,7 @@ export default class RegisterController {
         const country = (payload.country_default ?? "IR").toUpperCase();
         const normalizedPhone = payload.phone ? phoneService.normalize(payload.phone, country) : null;
 
-        const { user, customer } = await db.transaction(async (trx) => {
+        const { user, customer } = await withTenantTransaction(async (trx) => {
             const createdUser = await User.create(
                 {
                     email: payload.email,
