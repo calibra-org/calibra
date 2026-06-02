@@ -48,11 +48,12 @@ function stampTenant(row: LucidRow & { tenantId?: bigint | number | null }) {
  * `inherited`, so there is no recursion.
  */
 function bindQueryToTenant(model: typeof BaseModel): void {
-    const inherited = Object.getPrototypeOf(model).query as (...args: any[]) => unknown;
-    model.query = function tenantScopedQuery(this: typeof BaseModel, ...args: any[]) {
+    const inherited = Object.getPrototypeOf(model).query as (...args: unknown[]) => unknown;
+    model.query = function tenantScopedQuery(this: typeof BaseModel, ...args: unknown[]) {
         const ctx = maybeTenantContext();
-        if (ctx && (args[0] === undefined || args[0].client === undefined)) {
-            args[0] = { ...(args[0] ?? {}), client: ctx.trx };
+        const options = args[0] as { client?: unknown } | undefined;
+        if (ctx && (options === undefined || options.client === undefined)) {
+            args[0] = { ...(options ?? {}), client: ctx.trx };
         }
         return inherited.apply(this, args);
     } as typeof model.query;
