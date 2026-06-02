@@ -59,6 +59,17 @@ test.group("CacheKeys / CacheTags", () => {
     test("per-resource tag carries the id", ({ assert }) => {
         assert.equal(CacheTags.catalogProduct(42), "catalog:product:42");
         assert.equal(CacheTags.adminCustomer(7), "admin:customer:7");
-        assert.equal(CacheTags.settingsGroup("inventory"), "settings:inventory");
+    });
+
+    test("settings keys + tags are tenant-namespaced and fall back to global", ({ assert }) => {
+        assert.equal(CacheTags.settingsGroup("inventory"), "global:settings:inventory");
+        assert.equal(CacheTags.settingsGroup("inventory", 42), "t42:settings:inventory");
+        assert.equal(CacheKeys.settings.group("inventory"), "global:settings:group:inventory");
+        assert.equal(CacheKeys.settings.group("inventory", 42), "t42:settings:group:inventory");
+    });
+
+    test("two tenants get distinct settings keys + tags (no cross-tenant cache bleed)", ({ assert }) => {
+        assert.notEqual(CacheKeys.settings.group("inventory", 1), CacheKeys.settings.group("inventory", 2));
+        assert.notEqual(CacheTags.settingsGroup("inventory", 1), CacheTags.settingsGroup("inventory", 2));
     });
 });

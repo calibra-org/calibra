@@ -1,6 +1,7 @@
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
+import { runWithTenant } from "#services/tenant_context";
 import env from "#start/env";
 
 /**
@@ -86,6 +87,20 @@ export async function seedTestTenant(): Promise<number> {
 /** The default test tenant id — a fixed constant, no DB round-trip. */
 export async function testTenantId(): Promise<number> {
     return TEST_TENANT_ID;
+}
+
+/**
+ * Run `fn` inside the reserved test tenant's context, mirroring what `tenant_context_middleware`
+ * sets up per request: a transaction with `app.current_tenant` set (`SET LOCAL`) and a
+ * {@link runWithTenant} scope. Use in unit specs that exercise tenant-scoped services
+ * (`SettingsService`, numbering, …) directly rather than over HTTP — those call `currentTenantId()`
+ * / `currentTrx()` and would otherwise throw "outside a tenant context".
+ */
+export async function runInTestTenant<T>(fn: () => Promise<T>): Promise<T> {
+    return db.transaction(async (trx) => {
+        await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(TEST_TENANT_ID)]);
+        return runWithTenant(BigInt(TEST_TENANT_ID), trx, fn);
+    });
 }
 
 /**
