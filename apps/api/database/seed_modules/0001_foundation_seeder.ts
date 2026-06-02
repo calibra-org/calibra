@@ -335,7 +335,11 @@ export default class FoundationSeeder extends BaseSeeder {
             updated_at: now,
         }));
 
-        await this.client.table("settings").insert(rows).onConflict(["group_key", "key"]).merge(["value", "type", "updated_at"]);
+        await this.client
+            .table("settings")
+            .insert(rows)
+            .onConflict(["tenant_id", "group_key", "key"])
+            .merge(["value", "type", "updated_at"]);
     }
 }
 
