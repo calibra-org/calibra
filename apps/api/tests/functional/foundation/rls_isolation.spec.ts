@@ -45,11 +45,31 @@ test.group("RLS tenant isolation (calibra_app)", (group) => {
         });
 
         const now = DateTime.utc().toSQL()!;
-        await su.table("currencies").insert({ code: "IRR", symbol: "rial", name_en: "Rial", name_fa: "ریال", base_ratio: 1, enabled: true, created_at: now, updated_at: now }).onConflict("code").ignore();
-        await su.table("plans").insert({ key: "starter", name: "Starter", db_tier: "shared", is_default: true, created_at: now, updated_at: now }).onConflict("key").ignore();
+        await su
+            .table("currencies")
+            .insert({
+                code: "IRR",
+                symbol: "rial",
+                name_en: "Rial",
+                name_fa: "ریال",
+                base_ratio: 1,
+                enabled: true,
+                created_at: now,
+                updated_at: now,
+            })
+            .onConflict("code")
+            .ignore();
+        await su
+            .table("plans")
+            .insert({ key: "starter", name: "Starter", db_tier: "shared", is_default: true, created_at: now, updated_at: now })
+            .onConflict("key")
+            .ignore();
         const plan = await su.from("plans").where("key", "starter").firstOrFail();
 
-        for (const [id, slug] of [[TENANT_A, "rls-a"], [TENANT_B, "rls-b"]] as const) {
+        for (const [id, slug] of [
+            [TENANT_A, "rls-a"],
+            [TENANT_B, "rls-b"],
+        ] as const) {
             await su
                 .table("tenants")
                 .insert({
@@ -72,9 +92,33 @@ test.group("RLS tenant isolation (calibra_app)", (group) => {
         /** Seed asymmetric per-tenant settings so a count alone distinguishes the two tenants. */
         await su.from("settings").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
         const settingRows = [
-            { tenant_id: TENANT_A, group_key: "general", key: "shop_name", value: JSON.stringify("A"), type: "string", created_at: now, updated_at: now },
-            { tenant_id: TENANT_A, group_key: "general", key: "primary_locale", value: JSON.stringify("fa"), type: "string", created_at: now, updated_at: now },
-            { tenant_id: TENANT_B, group_key: "general", key: "shop_name", value: JSON.stringify("B"), type: "string", created_at: now, updated_at: now },
+            {
+                tenant_id: TENANT_A,
+                group_key: "general",
+                key: "shop_name",
+                value: JSON.stringify("A"),
+                type: "string",
+                created_at: now,
+                updated_at: now,
+            },
+            {
+                tenant_id: TENANT_A,
+                group_key: "general",
+                key: "primary_locale",
+                value: JSON.stringify("fa"),
+                type: "string",
+                created_at: now,
+                updated_at: now,
+            },
+            {
+                tenant_id: TENANT_B,
+                group_key: "general",
+                key: "shop_name",
+                value: JSON.stringify("B"),
+                type: "string",
+                created_at: now,
+                updated_at: now,
+            },
         ];
         await su.table("settings").insert(settingRows);
 
@@ -122,9 +166,15 @@ test.group("RLS tenant isolation (calibra_app)", (group) => {
         try {
             await app.transaction(async (trx) => {
                 await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(TENANT_A)]);
-                await trx
-                    .table("settings")
-                    .insert({ tenant_id: TENANT_B, group_key: "general", key: "leak", value: JSON.stringify("x"), type: "string", created_at: now, updated_at: now });
+                await trx.table("settings").insert({
+                    tenant_id: TENANT_B,
+                    group_key: "general",
+                    key: "leak",
+                    value: JSON.stringify("x"),
+                    type: "string",
+                    created_at: now,
+                    updated_at: now,
+                });
             });
         } catch {
             rejected = true;
@@ -134,7 +184,9 @@ test.group("RLS tenant isolation (calibra_app)", (group) => {
 
     test("calibra_app is NOBYPASSRLS; calibra_admin is BYPASSRLS", async ({ assert }) => {
         const su = db.connection();
-        const rows = (await su.rawQuery("SELECT rolname, rolbypassrls FROM pg_roles WHERE rolname IN (?, ?)", [APP_USER, ADMIN_USER])).rows as Array<{
+        const rows = (
+            await su.rawQuery("SELECT rolname, rolbypassrls FROM pg_roles WHERE rolname IN (?, ?)", [APP_USER, ADMIN_USER])
+        ).rows as Array<{
             rolname: string;
             rolbypassrls: boolean;
         }>;

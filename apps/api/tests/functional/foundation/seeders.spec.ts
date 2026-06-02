@@ -104,10 +104,9 @@ test.group("Demo + foundation seeder", (group) => {
     test("order numbering restarts per tenant (each shop's first order is #1000)", async ({ assert }) => {
         const bySlug = await demoTenantIds();
         for (const [slug, tenantId] of bySlug) {
-            const first = (await db
-                .from("orders")
-                .where("tenant_id", tenantId)
-                .min("order_number as min")) as Array<{ min: string | number | null }>;
+            const first = (await db.from("orders").where("tenant_id", tenantId).min("order_number as min")) as Array<{
+                min: string | number | null;
+            }>;
             if (first[0]?.min !== null && first[0]?.min !== undefined) {
                 assert.equal(Number(first[0].min), 1000, `tenant ${slug} should start order numbering at 1000`);
             }
