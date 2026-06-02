@@ -14,6 +14,7 @@ import { hashHeaderSet, suggestMapping } from "#services/product_import/import_f
 import { runPreview } from "#services/product_import/preview_runner";
 import { importsLocalPath, readSnapshot, uploadKey } from "#services/product_import/storage";
 import { TEMPLATE_HEADERS, TEMPLATE_SAMPLE_ROWS } from "#services/product_import/template_columns";
+import { withTenantTransaction } from "#services/tenant_context";
 import { paginated, resource } from "#transformers/api_envelope";
 import ProductImportChangeTransformer from "#transformers/product_import_change_transformer";
 import ProductImportErrorTransformer from "#transformers/product_import_error_transformer";
@@ -317,8 +318,7 @@ export default class AdminProductImportsController {
          * id wait on this lock; only one ever runs the transaction.
          */
         const [acquired, result] = await lock.createLock(`import:rollback:${row.id}`, "5 minutes").runImmediately(async () => {
-            const db = await import("@adonisjs/lucid/services/db");
-            await db.default.transaction(async (trx) => {
+            await withTenantTransaction(async (trx) => {
                 for (const [sku, fields] of Object.entries(snapshot)) {
                     const updates: Record<string, unknown> = {};
                     for (const [field, value] of Object.entries(fields)) {

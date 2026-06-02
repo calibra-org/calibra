@@ -19,10 +19,16 @@ responses:
             application/json:
                 schema:
                     type: object
-                    required: [user, customer]
+                    required: [user, customer, impersonated_by]
                     properties:
                         user: { $ref: "../../components/schemas/AuthUser.yaml" }
-                        customer: { $ref: "../../components/schemas/CustomerProfile.yaml" }
+                        customer:
+                            anyOf:
+                                - type: "null"
+                                - $ref: "../../components/schemas/CustomerProfile.yaml"
+                        impersonated_by:
+                            type: [integer, "null"]
+                            description: Platform-operator id when impersonating, else null.
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "404":

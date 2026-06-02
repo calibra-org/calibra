@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import logger from "@adonisjs/core/services/logger";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import Customer from "#models/customer";
@@ -11,6 +10,7 @@ import CustomerMergeHistory from "#models/customer_merge_history";
 import PasswordResetToken from "#models/password_reset_token";
 import User from "#models/user";
 import { recordAudit } from "#services/admin_audit_log_service";
+import { withTenantTransaction } from "#services/tenant_context";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
 import { adminCustomerConvertToAccountValidator, adminCustomerMergeValidator } from "#validators/admin/customer_validator";
@@ -47,7 +47,7 @@ export default class AdminCustomerActionsController {
 
         const placeholderPassword = payload.password ?? `tmp-${crypto.randomBytes(16).toString("hex")}A1`;
 
-        const { user, resetTokenPlain } = await db.transaction(async (trx) => {
+        const { user, resetTokenPlain } = await withTenantTransaction(async (trx) => {
             const created = await User.create(
                 {
                     email: payload.email,
@@ -221,7 +221,7 @@ export default class AdminCustomerActionsController {
             marketing_prefs: payload.strategy?.marketing_prefs ?? "most_recent",
         };
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             const primary = await Customer.query({ client: trx }).where("id", payload.primary_id).first();
             if (!primary) throw new Exception("Primary customer not found", { status: 404, code: "E_NOT_FOUND" });
             const duplicates = await Customer.query({ client: trx }).whereIn("id", payload.duplicate_ids).preload("user");

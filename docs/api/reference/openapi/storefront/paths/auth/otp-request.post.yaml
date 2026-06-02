@@ -1,0 +1,41 @@
+operationId: authOtpRequest
+summary: Request a one-time login code
+description: >
+    Issues a one-time code to the given `identifier` over the chosen `channel` (SMS or email). The
+    response is identical whether or not the identifier is registered — a new shopper is created on
+    verify, not here — so the endpoint never leaks account-existence signal. Tenant-scoped: the code
+    is bound to the tenant resolved from `X-Calibra-Tenant`.
+tags: [Auth]
+security: []
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [identifier, channel]
+                properties:
+                    identifier:
+                        type: string
+                        minLength: 3
+                        maxLength: 254
+                        description: Phone in E.164 (`09121234567`) or an email address.
+                        examples: ["09121234567"]
+                    channel:
+                        type: string
+                        enum: [sms, email]
+                        examples: ["sms"]
+
+responses:
+    "200":
+        description: A code was issued (or would have been — the response never reveals existence).
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/OtpRequestResult.yaml" }
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

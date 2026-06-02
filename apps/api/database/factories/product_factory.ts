@@ -6,17 +6,21 @@ import ProductBrand from "#models/product_brand";
 import ProductCategory from "#models/product_category";
 import ProductImage from "#models/product_image";
 import ProductTranslation from "#models/product_translation";
+import { testTenantId } from "#tests/helpers/tenant";
 
 /**
  * Factories for catalog entities. Each factory generates a deterministic-ish but unique row so
  * functional tests can compose them (`ProductFactory.merge({...}).with('translations', 2).create()`)
- * without colliding on unique constraints between runs.
+ * without colliding on unique constraints between runs. Every row is stamped with the default test
+ * tenant id (all catalog tables are per-tenant under multi-tenancy); override with
+ * `mergeRecursive({ tenantId })` for cross-tenant specs.
  *
- * Translations are added via the `withTranslations` state, since the test usually wants both fa + en
+ * Translations are added via the `after("create")` hook, since the test usually wants both fa + en
  * locales on the same row to exercise the i18n flow.
  */
 export const ProductCategoryFactory = factory
-    .define(ProductCategory, ({ faker }) => ({
+    .define(ProductCategory, async ({ faker }) => ({
+        tenantId: await testTenantId(),
         parentId: null,
         display: "default",
         imageMediaId: null,
@@ -26,7 +30,8 @@ export const ProductCategoryFactory = factory
     .build();
 
 export const ProductBrandFactory = factory
-    .define(ProductBrand, ({ faker }) => ({
+    .define(ProductBrand, async ({ faker }) => ({
+        tenantId: await testTenantId(),
         imageMediaId: null,
         menuOrder: faker.number.int({ min: 1, max: 100 }),
         attributes: {},
@@ -34,7 +39,8 @@ export const ProductBrandFactory = factory
     .build();
 
 export const MediaFactory = factory
-    .define(Media, ({ faker }) => ({
+    .define(Media, async ({ faker }) => ({
+        tenantId: await testTenantId(),
         kind: "image",
         url: `http://localhost/uploads/test/${faker.string.uuid()}.jpg`,
         mime: "image/jpeg",
@@ -46,7 +52,8 @@ export const MediaFactory = factory
     .build();
 
 export const ProductFactory = factory
-    .define(Product, ({ faker }) => ({
+    .define(Product, async ({ faker }) => ({
+        tenantId: await testTenantId(),
         type: "simple",
         sku: `SKU-${faker.string.alphanumeric(8).toUpperCase()}`,
         status: "publish",
@@ -72,6 +79,7 @@ export const ProductFactory = factory
     .after("create", async (_factory, product) => {
         await ProductTranslation.createMany([
             {
+                tenantId: product.tenantId,
                 productId: product.id,
                 locale: "fa",
                 name: `محصول ${product.id}`,
@@ -82,6 +90,7 @@ export const ProductFactory = factory
                 externalButtonText: null,
             },
             {
+                tenantId: product.tenantId,
                 productId: product.id,
                 locale: "en",
                 name: `Product ${product.id}`,
@@ -96,7 +105,8 @@ export const ProductFactory = factory
     .build();
 
 export const ProductImageFactory = factory
-    .define(ProductImage, () => ({
+    .define(ProductImage, async () => ({
+        tenantId: await testTenantId(),
         productId: 0 as unknown as bigint,
         mediaId: 0 as unknown as bigint,
         position: 0,

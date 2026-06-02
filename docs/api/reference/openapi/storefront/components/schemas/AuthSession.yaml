@@ -1,0 +1,11 @@
+title: AuthSession
+description: >
+    The `data` envelope returned by `POST /auth/otp/verify` — the authenticated user identity plus a
+    fresh bearer token. Mirrors the OTP controller's success payload exactly.
+type: object
+properties:
+    user: { $ref: "./AuthUser.yaml" }
+    token: { $ref: "./BearerToken.yaml" }
+required:
+    - user
+    - token

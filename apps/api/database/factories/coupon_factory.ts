@@ -1,6 +1,7 @@
 import factory from "@adonisjs/lucid/factories";
 
 import Coupon from "#models/coupon";
+import { testTenantId } from "#tests/helpers/tenant";
 
 let counter = 0;
 
@@ -13,6 +14,7 @@ export const CouponFactory = factory
     .define(Coupon, async () => {
         counter += 1;
         return {
+            tenantId: await testTenantId(),
             code: `TEST${counter}`,
             discountType: "percent" as const,
             amountMinor: null,

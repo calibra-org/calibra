@@ -1,7 +1,6 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import emitter from "@adonisjs/core/services/emitter";
 import lock from "@adonisjs/lock/services/main";
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import * as Sentry from "@sentry/node";
 import { DateTime } from "luxon";
@@ -17,6 +16,7 @@ import type User from "#models/user";
 import InventoryService from "#services/inventory_service";
 import { orderStateMachine } from "#services/order_state_machine";
 import { paymentService } from "#services/payment_service";
+import { withTenantTransaction } from "#services/tenant_context";
 
 export interface RefundLineItemInput {
     orderLineItemId: number | bigint;
@@ -101,7 +101,7 @@ export class RefundService {
         payload: RefundInput,
         opts: RefundCreateOptions,
     ): Promise<{ refund: OrderRefund; customerId: number | null }> {
-        return db.transaction(async (trx) => {
+        return withTenantTransaction(async (trx) => {
             /** Row-lock the order — concurrent refunds on the same order serialize here. */
             const orderRow = await trx.from("orders").where("id", numericOrderId).forUpdate().first();
             if (!orderRow) {

@@ -1,0 +1,22 @@
+operationId: authImpersonationStop
+summary: End the current impersonated session
+description: >
+    Called by the admin panel's "exit impersonation" control. Closes the audit event (`ended_at`)
+    and revokes the short-lived impersonation token. The authenticated user is the impersonated shop
+    admin (`api` guard).
+tags: [Auth]
+security:
+    - BearerAuth: []
+
+responses:
+    "200":
+        description: The impersonation session was ended and its token revoked.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/ImpersonationStopResult.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"

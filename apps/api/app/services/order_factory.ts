@@ -1,5 +1,4 @@
 import { Exception } from "@adonisjs/core/exceptions";
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 import type { DiscounterCouponContext, DiscounterCustomerContext } from "#contracts/discounter";
@@ -18,6 +17,7 @@ import { orderNumberService } from "#services/order_number_service";
 import { resolvePrice } from "#services/price_resolver";
 import SettingsService from "#services/settings_service";
 import { enumerateShippingRates } from "#services/shipping_rate_service";
+import { withTenantTransaction } from "#services/tenant_context";
 
 const settings = new SettingsService();
 
@@ -107,7 +107,7 @@ export class OrderFactory {
         if (opts.trx) {
             return run(opts.trx);
         }
-        return db.transaction(run);
+        return withTenantTransaction(run);
     }
 
     /**

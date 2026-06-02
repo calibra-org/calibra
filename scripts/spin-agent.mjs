@@ -347,18 +347,34 @@ const server = http.createServer(async (req, res) => {
             return;
         }
         if (path === "/api/actions/reseed" && method === "POST") {
-            streamShellSse(res, "pnpm", ["--filter", "@calibra/api", "db:seed"]);
+            streamShellSse(res, "pnpm", [
+                "--filter",
+                "@calibra/api",
+                "exec",
+                "node",
+                "ace",
+                "db:seed",
+                "--connection=postgres_admin",
+            ]);
             return;
         }
         if (path === "/api/actions/migrate" && method === "POST") {
-            streamShellSse(res, "pnpm", ["--filter", "@calibra/api", "migration:run"]);
+            streamShellSse(res, "pnpm", [
+                "--filter",
+                "@calibra/api",
+                "exec",
+                "node",
+                "ace",
+                "migration:run",
+                "--connection=postgres_admin",
+            ]);
             return;
         }
         if (path === "/api/actions/rollback" && method === "POST") {
             /** Roll back, then re-run to land at the same head. Equivalent to `just db-reset` minus the volume drop. */
             streamShellSse(res, "sh", [
                 "-c",
-                "pnpm --filter @calibra/api migration:rollback && pnpm --filter @calibra/api migration:run",
+                "pnpm --filter @calibra/api exec node ace migration:rollback --connection=postgres_admin && pnpm --filter @calibra/api exec node ace migration:run --connection=postgres_admin",
             ]);
             return;
         }

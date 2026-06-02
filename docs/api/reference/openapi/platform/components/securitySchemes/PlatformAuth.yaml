@@ -1,0 +1,7 @@
+type: http
+scheme: bearer
+bearerFormat: opaque
+description: >
+    Opaque `pat_`-prefixed control-plane token issued by `POST /api/v1/platform/auth/login`. Pass it
+    as `Authorization: Bearer <token>`. These tokens live in `platform_access_tokens` and authenticate
+    ONLY against the `platform` guard — a shopper/shop-admin token can never authenticate here.

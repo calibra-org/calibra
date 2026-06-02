@@ -12,14 +12,27 @@ import { createHash } from "node:crypto";
  * first — `?category=shoes&page=1` and `?page=1&category=shoes` collide on the same key.
  */
 
+/**
+ * Tenant cache-key namespace. Every per-tenant cache key + tag must be prefixed with this so two
+ * tenants never share a cache slot (a stale read across tenants is a data leak, not just staleness).
+ * `null`/`undefined` (a global or un-tenanted path) collapses to `"global"`. Phase 2 threads this
+ * through every remaining per-tenant cache caller; Phase 1 wires it into `settings_service`.
+ */
+export function tenantSegment(tenantId: number | string | bigint | null | undefined): string {
+    return tenantId === null || tenantId === undefined ? "global" : `t${String(tenantId)}`;
+}
+
 /** Tag constants. Use these — never inline string tags in controllers or write paths. */
 export const CacheTags = {
+    /** Tenant registry / host→tenant resolution map. Invalidated when a tenant or domain changes (Phase 5). */
+    tenants: "tenant:registry",
     catalogProducts: "catalog:products",
     catalogProduct: (productId: number | string | bigint): `catalog:product:${string}` => `catalog:product:${String(productId)}`,
     catalogCategories: "catalog:categories",
     catalogTaxonomy: "catalog:taxonomy",
     shippingZones: "shipping:zones",
-    settingsGroup: (group: string): `settings:${string}` => `settings:${group}`,
+    settingsGroup: (group: string, tenantId?: number | string | bigint | null): string =>
+        `${tenantSegment(tenantId)}:settings:${group}`,
     currency: "currency:config",
     adminReports: "admin:reports",
     adminCustomers: "admin:customers",
@@ -121,7 +134,13 @@ export const CacheKeys = {
         },
     },
     settings: {
-        group: (group: string): string => `settings:group:${group}`,
+        group: (group: string, tenantId?: number | string | bigint | null): string =>
+            `${tenantSegment(tenantId)}:settings:group:${group}`,
+    },
+    /** Host/slug → tenant resolution, used by tenant_context_middleware (short TTL, tag: CacheTags.tenants). */
+    tenant: {
+        byHost: (host: string): string => `tenant:host:${host.toLowerCase()}`,
+        byRef: (ref: string | number | bigint): string => `tenant:ref:${String(ref).toLowerCase()}`,
     },
     currency: {
         config: (locale: string): string => `currency:config:${locale}`,

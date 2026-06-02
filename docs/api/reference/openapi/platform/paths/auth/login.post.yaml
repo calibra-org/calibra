@@ -1,0 +1,33 @@
+operationId: platformAuthLogin
+summary: Control-plane operator login
+description: >
+    Email + password login for platform operators. Mints a `pat_`-prefixed token on the dedicated
+    `platform` guard. Global route — no tenant context is resolved. Invalid credentials return 401.
+tags: [Platform Auth]
+security: []
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [email, password]
+                properties:
+                    email: { type: string, format: email, maxLength: 254, examples: ["platform@calibra.dev"] }
+                    password: { type: string, minLength: 1, maxLength: 128, examples: ["Passw0rd1!"] }
+
+responses:
+    "200":
+        description: Authenticated. The response carries the operator identity and a control-plane token.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformAuthSession.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

@@ -5,6 +5,7 @@ import vine from "@vinejs/vine";
 
 import Customer from "#models/customer";
 import CustomerTag from "#models/customer_tag";
+import { withTenantTransaction } from "#services/tenant_context";
 import { type AdminCustomerTagsViewQuery, adminCustomerTagsView } from "#table_views/admin/customer_tags";
 import CustomerTagTransformer from "#transformers/customer_tag_transformer";
 import { adminCustomerTagAttachValidator, adminCustomerTagCreateValidator } from "#validators/admin/customer_validator";
@@ -72,7 +73,7 @@ export default class AdminCustomerTagsController {
         const customer = await this.findCustomerOrFail(ctx.params.id);
         const payload = await ctx.request.validateUsing(adminCustomerTagAttachValidator);
         const name = normalizeTagName(payload.tag);
-        const tagId = await db.transaction(async (trx) => {
+        const tagId = await withTenantTransaction(async (trx) => {
             let tag = await CustomerTag.findBy("name", name, { client: trx });
             if (!tag) tag = await CustomerTag.create({ name }, { client: trx });
             await trx

@@ -1,0 +1,46 @@
+operationId: platformTenantImpersonate
+summary: Impersonate a tenant's shop admin
+description: >
+    Mints a short-lived tenant-scoped shop-admin token for the given tenant (defaulting to its first
+    admin, or `target_user_id` when supplied), writes a `tenant_impersonation_events` audit row, and
+    returns the admin URL to open. Requires a control-plane token; a shopper/shop-admin token is
+    rejected 401.
+tags: [Platform Tenants]
+security:
+    - PlatformAuth: []
+
+parameters:
+    - name: id
+      in: path
+      required: true
+      description: Target tenant id.
+      schema: { type: integer }
+
+requestBody:
+    required: false
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    target_user_id:
+                        type: integer
+                        description: Specific shop admin to impersonate; defaults to the tenant's first admin.
+                    reason:
+                        type: [string, "null"]
+                        description: Optional audit reason recorded on the impersonation event.
+
+responses:
+    "200":
+        description: Impersonation token minted and audit row written.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/ImpersonationGrant.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

@@ -1,12 +1,12 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import Customer from "#models/customer";
 import CustomerMarketingConsentHistory from "#models/customer_marketing_consent_history";
 import CustomerMarketingPref from "#models/customer_marketing_pref";
 import { recordAudit } from "#services/admin_audit_log_service";
+import { withTenantTransaction } from "#services/tenant_context";
 import CustomerMarketingConsentHistoryTransformer from "#transformers/customer_marketing_consent_history_transformer";
 import CustomerMarketingPrefTransformer from "#transformers/customer_marketing_pref_transformer";
 import { adminCustomerMarketingPatchValidator } from "#validators/admin/customer_validator";
@@ -49,7 +49,7 @@ export default class AdminCustomerMarketingController {
         const fields = CHANNEL_TO_FIELDS[payload.channel];
         const now = DateTime.utc();
 
-        const { row, changed } = await db.transaction(async (trx) => {
+        const { row, changed } = await withTenantTransaction(async (trx) => {
             let prefs = await CustomerMarketingPref.findBy("customer_id", Number(customer.id), { client: trx });
             if (!prefs) {
                 prefs = await CustomerMarketingPref.create(

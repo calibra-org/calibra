@@ -7,6 +7,7 @@ import Customer from "#models/customer";
 import CustomerStatusHistory from "#models/customer_status_history";
 import { recordAudit } from "#services/admin_audit_log_service";
 import { CacheInvalidation } from "#services/cache_invalidation";
+import { withTenantTransaction } from "#services/tenant_context";
 import CustomerStatusHistoryTransformer from "#transformers/customer_status_history_transformer";
 import { adminCustomerStatusPatchValidator } from "#validators/admin/customer_validator";
 
@@ -44,7 +45,7 @@ export default class AdminCustomerStatusController {
             return { data: { from_status: previousStatus, to_status: payload.status, reason: null } };
         }
 
-        const historyRow = await db.transaction(async (trx) => {
+        const historyRow = await withTenantTransaction(async (trx) => {
             customer.useTransaction(trx);
             customer.status = payload.status;
             await customer.save();

@@ -1,0 +1,9 @@
+title: PlatformAuthSession
+description: The `data` envelope returned by `POST /platform/auth/login` — the operator identity plus a fresh control-plane token.
+type: object
+properties:
+    platform_user: { $ref: "./PlatformUser.yaml" }
+    token: { $ref: "./PlatformBearerToken.yaml" }
+required:
+    - platform_user
+    - token

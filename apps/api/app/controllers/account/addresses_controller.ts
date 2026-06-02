@@ -1,6 +1,5 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 import type Customer from "#models/customer";
@@ -9,6 +8,7 @@ import CustomerIranProfile from "#models/customer_iran_profile";
 import { throwIfErrors, validateAddressForCountry } from "#services/address_country_validator";
 import { rulesFor } from "#services/country_address_rules/index";
 import phoneService from "#services/phone_service";
+import { withTenantTransaction } from "#services/tenant_context";
 import { accountAddressesView } from "#table_views/account/addresses";
 import CustomerAddressTransformer from "#transformers/customer_address_transformer";
 import { addressCreateValidator, addressUpdateValidator } from "#validators/account/address_validator";
@@ -54,7 +54,7 @@ export default class AddressesController {
         throwIfErrors(errors);
 
         const customerIdNum = Number(customer.id);
-        const address = await db.transaction(async (trx) => {
+        const address = await withTenantTransaction(async (trx) => {
             if (payload.is_default === true) {
                 await this.clearSiblingDefaults(trx, customerIdNum, payload.kind);
             }
@@ -133,7 +133,7 @@ export default class AddressesController {
         throwIfErrors(errors);
 
         const customerIdNum = Number(customer.id);
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             if (payload.is_default === true && !address.isDefault) {
                 await this.clearSiblingDefaults(trx, customerIdNum, address.kind);
             }

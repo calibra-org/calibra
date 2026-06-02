@@ -16,10 +16,11 @@
     "scripts": {
         "build": "tsdown",
         "dev": "tsdown --watch",
-        "codegen": "pnpm codegen:specs && pnpm codegen:storefront && pnpm codegen:admin",
+        "codegen": "pnpm codegen:specs && pnpm codegen:storefront && pnpm codegen:admin && pnpm codegen:platform",
         "codegen:specs": "pnpm --filter @calibra/api-docs run build:json",
         "codegen:storefront": "openapi-typescript ../../docs/api/dist/storefront.v1.json -o src/generated/storefront.d.ts",
         "codegen:admin": "openapi-typescript ../../docs/api/dist/admin.v1.json -o src/generated/admin.d.ts",
+        "codegen:platform": "openapi-typescript ../../docs/api/dist/platform.v1.json -o src/generated/platform.d.ts",
         "codegen:check": "pnpm codegen && git diff --exit-code -- src/generated/",
         "test": "vitest --run --passWithNoTests",
         "test:coverage": "vitest --coverage --passWithNoTests",

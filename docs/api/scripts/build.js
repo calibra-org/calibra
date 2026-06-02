@@ -9,7 +9,7 @@ const REF_DIR = join(ROOT, "reference");
 const SPEC_DIR = join(REF_DIR, "openapi");
 const SRC_HTML = join(REF_DIR, "scalar", "index.html");
 
-const SPECS = ["storefront.v1.yaml", "admin.v1.yaml"];
+const SPECS = ["storefront.v1.yaml", "admin.v1.yaml", "platform.v1.yaml"];
 
 main();
 function main() {

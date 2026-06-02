@@ -7,6 +7,7 @@ import { beforeSave, hasOne } from "@adonisjs/lucid/orm";
 import type { HasOne } from "@adonisjs/lucid/types/relations";
 
 import { UserSchema } from "#database/schema";
+import { TenantScoped } from "#models/concerns/tenant_scoped";
 import Customer from "#models/customer";
 
 /**
@@ -21,7 +22,7 @@ const AuthFinder = withAuthFinder(() => hash.use("scrypt"), {
     passwordColumnName: "passwordHash",
 });
 
-export default class User extends compose(UserSchema, AuthFinder) {
+export default class User extends compose(UserSchema, AuthFinder, TenantScoped) {
     static table = "users";
 
     /**

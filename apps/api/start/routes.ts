@@ -43,6 +43,7 @@ router.get("/metrics", async ({ response }) => {
 
 await import("./routes/catalog.js");
 await import("./routes/auth.js");
+await import("./routes/platform.js");
 await import("./routes/account.js");
 await import("./routes/cart.js");
 await import("./routes/checkout.js");

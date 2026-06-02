@@ -14,6 +14,7 @@ import ProductVariation from "#models/product_variation";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { orderNumberService } from "#services/order_number_service";
 import { orderStateMachine } from "#services/order_state_machine";
+import { withTenantTransaction } from "#services/tenant_context";
 import { type AdminOrdersViewQuery, adminOrdersView } from "#table_views/admin/orders";
 import OrderTransformer from "#transformers/order_transformer";
 import {
@@ -124,7 +125,7 @@ export default class AdminOrdersController {
             });
         }
 
-        const order = await db.transaction(async (trx) => {
+        const order = await withTenantTransaction(async (trx) => {
             const created = new Order();
             created.useTransaction(trx);
             created.orderNumber = await orderNumberService.allocate(trx);
@@ -295,7 +296,7 @@ export default class AdminOrdersController {
 
     async batch(ctx: HttpContext) {
         const payload = await ctx.request.validateUsing(adminOrderBatchValidator);
-        const result = await db.transaction(async (trx) => {
+        const result = await withTenantTransaction(async (trx) => {
             const updated: Order[] = [];
             const deletedIds: Array<bigint | number> = [];
             for (const patch of payload.update ?? []) {

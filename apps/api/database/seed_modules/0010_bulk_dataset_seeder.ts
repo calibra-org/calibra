@@ -11,6 +11,8 @@ import { BULK_CATEGORY_TREE, type CategoryNode, type LeafProductSpec } from "./b
 import { ingestFile } from "#services/media_storage";
 import SettingsService from "#services/settings_service";
 import { slugify } from "#services/slug_service";
+import { maybeTenantId } from "#services/tenant_context";
+import { reserveNumberBlock } from "#services/tenant_numbering_service";
 import env from "#start/env";
 import { toMediaUploadConfig } from "#transformers/media_settings_transformer";
 
@@ -252,30 +254,39 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         }
     }
 
+    /**
+     * Active tenant id for the run, or `null` when invoked without a tenant context. Bulk counts,
+     * idempotency deltas, and `--reset` are scoped by it so each tenant's dataset is independent —
+     * otherwise the second tenant would see the first's bulk rows and skip seeding.
+     */
+    private get tenantId(): number | null {
+        const id = maybeTenantId();
+        return id === null ? null : Number(id);
+    }
+
     private async countExistingBulk(): Promise<{ users: number; products: number; orders: number; reviews: number }> {
-        const usersRow = (await this.client
-            .from("users")
-            .where("email", "like", `%${BULK_EMAIL_DOMAIN}`)
-            .count("* as count")
-            .first()) as { count: string | number } | undefined;
-        const productsRow = (await this.client
-            .from("products")
-            .where("sku", "like", `${BULK_SKU_PREFIX}%`)
-            .count("* as count")
-            .first()) as { count: string | number } | undefined;
-        const ordersRow = (await this.client
+        const tid = this.tenantId;
+        const usersQuery = this.client.from("users").where("email", "like", `%${BULK_EMAIL_DOMAIN}`);
+        const productsQuery = this.client.from("products").where("sku", "like", `${BULK_SKU_PREFIX}%`);
+        const ordersQuery = this.client
             .from("orders")
             .leftJoin("customers", "customers.id", "orders.customer_id")
             .leftJoin("users", "users.id", "customers.user_id")
-            .where("users.email", "like", `%${BULK_EMAIL_DOMAIN}`)
-            .count("* as count")
-            .first()) as { count: string | number } | undefined;
-        const reviewsRow = (await this.client
+            .where("users.email", "like", `%${BULK_EMAIL_DOMAIN}`);
+        const reviewsQuery = this.client
             .from("product_reviews")
             .leftJoin("products", "products.id", "product_reviews.product_id")
-            .where("products.sku", "like", `${BULK_SKU_PREFIX}%`)
-            .count("* as count")
-            .first()) as { count: string | number } | undefined;
+            .where("products.sku", "like", `${BULK_SKU_PREFIX}%`);
+        if (tid !== null) {
+            usersQuery.where("users.tenant_id", tid);
+            productsQuery.where("products.tenant_id", tid);
+            ordersQuery.where("orders.tenant_id", tid);
+            reviewsQuery.where("product_reviews.tenant_id", tid);
+        }
+        const usersRow = (await usersQuery.count("* as count").first()) as { count: string | number } | undefined;
+        const productsRow = (await productsQuery.count("* as count").first()) as { count: string | number } | undefined;
+        const ordersRow = (await ordersQuery.count("* as count").first()) as { count: string | number } | undefined;
+        const reviewsRow = (await reviewsQuery.count("* as count").first()) as { count: string | number } | undefined;
         return {
             users: Number(usersRow?.count ?? 0),
             products: Number(productsRow?.count ?? 0),
@@ -290,10 +301,11 @@ export default class BulkDatasetSeeder extends BaseSeeder {
      */
     private async reset(): Promise<void> {
         console.log("Resetting bulk dataset (rows tagged BULK-*  / @bulk.calibra.dev)…");
+        const tid = this.tenantId;
 
-        const bulkUserIds = (await this.client.from("users").select("id").where("email", "like", `%${BULK_EMAIL_DOMAIN}`)).map(
-            (r: { id: number | string }) => Number(r.id),
-        );
+        const bulkUsersQuery = this.client.from("users").select("id").where("email", "like", `%${BULK_EMAIL_DOMAIN}`);
+        if (tid !== null) bulkUsersQuery.where("tenant_id", tid);
+        const bulkUserIds = (await bulkUsersQuery).map((r: { id: number | string }) => Number(r.id));
 
         const bulkCustomerIds = (
             await this.client
@@ -309,9 +321,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 .whereIn("customer_id", bulkCustomerIds.length === 0 ? [-1] : bulkCustomerIds)
         ).map((r: { id: number | string }) => Number(r.id));
 
-        const bulkProductIds = (await this.client.from("products").select("id").where("sku", "like", `${BULK_SKU_PREFIX}%`)).map(
-            (r: { id: number | string }) => Number(r.id),
-        );
+        const bulkProductsQuery = this.client.from("products").select("id").where("sku", "like", `${BULK_SKU_PREFIX}%`);
+        if (tid !== null) bulkProductsQuery.where("tenant_id", tid);
+        const bulkProductIds = (await bulkProductsQuery).map((r: { id: number | string }) => Number(r.id));
 
         const ordersFilter = bulkOrderIds.length === 0 ? [-1] : bulkOrderIds;
         const productsFilter = bulkProductIds.length === 0 ? [-1] : bulkProductIds;
@@ -334,7 +346,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         await this.client.from("order_status_history").whereIn("order_id", ordersFilter).delete();
         await this.client.from("order_addresses").whereIn("order_id", ordersFilter).delete();
         await this.client.from("orders").whereIn("id", ordersFilter).delete();
-        await this.client.from("coupons").where("code", "like", "BULK_%").delete();
+        const couponsDelete = this.client.from("coupons").where("code", "like", "BULK_%");
+        if (tid !== null) couponsDelete.where("tenant_id", tid);
+        await couponsDelete.delete();
 
         await this.client.from("product_reviews").whereIn("product_id", productsFilter).delete();
 
@@ -416,7 +430,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
      * `(locale, slug)` constraint, so re-runs reuse the existing ids.
      */
     private async ensureBulkBrands(now: string): Promise<number[]> {
-        const existing = await this.client
+        const existingQuery = this.client
             .from("product_brand_translations")
             .select(["brand_id", "slug"])
             .where("locale", "en")
@@ -424,6 +438,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 "slug",
                 BULK_BRANDS.map((b) => b.slugEn),
             );
+        if (this.tenantId !== null) existingQuery.where("tenant_id", this.tenantId);
+        const existing = await existingQuery;
         const slugToId = new Map<string, number>();
         for (const r of existing) slugToId.set(String(r.slug), Number(r.brand_id));
 
@@ -459,11 +475,13 @@ export default class BulkDatasetSeeder extends BaseSeeder {
      * existing id without changing rows.
      */
     private async ensureBulkCategoryTree(now: string): Promise<Array<{ categoryId: number; spec: LeafProductSpec }>> {
-        const existingTranslations = await this.client
+        const existingTranslationsQuery = this.client
             .from("product_category_translations")
             .select(["category_id", "slug"])
             .where("locale", "en")
             .where("slug", "like", "bk-%");
+        if (this.tenantId !== null) existingTranslationsQuery.where("tenant_id", this.tenantId);
+        const existingTranslations = await existingTranslationsQuery;
         const slugToId = new Map<string, number>();
         for (const r of existingTranslations) slugToId.set(String(r.slug), Number(r.category_id));
 
@@ -513,7 +531,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
      * the unique `(locale, slug)` constraint on `product_tag_translations`.
      */
     private async ensureBulkTags(now: string): Promise<number[]> {
-        const existingTranslations = await this.client
+        const existingTranslationsQuery = this.client
             .from("product_tag_translations")
             .select(["tag_id", "slug"])
             .where("locale", "en")
@@ -521,6 +539,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 "slug",
                 BULK_TAGS.map((t) => t.slugEn),
             );
+        if (this.tenantId !== null) existingTranslationsQuery.where("tenant_id", this.tenantId);
+        const existingTranslations = await existingTranslationsQuery;
         const slugToId = new Map<string, number>();
         for (const r of existingTranslations) slugToId.set(String(r.slug), Number(r.tag_id));
 
@@ -551,10 +571,10 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         passwordHash: string,
         now: string,
     ): Promise<{ users: number; customers: number }> {
+        const existingEmailsQuery = this.client.from("users").select("email").where("email", "like", `%${BULK_EMAIL_DOMAIN}`);
+        if (this.tenantId !== null) existingEmailsQuery.where("tenant_id", this.tenantId);
         const existingEmails = new Set<string>(
-            (await this.client.from("users").select("email").where("email", "like", `%${BULK_EMAIL_DOMAIN}`)).map(
-                (r: { email: string }) => String(r.email).toLowerCase(),
-            ),
+            (await existingEmailsQuery).map((r: { email: string }) => String(r.email).toLowerCase()),
         );
 
         const userRows: Array<Record<string, unknown>> = [];
@@ -692,11 +712,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
         inventory: number;
         tagLinks: number;
     }> {
-        const existingSkus = new Set<string>(
-            (await this.client.from("products").select("sku").where("sku", "like", `${BULK_SKU_PREFIX}%`)).map(
-                (r: { sku: string }) => String(r.sku),
-            ),
-        );
+        const existingSkusQuery = this.client.from("products").select("sku").where("sku", "like", `${BULK_SKU_PREFIX}%`);
+        if (this.tenantId !== null) existingSkusQuery.where("tenant_id", this.tenantId);
+        const existingSkus = new Set<string>((await existingSkusQuery).map((r: { sku: string }) => String(r.sku)));
         const existingProductSlugsEn = new Set<string>(
             (await this.client.from("product_translations").select("slug").where("locale", "en")).map((r: { slug: string }) =>
                 String(r.slug),
@@ -1264,33 +1282,39 @@ export default class BulkDatasetSeeder extends BaseSeeder {
     }
 
     private async seedOrders(target: number, now: string): Promise<{ orders: number; lineItems: number; history: number }> {
-        const bulkCustomers = await this.client
+        const bulkCustomersQuery = this.client
             .from("customers")
             .select(["customers.id as id", "customers.user_id as user_id", "users.email as email"])
             .leftJoin("users", "users.id", "customers.user_id")
             .where("users.email", "like", `%${BULK_EMAIL_DOMAIN}`);
+        if (this.tenantId !== null) bulkCustomersQuery.where("customers.tenant_id", this.tenantId);
+        const bulkCustomers = await bulkCustomersQuery;
 
         if (bulkCustomers.length === 0) {
             console.warn("No bulk customers found; skipping orders.");
             return { orders: 0, lineItems: 0, history: 0 };
         }
 
-        const productPool = await this.client
+        const productPoolQuery = this.client
             .from("products")
             .select(["id", "sku", "regular_price"])
             .where("sku", "like", `${BULK_SKU_PREFIX}%`)
             .where("status", "publish")
             .limit(2_000);
+        if (this.tenantId !== null) productPoolQuery.where("tenant_id", this.tenantId);
+        const productPool = await productPoolQuery;
 
         if (productPool.length === 0) {
             console.warn("No bulk products with status=publish; skipping orders.");
             return { orders: 0, lineItems: 0, history: 0 };
         }
 
-        const maxOrderNumberRow = (await this.client.from("orders").max("order_number as max").first()) as
-            | { max: string | number | null }
-            | undefined;
-        const orderNumberBase = Math.max(100_000, Number(maxOrderNumberRow?.max ?? 0) + 1);
+        /**
+         * Reserve a contiguous per-tenant order-number block from `tenant_number_counters` (the old
+         * global `order_number_seq` is gone). Advancing the counter here keeps later real orders —
+         * which call `nextNumber("order")` — from colliding with the seeded numbers.
+         */
+        const orderNumberBase = await reserveNumberBlock("order", target);
 
         const nameTranslations: Map<number, string> = new Map();
         for (const chunk of chunked(productPool, 500)) {
@@ -1373,7 +1397,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             orderRows.push({
                 customer_id: customer.id,
                 order_number: orderNumberBase + i,
-                order_key: `wc_bulk_${i}_${faker.string.alphanumeric({ length: 8 })}`,
+                /** `order_key` is globally unique (a public token, not tenant-scoped) and faker is
+                 *  seeded deterministically per run, so the tenant id keeps two tenants' keys apart. */
+                order_key: `wc_bulk_t${this.tenantId ?? 0}_${i}_${faker.string.alphanumeric({ length: 8 })}`,
                 status,
                 currency: "IRR",
                 currency_display: "IRT",
@@ -1544,10 +1570,6 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             await this.client.table("order_coupon_lines").insert(chunk);
         }
 
-        const maxRefundRow = (await this.client.from("order_refunds").max("refund_number as max").first()) as
-            | { max: string | number | null }
-            | undefined;
-        let nextRefundNumber = Math.max(200_000, Number(maxRefundRow?.max ?? 0) + 1);
         const refundRows: Array<Record<string, unknown>> = [];
         for (let i = 0; i < insertedOrderIds.length; i += 1) {
             const order = orderRows[i]!;
@@ -1571,7 +1593,6 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             if (amountMinor <= 0) continue;
             refundRows.push({
                 order_id: insertedOrderIds[i]!,
-                refund_number: nextRefundNumber,
                 amount_minor: amountMinor,
                 tax_amount_minor: taxAmountMinor,
                 reason,
@@ -1582,13 +1603,17 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                 created_at: createdAt,
                 updated_at: createdAt,
             });
-            nextRefundNumber += 1;
         }
+        /**
+         * Assign per-tenant refund numbers from the tenant counter (the global `refund_number_seq`
+         * is gone). Reserve the whole block in one shot, then number the rows contiguously.
+         */
+        const refundBase = await reserveNumberBlock("refund", refundRows.length);
+        refundRows.forEach((row, idx) => {
+            row.refund_number = refundBase + idx;
+        });
         for (const chunk of chunked(refundRows, BATCH)) {
             await this.client.table("order_refunds").insert(chunk);
-        }
-        if (refundRows.length > 0) {
-            await this.client.raw(`ALTER SEQUENCE refund_number_seq RESTART WITH ${nextRefundNumber}`);
         }
 
         return { orders: insertedOrderIds.length, lineItems: lineCount, history: historyCount };
@@ -1624,7 +1649,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             { code: "BULK_SHIP", type: "free_shipping", amountMinor: null, amountPercent: null, freeShipping: true },
         ];
         const codes = specs.map((s) => s.code);
-        const existing = (await this.client.from("coupons").select(["id", "code"]).whereIn("code", codes)) as Array<{
+        const existingQuery = this.client.from("coupons").select(["id", "code"]).whereIn("code", codes);
+        if (this.tenantId !== null) existingQuery.where("tenant_id", this.tenantId);
+        const existing = (await existingQuery) as Array<{
             id: number | string;
             code: string;
         }>;
@@ -1654,7 +1681,9 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             }));
             await this.client.table("coupons").insert(rows);
         }
-        const allRows = (await this.client.from("coupons").select(["id", "code"]).whereIn("code", codes)) as Array<{
+        const allRowsQuery = this.client.from("coupons").select(["id", "code"]).whereIn("code", codes);
+        if (this.tenantId !== null) allRowsQuery.where("tenant_id", this.tenantId);
+        const allRows = (await allRowsQuery) as Array<{
             id: number | string;
             code: string;
         }>;
@@ -1662,7 +1691,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
     }
 
     private async seedReviews(targetCount: number, now: string): Promise<number> {
-        const completedOrders = await this.client
+        const completedOrdersQuery = this.client
             .from("orders")
             .select(["customers.id as customer_id", "order_line_items.product_id as product_id"])
             .leftJoin("customers", "customers.id", "orders.customer_id")
@@ -1672,6 +1701,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             .where("orders.status", "completed")
             .whereNotNull("order_line_items.product_id")
             .limit(8_000);
+        if (this.tenantId !== null) completedOrdersQuery.where("orders.tenant_id", this.tenantId);
+        const completedOrders = await completedOrdersQuery;
 
         if (completedOrders.length === 0) return 0;
 

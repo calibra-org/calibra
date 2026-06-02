@@ -1,15 +1,23 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 import type Customer from "#models/customer";
 import CustomerIranProfile from "#models/customer_iran_profile";
 import nationalIdService from "#services/national_id_service";
 import phoneService from "#services/phone_service";
+import { withTenantTransaction } from "#services/tenant_context";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
 import { meUpdateValidator } from "#validators/account/me_validator";
+
+/** Extract the impersonating platform-user id from a token's abilities, or null for a normal session. */
+function parseImpersonatedBy(abilities: string[] | undefined): number | null {
+    const found = abilities?.find((ability) => ability.startsWith("impersonated_by:"));
+    if (!found) return null;
+    const id = Number(found.split(":")[1]);
+    return Number.isFinite(id) ? id : null;
+}
 
 export default class MeController {
     /**
@@ -19,16 +27,34 @@ export default class MeController {
      */
     async show(ctx: HttpContext) {
         const user = ctx.auth.getUserOrFail();
+
+        /**
+         * When the session is an impersonation (a platform operator logged in as this shop admin),
+         * the token carries an `impersonated_by:<platformUserId>` ability. Surfacing it lets the
+         * admin panel render the persistent "you are impersonating" banner + exit control.
+         */
+        const impersonatedBy = parseImpersonatedBy(user.currentAccessToken?.abilities);
+
         await user.load("customer", (q) => q.preload("iranProfile"));
         const customer = user.customer;
 
         if (!customer) {
-            throw new Exception("Customer profile missing", { status: 404, code: "E_CUSTOMER_MISSING" });
+            /**
+             * No commerce customer row — expected for shop staff (admins) and for phone-OTP shoppers
+             * who have authenticated but not yet completed a profile. Return the identity with a null
+             * customer rather than 404; the storefront/admin branch on `customer === null`.
+             */
+            return {
+                user: new UserTransformer(user).toObject(),
+                customer: null,
+                impersonated_by: impersonatedBy,
+            };
         }
 
         return {
             user: new UserTransformer(user).toObject(),
             customer: new CustomerTransformer(customer).withProfileExtensions(),
+            impersonated_by: impersonatedBy,
         };
     }
 
@@ -57,7 +83,7 @@ export default class MeController {
                   ? null
                   : phoneService.normalize(payload.phone, country);
 
-        await db.transaction(async (trx) => {
+        await withTenantTransaction(async (trx) => {
             if (payload.locale) {
                 user.locale = payload.locale;
                 user.useTransaction(trx);

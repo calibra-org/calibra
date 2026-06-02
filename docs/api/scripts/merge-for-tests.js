@@ -21,30 +21,33 @@ const ROOT = resolve(fileURLToPath(import.meta.url), "../..");
 
 const storefront = JSON.parse(await readFile(resolve(ROOT, "dist/storefront.v1.json"), "utf8"));
 const admin = JSON.parse(await readFile(resolve(ROOT, "dist/admin.v1.json"), "utf8"));
+const platform = JSON.parse(await readFile(resolve(ROOT, "dist/platform.v1.json"), "utf8"));
 
-const overlap = Object.keys(storefront.paths ?? {}).filter((p) => Object.hasOwn(admin.paths ?? {}, p));
-if (overlap.length > 0) {
-    throw new Error(
-        `Path collision between storefront and admin specs — both define: ${overlap.join(", ")}. ` +
-            "Investigate before merging.",
-    );
+const surfaces = [storefront, admin, platform];
+const seenPaths = new Set();
+for (const surface of surfaces) {
+    for (const path of Object.keys(surface.paths ?? {})) {
+        if (seenPaths.has(path)) {
+            throw new Error(`Path collision across surfaces — "${path}" is defined more than once. Investigate before merging.`);
+        }
+        seenPaths.add(path);
+    }
 }
+
+const mergeComponent = (key) => Object.assign({}, ...surfaces.map((surface) => surface.components?.[key] ?? {}));
 
 const merged = {
     openapi: "3.0.3",
     info: { title: "Calibra API (test-only merge)", version: "0.0.0" },
-    servers: storefront.servers ?? admin.servers ?? [],
-    paths: { ...storefront.paths, ...admin.paths },
+    servers: storefront.servers ?? admin.servers ?? platform.servers ?? [],
+    paths: { ...storefront.paths, ...admin.paths, ...platform.paths },
     components: {
-        schemas: { ...(storefront.components?.schemas ?? {}), ...(admin.components?.schemas ?? {}) },
-        responses: { ...(storefront.components?.responses ?? {}), ...(admin.components?.responses ?? {}) },
-        parameters: { ...(storefront.components?.parameters ?? {}), ...(admin.components?.parameters ?? {}) },
-        requestBodies: { ...(storefront.components?.requestBodies ?? {}), ...(admin.components?.requestBodies ?? {}) },
-        headers: { ...(storefront.components?.headers ?? {}), ...(admin.components?.headers ?? {}) },
-        securitySchemes: {
-            ...(storefront.components?.securitySchemes ?? {}),
-            ...(admin.components?.securitySchemes ?? {}),
-        },
+        schemas: mergeComponent("schemas"),
+        responses: mergeComponent("responses"),
+        parameters: mergeComponent("parameters"),
+        requestBodies: mergeComponent("requestBodies"),
+        headers: mergeComponent("headers"),
+        securitySchemes: mergeComponent("securitySchemes"),
     },
 };
 
@@ -112,7 +115,13 @@ function downgradeTo30(node, root) {
             if (typeof only.$ref === "string") {
                 const resolved = resolveRef(only.$ref, root);
                 if (resolved && typeof resolved === "object") {
-                    Object.assign(node, deepClone(resolved));
+                    /**
+                     * `api-contract-validator` mishandles `allOf` + `nullable: true` — it applies the
+                     * allOf constraints even to a `null` value. Flatten an inlined allOf-of-objects
+                     * into a single object so a nullable customer/profile validates as either null or
+                     * the merged object shape.
+                     */
+                    Object.assign(node, flattenAllOf(deepClone(resolved), root));
                     node.nullable = true;
                     continue;
                 }
@@ -162,4 +171,36 @@ function resolveRef(ref, root) {
 /** Structural clone for plain JSON nodes. The merged spec is JSON, so this is enough. */
 function deepClone(node) {
     return JSON.parse(JSON.stringify(node));
+}
+
+/**
+ * Collapse an `allOf` of object schemas into one flat object (merging `properties` + `required`,
+ * resolving `$ref` members). Used so a nullable inlined `$ref` to an allOf-based schema (e.g.
+ * `CustomerProfile`) validates under `api-contract-validator`, which does not honour
+ * `allOf` + `nullable: true` together. Non-allOf schemas are returned unchanged.
+ */
+function flattenAllOf(schema, root) {
+    if (!schema || typeof schema !== "object" || !Array.isArray(schema.allOf)) {
+        return schema;
+    }
+    const merged = { type: "object", properties: {}, required: [] };
+    const members = [...schema.allOf];
+    for (const [key, value] of Object.entries(schema)) {
+        if (key !== "allOf") members.push({ [key]: value });
+    }
+    for (const rawMember of members) {
+        let member = rawMember;
+        if (typeof member.$ref === "string") {
+            member = resolveRef(member.$ref, root) ?? {};
+        }
+        member = flattenAllOf(deepClone(member), root);
+        if (member.properties) Object.assign(merged.properties, member.properties);
+        if (Array.isArray(member.required)) merged.required.push(...member.required);
+        for (const [key, value] of Object.entries(member)) {
+            if (key === "properties" || key === "required" || key === "type" || key === "allOf") continue;
+            merged[key] = value;
+        }
+    }
+    if (merged.required.length === 0) delete merged.required;
+    return merged;
 }
