@@ -35,9 +35,20 @@ const port = env.get("DB_PORT");
  * behaviour. Empty (no hook) in production, where a session-level default would collapse isolation.
  */
 const defaultTenant = env.get("DB_DEFAULT_TENANT");
-const testPool = defaultTenant
+
+/**
+ * Pool sizing. The bridge model wraps each request in a transaction that holds **one** connection
+ * for the request's whole lifetime (the `app.current_tenant` GUC lives on it), so the effective
+ * concurrency ceiling is the pool's `max` — Knex's default of 10 is too low for an admin dashboard
+ * that fans out many parallel widget calls (the source of the `KnexTimeoutError: pool is full`
+ * 500s). Default to 20, overridable via `DB_POOL_MAX`.
+ */
+const poolMax = Math.max(4, Number(process.env.DB_POOL_MAX ?? 20));
+const basePool = { min: 0, max: poolMax };
+const poolConfig = defaultTenant
     ? {
           pool: {
+              ...basePool,
               afterCreate(
                   connection: { query: (sql: string, cb: (err: Error | null) => void) => void },
                   done: (err: Error | null, connection: unknown) => void,
@@ -46,7 +57,7 @@ const testPool = defaultTenant
               },
           },
       }
-    : {};
+    : { pool: basePool };
 
 const dbConfig = defineConfig({
     connection: "postgres",
@@ -60,7 +71,7 @@ const dbConfig = defineConfig({
                 password: env.get("DB_PASSWORD"),
                 database: sharedDatabase,
             },
-            ...testPool,
+            ...poolConfig,
             migrations: {
                 naturalSort: true,
                 paths: ["database/migrations"],
@@ -79,7 +90,7 @@ const dbConfig = defineConfig({
                 password: env.get("DB_ADMIN_PASSWORD") ?? env.get("DB_PASSWORD"),
                 database: sharedDatabase,
             },
-            ...testPool,
+            ...poolConfig,
             migrations: {
                 naturalSort: true,
                 paths: ["database/migrations"],
