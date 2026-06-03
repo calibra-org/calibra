@@ -1,5 +1,4 @@
 import { test } from "@japa/runner";
-import { runInTestTenant } from "#tests/helpers/tenant";
 
 import { OrderStatus } from "#enums/order_status";
 import { CustomerFactory } from "#factories/customer_factory";
@@ -13,6 +12,7 @@ import { orderFactory } from "#services/order_factory";
 import { orderFinalizer } from "#services/order_finalizer";
 import { createTaxableProduct } from "#tests/helpers/cart";
 import { iranRegionId, resetPhase05, seedCustomerCartReadyToCheckout } from "#tests/helpers/orders";
+import { runInTestTenant } from "#tests/helpers/tenant";
 
 async function prepareDraft(quantity = 1) {
     const customer = await CustomerFactory.create();
@@ -69,7 +69,10 @@ test.group("OrderFinalizer.finalize", (group) => {
         await InventoryItem.query().where("product_id", Number(product.id)).update({ stock_quantity: 1 });
         const beforeStatus = draft.status;
 
-        await assert.rejects(() => runInTestTenant(() => orderFinalizer.finalize(cart, draft, { idempotencyKey: "k-x" })), /Insufficient/);
+        await assert.rejects(
+            () => runInTestTenant(() => orderFinalizer.finalize(cart, draft, { idempotencyKey: "k-x" })),
+            /Insufficient/,
+        );
 
         const persisted = await Order.findOrFail(draft.id);
         assert.equal(persisted.status, beforeStatus);
@@ -83,7 +86,10 @@ test.group("OrderFinalizer.finalize", (group) => {
         const { cart, draft, product } = await prepareDraft(1);
         await Product.query().where("id", Number(product.id)).update({ regular_price: 1_500_000 });
 
-        await assert.rejects(() => runInTestTenant(() => orderFinalizer.finalize(cart, draft, { idempotencyKey: "k-d" })), /price changed/i);
+        await assert.rejects(
+            () => runInTestTenant(() => orderFinalizer.finalize(cart, draft, { idempotencyKey: "k-d" })),
+            /price changed/i,
+        );
 
         const persisted = await Order.findOrFail(draft.id);
         assert.equal(persisted.status, OrderStatus.Draft);

@@ -22,7 +22,9 @@ test.group("shipping_rate_service", (group) => {
     });
 
     test("IR address returns the Iran zone's methods", async ({ assert }) => {
-        const options = await runInTestTenant(() => enumerateShippingRates({ country: "IR", regionId: null, postcode: null }, 10_000_000));
+        const options = await runInTestTenant(() =>
+            enumerateShippingRates({ country: "IR", regionId: null, postcode: null }, 10_000_000),
+        );
         const codes = options.map((option) => option.methodCode).sort();
         assert.deepInclude(codes, "post_pishtaz");
         assert.deepInclude(codes, "post_sefareshi");
@@ -30,20 +32,26 @@ test.group("shipping_rate_service", (group) => {
     });
 
     test("free_shipping only appears once items_total meets min_amount", async ({ assert }) => {
-        const belowMin = await runInTestTenant(() => enumerateShippingRates({ country: "IR", regionId: null, postcode: null }, 1_000_000));
+        const belowMin = await runInTestTenant(() =>
+            enumerateShippingRates({ country: "IR", regionId: null, postcode: null }, 1_000_000),
+        );
         assert.notInclude(
             belowMin.map((o) => o.methodCode),
             "free_shipping",
         );
 
-        const aboveMin = await runInTestTenant(() => enumerateShippingRates({ country: "IR", regionId: null, postcode: null }, 100_000_000));
+        const aboveMin = await runInTestTenant(() =>
+            enumerateShippingRates({ country: "IR", regionId: null, postcode: null }, 100_000_000),
+        );
         const freeOption = aboveMin.find((o) => o.methodCode === "free_shipping");
         assert.exists(freeOption);
         assert.equal(freeOption?.cost, 0);
     });
 
     test("foreign address falls through to the fallback zone", async ({ assert }) => {
-        const options = await runInTestTenant(() => enumerateShippingRates({ country: "US", regionId: null, postcode: null }, 10_000_000));
+        const options = await runInTestTenant(() =>
+            enumerateShippingRates({ country: "US", regionId: null, postcode: null }, 10_000_000),
+        );
         /** Foundation seed leaves the fallback zone without methods — confirm we return an empty list, not the IR set. */
         const codes = options.map((option) => option.methodCode);
         assert.notInclude(codes, "tipax");
@@ -72,7 +80,9 @@ test.group("shipping_rate_service", (group) => {
             settings: JSON.stringify({ cost: 250_000 }),
         });
 
-        const options = await runInTestTenant(() => enumerateShippingRates({ country: "IR", regionId: null, postcode: SYNTHETIC_POSTCODE }, 10_000_000));
+        const options = await runInTestTenant(() =>
+            enumerateShippingRates({ country: "IR", regionId: null, postcode: SYNTHETIC_POSTCODE }, 10_000_000),
+        );
         const codes = options.map((option) => option.methodCode).sort();
         /** Tehran VIP is the only method in the postcode zone — Iran-zone methods must not appear. */
         assert.deepEqual(codes, ["flat_rate"]);

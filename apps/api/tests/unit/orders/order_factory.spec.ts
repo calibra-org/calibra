@@ -1,5 +1,4 @@
 import { test } from "@japa/runner";
-import { runInTestTenant } from "#tests/helpers/tenant";
 
 import { OrderStatus } from "#enums/order_status";
 import { CustomerFactory } from "#factories/customer_factory";
@@ -10,6 +9,7 @@ import OrderShippingLine from "#models/order_shipping_line";
 import { orderFactory } from "#services/order_factory";
 import { createTaxableProduct } from "#tests/helpers/cart";
 import { iranRegionId, resetPhase05, seedCustomerCartReadyToCheckout } from "#tests/helpers/orders";
+import { runInTestTenant } from "#tests/helpers/tenant";
 
 test.group("OrderFactory.fromCart", (group) => {
     group.each.setup(async () => {
