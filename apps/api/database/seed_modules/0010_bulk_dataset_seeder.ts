@@ -49,6 +49,12 @@ export interface BulkSeederOptions {
     orders?: number;
     reviews?: number;
     reset?: boolean;
+    /**
+     * Ingest the on-disk seed images through the sharp variant pipeline and link them to products.
+     * Defaults to `true`. Set `false` to skip image ingestion entirely (products get no images) —
+     * used by the test-env demo seed where the sharp pass would dominate runtime.
+     */
+    images?: boolean;
 }
 
 /**
@@ -1199,7 +1205,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
          * plenty of visual variety while keeping the media library + on-disk storage lean — and the
          * admin renders the generated thumbnail/medium/large variants out of the box.
          */
-        const mediaPoolIds = await this.buildMediaPool(now);
+        const mediaPoolIds = this.options.images === false ? [] : await this.buildMediaPool(now);
 
         let mediaCursor = 0;
         for (const link of productImageLinks) {

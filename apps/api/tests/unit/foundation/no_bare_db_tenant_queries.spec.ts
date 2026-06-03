@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import app from "@adonisjs/core/services/app";
 import { test } from "@japa/runner";
@@ -31,17 +31,18 @@ const ALLOWLIST = new Set<string>([]);
 
 async function walkTsFiles(dir: string): Promise<string[]> {
     const out: string[] = [];
-    let entries: Awaited<ReturnType<typeof readdir>>;
+    let names: string[];
     try {
-        entries = await readdir(dir, { withFileTypes: true });
+        names = await readdir(dir);
     } catch {
         return out;
     }
-    for (const entry of entries) {
-        const full = join(dir, entry.name);
-        if (entry.isDirectory()) {
+    for (const name of names) {
+        const full = join(dir, name);
+        const info = await stat(full);
+        if (info.isDirectory()) {
             out.push(...(await walkTsFiles(full)));
-        } else if (entry.name.endsWith(".ts")) {
+        } else if (name.endsWith(".ts")) {
             out.push(full);
         }
     }

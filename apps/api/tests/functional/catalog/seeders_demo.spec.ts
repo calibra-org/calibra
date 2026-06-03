@@ -8,10 +8,12 @@ import { test } from "@japa/runner";
  * noisy-neighbour story. These specs assert each tenant's catalog independently (filtered by
  * `tenant_id`; the suite runs as the superuser) and that catalogs never bleed across tenants.
  *
- * Expected per-tenant product counts mirror `DEMO_TENANTS` in `database/seeders/main_seeder.ts`.
+ * Expected per-tenant product counts mirror `TEST_VOLUMES` in `database/seeders/main_seeder.ts` (the
+ * small, image-free volumes the seeder uses under `NODE_ENV=test`; dev/prod seed far larger catalogs
+ * via `volumes`). Keep these in lockstep with `TEST_VOLUMES`.
  */
 const EXPECTED_PRODUCTS: ReadonlyArray<{ slug: string; products: number }> = [
-    { slug: "aurora", products: 25 },
+    { slug: "aurora", products: 8 },
     { slug: "mehr", products: 6 },
     { slug: "kasra", products: 5 },
 ];
@@ -61,7 +63,7 @@ test.group("Demo seeder (per-tenant catalog)", (group) => {
         }
         const totalRows = (await db.from("products").count("* as count")) as Array<{ count: string | number }>;
         assert.equal(Number(totalRows[0]?.count), perTenantSum);
-        assert.equal(perTenantSum, 36);
+        assert.equal(perTenantSum, 19);
     });
 
     test("re-running the seeder does not duplicate a tenant's catalog", async ({ assert }) => {

@@ -1,3 +1,4 @@
+import app from "@adonisjs/core/services/app";
 import { BaseSeeder } from "@adonisjs/lucid/seeders";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
@@ -99,6 +100,19 @@ const DEMO_TENANTS: ReadonlyArray<{
     },
 ];
 
+/**
+ * Test-env volumes (`NODE_ENV=test`). Small + `images: false` so `db:seed` stays fast under Japa —
+ * `seeders.spec` / `seeders_demo.spec` re-run `MainSeeder` in every `each.setup`, and the full
+ * sharp image pass at dev volumes would blow the CI shard budget. Per-tenant counts stay distinct so
+ * the per-tenant catalog spec can still assert isolation. Keep `seeders_demo.spec`'s expected counts
+ * in lockstep with these.
+ */
+const TEST_VOLUMES: Record<string, BulkSeederOptions> = {
+    aurora: { products: 8, users: 6, orders: 6, reviews: 3, images: false },
+    mehr: { products: 6, users: 5, orders: 5, reviews: 2, images: false },
+    kasra: { products: 5, users: 4, orders: 4, reviews: 2, images: false },
+};
+
 export default class MainSeeder extends BaseSeeder {
     private async runSeeder(seederModule: { default: typeof BaseSeeder }) {
         const SeederClass = seederModule.default;
@@ -138,7 +152,7 @@ export default class MainSeeder extends BaseSeeder {
              * bulk rows for this tenant and inserts only the delta, so re-seeding an existing spin
              * tops it up to target rather than duplicating.
              */
-            await this.seedTenantDataset(tenantId, tenant.volumes);
+            await this.seedTenantDataset(tenantId, app.inTest ? (TEST_VOLUMES[tenant.slug] ?? tenant.volumes) : tenant.volumes);
         }
     }
 
