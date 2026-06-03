@@ -7,6 +7,7 @@ import sharp from "sharp";
 import Customer from "#models/customer";
 import Media from "#models/media";
 import User from "#models/user";
+import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 async function createAdmin(email = "admin@media.test") {
     const user = await User.create({ email, passwordHash: "Passw0rd1!", role: "admin", locale: "fa" });
@@ -217,7 +218,8 @@ test.group("/api/v1/admin/media", (group) => {
         assert.equal(body.data.filename, "hello.txt");
         assert.isAbove(body.data.size_bytes ?? 0, 0);
         assert.equal(body.data.uploaded_by_user_id, Number(admin.id));
-        assert.match(body.data.url, /\/uploads\/\d{4}\/\d{2}\/[a-f0-9]+\.txt$/);
+        /** The per-tenant `t{id}/` segment is the first path component — the physical serving namespace. */
+        assert.match(body.data.url, new RegExp(`/uploads/t${TEST_TENANT_ID}/\\d{4}/\\d{2}/[a-f0-9]+\\.txt$`));
 
         await fs.rm(tmpDir, { recursive: true, force: true });
 

@@ -5,13 +5,21 @@ import type { MultipartFile } from "@adonisjs/core/bodyparser";
 import app from "@adonisjs/core/services/app";
 import sharp from "sharp";
 
+import { currentTenantId } from "#services/tenant_context";
 import type { VariantSpec } from "#transformers/media_settings_transformer";
 
 /**
- * Local-disk media storage. Uploads land under `apps/api/storage/uploads/{yyyy}/{mm}/{slug}.{ext}`
- * and are served by the public `GET /uploads/*` route. The hostname for the public URL is
- * derived from the incoming request so the value works both for the local spin
- * (`http://localhost:13467`) and any future deployment without needing a separate env var.
+ * Local-disk media storage. Uploads land under
+ * `apps/api/storage/uploads/t{tenantId}/{yyyy}/{mm}/{slug}.{ext}` and are served by the public
+ * `GET /uploads/*` route. The hostname for the public URL is derived from the incoming request so
+ * the value works both for the local spin (`http://localhost:13467`) and any future deployment
+ * without needing a separate env var.
+ *
+ * **Tenant isolation** is physical: every file lives under a per-tenant `t{tenantId}/` segment
+ * (the first path component) and the stored `url` embeds it, so one tenant's files can never sit in
+ * another's directory and the segment in the public URL IS the serving namespace. Combined with the
+ * unguessable random `stableId` filename and the `media.tenant_id` RLS row guard, a tenant can
+ * neither list nor address another's uploads. See {@link resolveServePath} for the read side.
  *
  * Swap targets later: when moving to S3 / R2 the only surface that changes is this module —
  * controllers and tests touch nothing.
@@ -22,6 +30,11 @@ import type { VariantSpec } from "#transformers/media_settings_transformer";
 
 /** Filesystem root for uploads, relative to the AdonisJS app root. */
 const STORAGE_SUBPATH = "storage/uploads";
+
+/** Per-tenant first path component, e.g. `t100000`. The serving namespace lives here. */
+function tenantPathSegment(): string {
+    return `t${String(currentTenantId())}`;
+}
 
 /** URL prefix served by the public `/uploads/*` route. */
 const PUBLIC_PATH_PREFIX = "/uploads";
@@ -95,7 +108,7 @@ export async function save(
     const now = new Date();
     const yyyy = String(now.getUTCFullYear());
     const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
-    const dirSegments = organizeByDate ? [yyyy, mm] : [];
+    const dirSegments = [tenantPathSegment(), ...(organizeByDate ? [yyyy, mm] : [])];
     const relativeDir = dirSegments.join("/");
 
     const originalName = sanitizeFilename(file.clientName);
@@ -160,7 +173,7 @@ export async function ingestFile(
     const now = new Date();
     const yyyy = String(now.getUTCFullYear());
     const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
-    const dirSegments = organizeByDate ? [yyyy, mm] : [];
+    const dirSegments = [tenantPathSegment(), ...(organizeByDate ? [yyyy, mm] : [])];
     const relativeDir = dirSegments.join("/");
 
     const ext = extname(sourceAbsPath).toLowerCase();

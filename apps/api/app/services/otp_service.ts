@@ -4,7 +4,7 @@ import logger from "@adonisjs/core/services/logger";
 import { DateTime } from "luxon";
 
 import OtpCode from "#models/otp_code";
-import { smsSender } from "#services/sms/sms_sender";
+import { resolveSmsFrom, smsSender } from "#services/sms/sms_sender";
 
 const OTP_TTL_MINUTES = 5;
 const MAX_ATTEMPTS = 5;
@@ -43,7 +43,7 @@ export const otpService = {
 
         const message = `Calibra code: ${code}`;
         if (channel === "sms") {
-            await smsSender().send(identifier, message);
+            await smsSender().send(identifier, message, await resolveSmsFrom());
         } else {
             logger.info({ channel: "email", identifier, message }, "OTP (email log driver)");
         }

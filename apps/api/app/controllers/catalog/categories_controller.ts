@@ -4,6 +4,7 @@ import db from "@adonisjs/lucid/services/db";
 
 import ProductCategory from "#models/product_category";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
+import { currentTenantId } from "#services/tenant_context";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductCategoryTransformer from "#transformers/product_category_transformer";
 
@@ -24,9 +25,9 @@ export default class CategoriesController {
 
         if (tree) {
             return cache.getOrSet({
-                key: CacheKeys.catalog.categoriesTree(locale),
+                key: CacheKeys.catalog.categoriesTree(currentTenantId(), locale),
                 ttl: "15m",
-                tags: [CacheTags.catalogCategories, CacheTags.catalogTaxonomy],
+                tags: [CacheTags.catalogCategories(currentTenantId()), CacheTags.catalogTaxonomy(currentTenantId())],
                 factory: async () => {
                     const rows = await ProductCategory.query()
                         .preload("translations")
@@ -62,9 +63,9 @@ export default class CategoriesController {
         const parentScope = parentIdParam === undefined ? "any" : parentIdParam === "null" ? null : String(parentIdParam);
 
         return cache.getOrSet({
-            key: CacheKeys.catalog.categoriesFlat(parentScope, locale),
+            key: CacheKeys.catalog.categoriesFlat(currentTenantId(), parentScope, locale),
             ttl: "15m",
-            tags: [CacheTags.catalogCategories, CacheTags.catalogTaxonomy],
+            tags: [CacheTags.catalogCategories(currentTenantId()), CacheTags.catalogTaxonomy(currentTenantId())],
             factory: async () => {
                 const query = ProductCategory.query().preload("translations").orderBy("menu_order", "asc").orderBy("id", "asc");
                 if (parentScope === null) query.whereNull("parent_id");
@@ -91,9 +92,9 @@ export default class CategoriesController {
         }
 
         const cached = await cache.getOrSet({
-            key: CacheKeys.catalog.categoryDetail(slug, locale),
+            key: CacheKeys.catalog.categoryDetail(currentTenantId(), slug, locale),
             ttl: "15m",
-            tags: [CacheTags.catalogCategories, CacheTags.catalogTaxonomy],
+            tags: [CacheTags.catalogCategories(currentTenantId()), CacheTags.catalogTaxonomy(currentTenantId())],
             factory: async () => {
                 const category = await ProductCategory.query()
                     .where("id", translation.category_id)

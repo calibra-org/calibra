@@ -21,6 +21,7 @@ import {
     resolveInterval,
     type StockStatusFilter,
 } from "#services/reports/analytics_service";
+import { currentTenantId } from "#services/tenant_context";
 import {
     adminReportStatsValidator,
     adminReportTableValidator,
@@ -68,10 +69,10 @@ export default class AdminReportsController {
         const locale = ctx.i18n.locale;
 
         return cache.getOrSet({
-            key: CacheKeys.admin.topProducts(days, limit, locale),
+            key: CacheKeys.admin.topProducts(currentTenantId(), days, limit, locale),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports, CacheTags.catalogProducts],
+            tags: [CacheTags.adminReports(currentTenantId()), CacheTags.catalogProducts(currentTenantId())],
             factory: () => this.computeTopProducts(days, limit, locale),
         });
     }
@@ -84,10 +85,14 @@ export default class AdminReportsController {
         const locale = ctx.i18n.locale;
 
         return cache.getOrSet({
-            key: CacheKeys.admin.topCategories(days, limit, locale),
+            key: CacheKeys.admin.topCategories(currentTenantId(), days, limit, locale),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports, CacheTags.catalogProducts, CacheTags.catalogCategories],
+            tags: [
+                CacheTags.adminReports(currentTenantId()),
+                CacheTags.catalogProducts(currentTenantId()),
+                CacheTags.catalogCategories(currentTenantId()),
+            ],
             factory: () => computeTopCategories(days, limit, locale),
         });
     }
@@ -105,10 +110,10 @@ export default class AdminReportsController {
         const locale = ctx.i18n.locale;
 
         return cache.getOrSet({
-            key: CacheKeys.admin.report("sales-stats", this.statsKeyParams(payload, unit), locale),
+            key: CacheKeys.admin.report(currentTenantId(), "sales-stats", this.statsKeyParams(payload, unit), locale),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports],
+            tags: [CacheTags.adminReports(currentTenantId())],
             factory: async () => {
                 const current = await computeSalesWindow(from, to, unit);
                 const comparison = compare ? await computeSalesWindow(compare.from, compare.to, unit) : null;
@@ -131,10 +136,10 @@ export default class AdminReportsController {
         const locale = ctx.i18n.locale;
 
         return cache.getOrSet({
-            key: CacheKeys.admin.report("coupons-stats", this.statsKeyParams(payload, unit), locale),
+            key: CacheKeys.admin.report(currentTenantId(), "coupons-stats", this.statsKeyParams(payload, unit), locale),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports],
+            tags: [CacheTags.adminReports(currentTenantId())],
             factory: async () => {
                 const current = await computeCouponsWindow(from, to, unit);
                 const comparison = compare ? await computeCouponsWindow(compare.from, compare.to, unit) : null;
@@ -177,10 +182,10 @@ export default class AdminReportsController {
         }
 
         const result = await cache.getOrSet({
-            key: CacheKeys.admin.report("revenue-table", this.tableKeyParams(payload, { unit }), locale),
+            key: CacheKeys.admin.report(currentTenantId(), "revenue-table", this.tableKeyParams(payload, { unit }), locale),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports],
+            tags: [CacheTags.adminReports(currentTenantId())],
             factory: compute,
         });
 
@@ -233,10 +238,15 @@ export default class AdminReportsController {
             return this.csv(ctx, "products-report", result.data as unknown as Record<string, unknown>[]);
         }
         return cache.getOrSet({
-            key: CacheKeys.admin.report("products-table", this.tableKeyParams(payload, { orderBy, orderDir }), locale),
+            key: CacheKeys.admin.report(
+                currentTenantId(),
+                "products-table",
+                this.tableKeyParams(payload, { orderBy, orderDir }),
+                locale,
+            ),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports, CacheTags.catalogProducts],
+            tags: [CacheTags.adminReports(currentTenantId()), CacheTags.catalogProducts(currentTenantId())],
             factory: () => compute(payload.page ?? 1, payload.limit ?? TABLE_PAGE_LIMIT),
         });
     }
@@ -263,10 +273,19 @@ export default class AdminReportsController {
             return this.csv(ctx, "categories-report", result.data as unknown as Record<string, unknown>[]);
         }
         return cache.getOrSet({
-            key: CacheKeys.admin.report("categories-table", this.tableKeyParams(payload, { orderBy, orderDir }), locale),
+            key: CacheKeys.admin.report(
+                currentTenantId(),
+                "categories-table",
+                this.tableKeyParams(payload, { orderBy, orderDir }),
+                locale,
+            ),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports, CacheTags.catalogProducts, CacheTags.catalogCategories],
+            tags: [
+                CacheTags.adminReports(currentTenantId()),
+                CacheTags.catalogProducts(currentTenantId()),
+                CacheTags.catalogCategories(currentTenantId()),
+            ],
             factory: () => compute(payload.page ?? 1, payload.limit ?? TABLE_PAGE_LIMIT),
         });
     }
@@ -287,10 +306,15 @@ export default class AdminReportsController {
             return this.csv(ctx, "coupons-report", result.data as unknown as Record<string, unknown>[]);
         }
         return cache.getOrSet({
-            key: CacheKeys.admin.report("coupons-table", this.tableKeyParams(payload, { orderBy, orderDir }), locale),
+            key: CacheKeys.admin.report(
+                currentTenantId(),
+                "coupons-table",
+                this.tableKeyParams(payload, { orderBy, orderDir }),
+                locale,
+            ),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports],
+            tags: [CacheTags.adminReports(currentTenantId())],
             factory: () => compute(payload.page ?? 1, payload.limit ?? TABLE_PAGE_LIMIT),
         });
     }
@@ -311,10 +335,15 @@ export default class AdminReportsController {
             return this.csv(ctx, "taxes-report", result.data as unknown as Record<string, unknown>[]);
         }
         return cache.getOrSet({
-            key: CacheKeys.admin.report("taxes-table", this.tableKeyParams(payload, { orderBy, orderDir }), locale),
+            key: CacheKeys.admin.report(
+                currentTenantId(),
+                "taxes-table",
+                this.tableKeyParams(payload, { orderBy, orderDir }),
+                locale,
+            ),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports],
+            tags: [CacheTags.adminReports(currentTenantId())],
             factory: () => compute(payload.page ?? 1, payload.limit ?? TABLE_PAGE_LIMIT),
         });
     }
@@ -348,6 +377,7 @@ export default class AdminReportsController {
         }
         return cache.getOrSet({
             key: CacheKeys.admin.report(
+                currentTenantId(),
                 "stock-table",
                 {
                     status,
@@ -361,7 +391,7 @@ export default class AdminReportsController {
             ),
             ttl: "1m",
             grace: "30s",
-            tags: [CacheTags.adminReports, CacheTags.catalogProducts],
+            tags: [CacheTags.adminReports(currentTenantId()), CacheTags.catalogProducts(currentTenantId())],
             factory: async () => {
                 const result = await compute(payload.page ?? 1, payload.limit ?? TABLE_PAGE_LIMIT);
                 const counts = await computeStockCounts();
@@ -394,10 +424,10 @@ export default class AdminReportsController {
             return this.csv(ctx, scope, result.data as Record<string, unknown>[]);
         }
         return cache.getOrSet({
-            key: CacheKeys.admin.report(scope, this.tableKeyParams(payload, { orderBy, orderDir }), locale),
+            key: CacheKeys.admin.report(currentTenantId(), scope, this.tableKeyParams(payload, { orderBy, orderDir }), locale),
             ttl: "5m",
             grace: "1h",
-            tags: [CacheTags.adminReports],
+            tags: [CacheTags.adminReports(currentTenantId())],
             factory: () =>
                 runner(from, to, { orderBy, orderDir, page: payload.page ?? 1, limit: payload.limit ?? TABLE_PAGE_LIMIT }),
         });

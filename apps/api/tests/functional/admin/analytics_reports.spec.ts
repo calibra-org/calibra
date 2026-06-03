@@ -11,6 +11,7 @@ import OrderLineItem from "#models/order_line_item";
 import { CacheTags } from "#services/cache_keys";
 import { createTaxableProduct } from "#tests/helpers/cart";
 import { resetWithPhase07 } from "#tests/helpers/refunds";
+import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 async function adminUser() {
     const admin = await UserFactory.apply("admin").create();
@@ -296,7 +297,7 @@ test.group("GET /api/v1/admin/reports/sales-stats", (group) => {
         assert.equal((warm.body() as { totals: { net_sales: number } }).totals.net_sales, 100_000);
 
         /** Every order write busts `admin:reports` (see start/events.ts) — simulate that here. */
-        await cache.deleteByTag({ tags: [CacheTags.adminReports] });
+        await cache.deleteByTag({ tags: [CacheTags.adminReports(TEST_TENANT_ID)] });
         const fresh = await client.get("/api/v1/admin/reports/sales-stats").qs(w).withGuard("api").loginAs(admin);
         assert.equal((fresh.body() as { totals: { net_sales: number } }).totals.net_sales, 150_000);
     });

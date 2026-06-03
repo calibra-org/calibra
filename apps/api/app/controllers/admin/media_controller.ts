@@ -1,11 +1,11 @@
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import vine from "@vinejs/vine";
 import { DateTime } from "luxon";
 
 import Media from "#models/media";
 import { deleteFile, save } from "#services/media_storage";
 import SettingsService from "#services/settings_service";
+import { currentTrx } from "#services/tenant_context";
 import { adminMediaView } from "#table_views/admin/media";
 import { collection, resource } from "#transformers/api_envelope";
 import { toMediaUploadConfig } from "#transformers/media_settings_transformer";
@@ -134,7 +134,12 @@ export default class AdminMediaController {
 
     /** `GET /api/v1/admin/media/months` — distinct `YYYY-MM` buckets, for the date dropdown. */
     async months(_ctx: HttpContext) {
-        const rows = await db.rawQuery(
+        /**
+         * Rides the request transaction (GUC-bearing) so the distinct-month scan is tenant-scoped:
+         * a bare `db.rawQuery` on a pooled connection has no `app.current_tenant` set and returns
+         * zero rows under the fail-closed `calibra_app` role in production.
+         */
+        const rows = await currentTrx().rawQuery(
             `SELECT DISTINCT to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM') AS month
              FROM media
              ORDER BY month DESC`,

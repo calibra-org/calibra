@@ -3,6 +3,7 @@ import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import { CacheKeys, CacheTags } from "#services/cache_keys";
+import { currentTenantId } from "#services/tenant_context";
 import type { AdminStatsRow } from "#transformers/customer_transformer";
 
 /**
@@ -49,7 +50,7 @@ export async function aggregateForCustomerIds(customerIds: ReadonlyArray<number>
 
     const missing: number[] = [];
     for (const id of customerIds) {
-        const cached = await cache.get<AdminStatsRow>({ key: CacheKeys.admin.customerAggregate(id) });
+        const cached = await cache.get<AdminStatsRow>({ key: CacheKeys.admin.customerAggregate(currentTenantId(), id) });
         if (cached !== undefined) {
             result.set(id, cached);
         } else {
@@ -63,11 +64,11 @@ export async function aggregateForCustomerIds(customerIds: ReadonlyArray<number>
             const stats = computed.get(id) ?? EMPTY_STATS;
             result.set(id, stats);
             await cache.set({
-                key: CacheKeys.admin.customerAggregate(id),
+                key: CacheKeys.admin.customerAggregate(currentTenantId(), id),
                 value: stats,
                 ttl: "2m",
                 grace: "1h",
-                tags: [CacheTags.adminCustomer(id), CacheTags.adminCustomers],
+                tags: [CacheTags.adminCustomer(currentTenantId(), id), CacheTags.adminCustomers(currentTenantId())],
             });
         }
     }
@@ -140,10 +141,10 @@ interface FavoriteRow {
  */
 export async function forSingleCustomer(customerId: number): Promise<CustomerStatsBundle> {
     return cache.getOrSet({
-        key: CacheKeys.admin.customerStats(customerId),
+        key: CacheKeys.admin.customerStats(currentTenantId(), customerId),
         ttl: "2m",
         grace: "1h",
-        tags: [CacheTags.adminCustomer(customerId), CacheTags.adminCustomers],
+        tags: [CacheTags.adminCustomer(currentTenantId(), customerId), CacheTags.adminCustomers(currentTenantId())],
         factory: () => computeSingleCustomerBundle(customerId),
     });
 }
@@ -240,10 +241,10 @@ interface CountRow {
  */
 export async function fetchCounts(): Promise<CustomerCounts> {
     return cache.getOrSet({
-        key: CacheKeys.admin.customerCounts(),
+        key: CacheKeys.admin.customerCounts(currentTenantId()),
         ttl: "2m",
         grace: "1h",
-        tags: [CacheTags.adminCustomers],
+        tags: [CacheTags.adminCustomers(currentTenantId())],
         factory: () => computeCounts(),
     });
 }
@@ -397,10 +398,10 @@ interface CountByDayRow {
  */
 export async function fetchCustomerInsights(): Promise<CustomerInsights> {
     return cache.getOrSet({
-        key: CacheKeys.admin.customerInsights(),
+        key: CacheKeys.admin.customerInsights(currentTenantId()),
         ttl: "5m",
         grace: "24h",
-        tags: [CacheTags.adminCustomers],
+        tags: [CacheTags.adminCustomers(currentTenantId())],
         factory: () => computeCustomerInsights(),
     });
 }

@@ -3,6 +3,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 
 import { CacheKeys, CacheTags } from "#services/cache_keys";
 import { resolveCurrencyConfig } from "#services/currency_config_service";
+import { currentTenantId } from "#services/tenant_context";
 import { toCurrencyConfig } from "#transformers/currency_transformer";
 
 export default class CurrencyController {
@@ -14,9 +15,9 @@ export default class CurrencyController {
     async show(ctx: HttpContext) {
         const locale = ctx.i18n.locale;
         return cache.getOrSet({
-            key: CacheKeys.currency.config(locale),
+            key: CacheKeys.currency.config(currentTenantId(), locale),
             ttl: "30m",
-            tags: [CacheTags.currency],
+            tags: [CacheTags.currency(currentTenantId())],
             factory: async () => {
                 const resolved = await resolveCurrencyConfig();
                 return { data: toCurrencyConfig(resolved) };

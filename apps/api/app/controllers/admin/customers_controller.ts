@@ -9,7 +9,7 @@ import User from "#models/user";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { aggregateForCustomerIds, fetchCounts, forSingleCustomer } from "#services/customer_stats_service";
 import phoneService from "#services/phone_service";
-import { withTenantTransaction } from "#services/tenant_context";
+import { currentTenantId, withTenantTransaction } from "#services/tenant_context";
 import { type AdminCustomersViewQuery, adminCustomersView } from "#table_views/admin/customers";
 import CustomerDownloadTransformer from "#transformers/customer_download_transformer";
 import CustomerTransformer from "#transformers/customer_transformer";
@@ -363,7 +363,7 @@ export default class AdminCustomersController {
 
         ctx.response.status(201);
         await customer.load("user");
-        await CacheInvalidation.customerChanged(customer.id);
+        await CacheInvalidation.customerChanged(currentTenantId(), customer.id);
         return {
             data: {
                 ...new CustomerTransformer(customer).toObject(),
@@ -400,7 +400,7 @@ export default class AdminCustomersController {
             }
         });
 
-        await CacheInvalidation.customerChanged(customer.id);
+        await CacheInvalidation.customerChanged(currentTenantId(), customer.id);
         return {
             data: {
                 ...new CustomerTransformer(customer).toObject(),
@@ -429,7 +429,7 @@ export default class AdminCustomersController {
                 await trx.from("auth_access_tokens").where("tokenable_id", Number(customer.user.id)).delete();
             }
         });
-        await CacheInvalidation.customerChanged(customer.id);
+        await CacheInvalidation.customerChanged(currentTenantId(), customer.id);
         return ctx.response.noContent();
     }
 
@@ -537,7 +537,7 @@ export default class AdminCustomersController {
 
         const touched = [...result.created.map((c) => c.id), ...result.updated.map((c) => c.id), ...result.deletedIds];
         for (const id of touched) {
-            await CacheInvalidation.customerChanged(id);
+            await CacheInvalidation.customerChanged(currentTenantId(), id);
         }
 
         return {
@@ -576,7 +576,7 @@ export default class AdminCustomersController {
                 await customer.user.save();
             }
         });
-        await CacheInvalidation.customerChanged(customer.id);
+        await CacheInvalidation.customerChanged(currentTenantId(), customer.id);
         return {
             data: {
                 ...new CustomerTransformer(customer).toObject(),

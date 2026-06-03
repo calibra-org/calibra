@@ -1,5 +1,6 @@
 import { Job } from "@adonisjs/queue";
 
+import { withJobTenantContext } from "#jobs/with_job_tenant_context";
 import { recordQueueJobOutcome } from "#services/metrics/domain_metrics";
 import { type RunOptions, runImport } from "#services/product_import/import_runner";
 
@@ -24,7 +25,7 @@ export default class RunImportJob extends Job<RunOptions> {
     async execute() {
         const startedAt = process.hrtime.bigint();
         try {
-            await runImport(this.payload);
+            await withJobTenantContext("product_imports", this.payload.importId, () => runImport(this.payload));
             recordQueueJobOutcome("imports", "completed", Number(process.hrtime.bigint() - startedAt) / 1e9);
         } catch (err) {
             recordQueueJobOutcome("imports", "failed", Number(process.hrtime.bigint() - startedAt) / 1e9);

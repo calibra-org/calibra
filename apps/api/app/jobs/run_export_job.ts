@@ -1,5 +1,6 @@
 import { Job } from "@adonisjs/queue";
 
+import { withJobTenantContext } from "#jobs/with_job_tenant_context";
 import { recordQueueJobOutcome } from "#services/metrics/domain_metrics";
 import { type RunExportOptions, runExport } from "#services/product_export/export_runner";
 
@@ -19,7 +20,7 @@ export default class RunExportJob extends Job<RunExportOptions> {
     async execute() {
         const startedAt = process.hrtime.bigint();
         try {
-            await runExport(this.payload);
+            await withJobTenantContext("product_exports", this.payload.exportId, () => runExport(this.payload));
             recordQueueJobOutcome("exports", "completed", Number(process.hrtime.bigint() - startedAt) / 1e9);
         } catch (err) {
             recordQueueJobOutcome("exports", "failed", Number(process.hrtime.bigint() - startedAt) / 1e9);

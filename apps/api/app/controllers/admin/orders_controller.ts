@@ -1,7 +1,6 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import logger from "@adonisjs/core/services/logger";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import { isOrderStatus, ORDER_STATUS_VALUES, OrderStatus } from "#enums/order_status";
@@ -14,7 +13,7 @@ import ProductVariation from "#models/product_variation";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { orderNumberService } from "#services/order_number_service";
 import { orderStateMachine } from "#services/order_state_machine";
-import { withTenantTransaction } from "#services/tenant_context";
+import { currentTenantId, currentTrx, withTenantTransaction } from "#services/tenant_context";
 import { type AdminOrdersViewQuery, adminOrdersView } from "#table_views/admin/orders";
 import OrderTransformer from "#transformers/order_transformer";
 import {
@@ -85,7 +84,7 @@ export default class AdminOrdersController {
      * cancelled, refunded, failed, trashed }`.
      */
     async counts(ctx: HttpContext) {
-        const liveRows = (await db
+        const liveRows = (await currentTrx()
             .from("orders")
             .whereNull("deleted_at")
             .groupBy("status")
@@ -94,7 +93,7 @@ export default class AdminOrdersController {
             status: string;
             count: string | number;
         }[];
-        const trashedRow = (await db.from("orders").whereNotNull("deleted_at").count("* as count").first()) as
+        const trashedRow = (await currentTrx().from("orders").whereNotNull("deleted_at").count("* as count").first()) as
             | { count: string | number }
             | undefined;
 
@@ -191,7 +190,7 @@ export default class AdminOrdersController {
         ctx.response.status(201);
         await order.refresh();
         await this.loadForResponse(order);
-        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+        await CacheInvalidation.customerChanged(currentTenantId(), order.customerId as bigint | number | null | undefined);
         return { data: new OrderTransformer(order).forAdmin() };
     }
 
@@ -202,7 +201,7 @@ export default class AdminOrdersController {
         if (payload.billing_email !== undefined) order.billingEmail = payload.billing_email ?? null;
         await order.save();
         await this.loadForResponse(order);
-        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+        await CacheInvalidation.customerChanged(currentTenantId(), order.customerId as bigint | number | null | undefined);
         return { data: new OrderTransformer(order).forAdmin() };
     }
 
@@ -210,7 +209,7 @@ export default class AdminOrdersController {
         const order = await this.findOrFail(ctx.params.id);
         order.deletedAt = DateTime.utc();
         await order.save();
-        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+        await CacheInvalidation.customerChanged(currentTenantId(), order.customerId as bigint | number | null | undefined);
         return ctx.response.noContent();
     }
 

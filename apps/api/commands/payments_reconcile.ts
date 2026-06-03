@@ -13,6 +13,12 @@ import type { CommandOptions } from "@adonisjs/core/types/ace";
  * each attempt to auto-finalise verified ones (the SAFE remediation — wherever the PSP says
  * "yes that authority was paid", we'd run the same code path verifyCallback runs).
  *
+ * **Runs per-tenant.** `payment_attempts` / `orders` / `payment_gateways` are tenant-scoped (RLS),
+ * so the scan loops every tenant via {@link forEachTenant} (fail-closed runtime role +
+ * `app.current_tenant` GUC) and rides `currentTrx()`; a context-less scan would see zero rows under
+ * `calibra_app`. The stranded gauge is labelled by gateway code only, so counts are summed across
+ * tenants per code.
+ *
  * Schedule via the host cron every 5 minutes (the per-spin compose ships @adonisjs/queue but
  * not a queued scheduler yet — falling back to ace + cron is simpler and survives queue
  * outages, which is what reconcile exists to recover from).
@@ -41,78 +47,83 @@ export default class PaymentsReconcile extends BaseCommand {
     async run() {
         const windowMinutes = Number.isFinite(this.window) && this.window > 0 ? this.window : 15;
 
-        const db = (await import("@adonisjs/lucid/services/db")).default;
         const Sentry = await import("@sentry/node");
         const { recordStrandedOrders } = await import("#services/metrics/domain_metrics");
+        const { currentTrx } = await import("#services/tenant_context");
+        const { forEachTenant } = await import("#services/tenant_runner");
 
         const cutoff = new Date(Date.now() - windowMinutes * 60 * 1000).toISOString();
 
-        const builder = db
-            .from("payment_attempts as pa")
-            .innerJoin("orders as o", "o.id", "pa.order_id")
-            .innerJoin("payment_gateways as g", "g.id", "pa.gateway_id")
-            .where("pa.status", "awaiting_callback")
-            .where("o.status", "pending")
-            .whereNull("o.deleted_at")
-            .where("pa.initiated_at", "<", cutoff)
-            .select(
-                "pa.id as attempt_id",
-                "pa.gateway_authority",
-                "pa.initiated_at",
-                "o.id as order_id",
-                "o.order_key",
-                "g.code as gateway_code",
-            );
-
-        if (this.gateway) builder.where("g.code", this.gateway);
-
-        const rows = (await builder) as Array<{
-            attempt_id: string | number;
-            gateway_authority: string | null;
-            initiated_at: Date | string;
-            order_id: string | number;
-            order_key: string | null;
-            gateway_code: string;
-        }>;
-
-        if (rows.length === 0) {
-            this.logger.info(`No stranded orders past ${windowMinutes}min window.`);
-            if (!this.dryRun) {
-                /**
-                 * Best-effort: zero the gauge across every gateway we know about. Without this,
-                 * an alerting rule that fires on `gauge > 0` can stay sticky after the last
-                 * stranded order recovers.
-                 */
-                const gateways = (await db.from("payment_gateways").select("code")) as Array<{ code: string }>;
-                for (const g of gateways) recordStrandedOrders(g.code, 0);
-            }
-            return;
-        }
-
+        /** Aggregated across tenants: stranded counts per gateway code + every known gateway code. */
         const byGateway = new Map<string, number>();
-        for (const row of rows) {
-            byGateway.set(row.gateway_code, (byGateway.get(row.gateway_code) ?? 0) + 1);
-            this.logger.warning(
-                `stranded order=${row.order_id} order_key=${row.order_key ?? "-"} attempt=${row.attempt_id} ` +
-                    `gateway=${row.gateway_code} authority=${row.gateway_authority ?? "-"} initiated_at=${String(row.initiated_at)}`,
-            );
+        const knownGateways = new Set<string>();
+        let totalStranded = 0;
+
+        await forEachTenant(async () => {
+            const builder = currentTrx()
+                .from("payment_attempts as pa")
+                .innerJoin("orders as o", "o.id", "pa.order_id")
+                .innerJoin("payment_gateways as g", "g.id", "pa.gateway_id")
+                .where("pa.status", "awaiting_callback")
+                .where("o.status", "pending")
+                .whereNull("o.deleted_at")
+                .where("pa.initiated_at", "<", cutoff)
+                .select(
+                    "pa.id as attempt_id",
+                    "pa.gateway_authority",
+                    "pa.initiated_at",
+                    "o.id as order_id",
+                    "o.order_key",
+                    "g.code as gateway_code",
+                );
+            if (this.gateway) builder.where("g.code", this.gateway);
+
+            const rows = (await builder) as Array<{
+                attempt_id: string | number;
+                gateway_authority: string | null;
+                initiated_at: Date | string;
+                order_id: string | number;
+                order_key: string | null;
+                gateway_code: string;
+            }>;
+
+            const gateways = (await currentTrx().from("payment_gateways").select("code")) as Array<{ code: string }>;
+            for (const g of gateways) knownGateways.add(g.code);
+
+            for (const row of rows) {
+                totalStranded += 1;
+                byGateway.set(row.gateway_code, (byGateway.get(row.gateway_code) ?? 0) + 1);
+                this.logger.warning(
+                    `stranded order=${row.order_id} order_key=${row.order_key ?? "-"} attempt=${row.attempt_id} ` +
+                        `gateway=${row.gateway_code} authority=${row.gateway_authority ?? "-"} initiated_at=${String(row.initiated_at)}`,
+                );
+            }
+        });
+
+        if (totalStranded === 0) {
+            this.logger.info(`No stranded orders past ${windowMinutes}min window.`);
         }
 
         if (this.dryRun) {
-            this.logger.info(`dry-run: ${rows.length} stranded order(s) detected. Metrics + Sentry skipped.`);
+            this.logger.info(`dry-run: ${totalStranded} stranded order(s) detected. Metrics + Sentry skipped.`);
             return;
         }
 
-        for (const [code, count] of byGateway.entries()) {
-            recordStrandedOrders(code, count);
+        /**
+         * Refresh the gauge for every gateway code seen across all tenants — zero for codes with no
+         * stranded orders so an alerting rule on `gauge > 0` doesn't stay sticky after recovery.
+         */
+        for (const code of knownGateways) {
+            recordStrandedOrders(code, byGateway.get(code) ?? 0);
         }
 
-        Sentry.captureMessage("payments_stranded_orders_detected", {
-            level: "warning",
-            tags: { window_minutes: String(windowMinutes), total: String(rows.length) },
-            extra: { by_gateway: Object.fromEntries(byGateway) },
-        });
-
-        this.logger.info(`reconcile complete: ${rows.length} stranded order(s) across ${byGateway.size} gateway(s).`);
+        if (totalStranded > 0) {
+            Sentry.captureMessage("payments_stranded_orders_detected", {
+                level: "warning",
+                tags: { window_minutes: String(windowMinutes), total: String(totalStranded) },
+                extra: { by_gateway: Object.fromEntries(byGateway) },
+            });
+            this.logger.info(`reconcile complete: ${totalStranded} stranded order(s) across ${byGateway.size} gateway(s).`);
+        }
     }
 }

@@ -19,6 +19,7 @@ import {
     withTransaction,
 } from "#services/catalog_writer";
 import SettingsService from "#services/settings_service";
+import { currentTenantId } from "#services/tenant_context";
 import { adminProductsView } from "#table_views/admin/products";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductTransformer, { type ProductTransformerOptions } from "#transformers/product_transformer";
@@ -452,7 +453,7 @@ export default class AdminProductsController {
             return row;
         });
         const reloaded = await this.reload(product.id);
-        await CacheInvalidation.productChanged(product.id);
+        await CacheInvalidation.productChanged(currentTenantId(), product.id);
         ctx.response.status(201);
         return resource(
             ProductTransformer.transform(reloaded!, ctx.i18n.locale, await this.transformerOptions()).useVariant("forAdmin"),
@@ -513,7 +514,7 @@ export default class AdminProductsController {
             await syncProductCustomAttributes(trx, product.id, payload.custom_attributes);
         });
         const reloaded = await this.reload(product.id);
-        await CacheInvalidation.productChanged(product.id);
+        await CacheInvalidation.productChanged(currentTenantId(), product.id);
         if (attributesTouched) {
             await recordAudit({
                 ctx,
@@ -651,7 +652,7 @@ export default class AdminProductsController {
                 entityId: Number(product.id),
             });
         }
-        await CacheInvalidation.productChanged(product.id);
+        await CacheInvalidation.productChanged(currentTenantId(), product.id);
         return ctx.response.status(204);
     }
 
@@ -669,7 +670,7 @@ export default class AdminProductsController {
             entityKind: "product",
             entityId: Number(product.id),
         });
-        await CacheInvalidation.productChanged(product.id);
+        await CacheInvalidation.productChanged(currentTenantId(), product.id);
         const reloaded = await this.reload(product.id);
         return resource(
             ProductTransformer.transform(reloaded!, ctx.i18n.locale, await this.transformerOptions()).useVariant("forAdmin"),
@@ -693,7 +694,7 @@ export default class AdminProductsController {
         for (const id of restoredIds) {
             await recordAudit({ ctx, action: "product.restore", entityKind: "product", entityId: id });
         }
-        await CacheInvalidation.productsChanged(restoredIds);
+        await CacheInvalidation.productsChanged(currentTenantId(), restoredIds);
         return { data: { restored: restoredIds } };
     }
 
@@ -771,7 +772,7 @@ export default class AdminProductsController {
             return row;
         });
         const reloaded = await this.reload(copy.id);
-        await CacheInvalidation.productChanged(copy.id);
+        await CacheInvalidation.productChanged(currentTenantId(), copy.id);
         ctx.response.status(201);
         return resource(
             ProductTransformer.transform(reloaded!, ctx.i18n.locale, await this.transformerOptions()).useVariant("forAdmin"),
@@ -856,7 +857,12 @@ export default class AdminProductsController {
                 }
             }
         });
-        await CacheInvalidation.productsChanged([...createdIds, ...updatedIds, ...deletedIds, ...forceDeletedIds]);
+        await CacheInvalidation.productsChanged(currentTenantId(), [
+            ...createdIds,
+            ...updatedIds,
+            ...deletedIds,
+            ...forceDeletedIds,
+        ]);
         return {
             data: {
                 created: createdIds,

@@ -10,6 +10,7 @@ import PaymentGateway from "#models/payment_gateway";
 import type Product from "#models/product";
 import Region from "#models/region";
 import { resetWithFoundation } from "#tests/helpers/cart";
+import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 /**
  * Foundation seeder upserts by `(country_code, code)` so the surrogate `regions.id` values shift
@@ -60,6 +61,13 @@ export async function makeDraftOrder(args: {
     gatewayId?: number;
 }): Promise<Order> {
     const order = await Order.create({
+        /**
+         * Stamp the tenant explicitly so the in-memory instance carries `tenantId` for downstream
+         * event listeners (e.g. `order:*` cache invalidation reads `order.tenantId`). Created outside
+         * a request context, the model's tenant-stamp hook is a no-op and only the DB column default
+         * (the suite GUC) fills the row — which Lucid does not reflect back onto the instance.
+         */
+        tenantId: TEST_TENANT_ID,
         orderNumber: await nextOrderNumber(),
         status: OrderStatus.Draft,
         customerId: args.customerId ?? null,

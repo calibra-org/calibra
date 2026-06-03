@@ -189,6 +189,9 @@ export class TenantProvisioningService {
         const settings = [
             { group_key: "general", key: "shop_name", value: JSON.stringify("Shop"), type: "string" },
             { group_key: "general", key: "primary_locale", value: JSON.stringify("fa"), type: "string" },
+            /** Per-tenant SMS sender identity; empty defaults fall back to the `SMS_FROM` env. */
+            { group_key: "sms", key: "from_number", value: JSON.stringify(""), type: "string" },
+            { group_key: "sms", key: "from_name", value: JSON.stringify(""), type: "string" },
         ];
         for (const setting of settings) {
             await trx.table("settings").insert({
