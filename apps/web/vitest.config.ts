@@ -9,6 +9,8 @@ export default defineConfig({
     resolve: {
         alias: {
             "#": new URL("./src", import.meta.url).pathname,
+            /** `server-only` is a Next runtime marker with no test-time module — stub it out. */
+            "server-only": new URL("./src/test-stubs/server-only.ts", import.meta.url).pathname,
         },
     },
 });

@@ -56,6 +56,8 @@ tags:
       description: PSP init + gateway callback endpoints (storefront-facing).
     - name: Currency
       description: Public display-currency configuration for the money formatter.
+    - name: Tenant
+      description: Public tenant profile + runtime branding for the resolved shop.
 
 components:
     securitySchemes:
@@ -98,6 +100,12 @@ paths:
     /api/v1/currency:
         get:
             $ref: "./storefront/paths/currency/currency.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+
+    /api/v1/storefront/tenant:
+        get:
+            $ref: "./storefront/paths/tenant/tenant.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
 

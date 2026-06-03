@@ -3,6 +3,7 @@ import { BaseSeeder } from "@adonisjs/lucid/seeders";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
+import { type BrandingSettingsInput, brandingSettingRows } from "#services/storefront_branding_service";
 import { runWithTenant } from "#services/tenant_context";
 import { nextNumber } from "#services/tenant_numbering_service";
 import { TenantProvisioningService } from "#services/tenant_provisioning_service";
@@ -20,10 +21,67 @@ import { TenantProvisioningService } from "#services/tenant_provisioning_service
  * a no-op for that tenant. The full production-scale bulk dataset (`db:bulk-seed`) is not yet
  * tenant-aware — it remains the explicit single-tenant generator pending its Phase-2 conversion.
  */
+/**
+ * Each demo tenant gets a distinct brand palette + tagline so the storefront's runtime branding
+ * (RULE B) is visibly different per host — Aurora cool/blue, Mehr warm/amber, Kasra bold/violet.
+ * Logos stay unset (the storefront renders a per-tenant monogram from the name + accent), exercising
+ * the no-logo fallback path; production sets `logo_media_id` through the admin branding editor.
+ */
 const DEMO_TENANTS = [
-    { slug: "aurora", name: "Aurora", ownerEmail: "admin@bulk.calibra.dev", sizes: { products: 25, customers: 12, orders: 18 } },
-    { slug: "mehr", name: "Mehr", ownerEmail: "admin@mehr.calibra.dev", sizes: { products: 6, customers: 4, orders: 5 } },
-    { slug: "kasra", name: "Kasra", ownerEmail: "admin@kasra.calibra.dev", sizes: { products: 5, customers: 3, orders: 4 } },
+    {
+        slug: "aurora",
+        name: "Aurora",
+        ownerEmail: "admin@bulk.calibra.dev",
+        sizes: { products: 25, customers: 12, orders: 18 },
+        branding: {
+            tagline: "روشنایی برای هر روز",
+            palette: {
+                background: "oklch(99% 0.005 230)",
+                foreground: "oklch(20% 0.03 250)",
+                muted: "oklch(96% 0.01 230)",
+                mutedForeground: "oklch(50% 0.02 250)",
+                border: "oklch(90% 0.012 230)",
+                accent: "oklch(60% 0.16 230)",
+                accentForeground: "oklch(99% 0 0)",
+            },
+        },
+    },
+    {
+        slug: "mehr",
+        name: "Mehr",
+        ownerEmail: "admin@mehr.calibra.dev",
+        sizes: { products: 6, customers: 4, orders: 5 },
+        branding: {
+            tagline: "گرمی و مهربانی در هر خرید",
+            palette: {
+                background: "oklch(98% 0.012 70)",
+                foreground: "oklch(22% 0.03 50)",
+                muted: "oklch(95% 0.02 70)",
+                mutedForeground: "oklch(48% 0.03 50)",
+                border: "oklch(89% 0.022 60)",
+                accent: "oklch(64% 0.16 45)",
+                accentForeground: "oklch(99% 0 0)",
+            },
+        },
+    },
+    {
+        slug: "kasra",
+        name: "Kasra",
+        ownerEmail: "admin@kasra.calibra.dev",
+        sizes: { products: 5, customers: 3, orders: 4 },
+        branding: {
+            tagline: "جسارت در سادگی",
+            palette: {
+                background: "oklch(99% 0.006 300)",
+                foreground: "oklch(18% 0.03 300)",
+                muted: "oklch(96% 0.012 300)",
+                mutedForeground: "oklch(50% 0.03 300)",
+                border: "oklch(90% 0.015 300)",
+                accent: "oklch(56% 0.2 300)",
+                accentForeground: "oklch(99% 0 0)",
+            },
+        },
+    },
 ] as const;
 
 interface DemoSizes {
@@ -51,19 +109,57 @@ export default class MainSeeder extends BaseSeeder {
 
         for (const tenant of DEMO_TENANTS) {
             const existing = await admin.from("tenants").where("slug", tenant.slug).first();
-            if (existing) {
-                continue;
+            const tenantId = existing
+                ? Number(existing.id)
+                : (
+                      await provisioning.provision({
+                          slug: tenant.slug,
+                          name: tenant.name,
+                          planKey: "starter",
+                          currencyCode: "IRR",
+                          ownerEmail: tenant.ownerEmail,
+                          ownerPassword: "Passw0rd1!",
+                          branding: tenant.branding,
+                      })
+                  ).id;
+            if (!existing) {
+                await this.seedTenantDemo(tenantId, tenant.sizes);
             }
-            const result = await provisioning.provision({
-                slug: tenant.slug,
-                name: tenant.name,
-                planKey: "starter",
-                currencyCode: "IRR",
-                ownerEmail: tenant.ownerEmail,
-                ownerPassword: "Passw0rd1!",
-            });
-            await this.seedTenantDemo(result.id, tenant.sizes);
+            /** Branding is upserted unconditionally so spins provisioned before it gain it on re-seed. */
+            await this.ensureBranding(admin, tenantId, tenant.name, tenant.branding);
         }
+    }
+
+    /**
+     * Idempotently upsert a demo tenant's branding settings (RULE B). Runs on the admin connection
+     * with the GUC set so RLS resolves the tenant; `onConflict` keeps a re-seed a no-op for unchanged
+     * rows. Separate from provisioning so an existing tenant (skipped above) still gets branding.
+     */
+    private async ensureBranding(
+        admin: ReturnType<typeof db.connection>,
+        tenantId: number,
+        name: string,
+        branding: BrandingSettingsInput,
+    ): Promise<void> {
+        const now = DateTime.utc().toSQL()!;
+        await admin.transaction(async (trx) => {
+            await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(tenantId)]);
+            for (const row of brandingSettingRows(branding, name)) {
+                await trx
+                    .table("settings")
+                    .insert({
+                        tenant_id: tenantId,
+                        group_key: "branding",
+                        key: row.key,
+                        value: JSON.stringify(row.value),
+                        type: row.type,
+                        created_at: now,
+                        updated_at: now,
+                    })
+                    .onConflict(["tenant_id", "group_key", "key"])
+                    .merge(["value", "type", "updated_at"]);
+            }
+        });
     }
 
     /**

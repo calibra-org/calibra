@@ -1,0 +1,55 @@
+title: TenantBranding
+description: >
+    Per-tenant runtime branding consumed by the storefront. The palette tokens are OKLCH strings
+    matching the storefront's `@theme` custom properties (`--color-*`); the storefront injects them
+    on the root element before first paint so the existing Tailwind classes resolve to the shop's
+    colors with no flash. `logoUrl` / `faviconUrl` are absolute URLs (object storage / CDN) or
+    `null` when unset — the storefront then renders a monogram fallback from `name`.
+type: object
+required: [name, tagline, font, logoUrl, faviconUrl, palette]
+properties:
+    name:
+        type: string
+        description: Brand display name shown in the header/footer. Falls back to the tenant name.
+        examples: ["Aurora"]
+    tagline:
+        type: string
+        description: Short brand tagline. Empty string when unset.
+        examples: ["روشنایی برای هر روز"]
+    font:
+        type: string
+        description: Font-family key the storefront maps to a loaded font.
+        examples: ["vazirmatn"]
+    logoUrl:
+        type: [string, "null"]
+        description: Absolute logo URL, or null to render a name-derived monogram.
+        examples: ["https://cdn.calibra.app/uploads/t1/2026/06/logo.svg"]
+    faviconUrl:
+        type: [string, "null"]
+        description: Absolute favicon URL, or null.
+    palette:
+        type: object
+        description: OKLCH color tokens overriding the storefront's `@theme` defaults.
+        required: [background, foreground, muted, mutedForeground, border, accent, accentForeground]
+        properties:
+            background:
+                type: string
+                examples: ["oklch(99% 0.005 230)"]
+            foreground:
+                type: string
+                examples: ["oklch(20% 0.03 250)"]
+            muted:
+                type: string
+                examples: ["oklch(96% 0.01 230)"]
+            mutedForeground:
+                type: string
+                examples: ["oklch(50% 0.02 250)"]
+            border:
+                type: string
+                examples: ["oklch(90% 0.012 230)"]
+            accent:
+                type: string
+                examples: ["oklch(60% 0.16 230)"]
+            accentForeground:
+                type: string
+                examples: ["oklch(99% 0 0)"]
