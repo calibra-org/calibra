@@ -3,9 +3,10 @@
 import { randomUUID } from "node:crypto";
 import { BackendError, createApiClient } from "@calibra/sdk";
 import { cookies } from "next/headers";
+import { redirect as nextRedirect } from "next/navigation";
 
 import { redirect } from "#/lib/i18n/navigation";
-import { TENANT_HEADER } from "#/lib/tenant/constants";
+import { CONSOLE_URL, TENANT_HEADER } from "#/lib/tenant/constants";
 import { tenantRefFromHeaders } from "#/lib/tenant/current-tenant";
 
 import { CSRF_COOKIE, getSession, SESSION_COOKIE } from "./auth";
@@ -141,5 +142,37 @@ export async function logoutAction(): Promise<void> {
     }
     store.delete(SESSION_COOKIE);
     store.delete(CSRF_COOKIE);
+    redirect({ href: "/login", locale: "fa" });
+}
+
+/**
+ * Exit an impersonation session (RULE D). Calls `POST /api/v1/auth/impersonation/stop` so the API
+ * revokes the short-lived impersonation token and stamps `ended_at` on the audit event, clears the
+ * admin cookies, and returns the platform operator to the control plane (`NEXT_PUBLIC_CONSOLE_URL`)
+ * — or this shop's login when no console URL is configured. Best-effort on the revoke: the cookies
+ * are cleared regardless, so the operator always leaves the impersonated session.
+ */
+export async function stopImpersonationAction(): Promise<void> {
+    const session = await getSession();
+    const tenant = await tenantRefFromHeaders();
+    if (session) {
+        try {
+            const api = createApiClient({
+                baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+                token: session.token,
+                ...(tenant ? { headers: { [TENANT_HEADER]: tenant } } : {}),
+            });
+            await api.storefront.POST("/api/v1/auth/impersonation/stop", {});
+        } catch {
+            /** Best-effort: the cookies are cleared either way so the impersonation can't continue. */
+        }
+    }
+    const store = await cookies();
+    store.delete(SESSION_COOKIE);
+    store.delete(CSRF_COOKIE);
+
+    if (CONSOLE_URL.length > 0) {
+        nextRedirect(CONSOLE_URL);
+    }
     redirect({ href: "/login", locale: "fa" });
 }

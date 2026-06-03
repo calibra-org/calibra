@@ -54,20 +54,31 @@ export async function getSession(): Promise<AdminSession | null> {
     }
 }
 
+/** A validated session plus the impersonation state surfaced by `/auth/me` (Phase 4 RULE D). */
+export interface AuthenticatedSession {
+    session: AdminSession;
+    /**
+     * The platform operator's id when this token is an impersonation token (a support operator
+     * "logged in as" this shop), else `null`. Drives the persistent impersonation banner.
+     */
+    impersonatedBy: number | null;
+}
+
 /**
  * Server-side guard for the authenticated layout. Redirects to `/login` when the cookie is
- * absent, malformed, or carries a token the API has revoked / expired / never knew about
- * (cleared on DB reset, manual logout from another tab, etc.). A single `/auth/me` call
- * validates the token without surfacing 401s into page renders downstream.
+ * absent, malformed, the `Host` resolves to a different tenant (RULE A), or the token has been
+ * revoked / expired (cleared on DB reset, peer logout, etc.). The single `/auth/me` call both
+ * validates the token and reports whether the session is an impersonation (RULE D), so the layout
+ * can render the banner without a second round-trip.
  *
- * `redirect` throws an internal Next.js exception, so the cast on the unreachable branch is
+ * `redirect` throws an internal Next.js exception, so the casts on the unreachable branches are
  * only there to satisfy the type checker.
  */
-export async function requireSession(locale: string): Promise<AdminSession> {
+export async function requireSession(locale: string): Promise<AuthenticatedSession> {
     const session = await getSession();
     if (session === null) {
         redirect({ href: "/login", locale });
-        return null as unknown as AdminSession;
+        return null as unknown as AuthenticatedSession;
     }
 
     /**
@@ -79,7 +90,7 @@ export async function requireSession(locale: string): Promise<AdminSession> {
     const hostRef = await tenantRefFromHeaders();
     if (hostRef === null || session.tenantSlug !== hostRef) {
         redirect({ href: "/login", locale });
-        return null as unknown as AdminSession;
+        return null as unknown as AuthenticatedSession;
     }
 
     try {
@@ -89,7 +100,9 @@ export async function requireSession(locale: string): Promise<AdminSession> {
             locale,
             headers: { [TENANT_HEADER]: hostRef },
         });
-        await api.storefront.GET("/api/v1/auth/me", {});
+        const { data } = await api.storefront.GET("/api/v1/auth/me", {});
+        const impersonatedBy = typeof data?.impersonated_by === "number" ? data.impersonated_by : null;
+        return { session, impersonatedBy };
     } catch (err) {
         if (err instanceof BackendError && (err.status === 401 || err.status === 403)) {
             /**
@@ -101,9 +114,8 @@ export async function requireSession(locale: string): Promise<AdminSession> {
              * through {@link logoutAction} which clears them in a valid context.
              */
             redirect({ href: "/login", locale });
-            return null as unknown as AdminSession;
+            return null as unknown as AuthenticatedSession;
         }
         throw err;
     }
-    return session;
 }
