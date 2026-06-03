@@ -40,6 +40,13 @@ export async function ensureEnvFiles(meta) {
             `NEXT_PUBLIC_API_BASE_URL=http://localhost:${meta.ports.api}`,
             `NEXT_PUBLIC_SITE_URL=http://localhost:${meta.ports.web}`,
             `NEXT_PUBLIC_DEFAULT_LOCALE=fa`,
+            /**
+             * Multi-tenant storefront resolves the shop from the Host. In dev a shop is reached at
+             * `<slug>.shops.localhost:${meta.ports.web}` (browsers loop `*.localhost` back to
+             * 127.0.0.1), so the root is `shops.localhost` here, not the prod `shops.calibra.app`.
+             */
+            `NEXT_PUBLIC_SHOPS_ROOT=shops.localhost`,
+            `NEXT_PUBLIC_TEMPLATE_KEY=default`,
             "",
         ].join("\n"),
     );
