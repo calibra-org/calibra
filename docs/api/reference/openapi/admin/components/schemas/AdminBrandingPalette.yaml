@@ -1,0 +1,23 @@
+title: AdminBrandingPalette
+description: >
+    The shop's storefront color palette, in OKLCH. Keys mirror the storefront's `@theme` tokens
+    (`apps/web/src/styles/globals.css`); the storefront injects them as `--color-*` custom
+    properties so its Tailwind classes (`bg-background`, `text-accent`, …) resolve to these colors
+    before first paint (RULE B). Every value is an OKLCH string, validated on write.
+type: object
+required:
+    - background
+    - foreground
+    - muted
+    - muted_foreground
+    - border
+    - accent
+    - accent_foreground
+properties:
+    background: { type: string, examples: ["oklch(99% 0 0)"] }
+    foreground: { type: string, examples: ["oklch(15% 0 0)"] }
+    muted: { type: string, examples: ["oklch(96% 0 0)"] }
+    muted_foreground: { type: string, examples: ["oklch(45% 0 0)"] }
+    border: { type: string, examples: ["oklch(90% 0 0)"] }
+    accent: { type: string, examples: ["oklch(60% 0.18 250)"] }
+    accent_foreground: { type: string, examples: ["oklch(99% 0 0)"] }

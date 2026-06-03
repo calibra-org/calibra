@@ -5,7 +5,8 @@
         "auth": {
             "unauthenticated": "Authentication is required.",
             "invalid_credentials": "Invalid credentials.",
-            "forbidden_admin": "Admin access required."
+            "forbidden_admin": "Admin access required.",
+            "tenant_mismatch": "Account does not belong to this shop."
         },
         "coupons": {
             "not_found": "Coupon code not found.",

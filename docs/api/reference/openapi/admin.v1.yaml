@@ -283,6 +283,14 @@ paths:
         patch:
             $ref: "./admin/paths/settings/media.patch.yaml"
 
+    /api/v1/admin/settings/branding:
+        get:
+            $ref: "./admin/paths/settings/branding.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./admin/paths/settings/branding.patch.yaml"
+
     /api/v1/admin/customers:
         get:
             $ref: "./admin/paths/customers/customers.get.yaml"

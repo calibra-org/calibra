@@ -1,0 +1,9 @@
+title: AdminBrandingMedia
+description: >
+    A resolved branding asset (logo / favicon) — the `media` row id the form round-trips on save,
+    plus its absolute public URL for the live preview.
+type: object
+required: [id, url]
+properties:
+    id: { type: integer, examples: [42] }
+    url: { type: string, format: uri, examples: ["https://api.example.com/uploads/t1/logo.png"] }
