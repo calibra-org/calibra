@@ -27,17 +27,23 @@ const nextConfig: NextConfig = {
     allowedDevOrigins: [
         "*.spin.localhost",
         "*.*.spin.localhost",
+        /** Dev shop subdomains served at `<slug>.shops.localhost:<port>` (RULE A). */
+        "*.shops.localhost",
         ...(process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(",")
             .map((s) => s.trim())
             .filter(Boolean) ?? []),
     ],
     images: {
         /**
-         * Allow product images served from the AdonisJS API host. Adjust as deployment hosts settle.
-         * `localhost:3333` matches the default `apps/api` docker compose port.
+         * Allow product/branding images served from the AdonisJS API host (per-tenant `/uploads/*`)
+         * and from the production CDN. `localhost`/`127.0.0.1` (any port) cover the dev + spin API
+         * hosts; `https://**` covers per-shop CDN hosts and custom domains. Tighten the `https`
+         * wildcard to the real CDN host once deployment domains settle.
          */
         remotePatterns: [
-            { protocol: "http", hostname: "localhost", port: "3333", pathname: "/**" },
+            { protocol: "http", hostname: "localhost", pathname: "/**" },
+            { protocol: "http", hostname: "127.0.0.1", pathname: "/**" },
+            { protocol: "http", hostname: "*.shops.localhost", pathname: "/**" },
             { protocol: "https", hostname: "**", pathname: "/**" },
         ],
     },
