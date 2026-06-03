@@ -797,3 +797,16 @@ export async function getTopSellersReport(): Promise<TopSellersReport> {
         rows: [],
     };
 }
+
+/**
+ * Branding settings for the initial paint of the Branding screen — the storefront-facing config
+ * (name/tagline/font/logo/favicon/OKLCH palette) the shop's staff self-serve. The client view seeds
+ * its React Query cache from this so the form renders without a skeleton flash, then revalidates.
+ * Returns null on error so the page can fall back to the client fetch.
+ */
+export async function getBranding(): Promise<Schemas["AdminBrandingSettings"] | null> {
+    const api = await apiServer();
+    const { data, error } = await api.admin.GET("/api/v1/admin/settings/branding", {});
+    if (error !== undefined || !data?.data) return null;
+    return data.data;
+}

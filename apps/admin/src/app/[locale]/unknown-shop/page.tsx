@@ -1,10 +1,10 @@
-import { StoreIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { LocaleSwitch } from "#/components/LocaleSwitch";
 import { ThemeToggle } from "#/components/ThemeToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
+import { Store } from "#/icons";
 
 interface PageProps {
     params: Promise<{ locale: string }>;
@@ -36,7 +36,7 @@ export default async function UnknownShopPage({ params }: PageProps) {
             <div className="relative z-10 flex w-full max-w-sm flex-col items-stretch gap-6">
                 <div className="flex flex-col items-center gap-3 text-center">
                     <div className="grid size-12 place-items-center rounded-xl border border-border/80 bg-card shadow-sm">
-                        <StoreIcon className="size-5 text-foreground" aria-hidden="true" />
+                        <Store className="size-5 text-foreground" aria-hidden="true" />
                     </div>
                 </div>
 
