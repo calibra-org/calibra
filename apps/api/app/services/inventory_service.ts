@@ -1,8 +1,8 @@
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 import InventoryItem from "#models/inventory_item";
 import InventoryMovement from "#models/inventory_movement";
+import ProductVariation from "#models/product_variation";
 import { recordInventoryMovement, recordInventoryOversellAttempt } from "#services/metrics/domain_metrics";
 import { withTenantTransaction } from "#services/tenant_context";
 
@@ -83,8 +83,8 @@ export default class InventoryService {
     private async resolveItem(target: InventoryTarget) {
         let variationId = target.variationId ?? null;
         if (variationId !== null) {
-            const variationRow = await db.from("product_variations").where("id", String(variationId)).first();
-            if (variationRow?.manage_stock_mode === "parent") {
+            const variationRow = await ProductVariation.query().where("id", String(variationId)).first();
+            if (variationRow?.manageStockMode === "parent") {
                 variationId = null;
             }
         }

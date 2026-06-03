@@ -1,11 +1,10 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import vine from "@vinejs/vine";
 
 import Customer from "#models/customer";
 import CustomerTag from "#models/customer_tag";
-import { withTenantTransaction } from "#services/tenant_context";
+import { currentTrx, withTenantTransaction } from "#services/tenant_context";
 import { type AdminCustomerTagsViewQuery, adminCustomerTagsView } from "#table_views/admin/customer_tags";
 import CustomerTagTransformer from "#transformers/customer_tag_transformer";
 import { adminCustomerTagAttachValidator, adminCustomerTagCreateValidator } from "#validators/admin/customer_validator";
@@ -93,7 +92,7 @@ export default class AdminCustomerTagsController {
         const customer = await this.findCustomerOrFail(ctx.params.id);
         const tagId = Number(ctx.params.tagId);
         if (!Number.isFinite(tagId)) throw new Exception("Tag not found", { status: 404, code: "E_NOT_FOUND" });
-        await db.from("customer_tag_pivot").where("customer_id", Number(customer.id)).where("tag_id", tagId).delete();
+        await currentTrx().from("customer_tag_pivot").where("customer_id", Number(customer.id)).where("tag_id", tagId).delete();
         return ctx.response.noContent();
     }
 

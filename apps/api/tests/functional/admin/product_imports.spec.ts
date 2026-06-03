@@ -1,9 +1,11 @@
 import { test } from "@japa/runner";
 
+import Product from "#models/product";
 import ProductImport from "#models/product_import";
 import ProductImportError from "#models/product_import_error";
 import User from "#models/user";
 import { createImportAdmin, truncateImportTables, writeTempCsv } from "#tests/helpers/product_imports";
+import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 const BASE_CSV = `sku,name,regular_price,sale_price,stock_quantity,categories
 test-001,محصول اول,۲۹۹٬۰۰۰ تومان,۲۴۹٬۰۰۰,۱۰,کفش > روزانه
@@ -170,6 +172,13 @@ test.group("/api/v1/admin/products/import — start + run", (group) => {
         const errors = await ProductImportError.query().where("import_id", importId);
         assert.isAtLeast(errors.length, 1);
         assert.equal(errors[0]!.code, "invalid_price");
+
+        /** Every row the job wrote must carry the importing tenant's id (no tenant-less / leaked rows). */
+        const created = await Product.query();
+        assert.isAbove(created.length, 0);
+        for (const product of created) {
+            assert.equal(Number(product.tenantId), TEST_TENANT_ID);
+        }
     });
 
     test("update_existing skips duplicate SKUs when disabled", async ({ client, assert }) => {

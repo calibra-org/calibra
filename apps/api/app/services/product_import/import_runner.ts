@@ -1,5 +1,4 @@
 import logger from "@adonisjs/core/services/logger";
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
 
@@ -16,7 +15,7 @@ import { type ColumnMapping, type ProjectionError, projectRow } from "#services/
 import { type ImportSnapshot, importsLocalPath, snapshotKey, writeSnapshot } from "#services/product_import/storage";
 import { newCounters } from "#services/product_import/taxonomy_resolver";
 import { notifyImportTerminal } from "#services/product_io_notifier";
-import { withTenantTransaction } from "#services/tenant_context";
+import { currentTrx, withTenantTransaction } from "#services/tenant_context";
 
 /**
  * `runImport` — the real run. Streams progress through the in-memory event bus on every chunk,
@@ -373,7 +372,7 @@ async function fetchExistingProductsForChunk(
         if (sku !== "") skus.add(sku);
     }
     if (skus.size === 0) return new Map();
-    const rows = await db
+    const rows = await currentTrx()
         .from("products")
         .whereNull("deleted_at")
         .whereIn("sku", Array.from(skus))
@@ -445,7 +444,7 @@ async function writePreImportSnapshot(
         await writeSnapshot(importId, {});
         return;
     }
-    const existing = await db
+    const existing = await currentTrx()
         .from("products")
         .whereNull("deleted_at")
         .whereIn("sku", Array.from(skus))
@@ -473,9 +472,14 @@ async function writePreImportSnapshot(
 }
 
 async function isCancellationRequested(importId: number): Promise<boolean> {
-    const row = await db.from("product_imports").where("id", importId).select("cancellation_requested_at").first();
-    if (!row) return false;
-    return (row as { cancellation_requested_at: Date | null }).cancellation_requested_at !== null;
+    /**
+     * Rides the request/job transaction (GUC-bearing) via the model — a bare `db.from` on a pooled
+     * connection has no `app.current_tenant` and returns zero rows under the fail-closed
+     * `calibra_app` role, so the cancel flag would never be observed in production. READ COMMITTED
+     * means each call still sees a flag committed by the separate cancel request.
+     */
+    const row = await ProductImport.find(importId);
+    return row !== null && row.cancellationRequestedAt !== null && row.cancellationRequestedAt !== undefined;
 }
 
 async function recordErrors(importId: number, rowNumber: number, sku: string | null, errors: ProjectionError[]): Promise<void> {

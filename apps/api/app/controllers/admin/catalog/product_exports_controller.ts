@@ -2,7 +2,6 @@ import { createHash } from "node:crypto";
 import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
 import drive from "@adonisjs/drive/services/main";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import { cancelExport, downloadExport, viewExport } from "#abilities/main";
@@ -13,6 +12,7 @@ import { type ExportableProduct, resolveRow } from "#services/product_export/exp
 import { buildExportQuery, type ExportFilters } from "#services/product_export/export_query_builder";
 import { mintSignedUrl, verifySignedUrl } from "#services/product_export/export_signed_url";
 import { deleteExportArtifact } from "#services/product_export/export_storage";
+import { currentTrx } from "#services/tenant_context";
 import { collection, paginated, resource } from "#transformers/api_envelope";
 import ProductExportFilterPresetTransformer from "#transformers/product_export_filter_preset_transformer";
 import ProductExportTransformer from "#transformers/product_export_transformer";
@@ -304,7 +304,7 @@ export default class AdminProductExportsController {
                  */
                 const inner = buildExportQuery(filters).select("attributes");
                 const compiled = (inner as unknown as { toSQL: () => { sql: string; bindings: unknown[] } }).toSQL();
-                const rows = (await db.rawQuery(
+                const rows = (await currentTrx().rawQuery(
                     `SELECT jsonb_object_keys(attributes) AS key FROM (${compiled.sql}) AS p GROUP BY key`,
                     compiled.bindings as never,
                 )) as unknown as { rows: Array<{ key: string }> };
@@ -359,7 +359,7 @@ async function countVariations(filters: ExportFilters): Promise<number> {
     const compiled = (
         buildExportQuery(filters).select("id") as unknown as { toSQL: () => { sql: string; bindings: unknown[] } }
     ).toSQL();
-    const rows = (await db.rawQuery(
+    const rows = (await currentTrx().rawQuery(
         `SELECT COUNT(*)::int AS total FROM product_variations WHERE deleted_at IS NULL AND product_id IN (${compiled.sql})`,
         compiled.bindings as never,
     )) as unknown as { rows: Array<{ total: number }> };

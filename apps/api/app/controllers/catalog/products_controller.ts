@@ -1,10 +1,9 @@
 import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 
 import Product from "#models/product";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
-import { currentTenantId } from "#services/tenant_context";
+import { currentTenantId, currentTrx } from "#services/tenant_context";
 import { collection, paginated, resource } from "#transformers/api_envelope";
 import ProductTransformer from "#transformers/product_transformer";
 import ProductVariationTransformer from "#transformers/product_variation_transformer";
@@ -94,7 +93,7 @@ export default class ProductsController {
             }
 
             if (filters.attribute && filters.attributeTerm) {
-                const linkIds = await db
+                const linkIds = await currentTrx()
                     .from("product_attribute_links")
                     .innerJoin("product_attributes", "product_attribute_links.attribute_id", "product_attributes.id")
                     .innerJoin(
@@ -172,7 +171,7 @@ export default class ProductsController {
         const slug = ctx.params.slug;
         const locale = ctx.i18n.locale;
 
-        const translation = await db
+        const translation = await currentTrx()
             .from("product_translations")
             .where("locale", locale)
             .where("slug", slug)
@@ -254,6 +253,6 @@ async function resolveSlugsToIds(table: string, idColumn: string, slugOrId: stri
     if (/^\d+$/.test(value)) {
         return [Number(value)];
     }
-    const rows = await db.from(table).where("locale", locale).where("slug", value).select(idColumn);
+    const rows = await currentTrx().from(table).where("locale", locale).where("slug", value).select(idColumn);
     return rows.map((row) => Number(row[idColumn]));
 }
