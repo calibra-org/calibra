@@ -1,6 +1,8 @@
 import Currency from "#models/currency";
+import Tenant from "#models/tenant";
 import type { CurrencyPosition, MoneyFormatConfig } from "#services/money";
 import SettingsService from "#services/settings_service";
+import { maybeTenantId } from "#services/tenant_context";
 
 /**
  * Resolved currency configuration — the single shape both the public `GET /currency` endpoint and
@@ -48,7 +50,15 @@ export async function resolveCurrencyConfig(): Promise<ResolvedCurrencyConfig> {
     const settings = new SettingsService();
     const general = await settings.all("general");
 
-    const baseCode = typeof general.currency === "string" ? general.currency : "IRR";
+    /**
+     * Per-tenant base currency: the General `currency` setting wins, then the active tenant row's
+     * `currency_code` (set at provisioning), then the Iran-scope default. The tenant lookup only
+     * runs in a tenant context (request / job) and is skipped on a global path.
+     */
+    const tenantId = maybeTenantId();
+    const tenantCurrency = tenantId === null ? null : ((await Tenant.find(Number(tenantId)))?.currencyCode ?? null);
+
+    const baseCode = typeof general.currency === "string" ? general.currency : (tenantCurrency ?? "IRR");
     const displayCode = typeof general.currency_display_default === "string" ? general.currency_display_default : "IRT";
 
     const row = (await Currency.findBy("code", displayCode)) ?? (await Currency.findBy("code", "IRT"));
