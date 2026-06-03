@@ -76,7 +76,52 @@ test.group("prod-role reads of converted paths (calibra_app)", (group) => {
         await su
             .table("product_variations")
             .insert({ tenant_id: TENANT_A, product_id: productId, created_at: now, updated_at: now });
-        await su.table("orders").insert({ tenant_id: TENANT_A, order_number: 100_500, created_at: now, updated_at: now });
+        const orderRows = (await su
+            .table("orders")
+            .insert({ tenant_id: TENANT_A, order_number: 100_500, created_at: now, updated_at: now })
+            .returning("id")) as Array<{ id: number | string }>;
+        /** order_addresses powers the regional dashboard join (orders → order_addresses → regions). */
+        await su.table("order_addresses").insert({
+            tenant_id: TENANT_A,
+            order_id: Number(orderRows[0].id),
+            kind: "shipping",
+            first_name: "Scoped",
+            last_name: "Shipping",
+            address_line_1: "خیابان آزادی",
+            city: "تهران",
+            postcode: "1234567890",
+            country: "IR",
+            attributes: JSON.stringify({}),
+            created_at: now,
+            updated_at: now,
+        });
+        /** A customer user + favourite + category link — the exact bare-db tables that crashed/zeroed. */
+        const favUser = (await su
+            .table("users")
+            .insert({
+                tenant_id: TENANT_A,
+                email: "prod-fav@a.test",
+                password_hash: "x",
+                role: "customer",
+                locale: "fa",
+                created_at: now,
+                updated_at: now,
+            })
+            .returning("id")) as Array<{ id: number | string }>;
+        await su
+            .table("product_favorites")
+            .insert({ tenant_id: TENANT_A, user_id: Number(favUser[0].id), product_id: productId, created_at: now });
+        const cat = (await su
+            .table("product_categories")
+            .insert({ tenant_id: TENANT_A, created_at: now, updated_at: now })
+            .returning("id")) as Array<{ id: number | string }>;
+        await su.table("product_category_links").insert({
+            tenant_id: TENANT_A,
+            product_id: productId,
+            category_id: Number(cat[0].id),
+            created_at: now,
+            updated_at: now,
+        });
         await su.table("media").insert({
             tenant_id: TENANT_A,
             kind: "image",
@@ -101,11 +146,16 @@ test.group("prod-role reads of converted paths (calibra_app)", (group) => {
         return async () => {
             await db.manager.close(APP_CONNECTION, true);
             const cleanup = db.connection();
+            await cleanup.from("order_addresses").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
             await cleanup.from("orders").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
+            await cleanup.from("product_favorites").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
+            await cleanup.from("product_category_links").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
+            await cleanup.from("product_categories").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
             await cleanup.from("product_variations").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
             await cleanup.from("product_translations").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
             await cleanup.from("products").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
             await cleanup.from("media").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
+            await cleanup.from("users").whereIn("tenant_id", [TENANT_A, TENANT_B]).delete();
             await cleanup.from("tenants").whereIn("id", [TENANT_A, TENANT_B]).delete();
         };
     });
@@ -140,6 +190,25 @@ test.group("prod-role reads of converted paths (calibra_app)", (group) => {
 
     test("media months scan is tenant-scoped (media_controller.months)", async ({ assert }) => {
         const sql = "SELECT count(DISTINCT to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM'))::int AS count FROM media";
+        assert.equal(await scopedCount(TENANT_A, sql), 1);
+        assert.equal(await scopedCount(TENANT_B, sql), 0);
+    });
+
+    test("product_favorites is tenant-scoped (products_controller favourites)", async ({ assert }) => {
+        const sql = "SELECT count(*)::int AS count FROM product_favorites";
+        assert.equal(await scopedCount(TENANT_A, sql), 1);
+        assert.equal(await scopedCount(TENANT_B, sql), 0);
+    });
+
+    test("product_category_links is tenant-scoped (products_controller facet counts)", async ({ assert }) => {
+        const sql = "SELECT count(*)::int AS count FROM product_category_links";
+        assert.equal(await scopedCount(TENANT_A, sql), 1);
+        assert.equal(await scopedCount(TENANT_B, sql), 0);
+    });
+
+    test("order_addresses join is tenant-scoped (regional insights aggregation)", async ({ assert }) => {
+        const sql =
+            "SELECT count(*)::int AS count FROM order_addresses oa JOIN orders o ON o.id = oa.order_id WHERE oa.kind = 'shipping'";
         assert.equal(await scopedCount(TENANT_A, sql), 1);
         assert.equal(await scopedCount(TENANT_B, sql), 0);
     });
