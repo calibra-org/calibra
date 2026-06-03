@@ -47,6 +47,16 @@ export async function bootstrapRoles(client: QueryClientContract, config: Bootst
     const app = ident(config.appUser);
     const admin = ident(config.adminUser);
 
+    /**
+     * Provision database-global extensions while on the superuser connection. Migrations run as
+     * `calibra_admin` (NOSUPERUSER, no CREATE on the database), so a migration's
+     * `CREATE EXTENSION IF NOT EXISTS citext` cannot install a missing extension itself — even
+     * though `citext` is trusted, a non-superuser still needs CREATE on the current database. CI
+     * never hits this because it migrates as a superuser; the two-role spin/prod path does. Creating
+     * it here (idempotent) turns the migration's `IF NOT EXISTS` into a no-op.
+     */
+    await client.rawQuery("CREATE EXTENSION IF NOT EXISTS citext");
+
     const statements = [
         `GRANT USAGE ON SCHEMA public TO ${app}, ${admin}`,
         `GRANT CREATE ON SCHEMA public TO ${admin}`,
