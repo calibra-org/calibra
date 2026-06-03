@@ -3,6 +3,7 @@ import { BaseSeeder } from "@adonisjs/lucid/seeders";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
+import { type BrandingSettingsInput, brandingSettingRows } from "#services/storefront_branding_service";
 import { runWithTenant } from "#services/tenant_context";
 import { nextNumber } from "#services/tenant_numbering_service";
 import { TenantProvisioningService } from "#services/tenant_provisioning_service";
@@ -108,20 +109,57 @@ export default class MainSeeder extends BaseSeeder {
 
         for (const tenant of DEMO_TENANTS) {
             const existing = await admin.from("tenants").where("slug", tenant.slug).first();
-            if (existing) {
-                continue;
+            const tenantId = existing
+                ? Number(existing.id)
+                : (
+                      await provisioning.provision({
+                          slug: tenant.slug,
+                          name: tenant.name,
+                          planKey: "starter",
+                          currencyCode: "IRR",
+                          ownerEmail: tenant.ownerEmail,
+                          ownerPassword: "Passw0rd1!",
+                          branding: tenant.branding,
+                      })
+                  ).id;
+            if (!existing) {
+                await this.seedTenantDemo(tenantId, tenant.sizes);
             }
-            const result = await provisioning.provision({
-                slug: tenant.slug,
-                name: tenant.name,
-                planKey: "starter",
-                currencyCode: "IRR",
-                ownerEmail: tenant.ownerEmail,
-                ownerPassword: "Passw0rd1!",
-                branding: tenant.branding,
-            });
-            await this.seedTenantDemo(result.id, tenant.sizes);
+            /** Branding is upserted unconditionally so spins provisioned before it gain it on re-seed. */
+            await this.ensureBranding(admin, tenantId, tenant.name, tenant.branding);
         }
+    }
+
+    /**
+     * Idempotently upsert a demo tenant's branding settings (RULE B). Runs on the admin connection
+     * with the GUC set so RLS resolves the tenant; `onConflict` keeps a re-seed a no-op for unchanged
+     * rows. Separate from provisioning so an existing tenant (skipped above) still gets branding.
+     */
+    private async ensureBranding(
+        admin: ReturnType<typeof db.connection>,
+        tenantId: number,
+        name: string,
+        branding: BrandingSettingsInput,
+    ): Promise<void> {
+        const now = DateTime.utc().toSQL()!;
+        await admin.transaction(async (trx) => {
+            await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(tenantId)]);
+            for (const row of brandingSettingRows(branding, name)) {
+                await trx
+                    .table("settings")
+                    .insert({
+                        tenant_id: tenantId,
+                        group_key: "branding",
+                        key: row.key,
+                        value: JSON.stringify(row.value),
+                        type: row.type,
+                        created_at: now,
+                        updated_at: now,
+                    })
+                    .onConflict(["tenant_id", "group_key", "key"])
+                    .merge(["value", "type", "updated_at"]);
+            }
+        });
     }
 
     /**
