@@ -3,6 +3,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 
 import ProductTag from "#models/product_tag";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
+import { currentTenantId } from "#services/tenant_context";
 import { collection } from "#transformers/api_envelope";
 import ProductTagTransformer from "#transformers/product_tag_transformer";
 
@@ -14,9 +15,9 @@ export default class TagsController {
     async index(ctx: HttpContext) {
         const locale = ctx.i18n.locale;
         return cache.getOrSet({
-            key: CacheKeys.catalog.tags(locale),
+            key: CacheKeys.catalog.tags(currentTenantId(), locale),
             ttl: "30m",
-            tags: [CacheTags.catalogTaxonomy],
+            tags: [CacheTags.catalogTaxonomy(currentTenantId())],
             factory: async () => {
                 const rows = await ProductTag.query().preload("translations").orderBy("menu_order", "asc").orderBy("id", "asc");
                 return collection(ProductTagTransformer.transform(rows, locale));

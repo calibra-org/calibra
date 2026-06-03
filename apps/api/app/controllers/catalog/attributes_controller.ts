@@ -4,6 +4,7 @@ import type { HttpContext } from "@adonisjs/core/http";
 import ProductAttribute from "#models/product_attribute";
 import ProductAttributeTerm from "#models/product_attribute_term";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
+import { currentTenantId } from "#services/tenant_context";
 import { collection } from "#transformers/api_envelope";
 import ProductAttributeTermTransformer from "#transformers/product_attribute_term_transformer";
 import ProductAttributeTransformer from "#transformers/product_attribute_transformer";
@@ -13,9 +14,9 @@ export default class AttributesController {
     async index(ctx: HttpContext) {
         const locale = ctx.i18n.locale;
         return cache.getOrSet({
-            key: CacheKeys.catalog.attributes(locale),
+            key: CacheKeys.catalog.attributes(currentTenantId(), locale),
             ttl: "30m",
-            tags: [CacheTags.catalogTaxonomy],
+            tags: [CacheTags.catalogTaxonomy(currentTenantId())],
             factory: async () => {
                 const rows = await ProductAttribute.query().preload("translations").orderBy("id", "asc");
                 return collection(ProductAttributeTransformer.transform(rows, locale));
@@ -34,9 +35,9 @@ export default class AttributesController {
         }
 
         return cache.getOrSet({
-            key: CacheKeys.catalog.attributeTerms(attribute.id, locale),
+            key: CacheKeys.catalog.attributeTerms(currentTenantId(), attribute.id, locale),
             ttl: "30m",
-            tags: [CacheTags.catalogTaxonomy],
+            tags: [CacheTags.catalogTaxonomy(currentTenantId())],
             factory: async () => {
                 const terms = await ProductAttributeTerm.query()
                     .where("attribute_id", String(attribute.id))

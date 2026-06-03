@@ -9,6 +9,7 @@ import { recordAudit } from "#services/admin_audit_log_service";
 import { CacheTags } from "#services/cache_keys";
 import { SUPPORTED_COUNTRIES } from "#services/currency_config_service";
 import SettingsService from "#services/settings_service";
+import { currentTenantId } from "#services/tenant_context";
 import { type ProvinceOption, toGeneralSettings } from "#transformers/general_settings_transformer";
 import { adminGeneralSettingsUpdateValidator } from "#validators/admin/general_settings_validator";
 
@@ -64,7 +65,7 @@ export default class AdminSettingsGeneralController {
         }
 
         if (currencyChanged) {
-            await cache.deleteByTag({ tags: [CacheTags.currency] });
+            await cache.deleteByTag({ tags: [CacheTags.currency(currentTenantId())] });
         }
         if (changed) {
             await recordAudit({

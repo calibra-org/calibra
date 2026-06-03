@@ -93,11 +93,22 @@ const KNOWN_CACHE_TAGS = [
 export type DerivedCacheTag = (typeof KNOWN_CACHE_TAGS)[number];
 
 /**
+ * Strip the leading tenant segment (`t<id>:` or `global:`, see {@link tenantSegment}) so the
+ * domain-prefix matching below stays tenant-agnostic. Every per-tenant key/tag is namespaced; the
+ * metric labels are a closed *domain* set and must not split per tenant (that would both explode
+ * label cardinality and lose the per-domain breakdown). Keys without a segment pass through.
+ */
+function stripTenantSegment(value: string): string {
+    return value.replace(/^(?:t[^:]+|global):/, "");
+}
+
+/**
  * Map a Bentocache key back to the closed-set tag we want to label by. Tag membership lives in
  * `cache_keys.ts` — this is the inverse mapping. New `CacheKeys.*` shapes must be added here too
  * or they fall through to `"other"`.
  */
-export function deriveCacheTagFromKey(key: string): DerivedCacheTag {
+export function deriveCacheTagFromKey(rawKey: string): DerivedCacheTag {
+    const key = stripTenantSegment(rawKey);
     if (key.startsWith("catalog:products")) return "catalog:products";
     if (key.startsWith("catalog:categories")) return "catalog:categories";
     if (key.startsWith("catalog:taxonomy")) return "catalog:taxonomy";
@@ -127,7 +138,8 @@ export function recordCacheInvalidate(tags: readonly string[]): void {
     }
 }
 
-function normalizeTag(tag: string): DerivedCacheTag {
+function normalizeTag(rawTag: string): DerivedCacheTag {
+    const tag = stripTenantSegment(rawTag);
     if (tag === "catalog:products") return "catalog:products";
     if (tag === "catalog:categories") return "catalog:categories";
     if (tag === "catalog:taxonomy") return "catalog:taxonomy";

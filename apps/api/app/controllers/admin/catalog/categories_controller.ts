@@ -4,6 +4,7 @@ import vine from "@vinejs/vine";
 import ProductCategory from "#models/product_category";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
+import { currentTenantId } from "#services/tenant_context";
 import { adminCategoriesView } from "#table_views/admin/categories";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductCategoryTransformer from "#transformers/product_category_transformer";
@@ -78,7 +79,7 @@ export default class AdminCategoriesController {
         });
         await row.load("translations");
         await row.load("image");
-        await CacheInvalidation.taxonomyChanged();
+        await CacheInvalidation.taxonomyChanged(currentTenantId());
         ctx.response.status(201);
         return resource(ProductCategoryTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -107,7 +108,7 @@ export default class AdminCategoriesController {
         });
         await row.load("translations");
         await row.load("image");
-        await CacheInvalidation.taxonomyChanged();
+        await CacheInvalidation.taxonomyChanged(currentTenantId());
         return resource(ProductCategoryTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
 
@@ -115,7 +116,7 @@ export default class AdminCategoriesController {
         const row = await ProductCategory.find(ctx.params.id);
         if (!row) return ctx.response.status(404).json({ error: "category_not_found" });
         await row.delete();
-        await CacheInvalidation.taxonomyChanged();
+        await CacheInvalidation.taxonomyChanged(currentTenantId());
         return ctx.response.status(204);
     }
 }

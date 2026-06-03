@@ -1,4 +1,5 @@
 import { test } from "@japa/runner";
+import { runInTestTenant } from "#tests/helpers/tenant";
 
 import { OrderStatus } from "#enums/order_status";
 import { CustomerFactory } from "#factories/customer_factory";
@@ -17,7 +18,7 @@ test.group("OrderFactory.fromCart", (group) => {
 
     test("empty cart throws E_CART_EMPTY", async ({ assert }) => {
         const cart = await Cart.create({ currency: "IRR", country: "IR" });
-        await assert.rejects(() => orderFactory.fromCart(cart), /empty cart/);
+        await assert.rejects(() => runInTestTenant(() => orderFactory.fromCart(cart)), /empty cart/);
     });
 
     test("snapshots every cart line as an order_line_items row", async ({ assert }) => {
@@ -47,7 +48,7 @@ test.group("OrderFactory.fromCart", (group) => {
             attributesSnapshot: {},
         });
 
-        const order = await orderFactory.fromCart(cart);
+        const order = await runInTestTenant(() => orderFactory.fromCart(cart));
         assert.equal(order.status, OrderStatus.Draft);
 
         const lines = await OrderLineItem.query().where("order_id", Number(order.id)).orderBy("id", "asc");
@@ -63,7 +64,7 @@ test.group("OrderFactory.fromCart", (group) => {
         const product = await createTaxableProduct({ regularPrice: 1_000_000 });
         const cart = await seedCustomerCartReadyToCheckout(customer, product, 1);
 
-        const order = await orderFactory.fromCart(cart);
+        const order = await runInTestTenant(() => orderFactory.fromCart(cart));
 
         const shipping = await OrderShippingLine.query().where("order_id", Number(order.id)).first();
         assert.isNotNull(shipping);
@@ -75,7 +76,7 @@ test.group("OrderFactory.fromCart", (group) => {
         const product = await createTaxableProduct({ regularPrice: 1_000_000 });
         const cart = await seedCustomerCartReadyToCheckout(customer, product, 3);
 
-        const order = await orderFactory.fromCart(cart);
+        const order = await runInTestTenant(() => orderFactory.fromCart(cart));
         await order.refresh();
 
         /** prices_include_tax=true, 10% VAT, 3 × 1M Rial = 3M gross. */

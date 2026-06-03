@@ -6,6 +6,7 @@ import { createProduct } from "./helpers.js";
 import Product from "#models/product";
 import ProductTranslation from "#models/product_translation";
 import { CacheTags } from "#services/cache_keys";
+import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 /**
  * Cache behaviour for the storefront catalog endpoints. Strategy:
@@ -56,7 +57,7 @@ test.group("Catalog storefront caching", (group) => {
         warm.assertAgainstApiSpec();
         assert.equal(warm.body().data[0].name, "Original", "warm hit should return the cached payload, not the mutated row");
 
-        await cache.deleteByTag({ tags: [CacheTags.catalogProducts] });
+        await cache.deleteByTag({ tags: [CacheTags.catalogProducts(TEST_TENANT_ID)] });
 
         const refreshed = await client.get("/api/v1/products").header("Accept-Language", "en");
         refreshed.assertStatus(200);
@@ -114,7 +115,7 @@ test.group("Catalog storefront caching", (group) => {
         const warm = await client.get("/api/v1/products/detail-en").header("Accept-Language", "en");
         assert.equal(warm.body().data.name, "Detail", "detail should be cached");
 
-        await cache.deleteByTag({ tags: [CacheTags.catalogProduct(product.id)] });
+        await cache.deleteByTag({ tags: [CacheTags.catalogProduct(TEST_TENANT_ID, product.id)] });
 
         const refreshed = await client.get("/api/v1/products/detail-en").header("Accept-Language", "en");
         assert.equal(refreshed.body().data.name, "Mutated");
@@ -173,7 +174,7 @@ test.group("Catalog storefront caching", (group) => {
         const warm = await client.get(`/api/v1/products/${Number(product.id)}/variations`).header("Accept-Language", "en");
         assert.equal(warm.body().data.length, 0, "variations should be cached and not reflect the new row");
 
-        await cache.deleteByTag({ tags: [CacheTags.catalogProduct(product.id)] });
+        await cache.deleteByTag({ tags: [CacheTags.catalogProduct(TEST_TENANT_ID, product.id)] });
 
         const refreshed = await client.get(`/api/v1/products/${Number(product.id)}/variations`).header("Accept-Language", "en");
         assert.equal(refreshed.body().data.length, 1);

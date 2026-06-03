@@ -4,6 +4,7 @@ import vine from "@vinejs/vine";
 import ProductBrand from "#models/product_brand";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { upsertTranslations, withTransaction } from "#services/catalog_writer";
+import { currentTenantId } from "#services/tenant_context";
 import { adminBrandsView } from "#table_views/admin/brands";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductBrandTransformer from "#transformers/product_brand_transformer";
@@ -84,7 +85,7 @@ export default class AdminBrandsController {
         });
         await row.load("translations");
         await row.load("image");
-        await CacheInvalidation.taxonomyChanged();
+        await CacheInvalidation.taxonomyChanged(currentTenantId());
         ctx.response.status(201);
         return resource(ProductBrandTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
@@ -111,7 +112,7 @@ export default class AdminBrandsController {
         });
         await row.load("translations");
         await row.load("image");
-        await CacheInvalidation.taxonomyChanged();
+        await CacheInvalidation.taxonomyChanged(currentTenantId());
         return resource(ProductBrandTransformer.transform(row, ctx.i18n.locale).useVariant("forAdmin"));
     }
 
@@ -119,7 +120,7 @@ export default class AdminBrandsController {
         const row = await ProductBrand.find(ctx.params.id);
         if (!row) return ctx.response.status(404).json({ error: "brand_not_found" });
         await row.delete();
-        await CacheInvalidation.taxonomyChanged();
+        await CacheInvalidation.taxonomyChanged(currentTenantId());
         return ctx.response.status(204);
     }
 }

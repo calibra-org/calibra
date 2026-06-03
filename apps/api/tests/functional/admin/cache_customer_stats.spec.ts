@@ -8,6 +8,7 @@ import { CacheTags } from "#services/cache_keys";
 import { createTaxableProduct } from "#tests/helpers/cart";
 import { makeDraftOrder, resetPhase05 } from "#tests/helpers/orders";
 import { advanceOrderTo } from "#tests/helpers/refunds";
+import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 async function adminUser() {
     const admin = await UserFactory.apply("admin").create();
@@ -47,7 +48,7 @@ test.group("Admin customer-stats caching", (group) => {
         const warm = await client.get("/api/v1/admin/customers/counts").withGuard("api").loginAs(admin);
         assert.equal(warm.body().data.all, firstAll, "warm hit should serve cached counts");
 
-        await cache.deleteByTag({ tags: [CacheTags.adminCustomers] });
+        await cache.deleteByTag({ tags: [CacheTags.adminCustomers(TEST_TENANT_ID)] });
 
         const refreshed = await client.get("/api/v1/admin/customers/counts").withGuard("api").loginAs(admin);
         assert.equal(refreshed.body().data.all, firstAll + 1);

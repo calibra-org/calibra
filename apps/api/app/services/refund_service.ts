@@ -82,6 +82,7 @@ export class RefundService {
 
         /** Fire after commit so listeners observe persisted state. */
         await emitter.emit("order:refunded", {
+            tenantId: Number(refund.tenantId),
             orderId: Number(refund.orderId),
             refundId: Number(refund.id),
             amountMinor: Number(refund.amountMinor),
@@ -437,6 +438,6 @@ export const refundService = new RefundService();
 
 declare module "@adonisjs/core/types" {
     interface EventsList {
-        "order:refunded": { orderId: number; refundId: number; amountMinor: number; customerId: number | null };
+        "order:refunded": { tenantId: number; orderId: number; refundId: number; amountMinor: number; customerId: number | null };
     }
 }

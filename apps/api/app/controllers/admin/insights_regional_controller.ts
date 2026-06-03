@@ -7,6 +7,7 @@ import { ResourceNotFoundException } from "#exceptions/domain_exceptions";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
 import { listCountiesForProvince, resolveCounty } from "#services/iran_county_resolver";
 import { normalizeIranText } from "#services/iran_text_normalize";
+import { currentTenantId } from "#services/tenant_context";
 import {
     adminRegionalProvinceCodeValidator,
     adminRegionalProvincesValidator,
@@ -72,12 +73,13 @@ export default class AdminInsightsRegionalController {
 
         return cache.getOrSet({
             key: CacheKeys.admin.regionalProvinces(
+                currentTenantId(),
                 { from: range.from.toISOString(), to: range.to.toISOString(), metric: payload.metric ?? "orders" },
                 locale,
             ),
             ttl: "2m",
             grace: "30s",
-            tags: [CacheTags.regionalProvinces],
+            tags: [CacheTags.regionalProvinces(currentTenantId())],
             factory: () => this.computeCountry(range, locale),
         });
     }
@@ -94,6 +96,7 @@ export default class AdminInsightsRegionalController {
 
         return cache.getOrSet({
             key: CacheKeys.admin.regionalProvinceDetail(
+                currentTenantId(),
                 params.code,
                 {
                     from: range.from.toISOString(),
@@ -104,7 +107,7 @@ export default class AdminInsightsRegionalController {
             ),
             ttl: "2m",
             grace: "30s",
-            tags: [CacheTags.regionalProvinces, CacheTags.regionalProvince(params.code)],
+            tags: [CacheTags.regionalProvinces(currentTenantId()), CacheTags.regionalProvince(currentTenantId(), params.code)],
             factory: () => this.computeProvince(province, range, locale, topProductsLimit),
         });
     }

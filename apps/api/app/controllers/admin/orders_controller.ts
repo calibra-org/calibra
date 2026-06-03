@@ -14,7 +14,7 @@ import ProductVariation from "#models/product_variation";
 import { CacheInvalidation } from "#services/cache_invalidation";
 import { orderNumberService } from "#services/order_number_service";
 import { orderStateMachine } from "#services/order_state_machine";
-import { withTenantTransaction } from "#services/tenant_context";
+import { currentTenantId, withTenantTransaction } from "#services/tenant_context";
 import { type AdminOrdersViewQuery, adminOrdersView } from "#table_views/admin/orders";
 import OrderTransformer from "#transformers/order_transformer";
 import {
@@ -191,7 +191,7 @@ export default class AdminOrdersController {
         ctx.response.status(201);
         await order.refresh();
         await this.loadForResponse(order);
-        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+        await CacheInvalidation.customerChanged(currentTenantId(), order.customerId as bigint | number | null | undefined);
         return { data: new OrderTransformer(order).forAdmin() };
     }
 
@@ -202,7 +202,7 @@ export default class AdminOrdersController {
         if (payload.billing_email !== undefined) order.billingEmail = payload.billing_email ?? null;
         await order.save();
         await this.loadForResponse(order);
-        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+        await CacheInvalidation.customerChanged(currentTenantId(), order.customerId as bigint | number | null | undefined);
         return { data: new OrderTransformer(order).forAdmin() };
     }
 
@@ -210,7 +210,7 @@ export default class AdminOrdersController {
         const order = await this.findOrFail(ctx.params.id);
         order.deletedAt = DateTime.utc();
         await order.save();
-        await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+        await CacheInvalidation.customerChanged(currentTenantId(), order.customerId as bigint | number | null | undefined);
         return ctx.response.noContent();
     }
 

@@ -9,6 +9,7 @@ import { CacheTags } from "#services/cache_keys";
 import { createTaxableProduct } from "#tests/helpers/cart";
 import { makeDraftOrder, resetPhase05 } from "#tests/helpers/orders";
 import { advanceOrderTo } from "#tests/helpers/refunds";
+import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 async function adminUser() {
     const admin = await UserFactory.apply("admin").create();
@@ -54,7 +55,7 @@ test.group("Admin top-products report caching", (group) => {
         const warmBody = warm.body() as { data: { revenue: number }[] };
         assert.equal(warmBody.data[0]!.revenue, 2_000_000, "warm hit should serve cached revenue");
 
-        await cache.deleteByTag({ tags: [CacheTags.adminReports] });
+        await cache.deleteByTag({ tags: [CacheTags.adminReports(TEST_TENANT_ID)] });
 
         const refreshed = await client.get("/api/v1/admin/reports/top-products").withGuard("api").loginAs(admin);
         const refreshedBody = refreshed.body() as { data: { revenue: number }[] };

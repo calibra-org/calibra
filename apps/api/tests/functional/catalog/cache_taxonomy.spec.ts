@@ -7,6 +7,7 @@ import ProductBrandTranslation from "#models/product_brand_translation";
 import ProductCategoryTranslation from "#models/product_category_translation";
 import ProductTagTranslation from "#models/product_tag_translation";
 import { CacheTags } from "#services/cache_keys";
+import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 test.group("Catalog taxonomy caching", (group) => {
     group.each.setup(async () => {
@@ -42,7 +43,7 @@ test.group("Catalog taxonomy caching", (group) => {
         const warm = await client.get("/api/v1/categories?tree=1").header("Accept-Language", "en");
         assert.equal(warm.body().data[0].name, "Root", "tree should be cached");
 
-        await cache.deleteByTag({ tags: [CacheTags.catalogTaxonomy] });
+        await cache.deleteByTag({ tags: [CacheTags.catalogTaxonomy(TEST_TENANT_ID)] });
 
         const refreshed = await client.get("/api/v1/categories?tree=1").header("Accept-Language", "en");
         assert.equal(refreshed.body().data[0].name, "RenamedRoot");
@@ -61,7 +62,7 @@ test.group("Catalog taxonomy caching", (group) => {
         const warm = await client.get("/api/v1/tags").header("Accept-Language", "en");
         assert.equal(warm.body().data[0].name, "TagOne");
 
-        await cache.deleteByTag({ tags: [CacheTags.catalogTaxonomy] });
+        await cache.deleteByTag({ tags: [CacheTags.catalogTaxonomy(TEST_TENANT_ID)] });
 
         const refreshed = await client.get("/api/v1/tags").header("Accept-Language", "en");
         assert.equal(refreshed.body().data[0].name, "MutatedTag");
@@ -86,7 +87,7 @@ test.group("Catalog taxonomy caching", (group) => {
         const warm = await client.get("/api/v1/brands").header("Accept-Language", "en");
         assert.equal(warm.body().data[0].name, "BrandOne");
 
-        await cache.deleteByTag({ tags: [CacheTags.catalogTaxonomy] });
+        await cache.deleteByTag({ tags: [CacheTags.catalogTaxonomy(TEST_TENANT_ID)] });
 
         const refreshed = await client.get("/api/v1/brands").header("Accept-Language", "en");
         assert.equal(refreshed.body().data[0].name, "MutatedBrand");

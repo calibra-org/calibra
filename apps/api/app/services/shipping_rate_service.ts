@@ -5,6 +5,7 @@ import Region from "#models/region";
 import type ShippingZone from "#models/shipping_zone";
 import { bucketMinor, CacheKeys, CacheTags } from "#services/cache_keys";
 import { matchShippingZone } from "#services/shipping_zone_match";
+import { currentTenantId } from "#services/tenant_context";
 
 /**
  * Address keys that drive shipping-zone matching. `country` is the only required field; the rest
@@ -62,7 +63,7 @@ const SHIPPING_TOTAL_BUCKET_MINOR = 10_000;
  * for why. Any shipping zone / method / rate write must `cache.deleteByTag({ tags: [shipping:zones] })`.
  */
 export async function enumerateShippingRates(address: ShippingRateAddress, itemsTotal: number): Promise<ShippingRateOption[]> {
-    const key = CacheKeys.shipping.rates({
+    const key = CacheKeys.shipping.rates(currentTenantId(), {
         country: address.country,
         regionId: address.regionId,
         postcode: address.postcode,
@@ -72,7 +73,7 @@ export async function enumerateShippingRates(address: ShippingRateAddress, items
         key,
         ttl: "5m",
         grace: undefined,
-        tags: [CacheTags.shippingZones],
+        tags: [CacheTags.shippingZones(currentTenantId())],
         factory: async () => {
             const zone = await resolveZone(address);
             if (!zone) return [];

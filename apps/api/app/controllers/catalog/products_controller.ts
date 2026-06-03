@@ -4,6 +4,7 @@ import db from "@adonisjs/lucid/services/db";
 
 import Product from "#models/product";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
+import { currentTenantId } from "#services/tenant_context";
 import { collection, paginated, resource } from "#transformers/api_envelope";
 import ProductTransformer from "#transformers/product_transformer";
 import ProductVariationTransformer from "#transformers/product_variation_transformer";
@@ -151,9 +152,9 @@ export default class ProductsController {
         }
 
         return cache.getOrSet({
-            key: CacheKeys.catalog.productList(filters, locale),
+            key: CacheKeys.catalog.productList(currentTenantId(), filters, locale),
             ttl: "60s",
-            tags: [CacheTags.catalogProducts],
+            tags: [CacheTags.catalogProducts(currentTenantId())],
             factory: build,
         });
     }
@@ -184,9 +185,9 @@ export default class ProductsController {
 
         const productId = Number(translation.product_id);
         const cached = await cache.getOrSet({
-            key: CacheKeys.catalog.productDetail(productId, locale),
+            key: CacheKeys.catalog.productDetail(currentTenantId(), productId, locale),
             ttl: "5m",
-            tags: [CacheTags.catalogProducts, CacheTags.catalogProduct(productId)],
+            tags: [CacheTags.catalogProducts(currentTenantId()), CacheTags.catalogProduct(currentTenantId(), productId)],
             factory: async () => {
                 const product = await Product.query()
                     .where("id", productId)
@@ -221,9 +222,9 @@ export default class ProductsController {
         const locale = ctx.i18n.locale;
 
         const cached = await cache.getOrSet({
-            key: CacheKeys.catalog.productVariations(productId, locale),
+            key: CacheKeys.catalog.productVariations(currentTenantId(), productId, locale),
             ttl: "5m",
-            tags: [CacheTags.catalogProduct(productId)],
+            tags: [CacheTags.catalogProduct(currentTenantId(), productId)],
             factory: async () => {
                 const product = await Product.query()
                     .where("id", productId)

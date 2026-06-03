@@ -40,14 +40,14 @@ emitter.on(AdminActionPerformed, async (event) => {
  * counts (`new_30d`, etc.) move too.
  */
 emitter.on("order:status_changed", async ({ order }) => {
-    await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+    await CacheInvalidation.customerChanged(order.tenantId, order.customerId as bigint | number | null | undefined);
 });
 emitter.on("order:placed", async ({ order }) => {
-    await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+    await CacheInvalidation.customerChanged(order.tenantId, order.customerId as bigint | number | null | undefined);
 });
 emitter.on("order:completed", async ({ order }) => {
-    await CacheInvalidation.customerChanged(order.customerId as bigint | number | null | undefined);
+    await CacheInvalidation.customerChanged(order.tenantId, order.customerId as bigint | number | null | undefined);
 });
-emitter.on("order:refunded", async ({ customerId }) => {
-    await CacheInvalidation.customerChanged(customerId);
+emitter.on("order:refunded", async ({ tenantId, customerId }) => {
+    await CacheInvalidation.customerChanged(tenantId, customerId);
 });

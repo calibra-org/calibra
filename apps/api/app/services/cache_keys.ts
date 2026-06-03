@@ -22,23 +22,34 @@ export function tenantSegment(tenantId: number | string | bigint | null | undefi
     return tenantId === null || tenantId === undefined ? "global" : `t${String(tenantId)}`;
 }
 
+/**
+ * A tenant id is required everywhere a per-tenant cache key/tag is built. It is **not** nullable:
+ * every cached read/write in this codebase runs under `tenant_context_middleware` (request) or a
+ * `runWithTenant` block (job/seeder), so `currentTenantId()` is always available at the call site.
+ * Making it required turns a forgotten argument into a compile error instead of a silent
+ * cross-tenant cache leak.
+ */
+type TenantId = number | string | bigint;
+
 /** Tag constants. Use these — never inline string tags in controllers or write paths. */
 export const CacheTags = {
     /** Tenant registry / host→tenant resolution map. Invalidated when a tenant or domain changes (Phase 5). */
     tenants: "tenant:registry",
-    catalogProducts: "catalog:products",
-    catalogProduct: (productId: number | string | bigint): `catalog:product:${string}` => `catalog:product:${String(productId)}`,
-    catalogCategories: "catalog:categories",
-    catalogTaxonomy: "catalog:taxonomy",
-    shippingZones: "shipping:zones",
+    catalogProducts: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:catalog:products`,
+    catalogProduct: (tenantId: TenantId, productId: number | string | bigint): string =>
+        `${tenantSegment(tenantId)}:catalog:product:${String(productId)}`,
+    catalogCategories: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:catalog:categories`,
+    catalogTaxonomy: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:catalog:taxonomy`,
+    shippingZones: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:shipping:zones`,
     settingsGroup: (group: string, tenantId?: number | string | bigint | null): string =>
         `${tenantSegment(tenantId)}:settings:${group}`,
-    currency: "currency:config",
-    adminReports: "admin:reports",
-    adminCustomers: "admin:customers",
-    adminCustomer: (customerId: number | string | bigint): `admin:customer:${string}` => `admin:customer:${String(customerId)}`,
-    regionalProvinces: "regional:provinces",
-    regionalProvince: (code: string): `regional:province:${string}` => `regional:province:${code}`,
+    currency: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:currency:config`,
+    adminReports: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:admin:reports`,
+    adminCustomers: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:admin:customers`,
+    adminCustomer: (tenantId: TenantId, customerId: number | string | bigint): string =>
+        `${tenantSegment(tenantId)}:admin:customer:${String(customerId)}`,
+    regionalProvinces: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:regional:provinces`,
+    regionalProvince: (tenantId: TenantId, code: string): string => `${tenantSegment(tenantId)}:regional:province:${code}`,
 } as const;
 
 /**
@@ -104,33 +115,39 @@ function normaliseValue(value: unknown): unknown {
 /** Typed key builders, grouped by domain. Use these from every caller. */
 export const CacheKeys = {
     catalog: {
-        productList: (filters: Record<string, unknown>, locale: string): string =>
-            `catalog:products:list:${hashFilters(filters)}:${locale}`,
-        productDetail: (slugOrId: string | number | bigint, locale: string): string =>
-            `catalog:products:detail:${String(slugOrId)}:${locale}`,
-        productVariations: (productId: number | string | bigint, locale: string): string =>
-            `catalog:products:variations:${String(productId)}:${locale}`,
-        categoriesFlat: (parentId: string | null | undefined, locale: string): string =>
-            `catalog:categories:flat:${parentId === null ? "null" : (parentId ?? "any")}:${locale}`,
-        categoriesTree: (locale: string): string => `catalog:categories:tree:${locale}`,
-        categoryDetail: (slug: string, locale: string): string => `catalog:categories:detail:${slug}:${locale}`,
-        tags: (locale: string): string => `catalog:taxonomy:tags:${locale}`,
-        brands: (locale: string): string => `catalog:taxonomy:brands:${locale}`,
-        attributes: (locale: string): string => `catalog:taxonomy:attributes:${locale}`,
-        attributeTerms: (attributeId: number | string | bigint, locale: string): string =>
-            `catalog:taxonomy:attribute_terms:${String(attributeId)}:${locale}`,
+        productList: (tenantId: TenantId, filters: Record<string, unknown>, locale: string): string =>
+            `${tenantSegment(tenantId)}:catalog:products:list:${hashFilters(filters)}:${locale}`,
+        productDetail: (tenantId: TenantId, slugOrId: string | number | bigint, locale: string): string =>
+            `${tenantSegment(tenantId)}:catalog:products:detail:${String(slugOrId)}:${locale}`,
+        productVariations: (tenantId: TenantId, productId: number | string | bigint, locale: string): string =>
+            `${tenantSegment(tenantId)}:catalog:products:variations:${String(productId)}:${locale}`,
+        categoriesFlat: (tenantId: TenantId, parentId: string | null | undefined, locale: string): string =>
+            `${tenantSegment(tenantId)}:catalog:categories:flat:${parentId === null ? "null" : (parentId ?? "any")}:${locale}`,
+        categoriesTree: (tenantId: TenantId, locale: string): string =>
+            `${tenantSegment(tenantId)}:catalog:categories:tree:${locale}`,
+        categoryDetail: (tenantId: TenantId, slug: string, locale: string): string =>
+            `${tenantSegment(tenantId)}:catalog:categories:detail:${slug}:${locale}`,
+        tags: (tenantId: TenantId, locale: string): string => `${tenantSegment(tenantId)}:catalog:taxonomy:tags:${locale}`,
+        brands: (tenantId: TenantId, locale: string): string => `${tenantSegment(tenantId)}:catalog:taxonomy:brands:${locale}`,
+        attributes: (tenantId: TenantId, locale: string): string =>
+            `${tenantSegment(tenantId)}:catalog:taxonomy:attributes:${locale}`,
+        attributeTerms: (tenantId: TenantId, attributeId: number | string | bigint, locale: string): string =>
+            `${tenantSegment(tenantId)}:catalog:taxonomy:attribute_terms:${String(attributeId)}:${locale}`,
     },
     shipping: {
-        rates: (params: {
-            country: string;
-            regionId: number | null;
-            postcode: string | null;
-            itemsTotalBucket: string;
-        }): string => {
+        rates: (
+            tenantId: TenantId,
+            params: {
+                country: string;
+                regionId: number | null;
+                postcode: string | null;
+                itemsTotalBucket: string;
+            },
+        ): string => {
             const country = params.country.toUpperCase();
             const region = params.regionId === null ? "-" : String(params.regionId);
             const postcode = params.postcode === null || params.postcode === "" ? "-" : params.postcode;
-            return `shipping:rates:${country}:${region}:${postcode}:${params.itemsTotalBucket}`;
+            return `${tenantSegment(tenantId)}:shipping:rates:${country}:${region}:${postcode}:${params.itemsTotalBucket}`;
         },
     },
     settings: {
@@ -143,21 +160,21 @@ export const CacheKeys = {
         byRef: (ref: string | number | bigint): string => `tenant:ref:${String(ref).toLowerCase()}`,
     },
     currency: {
-        config: (locale: string): string => `currency:config:${locale}`,
+        config: (tenantId: TenantId, locale: string): string => `${tenantSegment(tenantId)}:currency:config:${locale}`,
     },
     admin: {
-        topProducts: (days: number, limit: number, locale: string): string =>
-            `admin:reports:top-products:${days}:${limit}:${locale}`,
-        topCategories: (days: number, limit: number, locale: string): string =>
-            `admin:reports:top-categories:${days}:${limit}:${locale}`,
+        topProducts: (tenantId: TenantId, days: number, limit: number, locale: string): string =>
+            `${tenantSegment(tenantId)}:admin:reports:top-products:${days}:${limit}:${locale}`,
+        topCategories: (tenantId: TenantId, days: number, limit: number, locale: string): string =>
+            `${tenantSegment(tenantId)}:admin:reports:top-categories:${days}:${limit}:${locale}`,
         /**
          * Analytics report cache key. `scope` is the report id (`performance`, `revenue-stats`,
          * `orders-table`, …); `params` is the full window/sort/page object hashed into one slot so
          * `?date_from=…&date_to=…` and any reordering collide. Locale-scoped because category /
          * coupon / tax names resolve per locale.
          */
-        report: (scope: string, params: Record<string, unknown>, locale: string): string =>
-            `admin:reports:${scope}:${hashFilters(params)}:${locale}`,
+        report: (tenantId: TenantId, scope: string, params: Record<string, unknown>, locale: string): string =>
+            `${tenantSegment(tenantId)}:admin:reports:${scope}:${hashFilters(params)}:${locale}`,
         /**
          * Most-used ranking for the admin taxonomy pickers (categories / tags / brands sidebar
          * cards on `/products/{id}`). Hashes the full filter object so `?perPage=10&sort=-used_count`
@@ -165,17 +182,20 @@ export const CacheKeys = {
          * slug fields differ per locale.
          */
         taxonomyUsedCount: (
+            tenantId: TenantId,
             resource: "categories" | "tags" | "brands",
             filters: Record<string, unknown>,
             locale: string,
-        ): string => `admin:taxonomy:used-count:${resource}:${hashFilters(filters)}:${locale}`,
-        customerCounts: (): string => "admin:customers:counts",
-        customerInsights: (): string => "admin:insights:customers",
-        customerStats: (customerId: number | string | bigint): string => `admin:customers:stats:${String(customerId)}`,
-        customerAggregate: (customerId: number | string | bigint): string => `admin:customers:aggregate:${String(customerId)}`,
-        regionalProvinces: (filters: Record<string, unknown>, locale: string): string =>
-            `admin:insights:regional:provinces:${hashFilters(filters)}:${locale}`,
-        regionalProvinceDetail: (code: string, filters: Record<string, unknown>, locale: string): string =>
-            `admin:insights:regional:province:${code}:${hashFilters(filters)}:${locale}`,
+        ): string => `${tenantSegment(tenantId)}:admin:taxonomy:used-count:${resource}:${hashFilters(filters)}:${locale}`,
+        customerCounts: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:admin:customers:counts`,
+        customerInsights: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:admin:insights:customers`,
+        customerStats: (tenantId: TenantId, customerId: number | string | bigint): string =>
+            `${tenantSegment(tenantId)}:admin:customers:stats:${String(customerId)}`,
+        customerAggregate: (tenantId: TenantId, customerId: number | string | bigint): string =>
+            `${tenantSegment(tenantId)}:admin:customers:aggregate:${String(customerId)}`,
+        regionalProvinces: (tenantId: TenantId, filters: Record<string, unknown>, locale: string): string =>
+            `${tenantSegment(tenantId)}:admin:insights:regional:provinces:${hashFilters(filters)}:${locale}`,
+        regionalProvinceDetail: (tenantId: TenantId, code: string, filters: Record<string, unknown>, locale: string): string =>
+            `${tenantSegment(tenantId)}:admin:insights:regional:province:${code}:${hashFilters(filters)}:${locale}`,
     },
 } as const;
