@@ -14,7 +14,7 @@ function ExitButton() {
         <button
             type="submit"
             disabled={pending}
-            className="rounded-md border border-amber-900/30 bg-amber-950/10 px-2.5 py-1 font-medium text-amber-950 transition-colors hover:bg-amber-950/20 disabled:opacity-60"
+            className="rounded-md border border-warning-foreground/30 bg-warning-foreground/10 px-2.5 py-1 font-medium text-warning-foreground transition-colors hover:bg-warning-foreground/20 disabled:opacity-60"
         >
             {pending ? t("exiting") : t("exit")}
         </button>
@@ -33,7 +33,7 @@ export function ImpersonationBanner({ shopName }: { shopName: string }) {
     return (
         <div
             role="alert"
-            className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-amber-400 px-4 py-2 text-amber-950 text-sm dark:bg-amber-500"
+            className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-warning px-4 py-2 text-sm text-warning-foreground"
         >
             <ShieldAlert className="size-4 shrink-0" aria-hidden="true" />
             <span className="font-medium">{t("banner", { shop: shopName })}</span>

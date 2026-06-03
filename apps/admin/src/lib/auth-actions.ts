@@ -44,10 +44,7 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     if (tenant === null) {
         return {
             ok: false,
-            error:
-                locale === "fa"
-                    ? "این آدرس به هیچ فروشگاهی متصل نیست."
-                    : "This address isn't connected to a shop.",
+            error: locale === "fa" ? "این آدرس به هیچ فروشگاهی متصل نیست." : "This address isn't connected to a shop.",
         };
     }
 

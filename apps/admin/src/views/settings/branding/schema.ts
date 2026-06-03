@@ -23,9 +23,7 @@ export const PALETTE_TOKENS = [
 
 export type PaletteToken = (typeof PALETTE_TOKENS)[number];
 
-const mediaValue = z
-    .object({ id: z.number(), url: z.string() })
-    .nullable() satisfies z.ZodType<MediaFieldValue | null>;
+const mediaValue = z.object({ id: z.number(), url: z.string() }).nullable() satisfies z.ZodType<MediaFieldValue | null>;
 
 const color = z.string().regex(OKLCH_RE);
 

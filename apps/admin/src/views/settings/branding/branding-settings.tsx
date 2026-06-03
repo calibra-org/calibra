@@ -138,7 +138,13 @@ function BrandingSettingsForm({ data }: { data: AdminBrandingSettings }) {
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 gap-4 pt-6 sm:grid-cols-2">
                         {PALETTE_TOKENS.map((token) => (
-                            <ColorField key={token} control={control} token={token} label={t(`palette.${token}`)} invalidHint={t("invalidColor")} />
+                            <ColorField
+                                key={token}
+                                control={control}
+                                token={token}
+                                label={t(`palette.${token}`)}
+                                invalidHint={t("invalidColor")}
+                            />
                         ))}
                     </CardContent>
                 </Card>
@@ -224,7 +230,13 @@ function ColorField({
                             className="size-9 shrink-0 rounded-md border border-border"
                             style={{ background: fieldState.invalid ? "transparent" : field.value }}
                         />
-                        <Input {...field} dir="ltr" spellCheck={false} className="font-mono text-xs" aria-invalid={fieldState.invalid} />
+                        <Input
+                            {...field}
+                            dir="ltr"
+                            spellCheck={false}
+                            className="font-mono text-xs"
+                            aria-invalid={fieldState.invalid}
+                        />
                     </div>
                     {fieldState.invalid ? <p className="text-destructive text-xs">{invalidHint}</p> : null}
                 </div>

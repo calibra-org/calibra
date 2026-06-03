@@ -3,7 +3,7 @@ import "server-only";
 import { headers } from "next/headers";
 import { cache } from "react";
 
-import { resolveHost, type ResolvedHost } from "./resolve-host";
+import { type ResolvedHost, resolveHost } from "./resolve-host";
 
 /**
  * The tenant resolved from the request `Host` (RULE A). Resolving directly from the `Host` header

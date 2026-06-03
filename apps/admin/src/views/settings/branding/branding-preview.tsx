@@ -49,7 +49,7 @@ export function BrandingPreview({ palette, name, tagline, logo, font }: Branding
                         <img src={logo.url} alt="" className="h-6 w-auto object-contain" />
                     ) : (
                         <span
-                            className="grid size-6 place-items-center rounded-md text-xs font-bold"
+                            className="grid size-6 place-items-center rounded-md font-bold text-xs"
                             style={{ background: palette.accent, color: palette.accent_foreground }}
                         >
                             {monogram(name)}

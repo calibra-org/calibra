@@ -20,15 +20,7 @@ interface PlannedWrite {
 type BrandingSettingsPayload = Awaited<ReturnType<typeof adminBrandingSettingsUpdateValidator.validate>>;
 
 /** Map a palette payload key (`muted_foreground`) to its flat settings row key (`palette_muted_foreground`). */
-const PALETTE_KEYS = [
-    "background",
-    "foreground",
-    "muted",
-    "muted_foreground",
-    "border",
-    "accent",
-    "accent_foreground",
-] as const;
+const PALETTE_KEYS = ["background", "foreground", "muted", "muted_foreground", "border", "accent", "accent_foreground"] as const;
 
 export default class AdminSettingsBrandingController {
     private settings = new SettingsService();
