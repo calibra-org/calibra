@@ -1,7 +1,7 @@
-import db from "@adonisjs/lucid/services/db";
 import type { DateTime } from "luxon";
 
 import Coupon from "#models/coupon";
+import { currentTrx } from "#services/tenant_context";
 
 export interface CouponExportFilters {
     tab?: string;
@@ -109,7 +109,7 @@ interface ExportStats {
 
 async function fetchExportStats(ids: number[]): Promise<Map<number, ExportStats>> {
     const out = new Map<number, ExportStats>();
-    const result = await db.rawQuery<{
+    const result = await currentTrx().rawQuery<{
         rows: {
             coupon_id: string | number;
             redemptions_count: string | number;

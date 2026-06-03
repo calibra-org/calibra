@@ -1,6 +1,5 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import vine from "@vinejs/vine";
 import { DateTime } from "luxon";
@@ -14,7 +13,7 @@ import CouponRedemption from "#models/coupon_redemption";
 import CouponTranslation from "#models/coupon_translation";
 import { exportCouponsToCsv } from "#services/coupon_csv_exporter";
 import { runCouponTest } from "#services/coupon_test_runner";
-import { withTenantTransaction } from "#services/tenant_context";
+import { currentTrx, withTenantTransaction } from "#services/tenant_context";
 import { adminCouponsView } from "#table_views/admin/coupons";
 import { collection, paginated, resource } from "#transformers/api_envelope";
 import CouponRedemptionTransformer from "#transformers/coupon_redemption_transformer";
@@ -170,7 +169,7 @@ export default class AdminCouponsController {
         const nowIso = DateTime.utc().toISO() ?? new Date().toISOString();
         const horizonIso = DateTime.utc().plus({ days: 7 }).toISO() ?? nowIso;
 
-        const result = await db.rawQuery<{
+        const result = await currentTrx().rawQuery<{
             rows: {
                 all: string;
                 active: string;
@@ -548,7 +547,7 @@ async function fetchCouponListStats(ids: number[]): Promise<Map<number, CouponLi
     const out = new Map<number, CouponListStats>();
     if (ids.length === 0) return out;
 
-    const result = await db.rawQuery<{
+    const result = await currentTrx().rawQuery<{
         rows: {
             coupon_id: string | number;
             products_count: string | number;

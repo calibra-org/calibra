@@ -1,7 +1,6 @@
 import cache from "@adonisjs/cache/services/main";
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import { CacheKeys, CacheTags } from "#services/cache_keys";
@@ -21,7 +20,7 @@ import {
     resolveInterval,
     type StockStatusFilter,
 } from "#services/reports/analytics_service";
-import { currentTenantId } from "#services/tenant_context";
+import { currentTenantId, currentTrx } from "#services/tenant_context";
 import {
     adminReportStatsValidator,
     adminReportTableValidator,
@@ -503,7 +502,7 @@ export default class AdminReportsController {
 
     private async computeTopProducts(days: number, limit: number, locale: string) {
         const since = DateTime.utc().minus({ days }).toJSDate();
-        const { rows } = await db.rawQuery<{ rows: TopProductRow[] }>(
+        const { rows } = await currentTrx().rawQuery<{ rows: TopProductRow[] }>(
             `
             WITH agg AS (
                 SELECT
