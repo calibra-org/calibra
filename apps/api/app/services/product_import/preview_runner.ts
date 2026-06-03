@@ -1,9 +1,8 @@
-import db from "@adonisjs/lucid/services/db";
-
 import { resolveCurrencyConfig } from "#services/currency_config_service";
 import { type AnomalyFinding, detectAnomalies, type PreviewRow } from "#services/product_import/anomaly_detector";
 import { parseFile } from "#services/product_import/csv_parser";
 import { type ColumnMapping, type ProjectionError, projectRow } from "#services/product_import/row_projector";
+import { currentTrx } from "#services/tenant_context";
 
 /**
  * `runPreview` — the dry-run pass that powers the Step 2.5 "شیامنش‌یپ" panel. Does NO database
@@ -217,7 +216,7 @@ async function fetchExistingProducts(skus: string[]): Promise<Map<string, Existi
     const chunks: string[][] = [];
     for (let i = 0; i < skus.length; i += 500) chunks.push(skus.slice(i, i + 500));
     for (const chunk of chunks) {
-        const rows = await db
+        const rows = await currentTrx()
             .from("products")
             .whereNull("deleted_at")
             .whereIn("sku", chunk)

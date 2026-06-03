@@ -1,13 +1,12 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import Customer from "#models/customer";
 import CustomerStatusHistory from "#models/customer_status_history";
 import { recordAudit } from "#services/admin_audit_log_service";
 import { CacheInvalidation } from "#services/cache_invalidation";
-import { currentTenantId, withTenantTransaction } from "#services/tenant_context";
+import { currentTenantId, currentTrx, withTenantTransaction } from "#services/tenant_context";
 import CustomerStatusHistoryTransformer from "#transformers/customer_status_history_transformer";
 import { adminCustomerStatusPatchValidator } from "#validators/admin/customer_validator";
 
@@ -25,7 +24,7 @@ export default class AdminCustomerStatusController {
         const force = ctx.request.input("force") === "1" || ctx.request.input("force") === "true";
 
         if (payload.status === "suspended" && !force) {
-            const activeRow = await db
+            const activeRow = await currentTrx()
                 .from("orders")
                 .where("customer_id", Number(customer.id))
                 .whereIn("status", ACTIVE_ORDER_STATUSES)

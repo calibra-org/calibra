@@ -10,7 +10,7 @@ import { buildCartView, resolveCustomerContext } from "#services/cart_view_build
 import { defaultValidationContext, rulesFor } from "#services/country_address_rules/index";
 import { resolvePrice } from "#services/price_resolver";
 import { findEligibleRate } from "#services/shipping_rate_service";
-import { withTenantTransaction } from "#services/tenant_context";
+import { currentTrx, withTenantTransaction } from "#services/tenant_context";
 import CartTransformer from "#transformers/cart_transformer";
 import {
     addItemValidator,
@@ -219,7 +219,7 @@ export default class CartController {
     }
 
     private async assertInStock(product: Product, variation: ProductVariation | null): Promise<void> {
-        const inventoryItem = await db
+        const inventoryItem = await currentTrx()
             .from("inventory_items")
             .where("product_id", Number(product.id))
             .where((q) => {
@@ -265,7 +265,7 @@ export default class CartController {
     }
 
     private async computeItemsTotalGross(cart: Cart): Promise<number> {
-        const rows = await db
+        const rows = await currentTrx()
             .from("cart_items")
             .where("cart_id", Number(cart.id))
             .select(db.raw("COALESCE(SUM(price_snapshot * quantity), 0)::bigint as total"));

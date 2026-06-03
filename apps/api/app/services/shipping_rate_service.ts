@@ -1,11 +1,10 @@
 import cache from "@adonisjs/cache/services/main";
-import db from "@adonisjs/lucid/services/db";
 
 import Region from "#models/region";
 import type ShippingZone from "#models/shipping_zone";
 import { bucketMinor, CacheKeys, CacheTags } from "#services/cache_keys";
 import { matchShippingZone } from "#services/shipping_zone_match";
-import { currentTenantId } from "#services/tenant_context";
+import { currentTenantId, currentTrx } from "#services/tenant_context";
 
 /**
  * Address keys that drive shipping-zone matching. `country` is the only required field; the rest
@@ -78,7 +77,7 @@ export async function enumerateShippingRates(address: ShippingRateAddress, items
             const zone = await resolveZone(address);
             if (!zone) return [];
 
-            const rows = await db
+            const rows = await currentTrx()
                 .from("shipping_zone_methods as szm")
                 .innerJoin("shipping_methods as sm", "sm.id", "szm.method_id")
                 .where("szm.zone_id", Number(zone.id))

@@ -1,9 +1,9 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import vine, { errors as vineErrors } from "@vinejs/vine";
 
 import Customer from "#models/customer";
+import { currentTrx } from "#services/tenant_context";
 
 interface TimelineRow {
     kind: string;
@@ -63,7 +63,7 @@ export default class AdminCustomerTimelineController {
         const rows: TimelineRow[] = [];
 
         if (wants("order")) {
-            const orders = await db
+            const orders = await currentTrx()
                 .from("orders")
                 .select("id", "order_number", "status", "grand_total", "currency", "created_at")
                 .where("customer_id", customerId)
@@ -86,7 +86,7 @@ export default class AdminCustomerTimelineController {
         }
 
         if (wants("note")) {
-            const notes = await db
+            const notes = await currentTrx()
                 .from("customer_notes as n")
                 .leftJoin("users as u", "u.id", "n.author_user_id")
                 .select("n.id", "n.body", "n.created_at", "u.id as author_id", "u.email as author_email")
@@ -104,7 +104,7 @@ export default class AdminCustomerTimelineController {
         }
 
         if (wants("status")) {
-            const status = await db
+            const status = await currentTrx()
                 .from("customer_status_history as h")
                 .leftJoin("users as u", "u.id", "h.actor_user_id")
                 .select(
@@ -130,7 +130,7 @@ export default class AdminCustomerTimelineController {
         }
 
         if (wants("marketing")) {
-            const mkt = await db
+            const mkt = await currentTrx()
                 .from("customer_marketing_consent_history as h")
                 .leftJoin("users as u", "u.id", "h.actor_user_id")
                 .select(
@@ -156,7 +156,7 @@ export default class AdminCustomerTimelineController {
         }
 
         if (wants("impersonation")) {
-            const imp = await db
+            const imp = await currentTrx()
                 .from("customer_impersonation_events as e")
                 .leftJoin("users as u", "u.id", "e.impersonator_user_id")
                 .select("e.id", "e.started_at", "e.ended_at", "u.id as actor_id", "u.email as actor_email")

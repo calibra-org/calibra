@@ -1,10 +1,9 @@
 import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 
 import ProductCategory from "#models/product_category";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
-import { currentTenantId } from "#services/tenant_context";
+import { currentTenantId, currentTrx } from "#services/tenant_context";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductCategoryTransformer from "#transformers/product_category_transformer";
 
@@ -81,7 +80,7 @@ export default class CategoriesController {
         const slug = ctx.params.slug;
         const locale = ctx.i18n.locale;
 
-        const translation = await db
+        const translation = await currentTrx()
             .from("product_category_translations")
             .where("locale", locale)
             .where("slug", slug)

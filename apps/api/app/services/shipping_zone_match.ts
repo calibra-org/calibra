@@ -1,6 +1,7 @@
 import db from "@adonisjs/lucid/services/db";
 
 import ShippingZone from "#models/shipping_zone";
+import { currentTrx } from "#services/tenant_context";
 
 /**
  * Address keys the matcher uses to find a shipping zone. `country` is required (ISO-3166-1 alpha-2);
@@ -49,7 +50,7 @@ export async function matchShippingZone(address: ShippingAddressForMatch): Promi
     }
 
     if (conditions.length > 0) {
-        const matched = await db
+        const matched = await currentTrx()
             .from("shipping_zone_locations")
             .select("zone_id")
             .select(
