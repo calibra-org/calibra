@@ -5,6 +5,8 @@ import { BackendError, createApiClient } from "@calibra/sdk";
 import { cookies } from "next/headers";
 
 import { redirect } from "#/lib/i18n/navigation";
+import { TENANT_HEADER } from "#/lib/tenant/constants";
+import { tenantRefFromHeaders } from "#/lib/tenant/current-tenant";
 
 import { CSRF_COOKIE, getSession, SESSION_COOKIE } from "./auth";
 
@@ -16,8 +18,13 @@ interface LoginState {
 /**
  * Calls `POST /api/v1/auth/login`, enforces an admin role, and stores the bearer token plus the
  * resolved user identity in the `admin_session` cookie (httpOnly). The cookie payload is
- * `{ token, userId, email, displayName }` JSON so `getSession()` can deserialise it without
- * round-tripping to the API on every page render.
+ * `{ token, userId, email, displayName, tenantSlug }` JSON so `getSession()` can deserialise it
+ * without round-tripping to the API on every page render.
+ *
+ * Login is tenant-scoped (RULE A): the host resolves to a tenant ref, which is forwarded as
+ * `X-Calibra-Tenant` so the API authenticates the user *within that shop* (RLS scopes the lookup —
+ * a user from another shop simply isn't found, yielding "invalid credentials"). The ref is then
+ * pinned into the session and re-checked on every request against the `Host`.
  */
 export async function loginAction(_state: LoginState, formData: FormData): Promise<LoginState> {
     const email = formData.get("email");
@@ -27,9 +34,26 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
         return { ok: false, error: locale === "fa" ? "ایمیل و رمز عبور الزامی است." : "Email and password are required." };
     }
 
+    /**
+     * No resolvable shop on this `Host` — the admin is per-tenant, so there is nothing to log into.
+     * The middleware already rewrites such hosts to the "unknown shop" page; this guards the action
+     * path (server actions bypass the middleware matcher).
+     */
+    const tenant = await tenantRefFromHeaders();
+    if (tenant === null) {
+        return {
+            ok: false,
+            error:
+                locale === "fa"
+                    ? "این آدرس به هیچ فروشگاهی متصل نیست."
+                    : "This address isn't connected to a shop.",
+        };
+    }
+
     const api = createApiClient({
         baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
         locale,
+        headers: { [TENANT_HEADER]: tenant },
     });
     let data: NonNullable<Awaited<ReturnType<typeof api.storefront.POST>>["data"]> | undefined;
     try {
@@ -71,6 +95,7 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
         userId: Number(loginData.user.id),
         email: loginData.user.email,
         displayName,
+        tenantSlug: tenant,
     };
 
     const store = await cookies();

@@ -24,6 +24,17 @@ export async function ensureEnvFiles(meta) {
             `NEXT_PUBLIC_API_BASE_URL=http://localhost:${meta.ports.api}`,
             `NEXT_PUBLIC_SITE_URL=http://localhost:${meta.ports.admin}`,
             `NEXT_PUBLIC_DEFAULT_LOCALE=fa`,
+            /**
+             * Multi-tenant admin resolves the shop from the Host (Phase 4 RULE A). In dev a shop's
+             * admin is reached at `<slug>.admin.localhost:${meta.ports.admin}` (browsers loop
+             * `*.localhost` back to 127.0.0.1), so the root is `admin.localhost` here, not the prod
+             * `admin.calibra.app`. The per-spin Caddy host (`admin.<slug>.spin.localhost`) carries no
+             * tenant slug and renders the platform "unknown shop" page — use the `<slug>.admin.localhost`
+             * host to reach a specific shop's admin.
+             */
+            `NEXT_PUBLIC_ADMIN_ROOT=admin.localhost`,
+            /** Where "Exit impersonation" returns the platform operator (the control plane, Phase 5). */
+            `NEXT_PUBLIC_CONSOLE_URL=http://localhost:${meta.ports.web ?? meta.ports.admin}`,
             "",
         ].join("\n"),
     );

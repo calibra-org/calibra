@@ -4,6 +4,8 @@ import { hasLocale } from "next-intl";
 
 import { CSRF_COOKIE, getSession, SESSION_COOKIE } from "#/lib/auth";
 import { routing } from "#/lib/i18n/routing";
+import { TENANT_HEADER } from "#/lib/tenant/constants";
+import { resolveHost, tenantRefFor } from "#/lib/tenant/resolve-host";
 
 interface RouteContext {
     params: Promise<{ path: string[] }>;
@@ -56,12 +58,19 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
     const search = request.nextUrl.search;
     const upstreamUrl = `${upstreamBase.replace(/\/+$/, "")}/api/v1/admin/${path.join("/")}${search}`;
     const locale = resolveLocale(request.headers.get("accept-language"));
+    /**
+     * The middleware matcher excludes `/api`, so this handler resolves the tenant from the request
+     * `Host` itself and forwards it as `X-Calibra-Tenant` (RULE B). The API scopes every admin call
+     * to that shop and double-checks the bearer's user belongs to it on top of RLS.
+     */
+    const tenant = tenantRefFor(resolveHost(request.headers.get("host")));
 
     const init: RequestInit & { duplex?: "half" } = {
         method,
         headers: buildUpstreamHeaders(
             session.token,
             locale,
+            tenant,
             request.headers.get("content-type"),
             request.headers.get("if-match"),
             method,
@@ -109,6 +118,7 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
 function buildUpstreamHeaders(
     token: string,
     locale: string,
+    tenant: string | null,
     contentType: string | null,
     ifMatch: string | null,
     method: string,
@@ -118,6 +128,9 @@ function buildUpstreamHeaders(
         "accept-language": locale,
         accept: "application/json",
     };
+    if (tenant !== null) {
+        headers[TENANT_HEADER] = tenant;
+    }
     if (MUTATION_METHODS.has(method) && typeof contentType === "string" && contentType.length > 0) {
         headers["content-type"] = contentType;
     }
