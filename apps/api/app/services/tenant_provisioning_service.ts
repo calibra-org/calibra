@@ -3,6 +3,7 @@ import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
 
 import User from "#models/user";
+import { type BrandingSettingsInput, brandingSettingRows } from "#services/storefront_branding_service";
 import { runWithTenant } from "#services/tenant_context";
 
 /**
@@ -48,6 +49,8 @@ export interface ProvisionInput {
     ownerEmail?: string | null;
     ownerPhone?: string | null;
     ownerPassword?: string | null;
+    /** Initial branding overrides (palette / tagline / logo). Unset tokens fall back to the defaults. */
+    branding?: BrandingSettingsInput;
     /** Hostname suffix for the auto-created subdomain. Defaults to `shops.calibra.app`. */
     domainSuffix?: string;
 }
@@ -120,7 +123,7 @@ export class TenantProvisioningService {
             });
 
             await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(tenantId)]);
-            await this.seedDefaults(trx, tenantId, now);
+            await this.seedDefaults(trx, tenantId, now, input.branding ?? {}, input.name);
 
             const ownerUserId = await runWithTenant(BigInt(tenantId), trx, async () => {
                 const user = new User();
@@ -142,7 +145,13 @@ export class TenantProvisioningService {
      * Seeds the minimal operational defaults every new shop needs. Raw inserts on the admin
      * transaction with explicit `tenant_id` (the GUC is set, but `calibra_admin` bypasses RLS).
      */
-    private async seedDefaults(trx: TransactionClientContract, tenantId: number, now: string): Promise<void> {
+    private async seedDefaults(
+        trx: TransactionClientContract,
+        tenantId: number,
+        now: string,
+        branding: BrandingSettingsInput,
+        name: string,
+    ): Promise<void> {
         const taxRows = await trx
             .table("tax_classes")
             .insert({ tenant_id: tenantId, slug: "standard", name: "Standard", created_at: now, updated_at: now })
@@ -187,11 +196,22 @@ export class TenantProvisioningService {
         });
 
         const settings = [
-            { group_key: "general", key: "shop_name", value: JSON.stringify("Shop"), type: "string" },
+            { group_key: "general", key: "shop_name", value: JSON.stringify(name), type: "string" },
             { group_key: "general", key: "primary_locale", value: JSON.stringify("fa"), type: "string" },
             /** Per-tenant SMS sender identity; empty defaults fall back to the `SMS_FROM` env. */
             { group_key: "sms", key: "from_number", value: JSON.stringify(""), type: "string" },
             { group_key: "sms", key: "from_name", value: JSON.stringify(""), type: "string" },
+            /**
+             * Storefront branding (RULE B). The storefront reads this through
+             * `GET /api/v1/storefront/tenant` and injects the palette as CSS custom properties.
+             * Unset tokens fall back to {@link DEFAULT_PALETTE}.
+             */
+            ...brandingSettingRows(branding, name).map((row) => ({
+                group_key: "branding",
+                key: row.key,
+                value: JSON.stringify(row.value),
+                type: row.type,
+            })),
         ];
         for (const setting of settings) {
             await trx.table("settings").insert({

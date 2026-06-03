@@ -240,6 +240,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/storefront/tenant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Current tenant profile + branding (public)
+         * @description Returns the profile and runtime branding for the tenant resolved from the request. The storefront calls this once per request, injects the palette as CSS custom properties before first paint, and reads `template_key` to detect a misrouted host. Cached server-side (~30m); invalidated when the tenant profile or its branding changes.
+         */
+        get: operations["storefrontTenantShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/products": {
         parameters: {
             query?: never;
@@ -1543,6 +1581,83 @@ export interface components {
             };
         };
         /**
+         * TenantBranding
+         * @description Per-tenant runtime branding consumed by the storefront. The palette tokens are OKLCH strings matching the storefront's `@theme` custom properties (`--color-*`); the storefront injects them on the root element before first paint so the existing Tailwind classes resolve to the shop's colors with no flash. `logoUrl` / `faviconUrl` are absolute URLs (object storage / CDN) or `null` when unset — the storefront then renders a monogram fallback from `name`.
+         */
+        TenantBranding: {
+            /**
+             * @description Brand display name shown in the header/footer. Falls back to the tenant name.
+             * @example Aurora
+             */
+            name: string;
+            /**
+             * @description Short brand tagline. Empty string when unset.
+             * @example روشنایی برای هر روز
+             */
+            tagline: string;
+            /**
+             * @description Font-family key the storefront maps to a loaded font.
+             * @example vazirmatn
+             */
+            font: string;
+            /**
+             * @description Absolute logo URL, or null to render a name-derived monogram.
+             * @example https://cdn.calibra.app/uploads/t1/2026/06/logo.svg
+             */
+            logoUrl: string | null;
+            /** @description Absolute favicon URL, or null. */
+            faviconUrl: string | null;
+            /** @description OKLCH color tokens overriding the storefront's `@theme` defaults. */
+            palette: {
+                /** @example oklch(99% 0.005 230) */
+                background: string;
+                /** @example oklch(20% 0.03 250) */
+                foreground: string;
+                /** @example oklch(96% 0.01 230) */
+                muted: string;
+                /** @example oklch(50% 0.02 250) */
+                mutedForeground: string;
+                /** @example oklch(90% 0.012 230) */
+                border: string;
+                /** @example oklch(60% 0.16 230) */
+                accent: string;
+                /** @example oklch(99% 0 0) */
+                accentForeground: string;
+            };
+        };
+        /**
+         * StorefrontTenant
+         * @description Public profile + branding for the tenant resolved from the request (`X-Calibra-Tenant` header → `Host`). The storefront fetches this once per request to render the shop: `branding` drives the runtime theme, `template_key` selects the rendering codebase (a misrouted host fails loudly), and `currency` is the tenant's stored currency code. Suspended/missing tenants never reach this endpoint — the API answers 503 / 404 before the route runs.
+         */
+        StorefrontTenant: {
+            /**
+             * @description Tenant slug (the `<slug>.shops.<root>` subdomain label).
+             * @example aurora
+             */
+            slug: string;
+            /**
+             * @description Tenant display name.
+             * @example Aurora
+             */
+            name: string;
+            /**
+             * @description Storefront template this tenant renders with; `apps/web` serves `default`.
+             * @example default
+             */
+            template_key: string;
+            /**
+             * @description Tenant lifecycle status. Always `active` here (others are gated upstream).
+             * @enum {string}
+             */
+            status: "active" | "suspended" | "archived";
+            /**
+             * @description Tenant's stored currency code (Rial family).
+             * @example IRR
+             */
+            currency: string;
+            branding: components["schemas"]["TenantBranding"];
+        };
+        /**
          * Product
          * @description Storefront product card payload — matches `ProductTransformer.toObject()` exactly. Money fields are flat integer minor units (`regular_price`, `sale_price`, `effective_price`); `on_sale` reflects the resolved sale window. Locale-dependent fields (`name`, `short_description`) come from the active locale.
          */
@@ -2615,6 +2730,28 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["CurrencyConfig"];
+                    };
+                };
+            };
+        };
+    };
+    storefrontTenantShow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resolved tenant profile + branding. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorefrontTenant"];
                     };
                 };
             };

@@ -1,0 +1,32 @@
+title: StorefrontTenant
+description: >
+    Public profile + branding for the tenant resolved from the request (`X-Calibra-Tenant` header →
+    `Host`). The storefront fetches this once per request to render the shop: `branding` drives the
+    runtime theme, `template_key` selects the rendering codebase (a misrouted host fails loudly),
+    and `currency` is the tenant's stored currency code. Suspended/missing tenants never reach this
+    endpoint — the API answers 503 / 404 before the route runs.
+type: object
+required: [slug, name, template_key, status, currency, branding]
+properties:
+    slug:
+        type: string
+        description: Tenant slug (the `<slug>.shops.<root>` subdomain label).
+        examples: ["aurora"]
+    name:
+        type: string
+        description: Tenant display name.
+        examples: ["Aurora"]
+    template_key:
+        type: string
+        description: Storefront template this tenant renders with; `apps/web` serves `default`.
+        examples: ["default"]
+    status:
+        type: string
+        description: Tenant lifecycle status. Always `active` here (others are gated upstream).
+        enum: [active, suspended, archived]
+    currency:
+        type: string
+        description: Tenant's stored currency code (Rial family).
+        examples: ["IRR"]
+    branding:
+        $ref: "./TenantBranding.yaml"

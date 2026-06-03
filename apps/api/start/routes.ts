@@ -49,6 +49,7 @@ await import("./routes/cart.js");
 await import("./routes/checkout.js");
 await import("./routes/account_orders.js");
 await import("./routes/currency.js");
+await import("./routes/storefront.js");
 await import("./routes/admin_catalog.js");
 await import("./routes/admin_customers.js");
 await import("./routes/admin_customer_notes.js");

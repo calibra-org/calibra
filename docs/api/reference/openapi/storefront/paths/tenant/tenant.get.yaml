@@ -1,0 +1,21 @@
+operationId: storefrontTenantShow
+summary: Current tenant profile + branding (public)
+description: >
+    Returns the profile and runtime branding for the tenant resolved from the request. The
+    storefront calls this once per request, injects the palette as CSS custom properties before
+    first paint, and reads `template_key` to detect a misrouted host. Cached server-side (~30m);
+    invalidated when the tenant profile or its branding changes.
+tags: [Tenant]
+security: []
+
+responses:
+    "200":
+        description: Resolved tenant profile + branding.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/StorefrontTenant.yaml"

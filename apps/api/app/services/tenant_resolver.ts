@@ -11,10 +11,13 @@ import { CacheKeys, CacheTags } from "#services/cache_keys";
 export interface ResolvedTenant {
     id: number | string;
     slug: string;
+    name: string;
     status: string;
     connectionName: string | null;
     currencyCode: string;
     primaryLocale: string;
+    /** Which storefront codebase renders this tenant; `apps/web` serves `"default"` (see RULE C). */
+    templateKey: string;
 }
 
 const ADMIN_CONNECTION = "postgres_admin";
@@ -23,17 +26,25 @@ const ADMIN_CONNECTION = "postgres_admin";
 const COLUMNS = {
     id: "tenants.id",
     slug: "tenants.slug",
+    name: "tenants.name",
     status: "tenants.status",
     connectionName: "tenants.connection_name",
     currencyCode: "tenants.currency_code",
     primaryLocale: "tenants.primary_locale",
+    templateKey: "tenants.template_key",
 };
 
 /**
- * Resolve a tenant by the `X-Calibra-Tenant` reference, which the web/admin BFFs set to either the
- * numeric tenant id or the slug. Short-TTL cached + tagged so Phase 5 can invalidate on edits.
+ * Resolve a tenant by the `X-Calibra-Tenant` reference, which the web/admin BFFs set to the numeric
+ * tenant id, the slug, or — for a custom-domain storefront the BFF can't map to a slug itself — the
+ * verbatim hostname. A ref containing a dot is treated as a custom domain and resolved through
+ * `tenant_domains`; everything else is an id (all digits) or a slug. Short-TTL cached + tagged so
+ * Phase 5 can invalidate on edits.
  */
 export function resolveTenantByRef(ref: string): Promise<ResolvedTenant | null> {
+    if (ref.includes(".")) {
+        return resolveTenantByHost(ref);
+    }
     return cache.getOrSet({
         key: CacheKeys.tenant.byRef(ref),
         ttl: "60s",

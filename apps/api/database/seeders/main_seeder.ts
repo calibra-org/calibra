@@ -20,10 +20,67 @@ import { TenantProvisioningService } from "#services/tenant_provisioning_service
  * a no-op for that tenant. The full production-scale bulk dataset (`db:bulk-seed`) is not yet
  * tenant-aware — it remains the explicit single-tenant generator pending its Phase-2 conversion.
  */
+/**
+ * Each demo tenant gets a distinct brand palette + tagline so the storefront's runtime branding
+ * (RULE B) is visibly different per host — Aurora cool/blue, Mehr warm/amber, Kasra bold/violet.
+ * Logos stay unset (the storefront renders a per-tenant monogram from the name + accent), exercising
+ * the no-logo fallback path; production sets `logo_media_id` through the admin branding editor.
+ */
 const DEMO_TENANTS = [
-    { slug: "aurora", name: "Aurora", ownerEmail: "admin@bulk.calibra.dev", sizes: { products: 25, customers: 12, orders: 18 } },
-    { slug: "mehr", name: "Mehr", ownerEmail: "admin@mehr.calibra.dev", sizes: { products: 6, customers: 4, orders: 5 } },
-    { slug: "kasra", name: "Kasra", ownerEmail: "admin@kasra.calibra.dev", sizes: { products: 5, customers: 3, orders: 4 } },
+    {
+        slug: "aurora",
+        name: "Aurora",
+        ownerEmail: "admin@bulk.calibra.dev",
+        sizes: { products: 25, customers: 12, orders: 18 },
+        branding: {
+            tagline: "روشنایی برای هر روز",
+            palette: {
+                background: "oklch(99% 0.005 230)",
+                foreground: "oklch(20% 0.03 250)",
+                muted: "oklch(96% 0.01 230)",
+                mutedForeground: "oklch(50% 0.02 250)",
+                border: "oklch(90% 0.012 230)",
+                accent: "oklch(60% 0.16 230)",
+                accentForeground: "oklch(99% 0 0)",
+            },
+        },
+    },
+    {
+        slug: "mehr",
+        name: "Mehr",
+        ownerEmail: "admin@mehr.calibra.dev",
+        sizes: { products: 6, customers: 4, orders: 5 },
+        branding: {
+            tagline: "گرمی و مهربانی در هر خرید",
+            palette: {
+                background: "oklch(98% 0.012 70)",
+                foreground: "oklch(22% 0.03 50)",
+                muted: "oklch(95% 0.02 70)",
+                mutedForeground: "oklch(48% 0.03 50)",
+                border: "oklch(89% 0.022 60)",
+                accent: "oklch(64% 0.16 45)",
+                accentForeground: "oklch(99% 0 0)",
+            },
+        },
+    },
+    {
+        slug: "kasra",
+        name: "Kasra",
+        ownerEmail: "admin@kasra.calibra.dev",
+        sizes: { products: 5, customers: 3, orders: 4 },
+        branding: {
+            tagline: "جسارت در سادگی",
+            palette: {
+                background: "oklch(99% 0.006 300)",
+                foreground: "oklch(18% 0.03 300)",
+                muted: "oklch(96% 0.012 300)",
+                mutedForeground: "oklch(50% 0.03 300)",
+                border: "oklch(90% 0.015 300)",
+                accent: "oklch(56% 0.2 300)",
+                accentForeground: "oklch(99% 0 0)",
+            },
+        },
+    },
 ] as const;
 
 interface DemoSizes {
@@ -61,6 +118,7 @@ export default class MainSeeder extends BaseSeeder {
                 currencyCode: "IRR",
                 ownerEmail: tenant.ownerEmail,
                 ownerPassword: "Passw0rd1!",
+                branding: tenant.branding,
             });
             await this.seedTenantDemo(result.id, tenant.sizes);
         }

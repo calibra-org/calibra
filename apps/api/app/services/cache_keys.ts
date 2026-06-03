@@ -44,6 +44,12 @@ export const CacheTags = {
     settingsGroup: (group: string, tenantId?: number | string | bigint | null): string =>
         `${tenantSegment(tenantId)}:settings:${group}`,
     currency: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:currency:config`,
+    /**
+     * Public storefront tenant profile + branding (`GET /api/v1/storefront/tenant`). Busted by both
+     * `CacheTags.tenants` (profile: name / template_key / status / domain edits in Phase 5) and this
+     * tag (branding edits — the Phase-5 admin branding editor must `deleteByTag` this on every save).
+     */
+    storefrontTenant: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:storefront:tenant`,
     adminReports: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:admin:reports`,
     adminCustomers: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:admin:customers`,
     adminCustomer: (tenantId: TenantId, customerId: number | string | bigint): string =>
@@ -161,6 +167,10 @@ export const CacheKeys = {
     },
     currency: {
         config: (tenantId: TenantId, locale: string): string => `${tenantSegment(tenantId)}:currency:config:${locale}`,
+    },
+    storefront: {
+        /** Tenant profile + branding. Locale-independent (palette/logo/name don't translate). */
+        tenant: (tenantId: TenantId): string => `${tenantSegment(tenantId)}:storefront:tenant`,
     },
     admin: {
         topProducts: (tenantId: TenantId, days: number, limit: number, locale: string): string =>
