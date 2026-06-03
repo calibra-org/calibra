@@ -175,7 +175,12 @@ function BrandingSettingsForm({ data }: { data: AdminBrandingSettings }) {
                     <Button type="button" variant="ghost" onClick={() => reset()} disabled={update.isPending}>
                         {t("discard")}
                     </Button>
-                    <Button type="submit" disabled={!formState.isDirty || update.isPending} className="gap-2">
+                    <Button
+                        type="submit"
+                        data-testid="branding-save"
+                        disabled={!formState.isDirty || update.isPending}
+                        className="gap-2"
+                    >
                         {update.isPending ? <Spinner className="size-4" /> : null}
                         {t("save")}
                     </Button>
@@ -232,6 +237,7 @@ function ColorField({
                         />
                         <Input
                             {...field}
+                            data-testid={`branding-color-${token}`}
                             dir="ltr"
                             spellCheck={false}
                             className="font-mono text-xs"

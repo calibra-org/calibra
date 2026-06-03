@@ -1,6 +1,14 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const BASE_URL = process.env.BASE_URL ?? "http://localhost:3001";
+/**
+ * The admin is per-tenant (Phase 4): a bare-`localhost` host renders the "unknown shop" page, so
+ * specs must run against a shop host (`<slug>.admin.localhost`). Default the base URL to Aurora's
+ * admin and pin `NEXT_PUBLIC_ADMIN_ROOT` for the auto-started dev server so `*.admin.localhost`
+ * resolves. Override `BASE_URL` (and `ADMIN_PORT`) to point at a spin.
+ */
+const PORT = process.env.ADMIN_PORT ?? "3001";
+const ROOT = process.env.ADMIN_ROOT ?? "admin.localhost";
+const BASE_URL = process.env.BASE_URL ?? `http://aurora.${ROOT}:${PORT}`;
 
 export default defineConfig({
     testDir: "./tests/e2e",
@@ -18,7 +26,8 @@ export default defineConfig({
         ? undefined
         : {
               command: "pnpm dev",
-              url: BASE_URL,
+              url: `http://localhost:${PORT}`,
+              env: { NEXT_PUBLIC_ADMIN_ROOT: ROOT },
               reuseExistingServer: !process.env.CI,
               timeout: 120_000,
           },
