@@ -1,22 +1,36 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useFormStatus } from "react-dom";
+import { useTransition } from "react";
 
 import { ShieldAlert } from "#/icons";
 import { stopImpersonationAction } from "#/lib/auth-actions";
 
-/** Submit button with a pending state, so a slow revoke shows progress instead of feeling stuck. */
+/**
+ * Exit button with a pending state, so a slow revoke shows progress instead of feeling stuck.
+ * Revokes then navigates on the client: a server-action redirect would sub-render the destination
+ * through Next's loopback origin and flash the platform "unknown shop". See the `redirectTo` note
+ * on `loginAction`.
+ */
 function ExitButton() {
     const t = useTranslations("Impersonation");
-    const { pending } = useFormStatus();
+    const [exiting, startExit] = useTransition();
+
+    function exit() {
+        startExit(async () => {
+            const { redirectTo } = await stopImpersonationAction();
+            window.location.assign(redirectTo);
+        });
+    }
+
     return (
         <button
-            type="submit"
-            disabled={pending}
+            type="button"
+            onClick={exit}
+            disabled={exiting}
             className="rounded-md border border-warning-foreground/30 bg-warning-foreground/10 px-2.5 py-1 font-medium text-warning-foreground transition-colors hover:bg-warning-foreground/20 disabled:opacity-60"
         >
-            {pending ? t("exiting") : t("exit")}
+            {exiting ? t("exiting") : t("exit")}
         </button>
     );
 }
@@ -37,9 +51,7 @@ export function ImpersonationBanner({ shopName }: { shopName: string }) {
         >
             <ShieldAlert className="size-4 shrink-0" aria-hidden="true" />
             <span className="font-medium">{t("banner", { shop: shopName })}</span>
-            <form action={stopImpersonationAction}>
-                <ExitButton />
-            </form>
+            <ExitButton />
         </div>
     );
 }

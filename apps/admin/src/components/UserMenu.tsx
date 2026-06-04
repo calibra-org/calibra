@@ -2,6 +2,7 @@
 
 import { LogOut, User } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useTransition } from "react";
 
 import {
     DropdownMenu,
@@ -20,6 +21,20 @@ interface UserMenuProps {
 
 export function UserMenu({ displayName, email }: UserMenuProps) {
     const topbar = useTranslations("Topbar");
+    const [signingOut, startSignOut] = useTransition();
+
+    /**
+     * Sign out then navigate on the client. A server-action redirect would sub-render `/login`
+     * through Next's loopback origin and flash the platform "unknown shop"; a real browser
+     * navigation preserves the shop's `Host`. See the `redirectTo` note on `loginAction`.
+     */
+    function signOut() {
+        startSignOut(async () => {
+            const { redirectTo } = await logoutAction();
+            window.location.assign(redirectTo);
+        });
+    }
+
     const initials = displayName
         .split(/\s+/)
         .map((word) => word[0])
@@ -56,15 +71,15 @@ export function UserMenu({ displayName, email }: UserMenuProps) {
                     <span>{topbar("profile")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <form action={logoutAction}>
-                    <button
-                        type="submit"
-                        className="flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2.5 py-1.5 text-start text-danger outline-none hover:bg-accent hover:text-danger focus-visible:bg-accent"
-                    >
-                        <LogOut className="size-4" aria-hidden="true" />
-                        <span>{topbar("signOut")}</span>
-                    </button>
-                </form>
+                <button
+                    type="button"
+                    onClick={signOut}
+                    disabled={signingOut}
+                    className="flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2.5 py-1.5 text-start text-danger outline-none hover:bg-accent hover:text-danger focus-visible:bg-accent disabled:opacity-60"
+                >
+                    <LogOut className="size-4" aria-hidden="true" />
+                    <span>{topbar("signOut")}</span>
+                </button>
             </DropdownMenuContent>
         </DropdownMenu>
     );

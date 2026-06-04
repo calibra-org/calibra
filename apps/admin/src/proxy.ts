@@ -19,7 +19,8 @@ const handleI18n = createMiddleware(routing);
  * the middleware-override-header dance — which the `/api` matcher exclusion would break anyway.
  */
 export default function middleware(request: NextRequest) {
-    if (tenantRefFor(resolveHost(request.headers.get("host"))) === null) {
+    const ref = tenantRefFor(resolveHost(request.headers.get("host")));
+    if (ref === null) {
         return NextResponse.rewrite(new URL(`/${routing.defaultLocale}/unknown-shop`, request.url));
     }
     return handleI18n(request);

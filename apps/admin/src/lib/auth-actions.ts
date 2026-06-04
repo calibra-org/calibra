@@ -3,9 +3,8 @@
 import { randomUUID } from "node:crypto";
 import { BackendError, createApiClient } from "@calibra/sdk";
 import { cookies } from "next/headers";
-import { redirect as nextRedirect } from "next/navigation";
 
-import { redirect } from "#/lib/i18n/navigation";
+import { getPathname } from "#/lib/i18n/navigation";
 import { CONSOLE_URL, TENANT_HEADER } from "#/lib/tenant/constants";
 import { tenantRefFromHeaders } from "#/lib/tenant/current-tenant";
 
@@ -14,6 +13,17 @@ import { CSRF_COOKIE, getSession, SESSION_COOKIE } from "./auth";
 interface LoginState {
     ok: boolean;
     error: string | null;
+    /**
+     * On success, the locale-aware path the client should navigate to. We do **not** `redirect()`
+     * from the server action: Next resolves a server-action redirect by issuing an internal
+     * server-side `fetch` to sub-render the destination, and that fetch hits the server's own
+     * loopback origin (`localhost`) rather than the tenant `Host` — so the per-tenant middleware
+     * (`proxy.ts`) resolves no shop and renders "unknown shop" (visible as a flash that "fixes
+     * itself" on manual refresh). A real browser navigation from the client always carries the
+     * shop's `Host`, so the middleware resolves the right tenant. {@link LoginForm} reads this and
+     * calls `window.location.assign`.
+     */
+    redirectTo?: string;
 }
 
 /**
@@ -117,13 +127,15 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 7,
     });
-    /** `redirect` throws an internal Next.js exception, so this never returns. The explicit
-     * unreachable success object satisfies TypeScript's control-flow analysis. */
-    redirect({ href: "/dashboard", locale });
-    return { ok: true, error: null };
+    return { ok: true, error: null, redirectTo: getPathname({ href: "/dashboard", locale }) };
 }
 
-export async function logoutAction(): Promise<void> {
+/**
+ * Clears the session and tells the caller where to go next. Like {@link loginAction}, navigation
+ * happens client-side (see the `redirectTo` note there) — {@link UserMenu} calls `window.location`
+ * with the returned path so the post-logout `/login` render lands on the shop's own `Host`.
+ */
+export async function logoutAction(): Promise<{ redirectTo: string }> {
     const session = await getSession();
     const store = await cookies();
     if (session) {
@@ -139,7 +151,7 @@ export async function logoutAction(): Promise<void> {
     }
     store.delete(SESSION_COOKIE);
     store.delete(CSRF_COOKIE);
-    redirect({ href: "/login", locale: "fa" });
+    return { redirectTo: getPathname({ href: "/login", locale: "fa" }) };
 }
 
 /**
@@ -148,8 +160,12 @@ export async function logoutAction(): Promise<void> {
  * admin cookies, and returns the platform operator to the control plane (`NEXT_PUBLIC_CONSOLE_URL`)
  * — or this shop's login when no console URL is configured. Best-effort on the revoke: the cookies
  * are cleared regardless, so the operator always leaves the impersonated session.
+ *
+ * Navigation happens client-side ({@link ImpersonationBanner}) — see the `redirectTo` note on
+ * {@link loginAction} for why a server-action redirect would land on the platform "unknown shop".
+ * Returns the control-plane URL when configured, else this shop's login.
  */
-export async function stopImpersonationAction(): Promise<void> {
+export async function stopImpersonationAction(): Promise<{ redirectTo: string }> {
     const session = await getSession();
     const tenant = await tenantRefFromHeaders();
     if (session) {
@@ -168,8 +184,5 @@ export async function stopImpersonationAction(): Promise<void> {
     store.delete(SESSION_COOKIE);
     store.delete(CSRF_COOKIE);
 
-    if (CONSOLE_URL.length > 0) {
-        nextRedirect(CONSOLE_URL);
-    }
-    redirect({ href: "/login", locale: "fa" });
+    return { redirectTo: CONSOLE_URL.length > 0 ? CONSOLE_URL : getPathname({ href: "/login", locale: "fa" }) };
 }
