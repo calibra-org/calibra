@@ -14,12 +14,13 @@ export const THEME_COOKIE = "calibra-console-theme";
 export type ResolvedTheme = "light" | "dark";
 
 /**
- * Reads the resolved theme from the cookie. Returns `"light"` when the cookie is absent or
- * holds an unrecognised value — a "system" preference resolves to its current value at write
- * time on the client and is persisted as `"light"` / `"dark"` here.
+ * Reads the resolved theme from the cookie. The console is **dark-first** — operators expect a
+ * mission-control surface — so the default when the cookie is absent (or holds an unrecognised
+ * value) is `"dark"`. Only an explicit `"light"` selection opts out. The admin panel keeps its
+ * own light-first default; this divergence is intentional.
  */
 export async function getResolvedTheme(): Promise<ResolvedTheme> {
     const store = await cookies();
     const value = store.get(THEME_COOKIE)?.value;
-    return value === "dark" ? "dark" : "light";
+    return value === "light" ? "light" : "dark";
 }

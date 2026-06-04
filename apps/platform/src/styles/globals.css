@@ -4,36 +4,47 @@
 @custom-variant dark (&:is(.dark *));
 
 /* -------------------------------------------------------------------------- */
-/*  Palette layer                                                              */
-/*  Raw color steps. Light scales go 50 → 900; dark mode inverts the gray      */
-/*  ramp so semantic tokens can keep using the same step names.                */
+/*  Palette layer — CONSOLE "mission-control" identity                          */
+/*                                                                             */
+/*  This is where the control plane diverges from the admin. The admin is a    */
+/*  light-first Linear-indigo (232°) panel; the console is a DARK-FIRST slate   */
+/*  console with a vivid iris/violet (262°) signature accent and a cooler,      */
+/*  near-black neutral ramp with wider elevation contrast so cards read as      */
+/*  crisp layered surfaces. Same primitives (`@calibra/panel-kit`), different   */
+/*  token values — that's the whole divergence mechanism.                       */
+/*                                                                             */
+/*  Light scales go 50 → 900; dark mode inverts the gray ramp so semantic       */
+/*  tokens can keep using the same step names.                                  */
 /* -------------------------------------------------------------------------- */
 :root {
     /**
-     * Light ramp. Off-white surfaces with the faintest cool-neutral tint (Linear has a
-     * barely-visible blue cast that prevents the UI from feeling sterile). Very low saturation
-     * so semantic accents stay loud.
+     * Light ramp. Secondary mode for the console (it defaults dark). Cool blue-slate tint
+     * (hue ~226°, a touch bluer than the admin's 240°) so the light surface still reads as
+     * the same product family as the dark one. Very low saturation so the violet accent stays loud.
      */
     --color-gray-50: 0 0% 100%;
-    --color-gray-75: 240 16% 98.5%;
-    --color-gray-100: 240 12% 96.5%;
-    --color-gray-150: 240 10% 93.5%;
-    --color-gray-200: 240 8% 90%;
-    --color-gray-300: 240 7% 80%;
-    --color-gray-400: 240 6% 62%;
-    --color-gray-500: 240 5% 45%;
-    --color-gray-600: 240 6% 32%;
-    --color-gray-700: 240 9% 20%;
-    --color-gray-800: 240 12% 13%;
-    --color-gray-900: 240 16% 9%;
+    --color-gray-75: 226 30% 98.5%;
+    --color-gray-100: 226 24% 96.5%;
+    --color-gray-150: 226 20% 93%;
+    --color-gray-200: 226 16% 89%;
+    --color-gray-300: 226 14% 79%;
+    --color-gray-400: 226 12% 60%;
+    --color-gray-500: 228 10% 44%;
+    --color-gray-600: 230 12% 31%;
+    --color-gray-700: 232 16% 19%;
+    --color-gray-800: 234 22% 12%;
+    --color-gray-900: 236 30% 8%;
 
-    /** Linear's signature indigo-violet (`#5e6ad2` ≈ HSL 232 60% 60%). */
-    --color-brand-100: 232 100% 96%;
-    --color-brand-200: 232 90% 90%;
-    --color-brand-400: 232 75% 72%;
-    --color-brand-500: 232 65% 65%;
-    --color-brand-600: 232 60% 60%;
-    --color-brand-700: 232 56% 52%;
+    /**
+     * Signature accent — vivid iris/violet (`~262°`). Distinct from the admin's 232° indigo, and
+     * pushed to a higher saturation so it reads "electric / control plane" rather than "corporate".
+     */
+    --color-brand-100: 262 100% 97%;
+    --color-brand-200: 262 94% 91%;
+    --color-brand-400: 262 86% 74%;
+    --color-brand-500: 262 80% 64%;
+    --color-brand-600: 262 72% 54%;
+    --color-brand-700: 262 70% 46%;
 
     /**
      * Semantic accents (status) — palette-layer raw HSL components. Named with a `-h` suffix to
@@ -42,57 +53,63 @@
      * picks up the raw-component value (`152 64% 38%`) as the theme color and refuses to generate
      * `.bg-success` / `.text-success` etc. because the value isn't a parseable color expression.
      */
-    --success-h: 152 64% 38%;
+    --success-h: 158 68% 38%;
     --warning-h: 35 92% 50%;
     --danger-h: 0 84% 60%;
-    --info-h: 210 95% 55%;
+    --info-h: 199 90% 48%;
 
     /** Paired tone foregrounds — same `-h` suffix dance so the `@theme inline` resolver doesn't
      * eagerly inline these and strip the wrapping `hsl(...)`. */
     --success-foreground-h: 0 0% 100%;
-    --warning-foreground-h: 240 16% 9%;
+    --warning-foreground-h: 236 30% 8%;
     --danger-foreground-h: 0 0% 100%;
     --info-foreground-h: 0 0% 100%;
+
+    /** Electric data accent — cyan/azure used for the secondary chart series + sparklines, so
+     * telemetry reads with a distinct hue from the violet primary (a true "mission control" duo). */
+    --accent-cyan-h: 190 90% 50%;
 }
 
 .dark {
     /**
-     * Dark ramp — Linear-style deep cool-neutral. Surfaces stair-step *lighter* as elevation
-     * increases, but only by 1.5–2% at a time so the UI reads as a single calm slab instead of
-     * stacked cards. Text foreground is pushed brighter (95% lightness) so dense tables stay
-     * readable without raising contrast on every secondary element.
+     * Dark ramp — near-black slate canvas. Base sits a touch darker and cooler than the admin
+     * (hue ~232°, ~5% lightness) and the elevation steps are WIDER (≈2.5–3.5% apart, vs the
+     * admin's 1.5–2%) so stacked surfaces — page → card → popover — read as crisp, separated
+     * panels rather than one calm slab. Text foreground is pushed bright (≈97%) for dense tables.
      */
-    --color-gray-50: 240 12% 4.5%;
-    --color-gray-75: 240 10% 6%;
-    --color-gray-100: 240 9% 7.5%;
-    --color-gray-150: 240 8% 10%;
-    --color-gray-200: 240 7% 13%;
-    --color-gray-300: 240 6% 20%;
-    --color-gray-400: 240 5% 38%;
-    --color-gray-500: 240 5% 62%;
-    --color-gray-600: 240 5% 74%;
-    --color-gray-700: 240 6% 84%;
-    --color-gray-800: 240 8% 92%;
-    --color-gray-900: 240 14% 96%;
+    --color-gray-50: 232 24% 5%;
+    --color-gray-75: 232 22% 7%;
+    --color-gray-100: 231 20% 9.5%;
+    --color-gray-150: 231 18% 12.5%;
+    --color-gray-200: 230 16% 16.5%;
+    --color-gray-300: 230 12% 25%;
+    --color-gray-400: 230 9% 44%;
+    --color-gray-500: 230 8% 62%;
+    --color-gray-600: 231 10% 74%;
+    --color-gray-700: 232 14% 84%;
+    --color-gray-800: 234 20% 92%;
+    --color-gray-900: 240 30% 97%;
 
-    --color-brand-100: 232 60% 18%;
-    --color-brand-200: 232 60% 30%;
-    --color-brand-400: 232 60% 55%;
-    --color-brand-500: 232 60% 65%;
-    --color-brand-600: 232 65% 70%;
-    --color-brand-700: 232 70% 80%;
+    --color-brand-100: 262 40% 22%;
+    --color-brand-200: 262 48% 34%;
+    --color-brand-400: 262 72% 58%;
+    --color-brand-500: 262 88% 72%;
+    --color-brand-600: 262 90% 76%;
+    --color-brand-700: 262 92% 84%;
 
-    --success-h: 152 60% 50%;
+    --success-h: 158 64% 50%;
     --warning-h: 35 92% 60%;
-    --danger-h: 0 72% 55%;
-    --info-h: 210 95% 65%;
+    --danger-h: 0 74% 60%;
+    --info-h: 199 90% 60%;
 
-    /** Dark-mode tone foregrounds — success / warning / info are lighter against the lighter dark
-     * surfaces so flip foregrounds to dark text; danger stays bright enough for white. */
-    --success-foreground-h: 240 12% 4.5%;
-    --warning-foreground-h: 240 12% 4.5%;
+    /** Dark-mode tone foregrounds — success / warning / info ride lighter against the lighter dark
+     * surfaces, so flip foregrounds to dark text; danger stays bright enough for white. */
+    --success-foreground-h: 232 24% 5%;
+    --warning-foreground-h: 232 24% 5%;
     --danger-foreground-h: 0 0% 100%;
-    --info-foreground-h: 240 12% 4.5%;
+    --info-foreground-h: 232 24% 5%;
+
+    --accent-cyan-h: 190 95% 60%;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -101,7 +118,8 @@
 /*  the palette can change without touching components.                        */
 /* -------------------------------------------------------------------------- */
 :root {
-    --radius: 0.625rem;
+    /** Tighter than the admin's 0.625rem — a crisper, more data-dense console feel. */
+    --radius: 0.5rem;
 
     /** Background elevation steps — page → card → popover → tooltip. */
     --background-base: var(--color-gray-75);
@@ -145,7 +163,7 @@
     --success: var(--success-h);
     --success-foreground: 0 0% 100%;
     --warning: var(--warning-h);
-    --warning-foreground: 240 16% 9%;
+    --warning-foreground: 236 30% 8%;
     --danger: var(--danger-h);
     --danger-foreground: 0 0% 100%;
     --info: var(--info-h);
@@ -156,10 +174,10 @@
     --ring: var(--color-brand-600);
 
     --chart-1: var(--color-brand-600);
-    --chart-2: var(--success-h);
-    --chart-3: var(--warning-h);
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-2: var(--accent-cyan-h);
+    --chart-3: var(--success-h);
+    --chart-4: var(--warning-h);
+    --chart-5: 326 78% 58%;
 
     --sidebar: var(--background-base);
     --sidebar-foreground: var(--color-gray-700);
@@ -173,9 +191,9 @@
 
 .dark {
     --background-base: var(--color-gray-50);
-    --background-layer-1: var(--color-gray-75);
-    --background-layer-2: var(--color-gray-100);
-    --background-subdued: var(--color-gray-150);
+    --background-layer-1: var(--color-gray-100);
+    --background-layer-2: var(--color-gray-150);
+    --background-subdued: var(--color-gray-100);
     --background-elevated: var(--color-gray-200);
 
     --foreground-base: var(--color-gray-900);
@@ -190,6 +208,8 @@
     --popover: var(--background-layer-2);
     --popover-foreground: var(--foreground-base);
 
+    /** Dark primary is a bright violet with near-black text — a glowing accent button, the most
+     * "operator action" surface in the console. */
     --primary: var(--color-brand-500);
     --primary-foreground: var(--color-gray-50);
 
@@ -208,23 +228,23 @@
     /** Dark-mode tone foregrounds: success / warning / info are lighter in dark mode, so flip
      * their foregrounds to dark text. Danger stays saturated enough to need white text. */
     --success: var(--success-h);
-    --success-foreground: 240 12% 4.5%;
+    --success-foreground: 232 24% 5%;
     --warning: var(--warning-h);
-    --warning-foreground: 240 12% 4.5%;
+    --warning-foreground: 232 24% 5%;
     --danger: var(--danger-h);
     --danger-foreground: 0 0% 100%;
     --info: var(--info-h);
-    --info-foreground: 240 12% 4.5%;
+    --info-foreground: 232 24% 5%;
 
     --border: var(--color-gray-200);
     --input: var(--color-gray-200);
     --ring: var(--color-brand-500);
 
     --chart-1: var(--color-brand-500);
-    --chart-2: var(--success-h);
-    --chart-3: var(--warning-h);
-    --chart-4: 280 65% 65%;
-    --chart-5: 340 75% 60%;
+    --chart-2: var(--accent-cyan-h);
+    --chart-3: var(--success-h);
+    --chart-4: var(--warning-h);
+    --chart-5: 326 84% 66%;
 
     --sidebar: var(--background-base);
     --sidebar-foreground: var(--color-gray-600);
@@ -244,6 +264,14 @@
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
+
+    /**
+     * Monospace stack for slugs / domains / IDs / numeric readouts. System fonts only — no new
+     * font dependency. Living in `@theme` (not `:root`) is safe here because, unlike `--font-sans`,
+     * the mono stack never needs a per-locale cascade override, so inlining it into `.font-mono`
+     * is fine.
+     */
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
 
     --color-background: hsl(var(--background));
     --color-foreground: hsl(var(--foreground));
@@ -278,6 +306,8 @@
     --color-danger-foreground: hsl(var(--danger-foreground-h));
     --color-info: hsl(var(--info-h));
     --color-info-foreground: hsl(var(--info-foreground-h));
+    /** Electric cyan data accent, exposed as `bg-accent-cyan` / `text-accent-cyan` / `stroke-accent-cyan`. */
+    --color-accent-cyan: hsl(var(--accent-cyan-h));
     --color-border: hsl(var(--border));
     --color-input: hsl(var(--input));
     --color-ring: hsl(var(--ring));
@@ -320,17 +350,64 @@ html[lang="fa"] {
     body {
         @apply bg-background text-foreground antialiased;
         font-family: var(--font-sans);
-        /** No horizontal page scroll — admin chrome is column-bounded; runaway X scroll is always a bug. */
+        /** No horizontal page scroll — console chrome is column-bounded; runaway X scroll is always a bug. */
         overflow-x: hidden;
+    }
+    /** Numerics read as aligned columns everywhere in the console (KPIs, tables, usage bars). */
+    .tabular-nums,
+    th,
+    td {
+        font-variant-numeric: tabular-nums;
     }
 }
 
-/**
- * Slim scrollbar styling applied via opt-in `.custom-scrollbar` class. Used by surfaces where we
- * need a *real* native scrollbar (e.g. tables with sticky `<th>` cells that don't play nicely
- * with virtualized scroll viewports) but still want the visual language of our `<ScrollArea>`
- * primitive — same 8px width, same translucent thumb that fades toward stronger on hover.
- */
+/* -------------------------------------------------------------------------- */
+/*  Mission-control surface treatments                                          */
+/*                                                                             */
+/*  Opt-in utility classes (like `.custom-scrollbar`) applied by the console's  */
+/*  COMPOSED components — never by panel-kit primitives, which stay neutral.    */
+/*  `.mission-panel` is the signature elevated surface: a hairline border plus  */
+/*  a faint top-edge highlight that makes a card read as a lit slab of glass.   */
+/* -------------------------------------------------------------------------- */
+.mission-panel {
+    position: relative;
+    border: 1px solid hsl(var(--border) / 0.6);
+    background-color: hsl(var(--card));
+    border-radius: var(--radius);
+}
+.mission-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding-block-start: 1px;
+    background: linear-gradient(to bottom, hsl(var(--foreground) / 0.08), transparent 42%);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+/** Accent-tinted variant for the hero / primary panel — a violet inner-glow on the top edge. */
+.mission-panel-accent::before {
+    background: linear-gradient(to bottom, hsl(var(--primary) / 0.35), transparent 48%);
+}
+
+/** Subtle violet glow ring — used on the active nav pill and the hero KPI. */
+.accent-glow {
+    box-shadow:
+        0 0 0 1px hsl(var(--primary) / 0.4),
+        0 8px 28px -12px hsl(var(--primary) / 0.55);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Slim scrollbar styling applied via opt-in `.custom-scrollbar` class. Used    */
+/*  by surfaces where we need a *real* native scrollbar (e.g. tables with sticky */
+/*  `<th>` cells) but still want the visual language of our `<ScrollArea>`        */
+/*  primitive — same 8px width, same translucent thumb that fades on hover.      */
+/* -------------------------------------------------------------------------- */
 .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--foreground) / 0.25) transparent;
@@ -358,19 +435,11 @@ html[lang="fa"] {
 /* -------------------------------------------------------------------------- */
 /*  RTL helpers                                                                */
 /*                                                                             */
-/*  Declarative direction-aware transforms. The pattern is: tag an element     */
-/*  with a `data-rtl-*` attribute, and the matching rule below applies the     */
-/*  transform when the document is RTL. Uses the modern individual transform   */
-/*  properties (`scale`, `rotate`, `translate`) so they compose cleanly with   */
-/*  Tailwind v4's `rotate-*` / `scale-*` / `translate-*` utilities instead of  */
-/*  overriding a combined `transform`.                                         */
-/*                                                                             */
-/*  Selectors use `:where(...)` to keep specificity at 0, so component-level   */
-/*  classes still win without `!important` gymnastics.                         */
-/*                                                                             */
-/*  Add new transforms here by following the same shape:                       */
-/*    :where([dir="rtl"]) [data-rtl-rotate-180] { rotate: 180deg; }            */
-/*    :where([dir="rtl"]) [data-rtl-translate-x] { translate: -100% 0; }       */
+/*  Declarative direction-aware transforms. Tag an element with a `data-rtl-*` */
+/*  attribute and the matching rule applies the transform when the document is */
+/*  RTL. Uses the modern individual transform properties (`scale`, `rotate`,   */
+/*  `translate`) so they compose cleanly with Tailwind v4's utilities.         */
+/*  Selectors use `:where(...)` to keep specificity at 0.                      */
 /* -------------------------------------------------------------------------- */
 :where([dir="rtl"]) [data-rtl-flip] {
     scale: -1 1;
