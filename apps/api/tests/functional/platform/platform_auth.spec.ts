@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 
 import PlatformUser from "#models/platform_user";
 import User from "#models/user";
+import { truncatePhase03Tables } from "#tests/helpers/db";
 import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 /**
@@ -37,9 +38,18 @@ async function createShopAdmin(): Promise<User> {
 
 test.group("Platform auth + impersonation", (group) => {
     group.each.setup(async () => {
-        await db.connection("postgres_admin").from("platform_users").delete();
-        await db.connection("postgres_admin").from("tenant_impersonation_events").delete();
-        await db.connection("postgres_admin").from("users").where("tenant_id", TEST_TENANT_ID).where("role", "admin").delete();
+        const conn = db.connection("postgres_admin");
+        await conn.from("platform_users").delete();
+        await conn.from("tenant_impersonation_events").delete();
+        /**
+         * Start from a clean user/customer slate regardless of sibling-spec residue. Several specs
+         * hardcode fixture emails (e.g. `shopper@calibra.dev`) and create customers linked to admin
+         * users; without a global per-test truncate, whichever spec ran first in the shard leaves
+         * rows that collide here (`users_tenant_email_unique`) or block a delete
+         * (`customers_user_id_foreign`). Truncating the phase-03 tables (CASCADE) is the same
+         * isolation the tenant-scoped specs already use.
+         */
+        await truncatePhase03Tables();
     });
 
     test("login mints a pat_ token for a valid operator", async ({ client, assert }) => {

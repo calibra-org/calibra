@@ -475,6 +475,8 @@ export interface components {
                 /** Format: int64 */
                 storage_bytes: number;
             };
+            /** @description 14-day daily revenue (oldest → newest, currency minor units) for the inline row sparkline. */
+            spark: number[];
         };
         /**
          * PaginationMeta

@@ -12,7 +12,9 @@
         "loading": "در حال بارگذاری…",
         "refresh": "تازه‌سازی",
         "retry": "تلاش دوباره",
-        "error": "خطایی رخ داد."
+        "error": "خطایی رخ داد.",
+        "errorTitle": "بارگذاری ناموفق بود",
+        "noData": "داده‌ای نیست"
     },
     "Theme": {
         "toggle": "تغییر پوسته",
@@ -53,7 +55,10 @@
         "orders30d": "سفارش‌ها (۳۰ روز)",
         "customersTotal": "مشتریان",
         "storage": "فضای ذخیره",
-        "recentShops": "فروشگاه‌ها"
+        "recentShops": "فروشگاه‌ها",
+        "fleetStatus": "وضعیت ناوگان",
+        "trendVsPrev": "نسبت به دوره قبل",
+        "empty": "هنوز فروشگاهی ثبت نشده است."
     },
     "Tenants": {
         "title": "فروشگاه‌ها",
@@ -67,6 +72,10 @@
         "colOrders": "سفارش ۳۰ روز",
         "colRevenue": "درآمد ۳۰ روز",
         "colStorage": "فضا",
+        "colTrend": "روند",
+        "sortAsc": "صعودی",
+        "sortDesc": "نزولی",
+        "errorBody": "فهرست فروشگاه‌ها بارگذاری نشد.",
         "statusActive": "فعال",
         "statusSuspended": "معلق",
         "statusArchived": "بایگانی‌شده",
@@ -74,7 +83,7 @@
         "filterPlan": "پلن",
         "empty": "هنوز فروشگاهی نیست.",
         "open": "باز کردن",
-        "impersonate": "ورود به‌جای کاربر",
+        "impersonate": "ورود به پنل مشتری",
         "suspend": "تعلیق",
         "activate": "فعال‌سازی"
     },
@@ -98,7 +107,7 @@
     },
     "ShopDetail": {
         "back": "فروشگاه‌ها",
-        "impersonate": "ورود به‌جای کاربر",
+        "impersonate": "ورود به پنل مشتری",
         "tabDomains": "دامنه‌ها",
         "tabPlan": "پلن و محدودیت‌ها",
         "tabMetrics": "سنجه‌ها",
@@ -165,5 +174,34 @@
         "shared": "اشتراکی",
         "dedicated": "اختصاصی",
         "empty": "هنوز پلنی نیست."
+    },
+    "Command": {
+        "placeholder": "جستجو یا اجرای فرمان…",
+        "searchLabel": "جستجو",
+        "noResults": "نتیجه‌ای یافت نشد.",
+        "actions": "اقدام‌ها",
+        "shops": "فروشگاه‌ها",
+        "shopActions": "اقدام‌های فروشگاه",
+        "goOverview": "رفتن به نمای کلی",
+        "goShops": "رفتن به فروشگاه‌ها",
+        "goPlans": "رفتن به پلن‌ها",
+        "provision": "ایجاد فروشگاه",
+        "impersonate": "ورود به پنل مشتری",
+        "suspend": "تعلیق",
+        "activate": "فعال‌سازی",
+        "hintOpen": "باز کردن",
+        "collapseRail": "جمع کردن نوار",
+        "expandRail": "باز کردن نوار"
+    },
+    "Shortcuts": {
+        "title": "میان‌برهای صفحه‌کلید",
+        "palette": "پالت فرمان",
+        "search": "جستجو",
+        "goOverview": "نمای کلی",
+        "goShops": "فروشگاه‌ها",
+        "goPlans": "پلن‌ها",
+        "rowNav": "حرکت بین ردیف‌ها",
+        "rowOpen": "باز کردن ردیف",
+        "help": "این راهنما"
     }
 }

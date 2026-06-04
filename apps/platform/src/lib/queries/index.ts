@@ -130,6 +130,46 @@ export function useImpersonate(id: number | string) {
     });
 }
 
+/**
+ * Impersonation grant where the tenant id is the mutate variable rather than baked into the hook.
+ * The command palette acts on arbitrary shops it can't enumerate as fixed hooks, so it needs the
+ * id at call time. Row-/detail-level call sites keep using the id-bound {@link useImpersonate}.
+ */
+export function useImpersonateTenant() {
+    return useMutation({
+        mutationFn: (id: number | string) =>
+            platformSend<Envelope<{ token: { value: string }; admin_url: string }>>("POST", `tenants/${id}/impersonate`).then(
+                (r) => r.data,
+            ),
+    });
+}
+
+/** Suspend / activate any tenant by id — the palette's lifecycle command. Invalidates list + detail. */
+export function useSetTenantStatus() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, status }: { id: number | string; status: string }) =>
+            platformSend<Envelope<TenantDetail>>("PATCH", `tenants/${id}`, { status }).then((r) => r.data),
+        onSuccess: (_data, { id }) => {
+            qc.invalidateQueries({ queryKey: ["tenant", String(id)] });
+            qc.invalidateQueries({ queryKey: ["tenants"] });
+            qc.invalidateQueries({ queryKey: ["overview"] });
+        },
+    });
+}
+
+/**
+ * Open an impersonation grant in a new admin tab (shared by rows, detail header, and the palette).
+ * Targets the admin's `/api/impersonate` hand-off route, which exchanges the token for an
+ * `admin_session` cookie and redirects into the dashboard — so the operator lands logged-in, not
+ * on the login screen.
+ */
+export function openImpersonationTab(grant: { token: { value: string }; admin_url: string }): void {
+    const url = new URL("/api/impersonate", grant.admin_url);
+    url.searchParams.set("token", grant.token.value);
+    window.open(url.toString(), "_blank", "noopener");
+}
+
 export interface PlanInput {
     key?: string;
     name?: string;

@@ -138,6 +138,13 @@ export async function ensureEnvFiles(meta) {
             `SMS_DRIVER=log`,
             `ALLOWED_ORIGINS=http://localhost:${meta.ports.admin},http://localhost:${meta.ports.web}`,
             /**
+             * Impersonation "log in to the customer panel" opens the per-tenant admin. In dev a shop's
+             * admin is reached at `<slug>.admin.localhost:${meta.ports.admin}` (browsers loop
+             * `*.localhost` to 127.0.0.1) — not the prod `<slug>.admin.calibra.app`. `{slug}` is
+             * substituted by the impersonation controller.
+             */
+            `ADMIN_URL_TEMPLATE=http://{slug}.admin.localhost:${meta.ports.admin}`,
+            /**
              * Mailpit (per-spin). The container is brought up by `ensureContainers()` on
              * `spin start` against the spin's own docker-compose project.
              * `MAIL_NOTIFICATIONS_ENABLED=true` opts the importer/exporter runners into sending

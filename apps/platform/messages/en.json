@@ -12,7 +12,9 @@
         "loading": "Loading…",
         "refresh": "Refresh",
         "retry": "Retry",
-        "error": "Something went wrong."
+        "error": "Something went wrong.",
+        "errorTitle": "Couldn't load",
+        "noData": "No data"
     },
     "Theme": {
         "toggle": "Toggle theme",
@@ -53,7 +55,10 @@
         "orders30d": "Orders (30d)",
         "customersTotal": "Customers",
         "storage": "Storage",
-        "recentShops": "Shops"
+        "recentShops": "Shops",
+        "fleetStatus": "Fleet status",
+        "trendVsPrev": "vs prev period",
+        "empty": "No shops yet."
     },
     "Tenants": {
         "title": "Shops",
@@ -67,6 +72,10 @@
         "colOrders": "Orders 30d",
         "colRevenue": "Revenue 30d",
         "colStorage": "Storage",
+        "colTrend": "Trend",
+        "sortAsc": "Ascending",
+        "sortDesc": "Descending",
+        "errorBody": "Couldn't load the shops list.",
         "statusActive": "Active",
         "statusSuspended": "Suspended",
         "statusArchived": "Archived",
@@ -74,7 +83,7 @@
         "filterPlan": "Plan",
         "empty": "No shops yet.",
         "open": "Open",
-        "impersonate": "Impersonate",
+        "impersonate": "Open customer panel",
         "suspend": "Suspend",
         "activate": "Activate"
     },
@@ -98,7 +107,7 @@
     },
     "ShopDetail": {
         "back": "Shops",
-        "impersonate": "Impersonate",
+        "impersonate": "Open customer panel",
         "tabDomains": "Domains",
         "tabPlan": "Plan & limits",
         "tabMetrics": "Metrics",
@@ -165,5 +174,34 @@
         "shared": "Shared",
         "dedicated": "Dedicated",
         "empty": "No plans yet."
+    },
+    "Command": {
+        "placeholder": "Search or run a command…",
+        "searchLabel": "Search",
+        "noResults": "No results.",
+        "actions": "Actions",
+        "shops": "Shops",
+        "shopActions": "Shop actions",
+        "goOverview": "Go to Overview",
+        "goShops": "Go to Shops",
+        "goPlans": "Go to Plans",
+        "provision": "Provision shop",
+        "impersonate": "Open customer panel",
+        "suspend": "Suspend",
+        "activate": "Activate",
+        "hintOpen": "open",
+        "collapseRail": "Collapse rail",
+        "expandRail": "Expand rail"
+    },
+    "Shortcuts": {
+        "title": "Keyboard shortcuts",
+        "palette": "Command palette",
+        "search": "Search",
+        "goOverview": "Overview",
+        "goShops": "Shops",
+        "goPlans": "Plans",
+        "rowNav": "Move between rows",
+        "rowOpen": "Open row",
+        "help": "This cheatsheet"
     }
 }

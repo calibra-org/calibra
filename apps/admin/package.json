@@ -17,6 +17,7 @@
     "dependencies": {
         "@adonisjs/transmit-client": "catalog:",
         "@base-ui/react": "catalog:",
+        "@calibra/panel-kit": "workspace:*",
         "@calibra/sdk": "workspace:*",
         "@calibra/shared": "workspace:*",
         "@dnd-kit/core": "catalog:",

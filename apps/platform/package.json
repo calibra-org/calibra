@@ -15,6 +15,7 @@
     },
     "dependencies": {
         "@base-ui/react": "catalog:",
+        "@calibra/panel-kit": "workspace:*",
         "@calibra/sdk": "workspace:*",
         "@calibra/shared": "workspace:*",
         "@hookform/resolvers": "catalog:",
@@ -22,6 +23,7 @@
         "@tanstack/react-query": "catalog:",
         "@tanstack/react-table": "catalog:",
         "lucide-react": "catalog:",
+        "motion": "catalog:",
         "next": "catalog:",
         "next-intl": "catalog:",
         "radix-ui": "catalog:",

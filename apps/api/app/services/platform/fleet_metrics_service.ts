@@ -17,6 +17,9 @@ import { DateTime } from "luxon";
  */
 const COUNTED_SQL = "('processing','completed','refunded')";
 
+/** Trailing-day count for the fleet-list revenue sparkline. */
+const SPARK_DAYS = 14;
+
 export type SeriesUnit = "day" | "week" | "month";
 
 export interface HeadlineKpis {
@@ -26,6 +29,8 @@ export interface HeadlineKpis {
     revenue: number;
     /** Total bytes stored in the tenant's media library. */
     storageBytes: number;
+    /** Daily revenue for the trailing 14 days, oldest → newest, zero-filled to a fixed length. */
+    spark: number[];
 }
 
 export interface RevenueByCurrency {
@@ -116,7 +121,7 @@ export class FleetMetricsService {
     async headlineKpis(tenantIds: number[], sinceDays = 30): Promise<Map<number, HeadlineKpis>> {
         const out = new Map<number, HeadlineKpis>();
         if (tenantIds.length === 0) return out;
-        for (const id of tenantIds) out.set(id, { orders: 0, revenue: 0, storageBytes: 0 });
+        for (const id of tenantIds) out.set(id, { orders: 0, revenue: 0, storageBytes: 0, spark: new Array(SPARK_DAYS).fill(0) });
 
         const from = DateTime.utc().minus({ days: sinceDays }).toISO()!;
         const orderRows = (
@@ -146,6 +151,34 @@ export class FleetMetricsService {
         for (const row of storageRows) {
             const entry = out.get(Number(row.tenant_id));
             if (entry) entry.storageBytes = Number(row.bytes);
+        }
+
+        /**
+         * One grouped query for the 14-day revenue sparkline across the whole page — no N+1. Each
+         * (tenant, day) revenue lands in the tenant's pre-zeroed array at the day's offset from the
+         * window start. `= ANY(:ids)` (not `IN (...)`) because Knex won't expand a named array
+         * binding inside `IN`; the day interval is an inlined literal (compile-time constant).
+         */
+        const sparkFrom = DateTime.utc()
+            .minus({ days: SPARK_DAYS - 1 })
+            .startOf("day");
+        const sparkRows = (
+            await admin().rawQuery(
+                `SELECT tenant_id, date_trunc('day', created_at)::date AS day, COALESCE(SUM(grand_total), 0)::bigint AS rev
+                 FROM orders
+                 WHERE deleted_at IS NULL AND status IN ${COUNTED_SQL}
+                   AND created_at >= now() - interval '${SPARK_DAYS} days' AND tenant_id = ANY(:ids)
+                 GROUP BY 1, 2`,
+                { ids: tenantIds },
+            )
+        ).rows as Array<{ tenant_id: string; day: string | Date; rev: string }>;
+        for (const row of sparkRows) {
+            const entry = out.get(Number(row.tenant_id));
+            if (!entry) continue;
+            const dayIso = typeof row.day === "string" ? row.day : DateTime.fromJSDate(row.day).toISODate();
+            if (dayIso === null) continue;
+            const index = Math.round(DateTime.fromISO(dayIso, { zone: "utc" }).diff(sparkFrom, "days").days);
+            if (index >= 0 && index < SPARK_DAYS) entry.spark[index] = Number(row.rev);
         }
 
         return out;

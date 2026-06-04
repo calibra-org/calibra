@@ -1,5 +1,6 @@
 /**
- * Backwards-compat re-export shim. The flat-file primitive moved to a folder in prompt 02
- * (`./skeleton/index.tsx`). Removed after every call site moves over.
+ * Re-export shim → `@calibra/panel-kit`. The primitive moved into the shared operator-panel
+ * package (one set of token-driven base primitives for both `apps/admin` and `apps/platform`).
+ * Existing `#/components/ui/<name>` imports keep resolving through this file unchanged.
  */
-export * from "./skeleton/index";
+export * from "@calibra/panel-kit/skeleton";

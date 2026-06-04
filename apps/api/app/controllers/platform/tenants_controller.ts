@@ -53,7 +53,11 @@ export default class PlatformTenantsController {
         const kpis = await new FleetMetricsService().headlineKpis(tenants.map((t) => Number(t.id)));
 
         const items = tenants.map((t) =>
-            toTenantListItem(t, primaryDomainOf(t), kpis.get(Number(t.id)) ?? { orders: 0, revenue: 0, storageBytes: 0 }),
+            toTenantListItem(
+                t,
+                primaryDomainOf(t),
+                kpis.get(Number(t.id)) ?? { orders: 0, revenue: 0, storageBytes: 0, spark: [] },
+            ),
         );
         return { data: items, meta };
     }
