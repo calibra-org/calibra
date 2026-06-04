@@ -1,0 +1,11 @@
+{
+    "extends": "@calibra/typescript-config/base.json",
+    "compilerOptions": {
+        "jsx": "preserve",
+        "lib": ["ESNext", "dom", "dom.iterable"],
+        "outDir": "./dist",
+        "rootDir": "./src"
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "exclude": ["node_modules", "dist", ".cache"]
+}
