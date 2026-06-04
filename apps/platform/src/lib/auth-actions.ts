@@ -36,23 +36,22 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     }
 
     const api = createApiClient({ baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL, locale });
-    let data: NonNullable<Awaited<ReturnType<typeof api.platform.POST>>["data"]> | undefined;
+    /** The login response is the standard `{ data: PlatformAuthSession }` envelope — unwrap `.data`. */
+    let loginData:
+        | { platform_user: { id: number; email: string; name: string | null; role: string }; token: { value: string } }
+        | undefined;
     try {
         const result = await api.platform.POST("/api/v1/platform/auth/login", { body: { email, password } });
-        data = result.data;
+        loginData = result.data?.data as typeof loginData;
     } catch (err) {
         if (err instanceof BackendError && (err.status === 400 || err.status === 401 || err.status === 422)) {
             return { ok: false, error: locale === "fa" ? "ایمیل یا رمز عبور نادرست است." : "Invalid email or password." };
         }
         return { ok: false, error: locale === "fa" ? "ورود ناموفق بود. دوباره تلاش کنید." : "Sign-in failed. Please try again." };
     }
-    if (!data || typeof data !== "object" || !("platform_user" in data) || !("token" in data)) {
+    if (!loginData || !loginData.platform_user || !loginData.token) {
         return { ok: false, error: locale === "fa" ? "ورود ناموفق بود. دوباره تلاش کنید." : "Sign-in failed. Please try again." };
     }
-    const loginData = data as {
-        platform_user: { id: number; email: string; name: string | null; role: string };
-        token: { value: string };
-    };
 
     const session = {
         token: loginData.token.value,
