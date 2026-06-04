@@ -11,6 +11,7 @@ This is **Calibra's commerce baseline** — the agency clones this repo as the s
 - `apps/api/` — AdonisJS 7 backend (Lucid ORM on Postgres, VineJS validators, Japa tests, `@adonisjs/i18n`). Source of truth for products / orders / customers / auth. Run via Docker.
 - `packages/sdk/` — framework-agnostic TypeScript client for `apps/api`. Used by both `web` and `admin`.
 - `packages/shared/` — shared **utilities and types only** (cn helper, locale registry). **Not** UI components — the storefront and admin use different design languages by design.
+- `packages/panel-kit/` — shared **token-driven base primitives** for the two shadcn operator panels (`apps/admin` + `apps/platform`) only. Source-only, headless: the look comes from each app's `globals.css` tokens. `apps/web` never imports it. See the carve-out under "Share duplicated patterns".
 - `toolings/typescript/` — shared `tsconfig` presets.
 
 Scope-specific contracts (read these before authoring inside the scope):
@@ -81,6 +82,13 @@ Before generating code, search for existing solutions first. Rephrase the reques
 When **logic** or **types** duplicate across `apps/web` and `apps/admin`, extract them to `packages/shared` (or `packages/sdk` if API-shaped).
 
 When **UI components** look similar across `web` and `admin`, **do not** extract — the two surfaces deliberately use different design languages. The storefront is warm + marketing-grade; the admin is dense + data-first. Sharing a `Button` would force both into the lowest common denominator. Each app keeps its own components even at the cost of duplication.
+
+**Carve-out — the two operator panels share base primitives via [`@calibra/panel-kit`](packages/panel-kit).** The rule above is about `web` ↔ `admin` (genuinely divergent design languages). It does **not** apply between the two shadcn operator panels, `apps/admin` and `apps/platform`: their base primitives (`Button`, `Input`, `Dialog`, `Table`, the icon registry, …) are headless and token-driven — appearance comes 100% from each app's `globals.css` token values (`bg-background`, `text-foreground`, `bg-primary`, `ring-ring`, …), never from hardcoded colors in the primitive. The *same* primitive therefore renders admin-styled in admin and platform-styled in platform. So you **share the primitive and diverge the tokens + the composed components** (`Sidebar`, `StatCard`, the screens). Rules:
+
+- Panel-kit primitives stay **token-only** — never a hex/HSL literal in `packages/panel-kit`. The per-panel look lives in each app's `globals.css` + that app's composed components, not in a forked primitive.
+- **`apps/web` never imports `@calibra/panel-kit`** — it is pure Tailwind (no shadcn) and stays out. The package is for the operator panels only.
+- Each consuming panel lists `@calibra/panel-kit` in `transpilePackages` (the package ships raw TS source; Tailwind v4 scans the compiled output — there is no `@source` directive).
+- Admin-only heavy primitives that depend on app-local modules (`data-grid`, `date-picker`, `combobox`, `rich-text-editor`, …) stay in `apps/admin`; only the neutral intersection moves to panel-kit.
 
 ## Sub-agents: read-parallel, write-serial
 
@@ -153,6 +161,7 @@ Scopes must be one of the top-level package or app names — never a sub-route o
 - `apps/api` → `api`
 - `packages/sdk` → `sdk`
 - `packages/shared` → `ui`
+- `packages/panel-kit` → `panel-kit`
 - `.agents/` / `.claude/` (skills, hooks, settings) → `agents`
 
 A change to `apps/web/src/views/cart/...` is still `web`, not `cart`. Confirm by running `git log --oneline -20` if in doubt.
