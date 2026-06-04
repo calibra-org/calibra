@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/**
+ * Scan the shared `@calibra/panel-kit` source so Tailwind picks up classes used *only* inside its
+ * primitives. `transpilePackages` runs the package's code, but Tailwind v4 doesn't scan the
+ * workspace package (symlinked under `node_modules`) on its own. Helps the production build;
+ * Turbopack's dev scan of the package is unreliable, so the critical case is also pinned below.
+ */
+@source "../../../../packages/panel-kit/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
 
 /* -------------------------------------------------------------------------- */
@@ -359,6 +367,18 @@ html[lang="fa"] {
     td {
         font-variant-numeric: tabular-nums;
     }
+}
+
+/**
+ * `display: contents` for the panel-kit Button's children wrapper. Tailwind would normally emit
+ * the `.contents` utility, but it only scans this app's own source — and nothing here uses
+ * `contents` except the shared Button (in the workspace package). Pinning the rule here guarantees
+ * the wrapper collapses so the Button's flex layout reaches the icon + label directly (otherwise
+ * the preflight `display:block` icon stacks above the label). Authored as the plain utility so a
+ * later `@source` pickup is a harmless duplicate.
+ */
+.contents {
+    display: contents;
 }
 
 /* -------------------------------------------------------------------------- */
