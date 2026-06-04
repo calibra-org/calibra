@@ -213,7 +213,18 @@ function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (
                 size="lg"
                 hideClose
                 aria-label={t("placeholder")}
-                className="top-[14%] translate-y-0 gap-0 overflow-hidden p-0"
+                /**
+                 * Anchor toward the top third while staying horizontally centered. Overriding the
+                 * single `transform` (translateX only) keeps the base Dialog's enter/exit animation
+                 * — the `data-[starting|ending-style]` transforms below add a subtle vertical slide,
+                 * and `left-1/2` + `translateX(-50%)` are physical, so it centers in LTR and RTL alike.
+                 */
+                className={cn(
+                    "top-[12vh] gap-0 overflow-hidden p-0",
+                    "[transform:translateX(-50%)]",
+                    "data-[starting-style]:[transform:translateX(-50%)_translateY(-0.75rem)]",
+                    "data-[ending-style]:[transform:translateX(-50%)_translateY(-0.75rem)]",
+                )}
             >
                 <div className="flex items-center gap-2.5 border-border border-b px-4">
                     <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
