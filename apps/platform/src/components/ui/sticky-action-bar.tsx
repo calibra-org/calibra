@@ -1,2 +1,6 @@
-/** Backwards-compat re-export. See ./sticky-action-bar/index.tsx. */
-export * from "./sticky-action-bar/index";
+/**
+ * Re-export shim → `@calibra/panel-kit`. The primitive moved into the shared operator-panel
+ * package (one set of token-driven base primitives for both `apps/admin` and `apps/platform`).
+ * Existing `#/components/ui/<name>` imports keep resolving through this file unchanged.
+ */
+export * from "@calibra/panel-kit/sticky-action-bar";
