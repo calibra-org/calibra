@@ -1,22 +1,21 @@
 "use client";
 
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 
+import { ConsoleSelect } from "#/components/ConsoleSelect";
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { ArrowStart, CheckCircle2 } from "#/icons";
 import { ApiError } from "#/lib/api-client";
 import { Link, useRouter } from "#/lib/i18n/navigation";
 import { type ProvisionInput, usePlans, useProvisionTenant } from "#/lib/queries";
 import type { TenantDetail } from "#/lib/types";
 
 const SHOP_SUFFIX = "shops.calibra.app";
-const SELECT_CLASS =
-    "h-9 w-full rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40";
 
 export function NewShopView() {
     const t = useTranslations("NewShop");
@@ -84,7 +83,7 @@ export function NewShopView() {
     return (
         <div className="mx-auto max-w-lg">
             <Button variant="ghost" size="sm" className="mb-2" onClick={() => router.push("/tenants")}>
-                <ArrowLeft className="size-4" aria-hidden="true" />
+                <ArrowStart className="size-4" aria-hidden="true" />
             </Button>
             <PageHeader title={t("title")} description={t("subtitle")} />
 
@@ -105,39 +104,36 @@ export function NewShopView() {
                         </Field>
                         <div className="grid grid-cols-2 gap-4">
                             <Field label={t("plan")}>
-                                <select
-                                    className={SELECT_CLASS}
+                                <ConsoleSelect
+                                    ariaLabel={t("plan")}
                                     value={planKey}
-                                    onChange={(e) => set("plan_key", e.target.value)}
-                                >
-                                    {plans.data?.map((p) => (
-                                        <option key={p.id} value={p.key}>
-                                            {p.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onValueChange={(v) => set("plan_key", v)}
+                                    options={(plans.data ?? []).map((p) => ({ value: p.key, label: p.name }))}
+                                />
                             </Field>
                             <Field label={t("currency")}>
-                                <select
-                                    className={SELECT_CLASS}
+                                <ConsoleSelect
+                                    ariaLabel={t("currency")}
                                     value={form.currency_code}
-                                    onChange={(e) => set("currency_code", e.target.value)}
-                                >
-                                    <option value="IRR">IRR</option>
-                                    <option value="IRT">IRT</option>
-                                </select>
+                                    onValueChange={(v) => set("currency_code", v)}
+                                    options={[
+                                        { value: "IRR", label: "IRR" },
+                                        { value: "IRT", label: "IRT" },
+                                    ]}
+                                />
                             </Field>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <Field label={t("locale")}>
-                                <select
-                                    className={SELECT_CLASS}
-                                    value={form.primary_locale}
-                                    onChange={(e) => set("primary_locale", e.target.value)}
-                                >
-                                    <option value="fa">fa</option>
-                                    <option value="en">en</option>
-                                </select>
+                                <ConsoleSelect
+                                    ariaLabel={t("locale")}
+                                    value={form.primary_locale ?? "fa"}
+                                    onValueChange={(v) => set("primary_locale", v)}
+                                    options={[
+                                        { value: "fa", label: "fa" },
+                                        { value: "en", label: "en" },
+                                    ]}
+                                />
                             </Field>
                             <Field label={t("ownerEmail")}>
                                 <Input

@@ -1,9 +1,9 @@
 "use client";
 
-import { Plus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 
+import { ConsoleSelect } from "#/components/ConsoleSelect";
 import { PageHeader } from "#/components/PageHeader";
 import { StatusPill } from "#/components/StatusPill";
 import { Button } from "#/components/ui/button";
@@ -11,11 +11,9 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { Plus } from "#/icons";
 import { formatNumber } from "#/lib/format";
 import { usePlans, useSavePlan } from "#/lib/queries";
-
-const SELECT_CLASS =
-    "h-9 rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40";
 
 export function PlansView() {
     const t = useTranslations("Plans");
@@ -66,10 +64,15 @@ export function PlansView() {
                     </div>
                     <div className="flex flex-col gap-1.5">
                         <Label>{t("dbTier")}</Label>
-                        <select className={SELECT_CLASS} value={dbTier} onChange={(e) => setDbTier(e.target.value)}>
-                            <option value="shared">{t("shared")}</option>
-                            <option value="dedicated">{t("dedicated")}</option>
-                        </select>
+                        <ConsoleSelect
+                            ariaLabel={t("dbTier")}
+                            value={dbTier}
+                            onValueChange={setDbTier}
+                            options={[
+                                { value: "shared", label: t("shared") },
+                                { value: "dedicated", label: t("dedicated") },
+                            ]}
+                        />
                     </div>
                     <Button type="submit" disabled={save.isPending}>
                         {t("newPlan")}
@@ -130,14 +133,16 @@ function PlanRow({ plan, locale }: { plan: import("#/lib/types").Plan; locale: s
                 ) : null}
             </TableCell>
             <TableCell>
-                <select
-                    className={SELECT_CLASS}
+                <ConsoleSelect
+                    ariaLabel={t("dbTier")}
+                    className="w-36"
                     value={plan.db_tier}
-                    onChange={(e) => save.mutate({ id: plan.id, input: { db_tier: e.target.value } })}
-                >
-                    <option value="shared">{t("shared")}</option>
-                    <option value="dedicated">{t("dedicated")}</option>
-                </select>
+                    onValueChange={(v) => save.mutate({ id: plan.id, input: { db_tier: v } })}
+                    options={[
+                        { value: "shared", label: t("shared") },
+                        { value: "dedicated", label: t("dedicated") },
+                    ]}
+                />
             </TableCell>
             <TableCell className="text-muted-foreground text-sm">{formatNumber(limitCount, locale)}</TableCell>
             <TableCell className="text-end">
