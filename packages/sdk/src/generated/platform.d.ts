@@ -24,6 +24,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fleet rollup for the console home
+         * @description Cross-tenant rollup — shop status counts, 30-day GMV (per currency), 30-day orders, total customers, total storage. Requires a control-plane token.
+         */
+        get: operations["platformOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List shops (fleet)
+         * @description Paginated fleet list with per-tenant 30-day headline KPIs. Supports the TableView grammar (`filter[]=status:eq:active`, `filter[]=plan_id:eq:2`, `sort[]=created_at:desc`) plus a free-text `q` search across slug + name.
+         */
+        get: operations["platformTenantsIndex"];
+        put?: never;
+        /**
+         * Provision a new shop
+         * @description Creates a tenant end-to-end via the provisioning service (tenant row + primary subdomain + Iran defaults + owner admin). Requires an owner email OR phone. Returns the new tenant plus its `<slug>.shops.calibra.app` URL.
+         */
+        post: operations["platformTenantsStore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Shop detail
+         * @description Full profile, domains, and plan limits vs current usage for one shop.
+         */
+        get: operations["platformTenantsShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a shop
+         * @description Update name / plan / lifecycle status (suspend/activate/archive) / template / currency. Changing the plan also updates the tenant's db_tier.
+         */
+        patch: operations["platformTenantsUpdate"];
+        trace?: never;
+    };
     "/api/v1/platform/tenants/{id}/impersonate": {
         parameters: {
             query?: never;
@@ -42,6 +110,121 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Native per-tenant metrics
+         * @description Headline KPIs plus a revenue/orders/new-customers time series over the requested range.
+         */
+        get: operations["platformTenantMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach a custom domain
+         * @description Records a custom domain (tls_status=pending) and returns the CNAME target the operator must create. TLS issuance happens at the edge (Phase 6).
+         */
+        post: operations["platformTenantDomainsStore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/domains/{domainId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Detach a custom domain
+         * @description Removes a custom domain. The auto-provisioned primary subdomain can't be detached.
+         */
+        delete: operations["platformTenantDomainsDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/domains/{domainId}/recheck": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Re-probe a domain's TLS/verification status
+         * @description Re-reads the domain's current verification + TLS status. Phase 6 flips pending → active once the edge issues a certificate; in Phase 5 this reflects the stored status.
+         */
+        post: operations["platformTenantDomainsRecheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List plan tiers */
+        get: operations["platformPlansIndex"];
+        put?: never;
+        /** Create a plan tier */
+        post: operations["platformPlansStore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update a plan tier */
+        patch: operations["platformPlansUpdate"];
         trace?: never;
     };
 }
@@ -143,6 +326,153 @@ export interface components {
             };
         };
         /**
+         * Money
+         * Format: int64
+         * @description Monetary amount in Rial minor units. Calibra stores every price column as a `BIGINT` so rounding and tax math stay integer-safe. Display currency is reported separately (`IRR` or `IRT`) and is locked on creation for orders.
+         * @example 259000000
+         * @example 0
+         * @example 1
+         */
+        Money: number;
+        /**
+         * PlatformOverview
+         * @description Fleet rollup for the console home — shop status counts, 30-day GMV (per currency, since the fleet spans currencies), 30-day orders, total customers, and total stored bytes.
+         */
+        PlatformOverview: {
+            shops: {
+                total: number;
+                active: number;
+                suspended: number;
+                archived: number;
+            };
+            revenue_30d: {
+                /** @example IRR */
+                currency_code: string;
+                amount: components["schemas"]["Money"];
+            }[];
+            orders_30d: number;
+            customers_total: number;
+            /** Format: int64 */
+            storage_bytes: number;
+        };
+        /**
+         * PlatformTenantListItem
+         * @description One row of the control-plane fleet list — a shop's profile plus 30-day headline KPIs joined from the order/media tables.
+         */
+        PlatformTenantListItem: {
+            id: number;
+            /** @example aurora */
+            slug: string;
+            name: string;
+            /** @enum {string} */
+            status: "active" | "suspended" | "archived";
+            /** @enum {string} */
+            db_tier: "shared" | "dedicated";
+            /** @example IRR */
+            currency_code: string;
+            /** @example aurora.shops.calibra.app */
+            primary_domain: string | null;
+            plan: {
+                id: number;
+                key: string;
+                name: string;
+            };
+            /** Format: date-time */
+            created_at: string;
+            kpis: {
+                orders_30d: number;
+                revenue_30d: components["schemas"]["Money"];
+                /** Format: int64 */
+                storage_bytes: number;
+            };
+        };
+        /**
+         * PaginationMeta
+         * @description Pagination metadata returned alongside any paginated `data` array.
+         * @example {
+         *       "page": 1,
+         *       "limit": 20,
+         *       "total": 137,
+         *       "lastPage": 7
+         *     }
+         */
+        PaginationMeta: {
+            /** @description The 1-indexed page returned. */
+            page: number;
+            /**
+             * @description Number of items per page. Mirrors the `?limit=N` wire param the client can send;
+             *     servers may clamp to a per-endpoint cap.
+             */
+            limit: number;
+            /** @description Total number of matching records across all pages. */
+            total: number;
+            /** @description The last 1-indexed page that contains records. */
+            lastPage: number;
+        };
+        /**
+         * PlatformTenantDomain
+         * @description A hostname mapped to a tenant. `subdomain` rows are auto-provisioned (one primary per tenant); `custom` rows are operator-attached and start `tls_status=pending` until the edge issues a certificate (Phase 6). `cname_target` is present on attach/recheck responses — the CNAME the operator must create.
+         */
+        PlatformTenantDomain: {
+            id: number;
+            /** @example shop.example.com */
+            domain: string;
+            /** @enum {string} */
+            kind: "subdomain" | "custom";
+            is_primary: boolean;
+            /** @enum {string} */
+            tls_status: "pending" | "active" | "failed";
+            /** Format: date-time */
+            verified_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /**
+             * @description CNAME target for a custom domain.
+             * @example aurora.shops.calibra.app
+             */
+            cname_target?: string;
+        };
+        /**
+         * PlatformTenantDetail
+         * @description Full control-plane view of one shop — profile, domains, and the plan limits alongside current usage counters.
+         */
+        PlatformTenantDetail: {
+            id: number;
+            slug: string;
+            name: string;
+            /** @enum {string} */
+            status: "active" | "suspended" | "archived";
+            /** @enum {string} */
+            db_tier: "shared" | "dedicated";
+            currency_code: string;
+            /** @example fa */
+            primary_locale: string;
+            /** @example default */
+            template_key: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            plan: {
+                id: number;
+                key: string;
+                name: string;
+                /** @enum {string} */
+                db_tier: "shared" | "dedicated";
+                limits: {
+                    [key: string]: number;
+                };
+            };
+            domains: components["schemas"]["PlatformTenantDomain"][];
+            usage: {
+                products: number;
+                orders_total: number;
+                customers_total: number;
+                /** Format: int64 */
+                storage_bytes: number;
+            };
+        };
+        /**
          * ImpersonationGrant
          * @description The `data` envelope returned by `POST /platform/tenants/{id}/impersonate` — a short-lived tenant-scoped shop-admin token plus the admin URL the operator should open. The minted token carries an `impersonated_by:<operatorId>` ability and an impersonation audit row is written.
          */
@@ -154,6 +484,59 @@ export interface components {
              * @example https://aurora.admin.calibra.app
              */
             admin_url: string;
+        };
+        /**
+         * PlatformTenantMetrics
+         * @description Native per-tenant business metrics — headline KPIs plus a revenue/orders/new-customers time series over the requested range. Amounts are in the tenant's currency minor units.
+         */
+        PlatformTenantMetrics: {
+            range: {
+                /** Format: date-time */
+                from: string;
+                /** Format: date-time */
+                to: string;
+                /** @enum {string} */
+                unit: "day" | "week" | "month";
+            };
+            currency_code: string;
+            kpis: {
+                revenue: components["schemas"]["Money"];
+                orders: number;
+                customers_new: number;
+                customers_total: number;
+                /** Format: int64 */
+                storage_bytes: number;
+            };
+            series: {
+                /** Format: date */
+                day: string;
+                revenue: components["schemas"]["Money"];
+                orders: number;
+                new_customers: number;
+            }[];
+        };
+        /**
+         * PlatformPlan
+         * @description A subscription plan tier. `limits` is a free-form numeric bag (`max_products`, `max_storage_bytes`, `max_orders_per_month`, `max_staff`, …); `db_tier` decides dedicated-database eligibility.
+         */
+        PlatformPlan: {
+            id: number;
+            /** @example starter */
+            key: string;
+            /** @example Starter */
+            name: string;
+            /** @enum {string} */
+            db_tier: "shared" | "dedicated";
+            is_default: boolean;
+            /**
+             * @example {
+             *       "max_products": 1000,
+             *       "max_storage_bytes": 5368709120
+             *     }
+             */
+            limits: {
+                [key: string]: number;
+            };
         };
     };
     responses: {
@@ -190,8 +573,30 @@ export interface components {
                 };
             };
         };
+        /** @description Conflict (409) — the request collides with current server state. Examples: submitting a draft after its prices changed (`E_PRICE_CHANGED`), refunding a fully-refunded order (`E_ORDER_ALREADY_REFUNDED`), or exhausting a coupon's usage limit (`E_COUPON_LIMIT_EXHAUSTED`) on parallel submits. */
+        Conflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    errors: components["schemas"]["BasicMessage"][];
+                };
+            };
+        };
     };
-    parameters: never;
+    parameters: {
+        /** @description 1-indexed page number. Defaults to 1. */
+        Page: number;
+        /** @description Items per page. Capped at 100. Defaults to 20. */
+        Limit: number;
+        /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+        Filter: string[];
+        /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+        FilterOr: string[];
+        /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+        Sort: string[];
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -234,6 +639,181 @@ export interface operations {
             422: components["responses"]["ValidationError"];
         };
     };
+    platformOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Fleet overview. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformOverview"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    platformTenantsIndex: {
+        parameters: {
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Free-text search across slug + name. */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated fleet list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTenantListItem"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformTenantsStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example aurora */
+                    slug: string;
+                    name: string;
+                    /** @example starter */
+                    plan_key: string;
+                    /** @example IRR */
+                    currency_code: string;
+                    /** @example fa */
+                    primary_locale?: string;
+                    /** @example default */
+                    template_key?: string;
+                    /** Format: email */
+                    owner_email?: string;
+                    /** @example +989121234567 */
+                    owner_phone?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Shop provisioned. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTenantDetail"] & {
+                            /**
+                             * Format: uri
+                             * @example https://aurora.shops.calibra.app
+                             */
+                            shop_url: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformTenantsShow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Shop detail. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTenantDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    platformTenantsUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    plan_key?: string;
+                    /** @enum {string} */
+                    status?: "active" | "suspended" | "archived";
+                    template_key?: string;
+                    currency_code?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated shop detail. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTenantDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
     platformTenantImpersonate: {
         parameters: {
             query?: never;
@@ -268,6 +848,229 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    platformTenantMetrics: {
+        parameters: {
+            query?: {
+                range?: "7d" | "30d" | "90d" | "12m";
+                /** @description Override the series bucket (defaults derive from range). */
+                unit?: "day" | "week" | "month";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tenant metrics. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTenantMetrics"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformTenantDomainsStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example shop.example.com */
+                    domain: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Domain attached. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTenantDomain"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformTenantDomainsDestroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                domainId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Domain detached. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            detached: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    platformTenantDomainsRecheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                domainId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current domain status. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTenantDomain"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    platformPlansIndex: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All plan tiers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformPlan"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    platformPlansStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    key: string;
+                    name: string;
+                    /** @enum {string} */
+                    db_tier?: "shared" | "dedicated";
+                    is_default?: boolean;
+                    limits?: {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Plan created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformPlan"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformPlansUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    /** @enum {string} */
+                    db_tier?: "shared" | "dedicated";
+                    is_default?: boolean;
+                    limits?: {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Plan updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformPlan"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
         };
     };
 }
