@@ -9,6 +9,7 @@ import { StatusPill, tenantStatusTone } from "#/components/StatusPill";
 import { Button } from "#/components/ui/button";
 import { EmptyState } from "#/components/ui/empty-state";
 import { Input } from "#/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { ChevronDown, ChevronsUpDown, ChevronUp, ExternalLink, Store, TriangleAlert, UserCheck } from "#/icons";
@@ -19,8 +20,39 @@ import { openImpersonationTab, useImpersonate, usePlans, useTenants } from "#/li
 import type { TenantListItem } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
-const SELECT_CLASS =
-    "h-9 rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40";
+/** Sentinel value for the "all" / no-filter option (base-ui Select needs a non-empty value). */
+const ALL = "all";
+
+/** Toolbar filter dropdown built on the base-ui `Select` primitive. `all` clears the filter. */
+function FilterSelect({
+    label,
+    value,
+    onChange,
+    options,
+    loading,
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    options: { value: string; label: string }[];
+    loading?: boolean;
+}) {
+    return (
+        <Select value={value || ALL} onValueChange={(next) => onChange(next === ALL ? "" : String(next))}>
+            <SelectTrigger className="w-44" loading={loading} aria-label={label}>
+                <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value={ALL}>{label}</SelectItem>
+                {options.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    );
+}
 
 type Sort = { field: "name" | "status"; dir: "asc" | "desc" } | null;
 
@@ -140,36 +172,29 @@ export function TenantsListView() {
                     placeholder={t("searchPlaceholder")}
                     className="max-w-xs"
                 />
-                <select
-                    aria-label={t("filterStatus")}
-                    className={SELECT_CLASS}
+                <FilterSelect
+                    label={t("filterStatus")}
                     value={status}
-                    onChange={(event) => {
-                        setStatus(event.target.value);
+                    onChange={(next) => {
+                        setStatus(next);
                         setPage(1);
                     }}
-                >
-                    <option value="">{t("filterStatus")}</option>
-                    <option value="active">{t("statusActive")}</option>
-                    <option value="suspended">{t("statusSuspended")}</option>
-                    <option value="archived">{t("statusArchived")}</option>
-                </select>
-                <select
-                    aria-label={t("filterPlan")}
-                    className={SELECT_CLASS}
+                    options={[
+                        { value: "active", label: t("statusActive") },
+                        { value: "suspended", label: t("statusSuspended") },
+                        { value: "archived", label: t("statusArchived") },
+                    ]}
+                />
+                <FilterSelect
+                    label={t("filterPlan")}
                     value={planId}
-                    onChange={(event) => {
-                        setPlanId(event.target.value);
+                    onChange={(next) => {
+                        setPlanId(next);
                         setPage(1);
                     }}
-                >
-                    <option value="">{t("filterPlan")}</option>
-                    {plans.data?.map((plan) => (
-                        <option key={plan.id} value={plan.id}>
-                            {plan.name}
-                        </option>
-                    ))}
-                </select>
+                    loading={plans.isPending}
+                    options={(plans.data ?? []).map((plan) => ({ value: String(plan.id), label: plan.name }))}
+                />
             </div>
 
             {tenants.isError ? (
@@ -191,7 +216,7 @@ export function TenantsListView() {
                 />
             ) : (
                 <div className="mission-panel">
-                    <Table>
+                    <Table className="console-table">
                         <TableHeader>
                             <TableRow className="[&>th]:sticky [&>th]:top-14 [&>th]:z-10 [&>th]:bg-card">
                                 <SortHeader field="name" label={t("colName")} sort={sort} onSort={onSort} />

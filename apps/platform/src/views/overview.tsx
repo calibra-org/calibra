@@ -153,7 +153,7 @@ export function OverviewView() {
                         </Link>
                     </div>
                     <div className="mission-panel overflow-hidden">
-                        <Table>
+                        <Table className="console-table">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>{tt("colName")}</TableHead>

@@ -402,6 +402,30 @@ html[lang="fa"] {
         0 8px 28px -12px hsl(var(--primary) / 0.55);
 }
 
+/**
+ * Roomier data-table density for the console. The shared panel-kit `Table` primitive stays
+ * admin-dense (`px-2`, `h-10`); applying `.console-table` to the `<table>` widens column padding,
+ * insets the first/last cells off the panel edge, and gives rows more vertical rhythm — the
+ * "mission control" tables read as spacious without forking the primitive.
+ */
+.console-table thead th {
+    height: 2.75rem;
+    padding-inline: 0.875rem;
+    padding-block: 0.5rem;
+}
+.console-table tbody td {
+    padding-inline: 0.875rem;
+    padding-block: 0.875rem;
+}
+.console-table thead th:first-child,
+.console-table tbody td:first-child {
+    padding-inline-start: 1.25rem;
+}
+.console-table thead th:last-child,
+.console-table tbody td:last-child {
+    padding-inline-end: 1.25rem;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Slim scrollbar styling applied via opt-in `.custom-scrollbar` class. Used    */
 /*  by surfaces where we need a *real* native scrollbar (e.g. tables with sticky */

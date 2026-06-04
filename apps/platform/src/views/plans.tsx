@@ -78,7 +78,7 @@ export function PlansView() {
             ) : null}
 
             <div className="overflow-hidden rounded-lg border border-border">
-                <Table>
+                <Table className="console-table">
                     <TableHeader>
                         <TableRow>
                             <TableHead>{t("key")}</TableHead>

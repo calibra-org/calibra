@@ -272,7 +272,7 @@ function DomainsTab({ id, shop }: { id: string; shop: TenantDetail }) {
                 <EmptyState icon={TriangleAlert} title={t("empty")} />
             ) : (
                 <div className="mission-panel overflow-hidden">
-                    <Table>
+                    <Table className="console-table">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>{t("domain")}</TableHead>

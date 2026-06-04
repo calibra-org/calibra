@@ -1,10 +1,10 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { Languages } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "#/components/ui/button";
+import { Languages } from "#/icons";
 import { getPathname, usePathname } from "#/lib/i18n/navigation";
 
 /**
@@ -18,9 +18,9 @@ export function LocaleSwitch() {
     const nextLocale: Locale = locale === "fa" ? "en" : "fa";
 
     return (
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="h-9 px-3">
             <a href={getPathname({ href: pathname, locale: nextLocale })}>
-                <Languages className="size-3.5" aria-hidden="true" />
+                <Languages className="size-4" aria-hidden="true" />
                 <span>{label}</span>
             </a>
         </Button>
