@@ -34,6 +34,17 @@ export function generateStaticParams(): { locale: Locale }[] {
     return locales.map((locale) => ({ locale }));
 }
 
+/**
+ * Every admin route depends on the request `Host` (the proxy rewrites a shop-less host to the
+ * platform "unknown shop" page, and `apiServer()` / session checks scope by the resolved tenant).
+ * Next's full-route cache keys flights by pathname **without** the Host, so a statically-cached
+ * `/dashboard` flight produced on a platform host (→ unknown shop) would bleed onto a real shop host
+ * on the next soft-navigation — the "unknown shop flashes after login, fixed on refresh" bug. Force
+ * dynamic rendering so each request re-resolves its own host; a per-tenant operator panel has no use
+ * for cross-host static caching anyway.
+ */
+export const dynamic = "force-dynamic";
+
 interface LayoutProps {
     children: ReactNode;
     params: Promise<{ locale: string }>;
