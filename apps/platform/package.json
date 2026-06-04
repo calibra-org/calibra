@@ -23,6 +23,7 @@
         "@tanstack/react-query": "catalog:",
         "@tanstack/react-table": "catalog:",
         "lucide-react": "catalog:",
+        "motion": "catalog:",
         "next": "catalog:",
         "next-intl": "catalog:",
         "radix-ui": "catalog:",
