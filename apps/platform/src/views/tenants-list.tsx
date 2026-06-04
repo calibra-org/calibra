@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 import { PageHeader } from "#/components/PageHeader";
+import { Sparkline } from "#/components/Sparkline";
 import { StatusPill, tenantStatusTone } from "#/components/StatusPill";
 import { Button } from "#/components/ui/button";
 import { EmptyState } from "#/components/ui/empty-state";
@@ -200,6 +201,7 @@ export function TenantsListView() {
                                 <TableHead className="text-end">{t("colOrders")}</TableHead>
                                 <TableHead className="text-end">{t("colRevenue")}</TableHead>
                                 <TableHead className="text-end">{t("colStorage")}</TableHead>
+                                <TableHead className="text-end">{t("colTrend")}</TableHead>
                                 <TableHead className="sticky end-0 z-10 bg-card" />
                             </TableRow>
                         </TableHeader>
@@ -207,7 +209,7 @@ export function TenantsListView() {
                             {tenants.isPending
                                 ? ["r1", "r2", "r3", "r4", "r5", "r6"].map((k) => (
                                       <TableRow key={k}>
-                                          <TableCell colSpan={8}>
+                                          <TableCell colSpan={9}>
                                               <Skeleton className="h-5 w-full" />
                                           </TableCell>
                                       </TableRow>
@@ -296,6 +298,15 @@ function ShopRow({
                 {formatMoney(shop.kpis.revenue_30d, shop.currency_code, locale)}
             </TableCell>
             <TableCell className="text-end tabular-nums">{formatBytes(shop.kpis.storage_bytes, locale)}</TableCell>
+            <TableCell>
+                <div className="flex justify-end">
+                    {shop.spark.some((v) => v > 0) ? (
+                        <Sparkline data={shop.spark} width={72} height={22} strokeClass="stroke-accent-cyan" />
+                    ) : (
+                        <span className="text-muted-foreground/50 text-xs">—</span>
+                    )}
+                </div>
+            </TableCell>
             <TableCell className={stickyBg}>
                 <div className="flex items-center justify-end gap-1">
                     <Button asChild variant="ghost" size="icon" aria-label={t("open")}>

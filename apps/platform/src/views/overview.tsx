@@ -64,6 +64,18 @@ export function OverviewView() {
     const gmv = overview.data?.revenue_30d ?? [];
     const primaryGmv = gmv[0];
 
+    /** Fleet 14-day revenue sparkline — element-wise sum of the loaded shops' per-row sparks. */
+    const fleetSpark = (tenants.data?.data ?? []).reduce<number[]>((acc, shop) => {
+        shop.spark.forEach((value, index) => {
+            acc[index] = (acc[index] ?? 0) + value;
+        });
+        return acc;
+    }, []);
+    /** Week-over-week trend on the fleet spark (last 7 days vs the prior 7). */
+    const lastWeek = fleetSpark.slice(7).reduce((a, b) => a + b, 0);
+    const priorWeek = fleetSpark.slice(0, 7).reduce((a, b) => a + b, 0);
+    const fleetTrend = priorWeek > 0 ? Math.round(((lastWeek - priorWeek) / priorWeek) * 100) : null;
+
     return (
         <div className="flex flex-col gap-6">
             <PageHeader title={t("title")} />
@@ -96,7 +108,13 @@ export function OverviewView() {
                                 <StatCard
                                     label={t("gmv30d")}
                                     value={primaryGmv ? formatMoney(primaryGmv.amount, primaryGmv.currency_code, locale) : "—"}
-                                    sublabel={gmv.length > 1 ? `+${formatNumber(gmv.length - 1, locale)}` : undefined}
+                                    sublabel={
+                                        fleetTrend === null && gmv.length > 1
+                                            ? `+${formatNumber(gmv.length - 1, locale)}`
+                                            : undefined
+                                    }
+                                    trend={fleetTrend !== null ? { value: fleetTrend, label: t("trendVsPrev") } : undefined}
+                                    spark={fleetSpark}
                                     icon={Wallet}
                                 />
                                 <StatCard
