@@ -1254,6 +1254,48 @@ export interface paths {
         patch: operations["adminSettingsMediaUpdate"];
         trace?: never;
     };
+    "/api/v1/admin/settings/branding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Branding settings (admin)
+         * @description Returns the storefront-facing branding config the shop's staff self-serve: name, tagline, font, logo + favicon (resolved to `{ id, url }`), and the OKLCH palette the storefront renders. The admin chrome itself is not themed by this (RULE C) — this edits the storefront's look.
+         */
+        get: operations["adminSettingsBrandingShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Update Branding settings (admin)
+         * @description Partial update of the storefront-facing branding. Only changed keys are written (same-value writes are no-ops — no audit row), and a real change busts the storefront's tenant cache so the new branding is live immediately. Palette tokens are validated as OKLCH. Returns the fresh settings.
+         */
+        patch: operations["adminSettingsBrandingUpdate"];
+        trace?: never;
+    };
     "/api/v1/admin/customers": {
         parameters: {
             query?: never;
@@ -4674,6 +4716,91 @@ export interface components {
             };
         };
         /**
+         * AdminBrandingMedia
+         * @description A resolved branding asset (logo / favicon) — the `media` row id the form round-trips on save, plus its absolute public URL for the live preview.
+         */
+        AdminBrandingMedia: {
+            /** @example 42 */
+            id: number;
+            /**
+             * Format: uri
+             * @example https://api.example.com/uploads/t1/logo.png
+             */
+            url: string;
+        };
+        /**
+         * AdminBrandingPalette
+         * @description The shop's storefront color palette, in OKLCH. Keys mirror the storefront's `@theme` tokens (`apps/web/src/styles/globals.css`); the storefront injects them as `--color-*` custom properties so its Tailwind classes (`bg-background`, `text-accent`, …) resolve to these colors before first paint (RULE B). Every value is an OKLCH string, validated on write.
+         */
+        AdminBrandingPalette: {
+            /** @example oklch(99% 0 0) */
+            background: string;
+            /** @example oklch(15% 0 0) */
+            foreground: string;
+            /** @example oklch(96% 0 0) */
+            muted: string;
+            /** @example oklch(45% 0 0) */
+            muted_foreground: string;
+            /** @example oklch(90% 0 0) */
+            border: string;
+            /** @example oklch(60% 0.18 250) */
+            accent: string;
+            /** @example oklch(99% 0 0) */
+            accent_foreground: string;
+        };
+        /**
+         * AdminBrandingSettings
+         * @description The admin Settings → Branding screen — the storefront-facing brand config a shop's staff self-serve. Shop name, tagline, font key, logo + favicon (resolved to `{ id, url }`), and the OKLCH palette the storefront renders (RULE B). `options.fonts` lists the font keys the storefront can load. The admin panel's own chrome is NOT themed by this — only the storefront is (RULE C).
+         */
+        AdminBrandingSettings: {
+            /** @example Aurora */
+            name: string;
+            /** @example روشنایی برای هر روز */
+            tagline: string;
+            /** @example vazirmatn */
+            font: string;
+            /** @description Current logo asset, or null when the shop renders a name monogram instead. */
+            logo: components["schemas"]["AdminBrandingMedia"] | null;
+            /** @description Current favicon asset, or null. */
+            favicon: components["schemas"]["AdminBrandingMedia"] | null;
+            palette: components["schemas"]["AdminBrandingPalette"];
+            options: {
+                fonts: {
+                    /** @example vazirmatn */
+                    value: string;
+                }[];
+            };
+        };
+        /**
+         * AdminBrandingSettingsUpdate
+         * @description Partial update for the Branding screen. Every field is optional — the server writes only what changed (same-value writes are no-ops, no audit row) and busts the storefront's tenant cache so the change is live immediately. `logo_media_id` / `favicon_media_id` reference a row in the tenant's `media` table, or `null` to clear. Palette tokens must be valid OKLCH strings.
+         */
+        AdminBrandingSettingsUpdate: {
+            name?: string;
+            tagline?: string;
+            /** @enum {string} */
+            font?: "vazirmatn" | "inter";
+            logo_media_id?: number | null;
+            favicon_media_id?: number | null;
+            /** @description Any subset of the palette tokens; each value is an OKLCH string. */
+            palette?: {
+                /** @example oklch(99% 0 0) */
+                background?: string;
+                /** @example oklch(15% 0 0) */
+                foreground?: string;
+                /** @example oklch(96% 0 0) */
+                muted?: string;
+                /** @example oklch(45% 0 0) */
+                muted_foreground?: string;
+                /** @example oklch(90% 0 0) */
+                border?: string;
+                /** @example oklch(60% 0.18 250) */
+                accent?: string;
+                /** @example oklch(99% 0 0) */
+                accent_foreground?: string;
+            };
+        };
+        /**
          * CustomerBase
          * @description Customer commerce identity — matches `CustomerTransformer.toObject()` exactly. This is the shape returned by `POST /auth/login`, `POST /auth/register`, and anywhere the API serialises a customer without country-scoped extension rows. The `CustomerProfile` schema extends this with `profile_extensions` (used by `GET /account/me`).
          */
@@ -7734,6 +7861,65 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminMediaSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminSettingsBrandingShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Branding settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminBrandingSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminSettingsBrandingUpdate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminBrandingSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated Branding settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminBrandingSettings"];
                     };
                 };
             };

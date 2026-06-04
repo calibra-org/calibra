@@ -1,0 +1,35 @@
+title: AdminBrandingSettings
+description: >
+    The admin Settings → Branding screen — the storefront-facing brand config a shop's staff
+    self-serve. Shop name, tagline, font key, logo + favicon (resolved to `{ id, url }`), and the
+    OKLCH palette the storefront renders (RULE B). `options.fonts` lists the font keys the storefront
+    can load. The admin panel's own chrome is NOT themed by this — only the storefront is (RULE C).
+type: object
+required: [name, tagline, font, logo, favicon, palette, options]
+properties:
+    name: { type: string, examples: ["Aurora"] }
+    tagline: { type: string, examples: ["روشنایی برای هر روز"] }
+    font: { type: string, examples: ["vazirmatn"] }
+    logo:
+        description: Current logo asset, or null when the shop renders a name monogram instead.
+        anyOf:
+            - $ref: "./AdminBrandingMedia.yaml"
+            - type: "null"
+    favicon:
+        description: Current favicon asset, or null.
+        anyOf:
+            - $ref: "./AdminBrandingMedia.yaml"
+            - type: "null"
+    palette:
+        $ref: "./AdminBrandingPalette.yaml"
+    options:
+        type: object
+        required: [fonts]
+        properties:
+            fonts:
+                type: array
+                items:
+                    type: object
+                    required: [value]
+                    properties:
+                        value: { type: string, examples: ["vazirmatn"] }

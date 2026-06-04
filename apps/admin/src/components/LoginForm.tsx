@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
@@ -12,11 +12,22 @@ interface LoginFormProps {
     locale: string;
 }
 
-const initialState: { ok: boolean; error: string | null } = { ok: false, error: null };
+const initialState: { ok: boolean; error: string | null; redirectTo?: string } = { ok: false, error: null };
 
 export function LoginForm({ locale }: LoginFormProps) {
     const t = useTranslations("Login");
     const [state, formAction, pending] = useActionState(loginAction, initialState);
+
+    /**
+     * Navigate on the **client** after a successful login. A server-action `redirect()` would make
+     * Next sub-render the destination through its own loopback origin, dropping the tenant subdomain
+     * and flashing the "unknown shop" page; a real browser navigation keeps the shop's `Host`. A
+     * full-document `assign` (not a soft router push) guarantees the authenticated layout re-renders
+     * against the freshly-set session cookie.
+     */
+    useEffect(() => {
+        if (state.ok && state.redirectTo) window.location.assign(state.redirectTo);
+    }, [state.ok, state.redirectTo]);
 
     return (
         <form action={formAction} className="flex flex-col gap-5">
@@ -54,8 +65,8 @@ export function LoginForm({ locale }: LoginFormProps) {
                 </p>
             )}
 
-            <Button type="submit" className="mt-1" disabled={pending}>
-                {pending ? "…" : t("submit")}
+            <Button type="submit" className="mt-1" disabled={pending || state.ok}>
+                {pending || state.ok ? "…" : t("submit")}
             </Button>
 
             <p className="text-center text-muted-foreground text-xs">{t("demoNotice")}</p>

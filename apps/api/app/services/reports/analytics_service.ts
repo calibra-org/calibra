@@ -1,4 +1,4 @@
-import db from "@adonisjs/lucid/services/db";
+import { currentTrx } from "#services/tenant_context";
 
 /**
  * Analytics aggregation service — the single source of truth for the sales math behind every
@@ -141,7 +141,7 @@ function deriveTotals(row: RawSalesRow): SalesTotals {
  * of fields off this one result, so they cannot drift apart.
  */
 export async function computeSalesWindow(from: Date, to: Date, unit: IntervalUnit): Promise<SalesWindow> {
-    const totalsResult = await db.rawQuery<{ rows: RawSalesRow[] }>(
+    const totalsResult = await currentTrx().rawQuery<{ rows: RawSalesRow[] }>(
         `
         WITH win_orders AS (
             SELECT id, grand_total, tax_total, shipping_total, shipping_tax_total, discount_total
@@ -181,7 +181,7 @@ export async function computeSalesWindow(from: Date, to: Date, unit: IntervalUni
         { from, to },
     );
 
-    const intervalsResult = await db.rawQuery<{ rows: (RawSalesRow & { bucket: string | Date })[] }>(
+    const intervalsResult = await currentTrx().rawQuery<{ rows: (RawSalesRow & { bucket: string | Date })[] }>(
         `
         WITH buckets AS (
             SELECT date_trunc(:unit, gs)::date AS bucket
@@ -279,7 +279,7 @@ export interface CouponsWindow {
 
 /** Coupon usage for a window: count of orders carrying ≥1 coupon and the total discount applied. */
 export async function computeCouponsWindow(from: Date, to: Date, unit: IntervalUnit): Promise<CouponsWindow> {
-    const totalsResult = await db.rawQuery<{ rows: { discounted_orders: string | number; amount: string | number }[] }>(
+    const totalsResult = await currentTrx().rawQuery<{ rows: { discounted_orders: string | number; amount: string | number }[] }>(
         `
         SELECT
             COUNT(DISTINCT o.id) AS discounted_orders,
@@ -292,7 +292,7 @@ export async function computeCouponsWindow(from: Date, to: Date, unit: IntervalU
         { from, to },
     );
 
-    const intervalsResult = await db.rawQuery<{
+    const intervalsResult = await currentTrx().rawQuery<{
         rows: { bucket: string | Date; discounted_orders: string | number; amount: string | number }[];
     }>(
         `
@@ -385,7 +385,7 @@ export async function computeOrdersTable(
     page: number,
     limit: number,
 ): Promise<PaginatedRows<OrdersReportRow>> {
-    const { rows } = await db.rawQuery<{ rows: RawOrderRow[] }>(
+    const { rows } = await currentTrx().rawQuery<{ rows: RawOrderRow[] }>(
         `
         SELECT
             o.id AS order_id,
@@ -459,7 +459,7 @@ export async function computeProductsTable(
         locale: string;
     },
 ): Promise<PaginatedRows<ProductsReportRow>> {
-    const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
+    const { rows } = await currentTrx().rawQuery<{ rows: Record<string, unknown>[] }>(
         `
         WITH agg AS (
             SELECT li.product_id,
@@ -488,12 +488,12 @@ export async function computeProductsTable(
                 WHERE pcl.product_id = agg.product_id), ARRAY[]::text[]) AS categories,
             COALESCE((SELECT COUNT(*) FROM product_variations v WHERE v.product_id = agg.product_id), 0) AS variations,
             (SELECT COALESCE(SUM(stock_quantity), 0) FROM inventory_items ii WHERE ii.product_id = agg.product_id) AS stock,
-            EXISTS (SELECT 1 FROM product_category_links pcl2 WHERE pcl2.product_id = agg.product_id AND (:categoryId::bigint IS NULL OR pcl2.category_id = :categoryId)) AS in_category
+            EXISTS (SELECT 1 FROM product_category_links pcl2 WHERE pcl2.product_id = agg.product_id AND (:categoryId::bigint = 0 OR pcl2.category_id = :categoryId)) AS in_category
         FROM agg
         LEFT JOIN products p ON p.id = agg.product_id
         LEFT JOIN product_translations pt ON pt.product_id = agg.product_id AND pt.locale = :locale
-        WHERE (:q::text IS NULL OR COALESCE(pt.name, agg.snapshot_name) ILIKE :qlike OR p.sku ILIKE :qlike)
-          AND (:categoryId::bigint IS NULL OR EXISTS (
+        WHERE (NULLIF(:q::text, '') IS NULL OR COALESCE(pt.name, agg.snapshot_name) ILIKE :qlike OR p.sku ILIKE :qlike)
+          AND (:categoryId::bigint = 0 OR EXISTS (
               SELECT 1 FROM product_category_links pcl3 WHERE pcl3.product_id = agg.product_id AND pcl3.category_id = :categoryId
           ))
         `,
@@ -501,9 +501,9 @@ export async function computeProductsTable(
             from,
             to,
             locale: opts.locale,
-            q: opts.q ?? null,
+            q: opts.q ?? "",
             qlike: opts.q ? `%${opts.q}%` : "%",
-            categoryId: opts.categoryId ?? null,
+            categoryId: opts.categoryId ?? 0,
         },
     );
 
@@ -544,7 +544,7 @@ export async function computeCategoriesTable(
         locale: string;
     },
 ): Promise<PaginatedRows<CategoriesReportRow>> {
-    const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
+    const { rows } = await currentTrx().rawQuery<{ rows: Record<string, unknown>[] }>(
         `
         SELECT
             pc.id AS category_id,
@@ -593,7 +593,7 @@ export async function computeCouponsTable(
     to: Date,
     opts: { orderBy: "orders" | "amount" | "code"; orderDir: "asc" | "desc"; page: number; limit: number },
 ): Promise<PaginatedRows<CouponsReportRow>> {
-    const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
+    const { rows } = await currentTrx().rawQuery<{ rows: Record<string, unknown>[] }>(
         `
         SELECT
             cl.code_snapshot AS code,
@@ -641,7 +641,7 @@ export async function computeTaxesTable(
     to: Date,
     opts: { orderBy: "total_tax" | "orders" | "code"; orderDir: "asc" | "desc"; page: number; limit: number },
 ): Promise<PaginatedRows<TaxesReportRow>> {
-    const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
+    const { rows } = await currentTrx().rawQuery<{ rows: Record<string, unknown>[] }>(
         `
         SELECT
             tl.rate_code_snapshot AS code,
@@ -686,7 +686,7 @@ export async function computeTopCategories(
     locale: string,
 ): Promise<{ data: TopCategoryRow[]; range: { start_date: string; end_date: string; days: number } }> {
     const since = new Date(Date.now() - days * 86_400_000);
-    const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
+    const { rows } = await currentTrx().rawQuery<{ rows: Record<string, unknown>[] }>(
         `
         SELECT
             pc.id AS category_id,
@@ -763,7 +763,7 @@ export async function computeStockTable(opts: {
     locale: string;
 }): Promise<PaginatedRows<StockReportRow>> {
     const predicate = stockStatusPredicate(opts.status);
-    const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
+    const { rows } = await currentTrx().rawQuery<{ rows: Record<string, unknown>[] }>(
         `
         SELECT
             ii.id AS inventory_id,
@@ -779,9 +779,9 @@ export async function computeStockTable(opts: {
         LEFT JOIN product_translations pt ON pt.product_id = p.id AND pt.locale = :locale
         LEFT JOIN product_variations v ON v.id = ii.variation_id
         WHERE ${predicate}
-          AND (:q::text IS NULL OR COALESCE(pt.name, '') ILIKE :qlike OR COALESCE(v.sku, p.sku) ILIKE :qlike)
+          AND (NULLIF(:q::text, '') IS NULL OR COALESCE(pt.name, '') ILIKE :qlike OR COALESCE(v.sku, p.sku) ILIKE :qlike)
         `,
-        { locale: opts.locale, q: opts.q ?? null, qlike: opts.q ? `%${opts.q}%` : "%" },
+        { locale: opts.locale, q: opts.q ?? "", qlike: opts.q ? `%${opts.q}%` : "%" },
     );
 
     const mapped: StockReportRow[] = rows.map((row) => ({
@@ -801,7 +801,7 @@ export async function computeStockTable(opts: {
 
 /** Footer counts for the stock report — total rows plus a breakdown by status (low stock derived). */
 export async function computeStockCounts(): Promise<StockReportCounts> {
-    const { rows } = await db.rawQuery<{ rows: Record<string, unknown>[] }>(
+    const { rows } = await currentTrx().rawQuery<{ rows: Record<string, unknown>[] }>(
         `
         SELECT
             COUNT(*) AS total,

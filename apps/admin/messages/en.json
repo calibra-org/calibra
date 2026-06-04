@@ -3651,7 +3651,8 @@
             "email": "Email",
             "advanced": "Advanced",
             "datetime": "Date & Time",
-            "media": "Media"
+            "media": "Media",
+            "branding": "Branding"
         },
         "general": {
             "comingSoon": "coming soon",
@@ -3821,6 +3822,72 @@
         "title": "Page not found",
         "description": "This URL does not exist or has been removed.",
         "back": "Back to dashboard"
+    },
+    "UnknownShop": {
+        "title": "Unknown shop",
+        "subtitle": "This address isn't connected to a shop.",
+        "hint": "Open your shop's admin at its own address — for example yourshop.admin.calibra.app."
+    },
+    "Impersonation": {
+        "banner": "You are viewing {shop}'s admin as support.",
+        "exit": "Exit impersonation",
+        "exiting": "Exiting…"
+    },
+    "Branding": {
+        "title": "Branding",
+        "subtitle": "Customize how your storefront looks. These settings change the shop, not this admin panel.",
+        "identity": {
+            "title": "Identity",
+            "subtitle": "Your shop's name and tagline as shown on the storefront.",
+            "name": "Shop name",
+            "nameHelp": "Shown in the storefront header and browser title.",
+            "tagline": "Tagline",
+            "taglineHelp": "A short line shown under the shop name."
+        },
+        "assets": {
+            "title": "Logo & favicon",
+            "subtitle": "Upload from your media library. With no logo, the storefront shows a name monogram.",
+            "logo": "Logo",
+            "favicon": "Favicon",
+            "choose": "Choose image",
+            "change": "Change",
+            "remove": "Remove"
+        },
+        "typography": {
+            "title": "Typography",
+            "font": "Font",
+            "fontHelp": "The typeface the storefront loads."
+        },
+        "fonts": {
+            "vazirmatn": "Vazirmatn",
+            "inter": "Inter"
+        },
+        "palette": {
+            "title": "Color palette",
+            "subtitle": "Colors are stored as OKLCH and applied to the storefront before first paint.",
+            "background": "Background",
+            "foreground": "Foreground",
+            "muted": "Muted",
+            "muted_foreground": "Muted foreground",
+            "border": "Border",
+            "accent": "Accent",
+            "accent_foreground": "Accent foreground"
+        },
+        "preview": {
+            "title": "Live preview",
+            "subtitle": "A storefront-style swatch reflecting the chosen palette.",
+            "nav": "Shop",
+            "heading": "New season, fresh looks",
+            "body": "Discover this week's arrivals, picked for you.",
+            "cta": "Shop now",
+            "muted": "Free shipping over a threshold"
+        },
+        "save": "Save changes",
+        "saving": "Saving…",
+        "discard": "Discard",
+        "unsaved": "You have unsaved changes",
+        "saveError": "Couldn't save. Please try again.",
+        "invalidColor": "Enter a valid OKLCH color, e.g. oklch(60% 0.18 250)."
     },
     "Status": {
         "active": "Active",

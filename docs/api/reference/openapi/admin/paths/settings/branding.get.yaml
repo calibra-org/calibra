@@ -1,0 +1,24 @@
+operationId: adminSettingsBrandingShow
+summary: Get Branding settings (admin)
+description: >
+    Returns the storefront-facing branding config the shop's staff self-serve: name, tagline, font,
+    logo + favicon (resolved to `{ id, url }`), and the OKLCH palette the storefront renders. The
+    admin chrome itself is not themed by this (RULE C) — this edits the storefront's look.
+tags: [Admin / Settings]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: Branding settings.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/AdminBrandingSettings.yaml"
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

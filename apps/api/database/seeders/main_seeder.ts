@@ -1,38 +1,54 @@
-import hash from "@adonisjs/core/services/hash";
+import app from "@adonisjs/core/services/app";
 import { BaseSeeder } from "@adonisjs/lucid/seeders";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
+import AttributesSeeder from "#database/seed_modules/0002_attributes_seeder";
+import BulkDatasetSeeder, { type BulkSeederOptions } from "#database/seed_modules/0010_bulk_dataset_seeder";
 import { type BrandingSettingsInput, brandingSettingRows } from "#services/storefront_branding_service";
 import { runWithTenant } from "#services/tenant_context";
-import { nextNumber } from "#services/tenant_numbering_service";
 import { TenantProvisioningService } from "#services/tenant_provisioning_service";
 
 /**
  * Multi-tenant demo seed for `node ace db:seed --connection=postgres_admin`. Seeds global
  * control-plane data (currencies, plans, a platform login), then provisions three demo tenants and
- * gives each its own catalog/customers/orders at varied volumes ("one big, two small" — exercises
- * per-tenant isolation, the bridge/noisy-neighbour story, and per-tenant order numbering).
+ * gives each a **realistic, fully-populated** catalog/customers/orders via {@link BulkDatasetSeeder}
+ * — the same generator behind `db:bulk-seed`, run per-tenant at demo volumes. Every tenant gets the
+ * nested Digikala-style category tree, brands, tags, ~200+ products (simple/variable with variations,
+ * inventory, images, fa+en translations, category/brand/tag links), hundreds of customers with
+ * addresses + IR profiles, 500+ orders with consistent totals/statuses/refunds, and reviews. Volumes
+ * vary per tenant ("one big, two small") to exercise per-tenant isolation and numbering.
  *
- * Known dev logins: control-plane `platform@calibra.dev` / `Passw0rd1!`; shop admin for the
- * **aurora** tenant `admin@bulk.calibra.dev` / `Passw0rd1!`.
+ * Known dev logins: control-plane `platform@calibra.dev` / `Passw0rd1!`; shop admins
+ * `admin@bulk.calibra.dev` (works on every tenant — part of the seeded admin roster) plus the
+ * per-tenant owners `admin@mehr.calibra.dev` / `admin@kasra.calibra.dev`, all `Passw0rd1!`.
  *
- * Idempotent: a tenant that already exists (by slug) is skipped, so a re-seed of an existing spin is
- * a no-op for that tenant. The full production-scale bulk dataset (`db:bulk-seed`) is not yet
- * tenant-aware — it remains the explicit single-tenant generator pending its Phase-2 conversion.
+ * Idempotent: per-tenant dataset seeding counts existing bulk rows and inserts only the delta, so a
+ * re-seed of an existing spin tops it up to target without duplicating. Attributes are seeded
+ * per-tenant first so variable products get real variation axes.
  */
 /**
  * Each demo tenant gets a distinct brand palette + tagline so the storefront's runtime branding
  * (RULE B) is visibly different per host — Aurora cool/blue, Mehr warm/amber, Kasra bold/violet.
  * Logos stay unset (the storefront renders a per-tenant monogram from the name + accent), exercising
  * the no-logo fallback path; production sets `logo_media_id` through the admin branding editor.
+ *
+ * `volumes` are passed straight to {@link BulkDatasetSeeder}: `products` / `users` (= customers) are
+ * explicit, `orders` and `reviews` are explicit so every shop clears the demo targets (≥500 orders,
+ * ~200 products) regardless of the customer count. "One big, two small" keeps Aurora the heaviest.
  */
-const DEMO_TENANTS = [
+const DEMO_TENANTS: ReadonlyArray<{
+    slug: string;
+    name: string;
+    ownerEmail: string;
+    volumes: BulkSeederOptions;
+    branding: BrandingSettingsInput;
+}> = [
     {
         slug: "aurora",
         name: "Aurora",
         ownerEmail: "admin@bulk.calibra.dev",
-        sizes: { products: 25, customers: 12, orders: 18 },
+        volumes: { products: 240, users: 400, orders: 650, reviews: 400 },
         branding: {
             tagline: "روشنایی برای هر روز",
             palette: {
@@ -50,7 +66,7 @@ const DEMO_TENANTS = [
         slug: "mehr",
         name: "Mehr",
         ownerEmail: "admin@mehr.calibra.dev",
-        sizes: { products: 6, customers: 4, orders: 5 },
+        volumes: { products: 200, users: 320, orders: 520, reviews: 320 },
         branding: {
             tagline: "گرمی و مهربانی در هر خرید",
             palette: {
@@ -68,7 +84,7 @@ const DEMO_TENANTS = [
         slug: "kasra",
         name: "Kasra",
         ownerEmail: "admin@kasra.calibra.dev",
-        sizes: { products: 5, customers: 3, orders: 4 },
+        volumes: { products: 200, users: 320, orders: 520, reviews: 320 },
         branding: {
             tagline: "جسارت در سادگی",
             palette: {
@@ -82,13 +98,20 @@ const DEMO_TENANTS = [
             },
         },
     },
-] as const;
+];
 
-interface DemoSizes {
-    products: number;
-    customers: number;
-    orders: number;
-}
+/**
+ * Test-env volumes (`NODE_ENV=test`). Small + `images: false` so `db:seed` stays fast under Japa —
+ * `seeders.spec` / `seeders_demo.spec` re-run `MainSeeder` in every `each.setup`, and the full
+ * sharp image pass at dev volumes would blow the CI shard budget. Per-tenant counts stay distinct so
+ * the per-tenant catalog spec can still assert isolation. Keep `seeders_demo.spec`'s expected counts
+ * in lockstep with these.
+ */
+const TEST_VOLUMES: Record<string, BulkSeederOptions> = {
+    aurora: { products: 8, users: 6, orders: 6, reviews: 3, images: false },
+    mehr: { products: 6, users: 5, orders: 5, reviews: 2, images: false },
+    kasra: { products: 5, users: 4, orders: 4, reviews: 2, images: false },
+};
 
 export default class MainSeeder extends BaseSeeder {
     private async runSeeder(seederModule: { default: typeof BaseSeeder }) {
@@ -122,11 +145,14 @@ export default class MainSeeder extends BaseSeeder {
                           branding: tenant.branding,
                       })
                   ).id;
-            if (!existing) {
-                await this.seedTenantDemo(tenantId, tenant.sizes);
-            }
             /** Branding is upserted unconditionally so spins provisioned before it gain it on re-seed. */
             await this.ensureBranding(admin, tenantId, tenant.name, tenant.branding);
+            /**
+             * Realistic dataset, unconditional + idempotent: the bulk generator counts existing
+             * bulk rows for this tenant and inserts only the delta, so re-seeding an existing spin
+             * tops it up to target rather than duplicating.
+             */
+            await this.seedTenantDataset(tenantId, app.inTest ? (TEST_VOLUMES[tenant.slug] ?? tenant.volumes) : tenant.volumes);
         }
     }
 
@@ -163,84 +189,21 @@ export default class MainSeeder extends BaseSeeder {
     }
 
     /**
-     * Seeds one tenant's catalog/customers/orders inside its RLS context so the numbering service and
-     * any model hooks resolve the right tenant. Runs on the admin connection (BYPASSRLS) but sets the
-     * GUC so per-tenant order numbers restart at 1000 for every shop.
+     * Seeds one tenant's full realistic dataset inside its RLS context. Runs on the admin connection
+     * (BYPASSRLS) but sets the `app.current_tenant` GUC inside one transaction so the `tenant_id`
+     * column default fills every insert, per-tenant numbering counters resolve through `currentTrx()`,
+     * and a failure rolls back that tenant's whole dataset.
+     *
+     * Order matters: {@link AttributesSeeder} first so the per-tenant attribute taxonomy
+     * (Color · Size · …) exists for {@link BulkDatasetSeeder} to pin variable-product variations
+     * against; then the bulk generator builds the catalog, customers, orders, and reviews.
      */
-    private async seedTenantDemo(tenantId: number, sizes: DemoSizes): Promise<void> {
-        const passwordHash = await hash.make("Passw0rd1!");
+    private async seedTenantDataset(tenantId: number, volumes: BulkSeederOptions): Promise<void> {
         await db.connection("postgres_admin").transaction(async (trx) => {
             await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(tenantId)]);
             await runWithTenant(BigInt(tenantId), trx, async () => {
-                const now = DateTime.utc().toSQL()!;
-
-                const customerIds: number[] = [];
-                for (let i = 1; i <= sizes.customers; i += 1) {
-                    const userRows = await trx
-                        .table("users")
-                        .insert({
-                            tenant_id: tenantId,
-                            email: `customer${i}@${tenantId}.demo.test`,
-                            password_hash: passwordHash,
-                            role: "customer",
-                            locale: "fa",
-                            created_at: now,
-                            updated_at: now,
-                        })
-                        .returning(["id"]);
-                    const customerRows = await trx
-                        .table("customers")
-                        .insert({
-                            tenant_id: tenantId,
-                            user_id: Number(userRows[0].id),
-                            first_name: `Customer${i}`,
-                            last_name: "Demo",
-                            created_at: now,
-                            updated_at: now,
-                        })
-                        .returning(["id"]);
-                    customerIds.push(Number(customerRows[0].id));
-                }
-
-                const productCount = sizes.products;
-                for (let i = 1; i <= productCount; i += 1) {
-                    const productRows = await trx
-                        .table("products")
-                        .insert({ tenant_id: tenantId, sku: `SKU-${i}`, created_at: now, updated_at: now })
-                        .returning(["id"]);
-                    await trx.table("product_translations").insert({
-                        tenant_id: tenantId,
-                        product_id: Number(productRows[0].id),
-                        locale: "fa",
-                        name: `محصول ${i}`,
-                        slug: `product-${i}`,
-                    });
-                }
-
-                for (let i = 0; i < sizes.orders; i += 1) {
-                    const orderNumber = await nextNumber("order");
-                    const orderRows = await trx
-                        .table("orders")
-                        .insert({
-                            tenant_id: tenantId,
-                            order_number: orderNumber,
-                            customer_id: customerIds[i % customerIds.length] ?? null,
-                            created_at: now,
-                            updated_at: now,
-                        })
-                        .returning(["id"]);
-                    const orderId = Number(orderRows[0].id);
-                    await trx.table("order_line_items").insert({
-                        tenant_id: tenantId,
-                        order_id: orderId,
-                        name_snapshot: `محصول ${(i % productCount) + 1}`,
-                    });
-                    await trx.table("order_status_history").insert({
-                        tenant_id: tenantId,
-                        order_id: orderId,
-                        to_status: "pending",
-                    });
-                }
+                await new AttributesSeeder(trx).run();
+                await new BulkDatasetSeeder(trx).setOptions(volumes).run();
             });
         });
     }

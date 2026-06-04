@@ -1,6 +1,5 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import Coupon from "#models/coupon";
@@ -15,7 +14,7 @@ import OrderShippingLine from "#models/order_shipping_line";
 import Product from "#models/product";
 import ProductVariation from "#models/product_variation";
 import { CacheInvalidation } from "#services/cache_invalidation";
-import { currentTenantId, withTenantTransaction } from "#services/tenant_context";
+import { currentTenantId, currentTrx, withTenantTransaction } from "#services/tenant_context";
 import OrderTransformer from "#transformers/order_transformer";
 import {
     adminOrderAddressUpdateValidator,
@@ -155,7 +154,7 @@ export default class AdminOrderEditController {
         if (!Number.isFinite(lineId)) {
             throw new Exception("Line not found", { status: 404, code: "E_NOT_FOUND" });
         }
-        const refundCount = (await db
+        const refundCount = (await currentTrx()
             .from("order_refund_line_items")
             .where("order_line_item_id", lineId)
             .count("* as c")
@@ -374,7 +373,7 @@ export default class AdminOrderEditController {
                 },
             };
         }
-        const row = (await db
+        const row = (await currentTrx()
             .from("orders")
             .whereNull("deleted_at")
             .where("customer_id", Number(order.customerId))

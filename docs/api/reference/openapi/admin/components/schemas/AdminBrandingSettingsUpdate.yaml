@@ -1,0 +1,24 @@
+title: AdminBrandingSettingsUpdate
+description: >
+    Partial update for the Branding screen. Every field is optional — the server writes only what
+    changed (same-value writes are no-ops, no audit row) and busts the storefront's tenant cache so
+    the change is live immediately. `logo_media_id` / `favicon_media_id` reference a row in the
+    tenant's `media` table, or `null` to clear. Palette tokens must be valid OKLCH strings.
+type: object
+properties:
+    name: { type: string, maxLength: 120 }
+    tagline: { type: string, maxLength: 240 }
+    font: { type: string, enum: [vazirmatn, inter] }
+    logo_media_id: { type: [integer, "null"], minimum: 1 }
+    favicon_media_id: { type: [integer, "null"], minimum: 1 }
+    palette:
+        type: object
+        description: Any subset of the palette tokens; each value is an OKLCH string.
+        properties:
+            background: { type: string, examples: ["oklch(99% 0 0)"] }
+            foreground: { type: string, examples: ["oklch(15% 0 0)"] }
+            muted: { type: string, examples: ["oklch(96% 0 0)"] }
+            muted_foreground: { type: string, examples: ["oklch(45% 0 0)"] }
+            border: { type: string, examples: ["oklch(90% 0 0)"] }
+            accent: { type: string, examples: ["oklch(60% 0.18 250)"] }
+            accent_foreground: { type: string, examples: ["oklch(99% 0 0)"] }

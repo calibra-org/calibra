@@ -1,9 +1,8 @@
 import cache from "@adonisjs/cache/services/main";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import { CacheKeys, CacheTags } from "#services/cache_keys";
-import { currentTenantId } from "#services/tenant_context";
+import { currentTenantId, currentTrx } from "#services/tenant_context";
 import type { AdminStatsRow } from "#transformers/customer_transformer";
 
 /**
@@ -84,7 +83,7 @@ async function fetchAggregateRows(customerIds: ReadonlyArray<number>): Promise<M
     const paidPlaceholders = ORDER_PAID_STATUSES.map(() => "?").join(",");
     const idPlaceholders = customerIds.map(() => "?").join(",");
 
-    const { rows } = await db.rawQuery<{ rows: AggregateRow[] }>(
+    const { rows } = await currentTrx().rawQuery<{ rows: AggregateRow[] }>(
         `SELECT
              customer_id,
              COUNT(*) FILTER (WHERE status IN (${countedPlaceholders})) AS order_count,
@@ -156,7 +155,7 @@ async function computeSingleCustomerBundle(customerId: number): Promise<Customer
     const paidPlaceholders = ORDER_PAID_STATUSES.map(() => "?").join(",");
     const countedPlaceholders = ORDER_COUNTED_STATUSES.map(() => "?").join(",");
 
-    const seriesResult = await db.rawQuery<{ rows: SeriesRow[] }>(
+    const seriesResult = await currentTrx().rawQuery<{ rows: SeriesRow[] }>(
         `SELECT TO_CHAR(date_trunc('month', created_at), 'YYYY-MM') AS month,
                 COALESCE(SUM(grand_total), 0) AS amount_minor
          FROM orders
@@ -168,7 +167,7 @@ async function computeSingleCustomerBundle(customerId: number): Promise<Customer
         [customerId, ...ORDER_PAID_STATUSES],
     );
 
-    const favoriteResult = await db.rawQuery<{ rows: FavoriteRow[] }>(
+    const favoriteResult = await currentTrx().rawQuery<{ rows: FavoriteRow[] }>(
         `SELECT oli.product_id
          FROM order_line_items oli
          JOIN orders o ON o.id = oli.order_id
@@ -254,7 +253,7 @@ async function computeCounts(): Promise<CustomerCounts> {
     const paidPlaceholders = ORDER_PAID_STATUSES.map(() => "?").join(",");
 
     const [tabResult, summaryResult, thresholdResult, inactiveResult, noAddressResult] = await Promise.all([
-        db.rawQuery<{ rows: TabRow[] }>(
+        currentTrx().rawQuery<{ rows: TabRow[] }>(
             `SELECT
                  COUNT(*) FILTER (WHERE deleted_at IS NULL) AS all_count,
                  COUNT(*) FILTER (WHERE deleted_at IS NULL AND user_id IS NOT NULL) AS account_holders,
@@ -263,7 +262,7 @@ async function computeCounts(): Promise<CustomerCounts> {
                  COUNT(*) FILTER (WHERE deleted_at IS NOT NULL) AS trashed_count
              FROM customers`,
         ),
-        db.rawQuery<{ rows: SummaryRow[] }>(
+        currentTrx().rawQuery<{ rows: SummaryRow[] }>(
             `WITH stats AS (
                  SELECT c.id,
                         c.user_id,
@@ -291,7 +290,7 @@ async function computeCounts(): Promise<CustomerCounts> {
              FROM stats`,
             [...ORDER_COUNTED_STATUSES, ...ORDER_PAID_STATUSES],
         ),
-        db.rawQuery<{ rows: ThresholdRow[] }>(
+        currentTrx().rawQuery<{ rows: ThresholdRow[] }>(
             `SELECT COALESCE(percentile_cont(0.9) WITHIN GROUP (ORDER BY spend), 0) AS threshold_minor
              FROM (
                  SELECT COALESCE(SUM(grand_total), 0) AS spend
@@ -301,7 +300,7 @@ async function computeCounts(): Promise<CustomerCounts> {
              ) spend_per_customer`,
             [...ORDER_PAID_STATUSES],
         ),
-        db.rawQuery<{ rows: CountRow[] }>(
+        currentTrx().rawQuery<{ rows: CountRow[] }>(
             `SELECT COUNT(*) AS count
              FROM customers c
              LEFT JOIN (
@@ -314,7 +313,7 @@ async function computeCounts(): Promise<CustomerCounts> {
                AND (o.last_order_at IS NULL OR o.last_order_at < now() - interval '180 days')`,
             [...ORDER_COUNTED_STATUSES],
         ),
-        db.rawQuery<{ rows: CountRow[] }>(
+        currentTrx().rawQuery<{ rows: CountRow[] }>(
             `SELECT COUNT(*) AS count
              FROM customers c
              LEFT JOIN customer_addresses a ON a.customer_id = c.id
@@ -325,7 +324,7 @@ async function computeCounts(): Promise<CustomerCounts> {
     const threshold = Number(thresholdResult.rows[0]?.threshold_minor ?? 0);
     const bigSpendersResult =
         threshold > 0
-            ? await db.rawQuery<{ rows: CountRow[] }>(
+            ? await currentTrx().rawQuery<{ rows: CountRow[] }>(
                   `SELECT COUNT(*) AS count
                    FROM (
                        SELECT customer_id, COALESCE(SUM(grand_total), 0) AS spend
@@ -411,7 +410,7 @@ async function computeCustomerInsights(): Promise<CustomerInsights> {
     const paidPlaceholders = ORDER_PAID_STATUSES.map(() => "?").join(",");
 
     const [now, prior, totalSeries, spendSeries] = await Promise.all([
-        db.rawQuery<{ rows: SummaryRow[] & { total: string | number }[] }>(
+        currentTrx().rawQuery<{ rows: SummaryRow[] & { total: string | number }[] }>(
             `WITH stats AS (
                  SELECT c.id, c.user_id,
                         COALESCE(o.order_count, 0) AS order_count,
@@ -438,7 +437,7 @@ async function computeCustomerInsights(): Promise<CustomerInsights> {
              FROM stats`,
             [...ORDER_COUNTED_STATUSES, ...ORDER_PAID_STATUSES],
         ),
-        db.rawQuery<{ rows: SummaryRow[] & { total: string | number }[] }>(
+        currentTrx().rawQuery<{ rows: SummaryRow[] & { total: string | number }[] }>(
             `WITH stats AS (
                  SELECT c.id,
                         COALESCE(o.order_count, 0) AS order_count,
@@ -462,7 +461,7 @@ async function computeCustomerInsights(): Promise<CustomerInsights> {
              FROM stats`,
             [...ORDER_COUNTED_STATUSES, ...ORDER_PAID_STATUSES],
         ),
-        db.rawQuery<{ rows: CountByDayRow[] }>(
+        currentTrx().rawQuery<{ rows: CountByDayRow[] }>(
             `SELECT day::date AS bucket,
                     COUNT(c.id) AS value
              FROM generate_series(now() - interval '29 days', now(), interval '1 day') day
@@ -471,7 +470,7 @@ async function computeCustomerInsights(): Promise<CustomerInsights> {
              GROUP BY day
              ORDER BY day`,
         ),
-        db.rawQuery<{ rows: CountByDayRow[] }>(
+        currentTrx().rawQuery<{ rows: CountByDayRow[] }>(
             `SELECT day::date AS bucket,
                     COALESCE(SUM(o.grand_total), 0) AS value
              FROM generate_series(now() - interval '29 days', now(), interval '1 day') day

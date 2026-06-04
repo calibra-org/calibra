@@ -1,13 +1,12 @@
 import cache from "@adonisjs/cache/services/main";
 import type { HttpContext } from "@adonisjs/core/http";
-import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import { ResourceNotFoundException } from "#exceptions/domain_exceptions";
 import { CacheKeys, CacheTags } from "#services/cache_keys";
 import { listCountiesForProvince, resolveCounty } from "#services/iran_county_resolver";
 import { normalizeIranText } from "#services/iran_text_normalize";
-import { currentTenantId } from "#services/tenant_context";
+import { currentTenantId, currentTrx } from "#services/tenant_context";
 import {
     adminRegionalProvinceCodeValidator,
     adminRegionalProvincesValidator,
@@ -125,7 +124,7 @@ export default class AdminInsightsRegionalController {
     }
 
     private async findProvinceOr404(code: string): Promise<{ id: bigint | number; code: string }> {
-        const { rows } = await db.rawQuery<{ rows: Array<{ id: string | number; code: string }> }>(
+        const { rows } = await currentTrx().rawQuery<{ rows: Array<{ id: string | number; code: string }> }>(
             `SELECT id, code FROM regions WHERE country_code = 'IR' AND parent_id IS NULL AND code = :code LIMIT 1`,
             { code },
         );
@@ -137,7 +136,7 @@ export default class AdminInsightsRegionalController {
     }
 
     private async computeCountry(range: NormalizedRange, locale: string) {
-        const { rows } = await db.rawQuery<{ rows: ProvinceAggregateRow[] }>(
+        const { rows } = await currentTrx().rawQuery<{ rows: ProvinceAggregateRow[] }>(
             `
             SELECT
                 r.id AS region_id,
@@ -208,7 +207,7 @@ export default class AdminInsightsRegionalController {
      * them — so the totals figure runs a single global aggregate scoped to the same window/status.
      */
     private async fetchDistinctCustomerCount(range: NormalizedRange): Promise<number> {
-        const { rows } = await db.rawQuery<{ rows: Array<{ customers_count: string | number }> }>(
+        const { rows } = await currentTrx().rawQuery<{ rows: Array<{ customers_count: string | number }> }>(
             `
             SELECT COUNT(DISTINCT o.customer_id)::bigint AS customers_count
             FROM orders o
@@ -256,7 +255,7 @@ export default class AdminInsightsRegionalController {
         province: { id: bigint | number; code: string },
         range: NormalizedRange,
     ): Promise<ProvinceAggregateRow> {
-        const { rows } = await db.rawQuery<{ rows: ProvinceAggregateRow[] }>(
+        const { rows } = await currentTrx().rawQuery<{ rows: ProvinceAggregateRow[] }>(
             `
             SELECT
                 r.id AS region_id,
@@ -308,7 +307,7 @@ export default class AdminInsightsRegionalController {
             image_url: string | null;
         }>
     > {
-        const { rows } = await db.rawQuery<{ rows: TopProductRow[] }>(
+        const { rows } = await currentTrx().rawQuery<{ rows: TopProductRow[] }>(
             `
             WITH agg AS (
                 SELECT
@@ -472,7 +471,7 @@ export default class AdminInsightsRegionalController {
         province: { id: bigint | number; code: string },
         range: NormalizedRange,
     ): Promise<CityAggregateRow[]> {
-        const { rows } = await db.rawQuery<{ rows: CityAggregateRow[] }>(
+        const { rows } = await currentTrx().rawQuery<{ rows: CityAggregateRow[] }>(
             `
             SELECT
                 MIN(oa.city) AS city_raw,

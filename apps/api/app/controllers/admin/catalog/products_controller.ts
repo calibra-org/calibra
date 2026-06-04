@@ -19,7 +19,7 @@ import {
     withTransaction,
 } from "#services/catalog_writer";
 import SettingsService from "#services/settings_service";
-import { currentTenantId } from "#services/tenant_context";
+import { currentTenantId, currentTrx } from "#services/tenant_context";
 import { adminProductsView } from "#table_views/admin/products";
 import { collection, resource } from "#transformers/api_envelope";
 import ProductTransformer, { type ProductTransformerOptions } from "#transformers/product_transformer";
@@ -309,41 +309,41 @@ export default class AdminProductsController {
     ): Promise<Array<{ key: string | number; count: number }>> {
         const subSql = sub.knexQuery.select("products.id").toString();
         if (facet === "type") {
-            return await db
+            return await currentTrx()
                 .from("products")
                 .whereIn("id", db.raw(`(${subSql})`))
                 .groupBy("type")
                 .select(db.raw("type as key"), db.raw("COUNT(*)::int as count"));
         }
         if (facet === "stock_status") {
-            return await db
+            return await currentTrx()
                 .from("inventory_items")
                 .whereIn("product_id", db.raw(`(${subSql})`))
                 .groupBy("stock_status")
                 .select(db.raw("stock_status as key"), db.raw("COUNT(DISTINCT product_id)::int as count"));
         }
         if (facet === "catalog_visibility") {
-            return await db
+            return await currentTrx()
                 .from("products")
                 .whereIn("id", db.raw(`(${subSql})`))
                 .groupBy("catalog_visibility")
                 .select(db.raw("catalog_visibility as key"), db.raw("COUNT(*)::int as count"));
         }
         if (facet === "category") {
-            return await db
+            return await currentTrx()
                 .from("product_category_links")
                 .whereIn("product_id", db.raw(`(${subSql})`))
                 .groupBy("category_id")
                 .select(db.raw("category_id as key"), db.raw("COUNT(DISTINCT product_id)::int as count"));
         }
         if (facet === "tag") {
-            return await db
+            return await currentTrx()
                 .from("product_tag_links")
                 .whereIn("product_id", db.raw(`(${subSql})`))
                 .groupBy("tag_id")
                 .select(db.raw("tag_id as key"), db.raw("COUNT(DISTINCT product_id)::int as count"));
         }
-        return await db
+        return await currentTrx()
             .from("product_brand_links")
             .whereIn("product_id", db.raw(`(${subSql})`))
             .groupBy("brand_id")
@@ -398,7 +398,7 @@ export default class AdminProductsController {
      */
     async checkSlug(ctx: HttpContext) {
         const params = await checkSlugValidator.validate(ctx.request.qs());
-        const query = db
+        const query = currentTrx()
             .from("product_translations")
             .where("locale", params.locale)
             .whereRaw("LOWER(slug) = ?", [params.slug.toLowerCase()]);
@@ -705,7 +705,7 @@ export default class AdminProductsController {
      * line item is on an order whose status is in the active set.
      */
     private async assertNotInActiveOrders(productId: number): Promise<string | null> {
-        const count = await db
+        const count = await currentTrx()
             .from("order_line_items")
             .innerJoin("orders", "orders.id", "order_line_items.order_id")
             .where("order_line_items.product_id", productId)
@@ -884,7 +884,7 @@ export default class AdminProductsController {
         if (!product) {
             return ctx.response.status(404).json({ errors: [{ message: "product_not_found" }] });
         }
-        await db
+        await currentTrx()
             .table("product_favorites")
             .insert({ user_id: Number(ctx.auth.user!.id), product_id: productId, created_at: DateTime.utc().toSQL() })
             .onConflict(["user_id", "product_id"])
@@ -898,7 +898,7 @@ export default class AdminProductsController {
      */
     async unfavorite(ctx: HttpContext) {
         const productId = Number(ctx.params.id);
-        await db
+        await currentTrx()
             .from("product_favorites")
             .where({ user_id: Number(ctx.auth.user!.id), product_id: productId })
             .delete();
@@ -908,7 +908,7 @@ export default class AdminProductsController {
     /** Loads the subset of `productIds` the given admin has favourited — drives `is_favorite`. */
     private async loadFavoriteProductIds(userId: number | undefined, productIds: number[]): Promise<Set<number>> {
         if (userId === undefined || productIds.length === 0) return new Set();
-        const rows = await db
+        const rows = await currentTrx()
             .from("product_favorites")
             .where("user_id", userId)
             .whereIn("product_id", productIds)

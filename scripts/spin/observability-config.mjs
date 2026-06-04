@@ -82,7 +82,22 @@ admin.${slug}.spin.localhost {
     reverse_proxy host.docker.internal:${adminPort}
 }
 
+# Per-tenant admin (Phase 4) — prod parity for <slug>.admin.calibra.app. The admin resolves the
+# tenant from the leading label (resolve-host.ts), so <tenant>.admin.<spin>.spin.localhost loads
+# that shop's admin over TLS. The bare admin.<spin> apex above stays the "unknown shop" page.
+*.admin.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy host.docker.internal:${adminPort}
+}
+
 web.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy host.docker.internal:${webPort}
+}
+
+# Per-tenant storefront — prod parity for a shop's own domain. <tenant>.web.<spin>.spin.localhost
+# loads that shop over TLS; the bare web.<spin> apex stays the platform page.
+*.web.${slug}.spin.localhost {
     tls internal
     reverse_proxy host.docker.internal:${webPort}
 }

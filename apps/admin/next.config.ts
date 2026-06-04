@@ -25,6 +25,14 @@ const nextConfig: NextConfig = {
     allowedDevOrigins: [
         "*.spin.localhost",
         "*.*.spin.localhost",
+        /**
+         * Per-tenant admin subdomains in dev (Phase 4). A shop's admin is reached at
+         * `<slug>.admin.localhost:<port>`; Next's glob `*` matches a single dot-less label, so
+         * `*.admin.localhost` catches `aurora.admin.localhost` / `mehr.admin.localhost`.
+         */
+        "*.admin.localhost",
+        /** Per-tenant admin via the spin's Caddy: `<tenant>.admin.<spin>.spin.localhost`. */
+        "*.admin.*.spin.localhost",
         ...(process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(",")
             .map((s) => s.trim())
             .filter(Boolean) ?? []),

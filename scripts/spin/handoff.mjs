@@ -4,6 +4,18 @@ import { bold, cyan, dim, green, log } from "./log.mjs";
 import { requirePort } from "./ports.mjs";
 
 /**
+ * The demo shops `MainSeeder` provisions on every seed (kept in sync with `DEMO_TENANTS` in
+ * `apps/api/database/seeders/main_seeder.ts`). The admin + storefront are per-tenant (Phase 4 / 3):
+ * the bare `admin.<spin>` / `web.<spin>` apex hosts render the platform "unknown shop" page, so the
+ * card points at each shop's own subdomain instead — prod parity for `<slug>.admin.calibra.app`.
+ */
+const DEMO_SHOPS = [
+    { slug: "aurora", adminEmail: "admin@bulk.calibra.dev" },
+    { slug: "mehr", adminEmail: "admin@mehr.calibra.dev" },
+    { slug: "kasra", adminEmail: "admin@kasra.calibra.dev" },
+];
+
+/**
  * @param {import("./meta.mjs").SpinMeta} meta
  * @param {{ withWeb: boolean }} opts
  */
@@ -14,11 +26,19 @@ export function printHandoffCard(meta, opts) {
     const caddyHttps = requirePort(meta, "caddyHttps");
     log(`  ${bold("dashboard")}`);
     log(`    home    ${cyan(`https://${slug}.spin.localhost:${caddyHttps}`)} ${dim("(live URLs + health + actions)")}`);
-    log(`  ${bold("app")}`);
-    log(`    admin   ${cyan(`https://admin.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(host :${meta.ports.admin})`)}`);
+    log(`  ${bold("app")} ${dim("(per-tenant — the bare admin./web. apex is the platform “unknown shop” page)")}`);
+    log(`    admin   ${cyan(`https://admin.${slug}.spin.localhost:${caddyHttps}`)} ${dim("(platform · open a shop ↓)")}`);
+    for (const shop of DEMO_SHOPS) {
+        log(
+            `       ${shop.slug.padEnd(7)} ${cyan(`https://${shop.slug}.admin.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(${shop.adminEmail})`)}`,
+        );
+    }
     log(`    api     ${cyan(`https://api.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(host :${meta.ports.api})`)}`);
     if (opts.withWeb) {
-        log(`    web     ${cyan(`https://web.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(host :${meta.ports.web})`)}`);
+        log(`    web     ${cyan(`https://web.${slug}.spin.localhost:${caddyHttps}`)} ${dim("(platform · open a shop ↓)")}`);
+        for (const shop of DEMO_SHOPS) {
+            log(`       ${shop.slug.padEnd(7)} ${cyan(`https://${shop.slug}.web.${slug}.spin.localhost:${caddyHttps}`)}`);
+        }
     }
     log(`  ${bold("observability")}`);
     const dsnNote = meta.glitchtipDsn ? "DSN wired" : "DSN pending — see GlitchTip setup below";
@@ -39,7 +59,9 @@ export function printHandoffCard(meta, opts) {
     log(`    db      ${cyan(`https://db.${slug}.spin.localhost:${caddyHttps}`)} ${dim(`(psql on :${meta.ports.db})`)}`);
     log(`    pgadmin ${cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
     log(`  pr      ${meta.prUrl ?? `(skipped — run pnpm spin pr ${meta.slug})`}`);
-    log(`  login   ${cyan("admin@bulk.calibra.dev")} / ${cyan("Passw0rd1!")}`);
+    log(
+        `  login   each shop's admin email above (or ${cyan("platform@calibra.dev")} for the control plane) / ${cyan("Passw0rd1!")}`,
+    );
     log(`  stop    ${cyan(`pnpm spin stop ${meta.slug}`)}`);
     if (!meta.glitchtipDsn) {
         log("");

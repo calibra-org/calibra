@@ -31,8 +31,16 @@ describe("resolveHost", () => {
         expect(resolveHost("127.0.0.1:13823", DEV)).toEqual({ kind: "platform" });
     });
 
-    it("treats spin infra hosts as platform", () => {
+    it("treats spin infra hosts and the bare web apex as platform", () => {
         expect(resolveHost("web.mt-storefront.spin.localhost:13830", DEV)).toEqual({ kind: "platform" });
+        expect(resolveHost("grafana.mt-storefront.spin.localhost:13830", DEV)).toEqual({ kind: "platform" });
+    });
+
+    it("resolves the per-spin Caddy storefront host `<slug>.web.<spin>.spin.localhost`", () => {
+        expect(resolveHost("aurora.web.mt-storefront.spin.localhost:13830", DEV)).toEqual({
+            kind: "subdomain",
+            slug: "aurora",
+        });
     });
 
     it("treats a nested label under the root as platform (not a valid single slug)", () => {

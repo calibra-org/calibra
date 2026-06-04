@@ -2,6 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 
+import { ImpersonationBanner } from "#/components/ImpersonationBanner";
 import { Sidebar } from "#/components/Sidebar";
 import { Topbar } from "#/components/Topbar";
 import { Toaster } from "#/components/ui/toast";
@@ -25,7 +26,7 @@ interface LayoutProps {
 export default async function AuthenticatedLayout({ children, params }: LayoutProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const [session, moneyConfig, dateTimeConfig] = await Promise.all([
+    const [{ session, impersonatedBy }, moneyConfig, dateTimeConfig] = await Promise.all([
         requireSession(locale),
         getMoneyFormatConfig(),
         getDateTimeConfig(),
@@ -43,11 +44,15 @@ export default async function AuthenticatedLayout({ children, params }: LayoutPr
                          * it. `min-w-0` lets the flex child shrink below its content width so `overflow-x`
                          * actually clips/scrolls instead of expanding the parent.
                          */}
-                        <div className="flex min-h-dvh">
-                            <Sidebar />
-                            <div className="flex min-w-0 flex-1 flex-col">
-                                <Topbar user={{ email: session.email, displayName: session.displayName }} />
-                                <main className="min-w-0 flex-1 overflow-y-auto bg-muted/20 p-6">{children}</main>
+                        <div className="flex min-h-dvh flex-col">
+                            {/** RULE D — the impersonation banner spans full width above the chrome on every authenticated route. */}
+                            {impersonatedBy !== null ? <ImpersonationBanner shopName={session.tenantSlug} /> : null}
+                            <div className="flex min-h-0 flex-1">
+                                <Sidebar />
+                                <div className="flex min-w-0 flex-1 flex-col">
+                                    <Topbar user={{ email: session.email, displayName: session.displayName }} />
+                                    <main className="min-w-0 flex-1 overflow-y-auto bg-muted/20 p-6">{children}</main>
+                                </div>
                             </div>
                         </div>
                         <Toaster />

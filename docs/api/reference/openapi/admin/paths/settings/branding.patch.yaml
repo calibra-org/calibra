@@ -1,0 +1,33 @@
+operationId: adminSettingsBrandingUpdate
+summary: Update Branding settings (admin)
+description: >
+    Partial update of the storefront-facing branding. Only changed keys are written (same-value
+    writes are no-ops — no audit row), and a real change busts the storefront's tenant cache so the
+    new branding is live immediately. Palette tokens are validated as OKLCH. Returns the fresh
+    settings.
+tags: [Admin / Settings]
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                $ref: "../../components/schemas/AdminBrandingSettingsUpdate.yaml"
+
+responses:
+    "200":
+        description: Updated Branding settings.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            $ref: "../../components/schemas/AdminBrandingSettings.yaml"
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

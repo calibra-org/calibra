@@ -5,7 +5,8 @@
         "auth": {
             "unauthenticated": "ابتدا باید وارد شوید.",
             "invalid_credentials": "اطلاعات ورود نامعتبر است.",
-            "forbidden_admin": "دسترسی مدیریتی لازم است."
+            "forbidden_admin": "دسترسی مدیریتی لازم است.",
+            "tenant_mismatch": "این حساب به این فروشگاه تعلق ندارد."
         },
         "coupons": {
             "not_found": "کد تخفیف پیدا نشد.",

@@ -4,6 +4,16 @@ import { test } from "@japa/runner";
 import ShippingZone from "#models/shipping_zone";
 import ShippingZoneLocation from "#models/shipping_zone_location";
 import { matchShippingZone } from "#services/shipping_zone_match";
+import { runInTestTenant } from "#tests/helpers/tenant";
+
+/**
+ * `matchShippingZone` rides the request transaction's tenant GUC (`currentTrx()`), exactly as it
+ * does under a checkout request. Drive it through {@link runInTestTenant} so the unit spec supplies
+ * that context instead of throwing "outside a tenant context".
+ */
+function match(input: Parameters<typeof matchShippingZone>[0]): ReturnType<typeof matchShippingZone> {
+    return runInTestTenant(() => matchShippingZone(input));
+}
 
 async function createZone(name: string, isFallback = false): Promise<ShippingZone> {
     return ShippingZone.create({ name, isFallback });
@@ -36,7 +46,7 @@ test.group("matchShippingZone", (group) => {
 
         await createZone("Fallback", true);
 
-        const matched = await matchShippingZone({
+        const matched = await match({
             country: "IR",
             regionCode: "IR-24",
             postcode: "1234567890",
@@ -54,7 +64,7 @@ test.group("matchShippingZone", (group) => {
 
         await createZone("Fallback", true);
 
-        const matched = await matchShippingZone({
+        const matched = await match({
             country: "IR",
             regionCode: "IR-24",
         });
@@ -71,7 +81,7 @@ test.group("matchShippingZone", (group) => {
 
         await createZone("Fallback", true);
 
-        const matched = await matchShippingZone({
+        const matched = await match({
             country: "IR",
             continent: "AS",
         });
@@ -85,7 +95,7 @@ test.group("matchShippingZone", (group) => {
 
         const fallback = await createZone("Rest of World", true);
 
-        const matched = await matchShippingZone({
+        const matched = await match({
             country: "DE",
             regionCode: "DE-BE",
             postcode: "10115",
@@ -103,7 +113,7 @@ test.group("matchShippingZone", (group) => {
 
         await createZone("Fallback", true);
 
-        const matched = await matchShippingZone({
+        const matched = await match({
             country: "IR",
             postcode: "1234567890",
         });

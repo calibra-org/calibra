@@ -1,6 +1,5 @@
-import db from "@adonisjs/lucid/services/db";
-
 import { bankersRound } from "#services/rounding";
+import { currentTrx } from "#services/tenant_context";
 
 /**
  * Input rate descriptor for the pure {@link calculateTax} math. Decoupled from the Lucid model so
@@ -147,7 +146,7 @@ function extractBase(gross: number, effective: TaxRateInput[]): number {
  * the math. NULL country / NULL region columns are interpreted as "match any".
  */
 export async function fetchRates(taxClassId: bigint | number, address: TaxAddress): Promise<TaxRateInput[]> {
-    const query = db
+    const query = currentTrx()
         .from("tax_rates")
         .select("id", "label", "rate", "priority", "compound", "applies_to_shipping", "ordering")
         .where("tax_class_id", Number(taxClassId))

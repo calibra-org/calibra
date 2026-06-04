@@ -8,6 +8,7 @@ import { faker as fakerFa } from "@faker-js/faker/locale/fa";
 import { DateTime } from "luxon";
 
 import { BULK_CATEGORY_TREE, type CategoryNode, type LeafProductSpec } from "./bulk_catalog_taxonomy.js";
+import { listCountiesForProvince } from "#services/iran_county_resolver";
 import { ingestFile } from "#services/media_storage";
 import SettingsService from "#services/settings_service";
 import { slugify } from "#services/slug_service";
@@ -49,6 +50,12 @@ export interface BulkSeederOptions {
     orders?: number;
     reviews?: number;
     reset?: boolean;
+    /**
+     * Ingest the on-disk seed images through the sharp variant pipeline and link them to products.
+     * Defaults to `true`. Set `false` to skip image ingestion entirely (products get no images) —
+     * used by the test-env demo seed where the sharp pass would dominate runtime.
+     */
+    images?: boolean;
 }
 
 /**
@@ -119,6 +126,15 @@ export default class BulkDatasetSeeder extends BaseSeeder {
      */
     private iranProvincePool: number[] = [];
 
+    /**
+     * `province regions.id` → its real sajaddp counties (Persian names), from the **system** county
+     * data (`listCountiesForProvince`, the same source the regional dashboard rolls up to). An IR
+     * address's `city` is sampled from *its own province's* counties so `(region_id, city)` is
+     * geographically consistent — without this the seed paired a random province with a random
+     * city from a flat list, so e.g. a Tehran-province order showed up under "کرج / اردبیل / …".
+     */
+    private iranCountiesByProvinceId = new Map<number, string[]>();
+
     setOptions(options: BulkSeederOptions): this {
         this.options = { ...this.options, ...options };
         return this;
@@ -140,6 +156,10 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             return;
         }
         const byCode = new Map(provinces.map((p) => [p.code, Number(p.id)]));
+        /** Map each province id to its real counties (system data) so addresses stay in-province. */
+        this.iranCountiesByProvinceId = new Map(
+            provinces.map((p) => [Number(p.id), listCountiesForProvince(p.code).map((c) => c.fa)]),
+        );
         const pool: number[] = [];
         const explicit = new Set(IRAN_PROVINCE_WEIGHTS.map((w) => w.code));
         for (const w of IRAN_PROVINCE_WEIGHTS) {
@@ -159,6 +179,20 @@ export default class BulkDatasetSeeder extends BaseSeeder {
     private pickIranProvinceId(): number | null {
         if (this.iranProvincePool.length === 0) return null;
         return this.iranProvincePool[Math.floor(Math.random() * this.iranProvincePool.length)] ?? null;
+    }
+
+    /**
+     * A geographically-consistent IR address locus: a weighted province `region_id` plus a `city`
+     * that is a real county **of that province** (system data). The dashboard joins orders→province
+     * on `region_id` and rolls `city` up to a county within it, so the pair must agree. Falls back to
+     * faker's generic city only when the province has no county data (shouldn't happen for IR).
+     */
+    private pickIranAddress(): { regionId: number | null; city: string } {
+        const regionId = this.pickIranProvinceId();
+        if (regionId === null) return { regionId: null, city: faker.location.city() };
+        const counties = this.iranCountiesByProvinceId.get(regionId) ?? [];
+        const city = counties.length > 0 ? faker.helpers.arrayElement(counties) : faker.location.city();
+        return { regionId, city };
     }
 
     /**
@@ -667,6 +701,8 @@ export default class BulkDatasetSeeder extends BaseSeeder {
             const addressCount = faker.number.int({ min: 1, max: 3 });
             for (let i = 0; i < addressCount; i += 1) {
                 const isIr = c.country === "IR";
+                /** Province + a county of that province, so `(region_id, city)` agree (system data). */
+                const irLoc = isIr ? this.pickIranAddress() : null;
                 addresses.push({
                     customer_id: c.id,
                     kind: faker.helpers.arrayElement(["billing", "shipping", "both"]),
@@ -674,10 +710,10 @@ export default class BulkDatasetSeeder extends BaseSeeder {
                     first_name: isIr ? fakerFa.person.firstName() : fakerEn.person.firstName(),
                     last_name: isIr ? fakerFa.person.lastName() : fakerEn.person.lastName(),
                     address_line_1: isIr ? randomIranianStreet() : faker.location.streetAddress(),
-                    city: isIr ? faker.helpers.arrayElement(IRANIAN_CITIES) : faker.location.city(),
+                    city: irLoc ? irLoc.city : faker.location.city(),
                     postcode: isIr ? randomIranianPostcode() : faker.location.zipCode(),
                     country: c.country,
-                    region_id: isIr ? this.pickIranProvinceId() : null,
+                    region_id: irLoc ? irLoc.regionId : null,
                     phone: isIr ? randomIranianPhone() : faker.phone.number({ style: "international" }),
                     is_default: i === 0,
                     region_text: isIr ? null : faker.location.state(),
@@ -1199,7 +1235,7 @@ export default class BulkDatasetSeeder extends BaseSeeder {
          * plenty of visual variety while keeping the media library + on-disk storage lean — and the
          * admin renders the generated thumbnail/medium/large variants out of the box.
          */
-        const mediaPoolIds = await this.buildMediaPool(now);
+        const mediaPoolIds = this.options.images === false ? [] : await this.buildMediaPool(now);
 
         let mediaCursor = 0;
         for (const link of productImageLinks) {
@@ -1427,15 +1463,17 @@ export default class BulkDatasetSeeder extends BaseSeeder {
 
             for (const ls of lineSpecs) orderLineSpecs.push(ls);
 
+            /** Province + a real county of it, so the regional drill-down lists in-province cities. */
+            const shipTo = this.pickIranAddress();
             const billing = {
                 kind: "billing" as const,
                 first_name: fakerFa.person.firstName(),
                 last_name: fakerFa.person.lastName(),
                 address_line_1: randomIranianStreet(),
-                city: faker.helpers.arrayElement(IRANIAN_CITIES),
+                city: shipTo.city,
                 postcode: randomIranianPostcode(),
                 country: "IR",
-                region_id: this.pickIranProvinceId(),
+                region_id: shipTo.regionId,
                 email: customer.email,
                 phone: randomIranianPhone(),
                 attributes: {},
@@ -1820,29 +1858,6 @@ function randomIranianStreet(): string {
     const plate = faker.number.int({ min: 1, max: 200 });
     return `${street}، پلاک ${plate}`;
 }
-
-const IRANIAN_CITIES = [
-    "تهران",
-    "مشهد",
-    "اصفهان",
-    "شیراز",
-    "تبریز",
-    "کرج",
-    "اهواز",
-    "قم",
-    "کرمانشاه",
-    "ارومیه",
-    "رشت",
-    "زاهدان",
-    "همدان",
-    "کرمان",
-    "یزد",
-    "اردبیل",
-    "بندرعباس",
-    "اراک",
-    "اسلامشهر",
-    "زنجان",
-];
 
 const IRANIAN_STREETS = [
     "خیابان آزادی",
