@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 
 import PlatformUser from "#models/platform_user";
 import User from "#models/user";
+import { truncatePhase03Tables } from "#tests/helpers/db";
 import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 /**
@@ -41,17 +42,14 @@ test.group("Platform auth + impersonation", (group) => {
         await conn.from("platform_users").delete();
         await conn.from("tenant_impersonation_events").delete();
         /**
-         * Establish a clean test-tenant admin state regardless of sibling-spec residue. A prior spec
-         * in the shard (e.g. `admin/customers`) can leave a customer linked to a test-tenant admin
-         * user; that `customers_user_id_foreign` FK blocks the `users` delete below. Clear the
-         * referencing customers first so this setup never depends on another spec cleaning up.
+         * Start from a clean user/customer slate regardless of sibling-spec residue. Several specs
+         * hardcode fixture emails (e.g. `shopper@calibra.dev`) and create customers linked to admin
+         * users; without a global per-test truncate, whichever spec ran first in the shard leaves
+         * rows that collide here (`users_tenant_email_unique`) or block a delete
+         * (`customers_user_id_foreign`). Truncating the phase-03 tables (CASCADE) is the same
+         * isolation the tenant-scoped specs already use.
          */
-        await conn
-            .from("customers")
-            .where("tenant_id", TEST_TENANT_ID)
-            .whereIn("user_id", conn.from("users").where("tenant_id", TEST_TENANT_ID).where("role", "admin").select("id"))
-            .delete();
-        await conn.from("users").where("tenant_id", TEST_TENANT_ID).where("role", "admin").delete();
+        await truncatePhase03Tables();
     });
 
     test("login mints a pat_ token for a valid operator", async ({ client, assert }) => {

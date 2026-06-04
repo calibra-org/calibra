@@ -3,6 +3,7 @@ import { test } from "@japa/runner";
 
 import PlatformUser from "#models/platform_user";
 import User from "#models/user";
+import { truncatePhase03Tables } from "#tests/helpers/db";
 import { TEST_TENANT_ID } from "#tests/helpers/tenant";
 
 /**
@@ -39,6 +40,13 @@ async function provision(client: import("@japa/api-client").ApiClient, pat: stri
 
 test.group("Platform console", (group) => {
     group.each.setup(async () => {
+        /**
+         * Clean the user/customer slate first (CASCADE) so fixed fixture emails (`shopper@calibra.dev`)
+         * and provisioned owner users left by a sibling spec sharing the shard can't collide
+         * (`users_tenant_email_unique`) or block the `cp-%` tenant delete below via `users.tenant_id`.
+         * Same isolation the tenant-scoped specs use.
+         */
+        await truncatePhase03Tables();
         await admin().from("platform_users").delete();
         await admin().from("tenant_impersonation_events").delete();
         await admin().from("tenant_domains").where("kind", "custom").delete();
