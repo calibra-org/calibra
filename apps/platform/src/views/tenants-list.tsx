@@ -217,10 +217,10 @@ export function TenantsListView() {
                     action={<Button onClick={() => router.push("/tenants/new")}>{t("newShop")}</Button>}
                 />
             ) : (
-                <div className="mission-panel">
+                <div className="mission-panel overflow-hidden">
                     <Table className="console-table">
                         <TableHeader>
-                            <TableRow className="[&>th]:sticky [&>th]:top-14 [&>th]:z-10 [&>th]:bg-card">
+                            <TableRow>
                                 <SortHeader field="name" label={t("colName")} sort={sort} onSort={onSort} />
                                 <SortHeader field="status" label={t("colStatus")} sort={sort} onSort={onSort} />
                                 <TableHead>{t("colPlan")}</TableHead>
@@ -229,7 +229,7 @@ export function TenantsListView() {
                                 <TableHead className="text-end">{t("colRevenue")}</TableHead>
                                 <TableHead className="text-end">{t("colStorage")}</TableHead>
                                 <TableHead className="text-end">{t("colTrend")}</TableHead>
-                                <TableHead className="sticky end-0 z-10 bg-card" />
+                                <TableHead />
                             </TableRow>
                         </TableHeader>
                         <TableBody ref={bodyRef}>
@@ -297,15 +297,10 @@ function ShopRow({
         openImpersonationTab(await impersonate.mutateAsync());
     }
 
-    const stickyBg = cn("sticky end-0 transition-colors", selected ? "bg-accent/60" : "bg-card group-hover:bg-accent/40");
-
     return (
         <TableRow
             data-row={index}
-            className={cn(
-                "group transition-colors hover:bg-accent/40",
-                selected && "bg-accent/60 ring-1 ring-primary/30 ring-inset",
-            )}
+            className={cn("transition-colors hover:bg-accent/40", selected && "bg-accent/60 ring-1 ring-primary/30 ring-inset")}
         >
             <TableCell>
                 <Link href={`/tenants/${shop.id}`} className="font-medium hover:underline">
@@ -334,7 +329,7 @@ function ShopRow({
                     )}
                 </div>
             </TableCell>
-            <TableCell className={stickyBg}>
+            <TableCell>
                 <div className="flex items-center justify-end gap-1">
                     <Button asChild variant="ghost" size="icon" aria-label={t("open")}>
                         <Link href={`/tenants/${shop.id}`}>

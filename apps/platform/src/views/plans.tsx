@@ -47,7 +47,7 @@ export function PlansView() {
             />
 
             {creating ? (
-                <form onSubmit={onCreate} className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-border p-3">
+                <form onSubmit={onCreate} className="mission-panel mb-4 flex flex-wrap items-end gap-3 p-3">
                     <div className="flex flex-col gap-1.5">
                         <Label>{t("key")}</Label>
                         <Input
@@ -80,7 +80,7 @@ export function PlansView() {
                 </form>
             ) : null}
 
-            <div className="overflow-hidden rounded-lg border border-border">
+            <div className="mission-panel overflow-hidden">
                 <Table className="console-table">
                     <TableHeader>
                         <TableRow>
@@ -120,8 +120,8 @@ function PlanRow({ plan, locale }: { plan: import("#/lib/types").Plan; locale: s
     const limitCount = Object.keys(plan.limits ?? {}).length;
 
     return (
-        <TableRow>
-            <TableCell dir="ltr" className="font-medium">
+        <TableRow className="transition-colors hover:bg-accent/40">
+            <TableCell dir="ltr" className="font-medium font-mono">
                 {plan.key}
             </TableCell>
             <TableCell>
