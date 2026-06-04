@@ -37,8 +37,10 @@ function FilterSelect({
     options: { value: string; label: string }[];
     loading?: boolean;
 }) {
+    /** Include the "all" sentinel so `SelectValue` resolves its label (the filter name) too. */
+    const items = [{ value: ALL, label }, ...options];
     return (
-        <Select value={value || ALL} onValueChange={(next) => onChange(next === ALL ? "" : String(next))}>
+        <Select value={value || ALL} onValueChange={(next) => onChange(next === ALL ? "" : String(next))} items={items}>
             <SelectTrigger className="w-44" loading={loading} aria-label={label}>
                 <SelectValue />
             </SelectTrigger>

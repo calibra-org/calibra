@@ -83,7 +83,7 @@
         "filterPlan": "پلن",
         "empty": "هنوز فروشگاهی نیست.",
         "open": "باز کردن",
-        "impersonate": "ورود به‌جای کاربر",
+        "impersonate": "ورود به پنل مشتری",
         "suspend": "تعلیق",
         "activate": "فعال‌سازی"
     },
@@ -107,7 +107,7 @@
     },
     "ShopDetail": {
         "back": "فروشگاه‌ها",
-        "impersonate": "ورود به‌جای کاربر",
+        "impersonate": "ورود به پنل مشتری",
         "tabDomains": "دامنه‌ها",
         "tabPlan": "پلن و محدودیت‌ها",
         "tabMetrics": "سنجه‌ها",
@@ -186,7 +186,7 @@
         "goShops": "رفتن به فروشگاه‌ها",
         "goPlans": "رفتن به پلن‌ها",
         "provision": "ایجاد فروشگاه",
-        "impersonate": "ورود به‌جای کاربر",
+        "impersonate": "ورود به پنل مشتری",
         "suspend": "تعلیق",
         "activate": "فعال‌سازی",
         "hintOpen": "باز کردن",

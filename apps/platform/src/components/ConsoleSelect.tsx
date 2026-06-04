@@ -21,7 +21,7 @@ export function ConsoleSelect({
     ariaLabel?: string;
 }) {
     return (
-        <Select value={value} onValueChange={(next) => onValueChange(String(next))}>
+        <Select value={value} onValueChange={(next) => onValueChange(String(next))} items={options}>
             <SelectTrigger className={className} aria-label={ariaLabel}>
                 <SelectValue />
             </SelectTrigger>
