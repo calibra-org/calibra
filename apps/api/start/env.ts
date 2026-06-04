@@ -58,6 +58,14 @@ export default await Env.create(new URL("../", import.meta.url), {
     ALLOWED_ORIGINS: Env.schema.string.optional(),
 
     /**
+     * Per-tenant admin URL template for impersonation ("log in to the customer panel"). `{slug}`
+     * is substituted with the tenant slug. Unset → the production default
+     * (`https://{slug}.admin.calibra.app`); the spin writes the local admin host
+     * (`http://{slug}.admin.localhost:<port>`).
+     */
+    ADMIN_URL_TEMPLATE: Env.schema.string.optional(),
+
+    /**
      * Mail / SMTP. The spin script writes `localhost:11025` (Mailpit) by default;
      * production overrides to the real relay. `MAIL_NOTIFICATIONS_ENABLED` is the runner-side
      * opt-out — CI runs with no catcher set it to `false` so terminal-event notifications

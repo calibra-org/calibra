@@ -3,6 +3,15 @@ import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
 
 import User from "#models/user";
+import env from "#start/env";
+
+/**
+ * Per-tenant admin URL template. `{slug}` is replaced with the tenant slug. Defaults to the
+ * production per-tenant admin host; dev/spin sets `ADMIN_URL_TEMPLATE` to the local admin host
+ * (`http://{slug}.admin.localhost:<port>`) so "log in to the customer panel" opens the right origin
+ * instead of `calibra.app`.
+ */
+const DEFAULT_ADMIN_URL_TEMPLATE = "https://{slug}.admin.calibra.app";
 
 /**
  * Platform → shop-staff impersonation ("log in as"). Guarded by the `platform` guard. Mints a
@@ -59,7 +68,7 @@ export default class ImpersonationController {
                     value: token.value!.release(),
                     expires_at: token.expiresAt?.toISOString() ?? null,
                 },
-                admin_url: `https://${tenant.slug}.admin.calibra.app`,
+                admin_url: (env.get("ADMIN_URL_TEMPLATE") ?? DEFAULT_ADMIN_URL_TEMPLATE).replace("{slug}", String(tenant.slug)),
             },
         };
     }
