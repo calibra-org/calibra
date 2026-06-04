@@ -149,6 +149,7 @@ Scopes must be one of the top-level package or app names — never a sub-route o
 
 - `apps/web` → `web`
 - `apps/admin` → `admin`
+- `apps/platform` → `platform`
 - `apps/api` → `api`
 - `packages/sdk` → `sdk`
 - `packages/shared` → `ui`
