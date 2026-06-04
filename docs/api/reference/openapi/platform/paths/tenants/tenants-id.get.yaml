@@ -1,0 +1,25 @@
+operationId: platformTenantsShow
+summary: Shop detail
+description: Full profile, domains, and plan limits vs current usage for one shop.
+tags: [Platform Tenants]
+security:
+    - PlatformAuth: []
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+responses:
+    "200":
+        description: Shop detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformTenantDetail.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

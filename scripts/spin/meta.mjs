@@ -32,6 +32,7 @@ import { allocatePorts } from "./ports.mjs";
  * @property {number} [glitchtip]
  * @property {number} [uptimeKuma]
  * @property {number} [spinAgent]
+ * @property {number} [platform] — undefined on metas allocated before the Phase-5 control-plane app
  */
 
 /**

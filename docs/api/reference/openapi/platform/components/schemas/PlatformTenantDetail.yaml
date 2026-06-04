@@ -1,0 +1,36 @@
+title: PlatformTenantDetail
+description: Full control-plane view of one shop — profile, domains, and the plan limits alongside
+    current usage counters.
+type: object
+properties:
+    id: { type: integer }
+    slug: { type: string }
+    name: { type: string }
+    status: { type: string, enum: [active, suspended, archived] }
+    db_tier: { type: string, enum: [shared, dedicated] }
+    currency_code: { type: string }
+    primary_locale: { type: string, examples: ["fa"] }
+    template_key: { type: string, examples: ["default"] }
+    created_at: { type: string, format: date-time }
+    updated_at: { type: string, format: date-time }
+    plan:
+        type: object
+        properties:
+            id: { type: integer }
+            key: { type: string }
+            name: { type: string }
+            db_tier: { type: string, enum: [shared, dedicated] }
+            limits: { type: object, additionalProperties: { type: number } }
+        required: [id, key, name, db_tier, limits]
+    domains:
+        type: array
+        items: { $ref: "./PlatformTenantDomain.yaml" }
+    usage:
+        type: object
+        properties:
+            products: { type: integer }
+            orders_total: { type: integer }
+            customers_total: { type: integer }
+            storage_bytes: { type: integer, format: int64 }
+        required: [products, orders_total, customers_total, storage_bytes]
+required: [id, slug, name, status, db_tier, currency_code, primary_locale, template_key, created_at, updated_at, plan, domains, usage]

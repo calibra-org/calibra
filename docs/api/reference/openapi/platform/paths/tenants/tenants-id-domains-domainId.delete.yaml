@@ -1,0 +1,35 @@
+operationId: platformTenantDomainsDestroy
+summary: Detach a custom domain
+description: Removes a custom domain. The auto-provisioned primary subdomain can't be detached.
+tags: [Platform Domains]
+security:
+    - PlatformAuth: []
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    - name: domainId
+      in: path
+      required: true
+      schema: { type: integer }
+responses:
+    "200":
+        description: Domain detached.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [detached]
+                            properties:
+                                detached: { type: boolean }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "409":
+        $ref: "../../../common/components/responses/Conflict.yaml"

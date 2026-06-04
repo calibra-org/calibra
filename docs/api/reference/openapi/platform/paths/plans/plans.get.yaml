@@ -1,0 +1,19 @@
+operationId: platformPlansIndex
+summary: List plan tiers
+tags: [Platform Plans]
+security:
+    - PlatformAuth: []
+responses:
+    "200":
+        description: All plan tiers.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/PlatformPlan.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"

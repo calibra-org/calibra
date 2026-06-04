@@ -1,0 +1,44 @@
+operationId: platformTenantsStore
+summary: Provision a new shop
+description: Creates a tenant end-to-end via the provisioning service (tenant row + primary
+    subdomain + Iran defaults + owner admin). Requires an owner email OR phone. Returns the new
+    tenant plus its `<slug>.shops.calibra.app` URL.
+tags: [Platform Tenants]
+security:
+    - PlatformAuth: []
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [slug, name, plan_key, currency_code]
+                properties:
+                    slug: { type: string, pattern: "^[a-z0-9]+(-[a-z0-9]+)*$", minLength: 2, maxLength: 40, examples: ["aurora"] }
+                    name: { type: string, minLength: 1, maxLength: 120 }
+                    plan_key: { type: string, examples: ["starter"] }
+                    currency_code: { type: string, examples: ["IRR"] }
+                    primary_locale: { type: string, examples: ["fa"] }
+                    template_key: { type: string, examples: ["default"] }
+                    owner_email: { type: string, format: email }
+                    owner_phone: { type: string, examples: ["+989121234567"] }
+responses:
+    "201":
+        description: Shop provisioned.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            allOf:
+                                - $ref: "../../components/schemas/PlatformTenantDetail.yaml"
+                                - type: object
+                                  required: [shop_url]
+                                  properties:
+                                      shop_url: { type: string, format: uri, examples: ["https://aurora.shops.calibra.app"] }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

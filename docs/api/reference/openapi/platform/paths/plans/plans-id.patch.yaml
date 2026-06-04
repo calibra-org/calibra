@@ -1,0 +1,37 @@
+operationId: platformPlansUpdate
+summary: Update a plan tier
+tags: [Platform Plans]
+security:
+    - PlatformAuth: []
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    name: { type: string, minLength: 1, maxLength: 120 }
+                    db_tier: { type: string, enum: [shared, dedicated] }
+                    is_default: { type: boolean }
+                    limits: { type: object, additionalProperties: { type: number } }
+responses:
+    "200":
+        description: Plan updated.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformPlan.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

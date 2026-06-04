@@ -1,0 +1,25 @@
+title: PlatformOverview
+description: Fleet rollup for the console home — shop status counts, 30-day GMV (per currency, since
+    the fleet spans currencies), 30-day orders, total customers, and total stored bytes.
+type: object
+properties:
+    shops:
+        type: object
+        properties:
+            total: { type: integer }
+            active: { type: integer }
+            suspended: { type: integer }
+            archived: { type: integer }
+        required: [total, active, suspended, archived]
+    revenue_30d:
+        type: array
+        items:
+            type: object
+            properties:
+                currency_code: { type: string, examples: ["IRR"] }
+                amount: { $ref: "../../../common/components/schemas/Money.yaml" }
+            required: [currency_code, amount]
+    orders_30d: { type: integer }
+    customers_total: { type: integer }
+    storage_bytes: { type: integer, format: int64 }
+required: [shops, revenue_30d, orders_30d, customers_total, storage_bytes]

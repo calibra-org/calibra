@@ -1,0 +1,34 @@
+operationId: platformPlansStore
+summary: Create a plan tier
+tags: [Platform Plans]
+security:
+    - PlatformAuth: []
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [key, name]
+                properties:
+                    key: { type: string, pattern: "^[a-z0-9]+(-[a-z0-9]+)*$", minLength: 2, maxLength: 48 }
+                    name: { type: string, minLength: 1, maxLength: 120 }
+                    db_tier: { type: string, enum: [shared, dedicated] }
+                    is_default: { type: boolean }
+                    limits: { type: object, additionalProperties: { type: number } }
+responses:
+    "201":
+        description: Plan created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformPlan.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "409":
+        $ref: "../../../common/components/responses/Conflict.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

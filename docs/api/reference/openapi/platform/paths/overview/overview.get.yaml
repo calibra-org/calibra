@@ -1,0 +1,19 @@
+operationId: platformOverview
+summary: Fleet rollup for the console home
+description: Cross-tenant rollup — shop status counts, 30-day GMV (per currency), 30-day orders,
+    total customers, total storage. Requires a control-plane token.
+tags: [Platform Overview]
+security:
+    - PlatformAuth: []
+responses:
+    "200":
+        description: Fleet overview.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformOverview.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"

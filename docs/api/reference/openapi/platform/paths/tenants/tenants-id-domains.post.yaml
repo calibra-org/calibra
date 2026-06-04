@@ -1,0 +1,39 @@
+operationId: platformTenantDomainsStore
+summary: Attach a custom domain
+description: Records a custom domain (tls_status=pending) and returns the CNAME target the operator
+    must create. TLS issuance happens at the edge (Phase 6).
+tags: [Platform Domains]
+security:
+    - PlatformAuth: []
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [domain]
+                properties:
+                    domain: { type: string, examples: ["shop.example.com"] }
+responses:
+    "201":
+        description: Domain attached.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformTenantDomain.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "409":
+        $ref: "../../../common/components/responses/Conflict.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

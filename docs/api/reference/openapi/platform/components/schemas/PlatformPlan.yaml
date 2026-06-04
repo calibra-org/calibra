@@ -1,0 +1,16 @@
+title: PlatformPlan
+description: A subscription plan tier. `limits` is a free-form numeric bag (`max_products`,
+    `max_storage_bytes`, `max_orders_per_month`, `max_staff`, …); `db_tier` decides dedicated-database
+    eligibility.
+type: object
+properties:
+    id: { type: integer }
+    key: { type: string, examples: ["starter"] }
+    name: { type: string, examples: ["Starter"] }
+    db_tier: { type: string, enum: [shared, dedicated] }
+    is_default: { type: boolean }
+    limits:
+        type: object
+        additionalProperties: { type: number }
+        examples: [{ max_products: 1000, max_storage_bytes: 5368709120 }]
+required: [id, key, name, db_tier, is_default, limits]
