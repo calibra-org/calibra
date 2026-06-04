@@ -40,7 +40,25 @@ export interface paths {
         post?: never;
         delete?: never;
         options?: never;
-        head?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         patch?: never;
         trace?: never;
     };
@@ -64,7 +82,25 @@ export interface paths {
         post: operations["platformTenantsStore"];
         delete?: never;
         options?: never;
-        head?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         patch?: never;
         trace?: never;
     };
@@ -84,7 +120,25 @@ export interface paths {
         post?: never;
         delete?: never;
         options?: never;
-        head?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         /**
          * Update a shop
          * @description Update name / plan / lifecycle status (suspend/activate/archive) / template / currency. Changing the plan also updates the tenant's db_tier.
@@ -128,7 +182,25 @@ export interface paths {
         post?: never;
         delete?: never;
         options?: never;
-        head?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         patch?: never;
         trace?: never;
     };
@@ -206,7 +278,25 @@ export interface paths {
         post: operations["platformPlansStore"];
         delete?: never;
         options?: never;
-        head?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         patch?: never;
         trace?: never;
     };
