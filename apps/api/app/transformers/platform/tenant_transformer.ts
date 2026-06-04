@@ -51,6 +51,8 @@ export function toTenantListItem(tenant: Tenant, primaryDomain: string | null, k
             revenue_30d: kpis.revenue,
             storage_bytes: kpis.storageBytes,
         },
+        /** 14-day daily revenue (oldest → newest, minor units) for the inline row sparkline. */
+        spark: kpis.spark,
     };
 }
 

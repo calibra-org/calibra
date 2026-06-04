@@ -79,6 +79,9 @@ test.group("Platform console", (group) => {
         const test = res.body().data.find((t: { id: number }) => t.id === TEST_TENANT_ID);
         assert.exists(test);
         assert.properties(test.kpis, ["orders_30d", "revenue_30d", "storage_bytes"]);
+        assert.isArray(test.spark);
+        assert.lengthOf(test.spark, 14);
+        assert.isTrue(test.spark.every((n: unknown) => typeof n === "number"));
     });
 
     test("tenants index supports a free-text q search", async ({ client, assert }) => {

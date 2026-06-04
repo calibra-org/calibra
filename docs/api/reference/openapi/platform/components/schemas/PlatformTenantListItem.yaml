@@ -25,4 +25,8 @@ properties:
             revenue_30d: { $ref: "../../../common/components/schemas/Money.yaml" }
             storage_bytes: { type: integer, format: int64 }
         required: [orders_30d, revenue_30d, storage_bytes]
-required: [id, slug, name, status, db_tier, currency_code, primary_domain, plan, created_at, kpis]
+    spark:
+        type: array
+        description: 14-day daily revenue (oldest → newest, currency minor units) for the inline row sparkline.
+        items: { type: integer, format: int64 }
+required: [id, slug, name, status, db_tier, currency_code, primary_domain, plan, created_at, kpis, spark]
