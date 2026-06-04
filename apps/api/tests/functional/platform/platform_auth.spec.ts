@@ -37,9 +37,21 @@ async function createShopAdmin(): Promise<User> {
 
 test.group("Platform auth + impersonation", (group) => {
     group.each.setup(async () => {
-        await db.connection("postgres_admin").from("platform_users").delete();
-        await db.connection("postgres_admin").from("tenant_impersonation_events").delete();
-        await db.connection("postgres_admin").from("users").where("tenant_id", TEST_TENANT_ID).where("role", "admin").delete();
+        const conn = db.connection("postgres_admin");
+        await conn.from("platform_users").delete();
+        await conn.from("tenant_impersonation_events").delete();
+        /**
+         * Establish a clean test-tenant admin state regardless of sibling-spec residue. A prior spec
+         * in the shard (e.g. `admin/customers`) can leave a customer linked to a test-tenant admin
+         * user; that `customers_user_id_foreign` FK blocks the `users` delete below. Clear the
+         * referencing customers first so this setup never depends on another spec cleaning up.
+         */
+        await conn
+            .from("customers")
+            .where("tenant_id", TEST_TENANT_ID)
+            .whereIn("user_id", conn.from("users").where("tenant_id", TEST_TENANT_ID).where("role", "admin").select("id"))
+            .delete();
+        await conn.from("users").where("tenant_id", TEST_TENANT_ID).where("role", "admin").delete();
     });
 
     test("login mints a pat_ token for a valid operator", async ({ client, assert }) => {
