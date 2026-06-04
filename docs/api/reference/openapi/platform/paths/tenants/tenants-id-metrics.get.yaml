@@ -1,0 +1,36 @@
+operationId: platformTenantMetrics
+summary: Native per-tenant metrics
+description: Headline KPIs plus a revenue/orders/new-customers time series over the requested range.
+tags: [Platform Metrics]
+security:
+    - PlatformAuth: []
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    - name: range
+      in: query
+      required: false
+      schema: { type: string, enum: ["7d", "30d", "90d", "12m"], default: "30d" }
+    - name: unit
+      in: query
+      required: false
+      description: Override the series bucket (defaults derive from range).
+      schema: { type: string, enum: [day, week, month] }
+responses:
+    "200":
+        description: Tenant metrics.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformTenantMetrics.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

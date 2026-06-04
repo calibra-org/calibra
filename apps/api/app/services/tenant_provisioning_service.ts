@@ -51,6 +51,9 @@ export interface ProvisionInput {
     ownerPassword?: string | null;
     /** Initial branding overrides (palette / tagline / logo). Unset tokens fall back to the defaults. */
     branding?: BrandingSettingsInput;
+    /** Storefront locale + initial template. Default to Persian / `default` when unset. */
+    primaryLocale?: string;
+    templateKey?: string;
     /** Hostname suffix for the auto-created subdomain. Defaults to `shops.calibra.app`. */
     domainSuffix?: string;
 }
@@ -102,9 +105,9 @@ export class TenantProvisioningService {
                     status: "active",
                     plan_id: plan.id,
                     db_tier: plan.db_tier,
-                    template_key: "default",
+                    template_key: input.templateKey ?? "default",
                     currency_code: input.currencyCode,
-                    primary_locale: "fa",
+                    primary_locale: input.primaryLocale ?? "fa",
                     created_at: now,
                     updated_at: now,
                 })

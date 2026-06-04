@@ -56,6 +56,49 @@ paths:
     /api/v1/platform/auth/login:
         post:
             $ref: "./platform/paths/auth/login.post.yaml"
+    /api/v1/platform/overview:
+        get:
+            $ref: "./platform/paths/overview/overview.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/platform/tenants:
+        get:
+            $ref: "./platform/paths/tenants/tenants.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./platform/paths/tenants/tenants.post.yaml"
+    /api/v1/platform/tenants/{id}:
+        get:
+            $ref: "./platform/paths/tenants/tenants-id.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./platform/paths/tenants/tenants-id.patch.yaml"
     /api/v1/platform/tenants/{id}/impersonate:
         post:
             $ref: "./platform/paths/tenants/tenants-id-impersonate.post.yaml"
+    /api/v1/platform/tenants/{id}/metrics:
+        get:
+            $ref: "./platform/paths/tenants/tenants-id-metrics.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/platform/tenants/{id}/domains:
+        post:
+            $ref: "./platform/paths/tenants/tenants-id-domains.post.yaml"
+    /api/v1/platform/tenants/{id}/domains/{domainId}:
+        delete:
+            $ref: "./platform/paths/tenants/tenants-id-domains-domainId.delete.yaml"
+    /api/v1/platform/tenants/{id}/domains/{domainId}/recheck:
+        post:
+            $ref: "./platform/paths/tenants/tenants-id-domains-domainId-recheck.post.yaml"
+    /api/v1/platform/plans:
+        get:
+            $ref: "./platform/paths/plans/plans.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./platform/paths/plans/plans.post.yaml"
+    /api/v1/platform/plans/{id}:
+        patch:
+            $ref: "./platform/paths/plans/plans-id.patch.yaml"

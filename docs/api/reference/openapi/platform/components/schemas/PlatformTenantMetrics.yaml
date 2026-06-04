@@ -1,0 +1,33 @@
+title: PlatformTenantMetrics
+description: Native per-tenant business metrics — headline KPIs plus a revenue/orders/new-customers
+    time series over the requested range. Amounts are in the tenant's currency minor units.
+type: object
+properties:
+    range:
+        type: object
+        properties:
+            from: { type: string, format: date-time }
+            to: { type: string, format: date-time }
+            unit: { type: string, enum: [day, week, month] }
+        required: [from, to, unit]
+    currency_code: { type: string }
+    kpis:
+        type: object
+        properties:
+            revenue: { $ref: "../../../common/components/schemas/Money.yaml" }
+            orders: { type: integer }
+            customers_new: { type: integer }
+            customers_total: { type: integer }
+            storage_bytes: { type: integer, format: int64 }
+        required: [revenue, orders, customers_new, customers_total, storage_bytes]
+    series:
+        type: array
+        items:
+            type: object
+            properties:
+                day: { type: string, format: date }
+                revenue: { $ref: "../../../common/components/schemas/Money.yaml" }
+                orders: { type: integer }
+                new_customers: { type: integer }
+            required: [day, revenue, orders, new_customers]
+required: [range, currency_code, kpis, series]

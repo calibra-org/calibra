@@ -1,0 +1,36 @@
+operationId: platformTenantsIndex
+summary: List shops (fleet)
+description: Paginated fleet list with per-tenant 30-day headline KPIs. Supports the TableView
+    grammar (`filter[]=status:eq:active`, `filter[]=plan_id:eq:2`, `sort[]=created_at:desc`) plus a
+    free-text `q` search across slug + name.
+tags: [Platform Tenants]
+security:
+    - PlatformAuth: []
+parameters:
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
+    - name: q
+      in: query
+      required: false
+      description: Free-text search across slug + name.
+      schema: { type: string, maxLength: 120 }
+responses:
+    "200":
+        description: Paginated fleet list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/PlatformTenantListItem.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

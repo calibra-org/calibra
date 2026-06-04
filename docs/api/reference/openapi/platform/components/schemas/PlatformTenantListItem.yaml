@@ -1,0 +1,28 @@
+title: PlatformTenantListItem
+description: One row of the control-plane fleet list — a shop's profile plus 30-day headline KPIs
+    joined from the order/media tables.
+type: object
+properties:
+    id: { type: integer }
+    slug: { type: string, examples: ["aurora"] }
+    name: { type: string }
+    status: { type: string, enum: [active, suspended, archived] }
+    db_tier: { type: string, enum: [shared, dedicated] }
+    currency_code: { type: string, examples: ["IRR"] }
+    primary_domain: { type: [string, "null"], examples: ["aurora.shops.calibra.app"] }
+    plan:
+        type: object
+        properties:
+            id: { type: integer }
+            key: { type: string }
+            name: { type: string }
+        required: [id, key, name]
+    created_at: { type: string, format: date-time }
+    kpis:
+        type: object
+        properties:
+            orders_30d: { type: integer }
+            revenue_30d: { $ref: "../../../common/components/schemas/Money.yaml" }
+            storage_bytes: { type: integer, format: int64 }
+        required: [orders_30d, revenue_30d, storage_bytes]
+required: [id, slug, name, status, db_tier, currency_code, primary_domain, plan, created_at, kpis]

@@ -1,0 +1,40 @@
+operationId: platformTenantsUpdate
+summary: Update a shop
+description: Update name / plan / lifecycle status (suspend/activate/archive) / template / currency.
+    Changing the plan also updates the tenant's db_tier.
+tags: [Platform Tenants]
+security:
+    - PlatformAuth: []
+parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: integer }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    name: { type: string, minLength: 1, maxLength: 120 }
+                    plan_key: { type: string }
+                    status: { type: string, enum: [active, suspended, archived] }
+                    template_key: { type: string }
+                    currency_code: { type: string }
+responses:
+    "200":
+        description: Updated shop detail.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformTenantDetail.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"
