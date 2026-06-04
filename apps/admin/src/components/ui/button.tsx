@@ -1,7 +1,6 @@
 /**
- * Backwards-compat re-export shim. The flat-file primitive moved to a folder in prompt 02
- * (`./button/index.tsx`). Existing view imports keep working — direct consumers can update
- * the import path at their leisure. This shim is removed in a follow-up cleanup once every
- * call site moves over.
+ * Re-export shim → `@calibra/panel-kit`. The primitive moved into the shared operator-panel
+ * package (one set of token-driven base primitives for both `apps/admin` and `apps/platform`).
+ * Existing `#/components/ui/<name>` imports keep resolving through this file unchanged.
  */
-export * from "./button/index";
+export * from "@calibra/panel-kit/button";
