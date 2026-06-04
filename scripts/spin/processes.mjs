@@ -8,7 +8,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 import { log, red, step } from "./log.mjs";
 import { metaPath } from "./meta.mjs";
-import { requirePort } from "./ports.mjs";
+import { effectivePort, requirePort } from "./ports.mjs";
 import { isPortListening } from "./probes.mjs";
 
 /**
@@ -59,6 +59,7 @@ export async function startServers(meta, opts) {
         `admin.${meta.slug}.spin.localhost`,
         `web.${meta.slug}.spin.localhost`,
         `api.${meta.slug}.spin.localhost`,
+        `console.${meta.slug}.spin.localhost`,
     ].join(",");
 
     await startServer({
@@ -84,6 +85,27 @@ export async function startServers(meta, opts) {
             env: {
                 ...process.env,
                 PORT: String(meta.ports.web),
+                NEXT_DEV_ALLOWED_ORIGINS: nextDevAllowedOrigins,
+            },
+        });
+    }
+
+    /**
+     * Control-plane console (Phase 5). Guarded on the `platform` port: metas allocated before the
+     * role lack it, so a legacy spin simply doesn't start the console (the role is appended last in
+     * `ROLES`, so every other offset is unchanged).
+     */
+    const platformPort = effectivePort(meta, "platform");
+    if (platformPort !== null) {
+        await startServer({
+            name: "platform",
+            meta,
+            cmd: "pnpm",
+            args: ["exec", "next", "dev", "-p", String(platformPort)],
+            cwd: join(meta.worktreePath, "apps/platform"),
+            env: {
+                ...process.env,
+                PORT: String(platformPort),
                 NEXT_DEV_ALLOWED_ORIGINS: nextDevAllowedOrigins,
             },
         });
@@ -141,10 +163,12 @@ export async function startServer(input) {
  * @param {{ withWeb: boolean }} opts
  */
 export async function waitForServersReady(meta, opts) {
+    const platformPort = effectivePort(meta, "platform");
     const targets = [
         { name: "api", port: meta.ports.api },
         { name: "admin", port: meta.ports.admin },
         ...(opts.withWeb ? [{ name: "web", port: meta.ports.web }] : []),
+        ...(platformPort !== null ? [{ name: "platform", port: platformPort }] : []),
     ];
     for (const target of targets) {
         const deadline = Date.now() + 60_000;
@@ -177,7 +201,7 @@ export async function waitForServersReady(meta, opts) {
  * @param {import("./meta.mjs").SpinMeta} meta
  */
 export async function killTrackedProcesses(meta) {
-    for (const name of ["api", "admin", "queue", "web", "agent"]) {
+    for (const name of ["api", "admin", "queue", "web", "agent", "platform"]) {
         const pidPath = join(meta.worktreePath, `.spin/${name}.pid`);
         if (!existsSync(pidPath)) continue;
         const pid = Number(await readFile(pidPath, "utf8"));

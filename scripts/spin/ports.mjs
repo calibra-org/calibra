@@ -17,11 +17,16 @@ export const PORT_BASE = 13000;
  * single exception is `tempo`: its offset publishes the OTLP/HTTP receiver (4318) so the api
  * on the host can send traces; the HTTP API (3200) still stays container-only and is fronted
  * by Caddy. Offset +20 is the `spinAgent` — the homepage + control plane process started by
- * `startServers` and fronted by Caddy at the bare `<slug>.spin.localhost` host.
+ * `startServers` and fronted by Caddy at the bare `<slug>.spin.localhost` host. Offset +21 is the
+ * `platform` control-plane app (Phase 5), fronted by Caddy at `console.<slug>.spin.localhost`.
+ *
+ * `platform` is appended last so offsets 0–20 stay fixed — old `.claude/spin/<slug>.json` metas
+ * (allocated before the platform role) keep pointing at the right containers; they simply lack a
+ * `platform` port and `startServers` skips it for them.
  */
-export const PORTS_PER_SLOT = 21;
-/** Total slots before we wrap around. 47 × 21 = 987 < 1000, so 13xxx still fits cleanly. */
-export const TOTAL_SLOTS = 47;
+export const PORTS_PER_SLOT = 22;
+/** Total slots before we wrap around. 45 × 22 = 990 < 1000, so 13xxx still fits cleanly. */
+export const TOTAL_SLOTS = 45;
 
 export const ROLES = /** @type {const} */ ([
     "db",
@@ -45,6 +50,7 @@ export const ROLES = /** @type {const} */ ([
     "glitchtip",
     "uptimeKuma",
     "spinAgent",
+    "platform",
 ]);
 
 /**
@@ -145,6 +151,7 @@ export async function allocatePorts(slug) {
             glitchtip: base + 18,
             uptimeKuma: base + 19,
             spinAgent: base + 20,
+            platform: base + 21,
         };
         if (await allPortsFree(ports)) return ports;
     }
