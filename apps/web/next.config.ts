@@ -29,6 +29,8 @@ const nextConfig: NextConfig = {
         "*.*.spin.localhost",
         /** Dev shop subdomains served at `<slug>.shops.localhost:<port>` (RULE A). */
         "*.shops.localhost",
+        /** Per-tenant storefront via the spin's Caddy: `<slug>.web.<spin>.spin.localhost`. */
+        "*.web.*.spin.localhost",
         ...(process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(",")
             .map((s) => s.trim())
             .filter(Boolean) ?? []),

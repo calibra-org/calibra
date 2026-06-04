@@ -95,6 +95,13 @@ web.${slug}.spin.localhost {
     reverse_proxy host.docker.internal:${webPort}
 }
 
+# Per-tenant storefront — prod parity for a shop's own domain. <tenant>.web.<spin>.spin.localhost
+# loads that shop over TLS; the bare web.<spin> apex stays the platform page.
+*.web.${slug}.spin.localhost {
+    tls internal
+    reverse_proxy host.docker.internal:${webPort}
+}
+
 mail.${slug}.spin.localhost {
     tls internal
     reverse_proxy mailpit:8025
