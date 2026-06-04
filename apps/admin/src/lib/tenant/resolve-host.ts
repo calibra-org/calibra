@@ -28,6 +28,17 @@ export function resolveHost(rawHost: string | null | undefined, root: string = A
     if (host === "" || host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1") {
         return { kind: "platform" };
     }
+    /**
+     * Dev convenience: the per-spin Caddy fronts the admin at `admin.<spin>.spin.localhost`, and a
+     * matching wildcard route serves per-tenant hosts `<slug>.admin.<spin>.spin.localhost` over TLS
+     * — prod parity for `<slug>.admin.calibra.app`. Resolve the leading label as the tenant here,
+     * before the generic `.spin.localhost` → platform fallback below (which still catches the bare
+     * `admin.<spin>` apex and every infra host).
+     */
+    const spinAdmin = host.match(/^([a-z0-9]+(?:-[a-z0-9]+)*)\.admin\..+\.spin\.localhost$/);
+    if (spinAdmin) {
+        return { kind: "subdomain", slug: spinAdmin[1]! };
+    }
     /** The apex of the admin root, and the per-checkout spin infra hosts, are not shops. */
     if (host === root || host.endsWith(".spin.localhost")) {
         return { kind: "platform" };

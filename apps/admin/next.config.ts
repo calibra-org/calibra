@@ -31,6 +31,8 @@ const nextConfig: NextConfig = {
          * `*.admin.localhost` catches `aurora.admin.localhost` / `mehr.admin.localhost`.
          */
         "*.admin.localhost",
+        /** Per-tenant admin via the spin's Caddy: `<tenant>.admin.<spin>.spin.localhost`. */
+        "*.admin.*.spin.localhost",
         ...(process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(",")
             .map((s) => s.trim())
             .filter(Boolean) ?? []),
