@@ -227,6 +227,9 @@ importers:
       '@base-ui/react':
         specifier: 'catalog:'
         version: 1.4.1(@date-fns/tz@1.5.0)(@types/react@19.2.14)(date-fns@4.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@calibra/panel-kit':
+        specifier: workspace:*
+        version: link:../../packages/panel-kit
       '@calibra/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
@@ -532,6 +535,9 @@ importers:
       '@base-ui/react':
         specifier: 'catalog:'
         version: 1.4.1(@date-fns/tz@1.5.0)(@types/react@19.2.14)(date-fns@4.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@calibra/panel-kit':
+        specifier: workspace:*
+        version: link:../../packages/panel-kit
       '@calibra/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
@@ -684,6 +690,55 @@ importers:
       http-server:
         specifier: ^14.1.1
         version: 14.1.1
+
+  packages/panel-kit:
+    dependencies:
+      '@base-ui/react':
+        specifier: 'catalog:'
+        version: 1.4.1(@date-fns/tz@1.5.0)(@types/react@19.2.14)(date-fns@4.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@calibra/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@radix-ui/react-slot':
+        specifier: 'catalog:'
+        version: 1.2.4(@types/react@19.2.14)(react@19.2.4)
+      class-variance-authority:
+        specifier: 'catalog:'
+        version: 0.7.1
+      lucide-react:
+        specifier: 'catalog:'
+        version: 0.469.0(react@19.2.4)
+      next-intl:
+        specifier: 'catalog:'
+        version: 4.12.0(next@16.2.3(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@6.0.3)
+      radix-ui:
+        specifier: 'catalog:'
+        version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.4
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.4(react@19.2.4)
+      tailwind-variants:
+        specifier: 'catalog:'
+        version: 1.0.0(tailwindcss@4.2.2)
+    devDependencies:
+      '@calibra/typescript-config':
+        specifier: workspace:*
+        version: link:../../toolings/typescript
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.5.0
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.3(@types/react@19.2.14)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
 
   packages/sdk:
     dependencies:
