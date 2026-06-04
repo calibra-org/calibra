@@ -158,10 +158,15 @@ export function useSetTenantStatus() {
     });
 }
 
-/** Open an impersonation grant in a new admin tab (shared by rows, detail header, and the palette). */
+/**
+ * Open an impersonation grant in a new admin tab (shared by rows, detail header, and the palette).
+ * Targets the admin's `/api/impersonate` hand-off route, which exchanges the token for an
+ * `admin_session` cookie and redirects into the dashboard — so the operator lands logged-in, not
+ * on the login screen.
+ */
 export function openImpersonationTab(grant: { token: { value: string }; admin_url: string }): void {
-    const url = new URL(grant.admin_url);
-    url.searchParams.set("__imp", grant.token.value);
+    const url = new URL("/api/impersonate", grant.admin_url);
+    url.searchParams.set("token", grant.token.value);
     window.open(url.toString(), "_blank", "noopener");
 }
 
