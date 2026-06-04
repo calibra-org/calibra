@@ -1,0 +1,48 @@
+{
+    "name": "@calibra/platform",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "next build",
+        "dev": "next dev -p 3002",
+        "start": "next start -p 3002",
+        "test": "echo 'no unit tests' && exit 0",
+        "test:e2e": "playwright test",
+        "test:e2e:headed": "playwright test --headed",
+        "test:e2e:report": "playwright show-report",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@base-ui/react": "catalog:",
+        "@calibra/sdk": "workspace:*",
+        "@calibra/shared": "workspace:*",
+        "@hookform/resolvers": "catalog:",
+        "@radix-ui/react-slot": "catalog:",
+        "@tanstack/react-query": "catalog:",
+        "@tanstack/react-table": "catalog:",
+        "lucide-react": "catalog:",
+        "next": "catalog:",
+        "next-intl": "catalog:",
+        "radix-ui": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "react-hook-form": "catalog:",
+        "recharts": "catalog:",
+        "tailwind-variants": "catalog:",
+        "tw-animate-css": "catalog:",
+        "zod": "catalog:"
+    },
+    "devDependencies": {
+        "@calibra/typescript-config": "workspace:*",
+        "@playwright/test": "catalog:",
+        "@tailwindcss/postcss": "catalog:",
+        "@tanstack/react-query-devtools": "catalog:",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "start-server-and-test": "catalog:",
+        "tailwindcss": "catalog:",
+        "typescript": "catalog:"
+    }
+}
