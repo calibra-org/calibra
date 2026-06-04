@@ -2,6 +2,8 @@ import testUtils from "@adonisjs/core/services/test_utils";
 import db from "@adonisjs/lucid/services/db";
 import { test } from "@japa/runner";
 
+import { listCountiesForProvince } from "#services/iran_county_resolver";
+
 /**
  * The multi-tenant demo seed (`MainSeeder`) gives each demo tenant its own small catalog rather than
  * one large shared one — "one big, two small" — to exercise per-tenant isolation and the
@@ -64,6 +66,27 @@ test.group("Demo seeder (per-tenant catalog)", (group) => {
         const totalRows = (await db.from("products").count("* as count")) as Array<{ count: string | number }>;
         assert.equal(Number(totalRows[0]?.count), perTenantSum);
         assert.equal(perTenantSum, 19);
+    });
+
+    test("every seeded IR address city is a real county of its region's province", async ({ assert }) => {
+        /**
+         * Guards the system-vs-mock seed bug: the mock seed used to pair a random province
+         * `region_id` with a random city from a flat list, so a Tehran-province order surfaced under
+         * cities from other provinces (کرج/اردبیل/…). The seed now samples the city from the
+         * **system** county data of that province (`listCountiesForProvince`), so every IR address's
+         * `(region_id, city)` must agree.
+         */
+        const rows = (await db
+            .from("order_addresses as oa")
+            .join("regions as r", "r.id", "oa.region_id")
+            .where("oa.country", "IR")
+            .whereNotNull("oa.region_id")
+            .select("oa.city as city", "r.code as code")) as Array<{ city: string; code: string }>;
+        assert.isAbove(rows.length, 0, "expected seeded IR order addresses");
+        for (const row of rows) {
+            const counties = listCountiesForProvince(String(row.code)).map((c) => c.fa);
+            assert.include(counties, String(row.city), `city "${row.city}" must be a county of province ${row.code}`);
+        }
     });
 
     test("re-running the seeder does not duplicate a tenant's catalog", async ({ assert }) => {
