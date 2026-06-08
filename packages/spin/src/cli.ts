@@ -12,6 +12,7 @@ import { registerSeed } from "./commands/seed";
 import { registerStart } from "./commands/start";
 import { registerStatus } from "./commands/status";
 import { registerStop } from "./commands/stop";
+import { registerTerm } from "./commands/term";
 import { registerUrl } from "./commands/url";
 
 /**
@@ -63,6 +64,7 @@ registerUrl(program);
 registerMetrics(program);
 registerAlerts(program);
 registerSeed(program);
+registerTerm(program);
 
 /**
  * Bare-slug alias: `pnpm spin <slug>` means `pnpm spin start <slug>`. If the first positional isn't
