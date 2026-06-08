@@ -1,10 +1,18 @@
 #!/usr/bin/env node
 import { createRequire } from "node:module";
 import { Command } from "commander";
+import { registerAlerts } from "./commands/alerts";
+import { registerDoctor } from "./commands/doctor";
+import { registerList } from "./commands/list";
 import { registerLocal } from "./commands/local";
+import { registerLogs } from "./commands/logs";
+import { registerMetrics } from "./commands/metrics";
 import { registerPr } from "./commands/pr";
+import { registerSeed } from "./commands/seed";
 import { registerStart } from "./commands/start";
+import { registerStatus } from "./commands/status";
 import { registerStop } from "./commands/stop";
+import { registerUrl } from "./commands/url";
 
 /**
  * `@calibra/spin` CLI root. This module runs `parseAsync` on import, so both the `bin/spin` shim
@@ -47,6 +55,14 @@ registerStart(program);
 registerLocal(program);
 registerStop(program);
 registerPr(program);
+registerList(program);
+registerDoctor(program);
+registerStatus(program);
+registerLogs(program);
+registerUrl(program);
+registerMetrics(program);
+registerAlerts(program);
+registerSeed(program);
 
 /**
  * Bare-slug alias: `pnpm spin <slug>` means `pnpm spin start <slug>`. If the first positional isn't

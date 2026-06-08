@@ -2,7 +2,6 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "commander";
-import { log } from "../log";
 import { buildComposeOptions } from "../core/compose-assembly";
 import { SPIN_ENV_HEADER_MARKER } from "../core/env-render";
 import { printHandoffCard } from "../core/handoff";
@@ -10,6 +9,7 @@ import { loadOrInitLocalMeta } from "../core/meta";
 import { runPipeline } from "../core/pipeline";
 import { pipelineSteps } from "../core/pipeline-steps";
 import { LOCAL_SLUG } from "../core/slug";
+import { runDoctor } from "./doctor";
 import { printStartHeader } from "./start";
 import { runStop } from "./stop";
 
@@ -66,8 +66,7 @@ export function registerLocal(program: Command): void {
                 /** Never remove the worktree for `local` — it's the main checkout. */
                 await runStop(LOCAL_SLUG, { purge: Boolean(opts.purge), remove: false, force: false });
             } else if (action === "status" || action === "doctor") {
-                /** Wired to the diagnostics command in Phase 5. */
-                log.info(`run \`pnpm spin doctor ${LOCAL_SLUG}\` once diagnostics land`);
+                await runDoctor(LOCAL_SLUG, { json: Boolean(opts.json) });
             } else {
                 await localStart(opts);
             }

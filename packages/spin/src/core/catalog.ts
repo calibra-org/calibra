@@ -243,7 +243,7 @@ export const SERVICES: ServiceDef[] = [
         composeService: "uptimekuma",
         portRole: "uptimeKuma",
         caddy: { subdomain: "uptime", upstream: { service: "uptimekuma", port: 3001 } },
-        health: { kind: "http", path: "/", viaCaddy: true },
+        health: { kind: "http", path: "/", acceptStatuses: [302], viaCaddy: true },
     },
     {
         id: "pgadmin",
