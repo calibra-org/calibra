@@ -68,15 +68,21 @@ export async function startHostServers(meta: SpinMeta, opts: { withWeb: boolean 
     );
 }
 
-/** Block until the app ports answer; warn (non-fatal) if the portless queue worker died. */
+/**
+ * Block until the app ports answer. `api` + `admin` are fatal (the primary surfaces — if they
+ * don't come up the spin is unusable). `web` + `platform` are **non-fatal**: a single secondary app
+ * failing (e.g. a drifted `node_modules` missing its `next` bin — run `pnpm install`) shouldn't
+ * discard an otherwise-healthy stack, so it warns loudly and continues. The portless queue worker
+ * is checked by pid and also non-fatal.
+ */
 export async function waitForServersReady(meta: SpinMeta, opts: { withWeb: boolean }): Promise<void> {
-    const targets = [
-        { name: "api", port: meta.ports.api },
-        { name: "admin", port: meta.ports.admin },
+    const targets: Array<{ name: string; port: number; fatal: boolean }> = [
+        { name: "api", port: meta.ports.api, fatal: true },
+        { name: "admin", port: meta.ports.admin, fatal: true },
     ];
-    if (opts.withWeb) targets.push({ name: "web", port: meta.ports.web });
+    if (opts.withWeb) targets.push({ name: "web", port: meta.ports.web, fatal: false });
     const platformPort = effectivePort(meta, "platform");
-    if (platformPort !== null) targets.push({ name: "platform", port: platformPort });
+    if (platformPort !== null) targets.push({ name: "platform", port: platformPort, fatal: false });
 
     for (const target of targets) {
         const deadline = Date.now() + 60_000;
@@ -89,9 +95,10 @@ export async function waitForServersReady(meta: SpinMeta, opts: { withWeb: boole
             }
             await sleep(500);
         }
-        if (!ready) {
-            throw new Error(`${target.name} did not start within 60s — check .spin/logs/${target.name}.log`);
-        }
+        if (ready) continue;
+        const hint = `${target.name} did not start within 60s — check .spin/logs/${target.name}.log (if it's a missing binary, run \`pnpm install\`)`;
+        if (target.fatal) throw new Error(hint);
+        log.warn(hint);
     }
 
     await sleep(1500);

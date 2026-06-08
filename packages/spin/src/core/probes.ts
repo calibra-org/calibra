@@ -66,14 +66,16 @@ export async function probeViaCaddy(
 
 /**
  * Probe a per-tenant host (`<tenant>.<app>.<slug>.spin.localhost`) through Caddy. Catches
- * multi-tenant cert/route/host-resolution failure that an apex-only probe would miss.
+ * multi-tenant cert/route/host-resolution failure that an apex-only probe would miss. Any
+ * **2xx or 3xx** counts as reachable — the app commonly answers a tenant route with a redirect
+ * (next-intl locale, auth), which still proves the cert + Host resolution + routing all work; only
+ * a TLS-handshake failure (Caddy couldn't mint the leaf), a connection error, or a 4xx/5xx is down.
  */
 export async function probeTenantViaCaddy(
     meta: SpinMeta,
     tenantSlug: string,
     app: "admin" | "web",
     path = "/",
-    acceptStatus: number[] = [200],
 ): Promise<boolean> {
     const caddyHttps = requirePort(meta, "caddyHttps");
     const host = `${tenantSlug}.${app}.${meta.slug}.spin.localhost`;
@@ -83,7 +85,7 @@ export async function probeTenantViaCaddy(
         `${host}:${caddyHttps}:127.0.0.1`,
         `https://${host}:${caddyHttps}${path}`,
     ]);
-    return acceptStatus.includes(status);
+    return status >= 200 && status < 400;
 }
 
 /** Block until a TCP port answers, or throw with a clear "did not come up" error. */

@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { DEMO_TENANTS, SERVICES, type ServiceDef } from "./catalog";
 import { type ComposePsRow, composePs } from "./compose";
 import { buildComposeOptions } from "./compose-assembly";
-import { isPidAlive, readPid } from "./host-process";
+import { isPidAlive, readPid, readSpawnManifest } from "./host-process";
 import { effectivePort, isLegacyDevUi } from "./ports";
 import { isPortListening, probeHttp, probeTenantViaCaddy, probeViaCaddy } from "./probes";
 import { describeRunStep, runActivity } from "./run-state";
@@ -56,6 +56,16 @@ async function serviceStatus(
     psByService: Map<string, ComposePsRow>,
 ): Promise<ServiceStatus> {
     const port = service.portRole ? effectivePort(meta, service.portRole) : null;
+
+    /**
+     * A host app with no spawn manifest was never started for this spin (e.g. `web` without
+     * `--with-web`) — report "unknown" rather than "down" so doctor doesn't fail on an app the
+     * operator deliberately left off. Once started, the manifest persists and a dead app reads
+     * "down" correctly.
+     */
+    if (service.kind === "host" && (await readSpawnManifest(meta.worktreePath, service.id)) === null) {
+        return "unknown";
+    }
 
     if (service.health.kind === "tcp") {
         if (port === null) return "unknown";
