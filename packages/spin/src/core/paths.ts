@@ -83,6 +83,9 @@ export const TEMPLATES_DIR = join(PACKAGE_ROOT, "templates");
 /** Shipped static config (the services catalog lives in code; this is for any data assets). */
 export const CONFIG_DIR = join(PACKAGE_ROOT, "config");
 
+/** The built panel server entry, spawned as a host process by the pipeline. */
+export const AGENT_SERVER_ENTRY = join(PACKAGE_ROOT, "dist/agent/server.js");
+
 /** Absolute path to a spin's meta file. */
 export function metaPath(slug: string): string {
     return join(STATE_DIR, `${slug}.json`);
