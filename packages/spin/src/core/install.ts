@@ -20,14 +20,13 @@ export async function ensureInstall(meta: SpinMeta): Promise<void> {
 }
 
 /**
- * Build `@calibra/sdk` if its `dist/` is missing. The Next apps import the SDK's built output —
- * `getBaseUrl()` throws (SSR 500) if it isn't there — so this must run before the apps boot.
+ * (Re)build `@calibra/sdk` before the apps boot. The Next apps import the SDK's built output, so a
+ * missing dist 500s on SSR — but a **stale** dist is worse and silent: a dist built before a client
+ * was added (e.g. the Phase-5 `platform` client) leaves `api.platform` undefined, so the platform
+ * login throws a generic "sign-in failed". The build is fast (tsdown), so we always rebuild rather
+ * than skip on existence — correctness beats the few seconds saved.
  */
 export async function ensureSdkBuild(meta: SpinMeta): Promise<void> {
-    if (existsSync(join(meta.worktreePath, "packages/sdk/dist"))) {
-        log.skip("sdk build (dist present)");
-        return;
-    }
     log.step("sdk: pnpm --filter @calibra/sdk build");
     await run("pnpm", ["--filter", "@calibra/sdk", "build"], { cwd: meta.worktreePath });
 }
