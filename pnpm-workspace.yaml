@@ -32,9 +32,11 @@ catalogs:
         "@tanstack/react-table": ^8.21.3
         "@tanstack/react-virtual": ^3.13.4
         idb-keyval: ^6.2.2
+        ink: ^6.8.0
         "@vitest/coverage-v8": ^4.1.5
         class-variance-authority: 0.7.1
         clsx: 2.1.1
+        commander: ^14.0.3
         "@mohammadxali/jalaali-js": 2.0.0-preview.0
         "@types/d3-scale": ^4.0.8
         "@types/d3-scale-chromatic": ^3.1.0

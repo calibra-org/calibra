@@ -69,7 +69,7 @@ db-shell:
 #
 # `just spin` brings up the FULL stack on the current checkout — no worktree, no branch,
 # no PR. For worktree-based per-task spins (with PRs), use `pnpm spin <slug>` directly;
-# see scripts/spin.md and the spin-task skill.
+# see packages/spin/README.md and the spin-task skill.
 
 # Bring up the full prod-parity stack (caddy + observability + meilisearch + …) in-place.
 spin *args:
@@ -85,7 +85,7 @@ spin-status:
 
 # JSON variant of spin-status — pipe into jq for scripted health checks.
 spin-status-json:
-    @pnpm spin doctor local --json
+    @pnpm -s spin doctor local --json
 
 # Inventory every persisted spin (worktree-based AND `local`), with status + ports.
 spin-list:
@@ -93,23 +93,23 @@ spin-list:
 
 # JSON variant of spin-list — pipe into jq.
 spin-list-json:
-    @pnpm spin list --json
+    @pnpm -s spin list --json
 
 # Print one URL from the in-place spin to stdout. Default service: dashboard.
 spin-url service='dashboard':
-    @pnpm spin url local {{ service }}
+    @pnpm -s spin url local {{ service }}
 
 # Print the absolute log path for the in-place spin. Default stream: api.ndjson.
 spin-logs stream='api.ndjson':
-    @pnpm spin logs local {{ stream }}
+    @pnpm -s spin logs local {{ stream }}
 
 # curl the in-place spin's /metrics endpoint → stdout (pipe into grep / awk).
 spin-metrics:
-    @pnpm spin metrics local
+    @pnpm -s spin metrics local
 
 # Query the in-place spin's Prometheus /api/v1/alerts → stdout (pipe into jq).
 spin-alerts:
-    @pnpm spin alerts local
+    @pnpm -s spin alerts local
 
 # === dev servers (host) ======================================================
 

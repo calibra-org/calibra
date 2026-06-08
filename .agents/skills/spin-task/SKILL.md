@@ -7,7 +7,7 @@ description: Use when the user wants a fresh isolated dev environment for a new 
 
 One-shot bootstrap of an isolated worktree + docker stack + seeded DB + draft PR via `pnpm spin`. The operator describes the work; you turn that description into a slug, run the script, and hand them the URLs.
 
-The mechanics live in [`scripts/spin.mjs`](../../../scripts/spin.mjs); read [`scripts/spin.md`](../../../scripts/spin.md) if anything below is unclear. This skill is the natural-language gateway in front of that script.
+The mechanics live in [`scripts/spin.mjs`](../../../scripts/spin.mjs); read [`packages/spin/README.md`](../../../packages/spin/README.md) if anything below is unclear. This skill is the natural-language gateway in front of that script.
 
 ## Trigger
 

@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
  *
  * NOTE: tests assume the bulk seed has run (`admin@bulk.calibra.dev` / `Passw0rd1!`). The
  * webServer in playwright.config wires that up automatically in dev; CI runs against a seeded
- * preview spin per scripts/spin.md.
+ * preview spin per packages/spin/README.md.
  */
 
 async function login(page: import("@playwright/test").Page) {
