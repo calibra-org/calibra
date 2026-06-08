@@ -1,12 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-    hashToSlot,
-    layoutFromBase,
-    PORT_BASE,
-    PORTS_PER_SLOT,
-    ROLES,
-    TOTAL_SLOTS,
-} from "../src/core/ports";
+
+import { hashToSlot, layoutFromBase, PORT_BASE, PORTS_PER_SLOT, ROLES, TOTAL_SLOTS } from "../src/core/ports";
 
 /**
  * The port layout is a frozen, append-only contract: existing `.claude/spin/<slug>.json` metas

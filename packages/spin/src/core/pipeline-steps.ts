@@ -2,12 +2,12 @@ import { composeUp } from "./compose";
 import { renderEdgeAndObsConfig, renderEnvFiles } from "./env-render";
 import { ensureInstall, ensureSdkBuild } from "./install";
 import { ensureMigrationsAndSeed } from "./migrate";
-import type { PipelineContext, PipelineStep } from "./pipeline";
 import { effectivePort, requirePort } from "./ports";
-import { isPortListening, waitForCaddyHttp, waitForHttp, waitForPort, waitForPostgresReady } from "./probes";
 import { ensureDraftPr } from "./pr";
+import { isPortListening, waitForCaddyHttp, waitForHttp, waitForPort, waitForPostgresReady } from "./probes";
 import { startHostServers, waitForServersReady } from "./servers";
 import { ensureWorktree, worktreeExists } from "./worktree";
+import type { PipelineContext, PipelineStep } from "./pipeline";
 
 /**
  * Whether the infra containers are already up — used to skip the compose-up + readiness-wait steps

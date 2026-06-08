@@ -1,7 +1,8 @@
 import type { Command } from "commander";
-import { log } from "../log";
+
 import { readMetaOrFail } from "../core/meta";
 import { ensureDraftPr } from "../core/pr";
+import { log } from "../log";
 
 export function registerPr(program: Command): void {
     program

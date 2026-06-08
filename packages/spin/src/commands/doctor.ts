@@ -1,9 +1,10 @@
 import type { Command } from "commander";
+
 import { c } from "../colors";
-import { setJsonMode } from "../log";
 import { readMetaOrFail } from "../core/meta";
 import { buildSnapshot } from "../core/snapshot";
 import { type SandboxSnapshot, snapshotHasFailure } from "../core/snapshot-types";
+import { setJsonMode } from "../log";
 
 /**
  * Full probed status of one spin: every service + each seeded tenant's admin reachability + the
@@ -36,10 +37,14 @@ function renderDoctor(s: SandboxSnapshot): void {
     process.stdout.write(`  dashboard    ${s.dashboardUrl}\n`);
     if (s.run.kind !== "none") {
         const colour = s.run.kind === "failed" ? c.red : c.yellow;
-        process.stdout.write(`  run          ${colour(s.run.kind)}${s.run.step ? ` — ${s.run.step}` : ""}${s.run.error ? ` (${s.run.error})` : ""}\n`);
+        process.stdout.write(
+            `  run          ${colour(s.run.kind)}${s.run.step ? ` — ${s.run.step}` : ""}${s.run.error ? ` (${s.run.error})` : ""}\n`,
+        );
     }
     for (const service of s.services) {
-        process.stdout.write(`  ${dot(service.status)} ${service.id.padEnd(16)} ${service.url ?? ""}${service.note ? c.dim(` ${service.note}`) : ""}\n`);
+        process.stdout.write(
+            `  ${dot(service.status)} ${service.id.padEnd(16)} ${service.url ?? ""}${service.note ? c.dim(` ${service.note}`) : ""}\n`,
+        );
     }
     if (s.tenants.length > 0) {
         process.stdout.write(`  ${c.bold("tenants")}\n`);

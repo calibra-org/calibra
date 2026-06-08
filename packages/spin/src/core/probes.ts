@@ -1,10 +1,11 @@
 import { connect } from "node:net";
 import { setTimeout as sleep } from "node:timers/promises";
-import type { ComposeOptions } from "./compose";
+
 import { composeExec } from "./compose";
 import { capture } from "./exec";
-import type { SpinMeta } from "./meta";
 import { requirePort } from "./ports";
+import type { ComposeOptions } from "./compose";
+import type { SpinMeta } from "./meta";
 
 /**
  * Health probes shared by the pipeline's readiness waits, the diagnostics commands, and the
@@ -124,7 +125,9 @@ export async function waitForCaddyHttp(
         if (await probeViaCaddy(meta, subdomain, path, acceptStatus)) return;
         await sleep(1000);
     }
-    throw new Error(`${label} did not respond on https://${spinHost(meta, subdomain)}${path} within ${Math.round(timeoutMs / 1000)}s`);
+    throw new Error(
+        `${label} did not respond on https://${spinHost(meta, subdomain)}${path} within ${Math.round(timeoutMs / 1000)}s`,
+    );
 }
 
 /**

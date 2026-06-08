@@ -1,8 +1,9 @@
 import { join } from "node:path";
 import type { Command } from "commander";
-import { log } from "../log";
+
 import { run } from "../core/exec";
 import { readMetaOrFail, writeMeta } from "../core/meta";
+import { log } from "../log";
 
 /**
  * Re-run the database seeder on demand (`MainSeeder`, provisioning the demo tenants). Always runs

@@ -1,11 +1,13 @@
 import { spawn } from "node:child_process";
-import { useEffect, useState } from "react";
 import { Box, useApp, useInput } from "ink";
+import { useEffect, useState } from "react";
+
 import { serviceById } from "../core/catalog";
 import { composeRestart } from "../core/compose";
 import { buildComposeOptions } from "../core/compose-assembly";
 import { restartHostProcess } from "../core/host-process";
 import { loadMeta, type SpinMeta } from "../core/meta";
+
 import { HeaderBar } from "./components/header-bar";
 import { HelpOverlay } from "./components/help-overlay";
 import { HintLine } from "./components/hint-line";
@@ -19,10 +21,14 @@ import { buildRows } from "./rows";
 
 /** Best-effort cross-platform "open this URL in a browser" (WSL/Linux/macOS). */
 function openUrl(url: string): void {
-    const child = spawn("sh", ["-c", `xdg-open '${url}' >/dev/null 2>&1 || open '${url}' >/dev/null 2>&1 || wslview '${url}' >/dev/null 2>&1`], {
-        detached: true,
-        stdio: "ignore",
-    });
+    const child = spawn(
+        "sh",
+        ["-c", `xdg-open '${url}' >/dev/null 2>&1 || open '${url}' >/dev/null 2>&1 || wslview '${url}' >/dev/null 2>&1`],
+        {
+            detached: true,
+            stdio: "ignore",
+        },
+    );
     child.unref();
 }
 
@@ -143,11 +149,23 @@ export function App({ initialSlug }: { initialSlug?: string }) {
                 <SandboxList rows={sandboxes} selected={sandboxSel} />
             ) : (
                 <>
-                    <ServiceList rows={rows} selected={Math.min(rowSel, Math.max(0, rows.length - 1))} focused={focus === "list"} />
+                    <ServiceList
+                        rows={rows}
+                        selected={Math.min(rowSel, Math.max(0, rows.length - 1))}
+                        focused={focus === "list"}
+                    />
                     {logName ? <LogPane name={logName} lines={logLines} focused={focus === "logs"} /> : null}
                 </>
             )}
-            {showHelp ? <HelpOverlay /> : <HintLine hints={view === "sandboxes" ? SANDBOX_HINTS : SERVICE_HINTS} status={status} confirm={confirm?.label ?? null} />}
+            {showHelp ? (
+                <HelpOverlay />
+            ) : (
+                <HintLine
+                    hints={view === "sandboxes" ? SANDBOX_HINTS : SERVICE_HINTS}
+                    status={status}
+                    confirm={confirm?.label ?? null}
+                />
+            )}
         </Box>
     );
 }

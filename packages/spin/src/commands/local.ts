@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "commander";
+
 import { buildComposeOptions } from "../core/compose-assembly";
 import { SPIN_ENV_HEADER_MARKER } from "../core/env-render";
 import { printHandoffCard } from "../core/handoff";
@@ -9,6 +10,7 @@ import { loadOrInitLocalMeta } from "../core/meta";
 import { runPipeline } from "../core/pipeline";
 import { pipelineSteps } from "../core/pipeline-steps";
 import { LOCAL_SLUG } from "../core/slug";
+
 import { runDoctor } from "./doctor";
 import { printStartHeader } from "./start";
 import { runStop } from "./stop";

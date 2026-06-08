@@ -1,11 +1,12 @@
 import type { Command } from "commander";
-import { log } from "../log";
+
 import { buildComposeOptions } from "../core/compose-assembly";
 import { printHandoffCard } from "../core/handoff";
 import { loadOrInitMeta, type SpinMeta } from "../core/meta";
 import { runPipeline } from "../core/pipeline";
 import { pipelineSteps } from "../core/pipeline-steps";
 import { assertSlug } from "../core/slug";
+import { log } from "../log";
 
 interface StartOptions {
     withWeb?: boolean;

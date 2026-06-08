@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+
 import type { SpinMeta } from "../../core/meta";
 import { buildSnapshot } from "../../core/snapshot";
 import type { SandboxSnapshot } from "../../core/snapshot-types";

@@ -1,7 +1,7 @@
 # Per-spin GlitchTip (Sentry-protocol). The api forwards thrown exceptions via `@sentry/node`
 # pointed at this instance; thrown errors surface at `errors.<slug>.spin.localhost` within
 # seconds. DSN auto-provisioning is on the roadmap — for now the operator registers + creates
-# org/project + copies the DSN once per spin (see scripts/spin.md).
+# org/project + copies the DSN once per spin (see packages/spin/README.md).
 #
 # GlitchTip reuses the spin's Postgres (dedicated `glitchtip` database, created by
 # `apps/api/docker/postgres-init/02_create_glitchtip_database.sql` on first volume init) and

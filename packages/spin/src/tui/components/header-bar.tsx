@@ -1,4 +1,5 @@
 import { Box, Text } from "ink";
+
 import type { SandboxSnapshot } from "../../core/snapshot-types";
 import { theme } from "../theme";
 

@@ -1,4 +1,5 @@
 import { Box, Text } from "ink";
+
 import { cell } from "../format";
 import type { TuiRow } from "../rows";
 import { healthColor, healthGlyph, theme } from "../theme";
@@ -7,7 +8,13 @@ import { healthColor, healthGlyph, theme } from "../theme";
 export function ServiceList({ rows, selected, focused }: { rows: TuiRow[]; selected: number; focused: boolean }) {
     let lastKind: TuiRow["kind"] | null = null;
     return (
-        <Box flexDirection="column" flexGrow={1} borderStyle="round" borderColor={focused ? theme.accent : theme.muted} paddingX={1}>
+        <Box
+            flexDirection="column"
+            flexGrow={1}
+            borderStyle="round"
+            borderColor={focused ? theme.accent : theme.muted}
+            paddingX={1}
+        >
             {rows.map((row, index) => {
                 const active = index === selected;
                 const separator = row.kind !== lastKind && row.kind === "tenant";

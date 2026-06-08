@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { serviceById } from "../src/core/catalog";
 import type { SpinMeta } from "../src/core/meta";
 import { layoutFromBase } from "../src/core/ports";
@@ -55,7 +56,9 @@ describe("snapshotHasFailure", () => {
         pr: null,
         prUrl: null,
         ports: layoutFromBase(13044),
-        services: [{ id: "api", label: "API", category: "app" as const, kind: "host" as const, url: null, status: "up" as const }],
+        services: [
+            { id: "api", label: "API", category: "app" as const, kind: "host" as const, url: null, status: "up" as const },
+        ],
         tenants: [],
         queueWorker: { pid: 1, status: "up" as const },
         run: { kind: "none" as const },

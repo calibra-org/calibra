@@ -1,10 +1,12 @@
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
+
 import { log } from "../log";
+
 import { capture, run } from "./exec";
-import type { SpinMeta } from "./meta";
 import { MAIN_REPO_ROOT, WORKTREES_DIR } from "./paths";
+import type { SpinMeta } from "./meta";
 
 /** Whether the worktree directory exists and is a real git worktree. */
 export function worktreeExists(meta: SpinMeta): boolean {

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+
 import { useAction, useLogStream, useStatus } from "./hooks";
 import type { SandboxSnapshot, ServiceRow, ServiceStatus, TenantRow } from "./types";
 
@@ -71,7 +72,7 @@ function TenantPanel({ tenants }: { tenants: TenantRow[] }) {
 }
 
 function ServiceItem({ service }: { service: ServiceRow }) {
-    const href = service.url && service.url.startsWith("http") ? service.url : undefined;
+    const href = service.url?.startsWith("http") ? service.url : undefined;
     return (
         <div className="spin-svc">
             <Dot status={service.status} />

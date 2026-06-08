@@ -1,4 +1,5 @@
 import { Box, Text } from "ink";
+
 import { theme } from "../theme";
 
 /** Bottom keybinding hint line, or a transient status message / confirm prompt. */

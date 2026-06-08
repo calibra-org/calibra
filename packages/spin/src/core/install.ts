@@ -1,7 +1,9 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { run } from "./exec";
+
 import { log } from "../log";
+
+import { run } from "./exec";
 import type { SpinMeta } from "./meta";
 
 /**

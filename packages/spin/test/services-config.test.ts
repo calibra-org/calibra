@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { CONTAINER_SERVICES, DEMO_TENANTS, HOST_SERVICES, SERVICES, serviceById } from "../src/core/catalog";
 import { ROLES } from "../src/core/ports";
 

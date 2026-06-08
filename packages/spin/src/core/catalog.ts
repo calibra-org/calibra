@@ -1,5 +1,5 @@
-import type { PortRole } from "./ports";
 import { DB_ROLES } from "./secrets";
+import type { PortRole } from "./ports";
 
 /**
  * The services catalog — the single source of truth for what a spin runs. Encoded as a typed

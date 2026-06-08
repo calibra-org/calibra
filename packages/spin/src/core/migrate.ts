@@ -1,8 +1,10 @@
 import { join } from "node:path";
-import { run } from "./exec";
+
 import { log } from "../log";
-import type { SpinMeta } from "./meta";
+
+import { run } from "./exec";
 import { writeMeta } from "./meta";
+import type { SpinMeta } from "./meta";
 
 /**
  * Multi-tenant DB bring-up. The two RLS roles must exist before the first migration:

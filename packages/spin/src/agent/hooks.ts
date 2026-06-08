@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import type { SandboxSnapshot } from "./types";
 
 /**
@@ -87,7 +88,11 @@ export function useAction(): { state: ActionState; run: (action: string, service
     return { state, run, reset };
 }
 
-async function streamAction(action: string, query: string, setState: (updater: (prev: ActionState) => ActionState) => void): Promise<void> {
+async function streamAction(
+    action: string,
+    query: string,
+    setState: (updater: (prev: ActionState) => ActionState) => void,
+): Promise<void> {
     try {
         const response = await fetch(`/api/actions/${action}${query}`, { method: "POST" });
         if (!response.body) throw new Error(`action ${action} returned no stream`);

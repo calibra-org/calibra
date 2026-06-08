@@ -1,7 +1,8 @@
 import { c } from "../colors";
-import { DEMO_TENANTS, DEMO_TENANT_PASSWORD } from "./catalog";
-import type { SpinMeta } from "./meta";
+
+import { DEMO_TENANT_PASSWORD, DEMO_TENANTS } from "./catalog";
 import { requirePort } from "./ports";
+import type { SpinMeta } from "./meta";
 
 /**
  * The handoff card printed after a successful bring-up. Goes to stdout (it's the command result).
@@ -26,7 +27,9 @@ export function printHandoffCard(meta: SpinMeta, opts: { withWeb: boolean }): vo
     print(`  ${c.bold("app")} ${c.dim("(per-tenant — the bare admin./web. apex is the platform “unknown shop” page)")}`);
     print(`    admin   ${c.cyan(base("admin"))} ${c.dim("(platform · open a shop ↓)")}`);
     for (const tenant of DEMO_TENANTS) {
-        print(`       ${tenant.slug.padEnd(7)} ${c.cyan(`https://${tenant.slug}.admin.${slug}.spin.localhost:${caddyHttps}`)} ${c.dim(`(${tenant.ownerEmail})`)}`);
+        print(
+            `       ${tenant.slug.padEnd(7)} ${c.cyan(`https://${tenant.slug}.admin.${slug}.spin.localhost:${caddyHttps}`)} ${c.dim(`(${tenant.ownerEmail})`)}`,
+        );
     }
     print(`    api     ${c.cyan(base("api"))} ${c.dim(`(host :${meta.ports.api})`)}`);
     if (opts.withWeb) {
@@ -53,5 +56,9 @@ export function printHandoffCard(meta: SpinMeta, opts: { withWeb: boolean }): vo
     print(`  login   each shop's admin email above / ${c.cyan(DEMO_TENANT_PASSWORD)}`);
     print(`  stop    ${c.cyan(`pnpm spin stop ${slug}`)}`);
     print();
-    print(c.dim(`caddy: *.${slug}.spin.localhost → 127.0.0.1; local-CA certs. Run \`pnpm spin trust\` once if you see TLS warnings.`));
+    print(
+        c.dim(
+            `caddy: *.${slug}.spin.localhost → 127.0.0.1; local-CA certs. Run \`pnpm spin trust\` once if you see TLS warnings.`,
+        ),
+    );
 }

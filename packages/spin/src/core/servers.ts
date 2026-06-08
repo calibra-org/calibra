@@ -1,12 +1,14 @@
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+
 import { log } from "../log";
+
 import { nextDevAllowedOrigins } from "./env-render";
 import { isPidAlive, readPid, startHostProcess, stopHostProcess, waitForPortsFree } from "./host-process";
-import type { SpinMeta } from "./meta";
 import { AGENT_SERVER_ENTRY } from "./paths";
 import { effectivePort, requirePort } from "./ports";
 import { isPortListening } from "./probes";
+import type { SpinMeta } from "./meta";
 
 /**
  * Host-process orchestration for the apps. Calibra runs api/queue/admin/web/platform/agent on the
@@ -31,7 +33,14 @@ export async function startHostServers(meta: SpinMeta, opts: { withWeb: boolean 
         PORT: String(meta.ports.api),
         HOST: "0.0.0.0",
     });
-    await spawn(meta, "queue", "pnpm", ["--filter", "@calibra/api", "exec", "node", "ace", "queue:work", "--queue=imports,exports"], wt, {});
+    await spawn(
+        meta,
+        "queue",
+        "pnpm",
+        ["--filter", "@calibra/api", "exec", "node", "ace", "queue:work", "--queue=imports,exports"],
+        wt,
+        {},
+    );
     await spawn(meta, "admin", "pnpm", ["exec", "next", "dev", "-p", String(meta.ports.admin)], join(wt, "apps/admin"), {
         PORT: String(meta.ports.admin),
         NEXT_DEV_ALLOWED_ORIGINS: origins,
@@ -49,7 +58,14 @@ export async function startHostServers(meta: SpinMeta, opts: { withWeb: boolean 
             NEXT_DEV_ALLOWED_ORIGINS: origins,
         });
     }
-    await spawn(meta, "agent", "node", [AGENT_SERVER_ENTRY, "--slug", meta.slug, "--port", String(requirePort(meta, "spinAgent"))], wt, {});
+    await spawn(
+        meta,
+        "agent",
+        "node",
+        [AGENT_SERVER_ENTRY, "--slug", meta.slug, "--port", String(requirePort(meta, "spinAgent"))],
+        wt,
+        {},
+    );
 }
 
 /** Block until the app ports answer; warn (non-fatal) if the portless queue worker died. */

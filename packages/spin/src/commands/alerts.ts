@@ -1,4 +1,5 @@
 import type { Command } from "commander";
+
 import { capture } from "../core/exec";
 import { readMetaOrFail } from "../core/meta";
 import { requirePort } from "../core/ports";

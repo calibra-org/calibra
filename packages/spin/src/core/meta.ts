@@ -1,8 +1,9 @@
+import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { chmod, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
-import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { z } from "zod";
+
 import { MAIN_REPO_ROOT, metaPath, STATE_DIR, WORKTREES_DIR } from "./paths";
 import { allocatePorts, layoutFromBase, type SpinPorts } from "./ports";
 import { backfillSecrets, generateSecrets } from "./secrets";
@@ -111,7 +112,11 @@ function migrationChanged(raw: Record<string, unknown>, meta: SpinMeta): boolean
     const rawPorts = JSON.stringify((raw.ports ?? {}) as object);
     const metaPorts = JSON.stringify(meta.ports);
     if (rawPorts !== metaPorts) return true;
-    return raw.appKey !== meta.appKey || raw.glitchtipSecretKey !== meta.glitchtipSecretKey || raw.meiliMasterKey !== meta.meiliMasterKey;
+    return (
+        raw.appKey !== meta.appKey ||
+        raw.glitchtipSecretKey !== meta.glitchtipSecretKey ||
+        raw.meiliMasterKey !== meta.meiliMasterKey
+    );
 }
 
 export async function loadMeta(slug: string): Promise<SpinMeta | null> {

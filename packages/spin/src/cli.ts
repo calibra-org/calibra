@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { createRequire } from "node:module";
 import { Command } from "commander";
+
 import { registerAlerts } from "./commands/alerts";
 import { registerDoctor } from "./commands/doctor";
 import { registerList } from "./commands/list";
@@ -13,6 +14,7 @@ import { registerStart } from "./commands/start";
 import { registerStatus } from "./commands/status";
 import { registerStop } from "./commands/stop";
 import { registerTerm } from "./commands/term";
+import { registerTrust } from "./commands/trust";
 import { registerUrl } from "./commands/url";
 
 /**
@@ -65,6 +67,7 @@ registerMetrics(program);
 registerAlerts(program);
 registerSeed(program);
 registerTerm(program);
+registerTrust(program);
 
 /**
  * Bare-slug alias: `pnpm spin <slug>` means `pnpm spin start <slug>`. If the first positional isn't

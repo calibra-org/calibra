@@ -1,9 +1,10 @@
 import { join } from "node:path";
+
 import { DB_ROLES } from "./catalog";
+import { SHARED_CADDY_CA_DIR, spinLogDir } from "./paths";
+import { effectivePort, requirePort } from "./ports";
 import type { ComposeOptions } from "./compose";
 import type { SpinMeta } from "./meta";
-import { effectivePort, requirePort } from "./ports";
-import { SHARED_CADDY_CA_DIR, spinLogDir } from "./paths";
 
 /**
  * Assembles the docker-compose invocation for a spin: the 22-role port block → env vars, and the

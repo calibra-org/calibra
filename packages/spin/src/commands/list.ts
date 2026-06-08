@@ -1,9 +1,10 @@
 import type { Command } from "commander";
+
 import { c } from "../colors";
-import { setJsonMode } from "../log";
 import { listMeta } from "../core/meta";
 import { isPortListening } from "../core/probes";
 import { runActivity } from "../core/run-state";
+import { setJsonMode } from "../log";
 
 type ListStatus = "running" | "partial" | "stopped" | "starting" | "interrupted" | "failed";
 
@@ -70,7 +71,9 @@ export async function runList(opts: { json?: boolean }): Promise<void> {
     const width = Math.max(...rows.map((row) => row.slug.length));
     for (const row of rows) {
         const pr = row.pr ? `#${row.pr}` : "—";
-        process.stdout.write(`  ${row.slug.padEnd(width)}  ${colourStatus(row.status).padEnd(20)}  admin=${row.admin}  api=${row.api}  pr=${pr}\n`);
+        process.stdout.write(
+            `  ${row.slug.padEnd(width)}  ${colourStatus(row.status).padEnd(20)}  admin=${row.admin}  api=${row.api}  pr=${pr}\n`,
+        );
     }
 }
 

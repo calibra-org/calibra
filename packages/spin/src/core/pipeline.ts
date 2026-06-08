@@ -1,7 +1,8 @@
 import { log } from "../log";
+
+import { clearRunState, writeRunState } from "./run-state";
 import type { ComposeOptions } from "./compose";
 import type { SpinMeta } from "./meta";
-import { clearRunState, writeRunState } from "./run-state";
 
 /**
  * The bring-up engine: a flat, ordered list of {@link PipelineStep}s driven by {@link runPipeline}.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SpinMeta } from "../src/core/meta";
+
 import {
     nextDevAllowedOrigins,
     renderApiEnv,
@@ -7,6 +7,7 @@ import {
     renderPlatformEnv,
     SPIN_ENV_HEADER_MARKER,
 } from "../src/core/env-render";
+import type { SpinMeta } from "../src/core/meta";
 import { layoutFromBase } from "../src/core/ports";
 
 function makeMeta(overrides: Partial<SpinMeta> = {}): SpinMeta {

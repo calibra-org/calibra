@@ -1,5 +1,6 @@
 import type { Command } from "commander";
-import { serviceById, SERVICES } from "../core/catalog";
+
+import { SERVICES, serviceById } from "../core/catalog";
 import { readMetaOrFail } from "../core/meta";
 import { requirePort } from "../core/ports";
 import { dashboardUrl, serviceUrl } from "../core/snapshot";
@@ -22,7 +23,7 @@ const ALIASES: Record<string, string> = {
 
 export async function runUrl(slug: string, requested: string): Promise<void> {
     const meta = await readMetaOrFail(slug);
-    const want = (ALIASES[requested.toLowerCase()] ?? requested.toLowerCase());
+    const want = ALIASES[requested.toLowerCase()] ?? requested.toLowerCase();
 
     if (want === "dashboard") {
         process.stdout.write(`${dashboardUrl(meta)}\n`);

@@ -4,14 +4,16 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
 import { serviceById } from "../core/catalog";
-import { composeRestart, type ComposeOptions } from "../core/compose";
+import { type ComposeOptions, composeRestart } from "../core/compose";
 import { buildComposeOptions } from "../core/compose-assembly";
 import { hostLogFile, restartHostProcess } from "../core/host-process";
 import { type LogStream, readServiceLogTail, streamContainerLog, streamHostLog } from "../core/log-stream";
 import { loadMetaOrFail, type SpinMeta } from "../core/meta";
 import { spinLogDir } from "../core/paths";
 import { buildSnapshot } from "../core/snapshot";
+
 import { renderDashboardHtml } from "./page";
 
 /**
@@ -113,7 +115,13 @@ function spawnToSse(res: ServerResponse, cmd: string, args: string[], cwd: strin
     });
 }
 
-async function handleAction(meta: SpinMeta, compose: ComposeOptions, action: string, service: string | null, res: ServerResponse): Promise<void> {
+async function handleAction(
+    meta: SpinMeta,
+    compose: ComposeOptions,
+    action: string,
+    service: string | null,
+    res: ServerResponse,
+): Promise<void> {
     const apiCwd = join(meta.worktreePath, "apps/api");
     if (action === "migrate") {
         spawnToSse(res, "node", ["ace", "migration:run", "--connection=postgres_admin"], apiCwd);
@@ -253,5 +261,7 @@ if (invokedPath === fileURLToPath(import.meta.url) || invokedPath.endsWith(join(
         process.exit(1);
     }
     startAgentServer(opts);
-    process.stderr.write(`spin agent (v${pkg.version}) listening on http://${opts.host ?? "127.0.0.1"}:${opts.port} (slug=${opts.slug})\n`);
+    process.stderr.write(
+        `spin agent (v${pkg.version}) listening on http://${opts.host ?? "127.0.0.1"}:${opts.port} (slug=${opts.slug})\n`,
+    );
 }

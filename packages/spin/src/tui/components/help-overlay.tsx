@@ -1,4 +1,5 @@
 import { Box, Text } from "ink";
+
 import { theme } from "../theme";
 
 const KEYS: Array<[string, string]> = [

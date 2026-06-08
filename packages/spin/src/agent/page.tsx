@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
+
 import { PANEL_CSS } from "./styles";
 
 /**
@@ -16,10 +17,12 @@ interface ShellProps {
 function Shell({ slug }: ShellProps) {
     return (
         <html lang="en">
+            {/* biome-ignore lint/style/noHeadElement: standalone SSR shell, not a Next.js app */}
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <title>{`spin · ${slug}`}</title>
+                {/* biome-ignore lint/security/noDangerouslySetInnerHtml: trusted first-party CSS inlined into the shell */}
                 <style dangerouslySetInnerHTML={{ __html: PANEL_CSS }} />
                 <link rel="modulepreload" href="/client.js" />
             </head>

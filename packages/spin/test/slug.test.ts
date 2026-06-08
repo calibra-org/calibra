@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { assertSlug, composeProjectName, LOCAL_SLUG, validateSlug } from "../src/core/slug";
 
 describe("validateSlug", () => {

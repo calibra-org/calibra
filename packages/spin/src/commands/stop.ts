@@ -1,13 +1,14 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { Command } from "commander";
-import { log } from "../log";
+
 import { composeDown } from "../core/compose";
 import { buildComposeOptions } from "../core/compose-assembly";
 import { readMetaOrFail, writeMeta } from "../core/meta";
 import { clearRunState } from "../core/run-state";
 import { stopHostServers } from "../core/servers";
 import { removeWorktree } from "../core/worktree";
+import { log } from "../log";
 
 export interface StopOptions {
     purge: boolean;

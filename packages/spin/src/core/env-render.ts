@@ -1,9 +1,10 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { DEMO_TENANTS, DB_ROLES, SERVICES, type ServiceDef } from "./catalog";
-import type { SpinMeta } from "./meta";
-import { effectivePort, requirePort } from "./ports";
+
+import { DB_ROLES, DEMO_TENANTS, SERVICES, type ServiceDef } from "./catalog";
 import { SHARED_CADDY_CA_DIR, spinLogDir } from "./paths";
+import { effectivePort, requirePort } from "./ports";
+import type { SpinMeta } from "./meta";
 
 /**
  * The render layer: turns a {@link SpinMeta} into the per-spin `.env` files, the Caddyfile, and
@@ -68,12 +69,7 @@ function consoleUrl(meta: SpinMeta): string {
  */
 export function nextDevAllowedOrigins(meta: SpinMeta): string {
     const domain = spinDomain(meta);
-    const origins = [
-        `admin.${domain}`,
-        `web.${domain}`,
-        `api.${domain}`,
-        `console.${domain}`,
-    ];
+    const origins = [`admin.${domain}`, `web.${domain}`, `api.${domain}`, `console.${domain}`];
     for (const tenant of DEMO_TENANTS) {
         origins.push(`${tenant.slug}.admin.${domain}`, `${tenant.slug}.web.${domain}`);
         origins.push(`${tenant.slug}.admin.localhost`, `${tenant.slug}.shops.localhost`);

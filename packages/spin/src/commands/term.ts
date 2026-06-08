@@ -1,6 +1,7 @@
 import type { Command } from "commander";
-import { createElement } from "react";
 import { render } from "ink";
+import { createElement } from "react";
+
 import { App } from "../tui/app";
 
 /**

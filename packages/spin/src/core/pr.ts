@@ -1,8 +1,9 @@
 import { log } from "../log";
+
 import { capture, run } from "./exec";
-import type { SpinMeta } from "./meta";
 import { writeMeta } from "./meta";
 import { requirePort } from "./ports";
+import type { SpinMeta } from "./meta";
 
 /**
  * Ensure a draft PR exists for a worktree spin. Idempotent: returns early if one is already

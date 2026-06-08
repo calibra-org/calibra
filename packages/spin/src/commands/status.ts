@@ -1,9 +1,10 @@
 import type { Command } from "commander";
+
 import { c } from "../colors";
-import { setJsonMode } from "../log";
 import { readMetaOrFail } from "../core/meta";
 import { buildSnapshot } from "../core/snapshot";
 import { snapshotHasFailure } from "../core/snapshot-types";
+import { setJsonMode } from "../log";
 
 /**
  * Concise per-spin status: the run banner, up/down counts, and the headline URLs. The full

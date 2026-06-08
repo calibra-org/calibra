@@ -1,8 +1,9 @@
 import { spawn } from "node:child_process";
 import { existsSync, openSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { setTimeout as sleep } from "node:timers/promises";
 import { join } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
+
 import { isPortListening } from "./probes";
 
 /**

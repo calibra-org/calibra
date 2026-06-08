@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { createReadStream, existsSync, statSync, watch } from "node:fs";
 import { readFile } from "node:fs/promises";
+
 import type { ComposeOptions } from "./compose";
 
 /**
@@ -11,7 +12,8 @@ import type { ComposeOptions } from "./compose";
  * panel's SSE feed, and the TUI's log pane.
  */
 
-const ANSI_RE = /[][[\]()#;?]*(?:(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><])/g;
+// biome-ignore lint/suspicious/noControlCharactersInRegex: matching ANSI escape sequences requires the ESC/BEL control chars
+const ANSI_RE = /\u001b\][^\u0007]*\u0007|\u001b\[[0-9;?=]*[A-Za-z]/g;
 
 /** Strip ANSI escape sequences. Host processes run with NO_COLOR, but this catches stragglers. */
 export function stripAnsi(value: string): string {
@@ -35,11 +37,7 @@ export interface LogStream {
  * Stream a host-process log file line-by-line. Starts at the current end (tail behaviour) unless
  * `fromStart` is set. Partial trailing lines are buffered until their newline arrives.
  */
-export function streamHostLog(
-    path: string,
-    onLine: (line: string) => void,
-    opts: { fromStart?: boolean } = {},
-): LogStream {
+export function streamHostLog(path: string, onLine: (line: string) => void, opts: { fromStart?: boolean } = {}): LogStream {
     let offset = 0;
     let buffer = "";
     let closed = false;

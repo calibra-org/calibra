@@ -4,7 +4,7 @@
 # The CA itself (root + intermediate cert/key) is host-bound — bind-mounted from
 # `~/.calibra/caddy-ca/` into the Caddy data dir's `pki/authorities/local/` subpath. That
 # means the same root signs leaf certs across every spin on this host, so trusting the root
-# once (see `scripts/spin.md`) is permanent: `pnpm spin stop --purge` no longer rotates the
+# once (see `packages/spin/README.md`) is permanent: `pnpm spin stop --purge` no longer rotates the
 # CA, a new slug reuses it, and the operator's browser keeps the green lock forever. Leaf
 # certs (per-hostname, short-lived) still live in the per-spin `caddy_data` volume and rotate
 # with `--purge` — which is fine because they're signed by the shared, trusted intermediate.
