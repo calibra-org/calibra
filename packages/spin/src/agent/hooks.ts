@@ -7,6 +7,35 @@ import type { SandboxSnapshot } from "./types";
  * node imports (this file is in the browser bundle).
  */
 
+export interface PanelExtras {
+    slug: string;
+    caddyHttps: number | null;
+    meiliMasterKey: string | null;
+    glitchtipDsn: string | null;
+    dashboards: Array<{ uid: string; title: string }>;
+    tenants: Array<{ slug: string; name: string; ownerEmail: string }>;
+    password: string;
+    platform: { email: string; password: string };
+}
+
+/** Fetch the panel-only extras (secrets + deep-links) once on mount. */
+export function useExtras(): PanelExtras | null {
+    const [extras, setExtras] = useState<PanelExtras | null>(null);
+    useEffect(() => {
+        let active = true;
+        fetch("/api/panel/extras")
+            .then((response) => response.json() as Promise<PanelExtras>)
+            .then((payload) => {
+                if (active) setExtras(payload);
+            })
+            .catch(() => {});
+        return () => {
+            active = false;
+        };
+    }, []);
+    return extras;
+}
+
 /** Poll `/api/status` every `intervalMs`, plus an immediate refetch when the tab regains focus. */
 export function useStatus(intervalMs = 3000): { snapshot: SandboxSnapshot | null; error: string | null; refresh: () => void } {
     const [snapshot, setSnapshot] = useState<SandboxSnapshot | null>(null);

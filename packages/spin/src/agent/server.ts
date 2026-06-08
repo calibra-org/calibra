@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { serviceById } from "../core/catalog";
+import { DEMO_TENANT_PASSWORD, DEMO_TENANTS, GRAFANA_DASHBOARDS, PLATFORM_LOGIN, serviceById } from "../core/catalog";
 import { type ComposeOptions, composeRestart } from "../core/compose";
 import { buildComposeOptions } from "../core/compose-assembly";
 import { hostLogFile, restartHostProcess } from "../core/host-process";
@@ -197,6 +197,26 @@ async function handle(req: IncomingMessage, res: ServerResponse, opts: AgentOpti
         const snapshot = await buildSnapshot(meta);
         res.setHeader("content-type", "application/json");
         res.end(JSON.stringify(snapshot));
+        return;
+    }
+
+    /**
+     * Panel-only extras — secrets + deep-links the shared snapshot deliberately omits (so they
+     * never leak into `doctor --json`). Safe here: the panel is bound to loopback.
+     */
+    if (path === "/api/panel/extras") {
+        const extras = {
+            slug: meta.slug,
+            caddyHttps: meta.ports.caddyHttps ?? null,
+            meiliMasterKey: meta.meiliMasterKey ?? null,
+            glitchtipDsn: meta.glitchtipDsn ?? null,
+            dashboards: GRAFANA_DASHBOARDS,
+            tenants: DEMO_TENANTS,
+            password: DEMO_TENANT_PASSWORD,
+            platform: PLATFORM_LOGIN,
+        };
+        res.setHeader("content-type", "application/json");
+        res.end(JSON.stringify(extras));
         return;
     }
 

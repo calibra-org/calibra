@@ -320,3 +320,27 @@ export const DEMO_TENANTS: DemoTenant[] = [
 
 /** Shared dev password for every seeded tenant owner. */
 export const DEMO_TENANT_PASSWORD = "Passw0rd1!";
+
+/** Platform (control-plane) operator login, seeded alongside the demo tenants. */
+export const PLATFORM_LOGIN = { email: "platform@calibra.dev", password: DEMO_TENANT_PASSWORD };
+
+export interface GrafanaDashboard {
+    uid: string;
+    title: string;
+}
+
+/**
+ * The committed Grafana dashboards (`docker/observability/grafana/dashboards/*.json`). The panel
+ * deep-links each at `https://grafana.<slug>.spin.localhost:<caddyHttps>/d/<uid>/`. Keep in sync
+ * with the dashboard JSON `uid` fields.
+ */
+export const GRAFANA_DASHBOARDS: GrafanaDashboard[] = [
+    { uid: "calibra-api-overview", title: "API — request overview" },
+    { uid: "calibra-api-by-route", title: "API — by route" },
+    { uid: "calibra-node-runtime", title: "API — Node runtime" },
+    { uid: "calibra-auth-ratelimits", title: "Auth & rate limits" },
+    { uid: "calibra-cache-queue", title: "Cache & queue" },
+    { uid: "calibra-orders-inventory", title: "Orders & inventory" },
+    { uid: "calibra-checkout-payments", title: "Checkout & payments" },
+    { uid: "calibra-imports-exports", title: "CSV imports & exports" },
+];

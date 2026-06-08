@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { useAction, useLogStream, useStatus } from "./hooks";
+import { type PanelExtras, useAction, useExtras, useLogStream, useStatus } from "./hooks";
 import type { SandboxSnapshot, ServiceRow, ServiceStatus, TenantRow } from "./types";
 
 /**
@@ -211,8 +211,110 @@ function ActionsPanel({ services }: { services: ServiceRow[] }) {
     );
 }
 
+function CopyButton({ text }: { text: string }) {
+    const [copied, setCopied] = useState(false);
+    return (
+        <button
+            type="button"
+            className="spin-copy"
+            onClick={async () => {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1200);
+                } catch {
+                    /* clipboard blocked — ignore */
+                }
+            }}
+        >
+            {copied ? "copied ✓" : "copy"}
+        </button>
+    );
+}
+
+function GrafanaCard({ extras }: { extras: PanelExtras }) {
+    if (!extras.caddyHttps) return null;
+    const base = `https://grafana.${extras.slug}.spin.localhost:${extras.caddyHttps}`;
+    return (
+        <section className="spin-card">
+            <h2>Grafana dashboards</h2>
+            <div className="spin-grid">
+                {extras.dashboards.map((dash) => (
+                    <a key={dash.uid} className="spin-tenant" href={`${base}/d/${dash.uid}/`} target="_blank" rel="noreferrer">
+                        {dash.title} →
+                    </a>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+function CredentialsCard({ extras }: { extras: PanelExtras }) {
+    return (
+        <section className="spin-card">
+            <h2>Logins</h2>
+            <p className="spin-dim">
+                Password for everyone: <code>{extras.password}</code> <CopyButton text={extras.password} />
+            </p>
+            <ul className="spin-creds">
+                {extras.tenants.map((tenant) => (
+                    <li key={tenant.slug}>
+                        <strong>{tenant.name}</strong> admin: <code>{tenant.ownerEmail}</code>{" "}
+                        <CopyButton text={tenant.ownerEmail} />
+                    </li>
+                ))}
+                <li>
+                    <strong>Platform</strong>: <code>{extras.platform.email}</code> <CopyButton text={extras.platform.email} />
+                </li>
+            </ul>
+        </section>
+    );
+}
+
+function MeiliCard({ extras }: { extras: PanelExtras }) {
+    if (!extras.meiliMasterKey) return null;
+    return (
+        <section className="spin-card">
+            <h2>Meilisearch master key</h2>
+            <p>
+                <code className="spin-key">{extras.meiliMasterKey}</code> <CopyButton text={extras.meiliMasterKey} />
+            </p>
+        </section>
+    );
+}
+
+function TrustCard() {
+    return (
+        <section className="spin-card">
+            <h2>HTTPS trust</h2>
+            <p className="spin-dim">
+                If <code>*.spin.localhost</code> shows a certificate warning, trust Caddy's local CA once:
+            </p>
+            <pre className="spin-log">pnpm spin trust --install</pre>
+            <p className="spin-dim">
+                Installs the root into the OS store (sudo; on WSL it also imports into the Windows store). Run once — every spin
+                reuses the same CA.
+            </p>
+        </section>
+    );
+}
+
+function GlitchTipCard({ extras }: { extras: PanelExtras }) {
+    if (extras.glitchtipDsn) return null;
+    return (
+        <section className="spin-card">
+            <h2>GlitchTip setup</h2>
+            <p className="spin-dim">
+                Error tracking isn't wired yet. Open the <strong>errors</strong> service above, register, create an org + project,
+                copy the DSN into <code>apps/api/.env</code> as <code>GLITCHTIP_DSN=…</code>, then restart the api.
+            </p>
+        </section>
+    );
+}
+
 export function Dashboard() {
     const { snapshot, error } = useStatus();
+    const extras = useExtras();
     return (
         <div className="spin-shell">
             <Header snapshot={snapshot} error={error} />
@@ -220,6 +322,11 @@ export function Dashboard() {
                 <>
                     <TenantPanel tenants={snapshot.tenants} />
                     <ServicesGrid services={snapshot.services} />
+                    {extras ? <GrafanaCard extras={extras} /> : null}
+                    {extras ? <MeiliCard extras={extras} /> : null}
+                    {extras ? <CredentialsCard extras={extras} /> : null}
+                    <TrustCard />
+                    {extras ? <GlitchTipCard extras={extras} /> : null}
                     <LogViewer />
                     <ActionsPanel services={snapshot.services} />
                 </>

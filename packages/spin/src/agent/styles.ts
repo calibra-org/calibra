@@ -64,4 +64,11 @@ code { font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 .spin-btn--danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, var(--border)); }
 .spin-btn--danger:hover { border-color: var(--bad); }
 .spin-confirm { display: inline-flex; align-items: center; gap: 6px; color: var(--warn); font-size: 13px; }
+.spin-copy { background: var(--panel-2); color: var(--muted); border: 1px solid var(--border); border-radius: 4px; padding: 1px 7px; font-size: 11px; cursor: pointer; font-family: inherit; margin-left: 4px; }
+.spin-copy:hover { color: var(--fg); border-color: var(--accent); }
+.spin-creds { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; }
+.spin-creds code { color: var(--accent); }
+.spin-key { word-break: break-all; color: var(--accent); }
+a.spin-tenant { color: var(--fg); }
+a.spin-tenant:hover { border-color: var(--accent); text-decoration: none; }
 `;
