@@ -1,0 +1,36 @@
+{
+    "name": "@calibra/spin",
+    "version": "0.0.0",
+    "private": true,
+    "license": "MIT",
+    "type": "module",
+    "description": "Calibra developer-local stack orchestrator — isolated per-slug Docker + host-HMR sandboxes with a commander CLI, an Ink terminal TUI, and a bundled-React web panel.",
+    "bin": {
+        "spin": "./dist/cli.js"
+    },
+    "files": ["bin", "dist", "config", "templates"],
+    "scripts": {
+        "build": "tsdown",
+        "dev": "tsdown --watch",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest --run --passWithNoTests",
+        "test:watch": "vitest",
+        "prepare": "tsdown"
+    },
+    "dependencies": {
+        "commander": "catalog:",
+        "ink": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "zod": "catalog:"
+    },
+    "devDependencies": {
+        "@calibra/typescript-config": "workspace:*",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "tsdown": "catalog:",
+        "typescript": "catalog:",
+        "vitest": "catalog:"
+    }
+}
