@@ -8,6 +8,8 @@ import { buildComposeOptions } from "../core/compose-assembly";
 import { restartHostProcess } from "../core/host-process";
 import { loadMeta, type SpinMeta } from "../core/meta";
 
+import { CommandBar } from "./components/command-bar";
+import { DetailPane } from "./components/detail-pane";
 import { HeaderBar } from "./components/header-bar";
 import { HelpOverlay } from "./components/help-overlay";
 import { HintLine } from "./components/hint-line";
@@ -24,16 +26,13 @@ function openUrl(url: string): void {
     const child = spawn(
         "sh",
         ["-c", `xdg-open '${url}' >/dev/null 2>&1 || open '${url}' >/dev/null 2>&1 || wslview '${url}' >/dev/null 2>&1`],
-        {
-            detached: true,
-            stdio: "ignore",
-        },
+        { detached: true, stdio: "ignore" },
     );
     child.unref();
 }
 
 const SANDBOX_HINTS = "j/k move · enter open · ? help · q quit";
-const SERVICE_HINTS = "j/k move · l logs · tab focus · r restart · o open · esc back · ? help · q quit";
+const SERVICE_HINTS = "j/k move · / filter · l logs · tab focus · r restart · o open · esc back · ? help · q quit";
 
 export function App({ initialSlug }: { initialSlug?: string }) {
     const { exit } = useApp();
@@ -49,6 +48,8 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     const [showHelp, setShowHelp] = useState(false);
     const [confirm, setConfirm] = useState<{ target: string; label: string } | null>(null);
     const [status, setStatus] = useState<string | null>(null);
+    const [filter, setFilter] = useState("");
+    const [inputMode, setInputMode] = useState(false);
 
     useEffect(() => {
         if (!selectedSlug) {
@@ -67,7 +68,12 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     const snapshot = useSnapshot(view === "services" ? meta : null);
     const logLines = useLogStream(meta, view === "services" ? logName : null);
     const rows = snapshot ? buildRows(snapshot) : [];
-    const selectedRow = rows[Math.min(rowSel, Math.max(0, rows.length - 1))] ?? null;
+    const needle = filter.toLowerCase();
+    const filteredRows = filter
+        ? rows.filter((row) => row.label.toLowerCase().includes(needle) || row.key.toLowerCase().includes(needle))
+        : rows;
+    const clampedSel = Math.min(rowSel, Math.max(0, filteredRows.length - 1));
+    const selectedRow = filteredRows[clampedSel] ?? null;
 
     async function doRestart(target: string): Promise<void> {
         if (!meta) return;
@@ -90,10 +96,21 @@ export function App({ initialSlug }: { initialSlug?: string }) {
             setShowHelp(false);
             return;
         }
-        if (confirm) {
-            if (input === "y") {
-                void doRestart(confirm.target);
+        if (inputMode) {
+            if (key.escape) {
+                setFilter("");
+                setInputMode(false);
+            } else if (key.return) {
+                setInputMode(false);
+            } else if (key.backspace || key.delete) {
+                setFilter((value) => value.slice(0, -1));
+            } else if (input && !key.ctrl && !key.meta) {
+                setFilter((value) => value + input);
             }
+            return;
+        }
+        if (confirm) {
+            if (input === "y") void doRestart(confirm.target);
             setConfirm(null);
             return;
         }
@@ -123,13 +140,18 @@ export function App({ initialSlug }: { initialSlug?: string }) {
             setView("sandboxes");
             setLogName(null);
             setFocus("list");
+            setFilter("");
+            return;
+        }
+        if (input === "/") {
+            setInputMode(true);
             return;
         }
         if (key.tab) {
             setFocus((f) => (f === "list" ? "logs" : "list"));
             return;
         }
-        if (input === "j" || key.downArrow) setRowSel((i) => Math.min(i + 1, Math.max(0, rows.length - 1)));
+        if (input === "j" || key.downArrow) setRowSel((i) => Math.min(i + 1, Math.max(0, filteredRows.length - 1)));
         else if (input === "k" || key.upArrow) setRowSel((i) => Math.max(i - 1, 0));
         else if (input === "l" && selectedRow?.logName) {
             setLogName(selectedRow.logName);
@@ -149,16 +171,17 @@ export function App({ initialSlug }: { initialSlug?: string }) {
                 <SandboxList rows={sandboxes} selected={sandboxSel} />
             ) : (
                 <>
-                    <ServiceList
-                        rows={rows}
-                        selected={Math.min(rowSel, Math.max(0, rows.length - 1))}
-                        focused={focus === "list"}
-                    />
+                    <Box>
+                        <ServiceList rows={filteredRows} selected={clampedSel} focused={focus === "list"} />
+                        <DetailPane row={selectedRow} />
+                    </Box>
                     {logName ? <LogPane name={logName} lines={logLines} focused={focus === "logs"} /> : null}
                 </>
             )}
             {showHelp ? (
                 <HelpOverlay />
+            ) : inputMode ? (
+                <CommandBar value={filter} />
             ) : (
                 <HintLine
                     hints={view === "sandboxes" ? SANDBOX_HINTS : SERVICE_HINTS}
