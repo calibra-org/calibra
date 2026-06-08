@@ -10,9 +10,9 @@ import { fileURLToPath } from "node:url";
  *  - **MAIN_REPO_ROOT** — the main worktree's repo root, located via `git --git-common-dir`.
  *    Resolving the *common* dir means every linked worktree (and the in-place `local` spin)
  *    agrees on one state location, so `.claude/spin/<slug>.json` is shared and a spin started
- *    from one worktree is visible from another. This is calibra's deliberate divergence from
- *    stridge's `~/.stridge-spin` home-dir model: in-repo state survives `--remove`, lets
- *    `git worktree add` see an empty target dir, and works from inside a worktree.
+ *    from one worktree is visible from another. State is kept **in-repo** (not in a home dir) on
+ *    purpose: it survives `--remove`, lets `git worktree add` see an empty target dir, and works
+ *    from inside a worktree.
  *  - **PACKAGE_ROOT** — the installed `@calibra/spin` directory, located by walking up from this
  *    module to its `package.json`. Used to resolve the shipped `templates/` and `config/` dirs
  *    regardless of which `dist/` entry (cli, agent server, tui) is executing.

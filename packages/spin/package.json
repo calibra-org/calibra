@@ -8,7 +8,12 @@
     "bin": {
         "spin": "./dist/cli.js"
     },
-    "files": ["bin", "dist", "config", "templates"],
+    "files": [
+        "bin",
+        "dist",
+        "config",
+        "templates"
+    ],
     "scripts": {
         "build": "tsdown",
         "dev": "tsdown --watch",

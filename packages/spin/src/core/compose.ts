@@ -2,9 +2,9 @@ import { capture, run } from "./exec";
 
 /**
  * Thin typed wrapper over `docker compose`. Every op shares {@link ComposeOptions} (project +
- * stacked `-f` files + env), so up/down/ps/restart all target the same per-spin project. Ported
- * from stridge-spin's compose layer **minus all pull-mode** (no `composePull`, no digest pinning):
- * calibra builds nothing privately, so `up` pulls public infra images directly.
+ * stacked `-f` files + env), so up/down/ps/restart all target the same per-spin project.
+ * Deliberately **no pull-mode** (no `composePull`, no digest pinning): calibra builds nothing
+ * privately, so `up` pulls public infra images directly.
  */
 export interface ComposeOptions {
     /** Compose project name — every container/volume/network inherits this prefix. */

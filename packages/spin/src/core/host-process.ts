@@ -12,8 +12,7 @@ import { isPortListening } from "./probes";
  * spawned **detached as its own group leader** (so `kill(-pid)` reaps pnpm's child Next/Adonis
  * workers too), with a pid file, a truncated-per-run log file, and a spawn manifest under the
  * worktree's `.spin/`. The manifest lets the panel's restart button re-spawn without pipeline
- * context. Ported from stridge-spin's host-process layer; state is worktree-relative (calibra's
- * model) rather than under a home dir.
+ * context. State is worktree-relative (in-repo) rather than under a home dir.
  */
 
 function pidFile(worktreePath: string, service: string): string {
