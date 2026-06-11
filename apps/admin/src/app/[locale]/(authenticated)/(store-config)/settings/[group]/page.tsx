@@ -4,19 +4,11 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { PageHeader } from "#/components/PageHeader";
-import { Button } from "#/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
-import { Input } from "#/components/ui/input";
-import { Label } from "#/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
-import { Switch } from "#/components/ui/switch";
-import { Textarea } from "#/components/ui/textarea";
-import { getSettingsGroup } from "#/lib/server-repos";
-import type { AdminSettingField, SettingsGroupKey } from "#/lib/types";
-import { cn } from "#/lib/utils";
+import type { SettingsGroupKey } from "#/lib/types";
 import { DateTimeSettings } from "#/views/settings/datetime/datetime-settings";
 import { GeneralSettings } from "#/views/settings/general/general-settings";
 import { MediaSettings } from "#/views/settings/media/media-settings";
+import { GenericSettingsView } from "#/views/store-config/settings/generic-settings-view";
 
 interface PageProps {
     params: Promise<{ locale: string; group: string }>;
@@ -38,37 +30,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: t(group) };
 }
 
-function FieldControl({ field, locale, prefix }: { field: AdminSettingField; locale: Locale; prefix: string }) {
-    const id = `${prefix}-${field.key}`;
-    if (field.type === "switch") {
-        return <Switch id={id} defaultChecked={Boolean(field.value)} />;
-    }
-    if (field.type === "select" && field.options !== undefined) {
-        return (
-            <Select defaultValue={String(field.value)}>
-                <SelectTrigger id={id}>
-                    <SelectValue placeholder="—" />
-                </SelectTrigger>
-                <SelectContent>
-                    {field.options.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                            {option.label[locale]}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-        );
-    }
-    if (field.type === "textarea") {
-        return <Textarea id={id} defaultValue={String(field.value)} rows={3} />;
-    }
-    return <Input id={id} type={field.type === "number" ? "number" : "text"} defaultValue={String(field.value)} />;
-}
-
+/**
+ * Settings group screen — thin server shell. Keeps the server-side `notFound()` gate for unknown
+ * group keys, then delegates rendering: `general`/`datetime`/`media` to their bespoke client views,
+ * every other (generic) group to {@link GenericSettingsView} over the static fixture.
+ */
 export default async function SettingsGroupPage({ params }: PageProps) {
-    const { locale: rawLocale, group } = await params;
-    setRequestLocale(rawLocale);
-    const locale = rawLocale as Locale;
+    const { locale, group } = await params;
+    setRequestLocale(locale);
     if (!isSettingsGroupKey(group)) notFound();
     const t = await getTranslations("Settings");
 
@@ -81,40 +50,5 @@ export default async function SettingsGroupPage({ params }: PageProps) {
         );
     }
 
-    const groupData = await getSettingsGroup(group);
-    if (groupData === null) notFound();
-
-    return (
-        <div className="flex flex-col gap-6">
-            <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<Button>{t("save")}</Button>} />
-
-            <Card>
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-base">{groupData.title[locale]}</CardTitle>
-                    <CardDescription>{groupData.subtitle[locale]}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-6 pt-6">
-                    {groupData.fields.map((field) => {
-                        const isToggle = field.type === "switch";
-                        return (
-                            <div
-                                key={field.key}
-                                className={cn("flex flex-col gap-1.5", isToggle && "flex-row items-center justify-between gap-3")}
-                            >
-                                <div className={cn("flex flex-col", isToggle && "flex-1")}>
-                                    <Label htmlFor={`${group}-${field.key}`} className="text-sm">
-                                        {field.label[locale]}
-                                    </Label>
-                                    <p className="text-muted-foreground text-xs">{field.description[locale]}</p>
-                                </div>
-                                <div className={cn(isToggle ? "shrink-0" : "max-w-md")}>
-                                    <FieldControl field={field} locale={locale} prefix={group} />
-                                </div>
-                            </div>
-                        );
-                    })}
-                </CardContent>
-            </Card>
-        </div>
-    );
+    return <GenericSettingsView group={group} />;
 }
