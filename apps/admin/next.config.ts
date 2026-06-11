@@ -10,9 +10,11 @@ const nextConfig: NextConfig = {
     reactStrictMode: true,
     /**
      * `@calibra/shared` and `@calibra/panel-kit` ship as raw TS source — Next compiles them like
-     * any local file via `transpilePackages`, and `@tailwindcss/postcss` then scans the compiled
-     * output for utility classes. This is the whole mechanism that styles panel-kit primitives;
-     * there is no `@source` directive. Drop panel-kit here and its primitives render unstyled.
+     * any local file via `transpilePackages`. Note this is a webpack/Turbopack mechanism only: it
+     * does NOT feed Tailwind's content scanner, which ignores `node_modules`. Tailwind picks up
+     * panel-kit's utility classes via the explicit `@source` directive in `src/styles/globals.css`
+     * (mirroring `apps/platform`). Both pieces are required — drop either and panel-kit primitives
+     * render unsized / unstyled.
      */
     transpilePackages: ["@calibra/shared", "@calibra/panel-kit"],
     /**

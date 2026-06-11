@@ -1,6 +1,15 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/**
+ * Scan the shared `@calibra/panel-kit` source so Tailwind picks up classes used *only* inside its
+ * primitives (e.g. the checkbox's `size-4 min-w-4 basis-4`, the tabs indicator). `transpilePackages`
+ * runs the package's code, but Tailwind v4 doesn't scan the workspace package (symlinked under
+ * `node_modules`) on its own — without this directive those primitives render unsized / unstyled in
+ * admin while looking fine in platform (which already pins this). Mirror of `apps/platform`.
+ */
+@source "../../../../packages/panel-kit/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
 
 /* -------------------------------------------------------------------------- */
