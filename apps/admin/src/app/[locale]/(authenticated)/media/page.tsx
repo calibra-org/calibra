@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { listMedia, listMediaMonths } from "#/lib/server-repos";
 import { MediaView } from "#/views/media";
 
 interface PageProps {
@@ -15,13 +14,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 /**
- * Media library SSR entry. Seeds the workbench with the first page of rows + the list of months
- * that drive the date dropdown, so the operator sees real content on first paint instead of a
- * skeleton-then-flash. The client view plants the seed into the React Query cache.
+ * Thin server shell for the media workbench. Resolves the locale for next-intl's static
+ * optimization and renders the client view — every row, month bucket, and the details modal are
+ * fetched in the browser through the same-origin admin proxy, so the chrome paints on first render
+ * regardless of how slow the admin API is.
  */
 export default async function MediaPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const [initial, months] = await Promise.all([listMedia({ limit: 60 }), listMediaMonths()]);
-    return <MediaView initialPage={initial} initialMonths={months} />;
+    return <MediaView />;
 }

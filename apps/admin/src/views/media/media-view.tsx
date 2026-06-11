@@ -1,7 +1,6 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { useQueryClient } from "@tanstack/react-query";
 import { Download, Trash2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -17,32 +16,27 @@ import {
 } from "#/components/ui/alert-dialog";
 import { BulkSelectionBar } from "#/components/ui/bulk-selection-bar";
 import { Button } from "#/components/ui/button";
+import { Skeleton } from "#/components/ui/skeleton";
 import { toast } from "#/components/ui/toast";
 import { formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
-import type { AdminMedia, Paginated } from "#/lib/types";
+import type { AdminMedia } from "#/lib/types";
 
 import { MediaDetailsModal } from "./media-details-modal";
 import { MediaGrid } from "./media-grid";
 import { MediaList } from "./media-list";
 import { MediaToolbar } from "./media-toolbar";
-import {
-    adminMediaListToEnvelope,
-    seedMediaListKey,
-    useBulkDeleteMedia,
-    useDeleteMedia,
-    useMediaList,
-    useMediaMonths,
-    useUpdateMedia,
-} from "./queries";
+import { useBulkDeleteMedia, useDeleteMedia, useMedia, useMediaList, useMediaMonths, useUpdateMedia } from "./queries";
 import { buildMonthOptions, classifyMediaType, type MediaTypeFilter, type MediaViewMode } from "./types";
 import { UploadDropzone } from "./upload-dropzone";
 
 interface MediaViewProps {
-    initialPage: Paginated<AdminMedia>;
-    initialMonths: string[];
-    initialOpenId?: number;
-    initialOpenRow?: AdminMedia;
+    /**
+     * Numeric id forwarded from the `/media/{id}` deep-link page. When present the workbench mounts
+     * with the details modal pre-opened over the matching row; the row is resolved client-side
+     * (`useMedia`) so the link stays shareable even when the row isn't on the first list page.
+     */
+    openId?: number;
 }
 
 const PER_PAGE = 60;
@@ -57,12 +51,11 @@ const SEARCH_DEBOUNCE_MS = 250;
  * Filters live in local state so they don't pollute the URL — the workbench is a single-page
  * tool, not a deep-linkable filter set.
  */
-export function MediaView({ initialPage, initialMonths, initialOpenId, initialOpenRow }: MediaViewProps) {
+export function MediaView({ openId }: MediaViewProps) {
     const t = useTranslations("Media");
     const tBulkBar = useTranslations("Media.bulk");
     const tBulk = useTranslations("Media.bulkDeleteDialog");
     const locale = useLocale() as Locale;
-    const queryClient = useQueryClient();
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -70,7 +63,7 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
     const [view, setView] = useState<MediaViewMode>(initialView);
     const [bulkMode, setBulkMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
-    const [activeId, setActiveId] = useState<number | null>(initialOpenId ?? null);
+    const [activeId, setActiveId] = useState<number | null>(openId ?? null);
     const [uploadOpen, setUploadOpen] = useState(false);
     const [pendingDeleteRow, setPendingDeleteRow] = useState<AdminMedia | null>(null);
     const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
@@ -79,18 +72,7 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [type, setType] = useState<MediaTypeFilter>("all");
     const [month, setMonth] = useState("");
-    const [limit, setLimit] = useState(initialPage.meta.limit > 0 ? initialPage.meta.limit : PER_PAGE);
-
-    /**
-     * Plant the SSR snapshot into the React Query cache once so the listing hook below doesn't
-     * paint empty on first mount. Subsequent fetches (filter change, load-more) hit the live
-     * `useMediaList` query and overwrite as needed.
-     */
-    useEffect(() => {
-        const key = seedMediaListKey({ locale, limit });
-        if (queryClient.getQueryData(key) !== undefined) return;
-        queryClient.setQueryData(key, adminMediaListToEnvelope(initialPage.data, initialPage.meta));
-    }, [initialPage.data, initialPage.meta, locale, limit, queryClient]);
+    const [limit, setLimit] = useState(PER_PAGE);
 
     useEffect(() => {
         const id = window.setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
@@ -123,17 +105,10 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
     });
 
     const monthsQuery = useMediaMonths();
-    const months = useMemo(
-        () => buildMonthOptions(query.data?.data ?? initialPage.data, monthsQuery.data ?? initialMonths),
-        [query.data?.data, initialPage.data, monthsQuery.data, initialMonths],
-    );
+    const rows = useMemo(() => query.data?.data ?? [], [query.data?.data]);
+    const months = useMemo(() => buildMonthOptions(rows, monthsQuery.data ?? []), [rows, monthsQuery.data]);
 
-    const rows = useMemo(() => {
-        if (query.data?.data !== undefined) return query.data.data;
-        return initialPage.data;
-    }, [query.data?.data, initialPage.data]);
-
-    const total = query.data?.meta.total ?? initialPage.meta.total ?? rows.length;
+    const total = query.data?.meta.total ?? rows.length;
     const canLoadMore = rows.length < total;
 
     /**
@@ -201,7 +176,14 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
     const handleCloseModal = useCallback(() => setActiveId(null), []);
 
     const activeRowFromList = useMemo(() => rows.find((row) => row.id === activeId) ?? null, [rows, activeId]);
-    const activeRow = activeRowFromList ?? (activeId === initialOpenId && initialOpenRow !== undefined ? initialOpenRow : null);
+
+    /**
+     * Resolve the open row when it isn't in the currently loaded list window — the deep-link case
+     * where `/media/{id}` points at a row on a later page. The fetch is skipped (`enabled: false`
+     * inside the hook) whenever the row is already in `rows`, so the common path stays a no-op.
+     */
+    const detailQuery = useMedia(activeRowFromList === null ? activeId : null);
+    const activeRow = activeRowFromList ?? detailQuery.data ?? null;
 
     const activeIndex = activeRow === null ? -1 : rows.findIndex((row) => row.id === activeRow.id);
     const canPrev = activeIndex > 0;
@@ -310,6 +292,45 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
         if (!query.isFetching) previousLimit.current = limit;
     }, [limit, query.isFetching]);
 
+    const gridOrList =
+        view === "grid" ? (
+            <MediaGrid
+                rows={rows}
+                selectedIds={selectedIds}
+                activeId={activeId}
+                bulkMode={bulkMode}
+                locale={locale}
+                isLoading={query.isPending}
+                isFiltering={isFiltering}
+                canLoadMore={canLoadMore}
+                isLoadingMore={isLoadingMore}
+                onTileOpen={handleOpen}
+                onTileToggle={handleToggleSelect}
+                onLoadMore={handleLoadMore}
+            />
+        ) : (
+            <MediaList
+                rows={rows}
+                selectedIds={selectedIds}
+                activeId={activeId}
+                bulkMode={bulkMode}
+                locale={locale}
+                isLoading={query.isPending}
+                isFiltering={isFiltering}
+                canLoadMore={canLoadMore}
+                isLoadingMore={isLoadingMore}
+                onRowOpen={handleOpen}
+                onRowToggle={handleToggleSelect}
+                onToggleAll={handleToggleAll}
+                onEdit={handleListEdit}
+                onDelete={handleListDelete}
+                onView={handleListView}
+                onCopyUrl={handleListCopyUrl}
+                onDownload={handleListDownload}
+                onLoadMore={handleLoadMore}
+            />
+        );
+
     return (
         <section className="flex flex-col gap-5">
             <header className="flex flex-wrap items-start justify-between gap-3">
@@ -342,42 +363,12 @@ export function MediaView({ initialPage, initialMonths, initialOpenId, initialOp
                     locale={locale}
                 />
 
-                {view === "grid" ? (
-                    <MediaGrid
-                        rows={rows}
-                        selectedIds={selectedIds}
-                        activeId={activeId}
-                        bulkMode={bulkMode}
-                        locale={locale}
-                        isLoading={query.isPending}
-                        isFiltering={isFiltering}
-                        canLoadMore={canLoadMore}
-                        isLoadingMore={isLoadingMore}
-                        onTileOpen={handleOpen}
-                        onTileToggle={handleToggleSelect}
-                        onLoadMore={handleLoadMore}
-                    />
+                {query.isError ? (
+                    <MediaErrorState onRetry={() => void query.refetch()} />
+                ) : query.isPending && rows.length === 0 ? (
+                    <MediaGridSkeleton view={view} />
                 ) : (
-                    <MediaList
-                        rows={rows}
-                        selectedIds={selectedIds}
-                        activeId={activeId}
-                        bulkMode={bulkMode}
-                        locale={locale}
-                        isLoading={query.isPending}
-                        isFiltering={isFiltering}
-                        canLoadMore={canLoadMore}
-                        isLoadingMore={isLoadingMore}
-                        onRowOpen={handleOpen}
-                        onRowToggle={handleToggleSelect}
-                        onToggleAll={handleToggleAll}
-                        onEdit={handleListEdit}
-                        onDelete={handleListDelete}
-                        onView={handleListView}
-                        onCopyUrl={handleListCopyUrl}
-                        onDownload={handleListDownload}
-                        onLoadMore={handleLoadMore}
-                    />
+                    gridOrList
                 )}
 
                 <FooterCount visible={rows.length} total={total} locale={locale} />
@@ -526,6 +517,45 @@ function triggerDownload(url: string, filename: string) {
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
+}
+
+/**
+ * First-paint placeholder for the workbench grid/list. Mirrors the tile grid (or the list rows)
+ * so the layout doesn't reflow when the live data lands. Shown only on the very first load, before
+ * any rows are cached; refetches (filter change, load-more) keep the prior rows visible instead.
+ */
+function MediaGridSkeleton({ view }: { view: MediaViewMode }) {
+    if (view === "list") {
+        return (
+            <div className="flex flex-col gap-2">
+                {Array.from({ length: 8 }, (_, i) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
+                    <Skeleton key={i} className="h-14 rounded-lg" />
+                ))}
+            </div>
+        );
+    }
+    return (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {Array.from({ length: 18 }, (_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
+                <Skeleton key={i} className="aspect-square rounded-xl" />
+            ))}
+        </div>
+    );
+}
+
+/** Retry-able error state for a failed listing fetch. Uses the shared `Common` copy. */
+function MediaErrorState({ onRetry }: { onRetry: () => void }) {
+    const tCommon = useTranslations("Common");
+    return (
+        <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-muted/20 p-12 text-center text-muted-foreground text-sm">
+            <span>{tCommon("errorLoading")}</span>
+            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+                {tCommon("retry")}
+            </Button>
+        </div>
+    );
 }
 
 /* Suppress unused-import warnings when the icons are only consumed inside dialogs/buttons. */

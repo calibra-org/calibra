@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { getMedia, listMedia, listMediaMonths } from "#/lib/server-repos";
 import { MediaView } from "#/views/media";
 
 interface PageProps {
@@ -16,12 +15,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 /**
- * Deep-link entry — `/media/{id}` renders the same workbench with the details modal pre-open
- * for the requested row. The view receives the same SSR seed as the bare `/media` page; it
- * recognises `initialOpenId` and mounts the modal on first paint so the URL is shareable.
- *
- * If the id doesn't parse or the row is missing, fall back to a 404 — the operator gets a
- * cleaner error than an empty modal.
+ * Thin server shell for the `/media/{id}` deep-link — the same workbench with the details modal
+ * pre-opened over the requested row. Only the numeric route param is forwarded; the client view
+ * resolves the row via `useMedia(openId)` so it stays shareable even when the row isn't on the
+ * first list page. An unparseable id 404s here rather than rendering an empty modal.
  */
 export default async function MediaDeepLinkPage({ params }: PageProps) {
     const { locale, id } = await params;
@@ -29,8 +26,5 @@ export default async function MediaDeepLinkPage({ params }: PageProps) {
     const numericId = Number.parseInt(id, 10);
     if (!Number.isFinite(numericId) || numericId <= 0) notFound();
 
-    const [row, initial, months] = await Promise.all([getMedia(numericId), listMedia({ limit: 60 }), listMediaMonths()]);
-    if (row === null) notFound();
-
-    return <MediaView initialPage={initial} initialMonths={months} initialOpenId={numericId} initialOpenRow={row} />;
+    return <MediaView openId={numericId} />;
 }

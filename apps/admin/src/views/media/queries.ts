@@ -370,18 +370,3 @@ function adminMediaToWire(row: AdminMedia): AdminMediaWire {
         updated_at: row.updatedAt,
     };
 }
-
-/** Key used by the page to plant the SSR snapshot into the React Query cache. */
-export function seedMediaListKey({ locale, limit }: { locale: Locale; limit: number }) {
-    return [
-        "admin",
-        "media",
-        "list",
-        { locale, page: 1, limit, q: undefined, type: "all" as MediaTypeFilter, month: undefined },
-    ] as const;
-}
-
-/** Identity helper to keep the page-side cache seeding short. */
-export function adminMediaListToEnvelope(rows: AdminMedia[], meta: Paginated<AdminMedia>["meta"]): MediaListEnvelope {
-    return { data: rows.map(adminMediaToWire), meta };
-}
