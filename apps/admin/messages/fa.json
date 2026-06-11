@@ -2757,6 +2757,7 @@
             }
         },
         "detail": {
+            "metaTitle": "سفارش",
             "title": "سفارش #{number}",
             "titleEditable": "ویرایش سفارش #{number}",
             "subtitle": "ثبت‌شده در {date}",
@@ -3473,6 +3474,9 @@
             "cancel": "انصراف",
             "delete": "حذف",
             "loading": "در حال بارگذاری…",
+            "loadError": "بارگذاری اطلاعات مشتری با خطا مواجه شد.",
+            "retry": "تلاش مجدد",
+            "notFound": "این مشتری یافت نشد.",
             "lifetimeStats": "آمار طول عمر",
             "copyEmail": "کپی ایمیل",
             "copyPhone": "کپی تلفن",
