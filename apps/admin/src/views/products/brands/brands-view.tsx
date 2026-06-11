@@ -1,7 +1,6 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -18,9 +17,11 @@ import { Button } from "#/components/ui/button";
 import { formatNumber } from "#/lib/format";
 import type { AdminBrand } from "#/lib/types";
 
+import { TaxonomyErrorState, TaxonomyWorkbenchSkeleton } from "../_shared/taxonomy-states";
+
 import { type AdminBrandDraft, BrandInspector } from "./brand-inspector";
 import { BrandsList } from "./brands-list";
-import { seedBrandsListKey, useBrandsList, useBulkDeleteBrands, useCreateBrand, useDeleteBrand, useUpdateBrand } from "./queries";
+import { useBrandsList, useBulkDeleteBrands, useCreateBrand, useDeleteBrand, useUpdateBrand } from "./queries";
 
 export type BrandFilterMode = "all" | "withProducts" | "empty";
 export type BrandSortKey = "name" | "slug" | "productCount";
@@ -32,10 +33,6 @@ export interface BrandsStats {
     totalAttachments: number;
 }
 
-interface BrandsViewProps {
-    initialRows: AdminBrand[];
-}
-
 const SORT_COMPARATORS: Record<BrandSortKey, (a: AdminBrand, b: AdminBrand, locale: Locale) => number> = {
     name: (a, b, locale) => (a.name[locale] ?? "").localeCompare(b.name[locale] ?? "", locale),
     slug: (a, b, locale) => (a.slug[locale] ?? "").localeCompare(b.slug[locale] ?? "", "en"),
@@ -43,67 +40,28 @@ const SORT_COMPARATORS: Record<BrandSortKey, (a: AdminBrand, b: AdminBrand, loca
 };
 
 /**
- * Top-level client component. Hosts the list + inspector, owns selection / draft / filter
+ * Page entry point. Fetches the brand list client-side via React Query and renders a workbench
+ * skeleton while in flight / a retry-able error state on failure before mounting the workbench.
+ */
+export function BrandsView() {
+    const { data, isLoading, isError, refetch } = useBrandsList({ limit: 200 });
+    if (isLoading || data === undefined) return <TaxonomyWorkbenchSkeleton />;
+    if (isError) return <TaxonomyErrorState onRetry={() => void refetch()} />;
+    return <BrandsWorkbench rows={data.data} />;
+}
+
+/**
+ * Top-level client workbench. Hosts the list + inspector, owns selection / draft / filter
  * state, fires React Query mutations, and shows a confirm dialog for destructive actions. The
- * server-rendered page hands us the seeded rows; we plant them in the React Query cache so the
- * list hook can take over without a flash on first render.
+ * product counts arrive from the index `used_count` through {@link useBrandsList}.
  *
  * Brands are flat (no `parent_id`) at the API today — the table schema does not carry
  * hierarchy and the brand validator rejects unknown fields. Treat this surface like Tags, not
  * Categories. Adding hierarchy is a separate effort that needs an API migration first.
  */
-export function BrandsView({ initialRows }: BrandsViewProps) {
+function BrandsWorkbench({ rows }: { rows: AdminBrand[] }) {
     const t = useTranslations("Brands");
     const locale = useLocale() as Locale;
-    const queryClient = useQueryClient();
-
-    /**
-     * Seed the React Query cache with the SSR snapshot on first mount, then rely on
-     * `useBrandsList` to refetch on focus or after mutations.
-     */
-    useEffect(() => {
-        const key = seedBrandsListKey({ locale, limit: 200 });
-        const existing = queryClient.getQueryData(key);
-        if (existing !== undefined) return;
-        queryClient.setQueryData(key, {
-            data: initialRows.map((row) => ({
-                id: row.id,
-                name: row.name[locale],
-                slug: row.slug[locale],
-                parent_id: null,
-                image_media_id: row.imageMediaId,
-                image_url: row.logoUrl,
-            })),
-            meta: { page: 1, limit: 200, total: initialRows.length, lastPage: 1 },
-        });
-        /**
-         * Stash the resolved counts in a side cache because the SDK payload doesn't carry
-         * them. The list hook below merges these back into the rendered rows.
-         */
-        queryClient.setQueryData(["admin", "brands", "counts", locale], productCountMap(initialRows));
-    }, [initialRows, locale, queryClient]);
-
-    const query = useBrandsList({ limit: 200 });
-    const counts = queryClient.getQueryData<Map<number, number>>(["admin", "brands", "counts", locale]);
-
-    /**
-     * Take the cached SDK-shape rows and fold the product counts back in. The list query sees
-     * `productCount: 0` from the adapter because the listing endpoint doesn't surface counts
-     * yet; the SSR fan-out filled the side cache above so the column stays accurate across
-     * refetches that don't change the underlying brand set.
-     *
-     * TODO(api): once `GET /admin/brands` returns counts, drop the side cache and rely on the
-     * query's `select` mapping alone.
-     */
-    const rows = useMemo<AdminBrand[]>(() => {
-        const liveRows = query.data?.data ?? initialRows;
-        if (counts === undefined) return liveRows;
-        return liveRows.map((row) => {
-            const fallback = counts.get(row.id);
-            if (fallback === undefined) return row;
-            return { ...row, productCount: row.productCount > 0 ? row.productCount : fallback };
-        });
-    }, [counts, initialRows, query.data]);
 
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<BrandFilterMode>("all");
@@ -480,10 +438,4 @@ function filterAndSortRows({ rows, search, filter, sortKey, sortDir, locale }: F
     const comparator = SORT_COMPARATORS[sortKey];
     const sorted = [...filtered].sort((a, b) => comparator(a, b, locale));
     return sortDir === "asc" ? sorted : sorted.reverse();
-}
-
-function productCountMap(rows: AdminBrand[]): Map<number, number> {
-    const map = new Map<number, number>();
-    for (const row of rows) map.set(row.id, row.productCount);
-    return map;
 }

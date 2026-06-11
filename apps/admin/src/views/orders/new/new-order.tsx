@@ -3,7 +3,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { PageHeader } from "#/components/PageHeader";
 import { Button } from "#/components/ui/button";
@@ -11,15 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
+import { Skeleton } from "#/components/ui/skeleton";
 import { Switch } from "#/components/ui/switch";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/toast";
 import { useRouter } from "#/lib/i18n/navigation";
 import { type CreateOrderInput, useCreateOrder } from "#/lib/queries/orders";
-
-interface NewOrderProps {
-    paymentMethods: { id: number; code: string; title: string }[];
-}
+import { usePaymentGateways } from "#/lib/queries/payments";
 
 const COUNTRY_OPTIONS = ["IR", "TR", "AE", "DE"] as const;
 
@@ -29,14 +27,78 @@ function lineKey(): string {
     return `line-${lineCounter}`;
 }
 
+interface PaymentMethod {
+    id: number;
+    code: string;
+    title: string;
+}
+
+/**
+ * Manual order entry shell. Fetches the tenant's enabled payment gateways client-side and resolves
+ * each gateway's localized title before handing the form a flat method list. The form itself only
+ * mounts once the gateways resolve so its `paymentGatewayId` initializer has real data to seed from.
+ */
+export function NewOrder() {
+    const locale = useLocale() as Locale;
+    const tCommon = useTranslations("Common");
+    const { data: gateways, isLoading, isError, refetch } = usePaymentGateways();
+
+    const paymentMethods = useMemo<PaymentMethod[]>(
+        () =>
+            (gateways ?? []).map((gateway) => ({
+                id: gateway.id,
+                code: gateway.code,
+                title: gateway.title[locale === "fa" ? "fa" : "en"],
+            })),
+        [gateways, locale],
+    );
+
+    if (isLoading) return <NewOrderSkeleton />;
+    if (isError || gateways === undefined) {
+        return (
+            <section className="flex flex-col gap-3 p-6 text-center">
+                <p className="text-muted-foreground text-sm">{tCommon("errorLoading")}</p>
+                <Button variant="outline" size="sm" onClick={() => refetch()} className="self-center">
+                    {tCommon("retry")}
+                </Button>
+            </section>
+        );
+    }
+
+    return <NewOrderForm paymentMethods={paymentMethods} />;
+}
+
+/** Loading placeholder for the manual-order editor — two-column layout matching the live form. */
+function NewOrderSkeleton() {
+    return (
+        <section className="flex flex-col gap-6">
+            <Skeleton className="h-12 w-64" />
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_320px]">
+                <div className="flex flex-col gap-4">
+                    <Skeleton className="h-48 w-full" />
+                    <Skeleton className="h-32 w-full" />
+                    <Skeleton className="h-40 w-full" />
+                </div>
+                <div className="flex flex-col gap-4">
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+            </div>
+        </section>
+    );
+}
+
+interface NewOrderFormProps {
+    paymentMethods: PaymentMethod[];
+}
+
 /**
  * Manual order entry. The new endpoint requires a `payment_gateway_id` (the dropdown is the
- * resolved server-side list of enabled gateways) and at least one line. Save-as-draft and
- * place-order both POST to `/admin/orders`; place-order then optionally walks the state machine
- * to `pending` so the order shows up in the live tab right away.
+ * resolved list of enabled gateways) and at least one line. Save-as-draft and place-order both
+ * POST to `/admin/orders`; place-order then optionally walks the state machine to `pending` so the
+ * order shows up in the live tab right away.
  */
-export function NewOrder({ paymentMethods }: NewOrderProps) {
-    const _locale = useLocale() as Locale;
+function NewOrderForm({ paymentMethods }: NewOrderFormProps) {
     const t = useTranslations("Orders.new");
     const addressT = useTranslations("Orders.new.address");
     const router = useRouter();

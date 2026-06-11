@@ -1,31 +1,48 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 import { Button } from "#/components/ui/button";
+import { Skeleton } from "#/components/ui/skeleton";
 import { formatDateTime, formatNumber } from "#/lib/format";
-import type { AdminOrder } from "#/lib/types";
+import { useOrder } from "#/lib/queries/orders";
 
 interface PackingSlipViewProps {
-    order: AdminOrder;
-    locale: Locale;
+    orderId: number;
     autoPrint: boolean;
 }
 
 /**
- * Packing slip — no money, just the items + quantities + ship-to address. Same auto-print +
- * print-CSS pattern as the invoice view.
+ * Packing slip — no money, just the items + quantities + ship-to address. The order is fetched
+ * client-side; the print DOM mounts only after the data resolves and `window.print()` is gated on
+ * `!isLoading`, same auto-print + print-CSS pattern as the invoice view.
  */
-export function PackingSlipView({ order, locale, autoPrint }: PackingSlipViewProps) {
+export function PackingSlipView({ orderId, autoPrint }: PackingSlipViewProps) {
+    const locale = useLocale() as Locale;
     const t = useTranslations("Orders.print");
+    const tDetail = useTranslations("Orders.detail");
+    const tCommon = useTranslations("Common");
+    const { data: order, isLoading, isError, refetch } = useOrder(orderId);
 
     useEffect(() => {
-        if (!autoPrint) return;
+        if (!autoPrint || isLoading || order === undefined) return;
         const timer = window.setTimeout(() => window.print(), 200);
         return () => window.clearTimeout(timer);
-    }, [autoPrint]);
+    }, [autoPrint, isLoading, order]);
+
+    if (isLoading) return <PrintSkeleton />;
+    if (isError || order === undefined) {
+        return (
+            <section className="mx-auto flex max-w-3xl flex-col gap-3 p-10 text-center">
+                <p className="text-muted-foreground text-sm">{tDetail("notFound")}</p>
+                <Button variant="outline" size="sm" onClick={() => refetch()} className="self-center">
+                    {tCommon("retry")}
+                </Button>
+            </section>
+        );
+    }
 
     return (
         <article className="mx-auto flex max-w-3xl flex-col gap-8 bg-white p-10 text-black print:p-0">
@@ -82,5 +99,23 @@ export function PackingSlipView({ order, locale, autoPrint }: PackingSlipViewPro
                 <Button onClick={() => window.print()}>{t("print")}</Button>
             </div>
         </article>
+    );
+}
+
+/** Print-page loading placeholder — mirrors the packing slip's header / address / table layout. */
+function PrintSkeleton() {
+    return (
+        <div className="mx-auto flex max-w-3xl flex-col gap-8 p-10">
+            <div className="flex items-start justify-between gap-4 border-black/10 border-b pb-6">
+                <Skeleton className="h-9 w-44" />
+                <Skeleton className="h-9 w-28" />
+            </div>
+            <Skeleton className="h-24 w-64" />
+            <div className="flex flex-col gap-2">
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+            </div>
+        </div>
     );
 }

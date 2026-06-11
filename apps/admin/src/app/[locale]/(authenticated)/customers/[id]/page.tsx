@@ -1,9 +1,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { getCustomer } from "#/lib/server-repos";
 import { CustomersDetailClient } from "#/views/customers/detail/customers-detail";
 
 interface PageProps {
@@ -11,19 +9,19 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { id, locale } = await params;
-    const customer = await getCustomer(Number(id));
-    if (customer === null) {
-        const t = await getTranslations({ locale, namespace: "Customers" });
-        return { title: t("title") };
-    }
-    return { title: `${customer.firstName} ${customer.lastName}` };
+    const { locale } = await params;
+    const t = await getTranslations({ locale, namespace: "Customers" });
+    return { title: t("title") };
 }
 
+/**
+ * Thin server shell: resolves the locale for next-intl's static optimization and forwards only the
+ * route's customer id into the client view, which owns the `useCustomer` React Query subscription
+ * and its own skeleton / error states. No data is fetched here — by design — so the detail chrome
+ * paints on first render regardless of how slow the admin API is.
+ */
 export default async function CustomerDetailPage({ params }: PageProps) {
-    const { locale: rawLocale, id } = await params;
-    setRequestLocale(rawLocale);
-    const customer = await getCustomer(Number(id));
-    if (customer === null) notFound();
-    return <CustomersDetailClient initialCustomerId={customer.id} locale={rawLocale as Locale} />;
+    const { locale, id } = await params;
+    setRequestLocale(locale);
+    return <CustomersDetailClient initialCustomerId={Number(id)} locale={locale as Locale} />;
 }

@@ -1,32 +1,51 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 import { Button } from "#/components/ui/button";
+import { Skeleton } from "#/components/ui/skeleton";
 import { formatDateTime, formatMoney, formatNumber } from "#/lib/format";
+import { useOrder } from "#/lib/queries/orders";
 import type { AdminOrder } from "#/lib/types";
 
 interface InvoiceViewProps {
-    order: AdminOrder;
-    locale: Locale;
+    orderId: number;
     autoPrint: boolean;
 }
 
 /**
- * Print-styled invoice. Server provides the order shape; the client triggers `window.print()` when
- * `?print=1` is in the URL. Layout is intentionally austere — body uses white, monospaced numbers
- * stay tabular, and the only on-screen chrome (the print button) is hidden by `@media print`.
+ * Print-styled invoice. The order is fetched client-side through React Query; the print DOM is only
+ * mounted once the data resolves, and `window.print()` (auto-fired when `?print=1` is in the URL)
+ * is gated on `!isLoading` so the browser never prints a skeleton. Layout is intentionally austere —
+ * body uses white, monospaced numbers stay tabular, and the only on-screen chrome (the print
+ * button) is hidden by `@media print`.
  */
-export function InvoiceView({ order, locale, autoPrint }: InvoiceViewProps) {
+export function InvoiceView({ orderId, autoPrint }: InvoiceViewProps) {
+    const locale = useLocale() as Locale;
     const t = useTranslations("Orders.print");
+    const tDetail = useTranslations("Orders.detail");
+    const tCommon = useTranslations("Common");
+    const { data: order, isLoading, isError, refetch } = useOrder(orderId);
 
     useEffect(() => {
-        if (!autoPrint) return;
+        if (!autoPrint || isLoading || order === undefined) return;
         const timer = window.setTimeout(() => window.print(), 200);
         return () => window.clearTimeout(timer);
-    }, [autoPrint]);
+    }, [autoPrint, isLoading, order]);
+
+    if (isLoading) return <PrintSkeleton />;
+    if (isError || order === undefined) {
+        return (
+            <section className="mx-auto flex max-w-3xl flex-col gap-3 p-10 text-center">
+                <p className="text-muted-foreground text-sm">{tDetail("notFound")}</p>
+                <Button variant="outline" size="sm" onClick={() => refetch()} className="self-center">
+                    {tCommon("retry")}
+                </Button>
+            </section>
+        );
+    }
 
     return (
         <article className="mx-auto flex max-w-3xl flex-col gap-8 bg-white p-10 text-black print:p-0">
@@ -88,6 +107,28 @@ export function InvoiceView({ order, locale, autoPrint }: InvoiceViewProps) {
                 <Button onClick={() => window.print()}>{t("print")}</Button>
             </div>
         </article>
+    );
+}
+
+/** Print-page loading placeholder — mirrors the invoice's header / table / totals block layout. */
+function PrintSkeleton() {
+    return (
+        <div className="mx-auto flex max-w-3xl flex-col gap-8 p-10">
+            <div className="flex items-start justify-between gap-4 border-black/10 border-b pb-6">
+                <Skeleton className="h-9 w-40" />
+                <Skeleton className="h-9 w-28" />
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+            </div>
+            <div className="flex flex-col gap-2">
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+            </div>
+            <Skeleton className="ms-auto h-28 w-72" />
+        </div>
     );
 }
 

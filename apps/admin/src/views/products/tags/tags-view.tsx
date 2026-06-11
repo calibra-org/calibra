@@ -1,7 +1,6 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -18,7 +17,9 @@ import { Button } from "#/components/ui/button";
 import { formatNumber } from "#/lib/format";
 import type { AdminTag } from "#/lib/types";
 
-import { seedTagsListKey, useBulkDeleteTags, useCreateTag, useDeleteTag, useTagsList, useUpdateTag } from "./queries";
+import { TaxonomyErrorState, TaxonomyWorkbenchSkeleton } from "../_shared/taxonomy-states";
+
+import { useBulkDeleteTags, useCreateTag, useDeleteTag, useTagsList, useUpdateTag } from "./queries";
 import { type AdminTagDraft, TagInspector } from "./tag-inspector";
 import { TagsList } from "./tags-list";
 
@@ -30,10 +31,6 @@ export interface TagsStats {
     popular: number;
     unused: number;
     totalAttachments: number;
-}
-
-interface TagsViewProps {
-    initialRows: AdminTag[];
 }
 
 /**
@@ -51,63 +48,24 @@ const SORT_COMPARATORS: Record<TagSortKey, (a: AdminTag, b: AdminTag, locale: Lo
 };
 
 /**
- * Top-level client component. Hosts list + inspector, owns selection / draft / filter state,
- * fires the React Query mutations, and shows a confirm dialog for destructive actions. The
- * server-rendered page hands us the seeded rows; we plant them in the React Query cache so
- * the list hook can take over without a flash on first render.
+ * Page entry point. Fetches the tag list client-side via React Query and renders a workbench
+ * skeleton while in flight / a retry-able error state on failure before mounting the workbench.
  */
-export function TagsView({ initialRows }: TagsViewProps) {
+export function TagsView() {
+    const { data, isLoading, isError, refetch } = useTagsList({ limit: 200 });
+    if (isLoading || data === undefined) return <TaxonomyWorkbenchSkeleton />;
+    if (isError) return <TaxonomyErrorState onRetry={() => void refetch()} />;
+    return <TagsWorkbench rows={data.data} />;
+}
+
+/**
+ * Top-level client workbench. Hosts list + inspector, owns selection / draft / filter state,
+ * fires the React Query mutations, and shows a confirm dialog for destructive actions. The
+ * product counts arrive from the index `used_count` through {@link useTagsList}.
+ */
+function TagsWorkbench({ rows }: { rows: AdminTag[] }) {
     const t = useTranslations("Tags");
     const locale = useLocale() as Locale;
-    const queryClient = useQueryClient();
-
-    /**
-     * Seed the React Query cache with the SSR snapshot on first mount, then rely on
-     * `useTagsList` to refetch on focus or after mutations. Without the seed the list flashes
-     * empty while the browser-side fetch is in flight.
-     */
-    useEffect(() => {
-        const key = seedTagsListKey({ locale, limit: 200 });
-        const existing = queryClient.getQueryData(key);
-        if (existing !== undefined) return;
-        queryClient.setQueryData(key, {
-            data: initialRows.map((row) => ({
-                id: row.id,
-                name: row.name[locale],
-                slug: row.slug[locale],
-                parent_id: null,
-                image_url: null,
-            })),
-            meta: { page: 1, limit: 200, total: initialRows.length, lastPage: 1 },
-        });
-        /**
-         * Stash the resolved counts in a side cache because the SDK payload doesn't carry
-         * them. The list hook below merges these back into the rendered rows.
-         */
-        queryClient.setQueryData(["admin", "tags", "counts", locale], productCountMap(initialRows));
-    }, [initialRows, locale, queryClient]);
-
-    const query = useTagsList({ limit: 200 });
-    const counts = queryClient.getQueryData<Map<number, number>>(["admin", "tags", "counts", locale]);
-
-    /**
-     * Take the cached SDK-shape rows and fold the product counts back in. The list query
-     * sees `productCount: 0` from the adapter because the listing endpoint doesn't surface
-     * counts yet; the SSR fan-out filled the side cache above so the column stays accurate
-     * across refetches that don't change the underlying tag set.
-     *
-     * TODO(api): once `GET /admin/tags` returns counts, drop the side cache and rely on
-     * the query's `select` mapping alone.
-     */
-    const rows = useMemo<AdminTag[]>(() => {
-        const liveRows = query.data?.data ?? initialRows;
-        if (counts === undefined) return liveRows;
-        return liveRows.map((row) => {
-            const fallback = counts.get(row.id);
-            if (fallback === undefined) return row;
-            return { ...row, productCount: row.productCount > 0 ? row.productCount : fallback };
-        });
-    }, [counts, initialRows, query.data]);
 
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<TagFilterMode>("all");
@@ -479,10 +437,4 @@ function filterAndSortRows({ rows, search, filter, sortKey, sortDir, locale }: F
     const comparator = SORT_COMPARATORS[sortKey];
     const sorted = [...filtered].sort((a, b) => comparator(a, b, locale));
     return sortDir === "asc" ? sorted : sorted.reverse();
-}
-
-function productCountMap(rows: AdminTag[]): Map<number, number> {
-    const map = new Map<number, number>();
-    for (const row of rows) map.set(row.id, row.productCount);
-    return map;
 }

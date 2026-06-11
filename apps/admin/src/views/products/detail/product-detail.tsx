@@ -49,6 +49,8 @@ import { VersionsBody } from "./sections/versions-card";
 export interface ProductDetailProps {
     /** SDK-shape payload from the server component. Adapted client-side. */
     initialSdkPayload?: unknown;
+    /** Already-adapted detail view, supplied by the client loader so the SDK shape never re-adapts. */
+    initialProduct?: AdminProductDetailView;
     isNew?: boolean;
     taxClassOptions: { id: number; slug: string; name: string }[];
     shippingClassOptions: { id: number; slug: string; name: string }[];
@@ -73,7 +75,13 @@ const statusTone: Record<"draft" | "publish" | "pending" | "private", StatusTone
  * Optimistic concurrency: the `If-Match` header carries the loaded product's `updated_at`;
  * a 409 surfaces the `ConflictDialog`.
  */
-export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOptions, shippingClassOptions }: ProductDetailProps) {
+export function ProductDetail({
+    initialSdkPayload,
+    initialProduct,
+    isNew = false,
+    taxClassOptions,
+    shippingClassOptions,
+}: ProductDetailProps) {
     const t = useTranslations("Products.detail");
     const tStatus = useTranslations("ProductStatus");
     const tType = useTranslations("Products.detail.types");
@@ -81,9 +89,8 @@ export function ProductDetail({ initialSdkPayload, isNew = false, taxClassOption
     const router = useRouter();
     const locale = useLocale() as Locale;
 
-    const initial: AdminProductDetailView | undefined = initialSdkPayload
-        ? toAdminProductDetail(initialSdkPayload as never)
-        : undefined;
+    const initial: AdminProductDetailView | undefined =
+        initialProduct ?? (initialSdkPayload ? toAdminProductDetail(initialSdkPayload as never) : undefined);
 
     const product = useProduct(initial?.id ?? null, initial ? { initialData: initial } : undefined);
 

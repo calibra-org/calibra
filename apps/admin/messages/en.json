@@ -2005,6 +2005,7 @@
         "title": "Product attributes",
         "subtitle": "Attributes like color and material used by product variations.",
         "subtitleStats": "{total} attributes · {terms} terms",
+        "subtitleCount": "{total} attributes",
         "addAttribute": "Add attribute",
         "footerCount": {
             "total": "Showing all {total} attributes",
@@ -2019,6 +2020,7 @@
             "hasArchives": "Archive page",
             "termsPreview": "Terms",
             "termsPreviewMore": "+{count} more",
+            "termsLoadError": "Failed to load terms",
             "termsConfigure": "Configure",
             "termsConfigureFor": "Configure terms for {name}",
             "actions": "Actions",
@@ -2757,6 +2759,7 @@
             }
         },
         "detail": {
+            "metaTitle": "Order",
             "title": "Order #{number}",
             "titleEditable": "Edit order #{number}",
             "subtitle": "Placed on {date}",
@@ -3473,6 +3476,9 @@
             "cancel": "Cancel",
             "delete": "Delete",
             "loading": "Loading…",
+            "loadError": "Failed to load this customer.",
+            "retry": "Retry",
+            "notFound": "This customer was not found.",
             "lifetimeStats": "Lifetime stats",
             "copyEmail": "Copy email",
             "copyPhone": "Copy phone",

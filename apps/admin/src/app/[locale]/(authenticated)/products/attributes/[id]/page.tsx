@@ -1,9 +1,6 @@
-import type { Locale } from "@calibra/shared/i18n";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { getAttribute, listAttributeTerms } from "#/lib/server-repos";
 import { AttributeTermsView } from "#/views/products/attributes/terms";
 
 interface PageProps {
@@ -11,29 +8,18 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { locale, id } = await params;
+    const { locale } = await params;
     const t = await getTranslations({ locale, namespace: "AttributeTerms" });
-    const numericId = Number(id);
-    if (!Number.isFinite(numericId)) return { title: t("title") };
-    const attribute = await getAttribute(numericId);
-    if (attribute === null) return { title: t("title") };
-    return { title: t("titleFor", { name: attribute.name[locale as Locale] }) };
+    return { title: t("title") };
 }
 
 /**
- * Server entry point for `/products/attributes/{id}`. Resolves the attribute (404s if it
- * doesn't exist), seeds the terms list from the live API, and hands both to the client
- * workbench. The view then drives every interaction through React Query against the
- * `/admin/attributes/{attribute_id}/terms[/:id]` endpoints.
+ * Thin server shell for `/products/attributes/{id}`. Forwards only the numeric route param; the
+ * client view resolves the attribute and its terms through the admin proxy, rendering a 404 state
+ * itself when the attribute does not exist.
  */
 export default async function AttributeTermsPage({ params }: PageProps) {
     const { locale, id } = await params;
     setRequestLocale(locale);
-    const numericId = Number(id);
-    if (!Number.isFinite(numericId)) notFound();
-    const attribute = await getAttribute(numericId);
-    if (attribute === null) notFound();
-    const terms = await listAttributeTerms(numericId);
-
-    return <AttributeTermsView attribute={attribute} initialRows={terms} />;
+    return <AttributeTermsView attributeId={Number(id)} />;
 }

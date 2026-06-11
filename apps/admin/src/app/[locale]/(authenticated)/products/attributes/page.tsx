@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { listAttributesWithTerms } from "#/lib/server-repos";
 import { AttributesView } from "#/views/products/attributes";
 
 interface PageProps {
@@ -15,15 +14,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 /**
- * Server entry point. Fetches the flat attribute list along with each row's term count + a
- * short preview of term names (SSR fan-out). The view plants the rows into the React Query
- * cache on first mount so the list never flashes empty; the term-preview chips are decorative
- * and stay client-stable across mutations.
+ * Thin server shell: resolves the locale and renders the client workbench. The attribute list is
+ * fetched in the browser through the admin proxy; each row's terms are lazy-loaded on expand, so
+ * the page never fans out a per-attribute terms request the way the old SSR repo did.
  */
 export default async function AttributesPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const { attributes, termPreviews, termCounts } = await listAttributesWithTerms();
-
-    return <AttributesView initialRows={attributes} termPreviews={termPreviews} termCounts={termCounts} />;
+    return <AttributesView />;
 }

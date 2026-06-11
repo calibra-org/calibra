@@ -1,7 +1,6 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -17,10 +16,12 @@ import {
 import { Button } from "#/components/ui/button";
 import { formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
+import { useAttribute } from "#/lib/queries/attributes";
 import type { AdminAttribute, AdminAttributeTerm } from "#/lib/types";
 
+import { TaxonomyErrorState, TaxonomyWorkbenchSkeleton } from "../../_shared/taxonomy-states";
+
 import {
-    seedAttributeTermsListKey,
     useAttributeTermsList,
     useBulkDeleteAttributeTerms,
     useCreateAttributeTerm,
@@ -33,8 +34,7 @@ import { TermsList } from "./terms-list";
 export type TermSortKey = "name" | "slug";
 
 interface AttributeTermsViewProps {
-    attribute: AdminAttribute;
-    initialRows: AdminAttributeTerm[];
+    attributeId: number;
 }
 
 const SORT_COMPARATORS: Record<TermSortKey, (a: AdminAttributeTerm, b: AdminAttributeTerm, locale: Locale) => number> = {
@@ -43,30 +43,43 @@ const SORT_COMPARATORS: Record<TermSortKey, (a: AdminAttributeTerm, b: AdminAttr
 };
 
 /**
- * Top-level client component for the per-attribute terms page. Mirrors the Tags workbench
+ * Page entry point. Resolves the attribute and its terms client-side through the admin proxy.
+ * Renders a workbench skeleton while either request is in flight, a retry-able error state on
+ * failure, and a not-found state when the attribute does not exist — then mounts the workbench.
+ */
+export function AttributeTermsView({ attributeId }: AttributeTermsViewProps) {
+    const attribute = useAttribute(attributeId);
+    const terms = useAttributeTermsList({ attributeId, limit: 200 });
+
+    if (attribute.isLoading || terms.isLoading || attribute.data === undefined || terms.data === undefined) {
+        return <TaxonomyWorkbenchSkeleton />;
+    }
+    if (attribute.isError || terms.isError) {
+        return (
+            <TaxonomyErrorState
+                onRetry={() => {
+                    void attribute.refetch();
+                    void terms.refetch();
+                }}
+            />
+        );
+    }
+    return <AttributeTermsWorkbench attribute={attribute.data} initialRows={terms.data} />;
+}
+
+interface AttributeTermsWorkbenchProps {
+    attribute: AdminAttribute;
+    initialRows: AdminAttributeTerm[];
+}
+
+/**
+ * Top-level client workbench for the per-attribute terms page. Mirrors the Tags workbench
  * shape — flat list + inspector with optimistic CRUD via React Query. Selection lifts to the
  * parent so the inspector reacts to row clicks without an extra mount.
  */
-export function AttributeTermsView({ attribute, initialRows }: AttributeTermsViewProps) {
+function AttributeTermsWorkbench({ attribute, initialRows }: AttributeTermsWorkbenchProps) {
     const t = useTranslations("AttributeTerms");
     const locale = useLocale() as Locale;
-    const queryClient = useQueryClient();
-
-    useEffect(() => {
-        const key = seedAttributeTermsListKey({ attributeId: attribute.id, locale, limit: 200 });
-        const existing = queryClient.getQueryData(key);
-        if (existing !== undefined) return;
-        queryClient.setQueryData(key, {
-            data: initialRows.map((row) => ({
-                id: row.id,
-                name: row.name[locale],
-                slug: row.slug,
-                parent_id: null,
-                image_url: null,
-            })),
-            meta: { page: 1, limit: 200, total: initialRows.length, lastPage: 1 },
-        });
-    }, [attribute.id, initialRows, locale, queryClient]);
 
     const query = useAttributeTermsList({ attributeId: attribute.id, limit: 200 });
     const rows = query.data ?? initialRows;

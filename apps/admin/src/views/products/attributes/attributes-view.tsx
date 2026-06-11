@@ -1,7 +1,6 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -16,79 +15,47 @@ import {
 } from "#/components/ui/alert-dialog";
 import { Button } from "#/components/ui/button";
 import { formatNumber } from "#/lib/format";
+import { useAttributesList } from "#/lib/queries/attributes";
 import type { AdminAttribute } from "#/lib/types";
+
+import { TaxonomyErrorState, TaxonomyWorkbenchSkeleton } from "../_shared/taxonomy-states";
 
 import { type AdminAttributeDraft, AttributeInspector } from "./attribute-inspector";
 import { AttributesList } from "./attributes-list";
-import {
-    seedAttributesListKey,
-    useAttributesList,
-    useBulkDeleteAttributes,
-    useCreateAttribute,
-    useDeleteAttribute,
-    useUpdateAttribute,
-} from "./queries";
+import { useBulkDeleteAttributes, useCreateAttribute, useDeleteAttribute, useUpdateAttribute } from "./queries";
 
-export type AttributeSortKey = "name" | "slug" | "termCount";
+export type AttributeSortKey = "name" | "slug";
 
 export interface AttributesStats {
     total: number;
-    totalTerms: number;
-}
-
-interface AttributesViewProps {
-    initialRows: AdminAttribute[];
-    termPreviews: Record<number, string[]>;
-    termCounts: Record<number, number>;
 }
 
 const SORT_COMPARATORS: Record<AttributeSortKey, (a: AdminAttribute, b: AdminAttribute, locale: Locale) => number> = {
     name: (a, b, locale) => (a.name[locale] ?? "").localeCompare(b.name[locale] ?? "", locale),
     slug: (a, b) => a.code.localeCompare(b.code, "en"),
-    termCount: (a, b) => a.termCount - b.termCount,
 };
 
 /**
- * Top-level client component. Hosts the attribute list + inspector, owns selection / draft /
- * filter state, fires React Query mutations, and shows a confirm dialog for destructive
- * actions. Term previews come from SSR — refetches after a mutation lose them until the next
- * full reload (acceptable for this surface, the previews are decorative).
+ * Page entry point. Fetches the attribute list client-side via React Query and renders a
+ * workbench skeleton while in flight / a retry-able error state on failure before mounting the
+ * workbench.
  */
-export function AttributesView({ initialRows, termPreviews, termCounts }: AttributesViewProps) {
+export function AttributesView() {
+    const { data, isLoading, isError, refetch } = useAttributesList({ limit: 200 });
+    if (isLoading || data === undefined) return <TaxonomyWorkbenchSkeleton />;
+    if (isError) return <TaxonomyErrorState onRetry={() => void refetch()} />;
+    return <AttributesWorkbench rows={data} />;
+}
+
+/**
+ * Top-level client workbench. Hosts the attribute list + inspector, owns selection / draft /
+ * filter state, fires React Query mutations, and shows a confirm dialog for destructive
+ * actions. Term counts / names are NOT fetched eagerly — the list lazy-loads a row's terms on
+ * expand (see {@link AttributesList}), so the index render is a single request with no fan-out.
+ */
+function AttributesWorkbench({ rows }: { rows: AdminAttribute[] }) {
     const t = useTranslations("Attributes");
     const locale = useLocale() as Locale;
-    const queryClient = useQueryClient();
-
-    useEffect(() => {
-        const key = seedAttributesListKey({ locale, limit: 200 });
-        const existing = queryClient.getQueryData(key);
-        if (existing !== undefined) return;
-        queryClient.setQueryData(key, {
-            data: initialRows.map((row) => ({
-                id: row.id,
-                code: row.code,
-                order_by: row.orderBy,
-                has_archives: row.hasArchives,
-                name: row.name[locale],
-                locale,
-            })),
-            meta: { page: 1, limit: 200, total: initialRows.length, lastPage: 1 },
-        });
-        /** Side cache for term counts — see brands/tags views for the same pattern. */
-        queryClient.setQueryData(["admin", "attributes", "counts", locale], termCounts);
-    }, [initialRows, termCounts, locale, queryClient]);
-
-    const query = useAttributesList({ limit: 200 });
-    const counts = queryClient.getQueryData<Record<number, number>>(["admin", "attributes", "counts", locale]) ?? termCounts;
-
-    const rows = useMemo<AdminAttribute[]>(() => {
-        const liveRows = query.data ?? initialRows;
-        return liveRows.map((row) => {
-            const fallback = counts[row.id];
-            if (fallback === undefined) return row;
-            return { ...row, termCount: row.termCount > 0 ? row.termCount : fallback };
-        });
-    }, [counts, initialRows, query.data]);
 
     const [search, setSearch] = useState("");
     const [sortKey, setSortKey] = useState<AttributeSortKey>("name");
@@ -114,11 +81,7 @@ export function AttributesView({ initialRows, termPreviews, termCounts }: Attrib
         setDraft(selected);
     }, [selected]);
 
-    const stats = useMemo<AttributesStats>(() => {
-        let totalTerms = 0;
-        for (const row of rows) totalTerms += row.termCount;
-        return { total: rows.length, totalTerms };
-    }, [rows]);
+    const stats = useMemo<AttributesStats>(() => ({ total: rows.length }), [rows]);
 
     const visibleRows = useMemo(
         () => filterAndSortRows({ rows, search, sortKey, sortDir, locale }),
@@ -261,7 +224,7 @@ export function AttributesView({ initialRows, termPreviews, termCounts }: Attrib
                 setSortDir((currentDir) => (currentDir === "asc" ? "desc" : "asc"));
                 return key;
             }
-            setSortDir(key === "termCount" ? "desc" : "asc");
+            setSortDir("asc");
             return key;
         });
     }, []);
@@ -279,10 +242,7 @@ export function AttributesView({ initialRows, termPreviews, termCounts }: Attrib
                 <div className="flex flex-col gap-1">
                     <h1 className="font-semibold text-2xl tracking-tight">{t("title")}</h1>
                     <p className="text-muted-foreground text-sm">
-                        {t("subtitleStats", {
-                            total: formatNumber(stats.total, locale),
-                            terms: formatNumber(stats.totalTerms, locale),
-                        })}
+                        {t("subtitleCount", { total: formatNumber(stats.total, locale) })}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -311,7 +271,6 @@ export function AttributesView({ initialRows, termPreviews, termCounts }: Attrib
                 <AttributesList
                     rows={rows}
                     visibleRows={visibleRows}
-                    termPreviews={termPreviews}
                     selectedId={selectedId}
                     selectedIds={selectedIds}
                     search={search}

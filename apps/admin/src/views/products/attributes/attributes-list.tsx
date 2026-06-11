@@ -1,16 +1,18 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Search, Settings2, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronRight, Pencil, Search, Settings2, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode, useState } from "react";
 
 import { BulkSelectionBar } from "#/components/ui/bulk-selection-bar";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
+import { Skeleton } from "#/components/ui/skeleton";
 import { formatNumber } from "#/lib/format";
 import { Link } from "#/lib/i18n/navigation";
+import { useAttributeTerms } from "#/lib/queries/attributes";
 import type { AdminAttribute } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
@@ -19,7 +21,6 @@ import type { AttributeSortKey } from "./attributes-view";
 interface AttributesListProps {
     rows: AdminAttribute[];
     visibleRows: AdminAttribute[];
-    termPreviews: Record<number, string[]>;
     selectedId: number | null;
     selectedIds: Set<number>;
     search: string;
@@ -38,14 +39,15 @@ interface AttributesListProps {
 }
 
 /**
- * Attributes list. Flat list with sortable columns (name / slug / term count) and three
- * row-hover actions: Configure terms (primary — navigates to the per-attribute terms page),
- * Edit, Delete. Bulk-select via the leading checkbox column.
+ * Attributes list. Flat list with sortable columns (name / slug) and three row-hover actions:
+ * Configure terms (primary — navigates to the per-attribute terms page), Edit, Delete.
+ * Bulk-select via the leading checkbox column. Each row carries an expand toggle that lazily
+ * loads that attribute's terms on demand ({@link useAttributeTerms}) — the index render itself
+ * never fans out a terms request, which is the whole point of the de-RSC refactor.
  */
 export function AttributesList({
     rows,
     visibleRows,
-    termPreviews,
     selectedId,
     selectedIds,
     search,
@@ -67,6 +69,7 @@ export function AttributesList({
     const tTable = useTranslations("Attributes.table");
     const tOrderBy = useTranslations("Attributes.orderBy");
     const tBulk = useTranslations("Attributes.bulk");
+    const [expandedId, setExpandedId] = useState<number | null>(null);
     const allVisibleSelected = visibleRows.length > 0 && visibleRows.every((row) => selectedIds.has(row.id));
 
     return (
@@ -113,13 +116,6 @@ export function AttributesList({
                                 />
                                 <th className="px-3 py-2 text-start font-medium">{tTable("orderBy")}</th>
                                 <th className="px-3 py-2 text-start font-medium">{tTable("termsPreview")}</th>
-                                <SortHeader
-                                    label={tTable("termCount")}
-                                    active={sortKey === "termCount"}
-                                    direction={sortDir}
-                                    onClick={() => onSort("termCount")}
-                                    className="text-end"
-                                />
                                 <th className="w-40 px-3 py-2 text-end font-medium">{tTable("actions")}</th>
                             </tr>
                         </thead>
@@ -127,109 +123,117 @@ export function AttributesList({
                             {visibleRows.map((row) => {
                                 const isSelected = selectedIds.has(row.id);
                                 const isActive = selectedId === row.id;
-                                const preview = termPreviews[row.id] ?? [];
+                                const isExpanded = expandedId === row.id;
+                                const rowName = row.name[locale] || tTable("untitled");
                                 return (
-                                    <tr
-                                        key={row.id}
-                                        className={cn(
-                                            "group border-border/40 border-b transition-colors last:border-b-0",
-                                            isActive ? "bg-primary/5" : "hover:bg-muted/40",
-                                            isSelected && "bg-primary/10",
+                                    <Fragment key={row.id}>
+                                        <tr
+                                            className={cn(
+                                                "group border-border/40 border-b transition-colors",
+                                                !isExpanded && "last:border-b-0",
+                                                isActive ? "bg-primary/5" : "hover:bg-muted/40",
+                                                isSelected && "bg-primary/10",
+                                            )}
+                                        >
+                                            <td className="w-10 px-3 py-2">
+                                                <Checkbox
+                                                    aria-label={tToolbar("selectRow", { name: rowName })}
+                                                    checked={isSelected}
+                                                    onCheckedChange={() => onToggleSelected(row.id)}
+                                                />
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onSelectRow(row.id)}
+                                                    className={cn(
+                                                        "block max-w-full truncate text-start font-medium",
+                                                        isActive ? "text-primary" : "text-foreground hover:text-primary",
+                                                    )}
+                                                >
+                                                    {rowName}
+                                                </button>
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <span
+                                                    dir="ltr"
+                                                    className="block max-w-full truncate font-mono text-muted-foreground text-xs"
+                                                >
+                                                    {row.code}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <span className="text-muted-foreground text-xs">{tOrderBy(row.orderBy)}</span>
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setExpandedId((current) => (current === row.id ? null : row.id))
+                                                    }
+                                                    aria-expanded={isExpanded}
+                                                    className="inline-flex items-center gap-1 text-muted-foreground text-xs hover:text-foreground"
+                                                >
+                                                    {isExpanded ? (
+                                                        <ChevronDown className="size-3.5" aria-hidden="true" />
+                                                    ) : (
+                                                        <ChevronRight className="size-3.5" data-rtl-flip aria-hidden="true" />
+                                                    )}
+                                                    {tTable("termsPreview")}
+                                                </button>
+                                            </td>
+                                            <td className="w-40 px-3 py-2 text-end">
+                                                <div
+                                                    className={cn(
+                                                        "inline-flex items-center gap-1 opacity-0 transition-opacity",
+                                                        "group-focus-within:opacity-100 group-hover:opacity-100",
+                                                        isActive && "opacity-100",
+                                                    )}
+                                                >
+                                                    <Button
+                                                        asChild
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        aria-label={tTable("termsAria", { name: rowName })}
+                                                        className="size-8 text-muted-foreground hover:text-foreground"
+                                                    >
+                                                        {/* biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware */}
+                                                        <Link href={`/products/attributes/${row.id}` as any}>
+                                                            <Settings2 className="size-3.5" aria-hidden="true" />
+                                                        </Link>
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        aria-label={tTable("editAria", { name: rowName })}
+                                                        onClick={() => onEdit(row.id)}
+                                                        className="size-8 text-muted-foreground hover:text-foreground"
+                                                    >
+                                                        <Pencil className="size-3.5" aria-hidden="true" />
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        aria-label={tTable("deleteAria", { name: rowName })}
+                                                        onClick={() => onDelete(row.id)}
+                                                        className="size-8 text-muted-foreground hover:text-destructive"
+                                                    >
+                                                        <Trash2 className="size-3.5" aria-hidden="true" />
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {isExpanded && (
+                                            <tr className="border-border/40 border-b bg-muted/20 last:border-b-0">
+                                                <td colSpan={6} className="px-3 py-2">
+                                                    <TermsRow attributeId={row.id} attributeName={rowName} locale={locale} />
+                                                </td>
+                                            </tr>
                                         )}
-                                    >
-                                        <td className="w-10 px-3 py-2">
-                                            <Checkbox
-                                                aria-label={tToolbar("selectRow", {
-                                                    name: row.name[locale] || tTable("untitled"),
-                                                })}
-                                                checked={isSelected}
-                                                onCheckedChange={() => onToggleSelected(row.id)}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => onSelectRow(row.id)}
-                                                className={cn(
-                                                    "block max-w-full truncate text-start font-medium",
-                                                    isActive ? "text-primary" : "text-foreground hover:text-primary",
-                                                )}
-                                            >
-                                                {row.name[locale] || tTable("untitled")}
-                                            </button>
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <span
-                                                dir="ltr"
-                                                className="block max-w-full truncate font-mono text-muted-foreground text-xs"
-                                            >
-                                                {row.code}
-                                            </span>
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <span className="text-muted-foreground text-xs">{tOrderBy(row.orderBy)}</span>
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <TermsPreview
-                                                names={preview}
-                                                total={row.termCount}
-                                                attributeId={row.id}
-                                                attributeName={row.name[locale] || tTable("untitled")}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2 text-end">
-                                            <TermCountPill count={row.termCount} locale={locale} />
-                                        </td>
-                                        <td className="w-40 px-3 py-2 text-end">
-                                            <div
-                                                className={cn(
-                                                    "inline-flex items-center gap-1 opacity-0 transition-opacity",
-                                                    "group-focus-within:opacity-100 group-hover:opacity-100",
-                                                    isActive && "opacity-100",
-                                                )}
-                                            >
-                                                <Button
-                                                    asChild
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={tTable("termsAria", {
-                                                        name: row.name[locale] || tTable("untitled"),
-                                                    })}
-                                                    className="size-8 text-muted-foreground hover:text-foreground"
-                                                >
-                                                    {/* biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware */}
-                                                    <Link href={`/products/attributes/${row.id}` as any}>
-                                                        <Settings2 className="size-3.5" aria-hidden="true" />
-                                                    </Link>
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={tTable("editAria", {
-                                                        name: row.name[locale] || tTable("untitled"),
-                                                    })}
-                                                    onClick={() => onEdit(row.id)}
-                                                    className="size-8 text-muted-foreground hover:text-foreground"
-                                                >
-                                                    <Pencil className="size-3.5" aria-hidden="true" />
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={tTable("deleteAria", {
-                                                        name: row.name[locale] || tTable("untitled"),
-                                                    })}
-                                                    onClick={() => onDelete(row.id)}
-                                                    className="size-8 text-muted-foreground hover:text-destructive"
-                                                >
-                                                    <Trash2 className="size-3.5" aria-hidden="true" />
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    </Fragment>
                                 );
                             })}
                         </tbody>
@@ -305,16 +309,41 @@ function SortHeader({ label, active, direction, onClick, className }: SortHeader
     );
 }
 
-interface TermsPreviewProps {
-    names: string[];
-    total: number;
+interface TermsRowProps {
     attributeId: number;
     attributeName: string;
+    locale: Locale;
 }
 
-function TermsPreview({ names, total, attributeId, attributeName }: TermsPreviewProps) {
+/**
+ * Lazily-loaded terms strip for an expanded attribute row. The terms query fires only when this
+ * component mounts (i.e. when the operator expands the row), so the index render never fans out
+ * one terms request per attribute — replacing the old SSR N+1.
+ */
+function TermsRow({ attributeId, attributeName, locale }: TermsRowProps) {
     const t = useTranslations("Attributes.table");
-    if (total === 0) {
+    const { data, isLoading, isError, refetch } = useAttributeTerms({ attributeId });
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-wrap items-center gap-1.5">
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-5 w-12 rounded-full" />
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <button type="button" onClick={() => void refetch()} className="text-destructive text-xs hover:underline">
+                {t("termsLoadError")}
+            </button>
+        );
+    }
+
+    const terms = data ?? [];
+    if (terms.length === 0) {
         return (
             // biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware
             <Link href={`/products/attributes/${attributeId}` as any} className="text-primary text-xs hover:underline">
@@ -322,18 +351,15 @@ function TermsPreview({ names, total, attributeId, attributeName }: TermsPreview
             </Link>
         );
     }
-    const overflow = total - names.length;
+
     return (
         <div className="flex flex-wrap items-center gap-1 text-xs">
-            {names.map((name) => (
-                <span
-                    key={`${attributeId}-term-${name}`}
-                    className="inline-flex items-center rounded-full bg-muted/60 px-2 py-0.5 text-foreground"
-                >
-                    {name}
+            <TermCountPill count={terms.length} locale={locale} />
+            {terms.map((term) => (
+                <span key={term.id} className="inline-flex items-center rounded-full bg-muted/60 px-2 py-0.5 text-foreground">
+                    {term.name[locale] || term.slug}
                 </span>
             ))}
-            {overflow > 0 && <span className="text-muted-foreground">{t("termsPreviewMore", { count: overflow })}</span>}
             {/* biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware */}
             <Link href={`/products/attributes/${attributeId}` as any} className="text-primary hover:underline">
                 ({t("termsConfigure")})
@@ -348,13 +374,6 @@ interface TermCountPillProps {
 }
 
 function TermCountPill({ count, locale }: TermCountPillProps) {
-    if (count === 0) {
-        return (
-            <span className="inline-flex h-6 min-w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 px-2 text-[11px] text-muted-foreground tabular-nums">
-                {formatNumber(0, locale)}
-            </span>
-        );
-    }
     return (
         <span className="inline-flex h-6 min-w-9 items-center justify-center rounded-full border border-primary/30 bg-primary/10 px-2 font-medium text-[11px] text-primary tabular-nums">
             {formatNumber(count, locale)}
