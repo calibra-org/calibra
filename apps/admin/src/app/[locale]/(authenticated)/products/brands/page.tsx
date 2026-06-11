@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { listBrands } from "#/lib/server-repos";
 import { BrandsView } from "#/views/products/brands";
 
 interface PageProps {
@@ -15,15 +14,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 /**
- * Server entry point. Fetches the flat brand list (with the per-row product-count fan-out
- * `listBrands` does) and hands it to the client workbench as the SSR seed. The view plants
- * the rows into the React Query cache on first mount so the list never flashes empty, and
- * every mutation afterwards rides through the same-origin admin proxy.
+ * Thin server shell: resolves the locale and renders the client workbench. The brand list and
+ * its product counts (index `used_count`) are fetched in the browser through the admin proxy.
  */
 export default async function BrandsPage({ params }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
-    const { data } = await listBrands({ limit: 200 });
-
-    return <BrandsView initialRows={data} />;
+    return <BrandsView />;
 }

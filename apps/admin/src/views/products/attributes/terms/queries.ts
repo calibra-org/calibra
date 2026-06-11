@@ -232,16 +232,3 @@ export function useBulkDeleteAttributeTerms() {
         },
     });
 }
-
-/** Used by `attribute-terms-view.tsx` to seed the React Query cache from the SSR payload. */
-export function seedAttributeTermsListKey({
-    attributeId,
-    locale,
-    limit,
-}: {
-    attributeId: number;
-    locale: Locale;
-    limit: number;
-}) {
-    return ["admin", "attribute-terms", attributeId, "list", { locale, page: 1, limit, search: undefined }] as const;
-}

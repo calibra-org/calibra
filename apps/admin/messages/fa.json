@@ -2005,6 +2005,7 @@
         "title": "ویژگی‌های محصول",
         "subtitle": "ویژگی‌هایی مانند رنگ و جنس که در تنوع محصول استفاده می‌شوند.",
         "subtitleStats": "{total} ویژگی · {terms} گزینه",
+        "subtitleCount": "{total} ویژگی",
         "addAttribute": "افزودن ویژگی",
         "footerCount": {
             "total": "نمایش هر {total} ویژگی",
@@ -2019,6 +2020,7 @@
             "hasArchives": "صفحهٔ آرشیو",
             "termsPreview": "گزینه‌ها",
             "termsPreviewMore": "+ {count} مورد دیگر",
+            "termsLoadError": "بارگذاری گزینه‌ها با خطا مواجه شد",
             "termsConfigure": "پیکربندی",
             "termsConfigureFor": "پیکربندی گزینه‌های {name}",
             "actions": "عملیات",

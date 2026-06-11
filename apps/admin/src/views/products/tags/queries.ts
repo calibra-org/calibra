@@ -26,7 +26,7 @@ function dup(value: string | null | undefined): LocalizedString {
 }
 
 function toAdminTag(t: SdkAdminTaxonomy): AdminTag {
-    return { id: t.id, name: dup(t.name), slug: dup(t.slug), productCount: 0 };
+    return { id: t.id, name: dup(t.name), slug: dup(t.slug), productCount: t.used_count ?? 0 };
 }
 
 const LIST_KEY = ["admin", "tags", "list"] as const;
@@ -38,12 +38,9 @@ export interface TagsListParams {
 }
 
 /**
- * Browser-side tags list. The page seeds the cache with the SSR result (including the
- * `productCount` fan-out that the API listing does not yet return), so we keep `staleTime`
- * generous and rely on mutation hooks below to bust the cache when content changes.
- *
- * TODO(api): include `product_count` on `GET /api/v1/admin/tags` so refetches after a
- * mutation don't drop the counts until the next full-page reload.
+ * Browser-side tags list. The index endpoint carries the product count as `used_count`, so
+ * {@link toAdminTag} reads it directly — there is no per-row `/products` fan-out, and refetches
+ * after a mutation keep the counts accurate.
  */
 export function useTagsList(params: TagsListParams = {}): UseQueryResult<Paginated<AdminTag>, Error> {
     const locale = useLocale() as Locale;
@@ -224,9 +221,4 @@ export function useBulkDeleteTags() {
             void queryClient.invalidateQueries({ queryKey: LIST_KEY });
         },
     });
-}
-
-/** Used by `tags-view.tsx` to seed the React Query cache from the SSR page payload. */
-export function seedTagsListKey({ locale, limit }: { locale: Locale; limit: number }) {
-    return ["admin", "tags", "list", { locale, page: 1, limit, search: undefined }] as const;
 }

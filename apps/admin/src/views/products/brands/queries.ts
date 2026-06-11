@@ -30,7 +30,7 @@ function toAdminBrand(b: SdkAdminTaxonomy): AdminBrand {
         id: b.id,
         name: dup(b.name),
         slug: dup(b.slug),
-        productCount: 0,
+        productCount: b.used_count ?? 0,
         imageMediaId: b.image_media_id ?? null,
         logoUrl: b.image_url ?? null,
     };
@@ -45,12 +45,9 @@ export interface BrandsListParams {
 }
 
 /**
- * Browser-side brands list. The page seeds the cache with the SSR result (including the
- * `productCount` fan-out that the API listing does not yet return), so we keep `staleTime`
- * generous and rely on mutation hooks below to bust the cache when content changes.
- *
- * TODO(api): include `product_count` on `GET /api/v1/admin/brands` so refetches after a
- * mutation don't drop the counts until the next full-page reload.
+ * Browser-side brands list. The index endpoint carries the product count as `used_count`, so
+ * {@link toAdminBrand} reads it directly — there is no per-row `/products` fan-out, and refetches
+ * after a mutation keep the counts accurate.
  */
 export function useBrandsList(params: BrandsListParams = {}): UseQueryResult<Paginated<AdminBrand>, Error> {
     const locale = useLocale() as Locale;
@@ -238,9 +235,4 @@ export function useBulkDeleteBrands() {
             void queryClient.invalidateQueries({ queryKey: LIST_KEY });
         },
     });
-}
-
-/** Used by `brands-view.tsx` to seed the React Query cache from the SSR page payload. */
-export function seedBrandsListKey({ locale, limit }: { locale: Locale; limit: number }) {
-    return ["admin", "brands", "list", { locale, page: 1, limit, search: undefined }] as const;
 }

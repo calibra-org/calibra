@@ -2,15 +2,19 @@
 
 import type { AdminSchemas } from "@calibra/sdk";
 import type { Locale } from "@calibra/shared/i18n";
-import { type UseQueryResult, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
-import { apiGet, apiMutate } from "#/lib/queries/api-client";
-import type { AdminAttribute, LocalizedString } from "#/lib/types";
+import { apiMutate } from "#/lib/queries/api-client";
+import type { AdminAttribute } from "#/lib/types";
 
 type Schemas = AdminSchemas["schemas"];
 type SdkAdminAttribute = Schemas["AdminAttribute"];
 
+/**
+ * Cached list-row shape mutated optimistically by the hooks below. Matches the envelope the
+ * read hook in `#/lib/queries/attributes` writes into the `["admin","attributes","list"]` cache.
+ */
 interface AttributeListEnvelope {
     data: SdkAdminAttribute[];
     meta?: { page: number; limit: number; total: number; lastPage: number };
@@ -20,51 +24,7 @@ interface AttributeResourceEnvelope {
     data: SdkAdminAttribute;
 }
 
-function dup(value: string | null | undefined): LocalizedString {
-    const safe = typeof value === "string" ? value : "";
-    return { fa: safe, en: safe };
-}
-
-function normalizeOrderBy(value: string | null | undefined): AdminAttribute["orderBy"] {
-    return value === "name" || value === "id" ? value : "menu_order";
-}
-
-function toAdminAttribute(a: SdkAdminAttribute): AdminAttribute {
-    return {
-        id: a.id,
-        code: a.code,
-        name: dup(a.name),
-        termCount: 0,
-        orderBy: normalizeOrderBy(a.order_by),
-        hasArchives: Boolean(a.has_archives),
-    };
-}
-
 const LIST_KEY = ["admin", "attributes", "list"] as const;
-
-export interface AttributesListParams {
-    page?: number;
-    limit?: number;
-    search?: string;
-}
-
-/**
- * Browser-side attributes list. The page seeds the cache with the SSR result (term counts +
- * term name previews are filled by SSR fan-out — the API listing doesn't carry them today),
- * so refetches after a mutation will lose the previews until the next full reload.
- */
-export function useAttributesList(params: AttributesListParams = {}): UseQueryResult<AdminAttribute[], Error> {
-    const locale = useLocale() as Locale;
-    const page = params.page ?? 1;
-    const limit = params.limit ?? 200;
-    const search = params.search;
-    return useQuery<AttributeListEnvelope, Error, AdminAttribute[]>({
-        queryKey: ["admin", "attributes", "list", { locale, page, limit, search }],
-        queryFn: () => apiGet<AttributeListEnvelope>("attributes", { locale, query: { page, limit, q: search } }),
-        select: (payload) => (payload.data ?? []).map(toAdminAttribute),
-        staleTime: 30_000,
-    });
-}
 
 export interface CreateAttributeInput {
     name: string;
@@ -213,9 +173,4 @@ export function useBulkDeleteAttributes() {
             void queryClient.invalidateQueries({ queryKey: LIST_KEY });
         },
     });
-}
-
-/** Used by `attributes-view.tsx` to seed the React Query cache from the SSR page payload. */
-export function seedAttributesListKey({ locale, limit }: { locale: Locale; limit: number }) {
-    return ["admin", "attributes", "list", { locale, page: 1, limit, search: undefined }] as const;
 }

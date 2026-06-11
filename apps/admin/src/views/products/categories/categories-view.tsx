@@ -33,13 +33,28 @@ import { formatNumber } from "#/lib/format";
 import type { AdminCategory } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
+import { TaxonomyErrorState, TaxonomyWorkbenchSkeleton } from "../_shared/taxonomy-states";
+
 import { flattenCategoryTree } from "./build-tree";
 import { type AdminCategoryLike, CategoryInspector } from "./category-inspector";
 import { CategoryTree } from "./category-tree";
-import { useBulkDeleteCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from "./queries";
+import { useBulkDeleteCategories, useCategoriesList, useCreateCategory, useDeleteCategory, useUpdateCategory } from "./queries";
 import { useCategoriesTree } from "./use-categories-tree";
 
-interface CategoriesViewProps {
+/**
+ * Page entry point. Fetches the category list client-side via React Query, renders a workbench
+ * skeleton while the request is in flight and a retry-able error state on failure, then mounts
+ * the tree workbench seeded from the loaded rows. The `key` forces a fresh `useCategoriesTree`
+ * seed whenever the row set identity changes (initial load, locale flip refetch).
+ */
+export function CategoriesView() {
+    const { data, isLoading, isError, refetch } = useCategoriesList({ limit: 200 });
+    if (isLoading || data === undefined) return <TaxonomyWorkbenchSkeleton />;
+    if (isError) return <TaxonomyErrorState onRetry={() => void refetch()} />;
+    return <CategoriesWorkbench key={data.data.length} initialRows={data.data} />;
+}
+
+interface CategoriesWorkbenchProps {
     initialRows: AdminCategory[];
 }
 
@@ -60,10 +75,10 @@ type FilterMode = "all" | "topLevel" | "withProducts" | "empty";
  *     for the rendered list (the SSR seed bypasses the query cache on first render).
  *   - Drag moves still stay client-only — the API does not yet expose a parent / order
  *     mutation, so the existing local-only `tree.onDragEnd` behaviour is preserved.
- *   - The server-rendered page hands us a hydrated row list; we never refetch on mount, so
- *     the initial paint matches SSR pixel-for-pixel and avoids a flash.
+ *   - The parent {@link CategoriesView} hands us the React Query-loaded rows as the tree's
+ *     initial state; mutations invalidate the list cache so a later refetch re-seeds the tree.
  */
-export function CategoriesView({ initialRows }: CategoriesViewProps) {
+function CategoriesWorkbench({ initialRows }: CategoriesWorkbenchProps) {
     const t = useTranslations("Categories");
     const tBulk = useTranslations("Categories.bulk");
     const locale = useLocale() as Locale;

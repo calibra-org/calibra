@@ -31,7 +31,7 @@ function toAdminCategory(c: SdkAdminTaxonomy): AdminCategory {
         parentId: c.parent_id ?? null,
         name: dup(c.name),
         slug: dup(c.slug),
-        productCount: 0,
+        productCount: c.used_count ?? 0,
         imageMediaId: c.image_media_id ?? null,
         imageUrl: c.image_url ?? null,
     };
@@ -46,15 +46,10 @@ export interface CategoriesListParams {
 }
 
 /**
- * Browser-side categories list — kept in sync with the server-rendered seed so reorders and
- * edits invalidate the cache instead of forcing a full page reload.
- *
- * `productCount` is sent as zero by the API listing today; the server-rendered page hydrates
- * the initial counts. Refetches after mutations therefore lose counts until the API exposes
- * them on the index payload (TODO below).
- *
- * TODO(api): include `product_count` on `GET /api/v1/admin/categories` so this hook returns
- * fully-populated rows without the fan-out the SSR repo does today.
+ * Browser-side categories list. The index endpoint already carries the product count as
+ * `used_count` (a `withCount` subquery on the controller), so {@link toAdminCategory} reads it
+ * directly — no per-row `/products` fan-out is needed, and refetches after a mutation keep the
+ * counts accurate.
  */
 export function useCategoriesList(params: CategoriesListParams = {}) {
     const locale = useLocale() as Locale;
