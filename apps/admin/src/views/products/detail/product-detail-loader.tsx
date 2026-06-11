@@ -44,13 +44,7 @@ export function ProductDetailLoader({ productId, isNew = false }: ProductDetailL
                 />
             );
         }
-        return (
-            <ProductDetail
-                isNew
-                taxClassOptions={taxClasses.data ?? []}
-                shippingClassOptions={shippingClasses.data ?? []}
-            />
-        );
+        return <ProductDetail isNew taxClassOptions={taxClasses.data ?? []} shippingClassOptions={shippingClasses.data ?? []} />;
     }
 
     if (detail.isLoading || optionsLoading) return <ProductDetailSkeleton />;
