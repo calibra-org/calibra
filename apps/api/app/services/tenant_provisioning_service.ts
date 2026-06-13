@@ -3,6 +3,8 @@ import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
 
 import User from "#models/user";
+import { CredentialService } from "#services/credential_service";
+import { recordPlatformAudit } from "#services/platform_audit_service";
 import { type BrandingSettingsInput, brandingSettingRows } from "#services/storefront_branding_service";
 import { runWithTenant } from "#services/tenant_context";
 
@@ -56,12 +58,20 @@ export interface ProvisionInput {
     templateKey?: string;
     /** Hostname suffix for the auto-created subdomain. Defaults to `shops.calibra.app`. */
     domainSuffix?: string;
+    /** When set (the control-plane API path), a `tenant_provisioned` audit row is written + attributed. */
+    platformUserId?: bigint | number | null;
+    ipAddress?: string | null;
+    userAgent?: string | null;
 }
 
 export interface ProvisionResult {
     id: number;
     slug: string;
     ownerUserId: number;
+    ownerEmail: string | null;
+    /** The generated temp password — plaintext, reveal-once. Null when an explicit password was given. */
+    ownerTempPassword: string | null;
+    mustChangePassword: boolean;
 }
 
 /**
@@ -128,19 +138,50 @@ export class TenantProvisioningService {
             await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(tenantId)]);
             await this.seedDefaults(trx, tenantId, now, input.branding ?? {}, input.name);
 
+            /**
+             * Owner credential: when no explicit password is supplied (the control-plane API path), a
+             * strong temp password is generated and the owner is forced to change it on first login.
+             * The seeder passes a known `ownerPassword` for demo convenience → no forced change.
+             */
+            const generated = !input.ownerPassword;
+            const ownerPassword = input.ownerPassword ?? CredentialService.generateTempPassword();
+
             const ownerUserId = await runWithTenant(BigInt(tenantId), trx, async () => {
                 const user = new User();
                 user.tenantId = tenantId;
                 if (input.ownerEmail) user.email = input.ownerEmail.toLowerCase();
                 if (input.ownerPhone) user.phone = input.ownerPhone;
-                user.passwordHash = input.ownerPassword ?? "ChangeMe123!";
+                user.passwordHash = ownerPassword;
                 user.role = "admin";
                 user.locale = "fa";
+                user.mustChangePassword = generated;
                 await user.save();
                 return Number(user.id);
             });
 
-            return { id: tenantId, slug, ownerUserId };
+            /** Persist the explicit owner pointer (was computed then discarded before Control Plane v2). */
+            await trx.from("tenants").where("id", tenantId).update({ owner_user_id: ownerUserId, updated_at: now });
+
+            if (input.platformUserId !== undefined && input.platformUserId !== null) {
+                await recordPlatformAudit(trx, {
+                    platformUserId: input.platformUserId,
+                    tenantId,
+                    targetUserId: ownerUserId,
+                    action: "tenant_provisioned",
+                    metadata: { slug, plan_key: input.planKey },
+                    ipAddress: input.ipAddress ?? null,
+                    userAgent: input.userAgent ?? null,
+                });
+            }
+
+            return {
+                id: tenantId,
+                slug,
+                ownerUserId,
+                ownerEmail: input.ownerEmail ? input.ownerEmail.toLowerCase() : null,
+                ownerTempPassword: generated ? ownerPassword : null,
+                mustChangePassword: generated,
+            };
         });
     }
 

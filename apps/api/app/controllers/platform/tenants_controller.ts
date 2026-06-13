@@ -81,7 +81,7 @@ export default class PlatformTenantsController {
             });
         }
 
-        let result: { id: number; slug: string };
+        let result: Awaited<ReturnType<TenantProvisioningService["provision"]>>;
         try {
             result = await new TenantProvisioningService().provision({
                 slug: payload.slug,
@@ -92,6 +92,9 @@ export default class PlatformTenantsController {
                 templateKey: payload.template_key,
                 ownerEmail: payload.owner_email ?? null,
                 ownerPhone: payload.owner_phone ?? null,
+                platformUserId: ctx.platformUser ? Number(ctx.platformUser.id) : null,
+                ipAddress: ctx.request.ip(),
+                userAgent: ctx.request.header("user-agent") ?? null,
             });
         } catch (err) {
             const message = err instanceof Error ? err.message : "Provisioning failed";
@@ -111,6 +114,16 @@ export default class PlatformTenantsController {
             data: {
                 ...toTenantDetail(tenant, tenant.domains, usage),
                 shop_url: `https://${result.slug}.${SHOP_DOMAIN_SUFFIX}`,
+                /**
+                 * Reveal-once owner credentials. The temp password is served exactly here and never
+                 * again (no endpoint re-reads it); the durable backstop is single-use + the forced
+                 * password change. `temp_password` is null when an explicit password was provided.
+                 */
+                owner_credentials: {
+                    email: result.ownerEmail,
+                    temp_password: result.ownerTempPassword,
+                    must_change_password: result.mustChangePassword,
+                },
             },
         };
     }

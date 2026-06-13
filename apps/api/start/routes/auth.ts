@@ -8,6 +8,7 @@ const LoginController = () => import("#controllers/auth/login_controller");
 const LogoutController = () => import("#controllers/auth/logout_controller");
 const PasswordForgotController = () => import("#controllers/auth/password_forgot_controller");
 const PasswordResetController = () => import("#controllers/auth/password_reset_controller");
+const PasswordChangeController = () => import("#controllers/auth/password_change_controller");
 const OtpController = () => import("#controllers/auth/otp_controller");
 const ImpersonationStopController = () => import("#controllers/auth/impersonation_stop_controller");
 const MeController = () => import("#controllers/account/me_controller");
@@ -26,6 +27,7 @@ router
             .group(() => {
                 router.post("/logout", [LogoutController, "handle"]).as("auth.logout");
                 router.get("/me", [MeController, "show"]).as("auth.me");
+                router.post("/password/change", [PasswordChangeController, "handle"]).as("auth.password.change");
                 router.post("/impersonation/stop", [ImpersonationStopController, "handle"]).as("auth.impersonation.stop");
             })
             .use(middleware.auth({ guards: ["api"] }));

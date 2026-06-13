@@ -31,6 +31,11 @@ export default class PasswordResetController {
         await withTenantTransaction(async (trx) => {
             const user = await User.findOrFail(row.userId, { client: trx });
             user.passwordHash = password;
+            /**
+             * Consuming a reset/handoff link also clears the forced-change flag: the operator has just
+             * chosen a password, so an operator-handoff link doubles as the "set your password" step.
+             */
+            user.mustChangePassword = false;
             await user.save();
 
             row.usedAt = DateTime.utc();
