@@ -1,0 +1,64 @@
+title: TicketConversation
+description: >
+    Admin ticketing conversation envelope — matches the controller's
+    `TicketConversationTransformer.toObject()`. Represents one inbox thread with its
+    requester, inbox, assignee, tags, and SLA timestamps. The `messages` array is folded
+    in only on the detail variant (`TicketConversationDetail`).
+type: object
+properties:
+    id: { type: string }
+    display_id: { type: integer }
+    context:
+        type: string
+        enum: [shop_customer, platform_internal]
+    subject: { type: [string, "null"] }
+    status:
+        type: string
+        enum: [open, pending, snoozed, resolved, closed, archived]
+    priority:
+        type: string
+        enum: [low, normal, high, urgent]
+    inbox_id: { type: string }
+    channel_identity_id: { type: string }
+    assignee_agent_id: { type: [string, "null"] }
+    inbox:
+        anyOf:
+            - type: "null"
+            - type: object
+              properties:
+                  id: { type: string }
+                  name: { type: string }
+                  channel_type: { type: string }
+              required: [id, name, channel_type]
+    requester:
+        anyOf:
+            - type: "null"
+            - type: object
+              properties:
+                  name: { type: [string, "null"] }
+                  identity: { type: string }
+              required: [identity]
+    tags:
+        type: array
+        items:
+            type: object
+            properties:
+                id: { type: string }
+                name: { type: string }
+                color: { type: [string, "null"] }
+            required: [id, name]
+    last_activity_at: { type: [string, "null"], format: date-time }
+    first_response_at: { type: [string, "null"], format: date-time }
+    waiting_since: { type: [string, "null"], format: date-time }
+    snoozed_until: { type: [string, "null"], format: date-time }
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
+required:
+    - id
+    - display_id
+    - context
+    - status
+    - priority
+    - inbox_id
+    - channel_identity_id
+    - tags

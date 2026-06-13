@@ -102,3 +102,18 @@ paths:
     /api/v1/platform/plans/{id}:
         patch:
             $ref: "./platform/paths/plans/plans-id.patch.yaml"
+    /api/v1/platform/tickets:
+        get:
+            $ref: "./platform/paths/tickets/tickets.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/platform/tickets/{id}:
+        get:
+            $ref: "./platform/paths/tickets/tickets-id.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./platform/paths/tickets/tickets-id.patch.yaml"
+    /api/v1/platform/tickets/{id}/messages:
+        post:
+            $ref: "./platform/paths/tickets/tickets-id-messages.post.yaml"

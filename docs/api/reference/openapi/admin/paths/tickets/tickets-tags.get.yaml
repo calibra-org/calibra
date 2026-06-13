@@ -1,0 +1,19 @@
+operationId: adminTicketTagsIndex
+summary: List conversation tags (admin)
+description: Returns every conversation tag with its display color.
+tags: [Admin / Tickets]
+
+responses:
+    "200":
+        description: Conversation-tag list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/TicketTag.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

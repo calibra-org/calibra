@@ -1,0 +1,15 @@
+operationId: adminChannelsDisconnect
+summary: Disconnect a channel connection (admin)
+description: Tears down the channel connection and purges its stored credentials.
+tags: [Admin / Channels]
+
+parameters:
+    - { name: provider, in: path, required: true, schema: { type: string } }
+    - { name: id, in: path, required: true, schema: { type: string } }
+
+responses:
+    "204":
+        description: Disconnected.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

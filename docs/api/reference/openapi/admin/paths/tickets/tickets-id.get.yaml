@@ -1,0 +1,24 @@
+operationId: adminTicketsShow
+summary: Get a ticket conversation (admin)
+description: Returns one ticket conversation with its full ordered message thread.
+tags: [Admin / Tickets]
+security:
+    - BearerAuth: []
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: The ticket conversation with its messages.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketConversationDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

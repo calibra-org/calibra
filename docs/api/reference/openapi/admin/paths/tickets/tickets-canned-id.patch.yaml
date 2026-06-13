@@ -1,0 +1,33 @@
+operationId: adminTicketCannedUpdate
+summary: Update a canned response (admin)
+description: Patches the included fields of a saved canned reply.
+tags: [Admin / Tickets]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    shortcut: { type: string, minLength: 1, maxLength: 80 }
+                    title: { type: string, minLength: 1, maxLength: 255 }
+                    body: { type: string, minLength: 1 }
+
+responses:
+    "200":
+        description: Updated canned response.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketCannedResponse.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

@@ -1,0 +1,38 @@
+operationId: adminTicketAgentsUpdate
+summary: Update a support agent (admin)
+description: Patches the included seat fields. Set `status` to `disabled` to revoke the agent without deleting their history.
+tags: [Admin / Tickets]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    support_role: { type: string, enum: [agent, supervisor, support_admin] }
+                    access_tier: { type: string, enum: [all, unassigned_and_own, participating] }
+                    can_reassign: { type: boolean }
+                    max_open_capacity: { type: [integer, "null"], minimum: 0 }
+                    inbox_ids:
+                        type: array
+                        items: { type: integer }
+                    status: { type: string, enum: [active, disabled] }
+
+responses:
+    "200":
+        description: Updated support agent.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketAgent.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

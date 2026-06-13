@@ -136,6 +136,52 @@ export class CartSchema extends BaseModel {
   declare userAgent: string | null
 }
 
+export class ChannelConnectionSchema extends BaseModel {
+  static $columns = ['createdAt', 'endpointId', 'id', 'keyVersion', 'lastError', 'lastVerifiedAt', 'provider', 'providerVariant', 'publicConfig', 'status', 'tenantId', 'updatedAt'] as const
+  $columns = ChannelConnectionSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare endpointId: any
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare keyVersion: number
+  @column()
+  declare lastError: string | null
+  @column.dateTime()
+  declare lastVerifiedAt: DateTime | null
+  @column()
+  declare provider: string
+  @column()
+  declare providerVariant: string | null
+  @column()
+  declare publicConfig: any
+  @column()
+  declare status: string
+  @column()
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class ChannelSecretSchema extends BaseModel {
+  static $columns = ['ciphertext', 'connectionId', 'createdAt', 'id', 'keyVersion', 'tenantId'] as const
+  $columns = ChannelSecretSchema.$columns
+  @column()
+  declare ciphertext: string
+  @column()
+  declare connectionId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare keyVersion: number
+  @column()
+  declare tenantId: bigint | number
+}
+
 export class CouponBrandConstraintSchema extends BaseModel {
   static $columns = ['brandId', 'couponId', 'createdAt', 'id', 'mode', 'tenantId', 'updatedAt'] as const
   $columns = CouponBrandConstraintSchema.$columns
@@ -2720,6 +2766,294 @@ export class TenantSchema extends BaseModel {
   declare status: string
   @column()
   declare templateKey: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class TicketingAgentSchema extends BaseModel {
+  static $columns = ['accessTier', 'canReassign', 'createdAt', 'id', 'maxOpenCapacity', 'status', 'supportRole', 'tenantId', 'updatedAt', 'userId'] as const
+  $columns = TicketingAgentSchema.$columns
+  @column()
+  declare accessTier: string
+  @column()
+  declare canReassign: boolean
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare maxOpenCapacity: number | null
+  @column()
+  declare status: string
+  @column()
+  declare supportRole: string
+  @column()
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: bigint | number
+}
+
+export class TicketingAttachmentSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'mediaId', 'messageId', 'tenantId'] as const
+  $columns = TicketingAttachmentSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare mediaId: bigint | number
+  @column()
+  declare messageId: bigint | number
+  @column()
+  declare tenantId: bigint | number
+}
+
+export class TicketingCannedResponseSchema extends BaseModel {
+  static $columns = ['body', 'createdAt', 'createdByUserId', 'id', 'shortcut', 'tenantId', 'title', 'updatedAt'] as const
+  $columns = TicketingCannedResponseSchema.$columns
+  @column()
+  declare body: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare createdByUserId: bigint | number | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare shortcut: any
+  @column()
+  declare tenantId: bigint | number
+  @column()
+  declare title: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class TicketingChannelIdentitySchema extends BaseModel {
+  static $columns = ['attributes', 'channelIdentity', 'createdAt', 'customerId', 'displayName', 'id', 'inboxId', 'tenantId', 'updatedAt', 'userId'] as const
+  $columns = TicketingChannelIdentitySchema.$columns
+  @column()
+  declare attributes: any
+  @column()
+  declare channelIdentity: any
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare customerId: bigint | number | null
+  @column()
+  declare displayName: string | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare inboxId: bigint | number
+  @column()
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: bigint | number | null
+}
+
+export class TicketingConversationParticipantSchema extends BaseModel {
+  static $columns = ['conversationId', 'createdAt', 'id', 'participantId', 'participantKind', 'role', 'tenantId', 'updatedAt'] as const
+  $columns = TicketingConversationParticipantSchema.$columns
+  @column()
+  declare conversationId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare participantId: bigint | number
+  @column()
+  declare participantKind: string
+  @column()
+  declare role: string
+  @column()
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class TicketingConversationTagSchema extends BaseModel {
+  static $columns = ['conversationId', 'createdAt', 'id', 'tagId', 'tenantId'] as const
+  $columns = TicketingConversationTagSchema.$columns
+  @column()
+  declare conversationId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare tagId: bigint | number
+  @column()
+  declare tenantId: bigint | number
+}
+
+export class TicketingConversationSchema extends BaseModel {
+  static $columns = ['assigneeAgentId', 'attributes', 'channelIdentityId', 'context', 'createdAt', 'deletedAt', 'displayId', 'firstResponseAt', 'id', 'inboxId', 'lastActivityAt', 'priority', 'snoozedUntil', 'status', 'subject', 'tenantId', 'updatedAt', 'waLastInboundAt', 'waWindowExpiresAt', 'waitingSince'] as const
+  $columns = TicketingConversationSchema.$columns
+  @column()
+  declare assigneeAgentId: bigint | number | null
+  @column()
+  declare attributes: any
+  @column()
+  declare channelIdentityId: bigint | number
+  @column()
+  declare context: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+  @column()
+  declare displayId: bigint | number
+  @column.dateTime()
+  declare firstResponseAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare inboxId: bigint | number
+  @column.dateTime()
+  declare lastActivityAt: DateTime
+  @column()
+  declare priority: string
+  @column.dateTime()
+  declare snoozedUntil: DateTime | null
+  @column()
+  declare status: string
+  @column()
+  declare subject: string | null
+  @column()
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column.dateTime()
+  declare waLastInboundAt: DateTime | null
+  @column.dateTime()
+  declare waWindowExpiresAt: DateTime | null
+  @column.dateTime()
+  declare waitingSince: DateTime | null
+}
+
+export class TicketingInboundEventSchema extends BaseModel {
+  static $columns = ['conversationId', 'externalEventId', 'id', 'outcome', 'processedAt', 'provider', 'receivedAt', 'tenantId'] as const
+  $columns = TicketingInboundEventSchema.$columns
+  @column()
+  declare conversationId: bigint | number | null
+  @column()
+  declare externalEventId: any
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare outcome: string
+  @column.dateTime()
+  declare processedAt: DateTime | null
+  @column()
+  declare provider: string
+  @column.dateTime()
+  declare receivedAt: DateTime
+  @column()
+  declare tenantId: bigint | number
+}
+
+export class TicketingInboxMemberSchema extends BaseModel {
+  static $columns = ['agentId', 'createdAt', 'id', 'inboxId', 'tenantId', 'updatedAt'] as const
+  $columns = TicketingInboxMemberSchema.$columns
+  @column()
+  declare agentId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare inboxId: bigint | number
+  @column()
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class TicketingInboxSchema extends BaseModel {
+  static $columns = ['assignmentStrategy', 'autoAssign', 'channelConnectionId', 'channelType', 'config', 'createdAt', 'id', 'isDefault', 'name', 'status', 'tenantId', 'updatedAt'] as const
+  $columns = TicketingInboxSchema.$columns
+  @column()
+  declare assignmentStrategy: string
+  @column()
+  declare autoAssign: boolean
+  @column()
+  declare channelConnectionId: bigint | number | null
+  @column()
+  declare channelType: string
+  @column()
+  declare config: any
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare isDefault: boolean
+  @column()
+  declare name: string
+  @column()
+  declare status: string
+  @column()
+  declare tenantId: bigint | number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class TicketingMessageSchema extends BaseModel {
+  static $columns = ['authorId', 'authorKind', 'body', 'contentAttributes', 'contentType', 'conversationId', 'createdAt', 'direction', 'id', 'inboxId', 'kind', 'private', 'providerMessageId', 'sourceId', 'status', 'tenantId'] as const
+  $columns = TicketingMessageSchema.$columns
+  @column()
+  declare authorId: bigint | number | null
+  @column()
+  declare authorKind: string
+  @column()
+  declare body: string | null
+  @column()
+  declare contentAttributes: any
+  @column()
+  declare contentType: string
+  @column()
+  declare conversationId: bigint | number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare direction: string
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare inboxId: bigint | number
+  @column()
+  declare kind: string
+  @column()
+  declare private: boolean
+  @column()
+  declare providerMessageId: any | null
+  @column()
+  declare sourceId: any | null
+  @column()
+  declare status: string
+  @column()
+  declare tenantId: bigint | number
+}
+
+export class TicketingTagSchema extends BaseModel {
+  static $columns = ['color', 'createdAt', 'id', 'name', 'tenantId', 'updatedAt'] as const
+  $columns = TicketingTagSchema.$columns
+  @column()
+  declare color: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare name: any
+  @column()
+  declare tenantId: bigint | number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 }

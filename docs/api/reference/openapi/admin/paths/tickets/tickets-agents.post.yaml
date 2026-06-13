@@ -1,0 +1,35 @@
+operationId: adminTicketAgentsStore
+summary: Create a support agent (admin)
+description: Promotes a user into a support-agent seat with a role, access tier, optional capacity cap, and optional inbox memberships.
+tags: [Admin / Tickets]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [user_id, support_role, access_tier]
+                properties:
+                    user_id: { type: integer }
+                    support_role: { type: string, enum: [agent, supervisor, support_admin] }
+                    access_tier: { type: string, enum: [all, unassigned_and_own, participating] }
+                    can_reassign: { type: boolean }
+                    max_open_capacity: { type: [integer, "null"], minimum: 0 }
+                    inbox_ids:
+                        type: array
+                        items: { type: integer }
+
+responses:
+    "201":
+        description: Created support agent.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketAgent.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

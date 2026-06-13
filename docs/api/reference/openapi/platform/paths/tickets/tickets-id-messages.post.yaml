@@ -1,0 +1,34 @@
+operationId: platformTicketsPostMessage
+summary: Post a message to a support conversation (control-plane)
+description: Appends an operator reply to a control-plane support conversation and returns the
+    created message.
+tags: [Platform Tickets]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [body]
+                properties:
+                    body: { type: string, minLength: 1 }
+responses:
+    "201":
+        description: Message created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformTicketMessage.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

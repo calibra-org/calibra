@@ -139,6 +139,7 @@ test.group("admin tickets — access tier", (group) => {
 
         const adminList = await client.get("/api/v1/admin/tickets").withGuard("api").loginAs(adminUser);
         adminList.assertStatus(200);
+        adminList.assertAgainstApiSpec();
         assert.equal(adminList.body().meta.total, 3);
 
         const ownList = await client.get("/api/v1/admin/tickets").withGuard("api").loginAs(ownUser);
@@ -158,6 +159,7 @@ test.group("admin tickets — access tier", (group) => {
             .loginAs(adminUser)
             .json({ body: "Hello, how can I help?" });
         reply.assertStatus(201);
+        reply.assertAgainstApiSpec();
         assert.equal(reply.body().data.direction, "outbound");
         assert.isFalse(reply.body().data.private);
 
@@ -172,6 +174,7 @@ test.group("admin tickets — access tier", (group) => {
 
         const detail = await client.get(`/api/v1/admin/tickets/${conversationId}`).withGuard("api").loginAs(adminUser);
         detail.assertStatus(200);
+        detail.assertAgainstApiSpec();
         assert.isAbove(detail.body().data.messages.length, 1);
     });
 
@@ -187,6 +190,7 @@ test.group("admin tickets — access tier", (group) => {
             .loginAs(adminUser)
             .json({ status: "resolved" });
         res.assertStatus(200);
+        res.assertAgainstApiSpec();
         assert.equal(res.body().data.status, "resolved");
     });
 
@@ -214,6 +218,7 @@ test.group("admin tickets — access tier", (group) => {
             .loginAs(adminUser)
             .json({ user_id: Number(staff.id), support_role: "agent", access_tier: "unassigned_and_own" });
         created.assertStatus(201);
+        created.assertAgainstApiSpec();
         assert.equal(created.body().data.access_tier, "unassigned_and_own");
 
         const canned = await client
@@ -222,6 +227,7 @@ test.group("admin tickets — access tier", (group) => {
             .loginAs(adminUser)
             .json({ shortcut: "hi", title: "Greeting", body: "Hello!" });
         canned.assertStatus(201);
+        canned.assertAgainstApiSpec();
         assert.equal(canned.body().data.shortcut, "hi");
     });
 });

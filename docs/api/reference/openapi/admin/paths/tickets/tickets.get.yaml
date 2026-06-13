@@ -1,0 +1,50 @@
+operationId: adminTicketsIndex
+summary: List ticket conversations (admin)
+description: >
+    Paginated list of ticket conversations in the support inbox. Simple per-column filters
+    and sort go through the unified TableView wire grammar (`filter[]=field:op:value`,
+    `filterOr[]=…`, `sort[]=field:dir`). Endpoint-specific extensions stay as top-level params.
+
+
+    **Endpoint extensions** (outside TableView):
+        - `q` — free-text search over subject, requester name/identity, and message bodies.
+        - `tab` — bespoke status bucket (`open` / `pending` / `snoozed` / `resolved` /
+          `closed` / `archived` / `all`). Counterpart of the conversation status enum.
+tags: [Admin / Tickets]
+security:
+    - BearerAuth: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - { name: q, in: query, schema: { type: string }, description: "Free-text search across subject, requester, and message bodies." }
+    - {
+          name: tab,
+          in: query,
+          schema:
+              {
+                  type: string,
+                  enum: [open, pending, snoozed, resolved, closed, archived, all],
+              },
+          description: Selects the status bucket to list.,
+      }
+
+responses:
+    "200":
+        description: Paginated ticket conversation list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/TicketConversation.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

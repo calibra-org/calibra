@@ -1,0 +1,30 @@
+operationId: adminTicketCannedStore
+summary: Create a canned response (admin)
+description: Saves a new canned reply. The `shortcut` is the token agents type to insert the `body`.
+tags: [Admin / Tickets]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [shortcut, title, body]
+                properties:
+                    shortcut: { type: string, minLength: 1, maxLength: 80 }
+                    title: { type: string, minLength: 1, maxLength: 255 }
+                    body: { type: string, minLength: 1 }
+
+responses:
+    "201":
+        description: Created canned response.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketCannedResponse.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

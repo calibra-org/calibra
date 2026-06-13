@@ -1,0 +1,17 @@
+operationId: adminTicketsRemoveTag
+summary: Detach a tag from a ticket (admin)
+description: Detaches a tag from the conversation. Idempotent — detaching an absent tag still returns 204.
+tags: [Admin / Tickets]
+security:
+    - BearerAuth: []
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+    - { name: tagId, in: path, required: true, schema: { type: string } }
+
+responses:
+    "204":
+        description: Tag detached. No content.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

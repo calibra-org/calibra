@@ -1,0 +1,32 @@
+operationId: adminChannelsConnect
+summary: Connect a channel provider (admin)
+description: >
+    Creates a channel connection for the named provider. The request body carries the
+    provider-specific credentials (token, secret, webhook config, …); the shape varies per
+    provider and is validated server-side. Secrets are encrypted at rest and never returned.
+tags: [Admin / Channels]
+
+parameters:
+    - { name: provider, in: path, required: true, schema: { type: string } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                additionalProperties: true
+
+responses:
+    "201":
+        description: Created channel connection.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/ChannelConnection.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

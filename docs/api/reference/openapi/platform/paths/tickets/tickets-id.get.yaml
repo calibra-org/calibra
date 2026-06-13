@@ -1,0 +1,22 @@
+operationId: platformTicketsShow
+summary: Get a support conversation (control-plane)
+description: Returns one control-plane support conversation with its full message thread.
+tags: [Platform Tickets]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+responses:
+    "200":
+        description: The conversation with its messages.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformTicketConversationDetail.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

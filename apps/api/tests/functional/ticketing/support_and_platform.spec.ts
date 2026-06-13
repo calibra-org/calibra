@@ -95,6 +95,7 @@ test.group("support + platform tickets", (group) => {
             .loginAs(owner)
             .json({ subject: "Billing question", body: "How do I upgrade my plan?" });
         opened.assertStatus(201);
+        opened.assertAgainstApiSpec();
         assert.equal(opened.body().data.context, "platform_internal");
 
         const ownerList = await client.get("/api/v1/admin/support").withGuard("api").loginAs(owner);
@@ -120,6 +121,7 @@ test.group("support + platform tickets", (group) => {
 
         const queue = await client.get("/api/v1/platform/tickets").header("Authorization", `Bearer ${pat}`);
         queue.assertStatus(200);
+        queue.assertAgainstApiSpec();
         assert.isAtLeast(queue.body().meta.total, 1);
 
         const reply = await client
@@ -127,11 +129,13 @@ test.group("support + platform tickets", (group) => {
             .header("Authorization", `Bearer ${pat}`)
             .json({ body: "We are looking into it." });
         reply.assertStatus(201);
+        reply.assertAgainstApiSpec();
         assert.equal(reply.body().data.direction, "outbound");
         assert.equal(reply.body().data.author_kind, "platform_user");
 
         const shopView = await client.get(`/api/v1/admin/support/${ticketId}`).withGuard("api").loginAs(owner);
         shopView.assertStatus(200);
+        shopView.assertAgainstApiSpec();
         const bodies = shopView.body().data.messages.map((m: { body: string }) => m.body);
         assert.include(bodies, "We are looking into it.");
     });

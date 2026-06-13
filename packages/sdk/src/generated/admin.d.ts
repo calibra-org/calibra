@@ -3853,6 +3853,539 @@ export interface paths {
         patch: operations["adminMediaPatch"];
         trace?: never;
     };
+    "/api/v1/admin/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List ticket conversations (admin)
+         * @description Paginated list of ticket conversations in the support inbox. Simple per-column filters and sort go through the unified TableView wire grammar (`filter[]=field:op:value`, `filterOr[]=…`, `sort[]=field:dir`). Endpoint-specific extensions stay as top-level params.
+         *
+         *     **Endpoint extensions** (outside TableView):
+         *         - `q` — free-text search over subject, requester name/identity, and message bodies.
+         *         - `tab` — bespoke status bucket (`open` / `pending` / `snoozed` / `resolved` /
+         *           `closed` / `archived` / `all`). Counterpart of the conversation status enum.
+         */
+        get: operations["adminTicketsIndex"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/inboxes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List inboxes (admin)
+         * @description Returns all ticketing inboxes configured for the shop.
+         */
+        get: operations["adminTicketsInboxes"];
+        put?: never;
+        /**
+         * Create an inbox (admin)
+         * @description Creates a ticketing inbox bound to a channel type. Internal channels (`internal_web`, `internal_platform`) are always available. External messaging channels (`whatsapp`, `telegram`) may be unavailable in the current deployment region — those requests fail validation with code `E_NOT_AVAILABLE_IN_REGION`.
+         */
+        post: operations["adminTicketsStoreInbox"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List support agents (admin)
+         * @description Returns every support-agent seat with its role, access tier, reassignment permission, capacity cap, and joined user.
+         */
+        get: operations["adminTicketAgentsIndex"];
+        put?: never;
+        /**
+         * Create a support agent (admin)
+         * @description Promotes a user into a support-agent seat with a role, access tier, optional capacity cap, and optional inbox memberships.
+         */
+        post: operations["adminTicketAgentsStore"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/agents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a support agent (admin)
+         * @description Patches the included seat fields. Set `status` to `disabled` to revoke the agent without deleting their history.
+         */
+        patch: operations["adminTicketAgentsUpdate"];
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/canned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List canned responses (admin)
+         * @description Returns the saved canned replies available to agents in the composer.
+         */
+        get: operations["adminTicketCannedIndex"];
+        put?: never;
+        /**
+         * Create a canned response (admin)
+         * @description Saves a new canned reply. The `shortcut` is the token agents type to insert the `body`.
+         */
+        post: operations["adminTicketCannedStore"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/canned/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a canned response (admin)
+         * @description Patches the included fields of a saved canned reply.
+         */
+        patch: operations["adminTicketCannedUpdate"];
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List conversation tags (admin)
+         * @description Returns every conversation tag with its display color.
+         */
+        get: operations["adminTicketTagsIndex"];
+        put?: never;
+        /**
+         * Create a conversation tag (admin)
+         * @description Creates a conversation tag with an optional display color.
+         */
+        post: operations["adminTicketTagsStore"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/tags/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a conversation tag (admin)
+         * @description Removes the tag and detaches it from any conversations it was attached to.
+         */
+        delete: operations["adminTicketTagsDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a ticket conversation (admin)
+         * @description Returns one ticket conversation with its full ordered message thread.
+         */
+        get: operations["adminTicketsShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Update a ticket conversation (admin)
+         * @description Patch the included fields on a conversation. Pass `assignee_agent_id: null` to unassign. Set `snoozed_until` together with `status: snoozed` to schedule a wake-up.
+         */
+        patch: operations["adminTicketsUpdate"];
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post a message or note to a ticket (admin)
+         * @description Append an outbound reply or an internal note to the conversation. Set `is_note: true` for a private internal note (not delivered to the requester). Attach media by passing their ids in `attachment_media_ids`.
+         */
+        post: operations["adminTicketsPostMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/{id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach a tag to a ticket (admin)
+         * @description Attaches an existing tag to the conversation. Idempotent — re-attaching a present tag is a no-op.
+         */
+        post: operations["adminTicketsAddTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tickets/{id}/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Detach a tag from a ticket (admin)
+         * @description Detaches a tag from the conversation. Idempotent — detaching an absent tag still returns 204.
+         */
+        delete: operations["adminTicketsRemoveTag"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/support": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List support conversations (admin)
+         * @description Returns the support conversations visible to the calling agent (scoped by their access tier). Each row is a `TicketConversation` envelope without the message thread.
+         */
+        get: operations["adminSupportIndex"];
+        put?: never;
+        /**
+         * Open a support conversation (admin)
+         * @description Opens a new internal support conversation seeded with a subject and an initial message body.
+         */
+        post: operations["adminSupportStore"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/support/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show a support conversation (admin)
+         * @description Returns one conversation with its full message thread folded in (`TicketConversationDetail`).
+         */
+        get: operations["adminSupportShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/support/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post a message to a support conversation (admin)
+         * @description Appends an outbound message to the conversation thread.
+         */
+        post: operations["adminSupportPostMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/channels/{provider}/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Connect a channel provider (admin)
+         * @description Creates a channel connection for the named provider. The request body carries the provider-specific credentials (token, secret, webhook config, …); the shape varies per provider and is validated server-side. Secrets are encrypted at rest and never returned.
+         */
+        post: operations["adminChannelsConnect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/channels/{provider}/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify a channel connection (admin)
+         * @description Re-runs the provider handshake against the stored credentials and updates the connection's verification state.
+         */
+        post: operations["adminChannelsVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/channels/{provider}/{id}/disconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disconnect a channel connection (admin)
+         * @description Tears down the channel connection and purges its stored credentials.
+         */
+        post: operations["adminChannelsDisconnect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5744,6 +6277,163 @@ export interface components {
             created_at?: string | null;
             /** Format: date-time */
             updated_at?: string | null;
+        };
+        /**
+         * TicketConversation
+         * @description Admin ticketing conversation envelope — matches the controller's `TicketConversationTransformer.toObject()`. Represents one inbox thread with its requester, inbox, assignee, tags, and SLA timestamps. The `messages` array is folded in only on the detail variant (`TicketConversationDetail`).
+         */
+        TicketConversation: {
+            id: string;
+            display_id: number;
+            /** @enum {string} */
+            context: "shop_customer" | "platform_internal";
+            subject?: string | null;
+            /** @enum {string} */
+            status: "open" | "pending" | "snoozed" | "resolved" | "closed" | "archived";
+            /** @enum {string} */
+            priority: "low" | "normal" | "high" | "urgent";
+            inbox_id: string;
+            channel_identity_id: string;
+            assignee_agent_id?: string | null;
+            inbox?: null | {
+                id: string;
+                name: string;
+                channel_type: string;
+            };
+            requester?: null | {
+                name?: string | null;
+                identity: string;
+            };
+            tags: {
+                id: string;
+                name: string;
+                color?: string | null;
+            }[];
+            /** Format: date-time */
+            last_activity_at?: string | null;
+            /** Format: date-time */
+            first_response_at?: string | null;
+            /** Format: date-time */
+            waiting_since?: string | null;
+            /** Format: date-time */
+            snoozed_until?: string | null;
+            /** Format: date-time */
+            created_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
+        };
+        /**
+         * TicketInbox
+         * @description An inbox — a routing destination tied to a channel (internal web/platform widget or an external messaging provider). Matches the controller's `TicketInboxTransformer.toObject()`.
+         */
+        TicketInbox: {
+            id: string;
+            name: string;
+            channel_type: string;
+            is_default: boolean;
+            status: string;
+        };
+        /**
+         * TicketAgent
+         * @description Support-agent membership row — matches the controller's `TicketAgentTransformer.toObject()`. Joins a platform user into the ticketing seat model with a support role, an access tier (how broad the agent's conversation visibility is), reassignment permission, and an optional open-conversation capacity cap. `user` is the lightweight admin-user envelope (or null).
+         */
+        TicketAgent: {
+            id: string;
+            user_id: string;
+            /** @enum {string} */
+            support_role: "agent" | "supervisor" | "support_admin";
+            /** @enum {string} */
+            access_tier: "all" | "unassigned_and_own" | "participating";
+            can_reassign: boolean;
+            max_open_capacity?: number | null;
+            /** @enum {string} */
+            status: "active" | "disabled";
+            user?: null | {
+                id: string;
+                email?: string | null;
+            };
+            /** Format: date-time */
+            created_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
+        };
+        /**
+         * TicketCannedResponse
+         * @description Saved canned reply — matches `TicketCannedResponseTransformer.toObject()`. Agents insert these by typing the `shortcut` token; `title` is the human label shown in the picker and `body` is the reply text dropped into the composer.
+         */
+        TicketCannedResponse: {
+            id: string;
+            shortcut: string;
+            title: string;
+            body: string;
+            created_by_user_id?: string | null;
+        };
+        /**
+         * TicketTag
+         * @description Conversation tag — matches `TicketTagTransformer.toObject()`. A free-text label with an optional display color, attached to conversations through the tag pivot.
+         */
+        TicketTag: {
+            id: string;
+            name: string;
+            color?: string | null;
+        };
+        /**
+         * TicketMessage
+         * @description A single message, note, activity, or template entry inside a ticket conversation — matches the controller's `TicketMessageTransformer.toObject()`. Internal notes carry `private: true` and `kind: note`; system activity rows use `kind: activity`.
+         */
+        TicketMessage: {
+            id: string;
+            conversation_id: string;
+            /** @enum {string} */
+            direction: "inbound" | "outbound" | "internal";
+            /** @enum {string} */
+            kind: "message" | "note" | "activity" | "template";
+            /** @enum {string} */
+            content_type: "text" | "image" | "file";
+            body?: string | null;
+            private: boolean;
+            /** @enum {string} */
+            author_kind: "customer" | "user" | "platform_user" | "system";
+            author_id?: string | null;
+            /** @enum {string} */
+            status: "queued" | "sent" | "delivered" | "read" | "failed";
+            provider_message_id?: string | null;
+            content_attributes?: {
+                [key: string]: unknown;
+            };
+            attachments: {
+                id: string;
+                media_id: string;
+                url?: string | null;
+            }[];
+            /** Format: date-time */
+            created_at?: string | null;
+        };
+        /**
+         * TicketConversationDetail
+         * @description Detail variant of `TicketConversation` returned by the show endpoint — the base conversation envelope plus the ordered `messages` thread.
+         */
+        TicketConversationDetail: components["schemas"]["TicketConversation"] & {
+            messages: components["schemas"]["TicketMessage"][];
+        };
+        /**
+         * ChannelConnection
+         * @description Inbound channel connection — matches `ChannelConnectionTransformer.toObject()`. Binds a provider (and optional provider variant) to an endpoint and tracks the encrypted-credential key version plus verification state. Secret material is never serialised; only the non-sensitive `public_config` is returned.
+         */
+        ChannelConnection: {
+            id: string;
+            provider: string;
+            provider_variant?: string | null;
+            endpoint_id: string;
+            /** @enum {string} */
+            status: "pending" | "connected" | "error";
+            public_config?: {
+                [key: string]: unknown;
+            };
+            key_version: number;
+            /** Format: date-time */
+            last_verified_at?: string | null;
+            last_error?: string | null;
         };
     };
     responses: {
@@ -12215,6 +12905,785 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTicketsIndex: {
+        parameters: {
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Free-text search across subject, requester, and message bodies. */
+                q?: string;
+                /** @description Selects the status bucket to list. */
+                tab?: "open" | "pending" | "snoozed" | "resolved" | "closed" | "archived" | "all";
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated ticket conversation list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketConversation"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminTicketsInboxes: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The list of inboxes. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketInbox"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminTicketsStoreInbox: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** @enum {string} */
+                    channel_type: "internal_web" | "internal_platform" | "whatsapp" | "telegram";
+                };
+            };
+        };
+        responses: {
+            /** @description The created inbox. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: string;
+                            name: string;
+                            channel_type: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Validation failed. External messaging channels unavailable in the current region return code `E_NOT_AVAILABLE_IN_REGION`. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors: {
+                            message: string;
+                            code: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    adminTicketAgentsIndex: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Support-agent list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketAgent"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminTicketAgentsStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    user_id: number;
+                    /** @enum {string} */
+                    support_role: "agent" | "supervisor" | "support_admin";
+                    /** @enum {string} */
+                    access_tier: "all" | "unassigned_and_own" | "participating";
+                    can_reassign?: boolean;
+                    max_open_capacity?: number | null;
+                    inbox_ids?: number[];
+                };
+            };
+        };
+        responses: {
+            /** @description Created support agent. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketAgent"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTicketAgentsUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    support_role?: "agent" | "supervisor" | "support_admin";
+                    /** @enum {string} */
+                    access_tier?: "all" | "unassigned_and_own" | "participating";
+                    can_reassign?: boolean;
+                    max_open_capacity?: number | null;
+                    inbox_ids?: number[];
+                    /** @enum {string} */
+                    status?: "active" | "disabled";
+                };
+            };
+        };
+        responses: {
+            /** @description Updated support agent. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketAgent"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTicketCannedIndex: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canned-response list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketCannedResponse"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminTicketCannedStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    shortcut: string;
+                    title: string;
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created canned response. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketCannedResponse"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTicketCannedUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    shortcut?: string;
+                    title?: string;
+                    body?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated canned response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketCannedResponse"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTicketTagsIndex: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Conversation-tag list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketTag"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminTicketTagsStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    color?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Created conversation tag. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketTag"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTicketTagsDestroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminTicketsShow: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The ticket conversation with its messages. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketConversationDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminTicketsUpdate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status?: "open" | "pending" | "snoozed" | "resolved" | "closed" | "archived";
+                    /** @enum {string} */
+                    priority?: "low" | "normal" | "high" | "urgent";
+                    assignee_agent_id?: number | null;
+                    /** Format: date-time */
+                    snoozed_until?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated ticket conversation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketConversation"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTicketsPostMessage: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body?: string;
+                    is_note?: boolean;
+                    /** @enum {string} */
+                    content_type?: "text" | "image" | "file";
+                    attachment_media_ids?: number[];
+                };
+            };
+        };
+        responses: {
+            /** @description The created message. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketMessage"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTicketsAddTag: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tag_id: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Tag attached. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ok: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminTicketsRemoveTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tag detached. No content. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminSupportIndex: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Support-conversation list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketConversation"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminSupportStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    subject: string;
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created support conversation. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketConversation"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminSupportShow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Support conversation with messages. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketConversationDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminSupportPostMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created message. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketMessage"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminChannelsConnect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Created channel connection. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ChannelConnection"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminChannelsVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verified channel connection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ChannelConnection"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminChannelsDisconnect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disconnected. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
 }

@@ -1,0 +1,44 @@
+operationId: adminTicketsPostMessage
+summary: Post a message or note to a ticket (admin)
+description: >
+    Append an outbound reply or an internal note to the conversation. Set `is_note: true`
+    for a private internal note (not delivered to the requester). Attach media by passing
+    their ids in `attachment_media_ids`.
+tags: [Admin / Tickets]
+security:
+    - BearerAuth: []
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    body: { type: string }
+                    is_note: { type: boolean }
+                    content_type:
+                        type: string
+                        enum: [text, image, file]
+                    attachment_media_ids:
+                        type: array
+                        items: { type: integer }
+
+responses:
+    "201":
+        description: The created message.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketMessage.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

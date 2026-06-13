@@ -1,0 +1,22 @@
+title: ChannelConnection
+description: >
+    Inbound channel connection — matches `ChannelConnectionTransformer.toObject()`. Binds a
+    provider (and optional provider variant) to an endpoint and tracks the encrypted-credential
+    key version plus verification state. Secret material is never serialised; only the
+    non-sensitive `public_config` is returned.
+type: object
+properties:
+    id: { type: string }
+    provider: { type: string }
+    provider_variant: { type: [string, "null"] }
+    endpoint_id: { type: string }
+    status:
+        type: string
+        enum: [pending, connected, error]
+    public_config:
+        type: object
+        additionalProperties: true
+    key_version: { type: integer }
+    last_verified_at: { type: [string, "null"], format: date-time }
+    last_error: { type: [string, "null"] }
+required: [id, provider, endpoint_id, status, key_version]
