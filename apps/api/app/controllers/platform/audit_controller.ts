@@ -15,20 +15,31 @@ interface OperatorIdentity {
     email: string | null;
 }
 
+interface TenantIdentity {
+    slug: string | null;
+    name: string | null;
+}
+
 /** Normalize a merged DB row into the `AuditEvent` wire shape, resolving the actor + target ids to
- * readable names/emails (so the feed shows "removed staff@shop.com", not "#770"). */
+ * readable names/emails (so the feed shows "removed staff@shop.com", not "#770") and the tenant id
+ * to its slug/name (so the fleet-wide feed shows which shop each event belongs to). */
 function toAuditEvent(
     row: Record<string, unknown>,
     operators: Map<number, OperatorIdentity>,
     targets: Map<number, string | null>,
+    tenants: Map<number, TenantIdentity>,
 ) {
     const platformUserId = row.platform_user_id === null ? null : Number(row.platform_user_id);
     const targetUserId = row.target_user_id === null ? null : Number(row.target_user_id);
+    const tenantId = Number(row.tenant_id);
     const operator = platformUserId === null ? undefined : operators.get(platformUserId);
+    const tenant = tenants.get(tenantId);
     return {
         source: String(row.source),
         id: Number(row.id),
-        tenant_id: Number(row.tenant_id),
+        tenant_id: tenantId,
+        tenant_slug: tenant?.slug ?? null,
+        tenant_name: tenant?.name ?? null,
         platform_user_id: platformUserId,
         platform_user_name: operator?.name ?? null,
         platform_user_email: operator?.email ?? null,
@@ -105,9 +116,15 @@ export default class PlatformAuditController {
             const found = await conn.from("users").whereIn("id", targetIds).select("id", "email");
             for (const row of found) targets.set(Number(row.id), row.email ?? null);
         }
+        const tenants = new Map<number, TenantIdentity>();
+        const tenantIds = distinctIds(rows, "tenant_id");
+        if (tenantIds.length > 0) {
+            const found = await conn.from("tenants").whereIn("id", tenantIds).select("id", "slug", "name");
+            for (const row of found) tenants.set(Number(row.id), { slug: row.slug ?? null, name: row.name ?? null });
+        }
 
         return {
-            data: rows.map((row) => toAuditEvent(row, operators, targets)),
+            data: rows.map((row) => toAuditEvent(row, operators, targets, tenants)),
             meta: { page, perPage: limit, total, lastPage: Math.max(1, Math.ceil(total / limit)) },
         };
     }

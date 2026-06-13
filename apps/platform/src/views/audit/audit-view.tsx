@@ -1,14 +1,16 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { type ReactNode, useState } from "react";
 
+import { ConsoleSelect } from "#/components/ConsoleSelect";
 import { StatusPill } from "#/components/StatusPill";
 import { Button } from "#/components/ui/button";
 import { EmptyState } from "#/components/ui/empty-state";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { TriangleAlert } from "#/icons";
-import { useAudit } from "#/lib/queries";
+import { useAudit, useTenants } from "#/lib/queries";
 import type { AuditEvent } from "#/lib/types";
 
 /**
@@ -64,23 +66,54 @@ function operatorLabel(e: AuditEvent): string {
     return e.platform_user_name ?? e.platform_user_email ?? (e.platform_user_id ? `#${e.platform_user_id}` : "—");
 }
 
+/** Shop label for the fleet feed (resolved name → slug → `#id`). */
+function shopLabel(e: AuditEvent): string {
+    return e.tenant_name ?? e.tenant_slug ?? `#${e.tenant_id}`;
+}
+
+/** Fleet-only "shop" filter — a select of the shops, plus an "all shops" option. */
+function ShopFilter({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const t = useTranslations("Audit");
+    const tenants = useTenants({ page: 1 });
+    const options = [
+        { value: "", label: t("allShops") },
+        ...(tenants.data?.data ?? []).map((shop) => ({ value: String(shop.id), label: shop.name })),
+    ];
+    return (
+        <div className="w-60">
+            <ConsoleSelect ariaLabel={t("shop")} value={value} onValueChange={onChange} options={options} />
+        </div>
+    );
+}
+
 /**
  * Control-plane audit feed — merged operator actions + impersonation sessions, newest-first. Scoped
- * to one tenant when `tenantId` is given (the shop-detail tab), otherwise fleet-wide.
+ * to one tenant when `tenantId` is given (the shop-detail tab); otherwise fleet-wide, where it gains
+ * a shop column + a shop filter.
  */
 export function AuditView({ tenantId }: { tenantId?: string }) {
     const t = useTranslations("Audit");
+    const tc = useTranslations("Common");
+    const fleet = tenantId === undefined;
+    const [shopFilter, setShopFilter] = useState("");
+    const effectiveTenant = tenantId ?? (shopFilter || undefined);
+    const audit = useAudit(effectiveTenant);
 
     /** Localized, human-readable label for an audit action (raw string fallback for unknown ones). */
     const actionLabel = (action: string): string =>
         isAuditAction(action) ? t(AUDIT_ACTION_KEYS[action] as "action_impersonation") : action;
 
-    const tc = useTranslations("Common");
-    const audit = useAudit(tenantId);
+    const filterBar = fleet ? (
+        <div className="flex justify-end">
+            <ShopFilter value={shopFilter} onChange={setShopFilter} />
+        </div>
+    ) : null;
 
-    if (audit.isPending) return <Skeleton className="h-64 w-full rounded-lg" />;
-    if (audit.isError || !audit.data) {
-        return (
+    let body: ReactNode;
+    if (audit.isPending) {
+        body = <Skeleton className="h-64 w-full rounded-lg" />;
+    } else if (audit.isError || !audit.data) {
+        body = (
             <EmptyState
                 icon={TriangleAlert}
                 title={tc("errorTitle")}
@@ -92,43 +125,56 @@ export function AuditView({ tenantId }: { tenantId?: string }) {
                 }
             />
         );
-    }
-    if (audit.data.data.length === 0) {
-        return <EmptyState icon={TriangleAlert} title={t("empty")} />;
+    } else if (audit.data.data.length === 0) {
+        body = <EmptyState icon={TriangleAlert} title={t("empty")} />;
+    } else {
+        body = (
+            <div className="mission-panel overflow-hidden">
+                <Table className="console-table">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>{t("when")}</TableHead>
+                            {fleet ? <TableHead>{t("shop")}</TableHead> : null}
+                            <TableHead>{t("action")}</TableHead>
+                            <TableHead>{t("details")}</TableHead>
+                            <TableHead>{t("operator")}</TableHead>
+                            <TableHead>{t("reason")}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {audit.data.data.map((e) => (
+                            <TableRow key={`${e.source}-${e.id}`} className="transition-colors hover:bg-accent/40">
+                                <TableCell className="whitespace-nowrap text-muted-foreground text-sm">
+                                    {new Date(e.created_at).toLocaleString()}
+                                </TableCell>
+                                {fleet ? <TableCell className="font-medium text-sm">{shopLabel(e)}</TableCell> : null}
+                                <TableCell>
+                                    <StatusPill tone={e.source === "impersonation" ? "warning" : "info"}>
+                                        {actionLabel(e.action)}
+                                    </StatusPill>
+                                </TableCell>
+                                <TableCell
+                                    dir="ltr"
+                                    className="max-w-xs truncate text-start font-mono text-muted-foreground text-sm"
+                                >
+                                    {auditSubject(e) ?? "—"}
+                                </TableCell>
+                                <TableCell className="text-muted-foreground text-sm">{operatorLabel(e)}</TableCell>
+                                <TableCell className="max-w-xs truncate text-muted-foreground text-sm">
+                                    {e.reason ?? "—"}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        );
     }
 
     return (
-        <div className="mission-panel overflow-hidden">
-            <Table className="console-table">
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>{t("when")}</TableHead>
-                        <TableHead>{t("action")}</TableHead>
-                        <TableHead>{t("details")}</TableHead>
-                        <TableHead>{t("operator")}</TableHead>
-                        <TableHead>{t("reason")}</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {audit.data.data.map((e) => (
-                        <TableRow key={`${e.source}-${e.id}`} className="transition-colors hover:bg-accent/40">
-                            <TableCell className="whitespace-nowrap text-muted-foreground text-sm">
-                                {new Date(e.created_at).toLocaleString()}
-                            </TableCell>
-                            <TableCell>
-                                <StatusPill tone={e.source === "impersonation" ? "warning" : "info"}>
-                                    {actionLabel(e.action)}
-                                </StatusPill>
-                            </TableCell>
-                            <TableCell dir="ltr" className="max-w-xs truncate text-start font-mono text-muted-foreground text-sm">
-                                {auditSubject(e) ?? "—"}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">{operatorLabel(e)}</TableCell>
-                            <TableCell className="max-w-xs truncate text-muted-foreground text-sm">{e.reason ?? "—"}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+        <div className="flex flex-col gap-3">
+            {filterBar}
+            {body}
         </div>
     );
 }

@@ -931,6 +931,10 @@ export interface components {
             source: "platform_action" | "impersonation";
             id: number;
             tenant_id: number;
+            /** @description Slug of the shop this event belongs to. */
+            tenant_slug?: string | null;
+            /** @description Display name of the shop this event belongs to. */
+            tenant_name?: string | null;
             platform_user_id: number | null;
             /** @description Resolved name of the acting platform operator. */
             platform_user_name?: string | null;

@@ -6,6 +6,8 @@ properties:
     source: { type: string, enum: [platform_action, impersonation] }
     id: { type: integer }
     tenant_id: { type: integer }
+    tenant_slug: { type: [string, "null"], description: "Slug of the shop this event belongs to." }
+    tenant_name: { type: [string, "null"], description: "Display name of the shop this event belongs to." }
     platform_user_id: { type: [integer, "null"] }
     platform_user_name: { type: [string, "null"], description: "Resolved name of the acting platform operator." }
     platform_user_email: { type: [string, "null"], description: "Resolved email of the acting platform operator." }
