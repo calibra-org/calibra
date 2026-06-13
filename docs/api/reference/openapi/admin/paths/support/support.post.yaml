@@ -1,0 +1,29 @@
+operationId: adminSupportStore
+summary: Open a support conversation (admin)
+description: Opens a new internal support conversation seeded with a subject and an initial message body.
+tags: [Admin / Support]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [subject, body]
+                properties:
+                    subject: { type: string, minLength: 1, maxLength: 255 }
+                    body: { type: string, minLength: 1 }
+
+responses:
+    "201":
+        description: Created support conversation.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketConversation.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

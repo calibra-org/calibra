@@ -3,7 +3,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { platformGet, platformSend } from "#/lib/api-client";
-import type { MetricsRange, Overview, Paginated, Plan, TenantDetail, TenantListItem, TenantMetrics } from "#/lib/types";
+import type {
+    MetricsRange,
+    Overview,
+    Paginated,
+    Plan,
+    TenantDetail,
+    TenantListItem,
+    TenantMetrics,
+    TicketConversation,
+    TicketConversationDetail,
+    TicketMessage,
+} from "#/lib/types";
 
 /** Single envelope unwrap helper — every control-plane response is `{ data, … }`. */
 type Envelope<T> = { data: T };
@@ -186,5 +197,66 @@ export function useSavePlan() {
                 ? platformSend<Envelope<Plan>>("PATCH", `plans/${id}`, input).then((r) => r.data)
                 : platformSend<Envelope<Plan>>("POST", "plans", input).then((r) => r.data),
         onSuccess: () => qc.invalidateQueries({ queryKey: ["plans"] }),
+    });
+}
+
+/** Toolbar state for the internal-ticket queue, serialized to the TableView wire grammar. */
+export interface TicketsQuery {
+    page: number;
+    q?: string;
+    status?: string;
+    sort?: string;
+}
+
+function ticketsQueryString(query: TicketsQuery): string {
+    const params = new URLSearchParams();
+    params.set("page", String(query.page));
+    params.set("limit", "20");
+    if (query.q) params.set("q", query.q);
+    if (query.status) params.append("filter[]", `status:eq:${query.status}`);
+    if (query.sort) params.append("sort[]", query.sort);
+    return params.toString();
+}
+
+export function useTickets(query: TicketsQuery) {
+    return useQuery({
+        queryKey: ["tickets", query],
+        queryFn: () => platformGet<Paginated<TicketConversation>>(`tickets?${ticketsQueryString(query)}`),
+    });
+}
+
+export function useTicket(id: string) {
+    return useQuery({
+        queryKey: ["ticket", id],
+        queryFn: () => platformGet<Envelope<TicketConversationDetail>>(`tickets/${id}`).then((r) => r.data),
+    });
+}
+
+export function useReplyTicket(id: string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (body: string) =>
+            platformSend<Envelope<TicketMessage>>("POST", `tickets/${id}/messages`, { body }).then((r) => r.data),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["ticket", id] });
+            qc.invalidateQueries({ queryKey: ["tickets"] });
+        },
+    });
+}
+
+export interface TicketPatch {
+    status?: string;
+    assignee_platform_user_id?: number | null;
+}
+
+export function useUpdateTicket(id: string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (patch: TicketPatch) =>
+            platformSend<Envelope<TicketConversation>>("PATCH", `tickets/${id}`, patch).then((r) => r.data),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["ticket", id] });
+            qc.invalidateQueries({ queryKey: ["tickets"] });
+        },
     });
 }

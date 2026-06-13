@@ -1,0 +1,32 @@
+operationId: adminSupportPostMessage
+summary: Post a message to a support conversation (admin)
+description: Appends an outbound message to the conversation thread.
+tags: [Admin / Support]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [body]
+                properties:
+                    body: { type: string, minLength: 1 }
+
+responses:
+    "201":
+        description: Created message.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketMessage.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

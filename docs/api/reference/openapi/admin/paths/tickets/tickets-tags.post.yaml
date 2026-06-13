@@ -1,0 +1,29 @@
+operationId: adminTicketTagsStore
+summary: Create a conversation tag (admin)
+description: Creates a conversation tag with an optional display color.
+tags: [Admin / Tickets]
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [name]
+                properties:
+                    name: { type: string, minLength: 1, maxLength: 80 }
+                    color: { type: [string, "null"], maxLength: 32 }
+
+responses:
+    "201":
+        description: Created conversation tag.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketTag.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

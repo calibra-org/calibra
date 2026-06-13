@@ -127,6 +127,7 @@ export class TenantProvisioningService {
 
             await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(tenantId)]);
             await this.seedDefaults(trx, tenantId, now, input.branding ?? {}, input.name);
+            await this.seedTicketingInboxes(trx, tenantId, now);
 
             const ownerUserId = await runWithTenant(BigInt(tenantId), trx, async () => {
                 const user = new User();
@@ -140,8 +141,48 @@ export class TenantProvisioningService {
                 return Number(user.id);
             });
 
+            /** Promote the owner to a support_admin agent (mirrors the backfill migration). */
+            await trx.table("ticketing_agents").insert({
+                tenant_id: tenantId,
+                user_id: ownerUserId,
+                support_role: "support_admin",
+                access_tier: "all",
+                can_reassign: true,
+                status: "active",
+                created_at: now,
+                updated_at: now,
+            });
+
             return { id: tenantId, slug, ownerUserId };
         });
+    }
+
+    /**
+     * Seeds the two always-on internal ticketing inboxes (R6): the shop's own customer support
+     * (`internal_web`) and the shop ↔ Calibra channel (`internal_platform`), both default. External
+     * (whatsapp/telegram) inboxes are gated off in v1 and never seeded.
+     */
+    private async seedTicketingInboxes(trx: TransactionClientContract, tenantId: number, now: string): Promise<void> {
+        await trx.table("ticketing_inboxes").multiInsert([
+            {
+                tenant_id: tenantId,
+                name: "Support",
+                channel_type: "internal_web",
+                is_default: true,
+                status: "active",
+                created_at: now,
+                updated_at: now,
+            },
+            {
+                tenant_id: tenantId,
+                name: "Calibra Support",
+                channel_type: "internal_platform",
+                is_default: true,
+                status: "active",
+                created_at: now,
+                updated_at: now,
+            },
+        ]);
     }
 
     /**

@@ -1,0 +1,39 @@
+operationId: adminTicketsAddTag
+summary: Attach a tag to a ticket (admin)
+description: Attaches an existing tag to the conversation. Idempotent — re-attaching a present tag is a no-op.
+tags: [Admin / Tickets]
+security:
+    - BearerAuth: []
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [tag_id]
+                properties:
+                    tag_id: { type: integer }
+
+responses:
+    "200":
+        description: Tag attached.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            properties:
+                                ok: { type: boolean }
+                            required: [ok]
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

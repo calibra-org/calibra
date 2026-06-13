@@ -1,0 +1,12 @@
+title: TicketConversationDetail
+description: >
+    Detail variant of `TicketConversation` returned by the show endpoint — the base
+    conversation envelope plus the ordered `messages` thread.
+allOf:
+    - $ref: "./TicketConversation.yaml"
+    - type: object
+      properties:
+          messages:
+              type: array
+              items: { $ref: "./TicketMessage.yaml" }
+      required: [messages]

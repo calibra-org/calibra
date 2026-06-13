@@ -710,3 +710,85 @@ paths:
             $ref: "./admin/paths/media/media-id.patch.yaml"
         delete:
             $ref: "./admin/paths/media/media-id.delete.yaml"
+    /api/v1/admin/tickets:
+        get:
+            $ref: "./admin/paths/tickets/tickets.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/tickets/inboxes:
+        get:
+            $ref: "./admin/paths/tickets/tickets-inboxes.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/tickets/tickets-inboxes.post.yaml"
+    /api/v1/admin/tickets/agents:
+        get:
+            $ref: "./admin/paths/tickets/tickets-agents.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/tickets/tickets-agents.post.yaml"
+    /api/v1/admin/tickets/agents/{id}:
+        patch:
+            $ref: "./admin/paths/tickets/tickets-agents-id.patch.yaml"
+    /api/v1/admin/tickets/canned:
+        get:
+            $ref: "./admin/paths/tickets/tickets-canned.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/tickets/tickets-canned.post.yaml"
+    /api/v1/admin/tickets/canned/{id}:
+        patch:
+            $ref: "./admin/paths/tickets/tickets-canned-id.patch.yaml"
+    /api/v1/admin/tickets/tags:
+        get:
+            $ref: "./admin/paths/tickets/tickets-tags.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/tickets/tickets-tags.post.yaml"
+    /api/v1/admin/tickets/tags/{id}:
+        delete:
+            $ref: "./admin/paths/tickets/tickets-tags-id.delete.yaml"
+    /api/v1/admin/tickets/{id}:
+        get:
+            $ref: "./admin/paths/tickets/tickets-id.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            $ref: "./admin/paths/tickets/tickets-id.patch.yaml"
+    /api/v1/admin/tickets/{id}/messages:
+        post:
+            $ref: "./admin/paths/tickets/tickets-id-messages.post.yaml"
+    /api/v1/admin/tickets/{id}/tags:
+        post:
+            $ref: "./admin/paths/tickets/tickets-id-tags.post.yaml"
+    /api/v1/admin/tickets/{id}/tags/{tagId}:
+        delete:
+            $ref: "./admin/paths/tickets/tickets-id-tags-tagid.delete.yaml"
+    /api/v1/admin/support:
+        get:
+            $ref: "./admin/paths/support/support.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/support/support.post.yaml"
+    /api/v1/admin/support/{id}:
+        get:
+            $ref: "./admin/paths/support/support-id.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/support/{id}/messages:
+        post:
+            $ref: "./admin/paths/support/support-id-messages.post.yaml"
+    /api/v1/admin/channels/{provider}/connect:
+        post:
+            $ref: "./admin/paths/channels/channels-provider-connect.post.yaml"
+    /api/v1/admin/channels/{provider}/{id}/verify:
+        post:
+            $ref: "./admin/paths/channels/channels-provider-id-verify.post.yaml"
+    /api/v1/admin/channels/{provider}/{id}/disconnect:
+        post:
+            $ref: "./admin/paths/channels/channels-provider-id-disconnect.post.yaml"

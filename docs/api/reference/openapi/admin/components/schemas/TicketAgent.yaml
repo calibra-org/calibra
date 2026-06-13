@@ -1,0 +1,32 @@
+title: TicketAgent
+description: >
+    Support-agent membership row — matches the controller's `TicketAgentTransformer.toObject()`.
+    Joins a platform user into the ticketing seat model with a support role, an access tier
+    (how broad the agent's conversation visibility is), reassignment permission, and an optional
+    open-conversation capacity cap. `user` is the lightweight admin-user envelope (or null).
+type: object
+properties:
+    id: { type: string }
+    user_id: { type: string }
+    support_role:
+        type: string
+        enum: [agent, supervisor, support_admin]
+    access_tier:
+        type: string
+        enum: [all, unassigned_and_own, participating]
+    can_reassign: { type: boolean }
+    max_open_capacity: { type: [integer, "null"] }
+    status:
+        type: string
+        enum: [active, disabled]
+    user:
+        anyOf:
+            - type: "null"
+            - type: object
+              required: [id]
+              properties:
+                  id: { type: string }
+                  email: { type: [string, "null"] }
+    created_at: { type: [string, "null"], format: date-time }
+    updated_at: { type: [string, "null"], format: date-time }
+required: [id, user_id, support_role, access_tier, can_reassign, status]

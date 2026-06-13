@@ -1,0 +1,43 @@
+operationId: adminTicketsUpdate
+summary: Update a ticket conversation (admin)
+description: >
+    Patch the included fields on a conversation. Pass `assignee_agent_id: null` to unassign.
+    Set `snoozed_until` together with `status: snoozed` to schedule a wake-up.
+tags: [Admin / Tickets]
+security:
+    - BearerAuth: []
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    status:
+                        type: string
+                        enum: [open, pending, snoozed, resolved, closed, archived]
+                    priority:
+                        type: string
+                        enum: [low, normal, high, urgent]
+                    assignee_agent_id: { type: [integer, "null"] }
+                    snoozed_until: { type: [string, "null"], format: date-time }
+
+responses:
+    "200":
+        description: The updated ticket conversation.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketConversation.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

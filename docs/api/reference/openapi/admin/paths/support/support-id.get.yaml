@@ -1,0 +1,21 @@
+operationId: adminSupportShow
+summary: Show a support conversation (admin)
+description: Returns one conversation with its full message thread folded in (`TicketConversationDetail`).
+tags: [Admin / Support]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+
+responses:
+    "200":
+        description: Support conversation with messages.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/TicketConversationDetail.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

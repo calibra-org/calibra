@@ -33,6 +33,28 @@ export function maybeTenantContext(): TenantContext | undefined {
     return storage.getStore();
 }
 
+/**
+ * Run `fn` inside a tenant context for an EXPLICITLY-supplied tenant id — the bridge for work that
+ * knows its tenant up front rather than discovering it from an owning row (R3): inbound channel
+ * webhooks carry `tenantId` in the job payload because a server-to-server POST has no owning row.
+ *
+ * Opens a transaction on the default (`calibra_app`, NOBYPASSRLS) connection, issues
+ * `SET LOCAL app.current_tenant`, and runs the body inside {@link runWithTenant} so every read/write
+ * is RLS-scoped to the tenant — never BYPASSRLS (a body on `postgres_admin` would see every tenant).
+ * When a context is already active (inline sync-driver dispatch) the body runs on it directly,
+ * preserving read-after-write. Mirrors the inner half of `withJobTenantContext` without the row lookup.
+ */
+export async function withTenantContext<T>(tenantId: bigint, fn: () => Promise<T>): Promise<T> {
+    const existing = storage.getStore();
+    if (existing) {
+        return fn();
+    }
+    return db.connection().transaction(async (trx) => {
+        await trx.rawQuery("SELECT set_config('app.current_tenant', ?, true)", [String(tenantId)]);
+        return runWithTenant(tenantId, trx, fn);
+    });
+}
+
 /** The active tenant id, or `null` when none is set (global paths). */
 export function maybeTenantId(): bigint | null {
     return storage.getStore()?.tenantId ?? null;

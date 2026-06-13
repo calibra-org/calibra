@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useCommandPalette } from "#/components/CommandPalette";
-import { Command, Layers, LayoutDashboard, PanelLeft, Search, Store, Zap } from "#/icons";
+import { Command, Inbox, Layers, LayoutDashboard, PanelLeft, Search, Store, Zap } from "#/icons";
 import { Link, usePathname } from "#/lib/i18n/navigation";
 import { cn } from "#/lib/utils";
 
@@ -13,6 +13,7 @@ const NAV = [
     { href: "/", key: "overview", icon: LayoutDashboard, exact: true },
     { href: "/tenants", key: "tenants", icon: Store, exact: false },
     { href: "/plans", key: "plans", icon: Layers, exact: false },
+    { href: "/tickets", key: "tickets", icon: Inbox, exact: false },
 ] as const;
 
 const STORAGE_KEY = "calibra-console-sidebar-collapsed";

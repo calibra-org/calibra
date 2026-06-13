@@ -1,0 +1,24 @@
+operationId: adminTicketsInboxes
+summary: List inboxes (admin)
+description: Returns all ticketing inboxes configured for the shop.
+tags: [Admin / Tickets]
+security:
+    - BearerAuth: []
+
+parameters:
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+
+responses:
+    "200":
+        description: The list of inboxes.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/TicketInbox.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

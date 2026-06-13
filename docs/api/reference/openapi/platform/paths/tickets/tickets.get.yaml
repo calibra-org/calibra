@@ -1,0 +1,37 @@
+operationId: platformTicketsIndex
+summary: List support conversations (control-plane)
+description: Paginated list of control-plane support conversations. Supports the TableView wire
+    grammar (`filter[]=status:eq:open`, `filter[]=priority:eq:high`, `sort[]=last_activity_at:desc`)
+    plus a free-text `q` search across subject + requester identity.
+tags: [Platform Tickets]
+security:
+    - PlatformAuth: []
+parameters:
+    - $ref: "../../../common/components/parameters/table-view/Page.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Limit.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Filter.yaml"
+    - $ref: "../../../common/components/parameters/table-view/FilterOr.yaml"
+    - $ref: "../../../common/components/parameters/table-view/Sort.yaml"
+    - $ref: "../../../common/components/parameters/LocaleHeader.yaml"
+    - name: q
+      in: query
+      required: false
+      description: Free-text search across subject + requester identity.
+      schema: { type: string, maxLength: 120 }
+responses:
+    "200":
+        description: Paginated conversation list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/PlatformTicketConversation.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

@@ -1,0 +1,34 @@
+operationId: platformTicketsUpdate
+summary: Update a support conversation (control-plane)
+description: "Patch the conversation status and/or reassign it to a platform operator. Pass
+    `assignee_platform_user_id: null` to unassign."
+tags: [Platform Tickets]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                properties:
+                    status: { type: string, enum: [open, pending, snoozed, resolved, closed, archived] }
+                    assignee_platform_user_id: { type: [integer, "null"] }
+responses:
+    "200":
+        description: Updated conversation.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/PlatformTicketConversation.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

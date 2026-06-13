@@ -1,0 +1,13 @@
+title: TicketCannedResponse
+description: >
+    Saved canned reply — matches `TicketCannedResponseTransformer.toObject()`. Agents insert
+    these by typing the `shortcut` token; `title` is the human label shown in the picker and
+    `body` is the reply text dropped into the composer.
+type: object
+properties:
+    id: { type: string }
+    shortcut: { type: string }
+    title: { type: string }
+    body: { type: string }
+    created_by_user_id: { type: [string, "null"] }
+required: [id, shortcut, title, body]

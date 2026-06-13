@@ -1,0 +1,14 @@
+operationId: adminTicketTagsDestroy
+summary: Delete a conversation tag (admin)
+description: Removes the tag and detaches it from any conversations it was attached to.
+tags: [Admin / Tickets]
+
+parameters:
+    - { name: id, in: path, required: true, schema: { type: string } }
+
+responses:
+    "204":
+        description: Deleted.
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }

@@ -69,3 +69,5 @@ await import("./routes/admin_product_imports.js");
 await import("./routes/admin_product_exports.js");
 await import("./routes/uploads.js");
 await import("./routes/payment.js");
+await import("./routes/channel_webhooks.js");
+await import("./routes/admin_tickets.js");

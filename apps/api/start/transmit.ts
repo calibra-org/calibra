@@ -2,7 +2,10 @@ import transmit from "@adonisjs/transmit/services/main";
 
 import ProductExport from "#models/product_export";
 import ProductImport from "#models/product_import";
+import TicketingAgent from "#models/ticketing_agent";
+import TicketingConversation from "#models/ticketing_conversation";
 import { setSseClients } from "#services/metrics/domain_metrics";
+import { applyAgentScope } from "#services/ticketing/agent_access";
 import { middleware } from "#start/kernel";
 
 /**
@@ -42,12 +45,34 @@ transmit.authorize<{ exportId: string }>("exports/:exportId", async (ctx, { expo
 });
 
 /**
+ * A shop agent may subscribe to a conversation only if their access tier (R5) admits it AND the
+ * conversation is in their tenant (RLS scopes the query to `app.current_tenant`, set by
+ * `tenant_context_middleware` from the admin BFF's header). Read-only — never auto-creates an agent.
+ * Storefront/customer + platform-operator subscription is phase 2.
+ */
+transmit.authorize<{ id: string }>("ticketing/conversations/:id", async (ctx, { id }) => {
+    const user = ctx.auth.user;
+    if (user === undefined || user === null) return false;
+    const agent = await TicketingAgent.query().where("user_id", Number(user.id)).first();
+    const accessTier = agent ? agent.accessTier : user.role === "admin" ? "all" : null;
+    if (accessTier === null) return false;
+    const query = TicketingConversation.query().where("id", Number(id));
+    applyAgentScope(query, {
+        agentId: agent ? Number(agent.id) : -1,
+        userId: Number(user.id),
+        accessTier: accessTier as "all" | "unassigned_and_own" | "participating",
+    });
+    const conversation = await query.first();
+    return conversation !== null;
+});
+
+/**
  * Track active subscribers per channel root. We collapse `imports/123` and `imports/456` to the
  * `imports` channel root so the gauge stays bounded (one series per known root, not one per id).
  * Cardinality is the same handful of roots over the process's lifetime.
  */
 const sseSubscriberCounts = new Map<string, number>();
-const KNOWN_CHANNEL_ROOTS = ["imports", "exports"] as const;
+const KNOWN_CHANNEL_ROOTS = ["imports", "exports", "ticketing"] as const;
 for (const root of KNOWN_CHANNEL_ROOTS) {
     sseSubscriberCounts.set(root, 0);
     setSseClients(root, 0);

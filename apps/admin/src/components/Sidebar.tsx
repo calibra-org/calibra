@@ -7,6 +7,7 @@ import {
     Boxes,
     Image as ImageIcon,
     LayoutDashboard,
+    LifeBuoy,
     ListTree,
     Package,
     ReceiptText,
@@ -15,6 +16,7 @@ import {
     Sparkles,
     Star,
     Tags as TagsIcon,
+    Ticket,
     TrendingUp,
     Users,
     Wallet,
@@ -32,7 +34,7 @@ interface NavItem {
 }
 
 interface NavGroup {
-    titleKey: "overview" | "catalog" | "sales" | "analytics" | "customersSection" | "configuration";
+    titleKey: "overview" | "catalog" | "sales" | "analytics" | "customersSection" | "support" | "configuration";
     items: NavItem[];
 }
 
@@ -76,6 +78,13 @@ const groups: NavGroup[] = [
     {
         titleKey: "customersSection",
         items: [{ href: "/customers", labelKey: "customers", icon: Users }],
+    },
+    {
+        titleKey: "support",
+        items: [
+            { href: "/tickets", labelKey: "tickets", icon: Ticket },
+            { href: "/support", labelKey: "helpCalibra", icon: LifeBuoy },
+        ],
     },
     {
         titleKey: "configuration",

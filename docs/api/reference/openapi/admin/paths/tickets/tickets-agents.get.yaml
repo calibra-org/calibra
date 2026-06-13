@@ -1,0 +1,19 @@
+operationId: adminTicketAgentsIndex
+summary: List support agents (admin)
+description: Returns every support-agent seat with its role, access tier, reassignment permission, capacity cap, and joined user.
+tags: [Admin / Tickets]
+
+responses:
+    "200":
+        description: Support-agent list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/TicketAgent.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

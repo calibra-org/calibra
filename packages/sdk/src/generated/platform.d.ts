@@ -317,6 +317,106 @@ export interface paths {
         patch: operations["platformPlansUpdate"];
         trace?: never;
     };
+    "/api/v1/platform/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List support conversations (control-plane)
+         * @description Paginated list of control-plane support conversations. Supports the TableView wire grammar (`filter[]=status:eq:open`, `filter[]=priority:eq:high`, `sort[]=last_activity_at:desc`) plus a free-text `q` search across subject + requester identity.
+         */
+        get: operations["platformTicketsIndex"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tickets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a support conversation (control-plane)
+         * @description Returns one control-plane support conversation with its full message thread.
+         */
+        get: operations["platformTicketsShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Update a support conversation (control-plane)
+         * @description Patch the conversation status and/or reassign it to a platform operator. Pass `assignee_platform_user_id: null` to unassign.
+         */
+        patch: operations["platformTicketsUpdate"];
+        trace?: never;
+    };
+    "/api/v1/platform/tickets/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post a message to a support conversation (control-plane)
+         * @description Appends an operator reply to a control-plane support conversation and returns the created message.
+         */
+        post: operations["platformTicketsPostMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -630,6 +730,89 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /**
+         * PlatformTicketConversation
+         * @description One control-plane support conversation row. Mirrors the platform ticketing controller's conversation transformer.
+         */
+        PlatformTicketConversation: {
+            id: string;
+            display_id: number;
+            /** @enum {string} */
+            context: "shop_customer" | "platform_internal";
+            subject?: string | null;
+            /** @enum {string} */
+            status: "open" | "pending" | "snoozed" | "resolved" | "closed" | "archived";
+            /** @enum {string} */
+            priority: "low" | "normal" | "high" | "urgent";
+            inbox_id: string;
+            channel_identity_id: string;
+            assignee_agent_id?: string | null;
+            inbox?: null | {
+                id: string;
+                name: string;
+                channel_type: string;
+            };
+            requester?: null | {
+                name?: string | null;
+                identity: string;
+            };
+            tags: {
+                id: string;
+                name: string;
+                color?: string | null;
+            }[];
+            /** Format: date-time */
+            last_activity_at?: string | null;
+            /** Format: date-time */
+            first_response_at?: string | null;
+            /** Format: date-time */
+            waiting_since?: string | null;
+            /** Format: date-time */
+            snoozed_until?: string | null;
+            /** Format: date-time */
+            created_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
+        };
+        /**
+         * PlatformTicketMessage
+         * @description One message/note/activity within a control-plane support conversation. Mirrors the platform ticketing controller's message transformer.
+         */
+        PlatformTicketMessage: {
+            id: string;
+            conversation_id: string;
+            /** @enum {string} */
+            direction: "inbound" | "outbound" | "internal";
+            /** @enum {string} */
+            kind: "message" | "note" | "activity" | "template";
+            /** @enum {string} */
+            content_type: "text" | "image" | "file";
+            body?: string | null;
+            private: boolean;
+            /** @enum {string} */
+            author_kind: "customer" | "user" | "platform_user" | "system";
+            author_id?: string | null;
+            /** @enum {string} */
+            status: "queued" | "sent" | "delivered" | "read" | "failed";
+            provider_message_id?: string | null;
+            content_attributes?: {
+                [key: string]: unknown;
+            };
+            attachments: {
+                id: string;
+                media_id: string;
+                url?: string | null;
+            }[];
+            /** Format: date-time */
+            created_at?: string | null;
+        };
+        /**
+         * PlatformTicketConversationDetail
+         * @description A single control-plane support conversation with its full message thread folded in. Returned by the show endpoint.
+         */
+        PlatformTicketConversationDetail: components["schemas"]["PlatformTicketConversation"] & {
+            messages: components["schemas"]["PlatformTicketMessage"][];
+        };
     };
     responses: {
         /** @description Unauthorized (401) — the request did not include a valid bearer token, or the token has been revoked. */
@@ -688,6 +871,8 @@ export interface components {
         FilterOr: string[];
         /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
         Sort: string[];
+        /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+        LocaleHeader: "fa" | "en";
     };
     requestBodies: never;
     headers: never;
@@ -1157,6 +1342,141 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["PlatformPlan"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformTicketsIndex: {
+        parameters: {
+            query?: {
+                /** @description 1-indexed page number. Defaults to 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Items per page. Capped at 100. Defaults to 20. */
+                limit?: components["parameters"]["Limit"];
+                /** @description AND-joined filter constraints. Each entry is `field:operator:value`, with `field:value` accepted as shorthand for `field:eq:value`. Void operators (`isnull`, `notnull`) omit the value slot: `field:isnull`. Multiple constraints on different fields combine with AND. The endpoint description enumerates the allowed `field` set and the operator validity per field type. */
+                "filter[]"?: components["parameters"]["Filter"];
+                /** @description OR-joined filter constraints — at least one must match. Combined with `filter[]` as `(AND constraints) AND (OR constraints)`. Same grammar as `filter[]`. */
+                "filterOr[]"?: components["parameters"]["FilterOr"];
+                /** @description Sort entries in the format `field:direction` (case-insensitive `asc` or `desc`). Multiple entries chain in the order supplied. The endpoint description enumerates the allowed `field` set. */
+                "sort[]"?: components["parameters"]["Sort"];
+                /** @description Free-text search across subject + requester identity. */
+                q?: string;
+            };
+            header?: {
+                /** @description Locale selector for server-resolved strings (product names, error messages, region names). Persian (`fa`) is the default; pass `en` for English. Unknown locales fall back to `fa`. */
+                "Accept-Language"?: components["parameters"]["LocaleHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated conversation list. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTicketConversation"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformTicketsShow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The conversation with its messages. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTicketConversationDetail"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    platformTicketsUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status?: "open" | "pending" | "snoozed" | "resolved" | "closed" | "archived";
+                    assignee_platform_user_id?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated conversation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTicketConversation"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformTicketsPostMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Message created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformTicketMessage"];
                     };
                 };
             };

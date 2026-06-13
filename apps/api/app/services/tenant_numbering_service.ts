@@ -11,12 +11,13 @@ import { currentTenantId, currentTrx } from "#services/tenant_context";
  * collide or skip a value — gap-free under concurrency, the same guarantee the old sequence gave but
  * scoped per tenant.
  */
-export type CounterKind = "order" | "refund";
+export type CounterKind = "order" | "refund" | "conversation";
 
 /** First number handed out for a kind when its counter row doesn't exist yet (matches the old sequences' START 1000). */
 const COUNTER_START: Record<CounterKind, number> = {
     order: 1000,
     refund: 1000,
+    conversation: 1000,
 };
 
 /**

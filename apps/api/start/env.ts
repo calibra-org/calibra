@@ -167,4 +167,13 @@ export default await Env.create(new URL("../", import.meta.url), {
      * exactly where Promtail's bind-mount expects it. Optional; ignored without observability.
      */
     SPIN_API_LOG_PATH: Env.schema.string.optional(),
+
+    /**
+     * Egress base URLs for the external communication-channel adapters. Optional — they default to
+     * the official provider hosts inside the adapters when unset, and can be pointed at the phase-2
+     * out-of-country relay once Iran reachability is solved (R6). WhatsApp/Telegram inbox creation
+     * is gated off in v1, so these are unused until the relay flips live.
+     */
+    WHATSAPP_API_BASE: Env.schema.string.optional(),
+    TELEGRAM_API_BASE: Env.schema.string.optional(),
 });

@@ -1,0 +1,19 @@
+operationId: adminTicketCannedIndex
+summary: List canned responses (admin)
+description: Returns the saved canned replies available to agents in the composer.
+tags: [Admin / Tickets]
+
+responses:
+    "200":
+        description: Canned-response list.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../components/schemas/TicketCannedResponse.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }

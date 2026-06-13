@@ -1,0 +1,23 @@
+operationId: adminChannelsVerify
+summary: Verify a channel connection (admin)
+description: Re-runs the provider handshake against the stored credentials and updates the connection's verification state.
+tags: [Admin / Channels]
+
+parameters:
+    - { name: provider, in: path, required: true, schema: { type: string } }
+    - { name: id, in: path, required: true, schema: { type: string } }
+
+responses:
+    "200":
+        description: Verified channel connection.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../components/schemas/ChannelConnection.yaml" }
+    "401": { $ref: "../../../common/components/responses/Unauthorized.yaml" }
+    "403": { $ref: "../../../common/components/responses/Forbidden.yaml" }
+    "404": { $ref: "../../../common/components/responses/NotFound.yaml" }
+    "422": { $ref: "../../../common/components/responses/ValidationError.yaml" }

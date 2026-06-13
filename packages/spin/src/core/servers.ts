@@ -37,7 +37,7 @@ export async function startHostServers(meta: SpinMeta, opts: { withWeb: boolean 
         meta,
         "queue",
         "pnpm",
-        ["--filter", "@calibra/api", "exec", "node", "ace", "queue:work", "--queue=imports,exports"],
+        ["--filter", "@calibra/api", "exec", "node", "ace", "queue:work", "--queue=imports,exports,ticketing"],
         wt,
         {},
     );

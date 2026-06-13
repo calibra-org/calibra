@@ -1,0 +1,17 @@
+title: TicketInbox
+description: >
+    An inbox — a routing destination tied to a channel (internal web/platform widget or an
+    external messaging provider). Matches the controller's `TicketInboxTransformer.toObject()`.
+type: object
+properties:
+    id: { type: string }
+    name: { type: string }
+    channel_type: { type: string }
+    is_default: { type: boolean }
+    status: { type: string }
+required:
+    - id
+    - name
+    - channel_type
+    - is_default
+    - status

@@ -1,0 +1,11 @@
+title: PlatformTicketConversationDetail
+description: A single control-plane support conversation with its full message thread folded in.
+    Returned by the show endpoint.
+allOf:
+    - $ref: "./PlatformTicketConversation.yaml"
+    - type: object
+      properties:
+          messages:
+              type: array
+              items: { $ref: "./PlatformTicketMessage.yaml" }
+      required: [messages]

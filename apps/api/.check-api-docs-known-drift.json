@@ -146,5 +146,9 @@
     {
         "severity": "missing-in-spec",
         "codeKey": "POST /api/v1/admin/products/import/upload"
+    },
+    {
+        "severity": "missing-in-spec",
+        "codeKey": "POST /api/v1/webhooks/channels/{provider}/{endpointId}"
     }
 ]

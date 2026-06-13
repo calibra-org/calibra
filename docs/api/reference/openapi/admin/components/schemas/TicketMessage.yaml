@@ -1,0 +1,51 @@
+title: TicketMessage
+description: >
+    A single message, note, activity, or template entry inside a ticket conversation —
+    matches the controller's `TicketMessageTransformer.toObject()`. Internal notes carry
+    `private: true` and `kind: note`; system activity rows use `kind: activity`.
+type: object
+properties:
+    id: { type: string }
+    conversation_id: { type: string }
+    direction:
+        type: string
+        enum: [inbound, outbound, internal]
+    kind:
+        type: string
+        enum: [message, note, activity, template]
+    content_type:
+        type: string
+        enum: [text, image, file]
+    body: { type: [string, "null"] }
+    private: { type: boolean }
+    author_kind:
+        type: string
+        enum: [customer, user, platform_user, system]
+    author_id: { type: [string, "null"] }
+    status:
+        type: string
+        enum: [queued, sent, delivered, read, failed]
+    provider_message_id: { type: [string, "null"] }
+    content_attributes:
+        type: object
+        additionalProperties: true
+    attachments:
+        type: array
+        items:
+            type: object
+            properties:
+                id: { type: string }
+                media_id: { type: string }
+                url: { type: [string, "null"] }
+            required: [id, media_id]
+    created_at: { type: [string, "null"], format: date-time }
+required:
+    - id
+    - conversation_id
+    - direction
+    - kind
+    - content_type
+    - private
+    - author_kind
+    - status
+    - attachments
