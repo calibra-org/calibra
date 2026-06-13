@@ -1,25 +1,26 @@
 import { BaseSchema } from "@adonisjs/lucid/schema";
 
 /**
- * Adds the explicit shop-owner pointer to `tenants`. Provisioning computed the owner admin then
- * discarded the id; Control Plane v2 needs a durable `owner_user_id` to drive the `store_owner`
- * capability checks (who can transfer ownership, who can't be disabled/removed) and to default
- * impersonation to the owner.
+ * Adds the shop-owner pointer to `tenants` — a plain, nullable `bigint` (NOT a foreign key).
  *
- * `ON DELETE RESTRICT`: a tenant must always have an owner, so the owner user cannot be hard-deleted
- * out from under the tenant (operator removal is a soft-delete + owner-guard, never a hard delete of
- * the owner). `tenants` is a global non-RLS table, so this cross-table FK to the RLS-scoped `users`
- * is safe (no policy interferes with the constraint check under the admin connection).
+ * Deliberately FK-less + nullable, for two structural reasons:
+ *  - **Provisioning insert order.** The owner `users` row needs the tenant id (FK + RLS), so the
+ *    tenant is inserted first and the owner stamped immediately after in the same transaction; a
+ *    `NOT NULL` column would make that first insert fail.
+ *  - **Test-suite truncation.** The reserved test tenant is never truncated, so a real FK from
+ *    `tenants` into `users` would make Postgres refuse the per-test `TRUNCATE "users"`.
  *
- * Backfill ordering: every tenant is provisioned with exactly one owner admin, so backfilling the
- * lowest live admin id per tenant fills every row before the `SET NOT NULL`.
+ * The "owner is a real, live admin" invariant is upheld in application code (provisioning + the
+ * make-owner endpoints validate the target; operators are soft-deleted and the owner can't be
+ * removed/disabled). Existing tenants are backfilled to their lowest non-deleted admin.
  */
 export default class extends BaseSchema {
     protected tableName = "tenants";
 
     async up() {
         this.schema.alterTable(this.tableName, (table) => {
-            table.bigInteger("owner_user_id").unsigned().nullable().references("id").inTable("users").onDelete("RESTRICT");
+            table.bigInteger("owner_user_id").unsigned().nullable();
+            table.index(["owner_user_id"], "tenants_owner_user_id_idx");
         });
 
         /** Backfill the lowest non-deleted admin id per tenant as the owner. */
@@ -30,12 +31,11 @@ export default class extends BaseSchema {
                 `WHERE "role" = 'admin' AND "deleted_at" IS NULL GROUP BY "tenant_id") sub ` +
                 `WHERE t."id" = sub."tenant_id"`,
         );
-
-        this.schema.raw(`ALTER TABLE "${this.tableName}" ALTER COLUMN "owner_user_id" SET NOT NULL`);
     }
 
     async down() {
         this.schema.alterTable(this.tableName, (table) => {
+            table.dropIndex(["owner_user_id"], "tenants_owner_user_id_idx");
             table.dropColumn("owner_user_id");
         });
     }
