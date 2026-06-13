@@ -932,7 +932,13 @@ export interface components {
             id: number;
             tenant_id: number;
             platform_user_id: number | null;
+            /** @description Resolved name of the acting platform operator. */
+            platform_user_name?: string | null;
+            /** @description Resolved email of the acting platform operator. */
+            platform_user_email?: string | null;
             target_user_id: number | null;
+            /** @description Resolved email of the affected user (incl. soft-deleted). */
+            target_email?: string | null;
             /**
              * @example domain_added
              * @example impersonation

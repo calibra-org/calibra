@@ -52,10 +52,16 @@ function metaString(metadata: AuditEvent["metadata"], key: string): string | nul
 function auditSubject(e: AuditEvent): string | null {
     return (
         metaString(e.metadata, "domain") ??
+        e.target_email ??
         metaString(e.metadata, "email") ??
         metaString(e.metadata, "slug") ??
         (e.target_user_id ? `#${e.target_user_id}` : null)
     );
+}
+
+/** Readable label for the acting platform operator (resolved name → email → `#id` → em dash). */
+function operatorLabel(e: AuditEvent): string {
+    return e.platform_user_name ?? e.platform_user_email ?? (e.platform_user_id ? `#${e.platform_user_id}` : "—");
 }
 
 /**
@@ -117,9 +123,7 @@ export function AuditView({ tenantId }: { tenantId?: string }) {
                             <TableCell dir="ltr" className="max-w-xs truncate text-start font-mono text-muted-foreground text-sm">
                                 {auditSubject(e) ?? "—"}
                             </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                                {e.platform_user_id ? `#${e.platform_user_id}` : "—"}
-                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{operatorLabel(e)}</TableCell>
                             <TableCell className="max-w-xs truncate text-muted-foreground text-sm">{e.reason ?? "—"}</TableCell>
                         </TableRow>
                     ))}
