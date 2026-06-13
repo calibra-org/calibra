@@ -1,16 +1,44 @@
 title: PlatformTenantDomain
-description: A hostname mapped to a tenant. `subdomain` rows are auto-provisioned (one primary per
-    tenant); `custom` rows are operator-attached and start `tls_status=pending` until the edge issues
-    a certificate (Phase 6). `cname_target` is present on attach/recheck responses — the CNAME the
-    operator must create.
+description: >
+    A hostname mapped to a tenant (`DomainStatus`). `subdomain` rows are auto-provisioned (one
+    primary per tenant) and always route. `custom` rows are operator-attached and gated by two DNS
+    checks — ownership (TXT) then routing (CNAME) + CAA preflight — before they route or issue TLS.
+    `ownership`/`routing` carry the exact records to publish; `cert_last_error` explains a `failed`
+    state; `simulated` is true when a local DNS-simulated recheck drove the result.
 type: object
 properties:
     id: { type: integer }
     domain: { type: string, examples: ["shop.example.com"] }
     kind: { type: string, enum: [subdomain, custom] }
     is_primary: { type: boolean }
-    tls_status: { type: string, enum: [pending, active, failed] }
+    tls_status: { type: string, enum: [pending, verifying, active, failed] }
+    ownership_verified: { type: boolean }
+    routing_verified: { type: boolean }
+    ownership_verified_at: { type: [string, "null"], format: date-time }
+    routing_verified_at: { type: [string, "null"], format: date-time }
+    cert_last_error: { type: [string, "null"] }
+    cname_target: { type: [string, "null"], examples: ["aurora.shops.calibra.app"] }
+    ownership: { $ref: "./PlatformDomainRecord.yaml" }
+    routing: { $ref: "./PlatformDomainRecord.yaml" }
+    simulated: { type: boolean, description: "Result came from local DNS simulation (SPIN_SIMULATE_DNS)." }
     verified_at: { type: [string, "null"], format: date-time }
     created_at: { type: string, format: date-time }
-    cname_target: { type: string, description: "CNAME target for a custom domain.", examples: ["aurora.shops.calibra.app"] }
-required: [id, domain, kind, is_primary, tls_status, verified_at, created_at]
+required:
+    [
+        id,
+        domain,
+        kind,
+        is_primary,
+        tls_status,
+        ownership_verified,
+        routing_verified,
+        ownership_verified_at,
+        routing_verified_at,
+        cert_last_error,
+        cname_target,
+        ownership,
+        routing,
+        simulated,
+        verified_at,
+        created_at,
+    ]

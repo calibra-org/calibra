@@ -130,6 +130,80 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     return { ok: true, error: null, redirectTo: getPathname({ href: "/dashboard", locale }) };
 }
 
+interface PasswordActionState {
+    ok: boolean;
+    error: string | null;
+    redirectTo?: string;
+}
+
+/**
+ * Consume an operator handoff link: set the operator's password (and clear the forced-change flag)
+ * via the single-use reset token, then land them on the login screen to sign in. Unauthenticated —
+ * the token IS the credential. Tenant-scoped (the link lives on `<slug>.admin…`), so the host's
+ * tenant ref is forwarded so the api resolves + RLS-scopes the token to this shop.
+ */
+export async function setPasswordAction(_state: PasswordActionState, formData: FormData): Promise<PasswordActionState> {
+    const token = String(formData.get("token") ?? "");
+    const password = String(formData.get("password") ?? "");
+    const locale = (formData.get("__locale") as string | null) ?? "fa";
+    const tenant = await tenantRefFromHeaders();
+    if (tenant === null) {
+        return {
+            ok: false,
+            error: locale === "fa" ? "این آدرس به هیچ فروشگاهی متصل نیست." : "This address isn't connected to a shop.",
+        };
+    }
+    try {
+        const api = createApiClient({
+            baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+            locale,
+            headers: { [TENANT_HEADER]: tenant },
+        });
+        await api.storefront.POST("/api/v1/auth/password/reset", { body: { token, password } });
+    } catch (err) {
+        if (err instanceof BackendError && (err.status === 400 || err.status === 422)) {
+            return { ok: false, error: locale === "fa" ? "پیوند نامعتبر یا منقضی است." : "This link is invalid or expired." };
+        }
+        return { ok: false, error: locale === "fa" ? "تنظیم گذرواژه ناموفق بود." : "Could not set the password." };
+    }
+    return { ok: true, error: null, redirectTo: getPathname({ href: "/login", locale }) };
+}
+
+/**
+ * Forced password change for the authenticated operator. Posts the new password with the session
+ * bearer; on success the 423 gate clears and the operator lands on the dashboard.
+ */
+export async function changePasswordAction(_state: PasswordActionState, formData: FormData): Promise<PasswordActionState> {
+    const password = String(formData.get("password") ?? "");
+    const locale = (formData.get("__locale") as string | null) ?? "fa";
+    const session = await getSession();
+    const tenant = await tenantRefFromHeaders();
+    if (!session) {
+        return { ok: false, error: null, redirectTo: getPathname({ href: "/login", locale }) };
+    }
+    try {
+        const api = createApiClient({
+            baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+            locale,
+            token: session.token,
+            ...(tenant ? { headers: { [TENANT_HEADER]: tenant } } : {}),
+        });
+        await api.storefront.POST("/api/v1/auth/password/change", { body: { password } });
+    } catch (err) {
+        if (err instanceof BackendError && err.status === 422) {
+            return {
+                ok: false,
+                error:
+                    locale === "fa"
+                        ? "گذرواژه باید حداقل ۸ نویسه با حرف و رقم باشد."
+                        : "Password must be 8+ chars with a letter and a digit.",
+            };
+        }
+        return { ok: false, error: locale === "fa" ? "تغییر گذرواژه ناموفق بود." : "Could not change the password." };
+    }
+    return { ok: true, error: null, redirectTo: getPathname({ href: "/dashboard", locale }) };
+}
+
 /**
  * Clears the session and tells the caller where to go next. Like {@link loginAction}, navigation
  * happens client-side (see the `redirectTo` note there) — {@link UserMenu} calls `window.location`

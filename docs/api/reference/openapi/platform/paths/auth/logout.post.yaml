@@ -1,0 +1,21 @@
+operationId: platformAuthLogout
+summary: Operator logout
+description: Revokes the operator's platform token and every live impersonation session they minted (closing the matching audit events).
+tags: [Platform Auth]
+security:
+    - PlatformAuth: []
+responses:
+    "200":
+        description: Logged out.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [ended]
+                            properties: { ended: { type: boolean } }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"

@@ -110,6 +110,8 @@ export function renderApiEnv(meta: SpinMeta): string {
         "SMS_DRIVER=log",
         `ALLOWED_ORIGINS=${allowedOrigins}`,
         `ADMIN_URL_TEMPLATE=${adminUrlTemplate(meta)}`,
+        `EDGE_SECRET=${requireSecret(meta, "edgeSecret")}`,
+        "SPIN_SIMULATE_DNS=1",
         "MAIL_FROM_ADDRESS=ops@calibra.local",
         "MAIL_FROM_NAME=Calibra",
         "MAIL_NOTIFICATIONS_ENABLED=true",
@@ -173,7 +175,7 @@ export function renderPlatformEnv(meta: SpinMeta): string | null {
     ].join("\n");
 }
 
-function requireSecret(meta: SpinMeta, key: "appKey" | "meiliMasterKey" | "glitchtipSecretKey"): string {
+function requireSecret(meta: SpinMeta, key: "appKey" | "meiliMasterKey" | "glitchtipSecretKey" | "edgeSecret"): string {
     const value = meta[key];
     if (!value) throw new Error(`spin "${meta.slug}" meta is missing secret "${key}"`);
     return value;
@@ -251,7 +253,22 @@ export function renderCaddyfile(meta: SpinMeta): string {
     ].join("\n");
 
     const blocks = SERVICES.flatMap((service) => serviceCaddyBlocks(meta, service));
-    return `${global}\n${blocks.join("\n")}`;
+
+    /**
+     * On-demand block for local **custom domains** under the `.store.localhost` convention
+     * (e.g. `acme-boutique.store.localhost`). Reverse-proxied to the **storefront** (`apps/web`), whose
+     * `resolve-host.ts` classifies an unknown dotted host as `kind:'custom'` and forwards `Host` to the
+     * api for tenant resolution. Caddy mints the leaf on demand, gated by the agent's `/api/caddy/ask`
+     * (which proxies the decision to the api's R5 predicate) — so a verified custom domain serves over
+     * TLS while an unverified one is refused. A concrete host **wildcard** is required: a bare
+     * `https://` catch-all does not attach the on-demand TLS policy to arbitrary SNIs, so Caddy never
+     * triggers issuance. Windows auto-resolves `*.localhost` → 127.0.0.1, so this is zero-config in the
+     * browser. (Production fronts arbitrary third-party custom domains with a true catch-all + ACME.)
+     */
+    const webPort = requirePort(meta, "web");
+    const catchAll = caddyOnDemandBlock("*.store.localhost", `host.docker.internal:${webPort}`);
+
+    return `${global}\n${blocks.join("\n")}\n${catchAll}`;
 }
 
 /** Render Prometheus's scrape config — the api on the host plus a self-scrape sanity target. */

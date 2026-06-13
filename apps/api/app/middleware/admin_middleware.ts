@@ -1,7 +1,10 @@
 import { Exception } from "@adonisjs/core/exceptions";
 import type { HttpContext } from "@adonisjs/core/http";
 import type { NextFn } from "@adonisjs/core/types/http";
+import db from "@adonisjs/lucid/services/db";
+import { DateTime } from "luxon";
 
+import { currentImpersonatorId, runWithImpersonator } from "#services/impersonation";
 import { maybeTenantId } from "#services/tenant_context";
 
 /**
@@ -40,6 +43,43 @@ export default class AdminMiddleware {
             });
         }
 
-        return next();
+        const impersonatorId = currentImpersonatorId(ctx);
+
+        /**
+         * Forced password change. An operator holding a freshly-minted / rotated / handed-off
+         * credential must set a new password before touching any admin route — the column read is the
+         * floor, so even a raw `curl` with the pre-change token 423s here. The gate is bypassed during
+         * impersonation (the operator must not be blocked by the *target's* pending change), detected
+         * via the token's `impersonated_by` ability. `/auth/password/change` and the handoff
+         * `/auth/password/reset` consume path are NOT admin routes, so they stay reachable to clear it.
+         */
+        if (user.mustChangePassword && impersonatorId === null) {
+            throw new Exception(ctx.i18n.t("errors.auth.password_change_required", {}, "Password change required"), {
+                status: 423,
+                code: "E_PASSWORD_CHANGE_REQUIRED",
+            });
+        }
+
+        /**
+         * Per-request impersonation revocation. If this is an impersonated session and the target was
+         * disabled/removed mid-session, end it on the next request: lazy-close this operator's open
+         * event (`end_cause='revoked'`) and 401 so the stale token stops working immediately.
+         */
+        if (impersonatorId !== null && (user.disabledAt !== null || user.deletedAt !== null)) {
+            await db
+                .connection("postgres_admin")
+                .from("tenant_impersonation_events")
+                .where("target_user_id", Number(user.id))
+                .where("platform_user_id", Number(impersonatorId))
+                .whereNull("ended_at")
+                .update({ ended_at: DateTime.utc().toSQL()!, end_cause: "revoked" });
+            throw new Exception("Impersonated operator is no longer active", {
+                status: 401,
+                code: "E_IMPERSONATION_REVOKED",
+            });
+        }
+
+        /** Expose the impersonator to the audit writer + Bouncer denylist for the rest of the request. */
+        return runWithImpersonator(impersonatorId, () => next());
     }
 }

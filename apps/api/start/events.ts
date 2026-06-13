@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 import AdminActionPerformed from "#events/admin_action_performed";
 import AdminAuditLog from "#models/admin_audit_log";
 import { CacheInvalidation } from "#services/cache_invalidation";
+import { currentStoredImpersonatorId } from "#services/impersonation";
 
 /**
  * Wire domain events to their listeners. Each listener does exactly one thing — keeping
@@ -23,6 +24,8 @@ emitter.on(AdminActionPerformed, async (event) => {
         row.entityId = event.payload.entityId;
         row.payload = event.payload.payload ?? {};
         row.ipAddress = event.payload.ipAddress ?? null;
+        const impersonatorId = currentStoredImpersonatorId();
+        row.impersonatorPlatformUserId = impersonatorId === null ? null : Number(impersonatorId);
         row.occurredAt = DateTime.utc();
         await row.save();
     } catch {

@@ -43,6 +43,10 @@ tags:
       description: Native per-tenant business KPIs + usage time series.
     - name: Platform Plans
       description: Manage subscription plan tiers, limits, and db_tier.
+    - name: Platform Operators
+      description: Manage a tenant's operators — create, disable, remove, rotate credentials, transfer ownership.
+    - name: Platform Audit
+      description: Cross-tenant control-plane audit feed (operator actions + impersonations).
 
 components:
     securitySchemes:
@@ -56,6 +60,9 @@ paths:
     /api/v1/platform/auth/login:
         post:
             $ref: "./platform/paths/auth/login.post.yaml"
+    /api/v1/platform/auth/logout:
+        post:
+            $ref: "./platform/paths/auth/logout.post.yaml"
     /api/v1/platform/overview:
         get:
             $ref: "./platform/paths/overview/overview.get.yaml"
@@ -102,3 +109,33 @@ paths:
     /api/v1/platform/plans/{id}:
         patch:
             $ref: "./platform/paths/plans/plans-id.patch.yaml"
+    /api/v1/platform/tenants/{id}/operators:
+        get:
+            $ref: "./platform/paths/tenants/tenants-id-operators.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./platform/paths/tenants/tenants-id-operators.post.yaml"
+    /api/v1/platform/tenants/{id}/operators/{userId}/disable:
+        patch:
+            $ref: "./platform/paths/tenants/tenants-id-operators-userId-disable.patch.yaml"
+    /api/v1/platform/tenants/{id}/operators/{userId}/enable:
+        patch:
+            $ref: "./platform/paths/tenants/tenants-id-operators-userId-enable.patch.yaml"
+    /api/v1/platform/tenants/{id}/operators/{userId}:
+        delete:
+            $ref: "./platform/paths/tenants/tenants-id-operators-userId.delete.yaml"
+    /api/v1/platform/tenants/{id}/operators/{userId}/reset-password:
+        post:
+            $ref: "./platform/paths/tenants/tenants-id-operators-userId-reset-password.post.yaml"
+    /api/v1/platform/tenants/{id}/operators/{userId}/handoff-link:
+        post:
+            $ref: "./platform/paths/tenants/tenants-id-operators-userId-handoff-link.post.yaml"
+    /api/v1/platform/tenants/{id}/operators/{userId}/make-owner:
+        post:
+            $ref: "./platform/paths/tenants/tenants-id-operators-userId-make-owner.post.yaml"
+    /api/v1/platform/audit:
+        get:
+            $ref: "./platform/paths/audit/audit.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"

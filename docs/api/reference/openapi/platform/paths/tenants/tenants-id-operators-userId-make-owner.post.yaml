@@ -1,0 +1,25 @@
+operationId: platformOperatorsMakeOwner
+summary: Transfer shop ownership
+description: Makes the target (an active admin) the new `store_owner`. The previous owner stays a normal admin.
+tags: [Platform Operators]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: userId, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Ownership transferred.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../../common/components/schemas/Operator.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

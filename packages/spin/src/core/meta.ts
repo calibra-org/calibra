@@ -57,6 +57,8 @@ export const MetaSchema = z.object({
     glitchtipSecretKey: z.string().optional(),
     /** Meilisearch master key for the per-spin instance. */
     meiliMasterKey: z.string().optional(),
+    /** Edge shared secret — spin agent → api `/api/caddy/ask` `X-Edge-Secret`. */
+    edgeSecret: z.string().optional(),
     /** DSN read back after auto-provisioning GlitchTip's first org/project (best-effort). */
     glitchtipDsn: z.string().optional(),
     /** Whether the database has been seeded (gates re-seed; cleared by `--purge`). */
@@ -104,6 +106,7 @@ export function backfillSchema(raw: Record<string, unknown>): Record<string, unk
         appKey: out.appKey as string | undefined,
         glitchtipSecretKey: out.glitchtipSecretKey as string | undefined,
         meiliMasterKey: out.meiliMasterKey as string | undefined,
+        edgeSecret: out.edgeSecret as string | undefined,
     });
     return { ...out, ...secrets };
 }
@@ -115,7 +118,8 @@ function migrationChanged(raw: Record<string, unknown>, meta: SpinMeta): boolean
     return (
         raw.appKey !== meta.appKey ||
         raw.glitchtipSecretKey !== meta.glitchtipSecretKey ||
-        raw.meiliMasterKey !== meta.meiliMasterKey
+        raw.meiliMasterKey !== meta.meiliMasterKey ||
+        raw.edgeSecret !== meta.edgeSecret
     );
 }
 

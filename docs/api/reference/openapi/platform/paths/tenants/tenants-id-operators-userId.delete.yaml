@@ -1,0 +1,28 @@
+operationId: platformOperatorsDestroy
+summary: Remove an operator
+description: Soft-deletes the operator and revokes their sessions. The store owner and the last active admin cannot be removed.
+tags: [Platform Operators]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: userId, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Operator removed.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [removed]
+                            properties: { removed: { type: boolean } }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

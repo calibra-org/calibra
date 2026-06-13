@@ -6,7 +6,9 @@
             "unauthenticated": "ابتدا باید وارد شوید.",
             "invalid_credentials": "اطلاعات ورود نامعتبر است.",
             "forbidden_admin": "دسترسی مدیریتی لازم است.",
-            "tenant_mismatch": "این حساب به این فروشگاه تعلق ندارد."
+            "tenant_mismatch": "این حساب به این فروشگاه تعلق ندارد.",
+            "password_change_required": "تغییر گذرواژه الزامی است.",
+            "action_unavailable_during_impersonation": "این کنش هنگام جانشینی در دسترس نیست."
         },
         "coupons": {
             "not_found": "کد تخفیف پیدا نشد.",

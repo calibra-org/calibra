@@ -21,6 +21,7 @@ function makeMeta(overrides: Partial<SpinMeta> = {}): SpinMeta {
         appKey: "a".repeat(64),
         glitchtipSecretKey: "b".repeat(96),
         meiliMasterKey: "c".repeat(64),
+        edgeSecret: "d".repeat(64),
         seeded: false,
         prNumber: null,
         observability: true,
@@ -62,6 +63,16 @@ describe("renderCaddyfile", () => {
         expect(out).toContain("reverse_proxy meilisearch:7700");
         expect(out).toMatch(/admin\.demo\.spin\.localhost \{[\s\S]*?reverse_proxy host\.docker\.internal:13047/);
     });
+
+    it("emits a custom-domain on-demand wildcard block routing to the storefront", () => {
+        const out = renderCaddyfile(makeMeta());
+        const webPort = layoutFromBase(13044).web;
+        expect(out).toMatch(
+            new RegExp(
+                `\\*\\.store\\.localhost \\{[\\s\\S]*?on_demand[\\s\\S]*?reverse_proxy host\\.docker\\.internal:${webPort}`,
+            ),
+        );
+    });
 });
 
 describe("renderApiEnv", () => {
@@ -73,6 +84,12 @@ describe("renderApiEnv", () => {
         const out = renderApiEnv(makeMeta());
         const caddyHttps = layoutFromBase(13044).caddyHttps;
         expect(out).toContain(`ADMIN_URL_TEMPLATE=https://{slug}.admin.demo.spin.localhost:${caddyHttps}`);
+    });
+
+    it("wires the edge secret + local DNS simulation for custom-domain verification", () => {
+        const out = renderApiEnv(makeMeta());
+        expect(out).toContain(`EDGE_SECRET=${"d".repeat(64)}`);
+        expect(out).toContain("SPIN_SIMULATE_DNS=1");
     });
 
     it("uses the fixed two-role DB split and direct-port api base", () => {

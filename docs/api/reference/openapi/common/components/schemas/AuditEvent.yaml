@@ -1,0 +1,24 @@
+title: AuditEvent
+description: A merged control-plane audit entry — either a platform operator action
+    (`source=platform_action`) or an impersonation session (`source=impersonation`). Newest-first.
+type: object
+properties:
+    source: { type: string, enum: [platform_action, impersonation] }
+    id: { type: integer }
+    tenant_id: { type: integer }
+    tenant_slug: { type: [string, "null"], description: "Slug of the shop this event belongs to." }
+    tenant_name: { type: [string, "null"], description: "Display name of the shop this event belongs to." }
+    platform_user_id: { type: [integer, "null"] }
+    platform_user_name: { type: [string, "null"], description: "Resolved name of the acting platform operator." }
+    platform_user_email: { type: [string, "null"], description: "Resolved email of the acting platform operator." }
+    target_user_id: { type: [integer, "null"] }
+    target_email: { type: [string, "null"], description: "Resolved email of the affected user (incl. soft-deleted)." }
+    action: { type: string, examples: ["domain_added", "impersonation"] }
+    reason: { type: [string, "null"] }
+    metadata: { type: object, additionalProperties: true }
+    ip_address: { type: [string, "null"] }
+    user_agent: { type: [string, "null"] }
+    created_at: { type: string, format: date-time }
+    ended_at: { type: [string, "null"], format: date-time }
+    end_cause: { type: [string, "null"], enum: [manual, expired, revoked, null] }
+required: [source, id, tenant_id, platform_user_id, target_user_id, action, created_at]

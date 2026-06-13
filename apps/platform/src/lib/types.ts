@@ -7,6 +7,11 @@ export type TenantDetail = PlatformSchemas["schemas"]["PlatformTenantDetail"];
 export type TenantDomain = PlatformSchemas["schemas"]["PlatformTenantDomain"];
 export type Plan = PlatformSchemas["schemas"]["PlatformPlan"];
 export type TenantMetrics = PlatformSchemas["schemas"]["PlatformTenantMetrics"];
+export type Operator = PlatformSchemas["schemas"]["Operator"];
+export type OperatorCapabilities = PlatformSchemas["schemas"]["OperatorCapabilities"];
+export type OperatorCredentialReveal = PlatformSchemas["schemas"]["OperatorCredentialReveal"];
+export type OwnerCredentials = PlatformSchemas["schemas"]["PlatformOwnerCredentials"];
+export type AuditEvent = PlatformSchemas["schemas"]["AuditEvent"];
 
 export type TenantStatus = "active" | "suspended" | "archived";
 export type DbTier = "shared" | "dedicated";

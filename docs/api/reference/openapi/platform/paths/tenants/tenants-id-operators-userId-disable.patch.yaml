@@ -1,0 +1,25 @@
+operationId: platformOperatorsDisable
+summary: Disable an operator
+description: Stamps `disabled_at` and revokes the operator's `oat_` sessions. The store owner and the last active admin cannot be disabled.
+tags: [Platform Operators]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: userId, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Operator disabled.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../../common/components/schemas/Operator.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

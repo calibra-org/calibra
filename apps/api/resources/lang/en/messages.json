@@ -6,7 +6,9 @@
             "unauthenticated": "Authentication is required.",
             "invalid_credentials": "Invalid credentials.",
             "forbidden_admin": "Admin access required.",
-            "tenant_mismatch": "Account does not belong to this shop."
+            "tenant_mismatch": "Account does not belong to this shop.",
+            "password_change_required": "Password change required.",
+            "action_unavailable_during_impersonation": "This action is unavailable during impersonation."
         },
         "coupons": {
             "not_found": "Coupon code not found.",

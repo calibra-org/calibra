@@ -43,7 +43,8 @@
         "tenants": "فروشگاه‌ها",
         "plans": "پلن‌ها",
         "signOut": "خروج",
-        "account": "حساب"
+        "account": "حساب",
+        "audit": "رویدادها"
     },
     "Overview": {
         "title": "نمای کلی فروشگاه‌ها",
@@ -117,7 +118,9 @@
         "createdAt": "ایجاد",
         "suspend": "تعلیق",
         "activate": "فعال‌سازی",
-        "archive": "بایگانی"
+        "archive": "بایگانی",
+        "tabOperators": "اپراتورها",
+        "tabAudit": "رویدادها"
     },
     "Domains": {
         "title": "دامنه‌ها",
@@ -133,7 +136,13 @@
         "tlsActive": "فعال",
         "tlsFailed": "ناموفق",
         "empty": "هنوز دامنه‌ای نیست.",
-        "placeholder": "shop.example.com"
+        "placeholder": "shop.example.com",
+        "gateOwnership": "مالکیت",
+        "gateRouting": "مسیردهی",
+        "simulated": "شبیه‌سازی (محلی)",
+        "recordsHint": "این رکوردهای DNS را ثبت کنید، سپس دوباره بررسی کنید:",
+        "kindSubdomain": "زیردامنه",
+        "tlsVerifying": "در حال تأیید"
     },
     "PlanLimits": {
         "title": "پلن و محدودیت‌ها",
@@ -203,5 +212,77 @@
         "rowNav": "حرکت بین ردیف‌ها",
         "rowOpen": "باز کردن ردیف",
         "help": "این راهنما"
+    },
+    "Credentials": {
+        "title": "اعتبارنامهٔ یک‌بارمصرف",
+        "email": "ایمیل (نام کاربری)",
+        "tempPassword": "گذرواژهٔ موقت",
+        "handoffLink": "پیوند واگذاری",
+        "warning": "این گذرواژه دوباره نمایش داده نمی‌شود. اپراتور باید در نخستین ورود آن را تغییر دهد.",
+        "handoffHint": "پیوند یک‌بارمصرف — پس از نخستین استفاده یا ۶۰ دقیقه منقضی می‌شود."
+    },
+    "Operators": {
+        "add": "افزودن اپراتور",
+        "addTitle": "افزودن اپراتور",
+        "addSubmit": "ایجاد",
+        "done": "تمام",
+        "name": "نام",
+        "email": "ایمیل",
+        "status": "وضعیت",
+        "lastLogin": "آخرین ورود",
+        "never": "هرگز",
+        "owner": "مالک فروشگاه",
+        "status_active": "فعال",
+        "status_disabled": "غیرفعال",
+        "status_never_signed_in": "بدون ورود",
+        "loginAs": "ورود به‌عنوان",
+        "resetPassword": "بازنشانی گذرواژه",
+        "makeOwner": "تعیین به‌عنوان مالک",
+        "disable": "غیرفعال‌سازی",
+        "enable": "فعال‌سازی",
+        "remove": "حذف",
+        "removeConfirm": "اپراتور {name} حذف شود؟",
+        "sendHandoff": "به‌جای گذرواژهٔ موقت، پیوند واگذاری بفرست",
+        "reason": "دلیل",
+        "reasonPlaceholder": "چرا به‌عنوان این اپراتور وارد می‌شوید؟",
+        "impersonateTitle": "ورود به‌عنوان اپراتور",
+        "impersonateTitleNamed": "ورود به‌عنوان {name}",
+        "impersonateConfirm": "شروع نشست",
+        "resetTitle": "گذرواژه بازنشانی شد",
+        "cancel": "انصراف",
+        "confirmResetTitle": "بازنشانی گذرواژه؟",
+        "confirmResetBody": "یک گذرواژهٔ موقت تازه برای {name} ساخته شود؟ گذرواژهٔ فعلی و نشست‌های فعال او باطل می‌شوند.",
+        "confirmMakeOwnerTitle": "انتقال مالکیت؟",
+        "confirmMakeOwnerBody": "{name} مالک فروشگاه شود؟ مالک فعلی به مدیر عادی تبدیل می‌شود.",
+        "confirmDisableTitle": "غیرفعال‌سازی اپراتور؟",
+        "confirmDisableBody": "{name} غیرفعال شود؟ از حساب خارج می‌شود و تا فعال‌سازی مجدد به فروشگاه دسترسی ندارد.",
+        "confirmEnableTitle": "فعال‌سازی اپراتور؟",
+        "confirmEnableBody": "{name} دوباره فعال شود؟ می‌تواند دوباره وارد شود.",
+        "confirmRemoveTitle": "حذف اپراتور؟",
+        "confirmRemoveBody": "{name} حذف شود؟ نشست‌های او باطل می‌شوند. با دعوت دوبارهٔ همان ایمیل قابل بازگشت است."
+    },
+    "Audit": {
+        "empty": "هنوز رویدادی ثبت نشده است.",
+        "when": "زمان",
+        "action": "کنش",
+        "operator": "اپراتور",
+        "reason": "دلیل",
+        "pageTitle": "رویدادها",
+        "pageSubtitle": "کنش‌های اپراتورها و نشست‌های جانشینی در سراسر فروشگاه‌ها.",
+        "action_impersonation": "ورود به‌عنوان اپراتور",
+        "action_tenant_provisioned": "ایجاد فروشگاه",
+        "action_tenant_updated": "به‌روزرسانی فروشگاه",
+        "action_domain_added": "افزودن دامنه",
+        "action_domain_removed": "حذف دامنه",
+        "action_operator_created": "ایجاد اپراتور",
+        "action_operator_disabled": "غیرفعال‌سازی اپراتور",
+        "action_operator_enabled": "فعال‌سازی اپراتور",
+        "action_operator_removed": "حذف اپراتور",
+        "action_password_rotated": "بازنشانی گذرواژه",
+        "action_handoff_link_issued": "صدور پیوند واگذاری",
+        "action_ownership_transferred": "انتقال مالکیت",
+        "details": "جزئیات",
+        "shop": "فروشگاه",
+        "allShops": "همهٔ فروشگاه‌ها"
     }
 }

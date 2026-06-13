@@ -1,0 +1,28 @@
+operationId: platformOperatorsHandoffLink
+summary: Issue an operator handoff link
+description: Creates a single-use link (on the tenant's slug admin host) for the operator to set their own password.
+tags: [Platform Operators]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: userId, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Handoff link issued.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [handoff_url, expires_at]
+                            properties:
+                                handoff_url: { type: string, format: uri }
+                                expires_at: { type: string, format: date-time }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

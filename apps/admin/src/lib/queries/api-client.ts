@@ -108,6 +108,14 @@ async function readResponse<T>(res: Response): Promise<T> {
         } catch {
             parsed = await res.text();
         }
+        /**
+         * Forced password change: the api 423s every admin route until the operator sets a new
+         * password. Bounce to the change-password screen (full-document nav so it renders on the
+         * shop's own Host, outside the authenticated layout that would 423 again).
+         */
+        if (res.status === 423 && typeof window !== "undefined" && !window.location.pathname.includes("/change-password")) {
+            window.location.assign("/change-password");
+        }
         throw new ProxyError(`admin proxy returned ${res.status}`, res.status, parsed);
     }
     /** 204 responses (e.g. successful DELETE) ship no body — return undefined for callers that expect a value. */

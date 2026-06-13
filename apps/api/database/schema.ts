@@ -8,7 +8,7 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class AdminAuditLogSchema extends BaseModel {
-  static $columns = ['action', 'actorUserId', 'entityId', 'entityKind', 'id', 'ipAddress', 'occurredAt', 'payload', 'tenantId'] as const
+  static $columns = ['action', 'actorUserId', 'entityId', 'entityKind', 'id', 'impersonatorPlatformUserId', 'ipAddress', 'occurredAt', 'payload', 'tenantId'] as const
   $columns = AdminAuditLogSchema.$columns
   @column()
   declare action: string
@@ -20,6 +20,8 @@ export class AdminAuditLogSchema extends BaseModel {
   declare entityKind: string
   @column({ isPrimary: true })
   declare id: bigint | number
+  @column()
+  declare impersonatorPlatformUserId: bigint | number | null
   @column()
   declare ipAddress: string | null
   @column.dateTime()
@@ -1235,14 +1237,20 @@ export class OtpCodeSchema extends BaseModel {
 }
 
 export class PasswordResetTokenSchema extends BaseModel {
-  static $columns = ['createdAt', 'expiresAt', 'id', 'tokenHash', 'updatedAt', 'usedAt', 'userId'] as const
+  static $columns = ['createdAt', 'createdByPlatformUserId', 'expiresAt', 'id', 'kind', 'tenantId', 'tokenHash', 'updatedAt', 'usedAt', 'userId'] as const
   $columns = PasswordResetTokenSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare createdByPlatformUserId: bigint | number | null
   @column.dateTime()
   declare expiresAt: DateTime
   @column({ isPrimary: true })
   declare id: bigint | number
+  @column()
+  declare kind: string
+  @column()
+  declare tenantId: bigint | number
   @column()
   declare tokenHash: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -1406,6 +1414,29 @@ export class PlatformAccessTokenSchema extends BaseModel {
   declare type: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+}
+
+export class PlatformAuditEventSchema extends BaseModel {
+  static $columns = ['action', 'createdAt', 'id', 'ipAddress', 'metadata', 'platformUserId', 'targetUserId', 'tenantId', 'userAgent'] as const
+  $columns = PlatformAuditEventSchema.$columns
+  @column()
+  declare action: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: bigint | number
+  @column()
+  declare ipAddress: string | null
+  @column()
+  declare metadata: any
+  @column()
+  declare platformUserId: bigint | number | null
+  @column()
+  declare targetUserId: bigint | number | null
+  @column()
+  declare tenantId: bigint | number
+  @column()
+  declare userAgent: string | null
 }
 
 export class PlatformUserSchema extends BaseModel {
@@ -2614,8 +2645,10 @@ export class TaxRateSchema extends BaseModel {
 }
 
 export class TenantDomainSchema extends BaseModel {
-  static $columns = ['createdAt', 'domain', 'id', 'isPrimary', 'kind', 'tenantId', 'tlsStatus', 'updatedAt', 'verifiedAt'] as const
+  static $columns = ['certLastError', 'createdAt', 'domain', 'id', 'isPrimary', 'kind', 'ownershipToken', 'ownershipVerifiedAt', 'routingVerifiedAt', 'tenantId', 'tlsStatus', 'updatedAt', 'verifiedAt'] as const
   $columns = TenantDomainSchema.$columns
+  @column()
+  declare certLastError: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
@@ -2627,6 +2660,12 @@ export class TenantDomainSchema extends BaseModel {
   @column()
   declare kind: string
   @column()
+  declare ownershipToken: string | null
+  @column.dateTime()
+  declare ownershipVerifiedAt: DateTime | null
+  @column.dateTime()
+  declare routingVerifiedAt: DateTime | null
+  @column()
   declare tenantId: bigint | number
   @column()
   declare tlsStatus: string
@@ -2637,8 +2676,10 @@ export class TenantDomainSchema extends BaseModel {
 }
 
 export class TenantImpersonationEventSchema extends BaseModel {
-  static $columns = ['endedAt', 'id', 'ipAddress', 'platformUserId', 'reason', 'startedAt', 'targetUserId', 'tenantId'] as const
+  static $columns = ['endCause', 'endedAt', 'id', 'ipAddress', 'platformUserId', 'reason', 'startedAt', 'targetUserId', 'tenantId', 'userAgent'] as const
   $columns = TenantImpersonationEventSchema.$columns
+  @column()
+  declare endCause: string | null
   @column.dateTime()
   declare endedAt: DateTime | null
   @column({ isPrimary: true })
@@ -2648,13 +2689,15 @@ export class TenantImpersonationEventSchema extends BaseModel {
   @column()
   declare platformUserId: bigint | number | null
   @column()
-  declare reason: string | null
+  declare reason: string
   @column.dateTime()
   declare startedAt: DateTime
   @column()
   declare targetUserId: bigint | number
   @column()
   declare tenantId: bigint | number
+  @column()
+  declare userAgent: string | null
 }
 
 export class TenantNumberCounterSchema extends BaseModel {
@@ -2692,7 +2735,7 @@ export class TenantUsageDailySchema extends BaseModel {
 }
 
 export class TenantSchema extends BaseModel {
-  static $columns = ['attributes', 'connectionName', 'createdAt', 'currencyCode', 'dbTier', 'deletedAt', 'id', 'name', 'planId', 'primaryLocale', 'slug', 'status', 'templateKey', 'updatedAt'] as const
+  static $columns = ['attributes', 'connectionName', 'createdAt', 'currencyCode', 'dbTier', 'deletedAt', 'id', 'name', 'ownerUserId', 'planId', 'primaryLocale', 'slug', 'status', 'templateKey', 'updatedAt'] as const
   $columns = TenantSchema.$columns
   @column()
   declare attributes: any
@@ -2711,6 +2754,8 @@ export class TenantSchema extends BaseModel {
   @column()
   declare name: string
   @column()
+  declare ownerUserId: bigint | number | null
+  @column()
   declare planId: bigint | number
   @column()
   declare primaryLocale: string
@@ -2725,12 +2770,14 @@ export class TenantSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'deletedAt', 'email', 'id', 'lastLoginAt', 'locale', 'passwordHash', 'phone', 'role', 'tenantId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'deletedAt', 'disabledAt', 'email', 'id', 'lastLoginAt', 'locale', 'mustChangePassword', 'passwordHash', 'phone', 'role', 'tenantId', 'updatedAt'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column.dateTime()
   declare deletedAt: DateTime | null
+  @column.dateTime()
+  declare disabledAt: DateTime | null
   @column()
   declare email: any | null
   @column({ isPrimary: true })
@@ -2739,6 +2786,8 @@ export class UserSchema extends BaseModel {
   declare lastLoginAt: DateTime | null
   @column()
   declare locale: string
+  @column()
+  declare mustChangePassword: boolean
   @column()
   declare passwordHash: string
   @column()

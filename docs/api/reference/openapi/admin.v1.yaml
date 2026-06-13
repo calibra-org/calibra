@@ -73,6 +73,8 @@ tags:
           rollup math on the client.
     - name: Admin / Settings
       description: Store configuration — the General (همگانی) tab, currency, store address, taxes & coupons.
+    - name: Admin / Team
+      description: Owner-only operator management — invite, disable, remove, rotate credentials, transfer ownership.
 
 components:
     securitySchemes:
@@ -258,6 +260,32 @@ paths:
             $ref: "./admin/paths/insights/regional-province.get.yaml"
         head:
             $ref: "./common/components/operations/HeadCompanion.yaml"
+
+    /api/v1/admin/operators:
+        get:
+            $ref: "./admin/paths/operators/operators.get.yaml"
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            $ref: "./admin/paths/operators/operators.post.yaml"
+    /api/v1/admin/operators/{id}/disable:
+        patch:
+            $ref: "./admin/paths/operators/operators-id-disable.patch.yaml"
+    /api/v1/admin/operators/{id}/enable:
+        patch:
+            $ref: "./admin/paths/operators/operators-id-enable.patch.yaml"
+    /api/v1/admin/operators/{id}:
+        delete:
+            $ref: "./admin/paths/operators/operators-id.delete.yaml"
+    /api/v1/admin/operators/{id}/reset-password:
+        post:
+            $ref: "./admin/paths/operators/operators-id-reset-password.post.yaml"
+    /api/v1/admin/operators/{id}/handoff-link:
+        post:
+            $ref: "./admin/paths/operators/operators-id-handoff-link.post.yaml"
+    /api/v1/admin/operators/{id}/make-owner:
+        post:
+            $ref: "./admin/paths/operators/operators-id-make-owner.post.yaml"
 
     /api/v1/admin/settings/general:
         get:

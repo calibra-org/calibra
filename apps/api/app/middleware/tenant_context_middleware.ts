@@ -30,7 +30,12 @@ import { type ResolvedTenant, resolveTenantByHost, resolveTenantByRef } from "#s
 export default class TenantContextMiddleware {
     async handle(ctx: HttpContext, next: NextFn) {
         const path = ctx.request.url();
-        if (path.startsWith("/api/v1/platform") || path.startsWith("/health") || path === "/metrics") {
+        if (
+            path.startsWith("/api/v1/platform") ||
+            path.startsWith("/health") ||
+            path === "/metrics" ||
+            path === "/api/caddy/ask"
+        ) {
             return next();
         }
 

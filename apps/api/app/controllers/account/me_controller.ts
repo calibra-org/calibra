@@ -4,20 +4,13 @@ import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 
 import type Customer from "#models/customer";
 import CustomerIranProfile from "#models/customer_iran_profile";
+import { parseImpersonatedBy } from "#services/impersonation";
 import nationalIdService from "#services/national_id_service";
 import phoneService from "#services/phone_service";
 import { withTenantTransaction } from "#services/tenant_context";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
 import { meUpdateValidator } from "#validators/account/me_validator";
-
-/** Extract the impersonating platform-user id from a token's abilities, or null for a normal session. */
-function parseImpersonatedBy(abilities: string[] | undefined): number | null {
-    const found = abilities?.find((ability) => ability.startsWith("impersonated_by:"));
-    if (!found) return null;
-    const id = Number(found.split(":")[1]);
-    return Number.isFinite(id) ? id : null;
-}
 
 export default class MeController {
     /**
@@ -33,7 +26,8 @@ export default class MeController {
          * the token carries an `impersonated_by:<platformUserId>` ability. Surfacing it lets the
          * admin panel render the persistent "you are impersonating" banner + exit control.
          */
-        const impersonatedBy = parseImpersonatedBy(user.currentAccessToken?.abilities);
+        const impersonatorId = parseImpersonatedBy(user.currentAccessToken?.abilities);
+        const impersonatedBy = impersonatorId === null ? null : Number(impersonatorId);
 
         await user.load("customer", (q) => q.preload("iranProfile"));
         const customer = user.customer;

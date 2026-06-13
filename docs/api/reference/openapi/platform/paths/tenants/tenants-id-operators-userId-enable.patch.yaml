@@ -1,0 +1,23 @@
+operationId: platformOperatorsEnable
+summary: Re-enable a disabled operator
+description: Clears `disabled_at`.
+tags: [Platform Operators]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+    - { name: userId, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Operator enabled.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../../common/components/schemas/Operator.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

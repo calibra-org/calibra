@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 
@@ -9,30 +10,33 @@ import { MetricsChart } from "#/components/MetricsChart";
 import { PageHeader } from "#/components/PageHeader";
 import { Reveal } from "#/components/Reveal";
 import { StatCard } from "#/components/StatCard";
-import { StatusPill, tenantStatusTone, tlsStatusTone } from "#/components/StatusPill";
+import { StatusPill, tenantStatusTone } from "#/components/StatusPill";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent } from "#/components/ui/card";
 import { EmptyState } from "#/components/ui/empty-state";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
-import { ArrowStart, Plus, RefreshCw, Trash2, TriangleAlert, UserCheck } from "#/icons";
+import { ArrowStart, Plus, TriangleAlert, UserCheck } from "#/icons";
 import { formatBytes, formatMoney, formatNumber } from "#/lib/format";
 import { useRouter } from "#/lib/i18n/navigation";
-import {
-    openImpersonationTab,
-    useAttachDomain,
-    useDetachDomain,
-    useImpersonate,
-    useRecheckDomain,
-    useTenant,
-    useTenantMetrics,
-    useUpdateTenant,
-} from "#/lib/queries";
+import { useAttachDomain, useDetachDomain, useRecheckDomain, useTenant, useTenantMetrics, useUpdateTenant } from "#/lib/queries";
 import type { MetricsRange, TenantDetail } from "#/lib/types";
 import { cn } from "#/lib/utils";
+import { AuditView } from "#/views/audit/audit-view";
+import { DomainRow } from "#/views/domains/domain-row";
+import { OperatorsTab } from "#/views/operators/operators-tab";
 
-type Tab = "metrics" | "domains" | "plan";
+type Tab = "metrics" | "domains" | "operators" | "audit" | "plan";
+
+const TABS: Tab[] = ["metrics", "domains", "operators", "audit", "plan"];
+
+const TAB_LABELS: Record<Tab, string> = {
+    metrics: "tabMetrics",
+    domains: "tabDomains",
+    operators: "tabOperators",
+    audit: "tabAudit",
+    plan: "tabPlan",
+};
 
 /** Percent change between the first and last point of a series, rounded. Null when undefined. */
 function trendPct(series: number[]): number | null {
@@ -48,7 +52,9 @@ export function ShopDetailView({ id }: { id: string }) {
     const tc = useTranslations("Common");
     const tenant = useTenant(id);
     const router = useRouter();
-    const [tab, setTab] = useState<Tab>("metrics");
+    const searchParams = useSearchParams();
+    const initialTab = TABS.includes(searchParams.get("tab") as Tab) ? (searchParams.get("tab") as Tab) : "metrics";
+    const [tab, setTab] = useState<Tab>(initialTab);
 
     if (tenant.isPending) return <Skeleton className="h-72 w-full rounded-lg" />;
     if (tenant.isError || !tenant.data) {
@@ -74,10 +80,10 @@ export function ShopDetailView({ id }: { id: string }) {
                 {t("back")}
             </Button>
 
-            <Header shop={shop} id={id} />
+            <Header shop={shop} id={id} onImpersonate={() => setTab("operators")} />
 
             <div className="mt-6 flex gap-1 border-border border-b">
-                {(["metrics", "domains", "plan"] as const).map((key) => (
+                {TABS.map((key) => (
                     <button
                         key={key}
                         type="button"
@@ -87,7 +93,7 @@ export function ShopDetailView({ id }: { id: string }) {
                             tab === key ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
                         )}
                     >
-                        {t(key === "metrics" ? "tabMetrics" : key === "domains" ? "tabDomains" : "tabPlan")}
+                        {t(TAB_LABELS[key] as "tabMetrics")}
                         {tab === key ? (
                             <motion.span
                                 layoutId="tab-underline"
@@ -102,21 +108,18 @@ export function ShopDetailView({ id }: { id: string }) {
             <div className="mt-5">
                 {tab === "metrics" ? <MetricsTab id={id} currencyCode={shop.currency_code} /> : null}
                 {tab === "domains" ? <DomainsTab id={id} shop={shop} /> : null}
+                {tab === "operators" ? <OperatorsTab id={id} /> : null}
+                {tab === "audit" ? <AuditView tenantId={id} /> : null}
                 {tab === "plan" ? <PlanTab shop={shop} /> : null}
             </div>
         </Reveal>
     );
 }
 
-function Header({ shop, id }: { shop: TenantDetail; id: string }) {
+function Header({ shop, id, onImpersonate }: { shop: TenantDetail; id: string; onImpersonate: () => void }) {
     const t = useTranslations("ShopDetail");
     const tt = useTranslations("Tenants");
     const update = useUpdateTenant(id);
-    const impersonate = useImpersonate(id);
-
-    async function onImpersonate() {
-        openImpersonationTab(await impersonate.mutateAsync());
-    }
 
     const nextStatus = shop.status === "active" ? "suspended" : "active";
 
@@ -140,7 +143,7 @@ function Header({ shop, id }: { shop: TenantDetail; id: string }) {
                     <Button variant="outline" disabled={update.isPending} onClick={() => update.mutate({ status: nextStatus })}>
                         {shop.status === "active" ? t("suspend") : t("activate")}
                     </Button>
-                    <Button disabled={impersonate.isPending} onClick={onImpersonate}>
+                    <Button onClick={onImpersonate}>
                         <UserCheck className="size-4" aria-hidden="true" />
                         {t("impersonate")}
                     </Button>
@@ -238,13 +241,21 @@ function DomainsTab({ id, shop }: { id: string; shop: TenantDetail }) {
     const detach = useDetachDomain(id);
     const recheck = useRecheckDomain(id);
     const [domain, setDomain] = useState("");
-    const [cname, setCname] = useState<string | null>(null);
+    const [pendingId, setPendingId] = useState<number | null>(null);
 
     async function onAttach(e: FormEvent) {
         e.preventDefault();
-        const res = (await attach.mutateAsync(domain)) as { data: { cname_target?: string } };
-        setCname(res.data.cname_target ?? null);
+        await attach.mutateAsync(domain);
         setDomain("");
+    }
+
+    async function onRecheck(domainId: number) {
+        setPendingId(domainId);
+        try {
+            await recheck.mutateAsync(domainId);
+        } finally {
+            setPendingId(null);
+        }
     }
 
     return (
@@ -259,66 +270,19 @@ function DomainsTab({ id, shop }: { id: string; shop: TenantDetail }) {
                 </Button>
             </form>
 
-            {cname ? (
-                <div className="mission-panel bg-muted/40 p-3 text-sm">
-                    <p className="text-muted-foreground text-xs">{t("cnameHint")}</p>
-                    <code className="mt-1 block font-mono text-xs" dir="ltr">
-                        CNAME → {cname}
-                    </code>
-                </div>
-            ) : null}
-
             {shop.domains.length === 0 ? (
                 <EmptyState icon={TriangleAlert} title={t("empty")} />
             ) : (
-                <div className="mission-panel overflow-hidden">
-                    <Table className="console-table">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{t("domain")}</TableHead>
-                                <TableHead>{t("kind")}</TableHead>
-                                <TableHead>{t("tls")}</TableHead>
-                                <TableHead />
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {shop.domains.map((d) => (
-                                <TableRow key={d.id} className="transition-colors hover:bg-accent/40">
-                                    <TableCell dir="ltr" className="font-medium font-mono">
-                                        {d.domain}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground text-sm">{d.kind}</TableCell>
-                                    <TableCell>
-                                        <StatusPill tone={tlsStatusTone(d.tls_status)}>
-                                            {t(`tls${cap(d.tls_status)}` as "tlsPending")}
-                                        </StatusPill>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex justify-end gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                aria-label={t("recheck")}
-                                                onClick={() => recheck.mutate(d.id)}
-                                            >
-                                                <RefreshCw className="size-4" aria-hidden="true" />
-                                            </Button>
-                                            {!d.is_primary ? (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={t("detach")}
-                                                    onClick={() => detach.mutate(d.id)}
-                                                >
-                                                    <Trash2 className="size-4 text-danger" aria-hidden="true" />
-                                                </Button>
-                                            ) : null}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                <div className="flex flex-col gap-3">
+                    {shop.domains.map((d) => (
+                        <DomainRow
+                            key={d.id}
+                            domain={d}
+                            busy={pendingId === d.id}
+                            onRecheck={() => onRecheck(d.id)}
+                            onDetach={() => detach.mutate(d.id)}
+                        />
+                    ))}
                 </div>
             )}
         </div>

@@ -20,7 +20,7 @@ import {
 } from "#/icons";
 import { fuzzyScore } from "#/lib/fuzzy";
 import { useRouter } from "#/lib/i18n/navigation";
-import { openImpersonationTab, useImpersonateTenant, useSetTenantStatus, useTenants } from "#/lib/queries";
+import { useSetTenantStatus, useTenants } from "#/lib/queries";
 import { cn } from "#/lib/utils";
 
 interface PaletteApi {
@@ -79,7 +79,6 @@ function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
 
-    const impersonate = useImpersonateTenant();
     const setStatus = useSetTenantStatus();
     const shopsQuery = useTenants({ page: 1, q: deferredQuery.trim() || undefined });
     const shops = shopsQuery.data?.data ?? [];
@@ -108,9 +107,10 @@ function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (
         void entry.run();
     }
 
-    async function doImpersonate(id: number | string) {
-        const grant = await impersonate.mutateAsync(id);
-        openImpersonationTab(grant);
+    /** Targeted impersonation requires choosing an operator + a reason, so the palette deep-links to
+     * the shop's Operators tab where the reason modal lives, rather than minting blindly. */
+    function doImpersonate(id: number | string) {
+        router.push(`/tenants/${id}?tab=operators`);
     }
 
     const quickActions: CommandEntry[] = useMemo(

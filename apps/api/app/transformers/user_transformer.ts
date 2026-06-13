@@ -14,6 +14,8 @@ export default class UserTransformer extends BaseTransformer<User> {
             email: this.resource.email,
             locale: this.resource.locale,
             role: this.resource.role,
+            /** Drives the admin panel's forced-change redirect (a 423 on admin routes mirrors this). */
+            must_change_password: this.resource.mustChangePassword,
             created_at: this.resource.createdAt?.toISO() ?? null,
             updated_at: this.resource.updatedAt?.toISO() ?? null,
         };

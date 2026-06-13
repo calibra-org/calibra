@@ -11,6 +11,9 @@ properties:
         description: Null for phone-OTP shoppers who registered without an email.
     locale: { type: string }
     role: { type: string }
+    must_change_password:
+        type: boolean
+        description: True when the operator must set a new password before using admin routes (mirrors the 423 gate).
     created_at: { type: [string, "null"], format: date-time }
     updated_at: { type: [string, "null"], format: date-time }
 required:

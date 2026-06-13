@@ -43,7 +43,8 @@
         "tenants": "Shops",
         "plans": "Plans",
         "signOut": "Sign out",
-        "account": "Account"
+        "account": "Account",
+        "audit": "Audit"
     },
     "Overview": {
         "title": "Fleet overview",
@@ -117,7 +118,9 @@
         "createdAt": "Created",
         "suspend": "Suspend",
         "activate": "Activate",
-        "archive": "Archive"
+        "archive": "Archive",
+        "tabOperators": "Operators",
+        "tabAudit": "Audit"
     },
     "Domains": {
         "title": "Domains",
@@ -133,7 +136,13 @@
         "tlsActive": "Active",
         "tlsFailed": "Failed",
         "empty": "No domains yet.",
-        "placeholder": "shop.example.com"
+        "placeholder": "shop.example.com",
+        "gateOwnership": "Ownership",
+        "gateRouting": "Routing",
+        "simulated": "simulated (local)",
+        "recordsHint": "Publish these DNS records, then re-check:",
+        "kindSubdomain": "subdomain",
+        "tlsVerifying": "Verifying"
     },
     "PlanLimits": {
         "title": "Plan & limits",
@@ -203,5 +212,77 @@
         "rowNav": "Move between rows",
         "rowOpen": "Open row",
         "help": "This cheatsheet"
+    },
+    "Credentials": {
+        "title": "One-time credentials",
+        "email": "Email (username)",
+        "tempPassword": "Temporary password",
+        "handoffLink": "Handoff link",
+        "warning": "This password will not be shown again. The operator must change it on first sign-in.",
+        "handoffHint": "Single-use link — it expires after first use or in 60 minutes."
+    },
+    "Operators": {
+        "add": "Add operator",
+        "addTitle": "Add operator",
+        "addSubmit": "Create",
+        "done": "Done",
+        "name": "Name",
+        "email": "Email",
+        "status": "Status",
+        "lastLogin": "Last login",
+        "never": "Never",
+        "owner": "Owner",
+        "status_active": "Active",
+        "status_disabled": "Disabled",
+        "status_never_signed_in": "Never signed in",
+        "loginAs": "Login as",
+        "resetPassword": "Reset password",
+        "makeOwner": "Make owner",
+        "disable": "Disable",
+        "enable": "Enable",
+        "remove": "Remove",
+        "removeConfirm": "Remove operator {name}?",
+        "sendHandoff": "Send a handoff link instead of a temp password",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why are you logging in as this operator?",
+        "impersonateTitle": "Log in as operator",
+        "impersonateTitleNamed": "Log in as {name}",
+        "impersonateConfirm": "Start session",
+        "resetTitle": "Password rotated",
+        "cancel": "Cancel",
+        "confirmResetTitle": "Reset password?",
+        "confirmResetBody": "Generate a new temporary password for {name}? Their current password and active sessions will be revoked.",
+        "confirmMakeOwnerTitle": "Transfer ownership?",
+        "confirmMakeOwnerBody": "Make {name} the shop owner? The current owner becomes a regular admin.",
+        "confirmDisableTitle": "Disable operator?",
+        "confirmDisableBody": "Disable {name}? They will be signed out and can't access the shop until re-enabled.",
+        "confirmEnableTitle": "Enable operator?",
+        "confirmEnableBody": "Re-enable {name}? They will be able to sign in again.",
+        "confirmRemoveTitle": "Remove operator?",
+        "confirmRemoveBody": "Remove {name}? Their sessions are revoked. This can be undone by re-inviting the same email."
+    },
+    "Audit": {
+        "empty": "No audit events yet.",
+        "when": "When",
+        "action": "Action",
+        "operator": "Operator",
+        "reason": "Reason",
+        "pageTitle": "Audit",
+        "pageSubtitle": "Operator actions and impersonation sessions across the fleet.",
+        "action_impersonation": "Impersonation",
+        "action_tenant_provisioned": "Shop provisioned",
+        "action_tenant_updated": "Shop updated",
+        "action_domain_added": "Domain added",
+        "action_domain_removed": "Domain removed",
+        "action_operator_created": "Operator created",
+        "action_operator_disabled": "Operator disabled",
+        "action_operator_enabled": "Operator enabled",
+        "action_operator_removed": "Operator removed",
+        "action_password_rotated": "Password reset",
+        "action_handoff_link_issued": "Handoff link issued",
+        "action_ownership_transferred": "Ownership transferred",
+        "details": "Details",
+        "shop": "Shop",
+        "allShops": "All shops"
     }
 }
