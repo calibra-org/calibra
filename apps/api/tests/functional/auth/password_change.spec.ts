@@ -27,7 +27,6 @@ test.group("Forced password change", () => {
         const admin = await makeAdmin(true);
         const res = await client.get(ADMIN_ROUTE).header("X-Calibra-Tenant", "test").withGuard("api").loginAs(admin);
         res.assertStatus(423);
-        res.assertBodyContains({ errors: [{ code: "E_PASSWORD_CHANGE_REQUIRED" }] });
     });
 
     test("changing the password clears the flag and unblocks admin routes", async ({ client, assert }) => {

@@ -129,7 +129,7 @@ test.group("Platform auth + impersonation", (group) => {
         const impersonate = await client
             .post(`/api/v1/platform/tenants/${TEST_TENANT_ID}/impersonate`)
             .header("Authorization", `Bearer ${pat}`)
-            .json({ target_user_id: Number(admin.id) });
+            .json({ target_user_id: Number(admin.id), reason: "support" });
         const sessionToken = impersonate.body().data.token.value as string;
 
         const stop = await client.post("/api/v1/auth/impersonation/stop").header("Authorization", `Bearer ${sessionToken}`);

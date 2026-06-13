@@ -45,6 +45,16 @@ export default class extends BaseSchema {
         );
 
         this.schema.raw(`ALTER TABLE "${this.tableName}" ALTER COLUMN "tenant_id" SET NOT NULL`);
+        /**
+         * Match the GUC-default sweep (`1750003000000`): query-builder inserts riding a
+         * GUC-bearing connection (and the test suite's session `app.current_tenant`) auto-fill
+         * `tenant_id` without passing it explicitly. This table was created after that sweep, so it
+         * needs the default applied here.
+         */
+        this.schema.raw(
+            `ALTER TABLE "${this.tableName}" ALTER COLUMN "tenant_id" ` +
+                `SET DEFAULT nullif(current_setting('app.current_tenant', true), '')::bigint`,
+        );
         this.schema.raw(
             `ALTER TABLE "${this.tableName}" ADD CONSTRAINT "password_reset_tokens_tenant_id_foreign" ` +
                 `FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE`,

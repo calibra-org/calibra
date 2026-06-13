@@ -77,7 +77,7 @@ test.group("Platform operators", (group) => {
             .json({ email: "staff@shop.test" });
         res.assertStatus(201);
         res.assertAgainstApiSpec();
-        assert.isString(res.body().data.id);
+        assert.isNumber(res.body().data.id);
         assert.isString(res.body().credentials.temp_password);
     });
 

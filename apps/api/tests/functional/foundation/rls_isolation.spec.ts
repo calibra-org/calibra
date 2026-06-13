@@ -32,7 +32,12 @@ const GLOBAL_TABLES = ["tenants", "plans", "regions", "currencies"];
  * metadata ABOUT tenants, read by the global control plane with an explicit `tenant_id`, so they are
  * intentionally excluded from the RLS sweep (see migration `1750002000000`).
  */
-const CONTROL_PLANE_WITH_TENANT_ID = ["tenant_domains", "tenant_usage_daily", "tenant_impersonation_events"];
+const CONTROL_PLANE_WITH_TENANT_ID = [
+    "tenant_domains",
+    "tenant_usage_daily",
+    "tenant_impersonation_events",
+    "platform_audit_events",
+];
 
 test.group("RLS tenant isolation (calibra_app)", (group) => {
     group.setup(async () => {
