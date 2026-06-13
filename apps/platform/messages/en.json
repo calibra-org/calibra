@@ -268,6 +268,18 @@
         "operator": "Operator",
         "reason": "Reason",
         "pageTitle": "Audit",
-        "pageSubtitle": "Operator actions and impersonation sessions across the fleet."
+        "pageSubtitle": "Operator actions and impersonation sessions across the fleet.",
+        "action_impersonation": "Impersonation",
+        "action_tenant_provisioned": "Shop provisioned",
+        "action_tenant_updated": "Shop updated",
+        "action_domain_added": "Domain added",
+        "action_domain_removed": "Domain removed",
+        "action_operator_created": "Operator created",
+        "action_operator_disabled": "Operator disabled",
+        "action_operator_enabled": "Operator enabled",
+        "action_operator_removed": "Operator removed",
+        "action_password_rotated": "Password reset",
+        "action_handoff_link_issued": "Handoff link issued",
+        "action_ownership_transferred": "Ownership transferred"
     }
 }

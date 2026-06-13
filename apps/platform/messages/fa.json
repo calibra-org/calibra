@@ -268,6 +268,18 @@
         "operator": "اپراتور",
         "reason": "دلیل",
         "pageTitle": "رویدادها",
-        "pageSubtitle": "کنش‌های اپراتورها و نشست‌های جانشینی در سراسر فروشگاه‌ها."
+        "pageSubtitle": "کنش‌های اپراتورها و نشست‌های جانشینی در سراسر فروشگاه‌ها.",
+        "action_impersonation": "ورود به‌عنوان اپراتور",
+        "action_tenant_provisioned": "ایجاد فروشگاه",
+        "action_tenant_updated": "به‌روزرسانی فروشگاه",
+        "action_domain_added": "افزودن دامنه",
+        "action_domain_removed": "حذف دامنه",
+        "action_operator_created": "ایجاد اپراتور",
+        "action_operator_disabled": "غیرفعال‌سازی اپراتور",
+        "action_operator_enabled": "فعال‌سازی اپراتور",
+        "action_operator_removed": "حذف اپراتور",
+        "action_password_rotated": "بازنشانی گذرواژه",
+        "action_handoff_link_issued": "صدور پیوند واگذاری",
+        "action_ownership_transferred": "انتقال مالکیت"
     }
 }

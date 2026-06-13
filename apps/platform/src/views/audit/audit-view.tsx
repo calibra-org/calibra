@@ -11,11 +11,43 @@ import { TriangleAlert } from "#/icons";
 import { useAudit } from "#/lib/queries";
 
 /**
+ * i18n key per audit `action` value (the `platform_audit_events` actions + the `impersonation`
+ * pseudo-action from `tenant_impersonation_events`). `satisfies` keeps this a closed, exhaustive map
+ * — add a server action and the compiler forces a matching label key here. Unknown/legacy actions
+ * fall back to the raw string so the feed never renders blank.
+ */
+const AUDIT_ACTION_KEYS = {
+    impersonation: "action_impersonation",
+    tenant_provisioned: "action_tenant_provisioned",
+    tenant_updated: "action_tenant_updated",
+    domain_added: "action_domain_added",
+    domain_removed: "action_domain_removed",
+    operator_created: "action_operator_created",
+    operator_disabled: "action_operator_disabled",
+    operator_enabled: "action_operator_enabled",
+    operator_removed: "action_operator_removed",
+    password_rotated: "action_password_rotated",
+    handoff_link_issued: "action_handoff_link_issued",
+    ownership_transferred: "action_ownership_transferred",
+} as const satisfies Record<string, string>;
+
+type AuditAction = keyof typeof AUDIT_ACTION_KEYS;
+
+function isAuditAction(action: string): action is AuditAction {
+    return action in AUDIT_ACTION_KEYS;
+}
+
+/**
  * Control-plane audit feed — merged operator actions + impersonation sessions, newest-first. Scoped
  * to one tenant when `tenantId` is given (the shop-detail tab), otherwise fleet-wide.
  */
 export function AuditView({ tenantId }: { tenantId?: string }) {
     const t = useTranslations("Audit");
+
+    /** Localized, human-readable label for an audit action (raw string fallback for unknown ones). */
+    const actionLabel = (action: string): string =>
+        isAuditAction(action) ? t(AUDIT_ACTION_KEYS[action] as "action_impersonation") : action;
+
     const tc = useTranslations("Common");
     const audit = useAudit(tenantId);
 
@@ -56,7 +88,9 @@ export function AuditView({ tenantId }: { tenantId?: string }) {
                                 {new Date(e.created_at).toLocaleString()}
                             </TableCell>
                             <TableCell>
-                                <StatusPill tone={e.source === "impersonation" ? "warning" : "info"}>{e.action}</StatusPill>
+                                <StatusPill tone={e.source === "impersonation" ? "warning" : "info"}>
+                                    {actionLabel(e.action)}
+                                </StatusPill>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                                 {e.platform_user_id ? `#${e.platform_user_id}` : "—"}
