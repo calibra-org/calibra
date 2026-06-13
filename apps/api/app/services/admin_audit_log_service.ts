@@ -3,6 +3,7 @@ import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import { DateTime } from "luxon";
 
 import AdminAuditLog from "#models/admin_audit_log";
+import { currentStoredImpersonatorId } from "#services/impersonation";
 
 export interface RecordAuditOptions {
     ctx?: HttpContext;
@@ -38,6 +39,9 @@ export async function recordAudit(options: RecordAuditOptions): Promise<void> {
         row.entityId = entityId;
         row.payload = payload ?? {};
         row.ipAddress = ctx?.request.ip() ?? null;
+        /** During impersonation, name the operator (not just the impersonated shop admin). */
+        const impersonatorId = currentStoredImpersonatorId();
+        row.impersonatorPlatformUserId = impersonatorId === null ? null : Number(impersonatorId);
         row.occurredAt = DateTime.utc();
         if (trx) row.useTransaction(trx);
         await row.save();

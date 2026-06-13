@@ -16,6 +16,7 @@
         "#models/*": "./app/models/*.js",
         "#services/*": "./app/services/*.js",
         "#middleware/*": "./app/middleware/*.js",
+        "#policies/*": "./app/policies/*.js",
         "#enums/*": "./app/enums/*.js",
         "#lib/*": "./app/lib/*.js",
         "#table_views/*": "./app/table_views/*.js",

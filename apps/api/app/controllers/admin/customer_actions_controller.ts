@@ -10,6 +10,7 @@ import CustomerMergeHistory from "#models/customer_merge_history";
 import PasswordResetToken from "#models/password_reset_token";
 import User from "#models/user";
 import { recordAudit } from "#services/admin_audit_log_service";
+import { assertNotImpersonating } from "#services/impersonation";
 import { withTenantTransaction } from "#services/tenant_context";
 import CustomerTransformer from "#transformers/customer_transformer";
 import UserTransformer from "#transformers/user_transformer";
@@ -149,6 +150,9 @@ export default class AdminCustomerActionsController {
      * Storefront-side banner + impersonator-stamping middleware land in a follow-up PR.
      */
     async impersonate(ctx: HttpContext) {
+        /** Nested-impersonation guard: a platform operator impersonating a shop admin cannot then
+         * impersonate one of that shop's customers (id-space + accountability would be lost). */
+        assertNotImpersonating();
         const customer = await this.findCustomerOrFail(ctx.params.id);
         if (customer.userId === null) {
             throw new Exception("Cannot impersonate a guest customer", {
