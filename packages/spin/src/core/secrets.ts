@@ -17,6 +17,8 @@ export interface SpinSecrets {
     glitchtipSecretKey: string;
     /** Meilisearch master key — the api authenticates against the per-spin instance with it. */
     meiliMasterKey: string;
+    /** Edge shared secret — the spin agent sends it as `X-Edge-Secret` to the api `/api/caddy/ask`. */
+    edgeSecret: string;
 }
 
 /** Fixed local Postgres roles for the two-role RLS split (see apps/api/config/database.ts). */
@@ -37,6 +39,7 @@ export function generateSecrets(): SpinSecrets {
         appKey: randomBytes(32).toString("hex"),
         glitchtipSecretKey: randomBytes(48).toString("hex"),
         meiliMasterKey: randomBytes(32).toString("hex"),
+        edgeSecret: randomBytes(32).toString("hex"),
     };
 }
 
@@ -50,5 +53,6 @@ export function backfillSecrets(existing: Partial<SpinSecrets>): SpinSecrets {
         appKey: existing.appKey ?? fresh.appKey,
         glitchtipSecretKey: existing.glitchtipSecretKey ?? fresh.glitchtipSecretKey,
         meiliMasterKey: existing.meiliMasterKey ?? fresh.meiliMasterKey,
+        edgeSecret: existing.edgeSecret ?? fresh.edgeSecret,
     };
 }

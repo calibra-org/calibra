@@ -163,6 +163,26 @@ async function handleAction(
     res.end(`unknown action "${action}"`);
 }
 
+/**
+ * Ask the api whether a custom domain is routable (R5 predicate). Loads the spin meta for the api
+ * port + edge secret, then calls `GET /api/caddy/ask` on the host api process. Fails closed (denied)
+ * on any error — a missing meta, a down api, or a bad secret all mean "do not mint a leaf".
+ */
+async function askApiAuthorizesCustomDomain(slug: string, domain: string): Promise<boolean> {
+    if (!domain) return false;
+    try {
+        const meta = await loadMetaOrFail(slug);
+        if (!meta.edgeSecret) return false;
+        const apiPort = meta.ports.api;
+        const response = await fetch(`http://127.0.0.1:${apiPort}/api/caddy/ask?domain=${encodeURIComponent(domain)}`, {
+            headers: { "X-Edge-Secret": meta.edgeSecret },
+        });
+        return response.status === 200;
+    } catch {
+        return false;
+    }
+}
+
 async function handle(req: IncomingMessage, res: ServerResponse, opts: AgentOptions): Promise<void> {
     const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
     const path = url.pathname;
@@ -178,15 +198,23 @@ async function handle(req: IncomingMessage, res: ServerResponse, opts: AgentOpti
     }
 
     /**
-     * Caddy on-demand-TLS authorizer. Caddy asks before minting a leaf for an ad-hoc tenant host;
-     * we only authorize hosts inside this spin's domain so Caddy can't be tricked into issuing for
-     * arbitrary names.
+     * Caddy on-demand-TLS authorizer. Caddy asks before minting a leaf for an ad-hoc host. Spin's own
+     * `*.<slug>.spin.localhost` hosts are authorized on the fast-path (no api round-trip). Anything
+     * else is a candidate **custom domain** — we proxy the decision to the api's `/api/caddy/ask`
+     * (the R5 predicate), forwarding the per-spin `X-Edge-Secret`, and mirror its 200/403. This is
+     * how a verified `.localhost` custom domain mints its leaf while an unverified one is refused,
+     * using the SAME predicate the storefront resolver enforces — no divergent local path.
      */
     if (path === "/api/caddy/ask") {
         const domain = (url.searchParams.get("domain") ?? "").toLowerCase();
-        const ok = domain === `${opts.slug}.spin.localhost` || domain.endsWith(`.${opts.slug}.spin.localhost`);
-        res.statusCode = ok ? 200 : 403;
-        res.end(ok ? "ok" : "denied");
+        if (domain === `${opts.slug}.spin.localhost` || domain.endsWith(`.${opts.slug}.spin.localhost`)) {
+            res.statusCode = 200;
+            res.end("ok");
+            return;
+        }
+        const authorized = await askApiAuthorizesCustomDomain(opts.slug, domain);
+        res.statusCode = authorized ? 200 : 403;
+        res.end(authorized ? "ok" : "denied");
         return;
     }
 

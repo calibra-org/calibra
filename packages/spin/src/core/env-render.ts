@@ -110,6 +110,8 @@ export function renderApiEnv(meta: SpinMeta): string {
         "SMS_DRIVER=log",
         `ALLOWED_ORIGINS=${allowedOrigins}`,
         `ADMIN_URL_TEMPLATE=${adminUrlTemplate(meta)}`,
+        `EDGE_SECRET=${requireSecret(meta, "edgeSecret")}`,
+        "SPIN_SIMULATE_DNS=1",
         "MAIL_FROM_ADDRESS=ops@calibra.local",
         "MAIL_FROM_NAME=Calibra",
         "MAIL_NOTIFICATIONS_ENABLED=true",
@@ -173,7 +175,7 @@ export function renderPlatformEnv(meta: SpinMeta): string | null {
     ].join("\n");
 }
 
-function requireSecret(meta: SpinMeta, key: "appKey" | "meiliMasterKey" | "glitchtipSecretKey"): string {
+function requireSecret(meta: SpinMeta, key: "appKey" | "meiliMasterKey" | "glitchtipSecretKey" | "edgeSecret"): string {
     const value = meta[key];
     if (!value) throw new Error(`spin "${meta.slug}" meta is missing secret "${key}"`);
     return value;
@@ -251,7 +253,19 @@ export function renderCaddyfile(meta: SpinMeta): string {
     ].join("\n");
 
     const blocks = SERVICES.flatMap((service) => serviceCaddyBlocks(meta, service));
-    return `${global}\n${blocks.join("\n")}`;
+
+    /**
+     * Catch-all on-demand block for arbitrary **custom domains** (e.g. `acme-boutique.store.localhost`).
+     * Any host not matched by a named service/tenant block above falls through here and is reverse-
+     * proxied to the **storefront** (`apps/web`), whose `resolve-host.ts` classifies an unknown dotted
+     * host as `kind:'custom'` and forwards `Host` to the api for tenant resolution. Caddy mints the leaf
+     * on demand, gated by the agent's `/api/caddy/ask` (which proxies the decision to the api's R5
+     * predicate). `https://` with no hostname is the lowest-priority match, so named blocks always win.
+     */
+    const webPort = requirePort(meta, "web");
+    const catchAll = caddyOnDemandBlock("https://", `host.docker.internal:${webPort}`);
+
+    return `${global}\n${blocks.join("\n")}\n${catchAll}`;
 }
 
 /** Render Prometheus's scrape config — the api on the host plus a self-scrape sanity target. */
