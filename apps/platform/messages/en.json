@@ -43,7 +43,8 @@
         "tenants": "Shops",
         "plans": "Plans",
         "signOut": "Sign out",
-        "account": "Account"
+        "account": "Account",
+        "audit": "Audit"
     },
     "Overview": {
         "title": "Fleet overview",
@@ -117,7 +118,9 @@
         "createdAt": "Created",
         "suspend": "Suspend",
         "activate": "Activate",
-        "archive": "Archive"
+        "archive": "Archive",
+        "tabOperators": "Operators",
+        "tabAudit": "Audit"
     },
     "Domains": {
         "title": "Domains",
@@ -133,7 +136,13 @@
         "tlsActive": "Active",
         "tlsFailed": "Failed",
         "empty": "No domains yet.",
-        "placeholder": "shop.example.com"
+        "placeholder": "shop.example.com",
+        "gateOwnership": "Ownership",
+        "gateRouting": "Routing",
+        "simulated": "simulated (local)",
+        "recordsHint": "Publish these DNS records, then re-check:",
+        "kindSubdomain": "subdomain",
+        "tlsVerifying": "Verifying"
     },
     "PlanLimits": {
         "title": "Plan & limits",
@@ -203,5 +212,51 @@
         "rowNav": "Move between rows",
         "rowOpen": "Open row",
         "help": "This cheatsheet"
+    },
+    "Credentials": {
+        "title": "One-time credentials",
+        "email": "Email (username)",
+        "tempPassword": "Temporary password",
+        "handoffLink": "Handoff link",
+        "warning": "This password will not be shown again. The operator must change it on first sign-in.",
+        "handoffHint": "Single-use link — it expires after first use or in 60 minutes."
+    },
+    "Operators": {
+        "add": "Add operator",
+        "addTitle": "Add operator",
+        "addSubmit": "Create",
+        "done": "Done",
+        "name": "Name",
+        "email": "Email",
+        "status": "Status",
+        "lastLogin": "Last login",
+        "never": "Never",
+        "owner": "Owner",
+        "status_active": "Active",
+        "status_disabled": "Disabled",
+        "status_never_signed_in": "Never signed in",
+        "loginAs": "Login as",
+        "resetPassword": "Reset password",
+        "makeOwner": "Make owner",
+        "disable": "Disable",
+        "enable": "Enable",
+        "remove": "Remove",
+        "removeConfirm": "Remove operator {name}?",
+        "sendHandoff": "Send a handoff link instead of a temp password",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why are you logging in as this operator?",
+        "impersonateTitle": "Log in as operator",
+        "impersonateTitleNamed": "Log in as {name}",
+        "impersonateConfirm": "Start session",
+        "resetTitle": "Password rotated"
+    },
+    "Audit": {
+        "empty": "No audit events yet.",
+        "when": "When",
+        "action": "Action",
+        "operator": "Operator",
+        "reason": "Reason",
+        "pageTitle": "Audit",
+        "pageSubtitle": "Operator actions and impersonation sessions across the fleet."
     }
 }

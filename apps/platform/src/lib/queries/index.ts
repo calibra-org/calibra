@@ -3,7 +3,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { platformGet, platformSend } from "#/lib/api-client";
-import type { MetricsRange, Overview, Paginated, Plan, TenantDetail, TenantListItem, TenantMetrics } from "#/lib/types";
+import type {
+    AuditEvent,
+    MetricsRange,
+    Operator,
+    OperatorCredentialReveal,
+    Overview,
+    OwnerCredentials,
+    Paginated,
+    Plan,
+    TenantDetail,
+    TenantListItem,
+    TenantMetrics,
+} from "#/lib/types";
 
 /** Single envelope unwrap helper — every control-plane response is `{ data, … }`. */
 type Envelope<T> = { data: T };
@@ -77,7 +89,11 @@ export function useProvisionTenant() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (input: ProvisionInput) =>
-            platformSend<Envelope<TenantDetail & { shop_url: string }>>("POST", "tenants", input).then((r) => r.data),
+            platformSend<Envelope<TenantDetail & { shop_url: string; owner_credentials: OwnerCredentials }>>(
+                "POST",
+                "tenants",
+                input,
+            ).then((r) => r.data),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["tenants"] });
             qc.invalidateQueries({ queryKey: ["overview"] });
@@ -121,12 +137,19 @@ export function useRecheckDomain(id: number | string) {
     });
 }
 
+/** Targeted impersonation now requires the chosen operator + a reason (both enforced server-side). */
+export interface ImpersonateInput {
+    targetUserId: number;
+    reason: string;
+}
+
 export function useImpersonate(id: number | string) {
     return useMutation({
-        mutationFn: () =>
-            platformSend<Envelope<{ token: { value: string }; admin_url: string }>>("POST", `tenants/${id}/impersonate`).then(
-                (r) => r.data,
-            ),
+        mutationFn: (input: ImpersonateInput) =>
+            platformSend<Envelope<{ token: { value: string }; admin_url: string }>>("POST", `tenants/${id}/impersonate`, {
+                target_user_id: input.targetUserId,
+                reason: input.reason,
+            }).then((r) => r.data),
     });
 }
 
@@ -137,10 +160,101 @@ export function useImpersonate(id: number | string) {
  */
 export function useImpersonateTenant() {
     return useMutation({
-        mutationFn: (id: number | string) =>
-            platformSend<Envelope<{ token: { value: string }; admin_url: string }>>("POST", `tenants/${id}/impersonate`).then(
-                (r) => r.data,
+        mutationFn: ({ id, targetUserId, reason }: ImpersonateInput & { id: number | string }) =>
+            platformSend<Envelope<{ token: { value: string }; admin_url: string }>>("POST", `tenants/${id}/impersonate`, {
+                target_user_id: targetUserId,
+                reason,
+            }).then((r) => r.data),
+    });
+}
+
+/** Operators of a tenant (admins incl. the store owner) with server-computed capabilities. */
+export function useOperators(id: number | string) {
+    return useQuery({
+        queryKey: ["operators", String(id)],
+        queryFn: () => platformGet<Envelope<Operator[]>>(`tenants/${id}/operators`).then((r) => r.data),
+    });
+}
+
+export interface CreateOperatorInput {
+    email: string;
+    handoff?: boolean;
+}
+
+export function useCreateOperator(id: number | string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (input: CreateOperatorInput) =>
+            platformSend<{ data: Operator; credentials: OperatorCredentialReveal }>(
+                "POST",
+                `tenants/${id}/operators`,
+                input,
             ),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["operators", String(id)] }),
+    });
+}
+
+export function useDisableOperator(id: number | string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: number) => platformSend<Envelope<Operator>>("PATCH", `tenants/${id}/operators/${userId}/disable`),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["operators", String(id)] }),
+    });
+}
+
+export function useEnableOperator(id: number | string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: number) => platformSend<Envelope<Operator>>("PATCH", `tenants/${id}/operators/${userId}/enable`),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["operators", String(id)] }),
+    });
+}
+
+export function useRemoveOperator(id: number | string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: number) => platformSend("DELETE", `tenants/${id}/operators/${userId}`),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["operators", String(id)] }),
+    });
+}
+
+export function useMakeOwner(id: number | string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: number) =>
+            platformSend<Envelope<Operator>>("POST", `tenants/${id}/operators/${userId}/make-owner`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["operators", String(id)] });
+            qc.invalidateQueries({ queryKey: ["tenant", String(id)] });
+        },
+    });
+}
+
+export function useResetOperatorPassword(id: number | string) {
+    return useMutation({
+        mutationFn: (userId: number) =>
+            platformSend<Envelope<{ temp_password: string; must_change_password: boolean }>>(
+                "POST",
+                `tenants/${id}/operators/${userId}/reset-password`,
+            ).then((r) => r.data),
+    });
+}
+
+export function useOperatorHandoffLink(id: number | string) {
+    return useMutation({
+        mutationFn: (userId: number) =>
+            platformSend<Envelope<{ handoff_url: string; expires_at: string }>>(
+                "POST",
+                `tenants/${id}/operators/${userId}/handoff-link`,
+            ).then((r) => r.data),
+    });
+}
+
+/** Control-plane audit feed, optionally scoped to one tenant. */
+export function useAudit(tenantId?: number | string) {
+    return useQuery({
+        queryKey: ["audit", tenantId ? String(tenantId) : "all"],
+        queryFn: () => platformGet<Paginated<AuditEvent>>(`audit${tenantId ? `?tenant_id=${tenantId}` : ""}`),
     });
 }
 

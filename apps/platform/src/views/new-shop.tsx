@@ -13,7 +13,8 @@ import { ArrowStart, CheckCircle2 } from "#/icons";
 import { ApiError } from "#/lib/api-client";
 import { Link, useRouter } from "#/lib/i18n/navigation";
 import { type ProvisionInput, usePlans, useProvisionTenant } from "#/lib/queries";
-import type { TenantDetail } from "#/lib/types";
+import type { OwnerCredentials, TenantDetail } from "#/lib/types";
+import { CredentialRevealCard } from "#/views/operators/credential-reveal-card";
 
 const SHOP_SUFFIX = "shops.calibra.app";
 
@@ -31,7 +32,9 @@ export function NewShopView() {
         primary_locale: "fa",
         owner_email: "",
     });
-    const [created, setCreated] = useState<(TenantDetail & { shop_url: string }) | null>(null);
+    const [created, setCreated] = useState<
+        (TenantDetail & { shop_url: string; owner_credentials: OwnerCredentials }) | null
+    >(null);
     const [error, setError] = useState<string | null>(null);
 
     const planKey = form.plan_key || plans.data?.[0]?.key || "";
@@ -64,6 +67,11 @@ export function NewShopView() {
                         <code className="rounded bg-muted px-2 py-1 text-xs" dir="ltr">
                             {created.shop_url}
                         </code>
+                        <CredentialRevealCard
+                            className="w-full text-start"
+                            email={created.owner_credentials.email}
+                            tempPassword={created.owner_credentials.temp_password}
+                        />
                         <div className="flex gap-2">
                             <Button asChild>
                                 <Link href={`/tenants/${created.id}`}>{t("viewDetail")}</Link>
