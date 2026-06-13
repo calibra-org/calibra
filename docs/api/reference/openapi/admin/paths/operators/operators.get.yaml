@@ -1,0 +1,22 @@
+operationId: adminOperatorsIndex
+summary: List operators (Team)
+description: Lists the shop's operators with per-row capabilities computed for the calling admin (non-owners get a read-only view).
+tags: [Admin / Team]
+security:
+    - BearerAuth: []
+responses:
+    "200":
+        description: Operators.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../../common/components/schemas/Operator.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"

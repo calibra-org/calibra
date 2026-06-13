@@ -1,0 +1,8 @@
+title: PlatformDomainRecord
+description: A DNS record the operator must publish to verify/route a custom domain.
+type: object
+properties:
+    record_type: { type: string, enum: [TXT, CNAME] }
+    record_name: { type: string, examples: ["_calibra-verify.shop.example.com"] }
+    record_value: { type: [string, "null"], examples: ["calibra-verify-abc123"] }
+required: [record_type, record_name, record_value]

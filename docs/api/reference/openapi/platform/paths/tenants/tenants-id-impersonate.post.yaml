@@ -17,18 +17,21 @@ parameters:
       schema: { type: integer }
 
 requestBody:
-    required: false
+    required: true
     content:
         application/json:
             schema:
                 type: object
+                required: [target_user_id, reason]
                 properties:
                     target_user_id:
                         type: integer
-                        description: Specific shop admin to impersonate; defaults to the tenant's first admin.
+                        description: The specific shop admin to impersonate (required).
                     reason:
-                        type: [string, "null"]
-                        description: Optional audit reason recorded on the impersonation event.
+                        type: string
+                        minLength: 3
+                        maxLength: 500
+                        description: Operator-supplied reason, recorded on the impersonation event (required).
 
 responses:
     "200":
@@ -44,3 +47,5 @@ responses:
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "404":
         $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

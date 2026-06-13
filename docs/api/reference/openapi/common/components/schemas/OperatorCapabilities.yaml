@@ -1,0 +1,12 @@
+title: OperatorCapabilities
+description: Server-computed, caller-dependent action permissions for an operator row. The UI renders
+    row actions strictly from these — never inferred client-side.
+type: object
+properties:
+    can_login_as: { type: boolean }
+    can_reset_password: { type: boolean }
+    can_disable: { type: boolean }
+    can_enable: { type: boolean }
+    can_remove: { type: boolean }
+    can_make_owner: { type: boolean }
+required: [can_login_as, can_reset_password, can_disable, can_enable, can_remove, can_make_owner]

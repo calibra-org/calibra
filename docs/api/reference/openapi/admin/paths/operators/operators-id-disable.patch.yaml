@@ -1,0 +1,26 @@
+operationId: adminOperatorsDisable
+summary: Disable an operator (Team)
+description: Owner-only. Stamps `disabled_at` and revokes sessions. The owner + last active admin are protected.
+tags: [Admin / Team]
+security:
+    - BearerAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Operator disabled.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../../common/components/schemas/Operator.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

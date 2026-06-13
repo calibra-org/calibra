@@ -1,0 +1,29 @@
+operationId: adminOperatorsHandoffLink
+summary: Issue an operator handoff link (Team)
+description: Owner-only. Single-use link for the operator to set their own password.
+tags: [Admin / Team]
+security:
+    - BearerAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Handoff link issued.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: object
+                            required: [handoff_url, expires_at]
+                            properties:
+                                handoff_url: { type: string, format: uri }
+                                expires_at: { type: string, format: date-time }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

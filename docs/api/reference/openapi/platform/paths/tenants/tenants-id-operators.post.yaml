@@ -1,0 +1,38 @@
+operationId: platformOperatorsStore
+summary: Create (or reactivate) an operator
+description: Creates an admin operator, or reactivates a soft-deleted/disabled one with the same
+    email. Reveals a temp password once, or returns a single-use handoff link when `handoff=true`.
+tags: [Platform Operators]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+requestBody:
+    required: true
+    content:
+        application/json:
+            schema:
+                type: object
+                required: [email]
+                properties:
+                    email: { type: string, format: email }
+                    handoff: { type: boolean, description: "Return a handoff link instead of a temp password." }
+responses:
+    "201":
+        description: Operator created.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, credentials]
+                    properties:
+                        data: { $ref: "../../../common/components/schemas/Operator.yaml" }
+                        credentials: { $ref: "../../../common/components/schemas/OperatorCredentialReveal.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "409":
+        $ref: "../../../common/components/responses/Conflict.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

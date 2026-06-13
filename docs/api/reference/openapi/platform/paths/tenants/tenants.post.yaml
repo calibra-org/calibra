@@ -35,9 +35,10 @@ responses:
                             allOf:
                                 - $ref: "../../components/schemas/PlatformTenantDetail.yaml"
                                 - type: object
-                                  required: [shop_url]
+                                  required: [shop_url, owner_credentials]
                                   properties:
                                       shop_url: { type: string, format: uri, examples: ["https://aurora.shops.calibra.app"] }
+                                      owner_credentials: { $ref: "../../components/schemas/PlatformOwnerCredentials.yaml" }
     "401":
         $ref: "../../../common/components/responses/Unauthorized.yaml"
     "422":

@@ -1,0 +1,24 @@
+operationId: platformOperatorsIndex
+summary: List a tenant's operators
+description: Lists the tenant's admin operators (including the store owner) with per-row, server-computed capabilities.
+tags: [Platform Operators]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Operators.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../../common/components/schemas/Operator.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"

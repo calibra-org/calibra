@@ -1,0 +1,26 @@
+operationId: adminOperatorsMakeOwner
+summary: Transfer ownership (Team)
+description: Owner-only self-transfer to another active admin. The previous owner stays a normal admin.
+tags: [Admin / Team]
+security:
+    - BearerAuth: []
+parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+responses:
+    "200":
+        description: Ownership transferred.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data]
+                    properties:
+                        data: { $ref: "../../../common/components/schemas/Operator.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "403":
+        $ref: "../../../common/components/responses/Forbidden.yaml"
+    "404":
+        $ref: "../../../common/components/responses/NotFound.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"

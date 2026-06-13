@@ -1,0 +1,27 @@
+operationId: platformAuditIndex
+summary: Control-plane audit feed
+description: Merged, newest-first feed of platform operator actions + impersonation sessions, optionally filtered to one tenant.
+tags: [Platform Audit]
+security:
+    - PlatformAuth: []
+parameters:
+    - { name: tenant_id, in: query, required: false, schema: { type: integer } }
+    - { name: page, in: query, required: false, schema: { type: integer, minimum: 1 } }
+    - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100 } }
+responses:
+    "200":
+        description: Audit events.
+        content:
+            application/json:
+                schema:
+                    type: object
+                    required: [data, meta]
+                    properties:
+                        data:
+                            type: array
+                            items: { $ref: "../../../common/components/schemas/AuditEvent.yaml" }
+                        meta: { $ref: "../../../common/components/schemas/PaginationMeta.yaml" }
+    "401":
+        $ref: "../../../common/components/responses/Unauthorized.yaml"
+    "422":
+        $ref: "../../../common/components/responses/ValidationError.yaml"
