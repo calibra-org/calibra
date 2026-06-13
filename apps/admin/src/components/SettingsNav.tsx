@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { ComponentType, SVGProps } from "react";
 
-import { Banknote, CalendarDays, ImageIcon, Palette, Settings2, Truck, Wallet } from "#/icons";
+import { Banknote, CalendarDays, ImageIcon, MessageCircle, Palette, Settings2, Truck, Wallet } from "#/icons";
 import { Link, usePathname } from "#/lib/i18n/navigation";
 import { cn } from "#/lib/utils";
 
@@ -29,6 +29,7 @@ const TABS: SettingsTab[] = [
     { href: "/tax/classes", match: "/tax", labelKey: "tax", icon: Wallet },
     { href: "/shipping/zones", match: "/shipping", labelKey: "shipping", icon: Truck },
     { href: "/payments", match: "/payments", labelKey: "payments", icon: Banknote },
+    { href: "/settings/support", match: "/settings/support", labelKey: "support", icon: MessageCircle },
 ];
 
 function isActive(pathname: string, match: string): boolean {

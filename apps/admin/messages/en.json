@@ -40,7 +40,10 @@
         "analyticsCategories": "Categories",
         "analyticsCoupons": "Coupons",
         "analyticsTaxes": "Taxes",
-        "analyticsStock": "Stock"
+        "analyticsStock": "Stock",
+        "tickets": "Tickets",
+        "helpCalibra": "Contact Calibra",
+        "support": "Support"
     },
     "Topbar": {
         "search": "Search…",
@@ -3658,7 +3661,8 @@
             "advanced": "Advanced",
             "datetime": "Date & Time",
             "media": "Media",
-            "branding": "Branding"
+            "branding": "Branding",
+            "support": "Support"
         },
         "general": {
             "comingSoon": "coming soon",
@@ -3779,6 +3783,62 @@
             "organizeHelp": "Uploaded files are stored in year/month folders.",
             "maxUpload": "Maximum upload size",
             "maxUploadHelp": "The largest size allowed per uploaded file."
+        },
+        "support": {
+            "title": "Support",
+            "subtitle": "Configure agents, tags, and canned responses for the support inbox.",
+            "cancel": "Cancel",
+            "save": "Save changes",
+            "tabs": {
+                "agents": "Agents",
+                "tags": "Tags",
+                "canned": "Canned responses"
+            },
+            "agents": {
+                "title": "Support agents",
+                "subtitle": "People who can pick up, reply to, and resolve tickets.",
+                "agent": "Agent",
+                "role": "Role",
+                "tier": "Access tier",
+                "reassign": "Reassign",
+                "status": "Status",
+                "empty": "No agents yet.",
+                "add": "Add agent",
+                "addSubtitle": "Give a user access to the support inbox.",
+                "userId": "User ID",
+                "inboxes": "Inboxes",
+                "create": "Add agent"
+            },
+            "role": {
+                "agent": "Agent",
+                "supervisor": "Supervisor",
+                "support_admin": "Support admin"
+            },
+            "tier": {
+                "all": "All tickets",
+                "unassigned_and_own": "Unassigned and own",
+                "participating": "Participating only"
+            },
+            "tags": {
+                "title": "Ticket tags",
+                "subtitle": "Labels for organizing and filtering tickets.",
+                "color": "Color",
+                "namePlaceholder": "Tag name",
+                "add": "Add tag",
+                "empty": "No tags yet.",
+                "delete": "Delete tag"
+            },
+            "canned": {
+                "title": "Canned responses",
+                "subtitle": "Reusable replies your agents can insert into a conversation.",
+                "add": "Add response",
+                "edit": "Edit response",
+                "empty": "No canned responses yet.",
+                "dialogSubtitle": "Save a reusable reply and a shortcut to insert it.",
+                "shortcut": "Shortcut",
+                "titleField": "Title",
+                "body": "Body"
+            }
         }
     },
     "Reports": {
@@ -4073,5 +4133,152 @@
         "searchProducts": "Search products",
         "stockUnknown": "Unknown",
         "totalsLabel": "Totals"
+    },
+    "Tickets": {
+        "title": "Tickets",
+        "subtitle": "Customer conversations across every inbox.",
+        "search": "Search tickets…",
+        "refresh": "Refresh",
+        "empty": "No tickets yet.",
+        "emptyFiltered": "No tickets match these filters",
+        "emptyFilteredHint": "Adjust or clear the filters to see more results.",
+        "errorTitle": "Failed to load tickets.",
+        "errorRetry": "Retry",
+        "selectAll": "Select all",
+        "selectRow": "Select ticket",
+        "unassigned": "Unassigned",
+        "unknownRequester": "Unknown requester",
+        "noSubject": "No subject",
+        "tabs": {
+            "all": "All"
+        },
+        "status": {
+            "open": "Open",
+            "pending": "Pending",
+            "snoozed": "Snoozed",
+            "resolved": "Resolved",
+            "closed": "Closed",
+            "archived": "Archived"
+        },
+        "priority": {
+            "low": "Low",
+            "normal": "Normal",
+            "high": "High",
+            "urgent": "Urgent"
+        },
+        "table": {
+            "id": "ID",
+            "requester": "Requester",
+            "subject": "Subject",
+            "channel": "Channel",
+            "status": "Status",
+            "priority": "Priority",
+            "assignee": "Assignee",
+            "inbox": "Inbox",
+            "lastActivity": "Last activity",
+            "tags": "Tags",
+            "actions": "Actions"
+        },
+        "sort": {
+            "asc": "Ascending",
+            "desc": "Descending",
+            "hide": "Hide column"
+        },
+        "rowActions": {
+            "open": "Open"
+        },
+        "toolbar": {
+            "clearAll": "Clear all",
+            "clearFilter": "Clear",
+            "viewOptions": "View",
+            "density": "Density",
+            "densityComfortable": "Comfortable",
+            "densityCozy": "Cozy",
+            "densityCompact": "Compact",
+            "columns": "Columns"
+        },
+        "bulk": {
+            "selectedCount": "{count} selected",
+            "clear": "Clear selection",
+            "assign": "Assign",
+            "setStatus": "Set status",
+            "noAgents": "No agents"
+        },
+        "pagination": {
+            "rowsPerPage": "Rows per page",
+            "showing": "Showing {from}–{to} of {total}",
+            "selectedOf": "{selected} of {total} selected",
+            "first": "First",
+            "previous": "Previous",
+            "next": "Next",
+            "last": "Last",
+            "pageOf": "Page {page} of {lastPage}"
+        },
+        "detail": {
+            "loadError": "Failed to load this ticket.",
+            "retry": "Retry",
+            "refresh": "Refresh",
+            "noSubject": "No subject"
+        },
+        "thread": {
+            "empty": "No messages yet.",
+            "noBody": "(no content)",
+            "internalNote": "Internal note",
+            "outbound": "Outbound",
+            "inbound": "Inbound",
+            "activity": "Activity",
+            "attachment": "Attachment"
+        },
+        "composer": {
+            "reply": "Reply",
+            "note": "Internal note",
+            "replyPlaceholder": "Write a reply…",
+            "notePlaceholder": "Write an internal note…",
+            "send": "Send",
+            "addNote": "Add note",
+            "attach": "Attach",
+            "attachSoon": "Attachments coming soon",
+            "sendError": "Couldn't send — try again."
+        },
+        "sidebar": {
+            "status": "Status",
+            "priority": "Priority",
+            "assignee": "Assignee",
+            "unassigned": "Unassigned",
+            "tags": "Tags",
+            "addTag": "Add tag",
+            "removeTag": "Remove tag",
+            "requester": "Requester",
+            "unknownRequester": "Unknown requester",
+            "channel": "Channel",
+            "noInbox": "No inbox",
+            "whatsappWindowSoon": "WhatsApp window status coming soon"
+        }
+    },
+    "Support": {
+        "title": "Support",
+        "subtitle": "Get help from the Calibra team.",
+        "newTicket": "New ticket",
+        "newTicketSubtitle": "Tell us what you need help with.",
+        "subject": "Subject",
+        "message": "Message",
+        "cancel": "Cancel",
+        "create": "Create ticket",
+        "noTickets": "You haven't opened any tickets yet.",
+        "reply": "Reply",
+        "replyPlaceholder": "Write a reply…",
+        "send": "Send",
+        "emptyThread": {
+            "title": "No messages yet",
+            "description": "Start the conversation by sending a message."
+        },
+        "status": {
+            "open": "Open",
+            "pending": "Pending",
+            "snoozed": "Snoozed",
+            "resolved": "Resolved",
+            "closed": "Closed",
+            "archived": "Archived"
+        }
     }
 }

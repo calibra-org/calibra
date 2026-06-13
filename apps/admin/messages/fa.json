@@ -40,7 +40,10 @@
         "analyticsCategories": "دسته‌ها",
         "analyticsCoupons": "کدهای تخفیف",
         "analyticsTaxes": "مالیات",
-        "analyticsStock": "انبار"
+        "analyticsStock": "انبار",
+        "tickets": "تیکت‌ها",
+        "helpCalibra": "تماس با کالیبرا",
+        "support": "پشتیبانی"
     },
     "Topbar": {
         "search": "جستجو…",
@@ -3658,7 +3661,8 @@
             "advanced": "پیشرفته",
             "datetime": "تاریخ و زمان",
             "media": "رسانه",
-            "branding": "برندینگ"
+            "branding": "برندینگ",
+            "support": "پشتیبانی"
         },
         "general": {
             "comingSoon": "به‌زودی",
@@ -3779,6 +3783,62 @@
             "organizeHelp": "پرونده‌های آپلودشده در پوشه‌های سال/ماه ذخیره می‌شوند.",
             "maxUpload": "بیشینهٔ اندازهٔ بارگذاری",
             "maxUploadHelp": "بزرگ‌ترین حجم مجاز برای هر پرونده."
+        },
+        "support": {
+            "title": "پشتیبانی",
+            "subtitle": "کارشناسان پشتیبانی، برچسب‌ها و پاسخ‌های آماده صندوق پشتیبانی را پیکربندی کنید.",
+            "cancel": "انصراف",
+            "save": "ذخیره تغییرات",
+            "tabs": {
+                "agents": "کارشناسان پشتیبانی",
+                "tags": "برچسب‌ها",
+                "canned": "پاسخ‌های آماده"
+            },
+            "agents": {
+                "title": "کارشناسان پشتیبانی",
+                "subtitle": "افرادی که می‌توانند تیکت‌ها را برداشته، پاسخ داده و حل کنند.",
+                "agent": "کارشناس پشتیبانی",
+                "role": "نقش",
+                "tier": "سطح دسترسی",
+                "reassign": "واگذاری مجدد",
+                "status": "وضعیت",
+                "empty": "هنوز کارشناسی اضافه نشده است.",
+                "add": "افزودن کارشناس",
+                "addSubtitle": "به یک کاربر دسترسی صندوق پشتیبانی بدهید.",
+                "userId": "شناسهٔ کاربر",
+                "inboxes": "صندوق‌ها",
+                "create": "افزودن کارشناس"
+            },
+            "role": {
+                "agent": "کارشناس پشتیبانی",
+                "supervisor": "سرپرست",
+                "support_admin": "مدیر پشتیبانی"
+            },
+            "tier": {
+                "all": "همهٔ تیکت‌ها",
+                "unassigned_and_own": "بدون مسئول و تیکت‌های خودم",
+                "participating": "فقط تیکت‌هایی که در آن مشارکت دارم"
+            },
+            "tags": {
+                "title": "برچسب‌های تیکت",
+                "subtitle": "برچسب‌هایی برای سازماندهی و فیلتر تیکت‌ها.",
+                "color": "رنگ",
+                "namePlaceholder": "نام برچسب",
+                "add": "افزودن برچسب",
+                "empty": "هنوز برچسبی اضافه نشده است.",
+                "delete": "حذف برچسب"
+            },
+            "canned": {
+                "title": "پاسخ‌های آماده",
+                "subtitle": "پاسخ‌های قابل استفادهٔ مجدد که کارشناسان می‌توانند در گفتگو درج کنند.",
+                "add": "افزودن پاسخ",
+                "edit": "ویرایش پاسخ",
+                "empty": "هنوز پاسخ آماده‌ای ثبت نشده است.",
+                "dialogSubtitle": "یک پاسخ قابل استفادهٔ مجدد و میانبر درج آن را ذخیره کنید.",
+                "shortcut": "میانبر",
+                "titleField": "عنوان",
+                "body": "متن"
+            }
         }
     },
     "Reports": {
@@ -4073,5 +4133,152 @@
         "searchProducts": "جستجوی محصول",
         "stockUnknown": "نامعلوم",
         "totalsLabel": "جمع کل"
+    },
+    "Tickets": {
+        "title": "تیکت‌ها",
+        "subtitle": "گفتگوهای مشتریان در همهٔ صندوق‌ها.",
+        "search": "جستجوی تیکت…",
+        "refresh": "بروزرسانی",
+        "empty": "هنوز تیکتی ثبت نشده است.",
+        "emptyFiltered": "تیکتی با این فیلترها یافت نشد",
+        "emptyFilteredHint": "فیلترها را تغییر دهید یا پاکشان کنید تا نتایج بیشتری ببینید.",
+        "errorTitle": "بارگذاری تیکت‌ها با خطا مواجه شد.",
+        "errorRetry": "تلاش مجدد",
+        "selectAll": "انتخاب همه",
+        "selectRow": "انتخاب تیکت",
+        "unassigned": "بدون مسئول",
+        "unknownRequester": "درخواست‌دهندهٔ ناشناس",
+        "noSubject": "بدون موضوع",
+        "tabs": {
+            "all": "همه"
+        },
+        "status": {
+            "open": "باز",
+            "pending": "در انتظار",
+            "snoozed": "به تعویق افتاده",
+            "resolved": "حل‌شده",
+            "closed": "بسته‌شده",
+            "archived": "بایگانی‌شده"
+        },
+        "priority": {
+            "low": "پایین",
+            "normal": "عادی",
+            "high": "بالا",
+            "urgent": "فوری"
+        },
+        "table": {
+            "id": "شناسه",
+            "requester": "درخواست‌دهنده",
+            "subject": "موضوع",
+            "channel": "کانال",
+            "status": "وضعیت",
+            "priority": "اولویت",
+            "assignee": "مسئول",
+            "inbox": "صندوق",
+            "lastActivity": "آخرین فعالیت",
+            "tags": "برچسب‌ها",
+            "actions": "عملیات"
+        },
+        "sort": {
+            "asc": "صعودی",
+            "desc": "نزولی",
+            "hide": "پنهان کردن ستون"
+        },
+        "rowActions": {
+            "open": "باز کردن"
+        },
+        "toolbar": {
+            "clearAll": "پاک کردن همه",
+            "clearFilter": "پاک کردن",
+            "viewOptions": "نمایش",
+            "density": "تراکم",
+            "densityComfortable": "راحت",
+            "densityCozy": "متوسط",
+            "densityCompact": "فشرده",
+            "columns": "ستون‌ها"
+        },
+        "bulk": {
+            "selectedCount": "{count} انتخاب‌شده",
+            "clear": "لغو انتخاب",
+            "assign": "واگذاری",
+            "setStatus": "تنظیم وضعیت",
+            "noAgents": "کارشناسی وجود ندارد"
+        },
+        "pagination": {
+            "rowsPerPage": "تعداد در هر صفحه",
+            "showing": "نمایش {from}–{to} از {total}",
+            "selectedOf": "{selected} از {total} انتخاب‌شده",
+            "first": "اولین",
+            "previous": "قبلی",
+            "next": "بعدی",
+            "last": "آخرین",
+            "pageOf": "صفحه {page} از {lastPage}"
+        },
+        "detail": {
+            "loadError": "بارگذاری این تیکت با خطا مواجه شد.",
+            "retry": "تلاش مجدد",
+            "refresh": "بروزرسانی",
+            "noSubject": "بدون موضوع"
+        },
+        "thread": {
+            "empty": "هنوز پیامی وجود ندارد.",
+            "noBody": "(بدون محتوا)",
+            "internalNote": "یادداشت داخلی",
+            "outbound": "خروجی",
+            "inbound": "ورودی",
+            "activity": "فعالیت",
+            "attachment": "پیوست"
+        },
+        "composer": {
+            "reply": "پاسخ",
+            "note": "یادداشت داخلی",
+            "replyPlaceholder": "پاسخ خود را بنویسید…",
+            "notePlaceholder": "یادداشت داخلی بنویسید…",
+            "send": "ارسال",
+            "addNote": "افزودن یادداشت",
+            "attach": "پیوست",
+            "attachSoon": "پیوست‌ها به‌زودی",
+            "sendError": "ارسال ناموفق بود — دوباره تلاش کنید."
+        },
+        "sidebar": {
+            "status": "وضعیت",
+            "priority": "اولویت",
+            "assignee": "مسئول",
+            "unassigned": "بدون مسئول",
+            "tags": "برچسب‌ها",
+            "addTag": "افزودن برچسب",
+            "removeTag": "حذف برچسب",
+            "requester": "درخواست‌دهنده",
+            "unknownRequester": "درخواست‌دهندهٔ ناشناس",
+            "channel": "کانال",
+            "noInbox": "بدون صندوق",
+            "whatsappWindowSoon": "وضعیت پنجرهٔ واتساپ به‌زودی"
+        }
+    },
+    "Support": {
+        "title": "پشتیبانی",
+        "subtitle": "از تیم کالیبرا کمک بگیرید.",
+        "newTicket": "تیکت جدید",
+        "newTicketSubtitle": "بگویید در چه موضوعی به کمک نیاز دارید.",
+        "subject": "موضوع",
+        "message": "پیام",
+        "cancel": "انصراف",
+        "create": "ثبت تیکت",
+        "noTickets": "هنوز هیچ تیکتی باز نکرده‌اید.",
+        "reply": "پاسخ",
+        "replyPlaceholder": "پاسخ خود را بنویسید…",
+        "send": "ارسال",
+        "emptyThread": {
+            "title": "هنوز پیامی وجود ندارد",
+            "description": "با ارسال یک پیام، گفتگو را آغاز کنید."
+        },
+        "status": {
+            "open": "باز",
+            "pending": "در انتظار",
+            "snoozed": "به تعویق افتاده",
+            "resolved": "حل‌شده",
+            "closed": "بسته‌شده",
+            "archived": "بایگانی‌شده"
+        }
     }
 }
