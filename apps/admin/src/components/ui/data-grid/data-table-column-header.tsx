@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ArrowUpDown, EyeOff, GripVertical } from "lucide-react";
 import type { ReactNode } from "react";
 
 import {
@@ -10,6 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { ArrowDown, ArrowUp, ArrowUpDown, EyeOff, GripVertical } from "#/icons";
 import { cn } from "#/lib/utils";
 
 import { useColumnDragHandle } from "./column-drag-handle-context";

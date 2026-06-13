@@ -1,9 +1,9 @@
 "use client";
 
-import { Inbox, SearchX } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "#/components/ui/button";
+import { Inbox, SearchX } from "#/icons";
 
 interface DataTableEmptyProps {
     variant: "empty" | "filtered";
