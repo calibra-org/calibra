@@ -43,4 +43,5 @@ export const middleware = router.named({
     cart: () => import("#middleware/cart_middleware"),
     idempotency: () => import("#middleware/idempotency_middleware"),
     webhookSignature: () => import("#middleware/webhook_signature_middleware"),
+    channelWebhook: () => import("#middleware/channel_webhook_middleware"),
 });
