@@ -337,13 +337,7 @@ function ShopRow({
                             <ExternalLink className="size-4" aria-hidden="true" />
                         </Link>
                     </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t("impersonate")}
-                        disabled={impersonate.isPending}
-                        onClick={onImpersonate}
-                    >
+                    <Button variant="ghost" size="icon" aria-label={t("impersonate")} onClick={onImpersonate}>
                         <UserCheck className="size-4" aria-hidden="true" />
                     </Button>
                 </div>

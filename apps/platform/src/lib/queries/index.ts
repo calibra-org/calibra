@@ -185,11 +185,7 @@ export function useCreateOperator(id: number | string) {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (input: CreateOperatorInput) =>
-            platformSend<{ data: Operator; credentials: OperatorCredentialReveal }>(
-                "POST",
-                `tenants/${id}/operators`,
-                input,
-            ),
+            platformSend<{ data: Operator; credentials: OperatorCredentialReveal }>("POST", `tenants/${id}/operators`, input),
         onSuccess: () => qc.invalidateQueries({ queryKey: ["operators", String(id)] }),
     });
 }
@@ -221,8 +217,7 @@ export function useRemoveOperator(id: number | string) {
 export function useMakeOwner(id: number | string) {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: (userId: number) =>
-            platformSend<Envelope<Operator>>("POST", `tenants/${id}/operators/${userId}/make-owner`),
+        mutationFn: (userId: number) => platformSend<Envelope<Operator>>("POST", `tenants/${id}/operators/${userId}/make-owner`),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["operators", String(id)] });
             qc.invalidateQueries({ queryKey: ["tenant", String(id)] });

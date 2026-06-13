@@ -16,7 +16,15 @@ import { CredentialRevealCard } from "#/views/operators/credential-reveal-card";
  * Add-operator dialog. Collects an email and whether to issue a handoff link instead of revealing a
  * temp password, then surfaces the reveal-once credentials inline on success.
  */
-export function OperatorForm({ tenantId, open, onOpenChange }: { tenantId: string; open: boolean; onOpenChange: (v: boolean) => void }) {
+export function OperatorForm({
+    tenantId,
+    open,
+    onOpenChange,
+}: {
+    tenantId: string;
+    open: boolean;
+    onOpenChange: (v: boolean) => void;
+}) {
     const t = useTranslations("Operators");
     const create = useCreateOperator(tenantId);
     const [email, setEmail] = useState("");
@@ -68,10 +76,10 @@ export function OperatorForm({ tenantId, open, onOpenChange }: { tenantId: strin
                                     placeholder="operator@shop.com"
                                 />
                             </div>
-                            <label className="flex items-center gap-2 text-sm">
-                                <Checkbox checked={handoff} onCheckedChange={(v) => setHandoff(Boolean(v))} />
+                            <Label htmlFor="op-handoff" className="flex items-center gap-2 font-normal text-sm">
+                                <Checkbox id="op-handoff" checked={handoff} onCheckedChange={(v) => setHandoff(Boolean(v))} />
                                 {t("sendHandoff")}
-                            </label>
+                            </Label>
                         </form>
                     )}
                 </DialogBody>

@@ -2,12 +2,12 @@
 
 import { useTranslations } from "next-intl";
 
-import { StatusPill, type PillTone, tlsStatusTone } from "#/components/StatusPill";
+import { type PillTone, StatusPill, tlsStatusTone } from "#/components/StatusPill";
 import { Button } from "#/components/ui/button";
 import { Check, RefreshCw, Trash2, TriangleAlert, X } from "#/icons";
-import { CopyField } from "#/views/operators/credential-reveal-card";
 import type { TenantDomain } from "#/lib/types";
 import { cn } from "#/lib/utils";
+import { CopyField } from "#/views/operators/credential-reveal-card";
 
 function cap(s: string): string {
     return s.charAt(0).toUpperCase() + s.slice(1);

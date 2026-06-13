@@ -32,9 +32,9 @@ export function NewShopView() {
         primary_locale: "fa",
         owner_email: "",
     });
-    const [created, setCreated] = useState<
-        (TenantDetail & { shop_url: string; owner_credentials: OwnerCredentials }) | null
-    >(null);
+    const [created, setCreated] = useState<(TenantDetail & { shop_url: string; owner_credentials: OwnerCredentials }) | null>(
+        null,
+    );
     const [error, setError] = useState<string | null>(null);
 
     const planKey = form.plan_key || plans.data?.[0]?.key || "";

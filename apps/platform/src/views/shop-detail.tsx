@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 
 import { GrafanaEmbed } from "#/components/GrafanaEmbed";

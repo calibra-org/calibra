@@ -49,7 +49,9 @@ export function ImpersonateModal({
         >
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{targetName ? t("impersonateTitleNamed", { name: targetName }) : t("impersonateTitle")}</DialogTitle>
+                    <DialogTitle>
+                        {targetName ? t("impersonateTitleNamed", { name: targetName }) : t("impersonateTitle")}
+                    </DialogTitle>
                 </DialogHeader>
                 <DialogBody>
                     <form id="impersonate-form" onSubmit={onSubmit} className="flex flex-col gap-2">

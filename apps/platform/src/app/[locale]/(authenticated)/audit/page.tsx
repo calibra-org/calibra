@@ -1,7 +1,6 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { PageHeader } from "#/components/PageHeader";
-import { getTranslations } from "next-intl/server";
 import { AuditView } from "#/views/audit/audit-view";
 
 export default async function AuditPage({ params }: { params: Promise<{ locale: string }> }) {

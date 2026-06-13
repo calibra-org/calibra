@@ -3,13 +3,13 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { StatusPill, type PillTone } from "#/components/StatusPill";
+import { type PillTone, StatusPill } from "#/components/StatusPill";
 import { Button } from "#/components/ui/button";
 import { DialogBody, DialogContent, DialogHeader, DialogRoot, DialogTitle } from "#/components/ui/dialog";
 import { EmptyState } from "#/components/ui/empty-state";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
-import { Ban, RefreshCw, ShieldCheck, Trash2, TriangleAlert, UserCheck, UserPlus } from "#/icons";
+import { RefreshCw, ShieldCheck, Trash2, TriangleAlert, UserCheck, UserPlus, UserX } from "#/icons";
 import {
     useDisableOperator,
     useEnableOperator,
@@ -104,7 +104,9 @@ export function OperatorsTab({ id }: { id: string }) {
                                         {op.email}
                                     </TableCell>
                                     <TableCell>
-                                        <StatusPill tone={statusTone(op.status)}>{t(`status_${op.status}` as "status_active")}</StatusPill>
+                                        <StatusPill tone={statusTone(op.status)}>
+                                            {t(`status_${op.status}` as "status_active")}
+                                        </StatusPill>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground text-sm">
                                         {op.last_login_at ? new Date(op.last_login_at).toLocaleDateString() : t("never")}
@@ -122,22 +124,42 @@ export function OperatorsTab({ id }: { id: string }) {
                                                 </Button>
                                             ) : null}
                                             {c.can_reset_password ? (
-                                                <Button variant="ghost" size="icon" aria-label={t("resetPassword")} onClick={() => onReset(op)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t("resetPassword")}
+                                                    onClick={() => onReset(op)}
+                                                >
                                                     <RefreshCw className="size-4" aria-hidden="true" />
                                                 </Button>
                                             ) : null}
                                             {c.can_make_owner ? (
-                                                <Button variant="ghost" size="icon" aria-label={t("makeOwner")} onClick={() => makeOwner.mutate(op.id)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t("makeOwner")}
+                                                    onClick={() => makeOwner.mutate(op.id)}
+                                                >
                                                     <ShieldCheck className="size-4" aria-hidden="true" />
                                                 </Button>
                                             ) : null}
                                             {c.can_disable ? (
-                                                <Button variant="ghost" size="icon" aria-label={t("disable")} onClick={() => disable.mutate(op.id)}>
-                                                    <Ban className="size-4" aria-hidden="true" />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t("disable")}
+                                                    onClick={() => disable.mutate(op.id)}
+                                                >
+                                                    <UserX className="size-4" aria-hidden="true" />
                                                 </Button>
                                             ) : null}
                                             {c.can_enable ? (
-                                                <Button variant="ghost" size="icon" aria-label={t("enable")} onClick={() => enable.mutate(op.id)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t("enable")}
+                                                    onClick={() => enable.mutate(op.id)}
+                                                >
                                                     <UserCheck className="size-4 text-success" aria-hidden="true" />
                                                 </Button>
                                             ) : null}
@@ -147,7 +169,8 @@ export function OperatorsTab({ id }: { id: string }) {
                                                     size="icon"
                                                     aria-label={t("remove")}
                                                     onClick={() => {
-                                                        if (window.confirm(t("removeConfirm", { name: op.name }))) remove.mutate(op.id);
+                                                        if (window.confirm(t("removeConfirm", { name: op.name })))
+                                                            remove.mutate(op.id);
                                                     }}
                                                 >
                                                     <Trash2 className="size-4 text-danger" aria-hidden="true" />
