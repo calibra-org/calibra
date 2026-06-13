@@ -255,15 +255,18 @@ export function renderCaddyfile(meta: SpinMeta): string {
     const blocks = SERVICES.flatMap((service) => serviceCaddyBlocks(meta, service));
 
     /**
-     * Catch-all on-demand block for arbitrary **custom domains** (e.g. `acme-boutique.store.localhost`).
-     * Any host not matched by a named service/tenant block above falls through here and is reverse-
-     * proxied to the **storefront** (`apps/web`), whose `resolve-host.ts` classifies an unknown dotted
-     * host as `kind:'custom'` and forwards `Host` to the api for tenant resolution. Caddy mints the leaf
-     * on demand, gated by the agent's `/api/caddy/ask` (which proxies the decision to the api's R5
-     * predicate). `https://` with no hostname is the lowest-priority match, so named blocks always win.
+     * On-demand block for local **custom domains** under the `.store.localhost` convention
+     * (e.g. `acme-boutique.store.localhost`). Reverse-proxied to the **storefront** (`apps/web`), whose
+     * `resolve-host.ts` classifies an unknown dotted host as `kind:'custom'` and forwards `Host` to the
+     * api for tenant resolution. Caddy mints the leaf on demand, gated by the agent's `/api/caddy/ask`
+     * (which proxies the decision to the api's R5 predicate) — so a verified custom domain serves over
+     * TLS while an unverified one is refused. A concrete host **wildcard** is required: a bare
+     * `https://` catch-all does not attach the on-demand TLS policy to arbitrary SNIs, so Caddy never
+     * triggers issuance. Windows auto-resolves `*.localhost` → 127.0.0.1, so this is zero-config in the
+     * browser. (Production fronts arbitrary third-party custom domains with a true catch-all + ACME.)
      */
     const webPort = requirePort(meta, "web");
-    const catchAll = caddyOnDemandBlock("https://", `host.docker.internal:${webPort}`);
+    const catchAll = caddyOnDemandBlock("*.store.localhost", `host.docker.internal:${webPort}`);
 
     return `${global}\n${blocks.join("\n")}\n${catchAll}`;
 }

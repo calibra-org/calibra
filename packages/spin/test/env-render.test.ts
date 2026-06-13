@@ -64,11 +64,13 @@ describe("renderCaddyfile", () => {
         expect(out).toMatch(/admin\.demo\.spin\.localhost \{[\s\S]*?reverse_proxy host\.docker\.internal:13047/);
     });
 
-    it("emits a catch-all on-demand block routing arbitrary custom domains to the storefront", () => {
+    it("emits a custom-domain on-demand wildcard block routing to the storefront", () => {
         const out = renderCaddyfile(makeMeta());
         const webPort = layoutFromBase(13044).web;
         expect(out).toMatch(
-            new RegExp(`https:\\/\\/ \\{[\\s\\S]*?on_demand[\\s\\S]*?reverse_proxy host\\.docker\\.internal:${webPort}`),
+            new RegExp(
+                `\\*\\.store\\.localhost \\{[\\s\\S]*?on_demand[\\s\\S]*?reverse_proxy host\\.docker\\.internal:${webPort}`,
+            ),
         );
     });
 });
