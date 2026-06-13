@@ -16,6 +16,7 @@ const MetricsController = () => import("#controllers/platform/metrics_controller
 const DomainsController = () => import("#controllers/platform/domains_controller");
 const PlansController = () => import("#controllers/platform/plans_controller");
 const ImpersonationController = () => import("#controllers/platform/impersonation_controller");
+const PlatformTicketsController = () => import("#controllers/platform/tickets_controller");
 
 router
     .group(() => {
@@ -43,6 +44,13 @@ router
                 router.get("/plans", [PlansController, "index"]).as("platform.plans.index");
                 router.post("/plans", [PlansController, "store"]).as("platform.plans.store");
                 router.patch("/plans/:id", [PlansController, "update"]).as("platform.plans.update");
+
+                router.get("/tickets", [PlatformTicketsController, "index"]).as("platform.tickets.index");
+                router.get("/tickets/:id", [PlatformTicketsController, "show"]).as("platform.tickets.show");
+                router
+                    .post("/tickets/:id/messages", [PlatformTicketsController, "storeMessage"])
+                    .as("platform.tickets.messages.store");
+                router.patch("/tickets/:id", [PlatformTicketsController, "update"]).as("platform.tickets.update");
             })
             .use(middleware.platformAuth());
     })
