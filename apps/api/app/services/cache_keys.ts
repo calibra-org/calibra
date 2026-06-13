@@ -164,6 +164,8 @@ export const CacheKeys = {
     tenant: {
         byHost: (host: string): string => `tenant:host:${host.toLowerCase()}`,
         byRef: (ref: string | number | bigint): string => `tenant:ref:${String(ref).toLowerCase()}`,
+        /** Edge `GET /api/caddy/ask` routable-boolean cache (positive + negative), tag: CacheTags.tenants. */
+        edgeAsk: (host: string): string => `tenant:ask:${host.toLowerCase()}`,
     },
     currency: {
         config: (tenantId: TenantId, locale: string): string => `${tenantSegment(tenantId)}:currency:config:${locale}`,

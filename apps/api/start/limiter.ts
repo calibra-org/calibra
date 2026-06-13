@@ -64,6 +64,20 @@ export const webhookLimiter = limiter.define("webhooks", (ctx) => {
         .limitExceeded(() => recordRateLimitThrottled("webhooks"));
 });
 
+/**
+ * 600/min per source on the edge `GET /api/caddy/ask` endpoint. The edge (Caddy) calls it once per
+ * unique inbound host on first request then caches the decision, so the rate is generous but still
+ * caps a misconfigured or hostile caller hammering the single unauthenticated BYPASSRLS surface.
+ * Keyed by the edge identity (the `X-Edge-Secret` presence collapses to the source IP).
+ */
+export const edgeAskLimiter = limiter.define("edge_ask", (ctx) => {
+    return limiter
+        .allowRequests(600)
+        .every("1 minute")
+        .usingKey(`edge:${ctx.request.ip()}`)
+        .limitExceeded(() => recordRateLimitThrottled("edge_ask"));
+});
+
 /** 120/min per admin user on admin mutation routes. Lets one operator do bulk updates without rugpulling them, but a runaway script gets capped. */
 export const adminWriteLimiter = limiter.define("admin_writes", (ctx) => {
     const userId = ctx.auth.user?.id ?? ctx.request.ip();

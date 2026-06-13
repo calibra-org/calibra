@@ -2,6 +2,7 @@ import cache from "@adonisjs/cache/services/main";
 import db from "@adonisjs/lucid/services/db";
 
 import { CacheKeys, CacheTags } from "#services/cache_keys";
+import { ROUTABLE_DOMAIN_SQL } from "#services/domain_routing";
 
 /**
  * Minimal tenant projection the middleware needs to open the per-request context. Resolved on the
@@ -62,7 +63,13 @@ export function resolveTenantByRef(ref: string): Promise<ResolvedTenant | null> 
     });
 }
 
-/** Resolve a tenant by request Host → `tenant_domains.domain`. */
+/**
+ * Resolve a tenant by request Host → `tenant_domains.domain`, gated by the R5 routing predicate
+ * ({@link ROUTABLE_DOMAIN_SQL}): a subdomain always resolves, but a custom domain resolves to NOTHING
+ * until BOTH verification gates pass and its cert is issuing/active — exactly matching the edge
+ * `/api/caddy/ask` decision so a half-verified custom host is unrouted (404) instead of silently
+ * serving the shop on an unverified hostname.
+ */
 export function resolveTenantByHost(host: string): Promise<ResolvedTenant | null> {
     return cache.getOrSet({
         key: CacheKeys.tenant.byHost(host),
@@ -74,6 +81,7 @@ export function resolveTenantByHost(host: string): Promise<ResolvedTenant | null
                 .from("tenant_domains")
                 .join("tenants", "tenants.id", "tenant_domains.tenant_id")
                 .where("tenant_domains.domain", host)
+                .whereRaw(ROUTABLE_DOMAIN_SQL)
                 .whereNull("tenants.deleted_at")
                 .select(COLUMNS)
                 .first();

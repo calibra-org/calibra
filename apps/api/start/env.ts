@@ -66,6 +66,27 @@ export default await Env.create(new URL("../", import.meta.url), {
     ADMIN_URL_TEMPLATE: Env.schema.string.optional(),
 
     /**
+     * Custom-domain edge + DNS verification (Control Plane v2).
+     *
+     *  - `EDGE_SECRET` — shared secret the edge (spin agent / prod Caddy) sends as `X-Edge-Secret` on
+     *    `GET /api/caddy/ask`. The endpoint is the single unauthenticated BYPASSRLS surface; it is
+     *    source-allowlisted on this secret and fails closed when the secret is unset or mismatched.
+     *  - `EDGE_APEX_IP` — the edge's public IPv4. Apex custom domains (no CNAME) verify routing via an
+     *    A-record pointing here. Unused under DNS simulation.
+     *  - `EDGE_CNAME_TARGET` — fallback CNAME target a custom domain must point at when a tenant has no
+     *    resolvable primary subdomain (real DNS routing check only).
+     *
+     * `SPIN_SIMULATE_DNS` is read directly from `process.env` by `domain_verification_service` (so
+     * tests can toggle it per-case) and is declared here only so the validated env still boots when
+     * the spin sets it. `1` short-circuits ownership/routing/CAA checks to success (local `.localhost`
+     * custom domains), badged "simulated (local)" in the UI.
+     */
+    EDGE_SECRET: Env.schema.string.optional(),
+    EDGE_APEX_IP: Env.schema.string.optional(),
+    EDGE_CNAME_TARGET: Env.schema.string.optional(),
+    SPIN_SIMULATE_DNS: Env.schema.string.optional(),
+
+    /**
      * Mail / SMTP. The spin script writes `localhost:11025` (Mailpit) by default;
      * production overrides to the real relay. `MAIL_NOTIFICATIONS_ENABLED` is the runner-side
      * opt-out — CI runs with no catcher set it to `false` so terminal-event notifications

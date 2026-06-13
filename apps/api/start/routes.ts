@@ -10,6 +10,9 @@ import router from "@adonisjs/core/services/router";
 
 import { renderPrometheusText } from "#middleware/metrics_middleware";
 import { healthChecks } from "#start/health";
+import { edgeAskLimiter } from "#start/limiter";
+
+const EdgeAskController = () => import("#controllers/edge/ask_controller");
 
 /**
  * Always-200 liveness probe. The orchestrator uses this to know the process is alive
@@ -40,6 +43,14 @@ router.get("/metrics", async ({ response }) => {
     response.header("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
     return renderPrometheusText();
 });
+
+/**
+ * Edge TLS-authorize oracle. Global + unversioned + outside any tenant context
+ * (`tenant_context_middleware` skips `/api/caddy/ask`, else it would try to resolve the unverified
+ * inbound Host and deadlock). Source-allowlisted by `X-Edge-Secret` inside the controller; rate
+ * limited here. See {@link EdgeAskController}.
+ */
+router.get("/api/caddy/ask", [EdgeAskController, "handle"]).as("edge.caddy.ask").use(edgeAskLimiter);
 
 await import("./routes/catalog.js");
 await import("./routes/auth.js");
