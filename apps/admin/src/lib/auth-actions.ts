@@ -148,7 +148,10 @@ export async function setPasswordAction(_state: PasswordActionState, formData: F
     const locale = (formData.get("__locale") as string | null) ?? "fa";
     const tenant = await tenantRefFromHeaders();
     if (tenant === null) {
-        return { ok: false, error: locale === "fa" ? "این آدرس به هیچ فروشگاهی متصل نیست." : "This address isn't connected to a shop." };
+        return {
+            ok: false,
+            error: locale === "fa" ? "این آدرس به هیچ فروشگاهی متصل نیست." : "This address isn't connected to a shop.",
+        };
     }
     try {
         const api = createApiClient({
@@ -190,7 +193,10 @@ export async function changePasswordAction(_state: PasswordActionState, formData
         if (err instanceof BackendError && err.status === 422) {
             return {
                 ok: false,
-                error: locale === "fa" ? "گذرواژه باید حداقل ۸ نویسه با حرف و رقم باشد." : "Password must be 8+ chars with a letter and a digit.",
+                error:
+                    locale === "fa"
+                        ? "گذرواژه باید حداقل ۸ نویسه با حرف و رقم باشد."
+                        : "Password must be 8+ chars with a letter and a digit.",
             };
         }
         return { ok: false, error: locale === "fa" ? "تغییر گذرواژه ناموفق بود." : "Could not change the password." };

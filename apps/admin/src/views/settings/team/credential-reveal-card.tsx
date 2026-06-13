@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, Copy, TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "#/components/ui/button";
+import { Check, Copy, TriangleAlert } from "#/icons";
 import { cn } from "#/lib/utils";
 
 function CopyField({ label, value }: { label: string; value: string }) {
@@ -26,7 +26,7 @@ function CopyField({ label, value }: { label: string; value: string }) {
                     {value}
                 </code>
                 <Button type="button" variant="outline" size="icon" aria-label="copy" onClick={copy}>
-                    {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+                    {copied ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
                 </Button>
             </div>
         </div>
@@ -47,9 +47,9 @@ export function CredentialRevealCard({
 }) {
     const t = useTranslations("Team");
     return (
-        <div className={cn("flex flex-col gap-3 rounded-lg border border-amber-400/50 bg-amber-50/60 p-4 dark:bg-amber-950/20", className)}>
+        <div className={cn("flex flex-col gap-3 rounded-lg border border-warning/50 bg-warning/5 p-4", className)}>
             <div className="flex items-center gap-2 font-medium text-sm">
-                <TriangleAlert className="size-4 text-amber-600" aria-hidden="true" />
+                <TriangleAlert className="size-4 text-warning" aria-hidden="true" />
                 {t("credTitle")}
             </div>
             {email ? <CopyField label={t("credEmail")} value={email} /> : null}

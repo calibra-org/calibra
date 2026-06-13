@@ -1,6 +1,5 @@
 "use client";
 
-import { Ban, KeyRound, Link2, RefreshCw, ShieldCheck, Trash2, UserCheck, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 
@@ -12,6 +11,7 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { Link2, RefreshCw, ShieldCheck, Trash2, UserCheck, UserPlus, UserX } from "#/icons";
 import {
     type Operator,
     type OperatorCredentialReveal,
@@ -87,7 +87,13 @@ export function TeamSettings() {
                 ) : null}
             </div>
 
-            {reveal ? <CredentialRevealCard email={reveal.email} tempPassword={reveal.cred.temp_password} handoffUrl={reveal.cred.handoff_url} /> : null}
+            {reveal ? (
+                <CredentialRevealCard
+                    email={reveal.email}
+                    tempPassword={reveal.cred.temp_password}
+                    handoffUrl={reveal.cred.handoff_url}
+                />
+            ) : null}
 
             <div className="overflow-hidden rounded-lg border border-border">
                 <Table>
@@ -119,33 +125,60 @@ export function TeamSettings() {
                                         {op.email}
                                     </TableCell>
                                     <TableCell>
-                                        <StatusBadge tone={statusTone(op.status)}>{t(`status_${op.status}` as "status_active")}</StatusBadge>
+                                        <StatusBadge tone={statusTone(op.status)}>
+                                            {t(`status_${op.status}` as "status_active")}
+                                        </StatusBadge>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex justify-end gap-1">
                                             {c.can_reset_password ? (
-                                                <Button variant="ghost" size="icon" aria-label={t("resetPassword")} onClick={() => onReset(op)}>
-                                                    <KeyRound className="size-4" aria-hidden="true" />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t("resetPassword")}
+                                                    onClick={() => onReset(op)}
+                                                >
+                                                    <RefreshCw className="size-4" aria-hidden="true" />
                                                 </Button>
                                             ) : null}
                                             {c.can_reset_password ? (
-                                                <Button variant="ghost" size="icon" aria-label={t("handoffLink")} onClick={() => onHandoff(op)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t("handoffLink")}
+                                                    onClick={() => onHandoff(op)}
+                                                >
                                                     <Link2 className="size-4" aria-hidden="true" />
                                                 </Button>
                                             ) : null}
                                             {c.can_make_owner ? (
-                                                <Button variant="ghost" size="icon" aria-label={t("makeOwner")} onClick={() => makeOwner.mutate(op.id)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t("makeOwner")}
+                                                    onClick={() => makeOwner.mutate(op.id)}
+                                                >
                                                     <ShieldCheck className="size-4" aria-hidden="true" />
                                                 </Button>
                                             ) : null}
                                             {c.can_disable ? (
-                                                <Button variant="ghost" size="icon" aria-label={t("disable")} onClick={() => disable.mutate(op.id)}>
-                                                    <Ban className="size-4" aria-hidden="true" />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t("disable")}
+                                                    onClick={() => disable.mutate(op.id)}
+                                                >
+                                                    <UserX className="size-4" aria-hidden="true" />
                                                 </Button>
                                             ) : null}
                                             {c.can_enable ? (
-                                                <Button variant="ghost" size="icon" aria-label={t("enable")} onClick={() => enable.mutate(op.id)}>
-                                                    <UserCheck className="size-4 text-emerald-600" aria-hidden="true" />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={t("enable")}
+                                                    onClick={() => enable.mutate(op.id)}
+                                                >
+                                                    <UserCheck className="size-4 text-success" aria-hidden="true" />
                                                 </Button>
                                             ) : null}
                                             {c.can_remove ? (
@@ -154,7 +187,8 @@ export function TeamSettings() {
                                                     size="icon"
                                                     aria-label={t("remove")}
                                                     onClick={() => {
-                                                        if (window.confirm(t("removeConfirm", { name: op.name }))) remove.mutate(op.id);
+                                                        if (window.confirm(t("removeConfirm", { name: op.name })))
+                                                            remove.mutate(op.id);
                                                     }}
                                                 >
                                                     <Trash2 className="size-4 text-danger" aria-hidden="true" />
@@ -178,12 +212,23 @@ export function TeamSettings() {
                         <form id="team-add" onSubmit={onAdd} className="flex flex-col gap-4">
                             <div className="flex flex-col gap-1.5">
                                 <Label htmlFor="team-email">{t("email")}</Label>
-                                <Input id="team-email" type="email" dir="ltr" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                                <Input
+                                    id="team-email"
+                                    type="email"
+                                    dir="ltr"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
                             </div>
-                            <label className="flex items-center gap-2 text-sm">
-                                <Checkbox checked={useHandoff} onCheckedChange={(v) => setUseHandoff(Boolean(v))} />
+                            <Label htmlFor="team-handoff" className="flex items-center gap-2 font-normal text-sm">
+                                <Checkbox
+                                    id="team-handoff"
+                                    checked={useHandoff}
+                                    onCheckedChange={(v) => setUseHandoff(Boolean(v))}
+                                />
                                 {t("sendHandoff")}
-                            </label>
+                            </Label>
                         </form>
                     </DialogBody>
                     <DialogFooter>
