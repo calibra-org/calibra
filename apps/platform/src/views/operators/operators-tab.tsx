@@ -9,6 +9,7 @@ import { DialogBody, DialogContent, DialogHeader, DialogRoot, DialogTitle } from
 import { EmptyState } from "#/components/ui/empty-state";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { RefreshCw, ShieldCheck, Trash2, TriangleAlert, UserCheck, UserPlus, UserX } from "#/icons";
 import {
     useDisableOperator,
@@ -19,6 +20,7 @@ import {
     useResetOperatorPassword,
 } from "#/lib/queries";
 import type { Operator } from "#/lib/types";
+import { ConfirmIconAction } from "#/views/operators/confirm-icon-action";
 import { CredentialRevealCard } from "#/views/operators/credential-reveal-card";
 import { ImpersonateModal } from "#/views/operators/impersonate-modal";
 import { OperatorForm } from "#/views/operators/operator-form";
@@ -114,67 +116,77 @@ export function OperatorsTab({ id }: { id: string }) {
                                     <TableCell>
                                         <div className="flex justify-end gap-1">
                                             {c.can_login_as ? (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={t("loginAs")}
-                                                    onClick={() => setImpersonate({ userId: op.id, name: op.name })}
-                                                >
-                                                    <UserCheck className="size-4" aria-hidden="true" />
-                                                </Button>
+                                                <Tooltip>
+                                                    <TooltipTrigger
+                                                        render={
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                aria-label={t("loginAs")}
+                                                                onClick={() => setImpersonate({ userId: op.id, name: op.name })}
+                                                            >
+                                                                <UserCheck className="size-4" aria-hidden="true" />
+                                                            </Button>
+                                                        }
+                                                    />
+                                                    <TooltipContent>{t("loginAs")}</TooltipContent>
+                                                </Tooltip>
                                             ) : null}
                                             {c.can_reset_password ? (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={t("resetPassword")}
-                                                    onClick={() => onReset(op)}
-                                                >
-                                                    <RefreshCw className="size-4" aria-hidden="true" />
-                                                </Button>
+                                                <ConfirmIconAction
+                                                    icon={<RefreshCw className="size-4" aria-hidden="true" />}
+                                                    label={t("resetPassword")}
+                                                    title={t("confirmResetTitle")}
+                                                    description={t("confirmResetBody", { name: op.name })}
+                                                    confirmLabel={t("resetPassword")}
+                                                    cancelLabel={t("cancel")}
+                                                    onConfirm={() => onReset(op)}
+                                                />
                                             ) : null}
                                             {c.can_make_owner ? (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={t("makeOwner")}
-                                                    onClick={() => makeOwner.mutate(op.id)}
-                                                >
-                                                    <ShieldCheck className="size-4" aria-hidden="true" />
-                                                </Button>
+                                                <ConfirmIconAction
+                                                    icon={<ShieldCheck className="size-4" aria-hidden="true" />}
+                                                    label={t("makeOwner")}
+                                                    title={t("confirmMakeOwnerTitle")}
+                                                    description={t("confirmMakeOwnerBody", { name: op.name })}
+                                                    confirmLabel={t("makeOwner")}
+                                                    cancelLabel={t("cancel")}
+                                                    onConfirm={() => makeOwner.mutate(op.id)}
+                                                />
                                             ) : null}
                                             {c.can_disable ? (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={t("disable")}
-                                                    onClick={() => disable.mutate(op.id)}
-                                                >
-                                                    <UserX className="size-4" aria-hidden="true" />
-                                                </Button>
+                                                <ConfirmIconAction
+                                                    icon={<UserX className="size-4" aria-hidden="true" />}
+                                                    label={t("disable")}
+                                                    title={t("confirmDisableTitle")}
+                                                    description={t("confirmDisableBody", { name: op.name })}
+                                                    confirmLabel={t("disable")}
+                                                    cancelLabel={t("cancel")}
+                                                    onConfirm={() => disable.mutate(op.id)}
+                                                />
                                             ) : null}
                                             {c.can_enable ? (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={t("enable")}
-                                                    onClick={() => enable.mutate(op.id)}
-                                                >
-                                                    <UserCheck className="size-4 text-success" aria-hidden="true" />
-                                                </Button>
+                                                <ConfirmIconAction
+                                                    icon={<UserCheck className="size-4 text-success" aria-hidden="true" />}
+                                                    label={t("enable")}
+                                                    title={t("confirmEnableTitle")}
+                                                    description={t("confirmEnableBody", { name: op.name })}
+                                                    confirmLabel={t("enable")}
+                                                    cancelLabel={t("cancel")}
+                                                    onConfirm={() => enable.mutate(op.id)}
+                                                />
                                             ) : null}
                                             {c.can_remove ? (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label={t("remove")}
-                                                    onClick={() => {
-                                                        if (window.confirm(t("removeConfirm", { name: op.name })))
-                                                            remove.mutate(op.id);
-                                                    }}
-                                                >
-                                                    <Trash2 className="size-4 text-danger" aria-hidden="true" />
-                                                </Button>
+                                                <ConfirmIconAction
+                                                    icon={<Trash2 className="size-4 text-danger" aria-hidden="true" />}
+                                                    label={t("remove")}
+                                                    title={t("confirmRemoveTitle")}
+                                                    description={t("confirmRemoveBody", { name: op.name })}
+                                                    confirmLabel={t("remove")}
+                                                    cancelLabel={t("cancel")}
+                                                    destructive
+                                                    onConfirm={() => remove.mutate(op.id)}
+                                                />
                                             ) : null}
                                         </div>
                                     </TableCell>

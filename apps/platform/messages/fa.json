@@ -248,7 +248,18 @@
         "impersonateTitle": "ورود به‌عنوان اپراتور",
         "impersonateTitleNamed": "ورود به‌عنوان {name}",
         "impersonateConfirm": "شروع نشست",
-        "resetTitle": "گذرواژه بازنشانی شد"
+        "resetTitle": "گذرواژه بازنشانی شد",
+        "cancel": "انصراف",
+        "confirmResetTitle": "بازنشانی گذرواژه؟",
+        "confirmResetBody": "یک گذرواژهٔ موقت تازه برای {name} ساخته شود؟ گذرواژهٔ فعلی و نشست‌های فعال او باطل می‌شوند.",
+        "confirmMakeOwnerTitle": "انتقال مالکیت؟",
+        "confirmMakeOwnerBody": "{name} مالک فروشگاه شود؟ مالک فعلی به مدیر عادی تبدیل می‌شود.",
+        "confirmDisableTitle": "غیرفعال‌سازی اپراتور؟",
+        "confirmDisableBody": "{name} غیرفعال شود؟ از حساب خارج می‌شود و تا فعال‌سازی مجدد به فروشگاه دسترسی ندارد.",
+        "confirmEnableTitle": "فعال‌سازی اپراتور؟",
+        "confirmEnableBody": "{name} دوباره فعال شود؟ می‌تواند دوباره وارد شود.",
+        "confirmRemoveTitle": "حذف اپراتور؟",
+        "confirmRemoveBody": "{name} حذف شود؟ نشست‌های او باطل می‌شوند. با دعوت دوبارهٔ همان ایمیل قابل بازگشت است."
     },
     "Audit": {
         "empty": "هنوز رویدادی ثبت نشده است.",

@@ -248,7 +248,18 @@
         "impersonateTitle": "Log in as operator",
         "impersonateTitleNamed": "Log in as {name}",
         "impersonateConfirm": "Start session",
-        "resetTitle": "Password rotated"
+        "resetTitle": "Password rotated",
+        "cancel": "Cancel",
+        "confirmResetTitle": "Reset password?",
+        "confirmResetBody": "Generate a new temporary password for {name}? Their current password and active sessions will be revoked.",
+        "confirmMakeOwnerTitle": "Transfer ownership?",
+        "confirmMakeOwnerBody": "Make {name} the shop owner? The current owner becomes a regular admin.",
+        "confirmDisableTitle": "Disable operator?",
+        "confirmDisableBody": "Disable {name}? They will be signed out and can't access the shop until re-enabled.",
+        "confirmEnableTitle": "Enable operator?",
+        "confirmEnableBody": "Re-enable {name}? They will be able to sign in again.",
+        "confirmRemoveTitle": "Remove operator?",
+        "confirmRemoveBody": "Remove {name}? Their sessions are revoked. This can be undone by re-inviting the same email."
     },
     "Audit": {
         "empty": "No audit events yet.",
