@@ -164,6 +164,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change password (authenticated)
+         * @description The authenticated user sets a new password and clears the forced-change flag. This is where the 423 `E_PASSWORD_CHANGE_REQUIRED` gate steers a freshly-provisioned operator.
+         */
+        post: operations["authPasswordChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -1366,6 +1386,8 @@ export interface components {
             email: string | null;
             locale: string;
             role: string;
+            /** @description True when the operator must set a new password before using admin routes (mirrors the 423 gate). */
+            must_change_password?: boolean;
             /** Format: date-time */
             created_at?: string | null;
             /** Format: date-time */
@@ -2680,6 +2702,36 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    authPasswordChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Password changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message: string;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
             422: components["responses"]["ValidationError"];
         };
     };

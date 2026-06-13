@@ -24,6 +24,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Operator logout
+         * @description Revokes the operator's platform token and every live impersonation session they minted (closing the matching audit events).
+         */
+        post: operations["platformAuthLogout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/overview": {
         parameters: {
             query?: never;
@@ -317,6 +337,206 @@ export interface paths {
         patch: operations["platformPlansUpdate"];
         trace?: never;
     };
+    "/api/v1/platform/tenants/{id}/operators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a tenant's operators
+         * @description Lists the tenant's admin operators (including the store owner) with per-row, server-computed capabilities.
+         */
+        get: operations["platformOperatorsIndex"];
+        put?: never;
+        /**
+         * Create (or reactivate) an operator
+         * @description Creates an admin operator, or reactivates a soft-deleted/disabled one with the same email. Reveals a temp password once, or returns a single-use handoff link when `handoff=true`.
+         */
+        post: operations["platformOperatorsStore"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/operators/{userId}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Disable an operator
+         * @description Stamps `disabled_at` and revokes the operator's `oat_` sessions. The store owner and the last active admin cannot be disabled.
+         */
+        patch: operations["platformOperatorsDisable"];
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/operators/{userId}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Re-enable a disabled operator
+         * @description Clears `disabled_at`.
+         */
+        patch: operations["platformOperatorsEnable"];
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/operators/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an operator
+         * @description Soft-deletes the operator and revokes their sessions. The store owner and the last active admin cannot be removed.
+         */
+        delete: operations["platformOperatorsDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/operators/{userId}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate an operator's password
+         * @description Generates a fresh temp password, forces a change, revokes the operator's sessions, and reveals the new password once.
+         */
+        post: operations["platformOperatorsResetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/operators/{userId}/handoff-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue an operator handoff link
+         * @description Creates a single-use link (on the tenant's slug admin host) for the operator to set their own password.
+         */
+        post: operations["platformOperatorsHandoffLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/operators/{userId}/make-owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transfer shop ownership
+         * @description Makes the target (an active admin) the new `store_owner`. The previous owner stays a normal admin.
+         */
+        post: operations["platformOperatorsMakeOwner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Control-plane audit feed
+         * @description Merged, newest-first feed of platform operator actions + impersonation sessions, optionally filtered to one tenant.
+         */
+        get: operations["platformAuditIndex"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -502,8 +722,20 @@ export interface components {
             lastPage: number;
         };
         /**
+         * PlatformDomainRecord
+         * @description A DNS record the operator must publish to verify/route a custom domain.
+         */
+        PlatformDomainRecord: {
+            /** @enum {string} */
+            record_type: "TXT" | "CNAME";
+            /** @example _calibra-verify.shop.example.com */
+            record_name: string;
+            /** @example calibra-verify-abc123 */
+            record_value: string | null;
+        };
+        /**
          * PlatformTenantDomain
-         * @description A hostname mapped to a tenant. `subdomain` rows are auto-provisioned (one primary per tenant); `custom` rows are operator-attached and start `tls_status=pending` until the edge issues a certificate (Phase 6). `cname_target` is present on attach/recheck responses — the CNAME the operator must create.
+         * @description A hostname mapped to a tenant (`DomainStatus`). `subdomain` rows are auto-provisioned (one primary per tenant) and always route. `custom` rows are operator-attached and gated by two DNS checks — ownership (TXT) then routing (CNAME) + CAA preflight — before they route or issue TLS. `ownership`/`routing` carry the exact records to publish; `cert_last_error` explains a `failed` state; `simulated` is true when a local DNS-simulated recheck drove the result.
          */
         PlatformTenantDomain: {
             id: number;
@@ -513,16 +745,24 @@ export interface components {
             kind: "subdomain" | "custom";
             is_primary: boolean;
             /** @enum {string} */
-            tls_status: "pending" | "active" | "failed";
+            tls_status: "pending" | "verifying" | "active" | "failed";
+            ownership_verified: boolean;
+            routing_verified: boolean;
+            /** Format: date-time */
+            ownership_verified_at: string | null;
+            /** Format: date-time */
+            routing_verified_at: string | null;
+            cert_last_error: string | null;
+            /** @example aurora.shops.calibra.app */
+            cname_target: string | null;
+            ownership: components["schemas"]["PlatformDomainRecord"];
+            routing: components["schemas"]["PlatformDomainRecord"];
+            /** @description Result came from local DNS simulation (SPIN_SIMULATE_DNS). */
+            simulated: boolean;
             /** Format: date-time */
             verified_at: string | null;
             /** Format: date-time */
             created_at: string;
-            /**
-             * @description CNAME target for a custom domain.
-             * @example aurora.shops.calibra.app
-             */
-            cname_target?: string;
         };
         /**
          * PlatformTenantDetail
@@ -563,6 +803,16 @@ export interface components {
                 /** Format: int64 */
                 storage_bytes: number;
             };
+        };
+        /**
+         * PlatformOwnerCredentials
+         * @description Reveal-once owner credentials returned on provisioning. `temp_password` is shown exactly once (null when an explicit password was supplied); the durable backstop is single-use + `must_change_password`.
+         */
+        PlatformOwnerCredentials: {
+            /** Format: email */
+            email: string | null;
+            temp_password: string | null;
+            must_change_password: boolean;
         };
         /**
          * ImpersonationGrant
@@ -629,6 +879,77 @@ export interface components {
             limits: {
                 [key: string]: number;
             };
+        };
+        /**
+         * OperatorCapabilities
+         * @description Server-computed, caller-dependent action permissions for an operator row. The UI renders row actions strictly from these — never inferred client-side.
+         */
+        OperatorCapabilities: {
+            can_login_as: boolean;
+            can_reset_password: boolean;
+            can_disable: boolean;
+            can_enable: boolean;
+            can_remove: boolean;
+            can_make_owner: boolean;
+        };
+        /**
+         * Operator
+         * @description A shop operator (admin user). Emitted identically by the control-plane console and the admin Team page. `is_store_owner` marks the protected owner; `status` derives from the credential lifecycle; `capabilities` are computed per caller.
+         */
+        Operator: {
+            id: number;
+            name: string;
+            /** Format: email */
+            email: string | null;
+            /** @example admin */
+            role: string;
+            is_store_owner: boolean;
+            /** @enum {string} */
+            status: "active" | "disabled" | "never_signed_in";
+            /** Format: date-time */
+            last_login_at: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            capabilities: components["schemas"]["OperatorCapabilities"];
+        };
+        /**
+         * OperatorCredentialReveal
+         * @description Reveal-once operator credentials. Either a `temp_password` (with `must_change_password`) OR a single-use `handoff_url` — mutually exclusive (one live secret per action). Never re-served.
+         */
+        OperatorCredentialReveal: {
+            temp_password: string | null;
+            /** Format: uri */
+            handoff_url: string | null;
+            must_change_password?: boolean;
+        };
+        /**
+         * AuditEvent
+         * @description A merged control-plane audit entry — either a platform operator action (`source=platform_action`) or an impersonation session (`source=impersonation`). Newest-first.
+         */
+        AuditEvent: {
+            /** @enum {string} */
+            source: "platform_action" | "impersonation";
+            id: number;
+            tenant_id: number;
+            platform_user_id: number | null;
+            target_user_id: number | null;
+            /**
+             * @example domain_added
+             * @example impersonation
+             */
+            action: string;
+            reason?: string | null;
+            metadata?: {
+                [key: string]: unknown;
+            };
+            ip_address?: string | null;
+            user_agent?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            ended_at?: string | null;
+            /** @enum {string|null} */
+            end_cause?: "manual" | "expired" | "revoked" | null;
         };
     };
     responses: {
@@ -729,6 +1050,31 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             422: components["responses"]["ValidationError"];
+        };
+    };
+    platformAuthLogout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Logged out. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            ended: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
     platformOverview: {
@@ -834,6 +1180,7 @@ export interface operations {
                              * @example https://aurora.shops.calibra.app
                              */
                             shop_url: string;
+                            owner_credentials: components["schemas"]["PlatformOwnerCredentials"];
                         };
                     };
                 };
@@ -916,13 +1263,13 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
                 "application/json": {
-                    /** @description Specific shop admin to impersonate; defaults to the tenant's first admin. */
-                    target_user_id?: number;
-                    /** @description Optional audit reason recorded on the impersonation event. */
-                    reason?: string | null;
+                    /** @description The specific shop admin to impersonate (required). */
+                    target_user_id: number;
+                    /** @description Operator-supplied reason, recorded on the impersonation event (required). */
+                    reason: string;
                 };
             };
         };
@@ -940,6 +1287,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
         };
     };
     platformTenantMetrics: {
@@ -1162,6 +1510,274 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformOperatorsIndex: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operators. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    platformOperatorsStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                    /** @description Return a handoff link instead of a temp password. */
+                    handoff?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Operator created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"];
+                        credentials: components["schemas"]["OperatorCredentialReveal"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformOperatorsDisable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator disabled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformOperatorsEnable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator enabled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    platformOperatorsDestroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator removed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            removed: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformOperatorsResetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Password rotated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            temp_password: string;
+                            must_change_password: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    platformOperatorsHandoffLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Handoff link issued. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** Format: uri */
+                            handoff_url: string;
+                            /** Format: date-time */
+                            expires_at: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    platformOperatorsMakeOwner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ownership transferred. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    platformAuditIndex: {
+        parameters: {
+            query?: {
+                tenant_id?: number;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Audit events. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AuditEvent"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
             422: components["responses"]["ValidationError"];
         };
     };

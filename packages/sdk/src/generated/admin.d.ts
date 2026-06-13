@@ -1128,6 +1128,168 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/operators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List operators (Team)
+         * @description Lists the shop's operators with per-row capabilities computed for the calling admin (non-owners get a read-only view).
+         */
+        get: operations["adminOperatorsIndex"];
+        put?: never;
+        /**
+         * Invite an operator (Team)
+         * @description Owner-only. Creates/reactivates an admin operator; reveals a temp password once, or returns a single-use handoff link when `handoff=true`.
+         */
+        post: operations["adminOperatorsStore"];
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/operators/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Disable an operator (Team)
+         * @description Owner-only. Stamps `disabled_at` and revokes sessions. The owner + last active admin are protected.
+         */
+        patch: operations["adminOperatorsDisable"];
+        trace?: never;
+    };
+    "/api/v1/admin/operators/{id}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Re-enable an operator (Team)
+         * @description Owner-only. Clears `disabled_at`.
+         */
+        patch: operations["adminOperatorsEnable"];
+        trace?: never;
+    };
+    "/api/v1/admin/operators/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an operator (Team)
+         * @description Owner-only. Soft-deletes the operator + revokes sessions. The owner + last active admin are protected.
+         */
+        delete: operations["adminOperatorsDestroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/operators/{id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate an operator's password (Team)
+         * @description Owner-only. Generates a fresh temp password, forces a change, revokes sessions, reveals once.
+         */
+        post: operations["adminOperatorsResetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/operators/{id}/handoff-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue an operator handoff link (Team)
+         * @description Owner-only. Single-use link for the operator to set their own password.
+         */
+        post: operations["adminOperatorsHandoffLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/operators/{id}/make-owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transfer ownership (Team)
+         * @description Owner-only self-transfer to another active admin. The previous owner stays a normal admin.
+         */
+        post: operations["adminOperatorsMakeOwner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/settings/general": {
         parameters: {
             query?: never;
@@ -4496,6 +4658,48 @@ export interface components {
             counties: components["schemas"]["RegionalCounty"][];
         };
         /**
+         * OperatorCapabilities
+         * @description Server-computed, caller-dependent action permissions for an operator row. The UI renders row actions strictly from these — never inferred client-side.
+         */
+        OperatorCapabilities: {
+            can_login_as: boolean;
+            can_reset_password: boolean;
+            can_disable: boolean;
+            can_enable: boolean;
+            can_remove: boolean;
+            can_make_owner: boolean;
+        };
+        /**
+         * Operator
+         * @description A shop operator (admin user). Emitted identically by the control-plane console and the admin Team page. `is_store_owner` marks the protected owner; `status` derives from the credential lifecycle; `capabilities` are computed per caller.
+         */
+        Operator: {
+            id: number;
+            name: string;
+            /** Format: email */
+            email: string | null;
+            /** @example admin */
+            role: string;
+            is_store_owner: boolean;
+            /** @enum {string} */
+            status: "active" | "disabled" | "never_signed_in";
+            /** Format: date-time */
+            last_login_at: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            capabilities: components["schemas"]["OperatorCapabilities"];
+        };
+        /**
+         * OperatorCredentialReveal
+         * @description Reveal-once operator credentials. Either a `temp_password` (with `must_change_password`) OR a single-use `handoff_url` — mutually exclusive (one live secret per action). Never re-served.
+         */
+        OperatorCredentialReveal: {
+            temp_password: string | null;
+            /** Format: uri */
+            handoff_url: string | null;
+            must_change_password?: boolean;
+        };
+        /**
          * LocalizedName
          * @description A display name carried in both supported locales (Persian + English).
          */
@@ -7683,6 +7887,240 @@ export interface operations {
                             range: components["schemas"]["RegionalRange"];
                             locale: string;
                         };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOperatorsIndex: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operators. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    adminOperatorsStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                    handoff?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Operator created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"];
+                        credentials: components["schemas"]["OperatorCredentialReveal"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOperatorsDisable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator disabled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOperatorsEnable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator enabled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminOperatorsDestroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operator removed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            removed: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    adminOperatorsResetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Password rotated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            temp_password: string;
+                            must_change_password: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminOperatorsHandoffLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Handoff link issued. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** Format: uri */
+                            handoff_url: string;
+                            /** Format: date-time */
+                            expires_at: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    adminOperatorsMakeOwner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ownership transferred. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Operator"];
                     };
                 };
             };
