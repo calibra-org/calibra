@@ -4073,5 +4073,43 @@
         "searchProducts": "Search products",
         "stockUnknown": "Unknown",
         "totalsLabel": "Totals"
+    },
+    "Password": {
+        "setTitle": "Set your password",
+        "setSubtitle": "Choose a password for your operator account.",
+        "changeTitle": "Change your password",
+        "changeSubtitle": "You must set a new password before continuing.",
+        "newPassword": "New password",
+        "rule": "At least 8 characters, with a letter and a number.",
+        "submit": "Save password"
+    },
+    "Team": {
+        "title": "Team",
+        "subtitle": "Manage the operators who can access this shop's admin.",
+        "add": "Add operator",
+        "addTitle": "Add operator",
+        "addSubmit": "Create",
+        "name": "Name",
+        "email": "Email",
+        "status": "Status",
+        "owner": "Owner",
+        "status_active": "Active",
+        "status_disabled": "Disabled",
+        "status_never_signed_in": "Never signed in",
+        "resetPassword": "Reset password",
+        "handoffLink": "Handoff link",
+        "makeOwner": "Make owner",
+        "disable": "Disable",
+        "enable": "Enable",
+        "remove": "Remove",
+        "removeConfirm": "Remove operator {name}?",
+        "sendHandoff": "Send a handoff link instead of a temp password",
+        "loadError": "Could not load operators.",
+        "credTitle": "One-time credentials",
+        "credEmail": "Email (username)",
+        "credTempPassword": "Temporary password",
+        "credHandoffLink": "Handoff link",
+        "credWarning": "This password will not be shown again. The operator must change it on first sign-in.",
+        "credHandoffHint": "Single-use link — expires after first use or in 60 minutes."
     }
 }
