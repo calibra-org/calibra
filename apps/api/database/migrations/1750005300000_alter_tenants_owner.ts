@@ -19,13 +19,7 @@ export default class extends BaseSchema {
 
     async up() {
         this.schema.alterTable(this.tableName, (table) => {
-            table
-                .bigInteger("owner_user_id")
-                .unsigned()
-                .nullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("RESTRICT");
+            table.bigInteger("owner_user_id").unsigned().nullable().references("id").inTable("users").onDelete("RESTRICT");
         });
 
         /** Backfill the lowest non-deleted admin id per tenant as the owner. */

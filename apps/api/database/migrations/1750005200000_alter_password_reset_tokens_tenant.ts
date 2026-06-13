@@ -49,9 +49,7 @@ export default class extends BaseSchema {
             `ALTER TABLE "${this.tableName}" ADD CONSTRAINT "password_reset_tokens_tenant_id_foreign" ` +
                 `FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE`,
         );
-        this.schema.raw(
-            `CREATE INDEX "password_reset_tokens_tenant_id_idx" ON "${this.tableName}" ("tenant_id")`,
-        );
+        this.schema.raw(`CREATE INDEX "password_reset_tokens_tenant_id_idx" ON "${this.tableName}" ("tenant_id")`);
         this.schema.raw(
             `ALTER TABLE "${this.tableName}" ADD CONSTRAINT "password_reset_tokens_kind_check" ` +
                 `CHECK (kind IN ('self_service', 'operator_handoff'))`,
@@ -72,9 +70,7 @@ export default class extends BaseSchema {
         this.schema.raw(`ALTER TABLE "${this.tableName}" DISABLE ROW LEVEL SECURITY`);
         this.schema.raw(`ALTER TABLE "${this.tableName}" DROP CONSTRAINT IF EXISTS "password_reset_tokens_kind_check"`);
         this.schema.raw(`DROP INDEX IF EXISTS "password_reset_tokens_tenant_id_idx"`);
-        this.schema.raw(
-            `ALTER TABLE "${this.tableName}" DROP CONSTRAINT IF EXISTS "password_reset_tokens_tenant_id_foreign"`,
-        );
+        this.schema.raw(`ALTER TABLE "${this.tableName}" DROP CONSTRAINT IF EXISTS "password_reset_tokens_tenant_id_foreign"`);
         this.schema.alterTable(this.tableName, (table) => {
             table.dropColumn("tenant_id");
             table.dropColumn("created_by_platform_user_id");
