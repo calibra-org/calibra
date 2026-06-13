@@ -192,6 +192,7 @@ export default class PlatformOperatorsController {
                 tenantId: Number(tenant.id),
                 targetUserId: Number(target.id),
                 action: "operator_enabled",
+                metadata: { email: target.email },
                 ipAddress: ctx.request.ip(),
                 userAgent: ctx.request.header("user-agent") ?? null,
             });
@@ -223,6 +224,7 @@ export default class PlatformOperatorsController {
                 tenantId: Number(tenant.id),
                 targetUserId: Number(target.id),
                 action: "password_rotated",
+                metadata: { email: target.email },
                 ipAddress: ctx.request.ip(),
                 userAgent: ctx.request.header("user-agent") ?? null,
             });
@@ -250,6 +252,7 @@ export default class PlatformOperatorsController {
                 tenantId: Number(tenant.id),
                 targetUserId: Number(target.id),
                 action: "handoff_link_issued",
+                metadata: { email: target.email },
                 ipAddress: ctx.request.ip(),
                 userAgent: ctx.request.header("user-agent") ?? null,
             });
@@ -282,7 +285,7 @@ export default class PlatformOperatorsController {
                 tenantId: Number(tenant.id),
                 targetUserId: Number(target.id),
                 action: "ownership_transferred",
-                metadata: { previous_owner_user_id: Number(tenant.ownerUserId) },
+                metadata: { email: target.email, previous_owner_user_id: Number(tenant.ownerUserId) },
                 ipAddress: ctx.request.ip(),
                 userAgent: ctx.request.header("user-agent") ?? null,
             });
@@ -317,6 +320,7 @@ export default class PlatformOperatorsController {
                 tenantId: Number(tenant.id),
                 targetUserId: Number(target.id),
                 action: kind === "disable" ? "operator_disabled" : "operator_removed",
+                metadata: { email: target.email },
                 ipAddress: ctx.request.ip(),
                 userAgent: ctx.request.header("user-agent") ?? null,
             });

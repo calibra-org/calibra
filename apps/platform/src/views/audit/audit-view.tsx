@@ -9,6 +9,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table";
 import { TriangleAlert } from "#/icons";
 import { useAudit } from "#/lib/queries";
+import type { AuditEvent } from "#/lib/types";
 
 /**
  * i18n key per audit `action` value (the `platform_audit_events` actions + the `impersonation`
@@ -35,6 +36,26 @@ type AuditAction = keyof typeof AUDIT_ACTION_KEYS;
 
 function isAuditAction(action: string): action is AuditAction {
     return action in AUDIT_ACTION_KEYS;
+}
+
+/** A string field off the (untyped) metadata bag, or null. */
+function metaString(metadata: AuditEvent["metadata"], key: string): string | null {
+    const value = (metadata as Record<string, unknown> | undefined)?.[key];
+    return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+/**
+ * The most informative "subject" of an event for the details column — the domain, the affected
+ * operator's email, the provisioned slug, or a `#id` fallback for the impersonated user. Returns null
+ * when there's nothing meaningful to show (rendered as an em dash).
+ */
+function auditSubject(e: AuditEvent): string | null {
+    return (
+        metaString(e.metadata, "domain") ??
+        metaString(e.metadata, "email") ??
+        metaString(e.metadata, "slug") ??
+        (e.target_user_id ? `#${e.target_user_id}` : null)
+    );
 }
 
 /**
@@ -77,6 +98,7 @@ export function AuditView({ tenantId }: { tenantId?: string }) {
                     <TableRow>
                         <TableHead>{t("when")}</TableHead>
                         <TableHead>{t("action")}</TableHead>
+                        <TableHead>{t("details")}</TableHead>
                         <TableHead>{t("operator")}</TableHead>
                         <TableHead>{t("reason")}</TableHead>
                     </TableRow>
@@ -91,6 +113,9 @@ export function AuditView({ tenantId }: { tenantId?: string }) {
                                 <StatusPill tone={e.source === "impersonation" ? "warning" : "info"}>
                                     {actionLabel(e.action)}
                                 </StatusPill>
+                            </TableCell>
+                            <TableCell dir="ltr" className="max-w-xs truncate text-start font-mono text-muted-foreground text-sm">
+                                {auditSubject(e) ?? "—"}
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                                 {e.platform_user_id ? `#${e.platform_user_id}` : "—"}

@@ -280,6 +280,7 @@
         "action_operator_removed": "حذف اپراتور",
         "action_password_rotated": "بازنشانی گذرواژه",
         "action_handoff_link_issued": "صدور پیوند واگذاری",
-        "action_ownership_transferred": "انتقال مالکیت"
+        "action_ownership_transferred": "انتقال مالکیت",
+        "details": "جزئیات"
     }
 }

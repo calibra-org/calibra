@@ -168,7 +168,7 @@ export class TenantProvisioningService {
                     tenantId,
                     targetUserId: ownerUserId,
                     action: "tenant_provisioned",
-                    metadata: { slug, plan_key: input.planKey },
+                    metadata: { slug, plan_key: input.planKey, email: input.ownerEmail ?? null },
                     ipAddress: input.ipAddress ?? null,
                     userAgent: input.userAgent ?? null,
                 });

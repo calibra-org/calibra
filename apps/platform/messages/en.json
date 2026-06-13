@@ -280,6 +280,7 @@
         "action_operator_removed": "Operator removed",
         "action_password_rotated": "Password reset",
         "action_handoff_link_issued": "Handoff link issued",
-        "action_ownership_transferred": "Ownership transferred"
+        "action_ownership_transferred": "Ownership transferred",
+        "details": "Details"
     }
 }
