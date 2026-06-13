@@ -46,13 +46,7 @@ export default class extends BaseSchema {
                 .references("id")
                 .inTable("ticketing_conversations")
                 .onDelete("CASCADE");
-            table
-                .bigInteger("tag_id")
-                .unsigned()
-                .notNullable()
-                .references("id")
-                .inTable("ticketing_tags")
-                .onDelete("CASCADE");
+            table.bigInteger("tag_id").unsigned().notNullable().references("id").inTable("ticketing_tags").onDelete("CASCADE");
 
             table.timestamp("created_at", { useTz: true }).notNullable().defaultTo(this.now());
 
@@ -66,13 +60,7 @@ export default class extends BaseSchema {
             table.specificType("shortcut", "citext").notNullable();
             table.string("title").notNullable();
             table.text("body").notNullable();
-            table
-                .bigInteger("created_by_user_id")
-                .unsigned()
-                .nullable()
-                .references("id")
-                .inTable("users")
-                .onDelete("SET NULL");
+            table.bigInteger("created_by_user_id").unsigned().nullable().references("id").inTable("users").onDelete("SET NULL");
 
             table.timestamp("created_at", { useTz: true }).notNullable().defaultTo(this.now());
             table.timestamp("updated_at", { useTz: true }).notNullable().defaultTo(this.now());
