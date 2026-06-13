@@ -1,96 +1,98 @@
 {
-    "errors": {
-        "not_found": "{resource} not found.",
-        "internal": "Something went wrong on our side. Please try again.",
-        "auth": {
-            "unauthenticated": "Authentication is required.",
-            "invalid_credentials": "Invalid credentials.",
-            "forbidden_admin": "Admin access required.",
-            "tenant_mismatch": "Account does not belong to this shop."
-        },
-        "coupons": {
-            "not_found": "Coupon code not found.",
-            "disabled": "This coupon is disabled.",
-            "not_yet_active": "This coupon is not active yet.",
-            "expired": "This coupon has expired.",
-            "below_minimum": "Cart subtotal is below the coupon minimum.",
-            "above_maximum": "Cart subtotal is above the coupon maximum.",
-            "no_eligible_items": "No items in your cart qualify for this coupon.",
-            "only_sale_items": "This coupon cannot be combined with sale items.",
-            "individual_use_conflict": "This coupon cannot be combined with other coupons.",
-            "email_not_allowed": "This coupon is not available for your email address.",
-            "usage_limit_global_reached": "This coupon has reached its usage limit.",
-            "usage_limit_per_user_reached": "You have already used this coupon the maximum number of times.",
-            "limit_exhausted": "This coupon was just used by someone else; please try again without it."
-        },
-        "orders": {
-            "illegal_transition": "Illegal order status transition: {from} → {to}.",
-            "not_draft": "Order is no longer a draft.",
-            "billing_required": "Billing address is required before submitting.",
-            "payment_required": "Payment method is required before submitting.",
-            "empty": "Order has no line items.",
-            "out_of_stock": "Some items are out of stock.",
-            "price_changed": "Product price changed since the draft was last viewed."
-        },
-        "refunds": {
-            "input_invalid": "Refund body must contain either amount_minor or line_items, never both.",
-            "amount_nonpositive": "Refund amount must be positive.",
-            "exceeds_outstanding": "Refund exceeds the remaining outstanding amount on this order.",
-            "line_invalid": "Line item does not belong to this order.",
-            "line_quantity_exceeds": "Refund quantity exceeds the remaining quantity for this line.",
-            "already_refunded": "Order is already fully refunded.",
-            "not_refundable": "Order is not refundable in its current status.",
-            "fully_refunded": "Order has no remaining outstanding to refund.",
-            "deletion_forbidden": "Refunds cannot be deleted — issue a credit note instead."
-        },
-        "imports": {
-            "missing_sku_on_update": "SKU is required to update a product.",
-            "invalid_price": "Price must be a positive number.",
-            "sale_gt_regular": "Sale price cannot be greater than regular price.",
-            "invalid_stock": "Stock must be a non-negative integer.",
-            "invalid_type": "Invalid product type (simple|variable|grouped|external).",
-            "invalid_status": "Invalid status (publish|draft|private|pending).",
-            "invalid_url": "Invalid URL: {value}.",
-            "invalid_date": "Invalid date format: {value}.",
-            "invalid_boolean": "Invalid boolean value (1/0/yes/no).",
-            "unknown_tax_class": "Tax class not recognized: {value}.",
-            "category_create_failed": "Could not create category «{path}».",
-            "db_constraint_violation": "Database error: {message}.",
-            "unhandled_exception": "Unknown error: {message}.",
-            "duplicate_sku": "Product with this SKU already exists (update disabled).",
-            "empty_row": "Row is empty.",
-            "all_columns_unmapped": "No importable columns are mapped.",
-            "not_found": "Import not found.",
-            "parse_failed": "File is unreadable — try a different encoding or delimiter.",
-            "rollback_already_done": "This import has already been rolled back.",
-            "rollback_window_expired": "The 24-hour rollback window for this import has expired.",
-            "snapshot_missing": "Pre-import snapshot is missing."
-        }
+  "errors": {
+    "not_found": "{resource} not found.",
+    "internal": "Something went wrong on our side. Please try again.",
+    "auth": {
+      "unauthenticated": "Authentication is required.",
+      "invalid_credentials": "Invalid credentials.",
+      "forbidden_admin": "Admin access required.",
+      "tenant_mismatch": "Account does not belong to this shop.",
+      "password_change_required": "Password change required.",
+      "action_unavailable_during_impersonation": "This action is unavailable during impersonation."
     },
-    "order": {
-        "status": {
-            "draft": "Draft",
-            "pending": "Pending",
-            "on_hold": "On hold",
-            "processing": "Processing",
-            "completed": "Completed",
-            "cancelled": "Cancelled",
-            "refunded": "Refunded",
-            "failed": "Failed"
-        },
-        "table_view": {
-            "field_not_filterable": "Filtering by \"{field}\" is not allowed",
-            "field_not_orderable": "Ordering by \"{field}\" is not allowed",
-            "operator_invalid": "Invalid operator \"{op}\"",
-            "operator_not_allowed_on_field": "Operator \"{op}\" is not allowed on field \"{field}\" (type {type})",
-            "value_required": "Operator \"{op}\" requires a value",
-            "between_requires_two": "Operator \"between\" requires exactly two comma-separated values",
-            "between_no_nulls": "Operator \"between\" does not accept null bounds",
-            "in_requires_list": "Operator \"{op}\" requires a non-empty comma-separated list",
-            "void_op_no_value": "Operator \"{op}\" does not accept a value",
-            "expression_invalid": "Invalid filter expression \"{raw}\"",
-            "sort_dir_invalid": "Invalid sort direction \"{dir}\"",
-            "field_duplicate": "Field \"{field}\" already has a constraint in this group"
-        }
+    "coupons": {
+      "not_found": "Coupon code not found.",
+      "disabled": "This coupon is disabled.",
+      "not_yet_active": "This coupon is not active yet.",
+      "expired": "This coupon has expired.",
+      "below_minimum": "Cart subtotal is below the coupon minimum.",
+      "above_maximum": "Cart subtotal is above the coupon maximum.",
+      "no_eligible_items": "No items in your cart qualify for this coupon.",
+      "only_sale_items": "This coupon cannot be combined with sale items.",
+      "individual_use_conflict": "This coupon cannot be combined with other coupons.",
+      "email_not_allowed": "This coupon is not available for your email address.",
+      "usage_limit_global_reached": "This coupon has reached its usage limit.",
+      "usage_limit_per_user_reached": "You have already used this coupon the maximum number of times.",
+      "limit_exhausted": "This coupon was just used by someone else; please try again without it."
+    },
+    "orders": {
+      "illegal_transition": "Illegal order status transition: {from} → {to}.",
+      "not_draft": "Order is no longer a draft.",
+      "billing_required": "Billing address is required before submitting.",
+      "payment_required": "Payment method is required before submitting.",
+      "empty": "Order has no line items.",
+      "out_of_stock": "Some items are out of stock.",
+      "price_changed": "Product price changed since the draft was last viewed."
+    },
+    "refunds": {
+      "input_invalid": "Refund body must contain either amount_minor or line_items, never both.",
+      "amount_nonpositive": "Refund amount must be positive.",
+      "exceeds_outstanding": "Refund exceeds the remaining outstanding amount on this order.",
+      "line_invalid": "Line item does not belong to this order.",
+      "line_quantity_exceeds": "Refund quantity exceeds the remaining quantity for this line.",
+      "already_refunded": "Order is already fully refunded.",
+      "not_refundable": "Order is not refundable in its current status.",
+      "fully_refunded": "Order has no remaining outstanding to refund.",
+      "deletion_forbidden": "Refunds cannot be deleted — issue a credit note instead."
+    },
+    "imports": {
+      "missing_sku_on_update": "SKU is required to update a product.",
+      "invalid_price": "Price must be a positive number.",
+      "sale_gt_regular": "Sale price cannot be greater than regular price.",
+      "invalid_stock": "Stock must be a non-negative integer.",
+      "invalid_type": "Invalid product type (simple|variable|grouped|external).",
+      "invalid_status": "Invalid status (publish|draft|private|pending).",
+      "invalid_url": "Invalid URL: {value}.",
+      "invalid_date": "Invalid date format: {value}.",
+      "invalid_boolean": "Invalid boolean value (1/0/yes/no).",
+      "unknown_tax_class": "Tax class not recognized: {value}.",
+      "category_create_failed": "Could not create category «{path}».",
+      "db_constraint_violation": "Database error: {message}.",
+      "unhandled_exception": "Unknown error: {message}.",
+      "duplicate_sku": "Product with this SKU already exists (update disabled).",
+      "empty_row": "Row is empty.",
+      "all_columns_unmapped": "No importable columns are mapped.",
+      "not_found": "Import not found.",
+      "parse_failed": "File is unreadable — try a different encoding or delimiter.",
+      "rollback_already_done": "This import has already been rolled back.",
+      "rollback_window_expired": "The 24-hour rollback window for this import has expired.",
+      "snapshot_missing": "Pre-import snapshot is missing."
     }
+  },
+  "order": {
+    "status": {
+      "draft": "Draft",
+      "pending": "Pending",
+      "on_hold": "On hold",
+      "processing": "Processing",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "failed": "Failed"
+    },
+    "table_view": {
+      "field_not_filterable": "Filtering by \"{field}\" is not allowed",
+      "field_not_orderable": "Ordering by \"{field}\" is not allowed",
+      "operator_invalid": "Invalid operator \"{op}\"",
+      "operator_not_allowed_on_field": "Operator \"{op}\" is not allowed on field \"{field}\" (type {type})",
+      "value_required": "Operator \"{op}\" requires a value",
+      "between_requires_two": "Operator \"between\" requires exactly two comma-separated values",
+      "between_no_nulls": "Operator \"between\" does not accept null bounds",
+      "in_requires_list": "Operator \"{op}\" requires a non-empty comma-separated list",
+      "void_op_no_value": "Operator \"{op}\" does not accept a value",
+      "expression_invalid": "Invalid filter expression \"{raw}\"",
+      "sort_dir_invalid": "Invalid sort direction \"{dir}\"",
+      "field_duplicate": "Field \"{field}\" already has a constraint in this group"
+    }
+  }
 }

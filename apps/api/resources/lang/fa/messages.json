@@ -1,96 +1,98 @@
 {
-    "errors": {
-        "not_found": "{resource} پیدا نشد.",
-        "internal": "خطایی در سرور رخ داد. لطفاً دوباره تلاش کنید.",
-        "auth": {
-            "unauthenticated": "ابتدا باید وارد شوید.",
-            "invalid_credentials": "اطلاعات ورود نامعتبر است.",
-            "forbidden_admin": "دسترسی مدیریتی لازم است.",
-            "tenant_mismatch": "این حساب به این فروشگاه تعلق ندارد."
-        },
-        "coupons": {
-            "not_found": "کد تخفیف پیدا نشد.",
-            "disabled": "این کد تخفیف غیرفعال است.",
-            "not_yet_active": "این کد تخفیف هنوز فعال نشده است.",
-            "expired": "این کد تخفیف منقضی شده است.",
-            "below_minimum": "مبلغ سبد خرید کمتر از حداقل لازم برای این کد است.",
-            "above_maximum": "مبلغ سبد خرید بیشتر از حداکثر مجاز این کد است.",
-            "no_eligible_items": "هیچ کالایی در سبد خرید شامل این کد تخفیف نمی‌شود.",
-            "only_sale_items": "این کد تخفیف با کالاهای حراج قابل ترکیب نیست.",
-            "individual_use_conflict": "این کد تخفیف با سایر کدها قابل ترکیب نیست.",
-            "email_not_allowed": "این کد تخفیف برای ایمیل شما در دسترس نیست.",
-            "usage_limit_global_reached": "ظرفیت استفاده از این کد تخفیف به پایان رسیده است.",
-            "usage_limit_per_user_reached": "شما حداکثر بار مجاز برای استفاده از این کد تخفیف را استفاده کرده‌اید.",
-            "limit_exhausted": "این کد تخفیف هم‌اکنون توسط کاربر دیگری استفاده شد؛ لطفاً بدون آن دوباره تلاش کنید."
-        },
-        "orders": {
-            "illegal_transition": "تغییر وضعیت سفارش غیرمجاز است: {from} ← {to}.",
-            "not_draft": "این سفارش دیگر پیش‌نویس نیست.",
-            "billing_required": "قبل از ثبت سفارش باید آدرس صورتحساب وارد شود.",
-            "payment_required": "قبل از ثبت سفارش باید روش پرداخت انتخاب شود.",
-            "empty": "سفارش هیچ آیتمی ندارد.",
-            "out_of_stock": "موجودی برخی اقلام کافی نیست.",
-            "price_changed": "قیمت یک یا چند کالا از زمان مشاهده پیش‌نویس تغییر کرده است."
-        },
-        "refunds": {
-            "input_invalid": "بدنه درخواست بازپرداخت باید فقط یکی از amount_minor یا line_items را داشته باشد.",
-            "amount_nonpositive": "مبلغ بازپرداخت باید مثبت باشد.",
-            "exceeds_outstanding": "مبلغ بازپرداخت از باقی‌ماندهٔ سفارش بیشتر است.",
-            "line_invalid": "این آیتم به این سفارش تعلق ندارد.",
-            "line_quantity_exceeds": "تعداد بازپرداخت از باقی‌ماندهٔ این آیتم بیشتر است.",
-            "already_refunded": "این سفارش پیش‌تر به‌طور کامل بازپرداخت شده است.",
-            "not_refundable": "این سفارش در وضعیت فعلی قابل بازپرداخت نیست.",
-            "fully_refunded": "این سفارش هیچ مبلغ باقی‌مانده‌ای برای بازپرداخت ندارد.",
-            "deletion_forbidden": "بازپرداخت‌ها قابل حذف نیستند — به‌جای آن یک صورت‌حساب اعتباری صادر کنید."
-        },
-        "imports": {
-            "missing_sku_on_update": "برای به‌روزرسانی، SKU الزامی است.",
-            "invalid_price": "قیمت باید عدد مثبت باشد.",
-            "sale_gt_regular": "قیمت ویژه نمی‌تواند از قیمت اصلی بیشتر باشد.",
-            "invalid_stock": "موجودی باید عدد صحیح و بزرگ‌تر یا مساوی صفر باشد.",
-            "invalid_type": "نوع محصول نامعتبر است (simple|variable|grouped|external).",
-            "invalid_status": "وضعیت نامعتبر است (publish|draft|private|pending).",
-            "invalid_url": "آدرس نامعتبر است: {value}.",
-            "invalid_date": "قالب تاریخ نامعتبر است: {value}.",
-            "invalid_boolean": "مقدار بولی نامعتبر است (1/0/yes/no/بله/خیر).",
-            "unknown_tax_class": "کلاس مالیاتی شناسایی نشد: {value}.",
-            "category_create_failed": "ساخت دسته‌بندی «{path}» با خطا مواجه شد.",
-            "db_constraint_violation": "خطای پایگاه داده: {message}.",
-            "unhandled_exception": "خطای نامشخص: {message}.",
-            "duplicate_sku": "از قبل محصولی با همین SKU وجود دارد (به‌روزرسانی غیرفعال است).",
-            "empty_row": "ردیف خالی است.",
-            "all_columns_unmapped": "هیچ ستون قابل وارد کردنی تطبیق داده نشده است.",
-            "not_found": "تایلمع ندرک دراو هتفای نشد.",
-            "parse_failed": "فایل قابل خواندن نیست — رمزگذاری یا جداکننده دیگری را امتحان کنید.",
-            "rollback_already_done": "این عملیات قبلاً بازگشت داده شده است.",
-            "rollback_window_expired": "مهلت ۲۴ ساعته برای بازگشت این عملیات به پایان رسیده است.",
-            "snapshot_missing": "تصویر پیش از وارد کردن یافت نشد."
-        }
+  "errors": {
+    "not_found": "{resource} پیدا نشد.",
+    "internal": "خطایی در سرور رخ داد. لطفاً دوباره تلاش کنید.",
+    "auth": {
+      "unauthenticated": "ابتدا باید وارد شوید.",
+      "invalid_credentials": "اطلاعات ورود نامعتبر است.",
+      "forbidden_admin": "دسترسی مدیریتی لازم است.",
+      "tenant_mismatch": "این حساب به این فروشگاه تعلق ندارد.",
+      "password_change_required": "تغییر گذرواژه الزامی است.",
+      "action_unavailable_during_impersonation": "این کنش هنگام جانشینی در دسترس نیست."
     },
-    "order": {
-        "status": {
-            "draft": "پیش‌نویس",
-            "pending": "در انتظار پرداخت",
-            "on_hold": "در انتظار بررسی",
-            "processing": "در حال پردازش",
-            "completed": "تکمیل‌شده",
-            "cancelled": "لغوشده",
-            "refunded": "بازپرداخت‌شده",
-            "failed": "ناموفق"
-        },
-        "table_view": {
-            "field_not_filterable": "فیلتر روی «{field}» مجاز نیست",
-            "field_not_orderable": "مرتب‌سازی بر اساس «{field}» مجاز نیست",
-            "operator_invalid": "عملگر «{op}» نامعتبر است",
-            "operator_not_allowed_on_field": "عملگر «{op}» برای فیلد «{field}» (نوع {type}) مجاز نیست",
-            "value_required": "عملگر «{op}» به یک مقدار نیاز دارد",
-            "between_requires_two": "عملگر «between» دقیقاً دو مقدار جداشده با ویرگول می‌خواهد",
-            "between_no_nulls": "عملگر «between» مقدار null نمی‌پذیرد",
-            "in_requires_list": "عملگر «{op}» به یک فهرست غیرخالی جداشده با ویرگول نیاز دارد",
-            "void_op_no_value": "عملگر «{op}» مقدار نمی‌پذیرد",
-            "expression_invalid": "عبارت فیلتر «{raw}» نامعتبر است",
-            "sort_dir_invalid": "جهت مرتب‌سازی «{dir}» نامعتبر است",
-            "field_duplicate": "فیلد «{field}» قبلاً در این گروه شرط دارد"
-        }
+    "coupons": {
+      "not_found": "کد تخفیف پیدا نشد.",
+      "disabled": "این کد تخفیف غیرفعال است.",
+      "not_yet_active": "این کد تخفیف هنوز فعال نشده است.",
+      "expired": "این کد تخفیف منقضی شده است.",
+      "below_minimum": "مبلغ سبد خرید کمتر از حداقل لازم برای این کد است.",
+      "above_maximum": "مبلغ سبد خرید بیشتر از حداکثر مجاز این کد است.",
+      "no_eligible_items": "هیچ کالایی در سبد خرید شامل این کد تخفیف نمی‌شود.",
+      "only_sale_items": "این کد تخفیف با کالاهای حراج قابل ترکیب نیست.",
+      "individual_use_conflict": "این کد تخفیف با سایر کدها قابل ترکیب نیست.",
+      "email_not_allowed": "این کد تخفیف برای ایمیل شما در دسترس نیست.",
+      "usage_limit_global_reached": "ظرفیت استفاده از این کد تخفیف به پایان رسیده است.",
+      "usage_limit_per_user_reached": "شما حداکثر بار مجاز برای استفاده از این کد تخفیف را استفاده کرده‌اید.",
+      "limit_exhausted": "این کد تخفیف هم‌اکنون توسط کاربر دیگری استفاده شد؛ لطفاً بدون آن دوباره تلاش کنید."
+    },
+    "orders": {
+      "illegal_transition": "تغییر وضعیت سفارش غیرمجاز است: {from} ← {to}.",
+      "not_draft": "این سفارش دیگر پیش‌نویس نیست.",
+      "billing_required": "قبل از ثبت سفارش باید آدرس صورتحساب وارد شود.",
+      "payment_required": "قبل از ثبت سفارش باید روش پرداخت انتخاب شود.",
+      "empty": "سفارش هیچ آیتمی ندارد.",
+      "out_of_stock": "موجودی برخی اقلام کافی نیست.",
+      "price_changed": "قیمت یک یا چند کالا از زمان مشاهده پیش‌نویس تغییر کرده است."
+    },
+    "refunds": {
+      "input_invalid": "بدنه درخواست بازپرداخت باید فقط یکی از amount_minor یا line_items را داشته باشد.",
+      "amount_nonpositive": "مبلغ بازپرداخت باید مثبت باشد.",
+      "exceeds_outstanding": "مبلغ بازپرداخت از باقی‌ماندهٔ سفارش بیشتر است.",
+      "line_invalid": "این آیتم به این سفارش تعلق ندارد.",
+      "line_quantity_exceeds": "تعداد بازپرداخت از باقی‌ماندهٔ این آیتم بیشتر است.",
+      "already_refunded": "این سفارش پیش‌تر به‌طور کامل بازپرداخت شده است.",
+      "not_refundable": "این سفارش در وضعیت فعلی قابل بازپرداخت نیست.",
+      "fully_refunded": "این سفارش هیچ مبلغ باقی‌مانده‌ای برای بازپرداخت ندارد.",
+      "deletion_forbidden": "بازپرداخت‌ها قابل حذف نیستند — به‌جای آن یک صورت‌حساب اعتباری صادر کنید."
+    },
+    "imports": {
+      "missing_sku_on_update": "برای به‌روزرسانی، SKU الزامی است.",
+      "invalid_price": "قیمت باید عدد مثبت باشد.",
+      "sale_gt_regular": "قیمت ویژه نمی‌تواند از قیمت اصلی بیشتر باشد.",
+      "invalid_stock": "موجودی باید عدد صحیح و بزرگ‌تر یا مساوی صفر باشد.",
+      "invalid_type": "نوع محصول نامعتبر است (simple|variable|grouped|external).",
+      "invalid_status": "وضعیت نامعتبر است (publish|draft|private|pending).",
+      "invalid_url": "آدرس نامعتبر است: {value}.",
+      "invalid_date": "قالب تاریخ نامعتبر است: {value}.",
+      "invalid_boolean": "مقدار بولی نامعتبر است (1/0/yes/no/بله/خیر).",
+      "unknown_tax_class": "کلاس مالیاتی شناسایی نشد: {value}.",
+      "category_create_failed": "ساخت دسته‌بندی «{path}» با خطا مواجه شد.",
+      "db_constraint_violation": "خطای پایگاه داده: {message}.",
+      "unhandled_exception": "خطای نامشخص: {message}.",
+      "duplicate_sku": "از قبل محصولی با همین SKU وجود دارد (به‌روزرسانی غیرفعال است).",
+      "empty_row": "ردیف خالی است.",
+      "all_columns_unmapped": "هیچ ستون قابل وارد کردنی تطبیق داده نشده است.",
+      "not_found": "تایلمع ندرک دراو هتفای نشد.",
+      "parse_failed": "فایل قابل خواندن نیست — رمزگذاری یا جداکننده دیگری را امتحان کنید.",
+      "rollback_already_done": "این عملیات قبلاً بازگشت داده شده است.",
+      "rollback_window_expired": "مهلت ۲۴ ساعته برای بازگشت این عملیات به پایان رسیده است.",
+      "snapshot_missing": "تصویر پیش از وارد کردن یافت نشد."
     }
+  },
+  "order": {
+    "status": {
+      "draft": "پیش‌نویس",
+      "pending": "در انتظار پرداخت",
+      "on_hold": "در انتظار بررسی",
+      "processing": "در حال پردازش",
+      "completed": "تکمیل‌شده",
+      "cancelled": "لغوشده",
+      "refunded": "بازپرداخت‌شده",
+      "failed": "ناموفق"
+    },
+    "table_view": {
+      "field_not_filterable": "فیلتر روی «{field}» مجاز نیست",
+      "field_not_orderable": "مرتب‌سازی بر اساس «{field}» مجاز نیست",
+      "operator_invalid": "عملگر «{op}» نامعتبر است",
+      "operator_not_allowed_on_field": "عملگر «{op}» برای فیلد «{field}» (نوع {type}) مجاز نیست",
+      "value_required": "عملگر «{op}» به یک مقدار نیاز دارد",
+      "between_requires_two": "عملگر «between» دقیقاً دو مقدار جداشده با ویرگول می‌خواهد",
+      "between_no_nulls": "عملگر «between» مقدار null نمی‌پذیرد",
+      "in_requires_list": "عملگر «{op}» به یک فهرست غیرخالی جداشده با ویرگول نیاز دارد",
+      "void_op_no_value": "عملگر «{op}» مقدار نمی‌پذیرد",
+      "expression_invalid": "عبارت فیلتر «{raw}» نامعتبر است",
+      "sort_dir_invalid": "جهت مرتب‌سازی «{dir}» نامعتبر است",
+      "field_duplicate": "فیلد «{field}» قبلاً در این گروه شرط دارد"
+    }
+  }
 }
