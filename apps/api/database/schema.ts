@@ -2754,7 +2754,7 @@ export class TenantSchema extends BaseModel {
   @column()
   declare name: string
   @column()
-  declare ownerUserId: bigint | number
+  declare ownerUserId: bigint | number | null
   @column()
   declare planId: bigint | number
   @column()
