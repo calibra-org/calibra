@@ -16,7 +16,7 @@ import { ChevronDown, ChevronsUpDown, ChevronUp, ExternalLink, Store, TriangleAl
 import { formatBytes, formatMoney, formatNumber } from "#/lib/format";
 import { Link, useRouter } from "#/lib/i18n/navigation";
 import { isEditableTarget } from "#/lib/keyboard";
-import { openImpersonationTab, useImpersonate, usePlans, useTenants } from "#/lib/queries";
+import { usePlans, useTenants } from "#/lib/queries";
 import type { TenantListItem } from "#/lib/types";
 import { cn } from "#/lib/utils";
 
@@ -291,10 +291,11 @@ function ShopRow({
     locale: string;
     t: ReturnType<typeof useTranslations<"Tenants">>;
 }) {
-    const impersonate = useImpersonate(shop.id);
+    const router = useRouter();
 
-    async function onImpersonate() {
-        openImpersonationTab(await impersonate.mutateAsync());
+    /** Targeted impersonation needs an operator + reason, so jump to the shop's Operators tab. */
+    function onImpersonate() {
+        router.push(`/tenants/${shop.id}?tab=operators`);
     }
 
     return (
