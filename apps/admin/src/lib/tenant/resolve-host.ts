@@ -1,4 +1,4 @@
-import { ADMIN_ROOT } from "./constants";
+import { ADMIN_ROOT, DEV_TENANT } from "./constants";
 
 /**
  * Classification of a request `Host` reaching the admin panel:
@@ -22,10 +22,20 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
  * @param rawHost the raw `Host` header (may include a `:port` and mixed case)
  * @param root the admin root domain; defaults to {@link ADMIN_ROOT}
  */
-export function resolveHost(rawHost: string | null | undefined, root: string = ADMIN_ROOT): ResolvedHost {
+export function resolveHost(
+    rawHost: string | null | undefined,
+    root: string = ADMIN_ROOT,
+    devTenant: string = DEV_TENANT,
+): ResolvedHost {
     if (!rawHost) return { kind: "platform" };
     const host = rawHost.trim().toLowerCase().split(":", 1)[0] ?? "";
-    if (host === "" || host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1") {
+    const isLoopback = host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1";
+    const isCodespacesPort = /^[a-z0-9-]+-\d+\.app\.github\.dev$/.test(host);
+    const fallbackSlug = devTenant.trim().toLowerCase();
+    if ((isLoopback || isCodespacesPort) && SLUG_RE.test(fallbackSlug)) {
+        return { kind: "subdomain", slug: fallbackSlug };
+    }
+    if (host === "" || isLoopback || isCodespacesPort) {
         return { kind: "platform" };
     }
     /**

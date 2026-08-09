@@ -116,7 +116,7 @@ spin-alerts:
 # Bring up db + migrations + the dashboard servers. Admin :3001, platform :3002, api :3333.
 # The storefront stays opt-in through `just up-web`, keeping the default Codespaces surface to three app ports.
 up: install env-sync db-up migrate
-    pnpm turbo run dev --filter=@calibra/api --filter=@calibra/admin --filter=@calibra/platform
+    NEXT_PUBLIC_DEV_TENANT="${NEXT_PUBLIC_DEV_TENANT:-aurora}" pnpm turbo run dev --filter=@calibra/api --filter=@calibra/admin --filter=@calibra/platform
 
 # Like `up` but only the api dev server.
 up-api: install env-sync db-up migrate
@@ -128,11 +128,11 @@ up-web: install env-sync
 
 # Like `up` but only the admin panel (assumes api is already running elsewhere).
 up-admin: install env-sync
-    pnpm dev:admin
+    NEXT_PUBLIC_DEV_TENANT="${NEXT_PUBLIC_DEV_TENANT:-aurora}" pnpm dev:admin
 
 # Run the three dashboard servers without touching docker (assumes db is already up).
 dev: install env-sync
-    pnpm turbo run dev --filter=@calibra/api --filter=@calibra/admin --filter=@calibra/platform
+    NEXT_PUBLIC_DEV_TENANT="${NEXT_PUBLIC_DEV_TENANT:-aurora}" pnpm turbo run dev --filter=@calibra/api --filter=@calibra/admin --filter=@calibra/platform
 
 # Stop the dev infra containers (preserves volumes).
 down: db-down
