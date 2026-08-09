@@ -18,6 +18,19 @@ describe("resolveHost (admin)", () => {
         expect(resolveHost(null, ROOT)).toEqual({ kind: "platform" });
     });
 
+    it("uses an explicit dev tenant for loopback and GitHub Codespaces port hosts", () => {
+        expect(resolveHost("localhost:3001", ROOT, "aurora")).toEqual({ kind: "subdomain", slug: "aurora" });
+        expect(resolveHost("studious-fishstick-vpvxp7wpqvx724qv-3001.app.github.dev", ROOT, "aurora")).toEqual({
+            kind: "subdomain",
+            slug: "aurora",
+        });
+    });
+
+    it("never applies the dev tenant fallback to production-shaped hosts", () => {
+        expect(resolveHost("admin.calibra.app", ROOT, "aurora")).toEqual({ kind: "platform" });
+        expect(resolveHost("unrelated.example", ROOT, "aurora")).toEqual({ kind: "platform" });
+    });
+
     it("treats a mapped admin domain `admin.<domain>` as custom", () => {
         expect(resolveHost("admin.acme.com", ROOT)).toEqual({ kind: "custom", domain: "acme.com" });
     });
