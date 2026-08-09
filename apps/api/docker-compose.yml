@@ -19,8 +19,8 @@ services:
         image: postgres:17-alpine
         restart: unless-stopped
         environment:
-            POSTGRES_USER: ${DB_USER:-calibra}
-            POSTGRES_PASSWORD: ${DB_PASSWORD:-calibra}
+            POSTGRES_USER: ${DB_SUPERUSER_USER:-calibra}
+            POSTGRES_PASSWORD: ${DB_SUPERUSER_PASSWORD:-calibra}
             POSTGRES_DB: ${DB_DATABASE:-calibra}
         ports:
             - "${DB_PORT:-5432}:5432"
@@ -28,10 +28,11 @@ services:
             - db_data:/var/lib/postgresql/data
             - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-calibra} -d ${DB_DATABASE:-calibra}"]
+            test: ["CMD-SHELL", "pg_isready -U ${DB_SUPERUSER_USER:-calibra} -d ${DB_DATABASE:-calibra}"]
             interval: 5s
             timeout: 5s
-            retries: 10
+            retries: 60
+            start_period: 2m
 
     pgadmin:
         image: dpage/pgadmin4:latest
