@@ -1,0 +1,14 @@
+type: object
+required: [data, meta]
+properties:
+    data:
+        type: array
+        items: { $ref: "./ContentPost.yaml" }
+    meta:
+        type: object
+        required: [page, limit, total, last_page]
+        properties:
+            page: { type: integer, minimum: 1 }
+            limit: { type: integer, minimum: 1 }
+            total: { type: integer, minimum: 0 }
+            last_page: { type: integer, minimum: 1 }

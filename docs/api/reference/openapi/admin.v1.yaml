@@ -46,6 +46,12 @@ tags:
       description: Customer listing and detail.
     - name: Admin / Payments
       description: Read-only payment-gateway registry and payment-attempt audit log.
+    - name: Admin / Factor
+      description: Tenant-scoped invoices, proformas, payment links, collections, and reports.
+    - name: Admin / Content
+      description: Tenant-scoped content operations, market monitoring, supervised AI agents, publishing, taxonomies, and commerce attribution.
+    - name: Admin / SEO
+      description: Tenant-scoped SEO profiles, audits, issues, keywords, redirects, structured data, robots, sitemaps, and integrations.
     - name: Admin / Catalog / Products
       description: Product CRUD + duplication + batch operations.
     - name: Admin / Catalog / Variations
@@ -710,3 +716,742 @@ paths:
             $ref: "./admin/paths/media/media-id.patch.yaml"
         delete:
             $ref: "./admin/paths/media/media-id.delete.yaml"
+
+    /api/v1/admin/factor/documents:
+        get:
+            operationId: adminFactorDocumentsIndex
+            summary: List factor documents
+            description: Lists tenant-scoped invoices, proformas, and credit notes with search, lifecycle, customer, date, and sort filters.
+            tags: [Admin / Factor]
+            parameters:
+                - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+                - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+                - { name: q, in: query, schema: { type: string, maxLength: 120 } }
+                - { name: type, in: query, schema: { type: string, enum: [proforma, invoice, credit_note] } }
+                - { name: status, in: query, schema: { type: string, enum: [draft, sent, viewed, awaiting, paid, expired, cancelled, refunded, credited] } }
+                - { name: customer_id, in: query, schema: { type: integer, minimum: 1 } }
+                - { name: from, in: query, schema: { type: string, format: date-time } }
+                - { name: to, in: query, schema: { type: string, format: date-time } }
+                - { name: sort, in: query, schema: { type: string, enum: [created_desc, created_asc, due_asc, amount_desc] } }
+            responses:
+                "200":
+                    description: Paginated invoices, proformas, and credit notes.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorDocumentListEnvelope.yaml" }
+                "401": { description: Authentication required. }
+                "403": { description: Admin role required. }
+                "422": { description: Invalid query parameters. }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            operationId: adminFactorDocumentsStore
+            summary: Create a factor document
+            tags: [Admin / Factor]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: { $ref: "./common/components/schemas/FactorDocumentInput.yaml" }
+            responses:
+                "201":
+                    description: Factor document created.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorDocumentEnvelope.yaml" }
+                "401": { description: Authentication required. }
+                "403": { description: Admin role required. }
+                "422": { description: Invalid document input. }
+    /api/v1/admin/factor/documents/{id}:
+        parameters:
+            - name: id
+              in: path
+              required: true
+              schema: { type: integer, minimum: 1 }
+        get:
+            operationId: adminFactorDocumentsShow
+            summary: Show a factor document
+            tags: [Admin / Factor]
+            responses:
+                "200":
+                    description: Factor document detail.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorDocumentEnvelope.yaml" }
+                "404": { description: Factor document not found. }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            operationId: adminFactorDocumentsUpdate
+            summary: Update a mutable factor document
+            tags: [Admin / Factor]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: { $ref: "./common/components/schemas/FactorDocumentUpdateInput.yaml" }
+            responses:
+                "200":
+                    description: Factor document updated.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorDocumentEnvelope.yaml" }
+                "404": { description: Factor document not found. }
+                "409": { description: The document is immutable or its issued type is locked. }
+                "422": { description: Invalid document input. }
+    /api/v1/admin/factor/documents/{id}/transition:
+        parameters:
+            - name: id
+              in: path
+              required: true
+              schema: { type: integer, minimum: 1 }
+        post:
+            operationId: adminFactorDocumentsTransition
+            summary: Transition a factor document
+            tags: [Admin / Factor]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [to_status, expected_version]
+                            properties:
+                                to_status: { type: string, enum: [sent, viewed, awaiting, paid, expired, cancelled] }
+                                reason: { type: [string, "null"], maxLength: 1000 }
+                                expected_version: { type: integer, minimum: 1 }
+                            additionalProperties: false
+            responses:
+                "200":
+                    description: Lifecycle transition applied.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorDocumentEnvelope.yaml" }
+                "409": { description: Invalid lifecycle transition or incomplete collection. }
+                "422": { description: Invalid transition payload. }
+    /api/v1/admin/factor/documents/{id}/convert:
+        parameters:
+            - name: id
+              in: path
+              required: true
+              schema: { type: integer, minimum: 1 }
+        post:
+            operationId: adminFactorDocumentsConvert
+            summary: Convert a proforma to an invoice or a paid invoice to a credit note
+            tags: [Admin / Factor]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [target_type, expected_version]
+                            properties:
+                                target_type: { type: string, enum: [invoice, credit_note] }
+                                expected_version: { type: integer, minimum: 1 }
+                                reason: { type: [string, "null"], maxLength: 1000 }
+                            additionalProperties: false
+            responses:
+                "201":
+                    description: Converted document created.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorDocumentEnvelope.yaml" }
+                "409": { description: Source document cannot be converted to the requested type. }
+    /api/v1/admin/factor/documents/{id}/payment-link:
+        parameters:
+            - name: id
+              in: path
+              required: true
+              schema: { type: integer, minimum: 1 }
+        post:
+            operationId: adminFactorPaymentLinkStore
+            summary: Create a single-use payment link for the outstanding document amount
+            tags: [Admin / Factor]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [gateway_id, expected_version]
+                            properties:
+                                gateway_id: { type: integer, minimum: 1 }
+                                expires_at: { type: [string, "null"], format: date-time }
+                                expected_version: { type: integer, minimum: 1 }
+                            additionalProperties: false
+            responses:
+                "201":
+                    description: Payment link created.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorPaymentLinkEnvelope.yaml" }
+                "409": { description: The document cannot accept an online payment link. }
+                "422": { description: Gateway or expiry is invalid. }
+    /api/v1/admin/factor/documents/{id}/manual-payment:
+        parameters:
+            - name: id
+              in: path
+              required: true
+              schema: { type: integer, minimum: 1 }
+        post:
+            operationId: adminFactorManualPaymentStore
+            summary: Record a manual payment against the outstanding amount
+            tags: [Admin / Factor]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [amount_minor, method, expected_version]
+                            properties:
+                                amount_minor: { type: integer, minimum: 1 }
+                                method: { type: string, enum: [manual, cash, card, bank_transfer] }
+                                reference: { type: [string, "null"], maxLength: 191 }
+                                notes: { type: [string, "null"], maxLength: 2000 }
+                                paid_at: { type: [string, "null"], format: date-time }
+                                expected_version: { type: integer, minimum: 1 }
+                            additionalProperties: false
+            responses:
+                "201":
+                    description: Payment recorded.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorDocumentEnvelope.yaml" }
+                "409": { description: The document cannot accept payments. }
+                "422": { description: Payment exceeds the outstanding balance or input is invalid. }
+    /api/v1/admin/factor/summary:
+        get:
+            operationId: adminFactorSummary
+            summary: Factor dashboard summary
+            tags: [Admin / Factor]
+            responses:
+                "200":
+                    description: Current factor KPIs.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorSummaryEnvelope.yaml" }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/factor/reports:
+        get:
+            operationId: adminFactorReports
+            summary: Factor reporting datasets
+            tags: [Admin / Factor]
+            responses:
+                "200":
+                    description: Monthly, aging, delivery-channel, and gateway reports.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorReportsEnvelope.yaml" }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/factor/payment-attempts:
+        get:
+            operationId: adminFactorPaymentAttempts
+            summary: List payment attempts attached to factor documents
+            tags: [Admin / Factor]
+            parameters:
+                - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+                - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+                - { name: status, in: query, schema: { type: string, enum: [initiated, awaiting_callback, verified, failed, cancelled, refunded] } }
+                - { name: q, in: query, schema: { type: string, maxLength: 120 } }
+            responses:
+                "200":
+                    description: Paginated factor payment attempts.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorPaymentAttemptListEnvelope.yaml" }
+                "422": { description: Invalid query parameters. }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/factor/resources:
+        get:
+            operationId: adminFactorResources
+            summary: Search factor customers or products
+            tags: [Admin / Factor]
+            parameters:
+                - name: kind
+                  in: query
+                  required: true
+                  schema: { type: string, enum: [customers, products] }
+                - { name: q, in: query, schema: { type: string, maxLength: 120 } }
+                - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50 } }
+            responses:
+                "200":
+                    description: Matching tenant resources.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorResourceListEnvelope.yaml" }
+                "422": { description: Invalid resource query. }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/factor/settings:
+        get:
+            operationId: adminFactorSettingsShow
+            summary: Show factor settings
+            tags: [Admin / Factor]
+            responses:
+                "200":
+                    description: Tenant factor settings.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorSettingsEnvelope.yaml" }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            operationId: adminFactorSettingsUpdate
+            summary: Update factor settings
+            tags: [Admin / Factor]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            additionalProperties: false
+                            properties:
+                                reference_prefix: { type: string, minLength: 1, maxLength: 16, pattern: "^[A-Za-z0-9-]+$" }
+                                default_type: { type: string, enum: [proforma, invoice] }
+                                default_tax_percent: { type: number, minimum: 0, maximum: 100 }
+                                default_expiry_days: { type: integer, minimum: 1, maximum: 365 }
+                                round_to_minor: { type: integer, enum: [1, 10, 100, 1000] }
+                                default_delivery_channel: { type: string, enum: [none, sms, email, whatsapp] }
+                                bank_account_title: { type: [string, "null"], maxLength: 180 }
+                                bank_iban: { type: [string, "null"], maxLength: 64 }
+                                bank_card_number: { type: [string, "null"], maxLength: 32 }
+                                footer_note: { type: [string, "null"], maxLength: 2000 }
+            responses:
+                "200":
+                    description: Tenant factor settings updated.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorSettingsEnvelope.yaml" }
+                "422": { description: Invalid settings payload. }
+
+    /api/v1/admin/content/summary:
+        get:
+            operationId: adminContentSummary
+            summary: Content operations dashboard summary
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Content summary, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/content/reports:
+        get:
+            operationId: adminContentReports
+            summary: Content performance and commerce attribution reports
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Content reports, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/content/calendar:
+        get:
+            operationId: adminContentCalendar
+            summary: List scheduled and published content in a date range
+            tags: [Admin / Content]
+            parameters:
+                - { name: from, in: query, schema: { type: string, format: date-time } }
+                - { name: to, in: query, schema: { type: string, format: date-time } }
+            responses:
+                "200": { description: Calendar events, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericEnvelope.yaml" } } } }
+                "422": { description: Invalid date range. }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/content/settings:
+        get:
+            operationId: adminContentSettingsShow
+            summary: Show tenant content settings
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Content settings, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            operationId: adminContentSettingsUpdate
+            summary: Update tenant content settings
+            tags: [Admin / Content]
+            requestBody:
+                required: true
+                content: { application/json: { schema: { type: object, additionalProperties: false } } }
+            responses:
+                "200": { description: Updated content settings. }
+                "422": { description: Invalid settings payload. }
+    /api/v1/admin/content/resources:
+        get:
+            operationId: adminContentResources
+            summary: Search products, completed orders, users, or media for content relationships
+            tags: [Admin / Content]
+            parameters:
+                - { name: kind, in: query, required: true, schema: { type: string, enum: [products, orders, users, media] } }
+                - { name: q, in: query, schema: { type: string, maxLength: 180 } }
+                - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50 } }
+            responses:
+                "200": { description: Matching tenant resources, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/content/posts:
+        get:
+            operationId: adminContentPostsIndex
+            summary: List content posts
+            tags: [Admin / Content]
+            parameters:
+                - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+                - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+                - { name: q, in: query, schema: { type: string, maxLength: 180 } }
+                - { name: type, in: query, schema: { type: string, enum: [article, news, guide, case_study, landing] } }
+                - { name: status, in: query, schema: { type: string, enum: [draft, in_review, approved, scheduled, published, archived] } }
+            responses:
+                "200": { description: Paginated posts, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentPostListEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            operationId: adminContentPostsStore
+            summary: Create a content post
+            tags: [Admin / Content]
+            requestBody:
+                required: true
+                content: { application/json: { schema: { $ref: "./common/components/schemas/ContentPost.yaml" } } }
+            responses:
+                "201": { description: Created post, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentPostEnvelope.yaml" } } } }
+                "409": { description: Slug or source-signal conflict. }
+                "422": { description: Invalid post payload. }
+    /api/v1/admin/content/posts/{id}:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        get:
+            operationId: adminContentPostsShow
+            summary: Show a content post with relations, revisions, events, and attributed orders
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Content post, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentPostEnvelope.yaml" } } } }
+                "404": { description: Post not found. }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        patch:
+            operationId: adminContentPostsUpdate
+            summary: Update a content post using optimistic concurrency
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Updated content post. }
+                "409": { description: Version conflict. }
+                "422": { description: Invalid post payload. }
+        delete:
+            operationId: adminContentPostsDestroy
+            summary: Soft-delete a content post
+            tags: [Admin / Content]
+            parameters:
+                - { name: If-Match, in: header, required: true, schema: { type: integer, minimum: 1 } }
+            responses:
+                "204": { description: Post deleted. }
+                "409": { description: Version conflict. }
+                "428": { description: Version precondition required. }
+    /api/v1/admin/content/posts/{id}/transition:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        post:
+            operationId: adminContentPostsTransition
+            summary: Move content through review, scheduling, publishing, or archive states
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Updated content post. }
+                "409": { description: "Invalid transition, quality gate, review gate, or version conflict." }
+                "422": { description: Invalid transition payload. }
+    /api/v1/admin/content/posts/{id}/revisions:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        get:
+            operationId: adminContentPostRevisions
+            summary: List immutable content revisions
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Revisions, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/content/posts/{id}/attributions:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        post:
+            operationId: adminContentAttributionStore
+            summary: Attribute a completed order to one content item
+            tags: [Admin / Content]
+            responses:
+                "201": { description: Attribution created. }
+                "409": { description: Order incomplete or already attributed. }
+                "422": { description: Invalid order or product relationship. }
+    /api/v1/admin/content/posts/{id}/attributions/{orderId}:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+            - { name: orderId, in: path, required: true, schema: { type: integer, format: int64 } }
+        delete:
+            operationId: adminContentAttributionDestroy
+            summary: Remove a manual order attribution
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Attribution removed and counters reconciled. }
+                "404": { description: Attribution not found. }
+    /api/v1/admin/content/posts/{postId}/revisions/{revisionId}/restore:
+        parameters:
+            - { name: postId, in: path, required: true, schema: { type: integer, format: int64 } }
+            - { name: revisionId, in: path, required: true, schema: { type: integer, format: int64 } }
+        post:
+            operationId: adminContentRevisionRestore
+            summary: Restore a prior revision into a new version
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Restored content post. }
+                "409": { description: Version conflict. }
+    /api/v1/admin/content/taxonomy:
+        get:
+            operationId: adminContentTaxonomyIndex
+            summary: List content categories and tags
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Taxonomy, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            operationId: adminContentTaxonomyStore
+            summary: Create a content category or tag
+            tags: [Admin / Content]
+            responses:
+                "201": { description: Taxonomy item created. }
+                "409": { description: Slug conflict. }
+                "422": { description: Invalid parent or payload. }
+    /api/v1/admin/content/taxonomy/{id}:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        patch:
+            operationId: adminContentTaxonomyUpdate
+            summary: Update a category or tag and prevent tree cycles
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Taxonomy item updated. }
+                "422": { description: Invalid parent or cycle. }
+        delete:
+            operationId: adminContentTaxonomyDestroy
+            summary: Delete an unused taxonomy item
+            tags: [Admin / Content]
+            parameters:
+                - { name: kind, in: query, required: true, schema: { type: string, enum: [category, tag] } }
+            responses:
+                "204": { description: Taxonomy item deleted. }
+                "409": { description: Item is used or has child categories. }
+    /api/v1/admin/content/sources:
+        get:
+            operationId: adminContentSourcesIndex
+            summary: List monitored sources
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Sources, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            operationId: adminContentSourcesStore
+            summary: Create a monitored source
+            tags: [Admin / Content]
+            responses:
+                "201": { description: Source created. }
+                "409": { description: Source name conflict. }
+                "422": { description: Invalid source or missing feed URL. }
+    /api/v1/admin/content/sources/{id}:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        patch:
+            operationId: adminContentSourcesUpdate
+            summary: Update a monitored source
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Source updated. }
+        delete:
+            operationId: adminContentSourcesDestroy
+            summary: Delete a source while preserving signals
+            tags: [Admin / Content]
+            responses:
+                "204": { description: Source deleted. }
+    /api/v1/admin/content/sources/{id}/ingest:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        post:
+            operationId: adminContentSourceIngest
+            summary: Queue a protected RSS or Atom ingestion job
+            tags: [Admin / Content]
+            responses:
+                "202": { description: Ingestion accepted. }
+                "409": { description: Source fetching disabled or source paused. }
+    /api/v1/admin/content/signals:
+        get:
+            operationId: adminContentSignalsIndex
+            summary: List market and source signals
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Signals, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericListEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+        post:
+            operationId: adminContentSignalsStore
+            summary: Add or deduplicate a manual signal
+            tags: [Admin / Content]
+            responses:
+                "201": { description: Signal created. }
+                "200": { description: Existing signal returned. }
+    /api/v1/admin/content/signals/{id}/status:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        patch:
+            operationId: adminContentSignalStatus
+            summary: Mark a signal reviewed or ignored
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Signal updated. }
+                "409": { description: Converted signal cannot change. }
+    /api/v1/admin/content/signals/{id}/convert:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        post:
+            operationId: adminContentSignalConvert
+            summary: Convert a signal into one news draft
+            tags: [Admin / Content]
+            responses:
+                "201": { description: News draft created. }
+                "409": { description: Signal already converted or ignored. }
+    /api/v1/admin/content/agents:
+        get:
+            operationId: adminContentAgentsIndex
+            summary: List supervised content agent runs
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Agent runs, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentGenericListEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/content/agents/run:
+        post:
+            operationId: adminContentAgentsRun
+            summary: Queue a supervised agent run
+            tags: [Admin / Content]
+            responses:
+                "202": { description: Agent run queued or safely blocked when no provider key exists. }
+                "422": { description: "Invalid post, signal, agent, or instruction." }
+    /api/v1/admin/content/agents/{id}:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        get:
+            operationId: adminContentAgentsShow
+            summary: Show one agent run, output, evidence, and review state
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Agent run. }
+                "404": { description: Agent run not found. }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/admin/content/agents/{id}/review:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        post:
+            operationId: adminContentAgentsReview
+            summary: Approve or reject a completed agent output
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Agent output reviewed. }
+                "409": { description: Run is not awaiting review. }
+    /api/v1/admin/content/agents/{id}/apply:
+        parameters:
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        post:
+            operationId: adminContentAgentsApply
+            summary: Apply one approved agent draft to the content studio exactly once
+            tags: [Admin / Content]
+            responses:
+                "200": { description: Draft applied to an existing post or a new draft. }
+                "409": { description: "Run not approved, incomplete, or already applied." }
+
+    /api/v1/admin/seo/overview:
+        get: { operationId: adminSeoOverview, summary: SEO dashboard overview, tags: [Admin / SEO], responses: { "200": { description: SEO overview. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/admin/seo/reports:
+        get: { operationId: adminSeoReports, summary: SEO reports, tags: [Admin / SEO], responses: { "200": { description: SEO reports. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/admin/seo/settings:
+        get: { operationId: adminSeoSettingsShow, summary: Read SEO settings, tags: [Admin / SEO], responses: { "200": { description: SEO settings. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+        patch: { operationId: adminSeoSettingsUpdate, summary: Update SEO settings, tags: [Admin / SEO], responses: { "200": { description: SEO settings updated. } } }
+    /api/v1/admin/seo/entities:
+        get: { operationId: adminSeoEntities, summary: List SEO entities, tags: [Admin / SEO], responses: { "200": { description: Paginated SEO entities. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/admin/seo/entities/{kind}/{id}:
+        parameters:
+            - { name: kind, in: path, required: true, schema: { type: string } }
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        get: { operationId: adminSeoEntityShow, summary: Show one SEO entity, tags: [Admin / SEO], responses: { "200": { description: SEO entity detail. }, "404": { description: Entity not found. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/admin/seo/entities/{kind}/{id}/profile:
+        parameters:
+            - { name: kind, in: path, required: true, schema: { type: string } }
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        patch: { operationId: adminSeoProfileUpdate, summary: Update an SEO profile, tags: [Admin / SEO], responses: { "200": { description: Profile updated and re-audited. }, "409": { description: Version conflict. } } }
+    /api/v1/admin/seo/entities/{kind}/{id}/audit:
+        parameters:
+            - { name: kind, in: path, required: true, schema: { type: string } }
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        post: { operationId: adminSeoEntityAudit, summary: Audit one SEO entity, tags: [Admin / SEO], responses: { "200": { description: Audit completed. } } }
+    /api/v1/admin/seo/audits:
+        post: { operationId: adminSeoAuditAll, summary: Run a scoped or full SEO audit, tags: [Admin / SEO], responses: { "200": { description: Audit completed. } } }
+    /api/v1/admin/seo/issues:
+        get: { operationId: adminSeoIssues, summary: List SEO issues, tags: [Admin / SEO], responses: { "200": { description: Paginated SEO issues. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/admin/seo/issues/{id}/status:
+        parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+        patch: { operationId: adminSeoIssueStatus, summary: Change SEO issue status, tags: [Admin / SEO], responses: { "200": { description: Issue updated. } } }
+    /api/v1/admin/seo/keywords:
+        get: { operationId: adminSeoKeywords, summary: List tracked keywords, tags: [Admin / SEO], responses: { "200": { description: Paginated keywords. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+        post: { operationId: adminSeoKeywordCreate, summary: Create tracked keyword, tags: [Admin / SEO], responses: { "201": { description: Keyword created. } } }
+    /api/v1/admin/seo/keywords/{id}:
+        parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+        patch: { operationId: adminSeoKeywordUpdate, summary: Update tracked keyword, tags: [Admin / SEO], responses: { "200": { description: Keyword updated. } } }
+        delete: { operationId: adminSeoKeywordDelete, summary: Delete tracked keyword, tags: [Admin / SEO], responses: { "204": { description: Keyword deleted. } } }
+    /api/v1/admin/seo/competitors:
+        get: { operationId: adminSeoCompetitors, summary: List SEO competitors, tags: [Admin / SEO], responses: { "200": { description: Paginated competitors. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+        post: { operationId: adminSeoCompetitorCreate, summary: Create SEO competitor, tags: [Admin / SEO], responses: { "201": { description: Competitor created. } } }
+    /api/v1/admin/seo/competitors/{id}:
+        parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+        patch: { operationId: adminSeoCompetitorUpdate, summary: Update SEO competitor, tags: [Admin / SEO], responses: { "200": { description: Competitor updated. } } }
+        delete: { operationId: adminSeoCompetitorDelete, summary: Delete SEO competitor, tags: [Admin / SEO], responses: { "204": { description: Competitor deleted. } } }
+    /api/v1/admin/seo/internal-links:
+        get: { operationId: adminSeoInternalLinks, summary: List internal-link records, tags: [Admin / SEO], responses: { "200": { description: Paginated internal links. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+        post: { operationId: adminSeoInternalLinkCreate, summary: Create internal-link record, tags: [Admin / SEO], responses: { "201": { description: Link created. } } }
+    /api/v1/admin/seo/internal-links/{id}:
+        parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+        patch: { operationId: adminSeoInternalLinkUpdate, summary: Update internal-link record, tags: [Admin / SEO], responses: { "200": { description: Link updated. } } }
+        delete: { operationId: adminSeoInternalLinkDelete, summary: Delete internal-link record, tags: [Admin / SEO], responses: { "204": { description: Link deleted. } } }
+    /api/v1/admin/seo/redirects:
+        get: { operationId: adminSeoRedirects, summary: List SEO redirects, tags: [Admin / SEO], responses: { "200": { description: Paginated redirects. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+        post: { operationId: adminSeoRedirectCreate, summary: Create SEO redirect, tags: [Admin / SEO], responses: { "201": { description: Redirect created. } } }
+    /api/v1/admin/seo/redirects/{id}:
+        parameters: [{ name: id, in: path, required: true, schema: { type: integer, format: int64 } }]
+        patch: { operationId: adminSeoRedirectUpdate, summary: Update SEO redirect, tags: [Admin / SEO], responses: { "200": { description: Redirect updated. } } }
+        delete: { operationId: adminSeoRedirectDelete, summary: Delete SEO redirect, tags: [Admin / SEO], responses: { "204": { description: Redirect deleted. } } }
+    /api/v1/admin/seo/integrations:
+        get: { operationId: adminSeoIntegrations, summary: List SEO integrations, tags: [Admin / SEO], responses: { "200": { description: SEO integrations. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+        patch: { operationId: adminSeoIntegrationUpdate, summary: Configure SEO integration, tags: [Admin / SEO], responses: { "200": { description: Integration configured. } } }
+    /api/v1/admin/seo/indexnow/submit:
+        post: { operationId: adminSeoIndexNowSubmit, summary: Submit same-host URLs to IndexNow, tags: [Admin / SEO], responses: { "200": { description: URLs accepted by IndexNow. }, "422": { description: Integration not configured. }, "502": { description: Upstream IndexNow failure. } } }
+    /api/v1/admin/seo/robots/preview:
+        get: { operationId: adminSeoRobotsPreview, summary: Preview tenant robots.txt, tags: [Admin / SEO], responses: { "200": { description: Robots document. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/admin/seo/sitemap/preview:
+        get: { operationId: adminSeoSitemapPreview, summary: Preview tenant sitemap entries, tags: [Admin / SEO], responses: { "200": { description: Sitemap preview. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/admin/seo/schema/{kind}/{id}:
+        parameters:
+            - { name: kind, in: path, required: true, schema: { type: string } }
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        get: { operationId: adminSeoSchemaPreview, summary: Preview entity JSON-LD, tags: [Admin / SEO], responses: { "200": { description: Structured-data preview. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }

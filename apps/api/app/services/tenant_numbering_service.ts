@@ -11,19 +11,22 @@ import { currentTenantId, currentTrx } from "#services/tenant_context";
  * collide or skip a value — gap-free under concurrency, the same guarantee the old sequence gave but
  * scoped per tenant.
  */
-export type CounterKind = "order" | "refund";
+export type CounterKind = "order" | "refund" | "invoice" | "proforma" | "credit_note";
 
 /** First number handed out for a kind when its counter row doesn't exist yet (matches the old sequences' START 1000). */
 const COUNTER_START: Record<CounterKind, number> = {
     order: 1000,
     refund: 1000,
+    invoice: 1000,
+    proforma: 1000,
+    credit_note: 1000,
 };
 
 /**
  * Allocate and return the next number for `kind` within the current tenant. Must be called inside a
  * tenant context (throws otherwise). The returned number is reserved for this transaction; a
- * rollback releases the row lock but the consumed value is not reused (gap-free is about concurrency,
- * not rollbacks — same semantics as a sequence).
+ * rollback reverts the allocation together with the caller transaction, so only committed allocations
+ * advance the tenant counter. The atomic row update still serializes concurrent committed allocations.
  */
 export async function nextNumber(kind: CounterKind): Promise<number> {
     const tenantId = currentTenantId();

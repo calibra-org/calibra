@@ -1348,6 +1348,340 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/factor/pay/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        /** Show the public payment payload for an invoice or proforma */
+        get: operations["factorPublicPaymentShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/factor/pay/{code}/init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Initialize payment for an invoice or proforma */
+        post: operations["factorPublicPaymentInit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published indexable content */
+        get: operations["publicContentPostsIndex"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/posts/{slug}": {
+        parameters: {
+            query?: {
+                locale?: "fa" | "en";
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        /** Show one published content item with categories, tags, and published products */
+        get: operations["publicContentPostsShow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: {
+                    locale?: "fa" | "en";
+                };
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a rate-limited content view, product click, or add-to-cart assist event */
+        post: operations["publicContentEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seo/robots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Render tenant robots.txt */
+        get: operations["seoRobots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seo/sitemap.xml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Render tenant XML sitemap */
+        get: operations["seoSitemap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seo/organization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read tenant Organization schema */
+        get: operations["seoOrganization"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seo/entity/{kind}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: number;
+            };
+            cookie?: never;
+        };
+        /** Read public SEO metadata for one entity */
+        get: operations["seoEntity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    kind: string;
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seo/redirect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve one tenant redirect path */
+        get: operations["seoRedirectResolve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** @description Headers-only companion to the corresponding `GET` operation. AdonisJS auto-registers a `HEAD` handler for every `GET` route — this stub exists so the route inventory matches the spec without duplicating the full `GET` schema. The response body is empty by definition; the headers match those returned by the `GET` operation. */
+        head: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Same headers as the matching `GET`. Body is empty. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2301,6 +2635,130 @@ export interface components {
             /** @description Hosted-checkout URL. Null for non-redirecting gateways. */
             redirect_url: string | null;
         };
+        /** FactorPublicPaymentEnvelope */
+        FactorPublicPaymentEnvelope: {
+            data: {
+                code: string;
+                reference?: string | null;
+                status: string;
+                /** @enum {string} */
+                link_status: "active" | "pending" | "paid" | "expired";
+                customer: {
+                    name: string;
+                    company: string | null;
+                };
+                subtotal_minor: number;
+                line_discount_minor: number;
+                order_discount_minor: number;
+                shipping_minor: number;
+                tax_minor: number;
+                rounding_minor: number;
+                payable_minor: number;
+                collected_minor: number;
+                outstanding_minor: number;
+                currency_display: string;
+                customer_note?: string | null;
+                /** Format: date-time */
+                expires_at?: string | null;
+                gateway_id?: number | null;
+                gateway_code?: string | null;
+                gateways: {
+                    [key: string]: unknown;
+                }[];
+                payment_instructions: {
+                    [key: string]: unknown;
+                };
+                items: {
+                    [key: string]: unknown;
+                }[];
+            };
+        };
+        /** FactorPaymentInitEnvelope */
+        FactorPaymentInitEnvelope: {
+            data: {
+                redirect_url: string | null;
+                attempt_id: number;
+                offline_pending: boolean;
+                payment_status: string;
+            };
+        };
+        ContentPost: {
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            type: "article" | "news" | "guide" | "case_study" | "landing";
+            /** @enum {string} */
+            status: "draft" | "in_review" | "approved" | "scheduled" | "published" | "archived";
+            /** @enum {string} */
+            locale: "fa" | "en";
+            title: string;
+            slug: string;
+            excerpt?: string | null;
+            content_html: string;
+            /** Format: int64 */
+            featured_media_id?: number | null;
+            /** Format: int64 */
+            author_user_id?: number | null;
+            /** Format: int64 */
+            reviewer_user_id?: number | null;
+            /** Format: int64 */
+            source_signal_id?: number | null;
+            seo_title?: string | null;
+            meta_description?: string | null;
+            /** Format: uri */
+            canonical_url?: string | null;
+            robots_index?: boolean;
+            robots_follow?: boolean;
+            /** @enum {string} */
+            schema_type?: "Article" | "BlogPosting" | "NewsArticle";
+            /** @enum {string|null} */
+            search_intent?: "informational" | "commercial" | "transactional" | "navigational" | "mixed" | null;
+            focus_keyword?: string | null;
+            structured_data?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            scheduled_at?: string | null;
+            /** Format: date-time */
+            approved_at?: string | null;
+            /** Format: date-time */
+            published_at?: string | null;
+            /** Format: date-time */
+            archived_at?: string | null;
+            version: number;
+            word_count?: number;
+            reading_time_minutes?: number;
+            seo_score: number;
+            quality_score: number;
+            commerce_score: number;
+            /** Format: int64 */
+            views_count?: number;
+            /** Format: int64 */
+            product_clicks_count?: number;
+            /** Format: int64 */
+            assisted_orders_count?: number;
+            /** Format: int64 */
+            assisted_revenue_minor?: number;
+            categories?: Record<string, never>[];
+            tags?: Record<string, never>[];
+            products?: Record<string, never>[];
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
+        ContentPostListEnvelope: {
+            data: components["schemas"]["ContentPost"][];
+            meta: {
+                page: number;
+                limit: number;
+                total: number;
+                last_page: number;
+            };
+        };
+        ContentPostEnvelope: {
+            data: components["schemas"]["ContentPost"];
+        };
     };
     responses: {
         /** @description Validation failed (422). The `errors` array contains one item per field that failed validation. VineJS rule name is in `rule`; the failing path is in `field`. */
@@ -2766,12 +3224,12 @@ export interface operations {
                 limit?: components["parameters"]["Limit"];
                 /** @description Free-text search across product name, slug, and sku. */
                 search?: string;
-                /** @description Filter by category id (single value; chain query strings for OR semantics). */
-                category?: number;
-                /** @description Filter by tag id. */
-                tag?: number;
-                /** @description Filter by brand id. */
-                brand?: number;
+                /** @description Filter by the localized category slug. */
+                category?: string;
+                /** @description Filter by the localized tag slug. */
+                tag?: string;
+                /** @description Filter by the localized brand slug. */
+                brand?: string;
                 /** @description Limit to products currently on sale. */
                 on_sale?: boolean;
                 stock_status?: "in_stock" | "out_of_stock" | "on_backorder";
@@ -4071,6 +4529,307 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    factorPublicPaymentShow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public factor document, outstanding amount, payment instructions, and available gateways. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FactorPublicPaymentEnvelope"];
+                };
+            };
+            /** @description Payment link not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Payment link is inactive or expired. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    factorPublicPaymentInit: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    gateway_id?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Gateway attempt initialized. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FactorPaymentInitEnvelope"];
+                };
+            };
+            /** @description Document is already paid or cannot accept payment. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Payment link is inactive or expired. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Gateway selection is invalid. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    publicContentPostsIndex: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                type?: "article" | "news" | "guide" | "case_study" | "landing";
+                category?: string;
+                q?: string;
+                locale?: "fa" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated published content */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentPostListEnvelope"];
+                };
+            };
+        };
+    };
+    publicContentPostsShow: {
+        parameters: {
+            query?: {
+                locale?: "fa" | "en";
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published content */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentPostEnvelope"];
+                };
+            };
+            /** @description Content not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported locale. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    publicContentEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    post_id: number;
+                    /** Format: int64 */
+                    product_id?: number | null;
+                    /** @enum {string} */
+                    event_type: "view" | "product_click" | "add_to_cart";
+                    session_key?: string | null;
+                    metadata?: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Event accepted or deduplicated. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid event or unlinked product. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limit exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    seoRobots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Plain-text robots document. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    seoSitemap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description XML sitemap. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    seoOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organization JSON-LD. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    seoEntity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public SEO metadata. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Entity not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    seoRedirectResolve: {
+        parameters: {
+            query: {
+                path: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect target or null. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
 }

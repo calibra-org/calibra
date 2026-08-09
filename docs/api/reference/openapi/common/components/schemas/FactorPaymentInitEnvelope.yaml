@@ -1,0 +1,14 @@
+title: FactorPaymentInitEnvelope
+type: object
+required: [data]
+properties:
+    data:
+        type: object
+        required: [redirect_url, attempt_id, offline_pending, payment_status]
+        properties:
+            redirect_url: { type: [string, "null"] }
+            attempt_id: { type: integer, minimum: 1 }
+            offline_pending: { type: boolean }
+            payment_status: { type: string }
+        additionalProperties: false
+additionalProperties: false

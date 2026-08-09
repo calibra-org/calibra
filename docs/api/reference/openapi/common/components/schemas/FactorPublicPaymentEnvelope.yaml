@@ -1,0 +1,38 @@
+title: FactorPublicPaymentEnvelope
+type: object
+required: [data]
+properties:
+    data:
+        type: object
+        required: [code, status, link_status, customer, subtotal_minor, line_discount_minor, order_discount_minor, shipping_minor, tax_minor, rounding_minor, payable_minor, collected_minor, outstanding_minor, currency_display, gateways, payment_instructions, items]
+        properties:
+            code: { type: string }
+            reference: { type: [string, "null"] }
+            status: { type: string }
+            link_status: { type: string, enum: [active, pending, paid, expired] }
+            customer:
+                type: object
+                required: [name, company]
+                properties:
+                    name: { type: string }
+                    company: { type: [string, "null"] }
+                additionalProperties: false
+            subtotal_minor: { type: integer, minimum: 0 }
+            line_discount_minor: { type: integer, minimum: 0 }
+            order_discount_minor: { type: integer, minimum: 0 }
+            shipping_minor: { type: integer, minimum: 0 }
+            tax_minor: { type: integer, minimum: 0 }
+            rounding_minor: { type: integer }
+            payable_minor: { type: integer, minimum: 0 }
+            collected_minor: { type: integer, minimum: 0 }
+            outstanding_minor: { type: integer, minimum: 0 }
+            currency_display: { type: string }
+            customer_note: { type: [string, "null"] }
+            expires_at: { type: [string, "null"], format: date-time }
+            gateway_id: { type: [integer, "null"], minimum: 1 }
+            gateway_code: { type: [string, "null"] }
+            gateways: { type: array, items: { type: object, additionalProperties: true } }
+            payment_instructions: { type: object, additionalProperties: true }
+            items: { type: array, items: { type: object, additionalProperties: true } }
+        additionalProperties: false
+additionalProperties: false

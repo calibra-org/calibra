@@ -1,0 +1,19 @@
+title: FactorSummaryEnvelope
+type: object
+required: [data]
+properties:
+    data:
+        type: object
+        required: [statuses, total_documents, gross_invoiced_minor, credited_minor, total_issued_minor, collected_minor, outstanding_minor, overdue_count, overdue_minor]
+        properties:
+            statuses: { type: object, additionalProperties: { type: object, additionalProperties: true } }
+            total_documents: { type: integer, minimum: 0 }
+            gross_invoiced_minor: { type: integer, minimum: 0 }
+            credited_minor: { type: integer, minimum: 0 }
+            total_issued_minor: { type: integer }
+            collected_minor: { type: integer, minimum: 0 }
+            outstanding_minor: { type: integer, minimum: 0 }
+            overdue_count: { type: integer, minimum: 0 }
+            overdue_minor: { type: integer, minimum: 0 }
+        additionalProperties: false
+additionalProperties: false

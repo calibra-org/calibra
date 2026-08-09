@@ -1,0 +1,13 @@
+title: FactorPaymentLinkEnvelope
+type: object
+required: [data]
+properties:
+    data:
+        type: object
+        required: [code, expires_at, path]
+        properties:
+            code: { type: string }
+            expires_at: { type: [string, "null"], format: date-time }
+            path: { type: string }
+        additionalProperties: false
+additionalProperties: false

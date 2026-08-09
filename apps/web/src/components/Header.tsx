@@ -23,8 +23,8 @@ export function Header({ brandName, logoUrl, monogram }: HeaderProps) {
 
     return (
         <header className="border-border border-b">
-            <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-4 py-4">
-                <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
+            <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-4">
+                <Link href="/" className="flex min-w-0 shrink items-center gap-2 font-bold text-lg tracking-tight">
                     {logoUrl ? (
                         // biome-ignore lint/performance/noImgElement: per-tenant CDN logo; next/image remote-patterns + sizing are overkill for a small header mark
                         <img src={logoUrl} alt={brandName} className="h-7 w-auto" />
@@ -36,21 +36,24 @@ export function Header({ brandName, logoUrl, monogram }: HeaderProps) {
                             {monogram}
                         </span>
                     )}
-                    <span>{brandName}</span>
+                    <span className="truncate">{brandName}</span>
                 </Link>
-                <nav className="flex items-center gap-6 text-sm">
+                <nav className="flex max-w-[72vw] shrink-0 items-center gap-2 overflow-x-auto whitespace-nowrap text-xs sm:max-w-none sm:gap-4 sm:text-sm md:gap-6">
                     <Link href="/" className="transition hover:text-accent">
                         {t("home")}
                     </Link>
                     <Link href="/products" className="transition hover:text-accent">
                         {t("products")}
                     </Link>
+                    <Link href="/mag" className="transition hover:text-accent">
+                        {t("magazine")}
+                    </Link>
                     <Link href="/cart" className="transition hover:text-accent">
                         {t("cart")}
                     </Link>
                     <a
                         href={getPathname({ href: pathname, locale: nextLocale })}
-                        className="rounded-md border border-border px-3 py-1.5 text-xs transition hover:bg-muted"
+                        className="rounded-md border border-border px-2 py-1.5 text-xs transition hover:bg-muted sm:px-3"
                     >
                         {switchLabel}
                     </a>

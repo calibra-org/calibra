@@ -1,0 +1,11 @@
+type: object
+required: [data]
+properties:
+    data: { type: array, items: { type: object, additionalProperties: true } }
+    meta:
+        type: object
+        properties:
+            page: { type: integer }
+            limit: { type: integer }
+            total: { type: integer }
+            last_page: { type: integer }

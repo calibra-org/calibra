@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { apiServer } from "#/lib/api";
+import { Link } from "#/lib/i18n/navigation";
 import { formatPrice, getMoneyFormatConfig } from "#/lib/money";
 
 interface PageProps {
@@ -27,22 +28,29 @@ export default async function ProductsPage({ params }: PageProps) {
             ) : (
                 <ul className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
                     {products.map((product) => (
-                        <li key={product.id} className="flex flex-col gap-2">
-                            <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-                                {product.featured_image_url ? (
-                                    // biome-ignore lint/performance/noImgElement: external picsum URLs avoid next/image remote-patterns
-                                    <img
-                                        src={product.featured_image_url}
-                                        alt={product.name ?? product.sku ?? ""}
-                                        className="size-full object-cover"
-                                        loading="lazy"
-                                    />
-                                ) : null}
-                            </div>
-                            <span className="line-clamp-2 font-medium text-sm">{product.name ?? product.sku}</span>
-                            <span className="text-muted-foreground text-xs tabular-nums">
-                                {formatPrice(product.effective_price ?? product.regular_price, moneyConfig, locale)}
-                            </span>
+                        <li key={product.id}>
+                            <Link
+                                href={product.slug ? `/products/${product.slug}` : "/products"}
+                                className="group flex flex-col gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent"
+                            >
+                                <div className="aspect-square overflow-hidden rounded-lg bg-muted">
+                                    {product.featured_image_url ? (
+                                        // biome-ignore lint/performance/noImgElement: tenant media can use dynamic remote hosts
+                                        <img
+                                            src={product.featured_image_url}
+                                            alt={product.name ?? product.sku ?? ""}
+                                            className="size-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                                            loading="lazy"
+                                        />
+                                    ) : null}
+                                </div>
+                                <span className="line-clamp-2 font-medium text-sm transition group-hover:text-accent">
+                                    {product.name ?? product.sku}
+                                </span>
+                                <span className="text-muted-foreground text-xs tabular-nums">
+                                    {formatPrice(product.effective_price ?? product.regular_price, moneyConfig, locale)}
+                                </span>
+                            </Link>
                         </li>
                     ))}
                 </ul>

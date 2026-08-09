@@ -1,0 +1,7 @@
+type: object
+required: [data]
+properties:
+    data:
+        oneOf:
+            - { type: object, additionalProperties: true }
+            - { type: array, items: {} }

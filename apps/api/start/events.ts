@@ -1,4 +1,5 @@
 import emitter from "@adonisjs/core/services/emitter";
+import logger from "@adonisjs/core/services/logger";
 import { DateTime } from "luxon";
 
 import AdminActionPerformed from "#events/admin_action_performed";
@@ -50,4 +51,27 @@ emitter.on("order:completed", async ({ order }) => {
 });
 emitter.on("order:refunded", async ({ tenantId, customerId }) => {
     await CacheInvalidation.customerChanged(tenantId, customerId);
+});
+
+/** Keep the factor ledger in sync with every successfully verified gateway attempt. */
+emitter.on("payment:verified", async ({ orderId, attemptId, transactionId }) => {
+    try {
+        const { factorDocumentService } = await import("#services/factor/document_service");
+        await factorDocumentService.syncVerifiedPayment(orderId, attemptId, transactionId || null);
+    } catch (error) {
+        logger.error(
+            { err: error, orderId, attemptId },
+            "Failed to mirror a verified payment into the factor ledger; scheduling reconciliation",
+        );
+        try {
+            const { default: ReconcileFactorPaymentJob } = await import("#jobs/reconcile_factor_payment_job");
+            await ReconcileFactorPaymentJob.dispatch({
+                orderId,
+                attemptId,
+                transactionId: transactionId || null,
+            });
+        } catch (queueError) {
+            logger.error({ err: queueError, orderId, attemptId }, "Failed to enqueue factor payment reconciliation");
+        }
+    }
 });

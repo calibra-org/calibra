@@ -1,0 +1,83 @@
+title: FactorDocument
+description: Tenant-scoped invoice, proforma, or credit-note document. All monetary fields use integer minor units in the document currency.
+type: object
+required:
+    - id
+    - type
+    - status
+    - locale
+    - currency
+    - currency_display
+    - amount_minor
+    - round_to_minor
+    - payable_minor
+    - collected_minor
+    - outstanding_minor
+    - customer
+    - created_at
+    - updated_at
+properties:
+    id: { type: integer, minimum: 1 }
+    order_id: { type: [integer, "null"], minimum: 1 }
+    customer_id: { type: [integer, "null"], minimum: 1 }
+    parent_document_id: { type: [integer, "null"], minimum: 1 }
+    type: { type: string, enum: [proforma, invoice, credit_note] }
+    number: { type: [integer, "null"], minimum: 1 }
+    reference: { type: [string, "null"] }
+    locale: { type: string }
+    currency: { type: string }
+    currency_display: { type: string }
+    amount_minor: { type: integer, minimum: 0 }
+    status: { type: string, enum: [draft, sent, viewed, awaiting, paid, expired, cancelled, refunded, credited] }
+    delivery_channel: { type: string, enum: [none, sms, email, whatsapp] }
+    customer: { type: object, additionalProperties: true }
+    billing: { type: object, additionalProperties: true }
+    subtotal_minor: { type: integer, minimum: 0 }
+    line_discount_minor: { type: integer, minimum: 0 }
+    order_discount_minor: { type: integer, minimum: 0 }
+    shipping_minor: { type: integer, minimum: 0 }
+    tax_minor: { type: integer, minimum: 0 }
+    rounding_minor: { type: integer }
+    round_to_minor: { type: integer, minimum: 1 }
+    payable_minor: { type: integer, minimum: 0 }
+    collected_minor: { type: integer, minimum: 0 }
+    outstanding_minor: { type: integer, minimum: 0 }
+    tax_percent: { type: number, minimum: 0, maximum: 100 }
+    customer_note: { type: [string, "null"] }
+    internal_note: { type: [string, "null"] }
+    due_at: { type: [string, "null"], format: date-time }
+    expires_at: { type: [string, "null"], format: date-time }
+    sent_at: { type: [string, "null"], format: date-time }
+    viewed_at: { type: [string, "null"], format: date-time }
+    paid_at: { type: [string, "null"], format: date-time }
+    cancelled_at: { type: [string, "null"], format: date-time }
+    issued_at: { type: [string, "null"], format: date-time }
+    created_at: { type: string, format: date-time }
+    updated_at: { type: string, format: date-time }
+    version: { type: integer, minimum: 1 }
+    attributes: { type: object, additionalProperties: true }
+    items:
+        type: array
+        items: { type: object, additionalProperties: true }
+    events:
+        type: array
+        items: { type: object, additionalProperties: true }
+    payments:
+        type: array
+        items: { type: object, additionalProperties: true }
+    payment_links:
+        type: array
+        items: { type: object, additionalProperties: true }
+    child_documents:
+        type: array
+        items:
+            type: object
+            required: [id, type, status, reference, created_at]
+            properties:
+                id: { type: integer, minimum: 1 }
+                type: { type: string, enum: [proforma, invoice, credit_note] }
+                status: { type: string, enum: [draft, sent, viewed, awaiting, paid, expired, cancelled, refunded, credited] }
+                reference: { type: [string, "null"] }
+                created_at: { type: string, format: date-time }
+            additionalProperties: false
+additionalProperties: true
