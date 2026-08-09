@@ -1,0 +1,6 @@
+title: FactorDocumentEnvelope
+type: object
+required: [data]
+properties:
+    data: { $ref: "./FactorDocument.yaml" }
+additionalProperties: false

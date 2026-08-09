@@ -1,0 +1,20 @@
+title: FactorSettingsEnvelope
+type: object
+required: [data]
+properties:
+    data:
+        type: object
+        required: [reference_prefix, default_type, default_tax_percent, default_expiry_days, round_to_minor, default_delivery_channel]
+        properties:
+            reference_prefix: { type: string }
+            default_type: { type: string, enum: [proforma, invoice] }
+            default_tax_percent: { type: number, minimum: 0, maximum: 100 }
+            default_expiry_days: { type: integer, minimum: 1, maximum: 365 }
+            round_to_minor: { type: integer, enum: [1, 10, 100, 1000] }
+            default_delivery_channel: { type: string, enum: [none, sms, email, whatsapp] }
+            bank_account_title: { type: string }
+            bank_iban: { type: string }
+            bank_card_number: { type: string }
+            footer_note: { type: string }
+        additionalProperties: false
+additionalProperties: false

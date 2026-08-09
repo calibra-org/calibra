@@ -2,7 +2,8 @@
     "Nav": {
         "home": "خانه",
         "products": "محصولات",
-        "cart": "سبد خرید"
+        "cart": "سبد خرید",
+        "magazine": "مجله"
     },
     "Home": {
         "heroTitle": "خوش آمدید",
@@ -20,5 +21,49 @@
     "Common": {
         "switchLocale": "English",
         "rights": "همه حقوق محفوظ است."
+    },
+    "Magazine": {
+        "metadataTitle": "مجله و نوشته‌ها",
+        "metadataDescription": "راهنماها، اخبار و محتوای تخصصی فروشگاه",
+        "eyebrow": "مرکز دانش",
+        "title": "مجله و نوشته‌ها",
+        "description": "راهنماها، تحلیل‌ها و خبرهایی که برای تصمیم‌گیری بهتر آماده و بازبینی شده‌اند.",
+        "empty": "هنوز نوشته‌ای منتشر نشده است.",
+        "news": "خبر",
+        "post": "نوشته",
+        "minutes": "دقیقه",
+        "fallbackExcerpt": "برای مطالعه کامل این نوشته وارد شوید.",
+        "previous": "قبلی",
+        "next": "بعدی",
+        "pagination": "صفحه‌بندی",
+        "readTime": "دقیقه مطالعه",
+        "relatedProducts": "محصولات مرتبط",
+        "viewProducts": "مشاهده محصولات",
+        "product": "محصول",
+        "search": "جست‌وجو",
+        "searchPlaceholder": "جست‌وجو در نوشته‌ها و اخبار…"
+    },
+    "ProductDetail": {
+        "breadcrumb": "مسیر صفحه",
+        "products": "محصولات",
+        "featured": "محصول ویژه",
+        "price": "قیمت",
+        "published": "قابل سفارش",
+        "sku": "شناسه کالا",
+        "weight": "وزن",
+        "gram": "گرم",
+        "dimensions": "ابعاد",
+        "millimeter": "میلی‌متر",
+        "categories": "دسته‌بندی‌ها",
+        "description": "توضیحات محصول",
+        "variations": "گزینه‌ها و تنوع‌ها",
+        "variation": "تنوع"
+    },
+    "Taxonomy": {
+        "breadcrumb": "مسیر صفحه",
+        "products": "محصولات",
+        "category": "دسته‌بندی محصولات",
+        "brand": "برند محصولات",
+        "empty": "در این بخش هنوز محصول منتشرشده‌ای وجود ندارد."
     }
 }

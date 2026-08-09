@@ -1,0 +1,14 @@
+title: FactorReportsEnvelope
+type: object
+required: [data]
+properties:
+    data:
+        type: object
+        required: [monthly, aging, channels, gateways]
+        properties:
+            monthly: { type: array, items: { type: object, additionalProperties: true } }
+            aging: { type: array, items: { type: object, additionalProperties: true } }
+            channels: { type: array, items: { type: object, additionalProperties: true } }
+            gateways: { type: array, items: { type: object, additionalProperties: true } }
+        additionalProperties: false
+additionalProperties: false

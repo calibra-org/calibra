@@ -1,0 +1,21 @@
+title: FactorResourceListEnvelope
+type: object
+required: [data]
+properties:
+    data:
+        type: array
+        items:
+            type: object
+            required: [id, name]
+            properties:
+                id: { type: integer, minimum: 1 }
+                variation_id: { type: [integer, "null"], minimum: 1 }
+                name: { type: string }
+                phone: { type: [string, "null"] }
+                email: { type: [string, "null"] }
+                company: { type: [string, "null"] }
+                national_id: { type: [string, "null"] }
+                sku: { type: [string, "null"] }
+                unit_price_minor: { type: integer, minimum: 0 }
+            additionalProperties: true
+additionalProperties: false

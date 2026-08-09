@@ -3,7 +3,6 @@
 import { cn } from "@calibra/shared";
 import type { Locale } from "@calibra/shared/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Boxes, ExternalLink, Eye, Loader2, Save, Sparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, FormProvider, useForm, useFormContext } from "react-hook-form";
@@ -20,8 +19,9 @@ import { RichTextEditor } from "#/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/toast";
+import { Boxes, ExternalLink, Eye, Loader2, Save, Sparkles } from "#/icons";
 import { type AdminProductDetailView, toAdminProductDetail } from "#/lib/adapters/product-detail";
-import { useRouter } from "#/lib/i18n/navigation";
+import { Link, useRouter } from "#/lib/i18n/navigation";
 import { useCreateProduct, useUpdateProduct } from "#/lib/products/mutations";
 import { useProduct, useSlugAvailability } from "#/lib/products/queries";
 
@@ -257,6 +257,14 @@ export function ProductDetail({
 
     const headerActions = (
         <div className="flex items-center gap-2">
+            {!isNew && initial?.id ? (
+                <Button type="button" variant="outline" asChild>
+                    <Link href={`/seo/live-editor?kind=product&id=${initial.id}` as never}>
+                        <Sparkles className="size-3.5" aria-hidden="true" />
+                        سئو
+                    </Link>
+                </Button>
+            ) : null}
             <Button
                 type="button"
                 onClick={() => void onSubmit()}

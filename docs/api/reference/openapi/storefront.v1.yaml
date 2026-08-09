@@ -54,6 +54,12 @@ tags:
       description: Authenticated customer profile, addresses, downloads, and order history.
     - name: Payment
       description: PSP init + gateway callback endpoints (storefront-facing).
+    - name: Factor Payment
+      description: Public invoice and proforma payment-link operations.
+    - name: Content
+      description: Published tenant content and privacy-conscious engagement events.
+    - name: SEO
+      description: Public tenant SEO metadata, robots, sitemap, structured data, and redirects.
     - name: Currency
       description: Public display-currency configuration for the money formatter.
     - name: Tenant
@@ -268,3 +274,140 @@ paths:
             $ref: "./common/components/operations/HeadCompanion.yaml"
         post:
             $ref: "./storefront/paths/payment/callback-gateway_code.post.yaml"
+
+    /api/v1/factor/pay/{code}:
+        parameters:
+            - name: code
+              in: path
+              required: true
+              schema: { type: string, minLength: 16, maxLength: 32 }
+        get:
+            operationId: factorPublicPaymentShow
+            summary: Show the public payment payload for an invoice or proforma
+            tags: [Factor Payment]
+            security: []
+            responses:
+                "200":
+                    description: Public factor document, outstanding amount, payment instructions, and available gateways.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorPublicPaymentEnvelope.yaml" }
+                "404": { description: Payment link not found. }
+                "410": { description: Payment link is inactive or expired. }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/factor/pay/{code}/init:
+        parameters:
+            - name: code
+              in: path
+              required: true
+              schema: { type: string, minLength: 16, maxLength: 32 }
+        post:
+            operationId: factorPublicPaymentInit
+            summary: Initialize payment for an invoice or proforma
+            tags: [Factor Payment]
+            security: []
+            parameters:
+                - name: Idempotency-Key
+                  in: header
+                  required: true
+                  schema: { type: string, minLength: 16, maxLength: 191 }
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                gateway_id: { type: integer, minimum: 1 }
+                            additionalProperties: false
+            responses:
+                "200":
+                    description: Gateway attempt initialized.
+                    content:
+                        application/json:
+                            schema: { $ref: "./common/components/schemas/FactorPaymentInitEnvelope.yaml" }
+                "409": { description: Document is already paid or cannot accept payment. }
+                "410": { description: Payment link is inactive or expired. }
+                "422": { description: Gateway selection is invalid. }
+
+    /api/v1/content/posts:
+        get:
+            operationId: publicContentPostsIndex
+            summary: List published indexable content
+            tags: [Content]
+            security: []
+            parameters:
+                - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+                - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50 } }
+                - { name: type, in: query, schema: { type: string, enum: [article, news, guide, case_study, landing] } }
+                - { name: category, in: query, schema: { type: string, maxLength: 191 } }
+                - { name: q, in: query, schema: { type: string, maxLength: 180 } }
+                - { name: locale, in: query, schema: { type: string, enum: [fa, en] } }
+            responses:
+                "200": { description: Paginated published content, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentPostListEnvelope.yaml" } } } }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/content/posts/{slug}:
+        parameters:
+            - { name: slug, in: path, required: true, schema: { type: string, maxLength: 191 } }
+            - { name: locale, in: query, schema: { type: string, enum: [fa, en], default: fa } }
+        get:
+            operationId: publicContentPostsShow
+            summary: Show one published content item with categories, tags, and published products
+            tags: [Content]
+            security: []
+            responses:
+                "200": { description: Published content, content: { application/json: { schema: { $ref: "./common/components/schemas/ContentPostEnvelope.yaml" } } } }
+                "404": { description: Content not found. }
+                "422": { description: Unsupported locale. }
+        head:
+            $ref: "./common/components/operations/HeadCompanion.yaml"
+    /api/v1/content/events:
+        post:
+            operationId: publicContentEvent
+            summary: Record a rate-limited content view, product click, or add-to-cart assist event
+            tags: [Content]
+            security: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            additionalProperties: false
+                            required: [post_id, event_type]
+                            properties:
+                                post_id: { type: integer, format: int64 }
+                                product_id: { type: [integer, "null"], format: int64 }
+                                event_type: { type: string, enum: [view, product_click, add_to_cart] }
+                                session_key: { type: [string, "null"], maxLength: 80 }
+                                metadata: { type: object, additionalProperties: true }
+            responses:
+                "202": { description: Event accepted or deduplicated. }
+                "422": { description: Invalid event or unlinked product. }
+                "429": { description: Rate limit exceeded. }
+
+    /api/v1/seo/robots:
+        get: { operationId: seoRobots, summary: Render tenant robots.txt, tags: [SEO], responses: { "200": { description: Plain-text robots document. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/seo/sitemap.xml:
+        get: { operationId: seoSitemap, summary: Render tenant XML sitemap, tags: [SEO], responses: { "200": { description: XML sitemap. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/seo/organization:
+        get: { operationId: seoOrganization, summary: Read tenant Organization schema, tags: [SEO], responses: { "200": { description: Organization JSON-LD. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/seo/entity/{kind}/{id}:
+        parameters:
+            - { name: kind, in: path, required: true, schema: { type: string } }
+            - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        get: { operationId: seoEntity, summary: Read public SEO metadata for one entity, tags: [SEO], responses: { "200": { description: Public SEO metadata. }, "404": { description: Entity not found. } } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }
+    /api/v1/seo/redirect:
+        get:
+            operationId: seoRedirectResolve
+            summary: Resolve one tenant redirect path
+            tags: [SEO]
+            parameters: [{ name: path, in: query, required: true, schema: { type: string } }]
+            responses: { "200": { description: Redirect target or null. } }
+        head: { $ref: "./common/components/operations/HeadCompanion.yaml" }

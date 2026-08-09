@@ -51,6 +51,16 @@ export const paymentLimiter = limiter.define("payments", (ctx) => {
         .limitExceeded(() => recordRateLimitThrottled("payments"));
 });
 
+/** 20/min per public factor-link and IP. Prevents anonymous retry storms without coupling all guests. */
+export const factorPaymentLimiter = limiter.define("factor_payments", (ctx) => {
+    const code = String(ctx.params.code ?? "unknown");
+    return limiter
+        .allowRequests(20)
+        .every("1 minute")
+        .usingKey(`factor:${code}:ip:${ctx.request.ip()}`)
+        .limitExceeded(() => recordRateLimitThrottled("factor_payments"));
+});
+
 /**
  * 60/min per IP on inbound PSP callbacks. We can't pin the limiter to the user (callbacks
  * are unauthenticated), but the IP rule still cuts off a misconfigured retry storm before
@@ -72,4 +82,14 @@ export const adminWriteLimiter = limiter.define("admin_writes", (ctx) => {
         .every("1 minute")
         .usingKey(`admin:${userId}`)
         .limitExceeded(() => recordRateLimitThrottled("admin_writes"));
+});
+
+/** Anonymous content analytics writes: generous for real readers, bounded for bots. */
+export const contentPublicLimiter = limiter.define("content_public", (ctx) => {
+    const tenant = ctx.request.header("x-calibra-tenant") ?? ctx.request.host() ?? "unknown";
+    return limiter
+        .allowRequests(120)
+        .every("1 minute")
+        .usingKey(`content:${tenant}:${ctx.request.ip()}`)
+        .limitExceeded(() => recordRateLimitThrottled("content_public"));
 });

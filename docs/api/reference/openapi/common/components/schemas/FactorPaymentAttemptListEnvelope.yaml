@@ -1,0 +1,30 @@
+title: FactorPaymentAttemptListEnvelope
+type: object
+required: [data, meta]
+properties:
+    data:
+        type: array
+        items:
+            type: object
+            required: [id, order_id, document_id, document_status, gateway_code, status, amount_minor, currency]
+            properties:
+                id: { type: integer, minimum: 1 }
+                order_id: { type: integer, minimum: 1 }
+                document_id: { type: integer, minimum: 1 }
+                document_reference: { type: [string, "null"] }
+                document_status: { type: string, enum: [draft, sent, viewed, awaiting, paid, expired, cancelled, refunded, credited] }
+                gateway_id: { type: integer, minimum: 1 }
+                gateway_code: { type: string }
+                status: { type: string }
+                amount_minor: { type: integer, minimum: 0 }
+                currency: { type: string }
+                gateway_authority: { type: [string, "null"] }
+                gateway_transaction_id: { type: [string, "null"] }
+                error_code: { type: [string, "null"] }
+                error_message: { type: [string, "null"] }
+                initiated_at: { type: [string, "null"], format: date-time }
+                verified_at: { type: [string, "null"], format: date-time }
+                created_at: { type: [string, "null"], format: date-time }
+            additionalProperties: true
+    meta: { $ref: "./PaginationMeta.yaml" }
+additionalProperties: false

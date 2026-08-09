@@ -1,0 +1,9 @@
+title: FactorDocumentListEnvelope
+type: object
+required: [data, meta]
+properties:
+    data:
+        type: array
+        items: { $ref: "./FactorDocument.yaml" }
+    meta: { $ref: "./PaginationMeta.yaml" }
+additionalProperties: false

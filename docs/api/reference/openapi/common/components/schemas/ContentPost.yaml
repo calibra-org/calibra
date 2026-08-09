@@ -1,0 +1,43 @@
+type: object
+required: [id, type, status, locale, title, slug, content_html, version, seo_score, quality_score, commerce_score]
+properties:
+    id: { type: integer, format: int64 }
+    type: { type: string, enum: [article, news, guide, case_study, landing] }
+    status: { type: string, enum: [draft, in_review, approved, scheduled, published, archived] }
+    locale: { type: string, enum: [fa, en] }
+    title: { type: string, maxLength: 500 }
+    slug: { type: string, maxLength: 191 }
+    excerpt: { type: [string, "null"] }
+    content_html: { type: string }
+    featured_media_id: { type: [integer, "null"], format: int64 }
+    author_user_id: { type: [integer, "null"], format: int64 }
+    reviewer_user_id: { type: [integer, "null"], format: int64 }
+    source_signal_id: { type: [integer, "null"], format: int64 }
+    seo_title: { type: [string, "null"] }
+    meta_description: { type: [string, "null"] }
+    canonical_url: { type: [string, "null"], format: uri }
+    robots_index: { type: boolean }
+    robots_follow: { type: boolean }
+    schema_type: { type: string, enum: [Article, BlogPosting, NewsArticle] }
+    search_intent: { type: [string, "null"], enum: [informational, commercial, transactional, navigational, mixed, null] }
+    focus_keyword: { type: [string, "null"] }
+    structured_data: { type: object, additionalProperties: true }
+    scheduled_at: { type: [string, "null"], format: date-time }
+    approved_at: { type: [string, "null"], format: date-time }
+    published_at: { type: [string, "null"], format: date-time }
+    archived_at: { type: [string, "null"], format: date-time }
+    version: { type: integer, minimum: 1 }
+    word_count: { type: integer, minimum: 0 }
+    reading_time_minutes: { type: integer, minimum: 0 }
+    seo_score: { type: integer, minimum: 0, maximum: 100 }
+    quality_score: { type: integer, minimum: 0, maximum: 100 }
+    commerce_score: { type: integer, minimum: 0, maximum: 100 }
+    views_count: { type: integer, format: int64, minimum: 0 }
+    product_clicks_count: { type: integer, format: int64, minimum: 0 }
+    assisted_orders_count: { type: integer, format: int64, minimum: 0 }
+    assisted_revenue_minor: { type: integer, format: int64, minimum: 0 }
+    categories: { type: array, items: { type: object } }
+    tags: { type: array, items: { type: object } }
+    products: { type: array, items: { type: object } }
+    created_at: { type: string, format: date-time }
+    updated_at: { type: string, format: date-time }
