@@ -47,7 +47,8 @@ dist/
 **/playwright/.cache/
 **/.playwright-cli/
 
-# Claude Code: only the shared skills are committed. Everything else under
+# Claude Code: .claude/skills/ is the only committed path (empty for now — it
+# holds shared, repo-specific skills when we add them). Everything else under
 # .claude/ is per-developer state (settings, hooks, agents, worktrees, spin
 # metadata, research captures) and stays local.
 .claude/*

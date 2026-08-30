@@ -146,7 +146,7 @@ The hook keeps an optimistic `pending` value that renders instantly. Each `setPe
 
 ## Commit messages
 
-Follow Conventional Commits. Default every commit message to **subject-only**; a body must earn its place. See [`.claude/skills/generate-commit-message/SKILL.md`](.claude/skills/generate-commit-message/SKILL.md) for the full guide.
+Follow Conventional Commits. Default every commit message to **subject-only**; a body must earn its place.
 
 Add a body only when the WHY cannot fit in the subject (hidden constraint, subtle invariant, workaround for a specific bug), when a breaking change needs migration notes, or when a non-obvious consequence would otherwise be missed. Cap bodies at 2–4 short lines (or 1–3 bullets). Never include verification logs, CLI output, or full file lists — the diff shows that.
 
@@ -161,17 +161,27 @@ Scopes must be one of the top-level package or app names — never a sub-route o
 - `packages/sdk` → `sdk`
 - `packages/shared` → `ui`
 - `packages/panel-kit` → `panel-kit`
-- `.claude/skills/` → `agents`
+- `AGENTS.md` / `.claude/` → `agents`
 
 A change to `apps/web/src/views/cart/...` is still `web`, not `cart`. Confirm by running `git log --oneline -20` if in doubt.
 
 ## Pull requests
 
-See [`.claude/skills/pr-creator/SKILL.md`](.claude/skills/pr-creator/SKILL.md) for title format, body sections, label application, and the `Type - Feature / Type - Fix / Type - Refactor` mapping.
+The title is the commit subject — same Conventional Commits format, same scopes as above.
+
+The body is dual-audience, in this order:
+
+- `## Summary` — what shipped and what changed for the user, in PM voice. No file paths, type names, or backticked identifiers; name product surfaces in plain language. Keep it to a few sentences.
+- `## Implementation` — the mechanism in one paragraph, then bullets for whatever a reviewer would otherwise have to reverse-engineer from the diff: rejected alternatives, edge cases, breaking-change boundaries. Backticks belong here. No commit-by-commit recap and no file-by-file walkthrough — GitHub already shows both.
+- `## Preview` — screenshot or GIF, only when the change is visibly UI-facing.
+
+Never paste the checks you ran (`pnpm lint`, `pnpm typecheck`, …) into the body; CI reports those already.
+
+Apply exactly one label: `Type - Feature` for new capability, `Type - Bug` for corrected behavior, `Type - Refactor` for restructuring without behavior change. The label describes the *impact*, the title prefix describes the *file kind* — they are separate decisions. Leave a PR unlabeled when it genuinely has no behavior impact (dep bumps, typo fixes, CI tweaks); forcing a wrong label pollutes triage views.
 
 ## Code style (repo-wide)
 
-- Never write inline `//` comments in code; use JSDoc (`/** … */`) blocks instead. See [`.claude/skills/polish-comments/SKILL.md`](.claude/skills/polish-comments/SKILL.md) for the full comment-style rules.
+- Never write inline `//` comments in code; use JSDoc (`/** … */`) blocks instead. Keep `TODO` / `FIXME` / `HACK` / `NOTE` tags and lint or TS pragmas as `//` — those are the exceptions.
 - Don't write deeply-nested ternary chains. Two-level cascades (`a ? x : b ? y : z`) are fine inline. Three-level or deeper cascades go in a named helper with early-return `if`/`else` branches — the helper reads like a decision table and accepts new branches cleanly.
 - Frontend styling is **Tailwind v4** across both apps. No CSS-in-JS, no Stylex. Compose classes with `cn()` from `@calibra/shared`. `lucide-react` is allowed for icons.
 - **Storefront (`apps/web`) stays pure Tailwind** — no shadcn, no Radix, no class-variance-authority. Components are written by hand.
