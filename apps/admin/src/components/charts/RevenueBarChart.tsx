@@ -42,7 +42,10 @@ export function RevenueBarChart({ data, height = 280, asMoney = true }: RevenueB
                         color: "hsl(var(--popover-foreground))",
                         fontSize: 12,
                     }}
-                    formatter={(value: number) => [asMoney ? formatMoney(value, locale) : formatNumber(value, locale), ""]}
+                    formatter={(value) => [
+                        asMoney ? formatMoney(Number(value), locale) : formatNumber(Number(value), locale),
+                        "",
+                    ]}
                 />
                 <Bar dataKey="value" fill="hsl(var(--chart-2))" radius={[6, 6, 0, 0]} />
             </BarChart>

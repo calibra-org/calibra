@@ -41,7 +41,7 @@ export function SalesComparisonChart({ data, height = 320 }: SalesComparisonChar
                         fontSize: 12,
                     }}
                     labelFormatter={(value) => formatDate(String(value), locale)}
-                    formatter={(value: number, name) => [formatMoney(value, locale), name]}
+                    formatter={(value, name) => [formatMoney(Number(value), locale), name]}
                 />
                 <Legend
                     wrapperStyle={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}

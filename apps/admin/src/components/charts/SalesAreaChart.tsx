@@ -47,7 +47,7 @@ export function SalesAreaChart({ data, height = 260 }: SalesAreaChartProps) {
                         fontSize: 12,
                     }}
                     labelFormatter={(value) => formatDate(String(value), locale)}
-                    formatter={(value: number) => [formatMoney(value, locale), ""]}
+                    formatter={(value) => [formatMoney(Number(value), locale), ""]}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="hsl(var(--chart-1))" strokeWidth={2} fill="url(#salesArea)" />
             </AreaChart>

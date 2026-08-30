@@ -53,7 +53,7 @@ export function OrdersByStatusChart({ data, height = 260 }: OrdersByStatusChartP
                         color: "hsl(var(--popover-foreground))",
                         fontSize: 12,
                     }}
-                    formatter={(value: number, name) => [formatNumber(value, locale), name]}
+                    formatter={(value, name) => [formatNumber(Number(value), locale), name]}
                 />
             </PieChart>
         </ResponsiveContainer>
