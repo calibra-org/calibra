@@ -2,13 +2,13 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Row } from "@tanstack/react-table";
 import { Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
 import { Button } from "#/components/ui/button";
 import {
+    type Row,
     ActiveFilterChips,
     type ColumnDef,
     DataTable,

@@ -20,18 +20,14 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-    type ColumnDef,
     type ColumnOrderState,
     type ColumnSizingState,
     type ExpandedState,
     flexRender,
-    getCoreRowModel,
-    getExpandedRowModel,
-    type Header,
-    type Row,
+    type RowData,
     type RowSelectionState,
-    useReactTable,
-    type VisibilityState,
+    useTable,
+    type ColumnVisibilityState,
 } from "@tanstack/react-table";
 import { AlertTriangle, type LucideIcon } from "lucide-react";
 import {
@@ -55,6 +51,7 @@ import { ColumnDragHandleProvider } from "./column-drag-handle-context";
 import { DataTableEmpty } from "./data-table-empty";
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableSkeleton } from "./data-table-skeleton";
+import { dataGridFeatures } from "./features";
 import {
     buildStickyPlan,
     type PlannableColumn,
@@ -63,6 +60,7 @@ import {
     type StickyConfig,
     type StickyPlan,
 } from "./sticky-columns";
+import type { ColumnDef, Header, Row, Table as TableInstance } from "./types";
 import {
     type BulkActionsRenderer,
     type CardRenderer,
@@ -155,7 +153,7 @@ function useStickyEdgeShadows(scrollRef: RefObject<HTMLDivElement | null>) {
 const VIEWPORT_CELL_CONTENT_CLASS = "sticky start-0";
 const VIEWPORT_CELL_CONTENT_STYLE: CSSProperties = { width: "var(--dt-viewport-width, 100%)" };
 
-export interface DataTableProps<TData> {
+export interface DataTableProps<TData extends RowData> {
     data: TData[];
     columns: ColumnDef<TData, unknown>[];
     /** Tracks state of the in-page selection. Resolved by id, not array index. */
@@ -285,7 +283,7 @@ export interface DataTableProps<TData> {
  * `e` opens the sub-row when {@link renderSubComponent} is provided, `Enter` calls
  * {@link onRowOpen}. We don't flip these keys under RTL — bindings stay reading-order agnostic.
  */
-export function DataTable<TData>({
+export function DataTable<TData extends RowData>({
     data,
     columns,
     getRowId,
@@ -371,8 +369,8 @@ export function DataTable<TData>({
         return out;
     }, [selectedIds]);
 
-    const visibilityState = useMemo<VisibilityState>(() => {
-        const out: VisibilityState = {};
+    const visibilityState = useMemo<ColumnVisibilityState>(() => {
+        const out: ColumnVisibilityState = {};
         for (const [id, visible] of Object.entries(columnVisibility)) out[id] = visible;
         return out;
     }, [columnVisibility]);
@@ -406,7 +404,8 @@ export function DataTable<TData>({
         return [...startIds, ...ordered, ...appended, ...endIds];
     }, [columns, columnOrder, PINNED_START_IDS, PINNED_END_IDS]);
 
-    const table = useReactTable<TData>({
+    const table = useTable({
+        features: dataGridFeatures,
         data,
         columns,
         getRowId,
@@ -453,8 +452,6 @@ export function DataTable<TData>({
             onColumnOrderChange(middleOnly);
         },
         onExpandedChange: setExpanded,
-        getCoreRowModel: getCoreRowModel(),
-        getExpandedRowModel: getExpandedRowModel(),
         getRowCanExpand: () => renderSubComponent !== undefined,
     });
 
@@ -538,7 +535,7 @@ export function DataTable<TData>({
      * CSS size vars — React doesn't reconcile a single cell. On release we swap back to the live
      * list, which renders once with the committed widths.
      */
-    const isResizing = Boolean(table.getState().columnSizingInfo.isResizingColumn);
+    const isResizing = Boolean(table.state.columnResizing.isResizingColumn);
     const RowsComponent = isResizing ? FrozenRowList : DataTableRowList;
 
     const lastFocusedIndex = useRef<number>(0);
@@ -806,7 +803,7 @@ export function DataTable<TData>({
     );
 }
 
-interface SortableHeaderProps<TData> {
+interface SortableHeaderProps<TData extends RowData> {
     header: Header<TData, unknown>;
     cellClass: string;
     stickyPlan: StickyPlan;
@@ -825,7 +822,7 @@ interface SortableHeaderProps<TData> {
  * column from the data band).
  */
 
-function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: SortableHeaderProps<TData>) {
+function SortableHeader<TData extends RowData>({ header, cellClass, stickyPlan, pinnedIds }: SortableHeaderProps<TData>) {
     const isPinned = pinnedIds.has(header.column.id);
     const placement = stickyPlan.get(header.column.id);
     const sticky = resolveStickyHeader(placement);
@@ -910,7 +907,7 @@ function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: Sor
     );
 }
 
-interface RowListProps<TData> {
+interface RowListProps<TData extends RowData> {
     rows: Row<TData>[];
     cellClass: string;
     rowHeightClass: string;
@@ -921,7 +918,7 @@ interface RowListProps<TData> {
 }
 
 /** The body's data rows. Extracted so the resize path can swap in a frozen, memoized copy. */
-function DataTableRowList<TData>({
+function DataTableRowList<TData extends RowData>({
     rows,
     cellClass,
     rowHeightClass,
@@ -957,7 +954,7 @@ function DataTableRowList<TData>({
  */
 const FrozenRowList = memo(DataTableRowList, () => true) as typeof DataTableRowList;
 
-interface BodyRowProps<TData> {
+interface BodyRowProps<TData extends RowData> {
     row: Row<TData>;
     rowIndex: number;
     cellClass: string;
@@ -969,7 +966,7 @@ interface BodyRowProps<TData> {
     stickyPlan: StickyPlan;
 }
 
-function DataTableBodyRow<TData>({
+function DataTableBodyRow<TData extends RowData>({
     row,
     rowIndex,
     cellClass,
@@ -1076,15 +1073,21 @@ function DataTableBodyRow<TData>({
     );
 }
 
-interface BulkActionsHostProps<TData> {
+interface BulkActionsHostProps<TData extends RowData> {
     selectedCount: number;
     selectedIds: ReadonlySet<string>;
     render: BulkActionsRenderer<TData>;
-    table: ReturnType<typeof useReactTable<TData>>;
+    table: TableInstance<TData>;
     onClear: () => void;
 }
 
-function BulkActionsHost<TData>({ selectedCount, selectedIds, render, table, onClear }: BulkActionsHostProps<TData>) {
+function BulkActionsHost<TData extends RowData>({
+    selectedCount,
+    selectedIds,
+    render,
+    table,
+    onClear,
+}: BulkActionsHostProps<TData>) {
     if (selectedCount === 0) return null;
     return <>{render({ table, selectedIds, clearSelection: onClear })}</>;
 }

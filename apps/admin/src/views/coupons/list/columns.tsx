@@ -1,12 +1,12 @@
 "use client";
 
 import type { Locale } from "@calibra/shared/i18n";
-import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Copy, MoreHorizontal, Percent, TrendingUp, X } from "lucide-react";
 
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
+import { type ColumnDef } from "#/components/ui/data-grid";
 import { DataTableColumnHeader } from "#/components/ui/data-grid/data-table-column-header";
 import type { SortState } from "#/components/ui/data-grid/types";
 import {
