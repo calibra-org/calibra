@@ -1,7 +1,7 @@
 import type { Client } from "openapi-fetch";
 
-import { createTypedClient, type TypedClientOptions } from "./internal/createTypedClient";
 import type { paths } from "./generated/storefront";
+import { createTypedClient, type TypedClientOptions } from "./internal/createTypedClient";
 
 /** Typed storefront API client. Every operation is inferred from `storefront.v1.yaml`. */
 export type StorefrontClient = Client<paths>;

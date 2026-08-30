@@ -1,9 +1,9 @@
-import { randomBytes } from "node:crypto";
 import { beforeCreate, belongsTo, hasMany } from "@adonisjs/lucid/orm";
 import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
 import type { BelongsTo, HasMany } from "@adonisjs/lucid/types/relations";
 import { DateTime } from "luxon";
+import { randomBytes } from "node:crypto";
 
 import { CartSchema } from "#database/schema";
 import CartAppliedCoupon from "#models/cart_applied_coupon";

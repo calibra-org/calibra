@@ -5,10 +5,10 @@ import { log } from "../log";
 
 import { nextDevAllowedOrigins } from "./env-render";
 import { isPidAlive, readPid, startHostProcess, stopHostProcess, waitForPortsFree } from "./host-process";
+import type { SpinMeta } from "./meta";
 import { AGENT_SERVER_ENTRY } from "./paths";
 import { effectivePort, requirePort } from "./ports";
 import { isPortListening } from "./probes";
-import type { SpinMeta } from "./meta";
 
 /**
  * Host-process orchestration for the apps. Calibra runs api/queue/admin/web/platform/agent on the

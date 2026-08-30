@@ -45,7 +45,7 @@ export function BrandingPreview({ palette, name, tagline, logo, font }: Branding
             <header className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: palette.border }}>
                 <div className="flex items-center gap-2">
                     {logo ? (
-                        // biome-ignore lint/performance/noImgElement: small preview, no Next/Image loader
+                        // oxlint-disable-next-line nextjs/no-img-element -- small preview, no Next/Image loader
                         <img src={logo.url} alt="" className="h-6 w-auto object-contain" />
                     ) : (
                         <span

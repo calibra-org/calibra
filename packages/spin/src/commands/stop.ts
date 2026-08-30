@@ -1,6 +1,6 @@
+import type { Command } from "commander";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { Command } from "commander";
 
 import { composeDown } from "../core/compose";
 import { buildComposeOptions } from "../core/compose-assembly";

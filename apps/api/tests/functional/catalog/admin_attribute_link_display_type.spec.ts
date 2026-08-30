@@ -1,7 +1,8 @@
 import { test } from "@japa/runner";
 
-import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import { truncateAndCleanup } from "#tests/helpers/truncate";
+
+import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 
 /**
  * Round-trip for the new `product_attribute_links.display_type` column powering the per-choice

@@ -1,7 +1,7 @@
 import type { Locale } from "@calibra/shared/i18n";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 
 import { PageHeader } from "#/components/PageHeader";
 import type { SettingsGroupKey } from "#/lib/types";

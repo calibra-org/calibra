@@ -1,9 +1,9 @@
 import { directionFor, type Locale, locales } from "@calibra/shared/i18n";
 import type { Metadata } from "next";
-import { Inter, Vazirmatn } from "next/font/google";
-import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
+import { Inter, Vazirmatn } from "next/font/google";
+import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { TooltipProvider } from "#/components/ui/tooltip";

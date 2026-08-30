@@ -32,7 +32,12 @@ jobs:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: "pnpm"
             - run: pnpm install --frozen-lockfile
-            - run: pnpm run format && pnpm run lint
+            - name: Lint (oxlint + @calibra/lint plugin)
+              run: pnpm run lint
+            - name: Format (oxfmt --check)
+              run: pnpm run format
+            - name: Custom lint rule tests
+              run: pnpm --filter @calibra/lint test
 
     typecheck:
         runs-on: ubuntu-latest

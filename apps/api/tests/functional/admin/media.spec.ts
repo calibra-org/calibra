@@ -1,7 +1,7 @@
-import { promises as fs } from "node:fs";
 import db from "@adonisjs/lucid/services/db";
 import { test } from "@japa/runner";
 import { DateTime } from "luxon";
+import { promises as fs } from "node:fs";
 import sharp from "sharp";
 
 import Customer from "#models/customer";

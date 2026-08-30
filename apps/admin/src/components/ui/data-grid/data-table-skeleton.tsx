@@ -18,11 +18,11 @@ export function DataTableSkeleton({ rowCount = 8, columnWidths, rowHeightClass =
     return (
         <div className="divide-y divide-border">
             {Array.from({ length: rowCount }).map((_, rowIndex) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: deterministic skeleton order
+                // oxlint-disable-next-line react/no-array-index-key -- deterministic skeleton order
                 <div key={rowIndex} className={cn("flex items-center gap-4 px-4", rowHeightClass)}>
                     {columnWidths.map((width, columnIndex) => (
                         <div
-                            // biome-ignore lint/suspicious/noArrayIndexKey: deterministic skeleton order
+                            // oxlint-disable-next-line react/no-array-index-key -- deterministic skeleton order
                             key={columnIndex}
                             className="flex"
                             style={{ width: `${(width / total) * 100}%` }}

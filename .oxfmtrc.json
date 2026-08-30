@@ -1,0 +1,38 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "useTabs": false,
+    "tabWidth": 4,
+    "printWidth": 130,
+    "singleQuote": false,
+    "jsxSingleQuote": false,
+    "quoteProps": "as-needed",
+    "trailingComma": "all",
+    "semi": true,
+    "arrowParens": "always",
+    "bracketSameLine": false,
+    "bracketSpacing": true,
+    "sortPackageJson": false,
+    "sortImports": {
+        "newlinesBetween": true,
+        "groups": [
+            ["value-builtin", "type-builtin", "value-external", "type-external"],
+            ["value-internal", "type-internal"],
+            ["value-parent", "type-parent"],
+            ["value-sibling", "value-index", "type-sibling", "type-index"]
+        ]
+    },
+    "ignorePatterns": [
+        "**/dist/**",
+        "**/build/**",
+        "**/.next/**",
+        "**/.turbo/**",
+        "**/coverage/**",
+        "packages/sdk/src/generated/**",
+        "apps/api/database/schema.ts",
+        "apps/api/database/data/**/*.json",
+        "**/*.md",
+        "**/*.mdx",
+        "**/*.yaml",
+        "**/*.yml"
+    ]
+}

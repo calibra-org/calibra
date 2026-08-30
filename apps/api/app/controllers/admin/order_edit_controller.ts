@@ -65,7 +65,7 @@ export default class AdminOrderEditController {
             row.phone = payload.phone ?? null;
             row.email = kind === "billing" ? (payload.email ?? null) : null;
             row.attributes = {
-                ...((row.attributes as Record<string, unknown>) ?? {}),
+                ...(row.attributes as Record<string, unknown>),
                 national_id: payload.national_id ?? null,
                 customer_note: kind === "shipping" ? (payload.customer_note ?? null) : undefined,
             };
@@ -322,7 +322,7 @@ export default class AdminOrderEditController {
         if (payload.billing_email !== undefined) order.billingEmail = payload.billing_email ?? null;
         if (payload.is_locked !== undefined) {
             order.attributes = {
-                ...((order.attributes as Record<string, unknown>) ?? {}),
+                ...(order.attributes as Record<string, unknown>),
                 unlock_override: payload.is_locked === false,
             };
         }

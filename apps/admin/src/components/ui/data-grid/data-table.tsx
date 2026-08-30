@@ -608,7 +608,7 @@ export function DataTable<TData>({
              * rows are focusable (tabIndex 0) and reachable via Tab; the wrapper just listens for
              * key events bubbling up from the active row.
              */}
-            {/* biome-ignore lint/a11y/useSemanticElements: a single <table> can't host the toolbar / pagination siblings; the inner <table> still carries the grid semantics */}
+            {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a single <table> can't host the toolbar / pagination siblings; the inner <table> still carries the grid semantics */}
             <div className="overflow-hidden rounded-lg border border-border bg-card" onKeyDown={onTableKeyDown} role="grid">
                 {/** Desktop / tablet: real <table>. */}
                 <div className={cn("hidden md:block", renderCard !== undefined && "md:block")}>
@@ -886,7 +886,7 @@ function SortableHeader<TData>({ header, cellClass, stickyPlan, pinnedIds }: Sor
                     header.column.id === "select" && "!px-2 min-w-12 overflow-visible",
                     headerMeta?.headerClassName,
                 )}
-                style={{ ...(sticky?.style ?? {}), ...widthStyle, ...dragStyle }}
+                style={{ ...sticky?.style, ...widthStyle, ...dragStyle }}
             >
                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 {header.column.getCanResize() && (
@@ -1066,7 +1066,7 @@ function DataTableBodyRow<TData>({
                             cell.column.id === "select" && "!px-2 min-w-12 overflow-visible",
                             (cell.column.columnDef.meta as { cellClassName?: string } | undefined)?.cellClassName,
                         )}
-                        style={{ ...(sticky?.style ?? {}), ...widthStyle }}
+                        style={{ ...sticky?.style, ...widthStyle }}
                     >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>

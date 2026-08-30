@@ -1,5 +1,5 @@
-import { spawn } from "node:child_process";
 import { Box, useApp, useInput } from "ink";
+import { spawn } from "node:child_process";
 import { useEffect, useState } from "react";
 
 import { serviceById } from "../core/catalog";

@@ -1,5 +1,4 @@
 import "server-only";
-
 import { cookies } from "next/headers";
 
 import { redirect } from "#/lib/i18n/navigation";

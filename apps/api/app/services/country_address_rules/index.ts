@@ -1,6 +1,7 @@
+import Region from "#models/region";
+
 import { defaultRules } from "./default.js";
 import { ir } from "./ir.js";
-import Region from "#models/region";
 
 export type AddressField =
     | "first_name"

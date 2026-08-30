@@ -2,11 +2,12 @@ import cache from "@adonisjs/cache/services/main";
 import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
-import { createProduct } from "./helpers.js";
 import Product from "#models/product";
 import ProductTranslation from "#models/product_translation";
 import { CacheTags } from "#services/cache_keys";
 import { TEST_TENANT_ID } from "#tests/helpers/tenant";
+
+import { createProduct } from "./helpers.js";
 
 /**
  * Cache behaviour for the storefront catalog endpoints. Strategy:

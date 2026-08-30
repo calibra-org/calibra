@@ -1,8 +1,8 @@
-import { randomUUID } from "node:crypto";
 import type { HttpContext } from "@adonisjs/core/http";
 import hash from "@adonisjs/core/services/hash";
 import db from "@adonisjs/lucid/services/db";
 import { DateTime } from "luxon";
+import { randomUUID } from "node:crypto";
 
 import User from "#models/user";
 import { recordAuthEvent } from "#services/metrics/domain_metrics";

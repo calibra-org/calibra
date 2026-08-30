@@ -1,6 +1,6 @@
-import crypto from "node:crypto";
 import { test } from "@japa/runner";
 import { DateTime } from "luxon";
+import crypto from "node:crypto";
 
 import PasswordResetToken from "#models/password_reset_token";
 import User from "#models/user";

@@ -1,7 +1,7 @@
-import crypto from "node:crypto";
 import type { HttpContext } from "@adonisjs/core/http";
 import logger from "@adonisjs/core/services/logger";
 import { DateTime } from "luxon";
+import crypto from "node:crypto";
 
 import PasswordResetToken from "#models/password_reset_token";
 import User from "#models/user";

@@ -2,10 +2,10 @@ import { connect } from "node:net";
 import { setTimeout as sleep } from "node:timers/promises";
 
 import { composeExec } from "./compose";
-import { capture } from "./exec";
-import { requirePort } from "./ports";
 import type { ComposeOptions } from "./compose";
+import { capture } from "./exec";
 import type { SpinMeta } from "./meta";
+import { requirePort } from "./ports";
 
 /**
  * Health probes shared by the pipeline's readiness waits, the diagnostics commands, and the

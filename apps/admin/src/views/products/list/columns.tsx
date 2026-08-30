@@ -125,7 +125,7 @@ export function buildProductColumns(ctx: ColumnContext): ColumnDef<AdminProduct>
                     );
                 }
                 return (
-                    // biome-ignore lint/performance/noImgElement: mock CDN avoids next/image remote-patterns config
+                    // oxlint-disable-next-line nextjs/no-img-element -- mock CDN avoids next/image remote-patterns config
                     <img
                         src={row.original.imageUrl}
                         alt={row.original.name[ctx.locale]}

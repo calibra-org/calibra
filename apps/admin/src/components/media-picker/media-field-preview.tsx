@@ -68,7 +68,7 @@ export function MediaFieldPreview({ label, value, onChange, className, aspectCla
                     </button>
                 ) : (
                     <>
-                        {/* biome-ignore lint/performance/noImgElement: media preview, no Next/Image loader configured */}
+                        {/* oxlint-disable-next-line nextjs/no-img-element -- media preview, no Next/Image loader configured */}
                         <img src={value.url} alt={t("previewAlt")} className="h-full w-full object-contain p-2" />
                         <div className="absolute end-2 top-2 flex items-center gap-1">
                             <Button

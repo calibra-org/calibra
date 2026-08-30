@@ -121,7 +121,8 @@ export class FleetMetricsService {
     async headlineKpis(tenantIds: number[], sinceDays = 30): Promise<Map<number, HeadlineKpis>> {
         const out = new Map<number, HeadlineKpis>();
         if (tenantIds.length === 0) return out;
-        for (const id of tenantIds) out.set(id, { orders: 0, revenue: 0, storageBytes: 0, spark: new Array(SPARK_DAYS).fill(0) });
+        for (const id of tenantIds)
+            out.set(id, { orders: 0, revenue: 0, storageBytes: 0, spark: Array.from({ length: SPARK_DAYS }, () => 0) });
 
         const from = DateTime.utc().minus({ days: sinceDays }).toISO()!;
         const orderRows = (

@@ -227,7 +227,7 @@ export function useTableView<E extends ExtraParsers | undefined = undefined>(
     const patch = useCallback(
         (next: { query?: Partial<TableViewQuery>; extras?: Partial<ExtrasValues<E>> }) =>
             writeAll(
-                { ...query, page: 1, ...(next.query ?? {}) },
+                { ...query, page: 1, ...next.query },
                 { ...extraValues, ...((next.extras ?? {}) as Record<string, unknown>) },
             ),
         [query, extraValues, writeAll],

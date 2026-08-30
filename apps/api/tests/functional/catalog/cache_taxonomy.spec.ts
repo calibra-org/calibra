@@ -2,12 +2,13 @@ import cache from "@adonisjs/cache/services/main";
 import testUtils from "@adonisjs/core/services/test_utils";
 import { test } from "@japa/runner";
 
-import { createBrand, createCategory, createTag } from "./helpers.js";
 import ProductBrandTranslation from "#models/product_brand_translation";
 import ProductCategoryTranslation from "#models/product_category_translation";
 import ProductTagTranslation from "#models/product_tag_translation";
 import { CacheTags } from "#services/cache_keys";
 import { TEST_TENANT_ID } from "#tests/helpers/tenant";
+
+import { createBrand, createCategory, createTag } from "./helpers.js";
 
 test.group("Catalog taxonomy caching", (group) => {
     group.each.setup(async () => {

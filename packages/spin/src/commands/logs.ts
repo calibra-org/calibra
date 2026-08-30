@@ -1,5 +1,5 @@
-import { join } from "node:path";
 import type { Command } from "commander";
+import { join } from "node:path";
 
 import { readServiceLogTail, streamHostLog } from "../core/log-stream";
 import { readMetaOrFail } from "../core/meta";

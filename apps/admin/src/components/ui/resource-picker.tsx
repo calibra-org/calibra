@@ -247,7 +247,7 @@ function SingleResourcePicker({
                                 onChange={(e) => setQuery(e.target.value)}
                                 placeholder={t("search")}
                                 className="h-7 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                                /** biome-ignore lint/a11y/noAutofocus: popover field. */
+                                /* oxlint-disable-next-line jsx-a11y/no-autofocus -- popover field. */
                                 autoFocus
                             />
                             {isSearching && (
@@ -283,16 +283,17 @@ function SingleResourcePicker({
                                                 >
                                                     {isSelected && <Check className="size-3" aria-hidden="true" />}
                                                 </span>
-                                                {opt.imageUrl !== null && opt.imageUrl !== undefined && (
-                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                    // biome-ignore lint/performance/noImgElement: combobox thumbs are user-uploaded URLs of unknown size; next/image's optimizer is overkill here
-                                                    <img
-                                                        src={opt.imageUrl}
-                                                        alt=""
-                                                        className="size-8 shrink-0 rounded border border-border bg-muted object-cover"
-                                                        loading="lazy"
-                                                    />
-                                                )}
+                                                {opt.imageUrl !== null &&
+                                                    opt.imageUrl !== undefined && (
+                                                        // eslint-disable-next-line @next/next/no-img-element
+                                                        // oxlint-disable-next-line nextjs/no-img-element -- combobox thumbs are user-uploaded URLs of unknown size; next/image's optimizer is overkill here
+                                                        <img
+                                                            src={opt.imageUrl}
+                                                            alt=""
+                                                            className="size-8 shrink-0 rounded border border-border bg-muted object-cover"
+                                                            loading="lazy"
+                                                        />
+                                                    )}
                                                 <span className="flex min-w-0 flex-col">
                                                     <span className="truncate">{opt.label}</span>
                                                     {opt.sublabel !== undefined && (

@@ -181,7 +181,7 @@ export class OrderFactory {
                 });
             }
             const variation =
-                // biome-ignore lint/suspicious/noExplicitAny: `variation` is conditionally preloaded by the caller; not part of the cart-item static shape.
+                // oxlint-disable-next-line typescript/no-explicit-any -- `variation` is conditionally preloaded by the caller; not part of the cart-item static shape.
                 item.variationId === null ? null : (((item as any).variation as ProductVariation | undefined) ?? null);
 
             const translations = product.translations ?? [];
@@ -332,7 +332,7 @@ export class OrderFactory {
 
         if (variation) {
             const salePrice = variation.salePrice === null ? null : Number(variation.salePrice);
-            // biome-ignore lint/suspicious/noExplicitAny: variation sale-window columns populated by catalog-writer but not in the static schema yet.
+            // oxlint-disable-next-line typescript/no-explicit-any -- variation sale-window columns populated by catalog-writer but not in the static schema yet.
             if (salePrice !== null && inWindow((variation as any).saleStartsAt, (variation as any).saleEndsAt)) {
                 return salePrice;
             }
@@ -340,7 +340,7 @@ export class OrderFactory {
         }
 
         const salePrice = product.salePrice === null ? null : Number(product.salePrice);
-        // biome-ignore lint/suspicious/noExplicitAny: product sale-window columns populated by catalog-writer but not in the static schema yet.
+        // oxlint-disable-next-line typescript/no-explicit-any -- product sale-window columns populated by catalog-writer but not in the static schema yet.
         if (salePrice !== null && inWindow((product as any).saleStartsAt, (product as any).saleEndsAt)) {
             return salePrice;
         }

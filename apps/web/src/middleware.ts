@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
+import { type NextRequest, NextResponse } from "next/server";
 
 import { routing } from "#/lib/i18n/routing";
 import { TEMPLATE_KEY, TENANT_DATA_HEADER, TENANT_HEADER } from "#/lib/tenant/constants";

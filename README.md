@@ -38,8 +38,8 @@ To stop only the API stack (preserves DB volume): `just down`.
 ```sh
 pnpm build              # turbo build across the workspace
 pnpm typecheck          # tsc --noEmit across the workspace
-pnpm lint               # biome lint + sherif workspace lint
-pnpm format:fix         # biome format --write
+pnpm lint               # oxlint (+ custom @calibra/lint rules) + sherif workspace lint
+pnpm format:fix         # oxfmt
 pnpm test               # vitest (frontend) + japa (API) across the workspace
 just ready              # format + lint + typecheck + build + test (PR gate)
 just api-ace 'migration:run'   # run pending Lucid migrations

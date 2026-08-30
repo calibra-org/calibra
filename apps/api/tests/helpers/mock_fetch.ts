@@ -37,7 +37,7 @@ export function mockFetch(map: Routes = {}): void {
         active = true;
         calls.length = 0;
         routes = {};
-        // biome-ignore lint/suspicious/noExplicitAny: test mock
+        // oxlint-disable-next-line typescript/no-explicit-any -- test mock
         (globalThis as any).fetch = mockedFetch;
     }
     for (const [url, spec] of Object.entries(map)) {
@@ -50,7 +50,7 @@ export function unmockFetch(): void {
     routes = {};
     calls.length = 0;
     Object.keys(cursors).forEach((k) => delete cursors[k]);
-    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    // oxlint-disable-next-line typescript/no-explicit-any -- test mock
     (globalThis as any).fetch = originalFetch;
 }
 
@@ -76,7 +76,7 @@ async function mockedFetch(input: string | URL | MaybeRequest, init?: RequestIni
     const body = spec.body === undefined ? "" : JSON.stringify(spec.body);
     return new Response(body, {
         status: spec.status ?? 200,
-        headers: { "Content-Type": "application/json", ...(spec.headers ?? {}) },
+        headers: { "Content-Type": "application/json", ...spec.headers },
     });
 }
 

@@ -97,7 +97,7 @@ export default class DbBulkSeed extends BaseCommand {
      * additional `bulk-tenant-N` shops when fewer exist. Provisioning runs on `postgres_admin`.
      */
     private async resolveTenantIds(
-        client: ReturnType<typeof import("@adonisjs/lucid/services/db")["default"]["connection"]>,
+        client: ReturnType<(typeof import("@adonisjs/lucid/services/db"))["default"]["connection"]>,
         count: number,
     ): Promise<number[]> {
         const existing = (await client.from("tenants").select("id").orderBy("id", "asc").limit(count)) as Array<{

@@ -1,8 +1,9 @@
 import { test } from "@japa/runner";
 
-import { createAdmin, createProduct } from "./helpers.js";
 import User from "#models/user";
 import { truncateAndCleanup } from "#tests/helpers/truncate";
+
+import { createAdmin, createProduct } from "./helpers.js";
 
 /**
  * Per-admin-user product favourites: the `PUT`/`DELETE /products/{id}/favorite` toggle, the

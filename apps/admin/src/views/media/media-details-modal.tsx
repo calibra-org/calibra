@@ -385,7 +385,7 @@ function PreviewPane({ row, category, previewMissingAlt }: PreviewPaneProps) {
     if (category === "image") {
         return (
             <div className="flex min-h-[300px] items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/30">
-                {/* biome-ignore lint/performance/noImgElement: external thumbnails, no Next/Image loader configured */}
+                {/* oxlint-disable-next-line nextjs/no-img-element -- external thumbnails, no Next/Image loader configured */}
                 <img
                     src={mediaVariantUrl(row, "large")}
                     alt={row.alt ?? row.filename ?? previewMissingAlt}

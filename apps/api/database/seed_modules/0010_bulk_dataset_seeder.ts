@@ -1,4 +1,3 @@
-import { promises as fs } from "node:fs";
 import app from "@adonisjs/core/services/app";
 import hash from "@adonisjs/core/services/hash";
 import { BaseSeeder } from "@adonisjs/lucid/seeders";
@@ -6,8 +5,8 @@ import { faker } from "@faker-js/faker";
 import { faker as fakerEn } from "@faker-js/faker/locale/en";
 import { faker as fakerFa } from "@faker-js/faker/locale/fa";
 import { DateTime } from "luxon";
+import { promises as fs } from "node:fs";
 
-import { BULK_CATEGORY_TREE, type CategoryNode, type LeafProductSpec } from "./bulk_catalog_taxonomy.js";
 import { listCountiesForProvince } from "#services/iran_county_resolver";
 import { ingestFile } from "#services/media_storage";
 import SettingsService from "#services/settings_service";
@@ -16,6 +15,8 @@ import { maybeTenantId } from "#services/tenant_context";
 import { reserveNumberBlock } from "#services/tenant_numbering_service";
 import env from "#start/env";
 import { toMediaUploadConfig } from "#transformers/media_settings_transformer";
+
+import { BULK_CATEGORY_TREE, type CategoryNode, type LeafProductSpec } from "./bulk_catalog_taxonomy.js";
 
 const BATCH = 500;
 

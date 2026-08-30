@@ -140,7 +140,7 @@ export function DataGridCellImage({ src, alt = "", size = 8, fallback, className
         );
     }
     return (
-        // biome-ignore lint/performance/noImgElement: lazy-loaded thumbnail of an arbitrary URL
+        // oxlint-disable-next-line nextjs/no-img-element -- lazy-loaded thumbnail of an arbitrary URL
         <img
             src={src}
             alt={alt}

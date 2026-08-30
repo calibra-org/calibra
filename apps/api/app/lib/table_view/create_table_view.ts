@@ -4,8 +4,8 @@ import type { SchemaTypes } from "@vinejs/vine/types";
 
 import { TABLE_VIEW_DEFAULT_LIMIT, TABLE_VIEW_MAX_LIMIT } from "./constants.js";
 import { buildFieldIndex, runTableView } from "./runtime.js";
-import { filterRule, STRICT_KEYS_RULE_NAME, sortRule } from "./validators.js";
 import type { CompileStrictOptions, TableView, TableViewColumn, TableViewConfig } from "./types.js";
+import { filterRule, STRICT_KEYS_RULE_NAME, sortRule } from "./validators.js";
 
 /** The fixed top-level keys the TableView wire grammar accepts on every endpoint. */
 const TABLE_VIEW_BASE_KEYS = ["page", "limit", "filter", "filterOr", "sort"] as const;
@@ -150,7 +150,7 @@ export function createTableView<Model extends LucidModel, const Columns extends 
  * the cast at the boundary is sound. Callers retain full Vine type inference because the
  * underlying validator is real.
  */
-// biome-ignore lint/suspicious/noExplicitAny: shape mirrors @vinejs/vine's internal VineValidator surface; the public types we expose at the TableView interface boundary carry the actual inference.
+// oxlint-disable-next-line typescript/no-explicit-any -- shape mirrors @vinejs/vine's internal VineValidator surface; the public types we expose at the TableView interface boundary carry the actual inference.
 function wrapStrict(inner: any, allowedKeys: Set<string>, defaultLimit: number): any {
     const validate = async (data: unknown, ...rest: unknown[]) => {
         if (data !== null && data !== undefined && typeof data === "object" && !Array.isArray(data)) {

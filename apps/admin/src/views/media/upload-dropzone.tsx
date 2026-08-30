@@ -235,7 +235,7 @@ function QueueThumbnail({ entry }: QueueThumbnailProps) {
     return (
         <div className="relative size-9 shrink-0 overflow-hidden rounded-md border border-border/60 bg-muted/40">
             {hasPreview ? (
-                /* biome-ignore lint/performance/noImgElement: local blob preview, no Next/Image loader configured */
+                /* oxlint-disable-next-line nextjs/no-img-element -- local blob preview, no Next/Image loader configured */
                 <img src={entry.previewUrl ?? ""} alt="" className="size-full object-cover" />
             ) : (
                 <div className="flex size-full items-center justify-center">

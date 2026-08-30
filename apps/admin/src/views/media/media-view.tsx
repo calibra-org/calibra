@@ -2,8 +2,8 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { Download, Trash2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -529,7 +529,7 @@ function MediaGridSkeleton({ view }: { view: MediaViewMode }) {
         return (
             <div className="flex flex-col gap-2">
                 {Array.from({ length: 8 }, (_, i) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
+                    // oxlint-disable-next-line react/no-array-index-key -- fixed-length skeleton placeholder
                     <Skeleton key={i} className="h-14 rounded-lg" />
                 ))}
             </div>
@@ -538,7 +538,7 @@ function MediaGridSkeleton({ view }: { view: MediaViewMode }) {
     return (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 18 }, (_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
+                // oxlint-disable-next-line react/no-array-index-key -- fixed-length skeleton placeholder
                 <Skeleton key={i} className="aspect-square rounded-xl" />
             ))}
         </div>

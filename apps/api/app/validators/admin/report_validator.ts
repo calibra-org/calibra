@@ -15,7 +15,7 @@ export const adminTopProductsValidator = vine.compile(
 export const adminTopCategoriesValidator = adminTopProductsValidator;
 
 /**
- * Shared query contract for every windowed analytics endpoint (performance + the `*​/stats`
+ * Shared query contract for every windowed analytics endpoint (performance + the `…/stats`
  * family). `date_from` / `date_to` are inclusive Gregorian bounds the admin date-picker resolves;
  * `interval` overrides the auto-picked bucket granularity; `compare_from` / `compare_to` request a
  * parallel comparison window (both required together, enforced in the controller).

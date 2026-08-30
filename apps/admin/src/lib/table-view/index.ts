@@ -30,9 +30,4 @@ export {
 } from "./serialize";
 export { type SdkQueryValue, type TableViewExtras, tableViewQueryToSdkQuery } from "./to-sdk-query";
 export { type UseTableViewOptions, type UseTableViewReturn, useTableView } from "./use-table-view";
-export type {
-    TableViewFilter,
-    TableViewPrimitive,
-    TableViewQuery,
-    TableViewSort,
-} from "./types";
+export type { TableViewFilter, TableViewPrimitive, TableViewQuery, TableViewSort } from "./types";

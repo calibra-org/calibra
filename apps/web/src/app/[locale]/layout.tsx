@@ -1,8 +1,8 @@
 import { directionFor } from "@calibra/shared/i18n";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { Footer } from "#/components/Footer";

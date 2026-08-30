@@ -356,12 +356,12 @@ export class RefundService {
             if (result.ok && result.gateway_refund_id) {
                 refund.gatewayRefundId = result.gateway_refund_id;
                 refund.attributes = {
-                    ...((refund.attributes as Record<string, unknown>) ?? {}),
+                    ...(refund.attributes as Record<string, unknown>),
                     gateway_refund: { ok: true, gateway_refund_id: result.gateway_refund_id },
                 };
             } else {
                 refund.attributes = {
-                    ...((refund.attributes as Record<string, unknown>) ?? {}),
+                    ...(refund.attributes as Record<string, unknown>),
                     gateway_refund: { ok: false, error_code: result.error_code, error_message: result.error_message },
                 };
                 /**
@@ -383,7 +383,7 @@ export class RefundService {
         } catch (error) {
             refund.useTransaction(trx);
             refund.attributes = {
-                ...((refund.attributes as Record<string, unknown>) ?? {}),
+                ...(refund.attributes as Record<string, unknown>),
                 gateway_refund: { ok: false, error_code: "exception", error_message: (error as Error).message ?? "unknown" },
             };
             await refund.save();

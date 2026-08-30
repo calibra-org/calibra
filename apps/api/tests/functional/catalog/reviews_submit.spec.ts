@@ -1,8 +1,9 @@
 import { test } from "@japa/runner";
 
-import { createProduct } from "./helpers.js";
 import ProductReview from "#models/product_review";
 import { truncateAndCleanup } from "#tests/helpers/truncate";
+
+import { createProduct } from "./helpers.js";
 
 test.group("Product reviews", (group) => {
     group.each.setup(async () => truncateAndCleanup());

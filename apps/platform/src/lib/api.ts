@@ -1,5 +1,4 @@
 import "server-only";
-
 import { createApiClient } from "@calibra/sdk";
 import { getLocale } from "next-intl/server";
 

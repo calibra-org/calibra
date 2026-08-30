@@ -2,10 +2,11 @@ import testUtils from "@adonisjs/core/services/test_utils";
 import db from "@adonisjs/lucid/services/db";
 import { test } from "@japa/runner";
 
-import { createAdmin } from "./helpers.js";
 import BulkDatasetSeeder, { FIXED_ADMINS } from "#database/seed_modules/0010_bulk_dataset_seeder";
 import { runWithTenant } from "#services/tenant_context";
 import { TEST_TENANT_ID } from "#tests/helpers/tenant";
+
+import { createAdmin } from "./helpers.js";
 
 /**
  * Scale-test coverage that runs against a real bulk-seeded dataset (≈1k products / 100 customers

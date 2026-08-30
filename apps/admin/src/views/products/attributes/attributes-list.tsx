@@ -198,7 +198,7 @@ export function AttributesList({
                                                         aria-label={tTable("termsAria", { name: rowName })}
                                                         className="size-8 text-muted-foreground hover:text-foreground"
                                                     >
-                                                        {/* biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware */}
+                                                        {/* oxlint-disable-next-line typescript/no-explicit-any -- Link href is locale-aware */}
                                                         <Link href={`/products/attributes/${row.id}` as any}>
                                                             <Settings2 className="size-3.5" aria-hidden="true" />
                                                         </Link>
@@ -345,7 +345,7 @@ function TermsRow({ attributeId, attributeName, locale }: TermsRowProps) {
     const terms = data ?? [];
     if (terms.length === 0) {
         return (
-            // biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware
+            // oxlint-disable-next-line typescript/no-explicit-any -- Link href is locale-aware
             <Link href={`/products/attributes/${attributeId}` as any} className="text-primary text-xs hover:underline">
                 {t("termsConfigureFor", { name: attributeName })}
             </Link>
@@ -360,7 +360,7 @@ function TermsRow({ attributeId, attributeName, locale }: TermsRowProps) {
                     {term.name[locale] || term.slug}
                 </span>
             ))}
-            {/* biome-ignore lint/suspicious/noExplicitAny: Link href is locale-aware */}
+            {/* oxlint-disable-next-line typescript/no-explicit-any -- Link href is locale-aware */}
             <Link href={`/products/attributes/${attributeId}` as any} className="text-primary hover:underline">
                 ({t("termsConfigure")})
             </Link>

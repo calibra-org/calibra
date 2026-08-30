@@ -167,7 +167,7 @@ function GalleryThumb({ id, url, alt, onRemove, onPromote, labels }: GalleryThum
                     <ImageIcon className="size-4" aria-hidden="true" />
                 </div>
             ) : (
-                // biome-ignore lint/performance/noImgElement: media thumbnail, no Next/Image loader configured
+                // oxlint-disable-next-line nextjs/no-img-element -- media thumbnail, no Next/Image loader configured
                 <img src={url} alt={alt} loading="lazy" className="h-full w-full object-cover" />
             )}
             <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-0.5 p-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">

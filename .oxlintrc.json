@@ -1,0 +1,97 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": ["typescript", "unicorn", "oxc", "react", "nextjs", "import", "jsx-a11y"],
+    "categories": {
+        "correctness": "error"
+    },
+    "rules": {
+        "react-hooks/rules-of-hooks": "error",
+        "react-hooks/exhaustive-deps": "warn",
+        "react/set-state-in-effect": "warn",
+        "react/purity": "warn",
+        "react/incompatible-library": "warn",
+        "react/static-components": "warn",
+        "react/refs": "warn",
+        "react/immutability": "warn",
+        "eslint/no-unused-expressions": "warn",
+        "jsx-a11y/no-autofocus": "warn",
+        "jsx-a11y/prefer-tag-over-role": "warn",
+        "jsx-a11y/no-noninteractive-element-interactions": "warn",
+        "jsx-a11y/interactive-supports-focus": "warn"
+    },
+    "jsPlugins": ["./toolings/lint/index.js"],
+    "ignorePatterns": [
+        "**/dist/**",
+        "**/build/**",
+        "**/.next/**",
+        "**/.turbo/**",
+        "**/coverage/**",
+        "packages/sdk/src/generated/**",
+        "apps/api/database/schema.ts",
+        "apps/api/database/data/**"
+    ],
+    "overrides": [
+        {
+            "files": ["apps/admin/src/**", "apps/platform/src/**"],
+            "rules": {
+                "calibra/semantic-tokens": "error",
+                "calibra/logical-utilities": "warn",
+                "calibra/icons-via-proxy": "warn"
+            }
+        },
+        {
+            "files": ["apps/admin/src/icons/**"],
+            "rules": {
+                "calibra/icons-via-proxy": "off"
+            }
+        },
+        {
+            "files": ["apps/web/src/**"],
+            "rules": {
+                "calibra/no-panel-kit-in-web": "error",
+                "calibra/semantic-tokens": "error",
+                "calibra/logical-utilities": "warn"
+            }
+        },
+        {
+            "files": ["apps/web/src/**", "apps/admin/src/**", "apps/platform/src/**"],
+            "rules": {
+                "calibra/no-direct-sdk-imports": "warn"
+            }
+        },
+        {
+            "files": ["apps/*/src/lib/api.ts"],
+            "rules": {
+                "calibra/no-direct-sdk-imports": "off"
+            }
+        },
+        {
+            "files": ["apps/api/**", "packages/sdk/**", "packages/spin/**"],
+            "rules": {
+                "nextjs/no-img-element": "off",
+                "nextjs/no-html-link-for-pages": "off",
+                "nextjs/no-sync-scripts": "off",
+                "nextjs/no-head-element": "off"
+            }
+        },
+        {
+            "files": [
+                "**/*.test.ts",
+                "**/*.test.tsx",
+                "**/*.test.js",
+                "**/*.spec.ts",
+                "**/*.spec.tsx",
+                "**/*.spec.js",
+                "**/__tests__/**",
+                "**/tests/**"
+            ],
+            "rules": {
+                "calibra/semantic-tokens": "off",
+                "calibra/logical-utilities": "off",
+                "calibra/icons-via-proxy": "off",
+                "calibra/no-direct-sdk-imports": "off",
+                "calibra/no-panel-kit-in-web": "off"
+            }
+        }
+    ]
+}

@@ -1,6 +1,6 @@
 # `#/icons`
 
-Single re-export surface for every icon used in the admin. **This is the only place that imports from `lucide-react`** — Biome blocks direct `lucide-react` imports anywhere else under `apps/admin/src/`.
+Single re-export surface for every icon used in the admin. **This is the only place that imports from `lucide-react`** — the `calibra/icons-via-proxy` lint rule blocks direct `lucide-react` imports anywhere else under `apps/admin/src/`.
 
 ## Why this exists
 
@@ -26,5 +26,5 @@ import { Search, Trash2, Spinner, ChevronStart, ChevronEnd } from "#/icons";
 
 ## What's enforced
 
-- Biome `noRestrictedImports` blocks `from "lucide-react"` anywhere under `apps/admin/src/` except this folder. Violations fail `pnpm --filter @calibra/admin lint`.
+- The `calibra/icons-via-proxy` rule (see [`toolings/lint`](../../../../toolings/lint)) blocks `from "lucide-react"` anywhere under `apps/admin/src/` and `apps/platform/src/` except this folder. It runs at `warn` while the existing call sites are swept; flip it to `error` in `.oxlintrc.json` once they are gone.
 - The directional-icons aliases set `data-rtl-flip`; the CSS rule lives in `apps/admin/src/styles/globals.css` (`:where([dir="rtl"]) [data-rtl-flip] { scale: -1 1; }`).

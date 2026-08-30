@@ -1,8 +1,8 @@
+import type { MultipartFile } from "@adonisjs/core/bodyparser";
+import app from "@adonisjs/core/services/app";
 import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { basename, dirname, extname, join, resolve, sep } from "node:path";
-import type { MultipartFile } from "@adonisjs/core/bodyparser";
-import app from "@adonisjs/core/services/app";
 import sharp from "sharp";
 
 import { currentTenantId } from "#services/tenant_context";

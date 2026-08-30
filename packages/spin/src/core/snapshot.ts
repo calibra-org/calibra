@@ -4,10 +4,10 @@ import { DEMO_TENANTS, SERVICES, type ServiceDef } from "./catalog";
 import { type ComposePsRow, composePs } from "./compose";
 import { buildComposeOptions } from "./compose-assembly";
 import { isPidAlive, readPid, readSpawnManifest } from "./host-process";
+import type { SpinMeta } from "./meta";
 import { effectivePort, isLegacyDevUi } from "./ports";
 import { isPortListening, probeHttp, probeTenantViaCaddy, probeViaCaddy } from "./probes";
 import { describeRunStep, runActivity } from "./run-state";
-import type { SpinMeta } from "./meta";
 import type { SandboxSnapshot, ServiceRow, ServiceStatus, TenantRow } from "./snapshot-types";
 
 /**
@@ -112,15 +112,13 @@ async function buildTenantRows(meta: SpinMeta): Promise<TenantRow[]> {
     const caddyHttps = effectivePort(meta, "caddyHttps");
     if (caddyHttps === null) return [];
     return Promise.all(
-        DEMO_TENANTS.map(
-            async (tenant): Promise<TenantRow> => ({
-                slug: tenant.slug,
-                name: tenant.name,
-                adminUrl: `https://${tenant.slug}.admin.${meta.slug}.spin.localhost:${caddyHttps}/`,
-                webUrl: `https://${tenant.slug}.web.${meta.slug}.spin.localhost:${caddyHttps}/`,
-                adminStatus: (await probeTenantViaCaddy(meta, tenant.slug, "admin")) ? "up" : "down",
-            }),
-        ),
+        DEMO_TENANTS.map(async (tenant): Promise<TenantRow> => ({
+            slug: tenant.slug,
+            name: tenant.name,
+            adminUrl: `https://${tenant.slug}.admin.${meta.slug}.spin.localhost:${caddyHttps}/`,
+            webUrl: `https://${tenant.slug}.web.${meta.slug}.spin.localhost:${caddyHttps}/`,
+            adminStatus: (await probeTenantViaCaddy(meta, tenant.slug, "admin")) ? "up" : "down",
+        })),
     );
 }
 

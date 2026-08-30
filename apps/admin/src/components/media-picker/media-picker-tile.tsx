@@ -44,7 +44,7 @@ export function MediaPickerTile({ row, selected, mode, selectionIndex, onToggle 
                 )}
             >
                 {category === "image" ? (
-                    /* biome-ignore lint/performance/noImgElement: external thumbnails, no Next/Image loader configured */
+                    /* oxlint-disable-next-line nextjs/no-img-element -- external thumbnails, no Next/Image loader configured */
                     <img
                         src={mediaVariantUrl(row, "medium")}
                         alt={row.alt ?? display}

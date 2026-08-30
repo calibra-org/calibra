@@ -1,8 +1,7 @@
 import "server-only";
-
 import { createApiClient } from "@calibra/sdk";
-import { cookies, headers } from "next/headers";
 import { getLocale } from "next-intl/server";
+import { cookies, headers } from "next/headers";
 
 import { TENANT_HEADER } from "#/lib/tenant/constants";
 

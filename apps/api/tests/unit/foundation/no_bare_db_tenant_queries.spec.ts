@@ -1,7 +1,7 @@
-import { readdir, readFile, stat } from "node:fs/promises";
-import { join } from "node:path";
 import app from "@adonisjs/core/services/app";
 import { test } from "@japa/runner";
+import { readdir, readFile, stat } from "node:fs/promises";
+import { join } from "node:path";
 
 /**
  * Static guard against the tenant-scoping bug class that shipped repeatedly undetected: a query run

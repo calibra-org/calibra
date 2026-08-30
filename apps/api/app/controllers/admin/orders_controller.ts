@@ -234,7 +234,7 @@ export default class AdminOrdersController {
                   DateTime.utc().toISO())
                 : DateTime.utc().toISO(),
         };
-        order.attributes = { ...((order.attributes as Record<string, unknown>) ?? {}), shipping: shippingAttr };
+        order.attributes = { ...(order.attributes as Record<string, unknown>), shipping: shippingAttr };
         await order.save();
 
         if (!alreadyShipped && order.status === OrderStatus.Processing) {
@@ -330,7 +330,7 @@ export default class AdminOrdersController {
     }
 
     private async writeAddress(
-        // biome-ignore lint/suspicious/noExplicitAny: Lucid's TransactionClientContract has open generics that don't simplify here; the writer only uses .from()/.where()/.insert() so the loose type is safe.
+        // oxlint-disable-next-line typescript/no-explicit-any -- Lucid's TransactionClientContract has open generics that don't simplify here; the writer only uses .from()/.where()/.insert() so the loose type is safe.
         trx: any,
         order: Order,
         kind: "billing" | "shipping",

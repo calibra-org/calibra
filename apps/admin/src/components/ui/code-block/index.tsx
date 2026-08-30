@@ -41,9 +41,9 @@ export async function CodeBlock({ code, language = "tsx", theme, copy = true, cl
             )}
         >
             {copy && <CodeBlockCopyButton code={code} />}
-            {/** biome-ignore lint/security/noDangerouslySetInnerHtml: shiki emits the highlighted HTML from a static `code` string. */}
+            {/* oxlint-disable-next-line react/no-danger -- shiki emits the highlighted HTML from a static `code` string. */}
             <div className="block dark:hidden" dangerouslySetInnerHTML={{ __html: lightHtml }} />
-            {/** biome-ignore lint/security/noDangerouslySetInnerHtml: shiki emits the highlighted HTML from a static `code` string. */}
+            {/* oxlint-disable-next-line react/no-danger -- shiki emits the highlighted HTML from a static `code` string. */}
             <div className="hidden dark:block" dangerouslySetInnerHTML={{ __html: darkHtml }} />
         </div>
     );

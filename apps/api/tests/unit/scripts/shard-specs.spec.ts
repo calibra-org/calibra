@@ -1,7 +1,7 @@
+import { test } from "@japa/runner";
 import { execFileSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { test } from "@japa/runner";
 
 const API_ROOT = resolve(import.meta.dirname, "..", "..", "..");
 const SCRIPT = resolve(API_ROOT, "scripts", "shard-specs.mjs");

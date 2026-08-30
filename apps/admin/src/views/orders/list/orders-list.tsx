@@ -3,8 +3,8 @@
 import type { Locale } from "@calibra/shared/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { parseAsBoolean, parseAsString } from "nuqs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -533,7 +533,7 @@ interface OrderCardProps {
  */
 function OrderCard({ order, locale, onOpenPreview }: OrderCardProps) {
     return (
-        // biome-ignore lint/a11y/useSemanticElements: a real <button> would nest the RiskFlagChip buttons inside, breaking hydration
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a real <button> would nest the RiskFlagChip buttons inside, breaking hydration
         <div
             role="button"
             tabIndex={0}

@@ -1,4 +1,3 @@
-import { resolve } from "node:path";
 import { authApiClient } from "@adonisjs/auth/plugins/api_client";
 import cache from "@adonisjs/cache/services/main";
 import app from "@adonisjs/core/services/app";
@@ -10,6 +9,7 @@ import { assert } from "@japa/assert";
 import { openapi } from "@japa/openapi-assertions";
 import { pluginAdonisJS } from "@japa/plugin-adonisjs";
 import type { Config } from "@japa/runner/types";
+import { resolve } from "node:path";
 
 import { bootstrapTestRoles, ensureTestTenant, seedTestTenant, TEST_TENANT_SLUG } from "#tests/helpers/tenant";
 

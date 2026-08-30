@@ -14,9 +14,7 @@ abstract class DomainException extends Exception {
     declare status: number;
 
     async handle(error: this, ctx: HttpContext) {
-        return ctx.response
-            .status(error.status)
-            .json({ errors: [{ message: error.message, code: error.code, ...(error.meta ?? {}) }] });
+        return ctx.response.status(error.status).json({ errors: [{ message: error.message, code: error.code, ...error.meta }] });
     }
 
     /** Additional fields merged into the error envelope (`{ rule: "...", field: "...", ... }`). */
@@ -59,6 +57,6 @@ export class BusinessRuleException extends DomainException {
     static code = "E_BUSINESS_RULE";
     constructor(message: string, rule: string, meta?: Record<string, unknown>) {
         super(message, { status: 422, code: "E_BUSINESS_RULE" });
-        this.meta = { rule, ...(meta ?? {}) };
+        this.meta = { rule, ...meta };
     }
 }

@@ -34,7 +34,7 @@ export function ReportStatCards({ items, isLoading, columns }: { items: ReportSt
         return (
             <div className={cn("grid grid-cols-1 gap-3", colClass)}>
                 {Array.from({ length: columns ?? items.length ?? 4 }).map((_, i) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length skeleton placeholder
+                    // oxlint-disable-next-line react/no-array-index-key -- fixed-length skeleton placeholder
                     <Skeleton key={i} className="h-24 rounded-lg" />
                 ))}
             </div>

@@ -53,7 +53,7 @@ export function StepImporting({ importRow, onFinished, onBackToList }: StepImpor
     }, []);
 
     /** Open SSE stream. */
-    // biome-ignore lint/correctness/useExhaustiveDependencies: see end-of-effect note
+    // oxlint-disable-next-line react/exhaustive-deps -- see end-of-effect note
     useEffect(() => {
         if (finishedRef.current) return;
         let cancelled = false;

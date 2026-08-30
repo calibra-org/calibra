@@ -54,7 +54,7 @@ export function ItemsCard({ order, locale }: ItemsCardProps) {
      * is a join of the row-identifying tuple so the effect only re-fires on real shape change.
      */
     const lineFingerprint = order.lineItems.map((l) => `${l.id}:${l.quantity}:${l.unitPrice}`).join(",");
-    // biome-ignore lint/correctness/useExhaustiveDependencies: setDirty is stable; the fingerprint string is the only signal we care about
+    // oxlint-disable-next-line react/exhaustive-deps -- setDirty is stable; the fingerprint string is the only signal we care about
     useEffect(() => {
         setDirty({});
     }, [lineFingerprint]);
@@ -191,7 +191,7 @@ function LineRow({ line, locale, readOnly, dirty, onPatch, onRemove }: LineRowPr
             <TableCell className="px-2 py-3">
                 <div className="flex items-center gap-3">
                     {line.imageUrl !== null ? (
-                        // biome-ignore lint/performance/noImgElement: mock CDN
+                        // oxlint-disable-next-line nextjs/no-img-element -- mock CDN
                         <img src={line.imageUrl} alt="" className="size-10 rounded-md object-cover" />
                     ) : (
                         <div className="size-10 rounded-md bg-muted" aria-hidden="true" />

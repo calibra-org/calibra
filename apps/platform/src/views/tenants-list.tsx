@@ -119,7 +119,7 @@ export function TenantsListView() {
     }
 
     /** Reset the keyboard selection whenever the result set changes. */
-    // biome-ignore lint/correctness/useExhaustiveDependencies: re-clamp selection only when the row set identity changes
+    // oxlint-disable-next-line react/exhaustive-deps -- re-clamp selection only when the row set identity changes
     useEffect(() => {
         setSelected(-1);
     }, [tenants.data]);

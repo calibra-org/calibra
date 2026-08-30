@@ -1,6 +1,6 @@
-import { randomUUID } from "node:crypto";
 import type { HttpContext } from "@adonisjs/core/http";
 import type { NextFn } from "@adonisjs/core/types/http";
+import { randomUUID } from "node:crypto";
 
 /**
  * Attach a stable request id to every inbound request and echo it on the response.

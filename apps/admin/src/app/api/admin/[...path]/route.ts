@@ -1,6 +1,6 @@
+import { hasLocale } from "next-intl";
 import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
-import { hasLocale } from "next-intl";
 
 import { CSRF_COOKIE, getSession, SESSION_COOKIE } from "#/lib/auth";
 import { routing } from "#/lib/i18n/routing";

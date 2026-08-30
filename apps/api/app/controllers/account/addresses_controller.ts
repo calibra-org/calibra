@@ -172,7 +172,7 @@ export default class AddressesController {
                 .where("is_default", false)
                 .count("id as total")
                 .first();
-            const others = Number((siblingCount?.$extras as { total: string }).total ?? 0);
+            const others = Number((siblingCount?.$extras as { total: string } | undefined)?.total ?? 0);
             if (others === 0) {
                 throw new Exception("Cannot delete the only default address of this kind", {
                     status: 422,

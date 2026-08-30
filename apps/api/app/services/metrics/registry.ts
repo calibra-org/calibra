@@ -119,11 +119,7 @@ type AnyMetric = CounterMetric | GaugeMetric | HistogramMetric;
  */
 function pickLabelValues(labelNames: readonly string[], labelValues: Record<string, string> | undefined): string[] {
     if (labelNames.length === 0) return [];
-    const out: string[] = new Array(labelNames.length);
-    for (let i = 0; i < labelNames.length; i++) {
-        out[i] = labelValues?.[labelNames[i]] ?? "";
-    }
-    return out;
+    return Array.from({ length: labelNames.length }, (_, i) => labelValues?.[labelNames[i]] ?? "");
 }
 
 /**

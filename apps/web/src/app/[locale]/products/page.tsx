@@ -30,7 +30,7 @@ export default async function ProductsPage({ params }: PageProps) {
                         <li key={product.id} className="flex flex-col gap-2">
                             <div className="aspect-square overflow-hidden rounded-lg bg-muted">
                                 {product.featured_image_url ? (
-                                    // biome-ignore lint/performance/noImgElement: external picsum URLs avoid next/image remote-patterns
+                                    // oxlint-disable-next-line nextjs/no-img-element -- external picsum URLs avoid next/image remote-patterns
                                     <img
                                         src={product.featured_image_url}
                                         alt={product.name ?? product.sku ?? ""}

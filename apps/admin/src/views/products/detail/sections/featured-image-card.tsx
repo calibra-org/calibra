@@ -69,7 +69,7 @@ export function FeaturedImageBody() {
                     </button>
                 ) : (
                     <>
-                        {/* biome-ignore lint/performance/noImgElement: media preview, no Next/Image loader configured */}
+                        {/* oxlint-disable-next-line nextjs/no-img-element -- media preview, no Next/Image loader configured */}
                         <img
                             src={featuredUrl}
                             alt={tField("featured")}

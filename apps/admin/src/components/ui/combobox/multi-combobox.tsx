@@ -274,15 +274,16 @@ export function MultiCombobox({
                                                             >
                                                                 {isSelected && <Check className="size-3" aria-hidden="true" />}
                                                             </span>
-                                                            {opt.imageUrl !== undefined && opt.imageUrl !== null && (
-                                                                // biome-ignore lint/performance/noImgElement: lazy-loaded thumbnail of an arbitrary URL
-                                                                <img
-                                                                    src={opt.imageUrl}
-                                                                    alt=""
-                                                                    className="size-8 shrink-0 rounded border border-border bg-muted object-cover"
-                                                                    loading="lazy"
-                                                                />
-                                                            )}
+                                                            {opt.imageUrl !== undefined &&
+                                                                opt.imageUrl !== null && (
+                                                                    // oxlint-disable-next-line nextjs/no-img-element -- lazy-loaded thumbnail of an arbitrary URL
+                                                                    <img
+                                                                        src={opt.imageUrl}
+                                                                        alt=""
+                                                                        className="size-8 shrink-0 rounded border border-border bg-muted object-cover"
+                                                                        loading="lazy"
+                                                                    />
+                                                                )}
                                                             <span className="flex min-w-0 flex-col">
                                                                 <span className="truncate">{opt.label}</span>
                                                                 {opt.sublabel !== undefined && (
