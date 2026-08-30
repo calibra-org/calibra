@@ -15,7 +15,7 @@ import Order from "#models/order";
  *      insertion layer.
  *   3. Header present AND an existing order matches — short-circuit with the order's current
  *      state, so the second request observes whatever progress the first one's downstream payment
- *      flow has made (per `docs/phases/05-orders.md` checkout_idempotency.spec.ts case (c)).
+ *      flow has made — case (c) in `tests/functional/orders/checkout_idempotency.spec.ts`.
  */
 export default class IdempotencyMiddleware {
     async handle(ctx: HttpContext, next: NextFn) {

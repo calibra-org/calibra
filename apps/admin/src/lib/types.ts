@@ -1,14 +1,12 @@
 /**
- * Admin-side view types. The shapes mirror the ADR schema; `./server-repos.ts` adapts every SDK
- * response into one of these so page templates stay untouched whether they're rendering against
- * fixture data or the live AdonisJS API.
+ * Admin-side view types. The shapes mirror the API's commerce schema; the adapters in `./adapters`
+ * turn every SDK response into one of these so page templates stay untouched whether they're
+ * rendering against fixture data or the live AdonisJS API.
  *
  * `LocalizedString` stays as `Record<Locale, string>` deliberately. The API resolves one locale
  * per request (via `Accept-Language`) and returns plain strings; the adapter fans the resolved
  * string out to both `fa` and `en` keys so the existing `row.name[locale]` access pattern keeps
  * working. The wire types in `@calibra/sdk` stay narrow.
- *
- * @see /docs/adr/0001-commerce-domain-model.md
  */
 
 import type { Locale } from "@calibra/shared/i18n";
