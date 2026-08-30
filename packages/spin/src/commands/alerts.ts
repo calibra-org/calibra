@@ -11,7 +11,7 @@ import { requirePort } from "../core/ports";
 export async function runAlerts(slug: string): Promise<void> {
     const meta = await readMetaOrFail(slug);
     const caddyHttps = requirePort(meta, "caddyHttps");
-    const host = `prom.${slug}.spin.localhost`;
+    const host = `prom.${slug}.calibra.localhost`;
     const target = `https://${host}:${caddyHttps}/api/v1/alerts`;
     const result = await capture("curl", [
         "-fsS",

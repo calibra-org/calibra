@@ -138,7 +138,7 @@ export default await Env.create(new URL("../", import.meta.url), {
     /**
      * GlitchTip (Sentry-protocol) DSN. Optional — when blank the `@sentry/node` init is
      * skipped and uncaught exceptions surface only through Pino. When set, exceptions
-     * ship to the per-spin GlitchTip instance and appear at `errors.<slug>.spin.localhost`.
+     * ship to the per-spin GlitchTip instance and appear at `errors.<slug>.calibra.localhost`.
      */
     GLITCHTIP_DSN: Env.schema.string.optional(),
 

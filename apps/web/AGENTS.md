@@ -65,7 +65,7 @@ One `apps/web` deployment serves **every** shop whose `template_key` is `default
 
 **Request pipeline (`src/middleware.ts`).** Tenant resolution runs in front of next-intl:
 
-1. `resolveHost(host)` (`src/lib/tenant/resolve-host.ts`) classifies the `Host` as `subdomain` (`<slug>.<NEXT_PUBLIC_SHOPS_ROOT>`), `custom` (a mapped domain), or `platform` (apex / unknown / `*.spin.localhost` / bare `localhost`).
+1. `resolveHost(host)` (`src/lib/tenant/resolve-host.ts`) classifies the `Host` as `subdomain` (`<slug>.<NEXT_PUBLIC_SHOPS_ROOT>`), `custom` (a mapped domain), or `platform` (apex / unknown / `*.calibra.localhost` / bare `localhost`).
 2. The tenant ref is validated against `GET /api/v1/storefront/tenant`. Any non-OK outcome rewrites to a `/platform/*` state page so **no shop route ever renders without a resolved, active, correctly-templated tenant**: unknown → `/platform/not-found`, suspended/archived (API 503) → `/platform/unavailable`, `template_key` ≠ this deployment's → `/platform/misrouted`.
 3. On success the validated profile is forwarded to the render path as request headers: `x-calibra-tenant` (the ref — `apiServer()` forwards it so every API call is tenant-scoped) and `x-calibra-tenant-data` (the profile + branding JSON, percent-encoded). Then next-intl handles locale routing. Tenant and locale are independent — the API still gets `Accept-Language` *and* `X-Calibra-Tenant`.
 

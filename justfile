@@ -111,6 +111,19 @@ spin-metrics:
 spin-alerts:
     @pnpm -s spin alerts local
 
+# On WSL this imports into the WINDOWS CurrentUser root store, which is the one Chrome and
+# Edge read: the stack runs in WSL but the browser is a Windows process, so trusting the CA
+# inside WSL alone still leaves the browser at ERR_CERT_AUTHORITY_INVALID. No elevation
+# needed, and it is idempotent. One root signs every spin, so future spins are covered too.
+
+# Trust the local CA so https://*.calibra.localhost is green. Run once per machine.
+trust:
+    @pnpm -s spin trust
+
+# Also add the CA to the Linux system store (curl/node inside WSL). Needs sudo.
+trust-linux:
+    @pnpm -s spin trust --install
+
 # === dev servers (host) ======================================================
 
 # Bring up db + migrations + every dev server. Storefront :3000, admin :3001, api :3333.

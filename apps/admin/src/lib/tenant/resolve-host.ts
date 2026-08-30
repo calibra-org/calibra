@@ -5,7 +5,7 @@ import { ADMIN_ROOT } from "./constants";
  * - `subdomain` — a shop's admin at `<slug>.<ADMIN_ROOT>` (e.g. `aurora.admin.calibra.app`).
  * - `custom` — a shop's mapped admin domain `admin.<domain>` (e.g. `admin.acme.com`); the ref is the
  *   storefront `domain` the API resolves via `tenant_domains`.
- * - `platform` — the apex/root itself, bare `localhost`, the per-spin infra hosts (`*.spin.localhost`),
+ * - `platform` — the apex/root itself, bare `localhost`, the per-spin infra hosts (`*.calibra.localhost`),
  *   or anything that names no shop. These render the "unknown shop" page — the admin is per-tenant.
  */
 export type ResolvedHost = { kind: "subdomain"; slug: string } | { kind: "custom"; domain: string } | { kind: "platform" };
@@ -16,7 +16,7 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /**
  * Resolve a request `Host` to a tenant reference (RULE A). Strips the port, lowercases, and matches
  * the configured admin shapes. Bare `localhost`, the apex `root`, and the per-spin infra hosts
- * (`*.spin.localhost`) are platform — never a shop. A host of the form `admin.<domain>` is a custom
+ * (`*.calibra.localhost`) are platform — never a shop. A host of the form `admin.<domain>` is a custom
  * admin domain whose ref is `<domain>` (the storefront domain the API knows).
  *
  * @param rawHost the raw `Host` header (may include a `:port` and mixed case)
@@ -29,18 +29,18 @@ export function resolveHost(rawHost: string | null | undefined, root: string = A
         return { kind: "platform" };
     }
     /**
-     * Dev convenience: the per-spin Caddy fronts the admin at `admin.<spin>.spin.localhost`, and a
-     * matching wildcard route serves per-tenant hosts `<slug>.admin.<spin>.spin.localhost` over TLS
+     * Dev convenience: the per-spin Caddy fronts the admin at `admin.<spin>.calibra.localhost`, and a
+     * matching wildcard route serves per-tenant hosts `<slug>.admin.<spin>.calibra.localhost` over TLS
      * — prod parity for `<slug>.admin.calibra.app`. Resolve the leading label as the tenant here,
-     * before the generic `.spin.localhost` → platform fallback below (which still catches the bare
+     * before the generic `.calibra.localhost` → platform fallback below (which still catches the bare
      * `admin.<spin>` apex and every infra host).
      */
-    const spinAdmin = host.match(/^([a-z0-9]+(?:-[a-z0-9]+)*)\.admin\..+\.spin\.localhost$/);
+    const spinAdmin = host.match(/^([a-z0-9]+(?:-[a-z0-9]+)*)\.admin\..+\.calibra\.localhost$/);
     if (spinAdmin) {
         return { kind: "subdomain", slug: spinAdmin[1]! };
     }
     /** The apex of the admin root, and the per-checkout spin infra hosts, are not shops. */
-    if (host === root || host.endsWith(".spin.localhost")) {
+    if (host === root || host.endsWith(".calibra.localhost")) {
         return { kind: "platform" };
     }
     const suffix = `.${root}`;

@@ -27,14 +27,14 @@ describe("resolveHost (admin)", () => {
         expect(resolveHost("admin.localhost", "admin.localhost")).toEqual({ kind: "platform" });
     });
 
-    it("resolves the per-spin Caddy tenant host `<slug>.admin.<spin>.spin.localhost`", () => {
-        expect(resolveHost("aurora.admin.mt-shop-admin.spin.localhost:13662", ROOT)).toEqual({
+    it("resolves the per-spin Caddy tenant host `<slug>.admin.<spin>.calibra.localhost`", () => {
+        expect(resolveHost("aurora.admin.mt-shop-admin.calibra.localhost:13662", ROOT)).toEqual({
             kind: "subdomain",
             slug: "aurora",
         });
         /** The bare admin apex and infra hosts under a spin stay platform. */
-        expect(resolveHost("admin.mt-shop-admin.spin.localhost:13662", ROOT)).toEqual({ kind: "platform" });
-        expect(resolveHost("grafana.mt-shop-admin.spin.localhost:13662", ROOT)).toEqual({ kind: "platform" });
+        expect(resolveHost("admin.mt-shop-admin.calibra.localhost:13662", ROOT)).toEqual({ kind: "platform" });
+        expect(resolveHost("grafana.mt-shop-admin.calibra.localhost:13662", ROOT)).toEqual({ kind: "platform" });
     });
 
     it("rejects a non-DNS-label slug", () => {

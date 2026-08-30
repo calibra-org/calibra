@@ -234,7 +234,7 @@ function CopyButton({ text }: { text: string }) {
 
 function GrafanaCard({ extras }: { extras: PanelExtras }) {
     if (!extras.caddyHttps) return null;
-    const base = `https://grafana.${extras.slug}.spin.localhost:${extras.caddyHttps}`;
+    const base = `https://grafana.${extras.slug}.calibra.localhost:${extras.caddyHttps}`;
     return (
         <section className="spin-card">
             <h2>Grafana dashboards</h2>
@@ -288,7 +288,7 @@ function TrustCard() {
         <section className="spin-card">
             <h2>HTTPS trust</h2>
             <p className="spin-dim">
-                If <code>*.spin.localhost</code> shows a certificate warning, trust Caddy's local CA once:
+                If <code>*.calibra.localhost</code> shows a certificate warning, trust Caddy's local CA once:
             </p>
             <pre className="spin-log">pnpm spin trust --install</pre>
             <p className="spin-dim">

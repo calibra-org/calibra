@@ -17,14 +17,14 @@ const nextConfig: NextConfig = {
     transpilePackages: ["@calibra/shared", "@calibra/panel-kit"],
     /**
      * Allow dev-server cross-origin requests from the per-spin Caddy hostname. The control plane is
-     * a single global host (NOT per-tenant), reached at `console.<slug>.spin.localhost:<caddyHttps>`
+     * a single global host (NOT per-tenant), reached at `console.<slug>.calibra.localhost:<caddyHttps>`
      * in a spin and `console.localhost:<port>` directly. Next's glob `*` matches one dot-less label,
-     * so `*.spin.localhost` catches `console.spin.localhost` and `*.*.spin.localhost` catches
-     * `console.<slug>.spin.localhost`. `NEXT_DEV_ALLOWED_ORIGINS` (emitted by spin) is merged in.
+     * so `*.calibra.localhost` catches `console.calibra.localhost` and `*.*.calibra.localhost` catches
+     * `console.<slug>.calibra.localhost`. `NEXT_DEV_ALLOWED_ORIGINS` (emitted by spin) is merged in.
      */
     allowedDevOrigins: [
-        "*.spin.localhost",
-        "*.*.spin.localhost",
+        "*.calibra.localhost",
+        "*.*.calibra.localhost",
         "console.localhost",
         ...(process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(",")
             .map((s) => s.trim())

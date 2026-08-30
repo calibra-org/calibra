@@ -19,27 +19,27 @@ const nextConfig: NextConfig = {
     transpilePackages: ["@calibra/shared", "@calibra/panel-kit"],
     /**
      * Allow dev-server cross-origin requests from the per-spin Caddy hostnames. The spin
-     * fronts the dev server at `https://admin.<slug>.spin.localhost:<caddyHttps>`; without
+     * fronts the dev server at `https://admin.<slug>.calibra.localhost:<caddyHttps>`; without
      * this list Next.js 15.3+ blocks `/_next/webpack-hmr` and other dev resources because
      * they originate from a hostname other than the dev server's own.
      *
-     * Next's glob `*` matches a single dot-less segment, so `*.spin.localhost` only catches
-     * `<one>.spin.localhost`. Our hostnames have two labels before `.spin.localhost`
-     * (`admin.<slug>.spin.localhost`), so we also include `*.*.spin.localhost`. Spin.mjs
+     * Next's glob `*` matches a single dot-less segment, so `*.calibra.localhost` only catches
+     * `<one>.calibra.localhost`. Our hostnames have two labels before `.calibra.localhost`
+     * (`admin.<slug>.calibra.localhost`), so we also include `*.*.calibra.localhost`. Spin.mjs
      * additionally emits `NEXT_DEV_ALLOWED_ORIGINS` with the literal hostnames as belt-and-
      * suspenders for any pattern Next doesn't accept; we merge that in here.
      */
     allowedDevOrigins: [
-        "*.spin.localhost",
-        "*.*.spin.localhost",
+        "*.calibra.localhost",
+        "*.*.calibra.localhost",
         /**
          * Per-tenant admin subdomains in dev (Phase 4). A shop's admin is reached at
          * `<slug>.admin.localhost:<port>`; Next's glob `*` matches a single dot-less label, so
          * `*.admin.localhost` catches `aurora.admin.localhost` / `mehr.admin.localhost`.
          */
         "*.admin.localhost",
-        /** Per-tenant admin via the spin's Caddy: `<tenant>.admin.<spin>.spin.localhost`. */
-        "*.admin.*.spin.localhost",
+        /** Per-tenant admin via the spin's Caddy: `<tenant>.admin.<spin>.calibra.localhost`. */
+        "*.admin.*.calibra.localhost",
         ...(process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(",")
             .map((s) => s.trim())
             .filter(Boolean) ?? []),

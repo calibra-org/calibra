@@ -16,7 +16,7 @@ The dev-stack orchestrator (`@calibra/spin`). A tsdown-built TypeScript package:
 - **No bare-db / always `postgres_admin`.** Migrations + seed run on `--connection=postgres_admin` (BYPASSRLS). Seeding on the RLS-enforced `calibra_app` role silently writes zero rows. See [[feedback_no_bare_db_tenant_queries]].
 - **Panel binds 127.0.0.1.** The panel exposes destructive actions (reseed/migrate/restart) — never bind 0.0.0.0.
 - **Secrets live in the meta, chmod 0600.** `appKey`/`glitchtipSecretKey`/`meiliMasterKey` are flat top-level fields (legacy-compatible); forward-migration only fills holes, never reallocates ports/secrets.
-- **Canonical tenant URLs = Caddy TLS** (`<shop>.admin.<slug>.spin.localhost`); direct-port is a fallback. Keep the handoff, panel, env (`ADMIN_URL_TEMPLATE`/`CONSOLE_URL`), and impersonation on the one scheme.
+- **Canonical tenant URLs = Caddy TLS** (`<shop>.admin.<slug>.calibra.localhost`); direct-port is a fallback. Keep the handoff, panel, env (`ADMIN_URL_TEMPLATE`/`CONSOLE_URL`), and impersonation on the one scheme.
 
 ## Deps
 

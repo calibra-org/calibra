@@ -14,7 +14,7 @@ import { effectivePort, requirePort } from "./ports";
  * port aborts the spin instead of emitting a broken `reverse_proxy host.docker.internal:` line)
  * while also being compiler-checked, so a typo'd field can't slip through.
  *
- * Canonical per-tenant URLs use the **Caddy TLS** scheme (`<shop>.admin.<slug>.spin.localhost`);
+ * Canonical per-tenant URLs use the **Caddy TLS** scheme (`<shop>.admin.<slug>.calibra.localhost`);
  * the direct-port scheme stays as a fallback. The dual-scheme bug is fixed by making the env
  * (`ADMIN_URL_TEMPLATE`, `CONSOLE_URL`) advertise the same canonical scheme as the handoff/panel.
  */
@@ -26,9 +26,9 @@ function envHeader(slug: string): string {
     return `# ${SPIN_ENV_HEADER_MARKER} for spin "${slug}". Safe to edit; re-running spin overwrites.`;
 }
 
-/** The spin's Caddy apex domain, e.g. `my-feature.spin.localhost`. */
+/** The spin's Caddy apex domain, e.g. `my-feature.calibra.localhost`. */
 function spinDomain(meta: SpinMeta): string {
-    return `${meta.slug}.spin.localhost`;
+    return `${meta.slug}.calibra.localhost`;
 }
 
 /**
@@ -63,7 +63,7 @@ function consoleUrl(meta: SpinMeta): string {
 
 /**
  * Literal hostnames Next's `allowedDevOrigins` must accept for this spin. The apps already
- * declare wildcard globs (`*.admin.*.spin.localhost`, …); these explicit literals — including
+ * declare wildcard globs (`*.admin.*.calibra.localhost`, …); these explicit literals — including
  * every seeded tenant in both the Caddy and direct-port schemes — are belt-and-suspenders for
  * multi-tenant cause #2 (Next blocking `/_next` HMR from a per-tenant host).
  */

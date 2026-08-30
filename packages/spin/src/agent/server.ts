@@ -184,7 +184,7 @@ async function handle(req: IncomingMessage, res: ServerResponse, opts: AgentOpti
      */
     if (path === "/api/caddy/ask") {
         const domain = (url.searchParams.get("domain") ?? "").toLowerCase();
-        const ok = domain === `${opts.slug}.spin.localhost` || domain.endsWith(`.${opts.slug}.spin.localhost`);
+        const ok = domain === `${opts.slug}.calibra.localhost` || domain.endsWith(`.${opts.slug}.calibra.localhost`);
         res.statusCode = ok ? 200 : 403;
         res.end(ok ? "ok" : "denied");
         return;

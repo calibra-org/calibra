@@ -15,7 +15,7 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /**
  * Resolve a request `Host` to a tenant reference (RULE A). Strips the port, lowercases, and matches
  * the configured `<slug>.<root>` shape. Bare `localhost`, the apex `root` itself, and the per-spin
- * infra hosts (`*.spin.localhost`) are platform — never a shop. Anything else with no `root` suffix
+ * infra hosts (`*.calibra.localhost`) are platform — never a shop. Anything else with no `root` suffix
  * is treated as a custom domain for the backend to resolve.
  *
  * @param rawHost the raw `Host` header (may include a `:port` and mixed case)
@@ -29,16 +29,16 @@ export function resolveHost(rawHost: string | null | undefined, root: string = S
     }
     /**
      * Dev convenience: the per-spin Caddy serves a shop's storefront at
-     * `<slug>.web.<spin>.spin.localhost` (a wildcard route beside the bare `web.<spin>` apex), so
-     * resolve the leading label as the tenant here — before the generic `.spin.localhost` → platform
+     * `<slug>.web.<spin>.calibra.localhost` (a wildcard route beside the bare `web.<spin>` apex), so
+     * resolve the leading label as the tenant here — before the generic `.calibra.localhost` → platform
      * fallback below, which still catches the apex and every infra host.
      */
-    const spinShop = host.match(/^([a-z0-9]+(?:-[a-z0-9]+)*)\.web\..+\.spin\.localhost$/);
+    const spinShop = host.match(/^([a-z0-9]+(?:-[a-z0-9]+)*)\.web\..+\.calibra\.localhost$/);
     if (spinShop) {
         return { kind: "subdomain", slug: spinShop[1]! };
     }
     /** The apex of the shop root, and the per-checkout spin infra hosts, are not shops. */
-    if (host === root || host.endsWith(".spin.localhost")) {
+    if (host === root || host.endsWith(".calibra.localhost")) {
         return { kind: "platform" };
     }
     const suffix = `.${root}`;

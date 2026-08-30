@@ -1,5 +1,5 @@
 # Caddy reverse proxy for the prod-parity per-spin stack. Terminates TLS for every service
-# UI behind `https://<service>.<slug>.spin.localhost`, using Caddy's internal CA.
+# UI behind `https://<service>.<slug>.calibra.localhost`, using Caddy's internal CA.
 #
 # The CA itself (root + intermediate cert/key) is host-bound — bind-mounted from
 # `~/.calibra/caddy-ca/` into the Caddy data dir's `pki/authorities/local/` subpath. That

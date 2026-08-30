@@ -1,5 +1,5 @@
 # Per-spin GlitchTip (Sentry-protocol). The api forwards thrown exceptions via `@sentry/node`
-# pointed at this instance; thrown errors surface at `errors.<slug>.spin.localhost` within
+# pointed at this instance; thrown errors surface at `errors.<slug>.calibra.localhost` within
 # seconds. DSN auto-provisioning is on the roadmap — for now the operator registers + creates
 # org/project + copies the DSN once per spin (see packages/spin/README.md).
 #

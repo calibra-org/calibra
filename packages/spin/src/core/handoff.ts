@@ -17,8 +17,8 @@ function print(line = ""): void {
 export function printHandoffCard(meta: SpinMeta, opts: { withWeb: boolean }): void {
     const { slug } = meta;
     const caddyHttps = requirePort(meta, "caddyHttps");
-    const apex = `https://${slug}.spin.localhost:${caddyHttps}`;
-    const base = (host: string) => `https://${host}.${slug}.spin.localhost:${caddyHttps}`;
+    const apex = `https://${slug}.calibra.localhost:${caddyHttps}`;
+    const base = (host: string) => `https://${host}.${slug}.calibra.localhost:${caddyHttps}`;
 
     print();
     print(c.bold(c.green("ready")));
@@ -28,14 +28,16 @@ export function printHandoffCard(meta: SpinMeta, opts: { withWeb: boolean }): vo
     print(`    admin   ${c.cyan(base("admin"))} ${c.dim("(platform · open a shop ↓)")}`);
     for (const tenant of DEMO_TENANTS) {
         print(
-            `       ${tenant.slug.padEnd(7)} ${c.cyan(`https://${tenant.slug}.admin.${slug}.spin.localhost:${caddyHttps}`)} ${c.dim(`(${tenant.ownerEmail})`)}`,
+            `       ${tenant.slug.padEnd(7)} ${c.cyan(`https://${tenant.slug}.admin.${slug}.calibra.localhost:${caddyHttps}`)} ${c.dim(`(${tenant.ownerEmail})`)}`,
         );
     }
     print(`    api     ${c.cyan(base("api"))} ${c.dim(`(host :${meta.ports.api})`)}`);
     if (opts.withWeb) {
         print(`    web     ${c.cyan(base("web"))} ${c.dim("(platform · open a shop ↓)")}`);
         for (const tenant of DEMO_TENANTS) {
-            print(`       ${tenant.slug.padEnd(7)} ${c.cyan(`https://${tenant.slug}.web.${slug}.spin.localhost:${caddyHttps}`)}`);
+            print(
+                `       ${tenant.slug.padEnd(7)} ${c.cyan(`https://${tenant.slug}.web.${slug}.calibra.localhost:${caddyHttps}`)}`,
+            );
         }
     }
     print(`  ${c.bold("observability")}`);
@@ -58,7 +60,7 @@ export function printHandoffCard(meta: SpinMeta, opts: { withWeb: boolean }): vo
     print();
     print(
         c.dim(
-            `caddy: *.${slug}.spin.localhost → 127.0.0.1; local-CA certs. Run \`pnpm spin trust\` once if you see TLS warnings.`,
+            `caddy: *.${slug}.calibra.localhost → 127.0.0.1; local-CA certs. Run \`just trust\` once per machine if you see TLS warnings (WSL: updates the Windows store).`,
         ),
     );
 }

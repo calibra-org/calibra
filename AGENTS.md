@@ -54,7 +54,7 @@ When an agent (Codex, Claude Code, Cursor, …) is investigating a running spin,
 ```sh
 just spin-status-json           # machine-readable health report — pipe into jq
 just spin-list-json             # every spin (worktree + local) as JSON
-just spin-url grafana           # → https://grafana.local.spin.localhost:13xxx/  (just the URL)
+just spin-url grafana           # → https://grafana.local.calibra.localhost:13xxx/  (just the URL)
 just spin-url api               # → http://localhost:13xxx/  (api host port)
 just spin-logs api.ndjson       # → absolute path; agent picks tail / jq / less
 just spin-metrics               # raw /metrics body — pipe into grep
