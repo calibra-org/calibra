@@ -108,8 +108,8 @@ export function ReportSeriesChart({
                                     fontSize: 12,
                                 }}
                                 labelFormatter={(value) => formatDate(String(value), locale)}
-                                formatter={(value: number, key) => [
-                                    fmt(value),
+                                formatter={(value, key) => [
+                                    fmt(Number(value)),
                                     key === "value" ? currentLabel : (compareLabel ?? ""),
                                 ]}
                             />
