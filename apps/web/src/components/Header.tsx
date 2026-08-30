@@ -26,7 +26,7 @@ export function Header({ brandName, logoUrl, monogram }: HeaderProps) {
             <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-4 py-4">
                 <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
                     {logoUrl ? (
-                        // biome-ignore lint/performance/noImgElement: per-tenant CDN logo; next/image remote-patterns + sizing are overkill for a small header mark
+                        // oxlint-disable-next-line nextjs/no-img-element -- per-tenant CDN logo; next/image remote-patterns + sizing are overkill for a small header mark
                         <img src={logoUrl} alt={brandName} className="h-7 w-auto" />
                     ) : (
                         <span

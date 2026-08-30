@@ -4,9 +4,10 @@ import db from "@adonisjs/lucid/services/db";
 import { test } from "@japa/runner";
 import { DateTime } from "luxon";
 
-import { createCategory } from "./helpers.js";
 import ProductCategoryTranslation from "#models/product_category_translation";
 import { TEST_TENANT_SLUG } from "#tests/helpers/tenant";
+
+import { createCategory } from "./helpers.js";
 
 /** A reserved id distinct from every other spec's second tenant (e.g. otp.spec uses 100_001). */
 const SECOND_TENANT_ID = 100_077;

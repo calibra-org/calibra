@@ -42,8 +42,6 @@ export function DashboardClient() {
     const tCommon = useTranslations("Common");
     const queryClient = useQueryClient();
 
-    const comparison = t("comparedTo");
-
     return (
         <section className="flex flex-col gap-6">
             <header className="flex flex-wrap items-center justify-between gap-4">

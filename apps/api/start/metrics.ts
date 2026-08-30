@@ -1,7 +1,7 @@
-import { monitorEventLoopDelay } from "node:perf_hooks";
 import cache from "@adonisjs/cache/services/main";
 import logger from "@adonisjs/core/services/logger";
 import db from "@adonisjs/lucid/services/db";
+import { monitorEventLoopDelay } from "node:perf_hooks";
 
 import {
     recordCacheHit,

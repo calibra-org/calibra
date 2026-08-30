@@ -1,5 +1,4 @@
 import "server-only";
-
 import type { MoneyFormatConfig } from "@calibra/shared/money";
 
 import { apiServer } from "#/lib/api";

@@ -182,7 +182,7 @@ just ace 'make:transformer order'       # BaseTransformer<Order> stub
 # Verification
 pnpm --filter @calibra/api typecheck    # tsc --noEmit
 pnpm --filter @calibra/api test         # full Japa suite (unit + functional)
-just lint                               # biome + sherif
+just lint                               # oxlint + sherif
 
 # Spec / route drift detection
 just docs-check                         # bundle OpenAPI specs + node ace check:api-docs

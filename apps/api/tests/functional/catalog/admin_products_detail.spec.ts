@@ -1,10 +1,11 @@
 import { test } from "@japa/runner";
 
-import { createAdmin, createProduct } from "./helpers.js";
 import Media from "#models/media";
 import Product from "#models/product";
 import ProductDownload from "#models/product_download";
 import { truncateAndCleanup } from "#tests/helpers/truncate";
+
+import { createAdmin, createProduct } from "./helpers.js";
 
 async function createMedia(label: string) {
     return await Media.create({

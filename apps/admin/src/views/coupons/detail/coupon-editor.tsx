@@ -2,8 +2,8 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { Copy, MoreHorizontal, RefreshCw, Save, Trash2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DetailPageShell } from "#/components/sections/detail-page-shell";

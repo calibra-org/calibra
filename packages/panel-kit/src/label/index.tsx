@@ -15,7 +15,7 @@ export interface LabelProps extends ComponentProps<"label"> {
  */
 export function Label({ className, required, optional, children, ...props }: LabelProps) {
     return (
-        // biome-ignore lint/a11y/noLabelWithoutControl: shadcn-style Label is a generic wrapper; consumers pair it with a control via `htmlFor`.
+        // oxlint-disable-next-line jsx-a11y/label-has-associated-control -- shadcn-style Label is a generic wrapper; consumers pair it with a control via `htmlFor`.
         <label
             data-slot="label"
             className={cn(

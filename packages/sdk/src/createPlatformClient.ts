@@ -1,7 +1,7 @@
 import type { Client } from "openapi-fetch";
 
-import { createTypedClient, type TypedClientOptions } from "./internal/createTypedClient";
 import type { paths } from "./generated/platform";
+import { createTypedClient, type TypedClientOptions } from "./internal/createTypedClient";
 
 /** Typed control-plane (platform) API client. Every operation is inferred from `platform.v1.yaml`. */
 export type PlatformClient = Client<paths>;

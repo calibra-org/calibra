@@ -1,7 +1,8 @@
 import { test } from "@japa/runner";
 
-import { createCategory } from "./helpers.js";
 import { truncateAndCleanup } from "#tests/helpers/truncate";
+
+import { createCategory } from "./helpers.js";
 
 test.group("GET /api/v1/categories", (group) => {
     group.each.setup(async () => truncateAndCleanup());

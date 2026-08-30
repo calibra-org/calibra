@@ -12,7 +12,7 @@ import type { ComposeOptions } from "./compose";
  * panel's SSE feed, and the TUI's log pane.
  */
 
-// biome-ignore lint/suspicious/noControlCharactersInRegex: matching ANSI escape sequences requires the ESC/BEL control chars
+// oxlint-disable-next-line no-control-regex -- matching ANSI escape sequences requires the ESC/BEL control chars
 const ANSI_RE = /\u001b\][^\u0007]*\u0007|\u001b\[[0-9;?=]*[A-Za-z]/g;
 
 /** Strip ANSI escape sequences. Host processes run with NO_COLOR, but this catches stragglers. */

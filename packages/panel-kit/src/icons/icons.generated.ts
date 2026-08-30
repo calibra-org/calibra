@@ -1,7 +1,7 @@
 /**
  * Icon re-export surface. Every icon used anywhere in the admin imports from `#/icons`
  * (not directly from `"lucide-react"`). Direct imports from `"lucide-react"` are blocked
- * by Biome's `noRestrictedImports` rule everywhere outside this folder.
+ * by the `calibra/icons-via-proxy` lint rule everywhere outside this folder.
  *
  * Adding a new icon:
  *   1. Add its name to the export list below (alphabetised).

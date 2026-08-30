@@ -5,8 +5,8 @@ import { join } from "node:path";
 import { log } from "../log";
 
 import { capture, run } from "./exec";
-import { MAIN_REPO_ROOT, WORKTREES_DIR } from "./paths";
 import type { SpinMeta } from "./meta";
+import { MAIN_REPO_ROOT, WORKTREES_DIR } from "./paths";
 
 /** Whether the worktree directory exists and is a real git worktree. */
 export function worktreeExists(meta: SpinMeta): boolean {

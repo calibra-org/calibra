@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { BaseSeeder } from "@adonisjs/lucid/seeders";
 import { DateTime } from "luxon";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 import Region from "#models/region";
 import { normalizeIranText } from "#services/iran_text_normalize";

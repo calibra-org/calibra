@@ -1,8 +1,8 @@
+import type { Command } from "commander";
 import { existsSync, readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { platform } from "node:os";
 import { join } from "node:path";
-import type { Command } from "commander";
 
 import { capture, run } from "../core/exec";
 import { SHARED_CADDY_CA_DIR, STATE_DIR } from "../core/paths";

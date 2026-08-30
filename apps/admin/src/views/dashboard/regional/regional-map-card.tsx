@@ -11,10 +11,10 @@ import { useRegionalProvinceDetail, useRegionalProvinces } from "#/lib/queries/r
 
 import { CountryView } from "./country-view";
 import { dateFilterToApi } from "./date-filter-to-api";
+import type { HeatmapMetric } from "./heatmap-scale";
 import { ProvinceView } from "./province-view";
 import { RegionalMapHeader } from "./regional-map-header";
 import { useTopX } from "./use-top-x";
-import type { HeatmapMetric } from "./heatmap-scale";
 
 /**
  * Regional insights — full Card hosting the country↔province state machine. Lives in the admin

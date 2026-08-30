@@ -236,7 +236,7 @@ Each of the 24 `page.tsx` files belongs to exactly one group; the per-group view
 ```sh
 pnpm --filter @calibra/admin typecheck          # tsc --noEmit
 pnpm --filter @calibra/admin test               # vitest (unit; --passWithNoTests)
-biome check apps/admin/src                       # lint + format (root: pnpm lint:biome)
+oxlint apps/admin/src && oxfmt --check apps/admin/src   # lint + format (root: pnpm lint)
 pnpm --filter @calibra/admin build              # next build (standalone)
 pnpm --filter @calibra/admin test:e2e           # playwright — needs the spin stack up
 ```
@@ -268,7 +268,7 @@ The executing agent authors a `Workflow` script. **Parallel where file sets are 
 - Convert each view to Pattern B (consume hook, skeleton + error state).
 - Add/extend the group's client hooks to Pattern C (reuse Phase-0 shared hooks; taxonomy hooks read `used_count`).
 - **Do NOT edit `server-repos.ts`, `lib/types.ts`, or the Phase-0 shared hook files.** If a needed shared type/hook is missing, the agent reports it back (it does not add it in parallel).
-- Run `typecheck` + `biome check` on its own files; return a per-group report (files changed, hooks added, anything that still imports server-repos).
+- Run `typecheck` + `oxlint` + `oxfmt --check` on its own files; return a per-group report (files changed, hooks added, anything that still imports server-repos).
 - Because the groups' file sets are disjoint, run them in the SHARED worktree WITHOUT per-agent `isolation: 'worktree'` (cheaper; no conflicts by construction). Use worktree isolation ONLY if a late discovery forces two agents onto the same file.
 
 **Phase 2 — Adversarial review (PARALLEL, per-group reviewers).** For each group, a fresh skeptic agent verifies against acceptance criteria (§10): no `server-repos`/`apiServer`/`Promise.all`/SDK import in that group's pages or client modules; every converted view has a skeleton + error state; metadata is static; navigation uses `#/lib/i18n/navigation`; no `//` comments; `used_count` actually wired for taxonomy. Reviewers return PASS/FAIL with file:line evidence. Any FAIL loops back to a Phase-1 fix for that group only.
@@ -276,7 +276,7 @@ The executing agent authors a `Workflow` script. **Parallel where file sets are 
 **Phase 3 — Synthesis + cleanup (SERIAL, main thread).**
 - Now that no page imports `server-repos`, delete every dead data-fetching export; move surviving static fixtures to `src/lib/fixtures/*` (if not already); delete `server-repos.ts` if fully empty. This is the ONLY edit to that shared file — done once, serially.
 - Run the full anti-regression grep (§7) — must be zero hits.
-- Full gate: `typecheck` + `test` + `biome check` + `build` + `test:e2e` (stack up). 
+- Full gate: `typecheck` + `test` + `oxlint` + `oxfmt --check` + `build` + `test:e2e` (stack up). 
 - Commit `refactor(admin): remove server-repos data layer`. Push. Update the PR body with the §10 checklist.
 
 The Workflow `meta.phases` should mirror these four. Phase 1 and Phase 2 are the parallel fans (7 agents each); Phase 0 and Phase 3 are single-agent serial barriers. Log dropped/odd cases via `log()` so nothing is silently skipped.
@@ -310,7 +310,7 @@ Technical:
 - [ ] `grep -rnE "from \"#/lib/server-repos\"|apiServer\(|Promise\.all" src/app` → **0 hits**.
 - [ ] `grep -rn "@calibra/sdk" src/views src/lib/queries` → **0 hits**.
 - [ ] `server-repos.ts` deleted (or contains zero data-fetching exports); static fixtures live under `src/lib/fixtures/`.
-- [ ] `typecheck`, `test`, `biome check`, `build`, `test:e2e` all green.
+- [ ] `typecheck`, `test`, `oxlint`, `oxfmt --check`, `build`, `test:e2e` all green.
 - [ ] No `//` comments introduced; navigation imports from `#/lib/i18n/navigation`; logical Tailwind utilities only.
 - [ ] No new deps (or human approval documented).
 - [ ] Commits scoped `admin`, small, pushed; PR body has this checklist + a note that entity-derived metadata titles were intentionally dropped + the attributes term-preview backend follow-up.

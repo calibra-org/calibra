@@ -1,8 +1,8 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import { BaseCommand, flags } from "@adonisjs/core/ace";
 import router from "@adonisjs/core/services/router";
 import type { CommandOptions } from "@adonisjs/core/types/ace";
+import { readFile, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
 /**
  * Diff entry produced by {@link diff}. Each value indicates a single drift between the live

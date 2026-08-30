@@ -1,6 +1,6 @@
 # Calibra Admin Design System
 
-The canonical contract for every primitive, token, and convention that the admin renders with. Read this end-to-end **before** building any new view, primitive, or business component. Every consistency rule below is enforced — by Biome, by the `lint-tokens` script, by code review, or all three.
+The canonical contract for every primitive, token, and convention that the admin renders with. Read this end-to-end **before** building any new view, primitive, or business component. Every consistency rule below is enforced — by oxlint, by the custom `@calibra/lint` rules, by code review, or all three.
 
 > **Status (2026-05-26):** Foundation layer landed (prompt `01`). Tier-2/3 primitive folder migration in flight (prompt `02`). Date input consolidation (prompt `03`), DataGrid primitive (prompt `04`), business primitives (prompt `05`), colour sweep (prompt `06`), and showcase site (prompt `07`) follow. The token + icons + lint rails described here are live today; primitive folder shapes and showcase routes appear as their sub-prompts land.
 
@@ -118,7 +118,7 @@ Enforced by `scripts/lint-tokens.mjs` (at `warn` today; flips to `error` after p
 
 ### 3.2 Icons only from `#/icons`
 
-No `import { X } from "lucide-react"` anywhere outside `apps/admin/src/icons/`. Enforced by Biome's `noRestrictedImports` (at `warn` today; flips to `error` after the call-site sweep in prompt `02`). See [`../icons/README.md`](../icons/README.md).
+No `import { X } from "lucide-react"` anywhere outside `apps/admin/src/icons/`. Enforced by the `calibra/icons-via-proxy` lint rule (at `warn` today; flips to `error` after the call-site sweep in prompt `02`). See [`../icons/README.md`](../icons/README.md).
 
 ### 3.3 RTL via logical properties
 
@@ -369,10 +369,10 @@ Same shape as above, plus:
 
 | Rule | Enforcer | Status today |
 |--- |--- |--- |
-| No raw lucide-react imports outside `#/icons` | Biome `noRestrictedImports` | `warn` — flips to `error` after the prompt 02–05 sweep |
-| No raw Tailwind colour utilities | `scripts/lint-tokens.mjs` | `error` — sweep landed (prompt 06); 0 offenders |
-| Import sort | Biome `assist.actions.source.organizeImports` | `on` |
-| `useExportType` | Biome `style.useExportType` | `error` |
-| Next.js + React rule sets | Biome `domains.next: all` / `react: all` | `recommended/all` |
+| No raw lucide-react imports outside `#/icons` | `calibra/icons-via-proxy` | `warn` — flips to `error` after the prompt 02–05 sweep |
+| No raw Tailwind colour utilities | `calibra/semantic-tokens` | `error` — sweep landed (prompt 06); 0 offenders |
+| RTL-safe logical utilities | `calibra/logical-utilities` | `warn` |
+| Import sort | `oxfmt` `sortImports` | on (applied by `pnpm format:fix`) |
+| Next.js + React rule sets | oxlint `nextjs` / `react` plugins | `correctness` at `error` |
 
 Run all checks: `pnpm lint` from the repo root.

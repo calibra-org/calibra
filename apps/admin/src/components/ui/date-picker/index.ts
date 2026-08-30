@@ -8,10 +8,7 @@ export { DateFilterChip } from "./filter-chip";
 export { formatDateFilterValue, formatOperator, formatValueOnly } from "./format";
 export { OperatorMenu } from "./operator-menu";
 export { parseDateFilterInput } from "./parse";
-export {
-    ALLOWED_OPERATORS_BY_GRANULARITY,
-    DEFAULT_OPERATOR_BY_GRANULARITY,
-} from "./types";
+export { ALLOWED_OPERATORS_BY_GRANULARITY, DEFAULT_OPERATOR_BY_GRANULARITY } from "./types";
 export { parseDateFilter, serializeDateFilter } from "./url";
 export { useDateFilter } from "./use-date-filter";
 export type { Calendar, DateFilterValue, Granularity, Operator, PeriodString } from "./types";

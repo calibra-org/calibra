@@ -1,9 +1,10 @@
 import { test } from "@japa/runner";
 
-import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 import ProductAttributeLink from "#models/product_attribute_link";
 import ProductVariation from "#models/product_variation";
 import { truncateAndCleanup } from "#tests/helpers/truncate";
+
+import { createAdmin, createAttributeWithTerm, createProduct } from "./helpers.js";
 
 /**
  * Lifecycle for the new `product_variations.status` column powering the Sellable versions

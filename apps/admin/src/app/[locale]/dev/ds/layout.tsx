@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { getByTier, PRIMITIVES } from "#/design-system/showcase/registry";

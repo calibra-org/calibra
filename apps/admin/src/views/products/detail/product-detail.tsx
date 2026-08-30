@@ -8,9 +8,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, FormProvider, useForm, useFormContext } from "react-hook-form";
 
-import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { DetailPageShell } from "#/components/sections/detail-page-shell";
 import type { SectionSpec } from "#/components/sections/draggable-section-grid";
+import { StatusBadge, type StatusTone } from "#/components/StatusBadge";
 import { Button } from "#/components/ui/button";
 import { HelperTooltip } from "#/components/ui/helper-tooltip";
 import { Input } from "#/components/ui/input";

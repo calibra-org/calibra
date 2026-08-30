@@ -87,7 +87,7 @@ export function StepReview({ state, onChange, onBackToFilter, onStart }: StepRev
      * a refresh storm because `refreshPreview` already depends on the same fields — so we list
      * the formatting fields directly here and ignore the lint hint.
      */
-    // biome-ignore lint/correctness/useExhaustiveDependencies: format fields are the trigger; refreshPreview reads them
+    // oxlint-disable-next-line react/exhaustive-deps -- format fields are the trigger; refreshPreview reads them
     useEffect(() => {
         if (skipFirstRefresh.current) {
             skipFirstRefresh.current = false;
@@ -238,7 +238,7 @@ export function StepReview({ state, onChange, onBackToFilter, onStart }: StepRev
                                 </thead>
                                 <tbody>
                                     {state.preview.rows.map((row, idx) => (
-                                        // biome-ignore lint/suspicious/noArrayIndexKey: preview rows have no stable identity
+                                        // oxlint-disable-next-line react/no-array-index-key -- preview rows have no stable identity
                                         <tr key={`preview-${idx}`} className="border-t">
                                             {state.preview.columns.map((c) => (
                                                 <td key={c} className="max-w-48 truncate px-2 py-1.5">

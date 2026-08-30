@@ -48,7 +48,7 @@ export function StepExporting({ exportRow, onFinished, onBackToList }: StepExpor
         }
     }, []);
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: see end-of-effect note
+    // oxlint-disable-next-line react/exhaustive-deps -- see end-of-effect note
     useEffect(() => {
         if (finishedRef.current) return;
         let cancelled = false;

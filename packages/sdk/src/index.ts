@@ -6,11 +6,7 @@ export { createStorefrontClient, type StorefrontClient } from "./createStorefron
 export { type MoneyMinor, type Paginated, type Resource, unwrapPaginated, unwrapResource } from "./envelopes";
 export { getBaseUrl } from "./getBaseUrl";
 export { HttpClient, type HttpClientOptions, type RequestOptions } from "./HttpClient";
-export type {
-    components as AdminSchemas,
-    operations as AdminOperations,
-    paths as AdminPaths,
-} from "./generated/admin";
+export type { components as AdminSchemas, operations as AdminOperations, paths as AdminPaths } from "./generated/admin";
 export type {
     components as PlatformSchemas,
     operations as PlatformOperations,

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { createRequire } from "node:module";
 import { Command } from "commander";
+import { createRequire } from "node:module";
 
 import { registerAlerts } from "./commands/alerts";
 import { registerDoctor } from "./commands/doctor";

@@ -1,5 +1,5 @@
-import { promises as fs } from "node:fs";
 import router from "@adonisjs/core/services/router";
+import { promises as fs } from "node:fs";
 
 import { resolveServePath } from "#services/media_storage";
 

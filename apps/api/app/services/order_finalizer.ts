@@ -1,7 +1,7 @@
-import { randomBytes } from "node:crypto";
 import { Exception } from "@adonisjs/core/exceptions";
 import type db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
+import { randomBytes } from "node:crypto";
 
 import { OrderStatus } from "#enums/order_status";
 import type Cart from "#models/cart";
@@ -168,7 +168,7 @@ export class OrderFinalizer {
         source: CustomerAddress,
         kind: "billing" | "shipping",
         opts: {
-            // biome-ignore lint/suspicious/noExplicitAny: Lucid trx type ergonomics — same workaround as admin/orders_controller.ts#writeAddress.
+            // oxlint-disable-next-line typescript/no-explicit-any -- Lucid trx type ergonomics — same workaround as admin/orders_controller.ts#writeAddress.
             trx?: typeof db.transaction extends never ? never : any;
             iranExtension?: Partial<OrderAddressIranExtension> | null;
         } = {},

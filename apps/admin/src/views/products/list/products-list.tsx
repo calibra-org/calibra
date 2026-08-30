@@ -632,7 +632,7 @@ function ProductCard({ row, isFavorite: _isFavorite, onQuickEdit, onOpenDetail }
     return (
         <article className="flex items-start gap-3">
             {row.imageUrl !== null ? (
-                // biome-ignore lint/performance/noImgElement: mock CDN
+                // oxlint-disable-next-line nextjs/no-img-element -- mock CDN
                 <img src={row.imageUrl} alt={row.name.fa} className="size-12 rounded-md object-cover" loading="lazy" />
             ) : (
                 <div className="size-12 rounded-md bg-muted" aria-hidden="true" />

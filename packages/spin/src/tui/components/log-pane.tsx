@@ -20,7 +20,7 @@ export function LogPane({
             <Text color={theme.accent}>logs: {name}</Text>
             {visible.length === 0 ? <Text color={theme.muted}>waiting for output…</Text> : null}
             {visible.map((line, index) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: log lines have no stable id; a positional key is correct for an append-only tail
+                // oxlint-disable-next-line react/no-array-index-key -- log lines have no stable id; a positional key is correct for an append-only tail
                 <Text key={`${index}-${line.slice(0, 8)}`} wrap="truncate-end">
                     {line || " "}
                 </Text>

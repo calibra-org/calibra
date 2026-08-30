@@ -345,7 +345,7 @@ function CategoryThumb({ url, alt }: CategoryThumbProps) {
         );
     }
     return (
-        // biome-ignore lint/performance/noImgElement: mock CDN, no Next/Image loader configured
+        // oxlint-disable-next-line nextjs/no-img-element -- mock CDN, no Next/Image loader configured
         <img src={url} alt={alt} loading="lazy" className="size-8 shrink-0 rounded-md border border-border/40 object-cover" />
     );
 }

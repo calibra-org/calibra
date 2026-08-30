@@ -243,7 +243,7 @@ function Thumbnail({ row }: ThumbnailProps) {
     const category = classifyMediaType(row.mime);
     if (category === "image") {
         return (
-            // biome-ignore lint/performance/noImgElement: external thumbnails, no Next/Image loader configured
+            // oxlint-disable-next-line nextjs/no-img-element -- external thumbnails, no Next/Image loader configured
             <img
                 src={mediaVariantUrl(row, "thumbnail")}
                 alt={row.alt ?? row.filename}

@@ -31,13 +31,13 @@ export function OperatorChips({ operator, allowed, onChange, labelFor, groupLabe
 /**
  * One pill in the {@link OperatorChips} group. Lifted out so the lint suppression for the
  * radio-role-on-button pattern sits in a single, justified place — the WAI-ARIA APG toggle-style
- * radio group is the right pattern for a visually-chipped single-select, but Biome's
- * `useSemanticElements` rule wants a native `<input type="radio">` which can't carry the pill
+ * radio group is the right pattern for a visually-chipped single-select, but the
+ * `jsx-a11y/prefer-tag-over-role` rule wants a native `<input type="radio">` which can't carry the pill
  * styling without heavy CSS hacks.
  */
 function RadioChipButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
     return (
-        // biome-ignore lint/a11y/useSemanticElements: see component JSDoc above.
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- see component JSDoc above.
         <button
             type="button"
             role="radio"

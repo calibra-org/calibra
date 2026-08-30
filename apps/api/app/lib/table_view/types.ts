@@ -201,7 +201,7 @@ export interface TableView<Model extends LucidModel, Columns extends Record<stri
             },
             unknown
         >,
-        // biome-ignore lint/suspicious/noExplicitAny: matches the MetaData parameter Vine's own `vine.compile()` uses; narrowing to `unknown` would force every caller to pass an explicit `meta` arg.
+        // oxlint-disable-next-line typescript/no-explicit-any -- matches the MetaData parameter Vine's own `vine.compile()` uses; narrowing to `unknown` would force every caller to pass an explicit `meta` arg.
         Record<string, any> | undefined
     >;
     /** Wire field name → column declaration; flattens relations for tooling consumers. */

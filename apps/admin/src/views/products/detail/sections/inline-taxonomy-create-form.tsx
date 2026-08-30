@@ -87,7 +87,7 @@ export function InlineTaxonomyCreateForm({
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder={placeholder}
-                /** biome-ignore lint/a11y/noAutofocus: inline form, focused on reveal */
+                /* oxlint-disable-next-line jsx-a11y/no-autofocus -- inline form, focused on reveal */
                 autoFocus
                 className="h-8"
             />

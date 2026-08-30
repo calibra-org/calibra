@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 
 import { Badge } from "#/components/ui/badge";
 import { Card } from "#/components/ui/card";

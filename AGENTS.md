@@ -13,6 +13,7 @@ This is **Calibra's commerce baseline** — the agency clones this repo as the s
 - `packages/shared/` — shared **utilities and types only** (cn helper, locale registry). **Not** UI components — the storefront and admin use different design languages by design.
 - `packages/panel-kit/` — shared **token-driven base primitives** for the two shadcn operator panels (`apps/admin` + `apps/platform`) only. Source-only, headless: the look comes from each app's `globals.css` tokens. `apps/web` never imports it. See the carve-out under "Share duplicated patterns".
 - `toolings/typescript/` — shared `tsconfig` presets.
+- `toolings/lint/` — custom oxlint rules (`@calibra/lint`) that enforce the invariants stated here. See [`toolings/lint/README.md`](toolings/lint/README.md).
 
 Scope-specific contracts (read these before authoring inside the scope):
 
@@ -161,6 +162,7 @@ Scopes must be one of the top-level package or app names — never a sub-route o
 - `packages/sdk` → `sdk`
 - `packages/shared` → `ui`
 - `packages/panel-kit` → `panel-kit`
+- `toolings/lint` → `lint`
 - `AGENTS.md` / `.claude/` → `agents`
 
 A change to `apps/web/src/views/cart/...` is still `web`, not `cart`. Confirm by running `git log --oneline -20` if in doubt.
@@ -178,6 +180,31 @@ The body is dual-audience, in this order:
 Never paste the checks you ran (`pnpm lint`, `pnpm typecheck`, …) into the body; CI reports those already.
 
 Apply exactly one label: `Type - Feature` for new capability, `Type - Bug` for corrected behavior, `Type - Refactor` for restructuring without behavior change. The label describes the *impact*, the title prefix describes the *file kind* — they are separate decisions. Leave a PR unlabeled when it genuinely has no behavior impact (dep bumps, typo fixes, CI tweaks); forcing a wrong label pollutes triage views.
+
+## Linting and formatting
+
+The toolchain is **oxc**: [`oxlint`](https://oxc.rs) for linting, `oxfmt` for formatting. There is no ESLint, no Prettier, and no Biome — `eslint` appears only as a devDependency of `toolings/lint`, where it supplies `RuleTester` for the custom rules' unit tests.
+
+```sh
+pnpm lint          # oxlint (incl. @calibra/lint rules) + sherif workspace lint
+pnpm lint:fix      # oxlint --fix
+pnpm format        # oxfmt --check
+pnpm format:fix    # oxfmt
+```
+
+Configuration lives in [`.oxlintrc.json`](.oxlintrc.json) and [`.oxfmtrc.json`](.oxfmtrc.json). `oxfmt` also sorts imports, so there is no separate organize-imports step.
+
+**Suppressions** use the oxlint pragma and must name a rule and a reason:
+
+```ts
+// oxlint-disable-next-line nextjs/no-img-element -- external CDN URL; next/image remote-patterns are overkill here
+```
+
+The line, block, and JSX (`{/* … */}`) comment forms all work. A suppression without a reason after `--` is not acceptable — the reason is the entire point, and review should reject one that only restates the rule name.
+
+**Repo-specific rules** live in `toolings/lint` and are scoped per directory in `.oxlintrc.json` `overrides`. They encode invariants this file states in prose but that nothing else checks: semantic colour tokens, RTL-safe logical utilities, icons through the `#/icons` proxy, `apps/web` staying out of `@calibra/panel-kit`, and SDK clients being constructed only in `lib/api.ts`. Add a rule rather than a review checklist whenever an invariant fails silently at runtime — the README explains the shape.
+
+Some rules ship at `warn` because existing call sites predate them. A warning is a backlog item, not a licence: do not add new violations of a warned rule.
 
 ## Code style (repo-wide)
 

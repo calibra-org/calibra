@@ -1,5 +1,4 @@
 import "server-only";
-
 import type { StorefrontSchemas } from "@calibra/sdk";
 import { headers } from "next/headers";
 import { cache } from "react";

@@ -603,7 +603,7 @@ function ReviewCard({ row, onOpen }: ReviewCardProps) {
                 <span className="inline-flex items-center gap-0.5 text-warning">
                     {Array.from({ length: 5 }).map((_, index) => (
                         <Star
-                            // biome-ignore lint/suspicious/noArrayIndexKey: rating stars rendered in fixed order
+                            // oxlint-disable-next-line react/no-array-index-key -- rating stars rendered in fixed order
                             key={index}
                             className={index < row.rating ? "size-3.5 fill-current" : "size-3.5 stroke-current opacity-25"}
                             aria-hidden="true"

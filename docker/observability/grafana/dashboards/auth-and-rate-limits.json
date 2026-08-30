@@ -99,7 +99,10 @@
                     "color": { "mode": "thresholds" },
                     "thresholds": {
                         "mode": "absolute",
-                        "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 200 }]
+                        "steps": [
+                            { "color": "green", "value": null },
+                            { "color": "yellow", "value": 200 }
+                        ]
                     }
                 },
                 "overrides": []

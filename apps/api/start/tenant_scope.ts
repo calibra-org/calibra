@@ -1,3 +1,5 @@
+import { BaseModel } from "@adonisjs/lucid/orm";
+import type { LucidRow } from "@adonisjs/lucid/types/model";
 /**
  * Global tenant-scoping for every per-tenant model. Rather than add the `TenantScoped` mixin to
  * ~85 model files, this preload auto-discovers the models in `app/models/` and applies the same two
@@ -22,8 +24,6 @@
  * idempotent `client`-already-set guard make the double application harmless.
  */
 import { readdir } from "node:fs/promises";
-import { BaseModel } from "@adonisjs/lucid/orm";
-import type { LucidRow } from "@adonisjs/lucid/types/model";
 
 import { maybeTenantContext } from "#services/tenant_context";
 
@@ -53,7 +53,7 @@ function bindQueryToTenant(model: typeof BaseModel): void {
         const ctx = maybeTenantContext();
         const options = args[0] as { client?: unknown } | undefined;
         if (ctx && (options === undefined || options.client === undefined)) {
-            args[0] = { ...(options ?? {}), client: ctx.trx };
+            args[0] = { ...options, client: ctx.trx };
         }
         return inherited.apply(this, args);
     } as typeof model.query;

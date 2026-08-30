@@ -1,6 +1,6 @@
-import { AsyncLocalStorage } from "node:async_hooks";
 import db from "@adonisjs/lucid/services/db";
 import type { TransactionClientContract } from "@adonisjs/lucid/types/database";
+import { AsyncLocalStorage } from "node:async_hooks";
 
 /**
  * Per-request tenant context, carried through the async call tree by `AsyncLocalStorage` so any

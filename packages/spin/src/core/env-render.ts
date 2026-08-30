@@ -2,9 +2,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { DB_ROLES, DEMO_TENANTS, SERVICES, type ServiceDef } from "./catalog";
+import type { SpinMeta } from "./meta";
 import { SHARED_CADDY_CA_DIR, spinLogDir } from "./paths";
 import { effectivePort, requirePort } from "./ports";
-import type { SpinMeta } from "./meta";
 
 /**
  * The render layer: turns a {@link SpinMeta} into the per-spin `.env` files, the Caddyfile, and

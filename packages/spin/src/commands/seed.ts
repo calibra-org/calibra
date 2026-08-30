@@ -1,5 +1,5 @@
-import { join } from "node:path";
 import type { Command } from "commander";
+import { join } from "node:path";
 
 import { run } from "../core/exec";
 import { readMetaOrFail, writeMeta } from "../core/meta";

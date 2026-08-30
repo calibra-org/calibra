@@ -35,15 +35,16 @@ export function TenantScoped<T extends NormalizeConstructor<typeof BaseModel>>(s
         static query(...args: any[]) {
             const ctx = maybeTenantContext();
             if (ctx && (args[0] === undefined || args[0].client === undefined)) {
-                args[0] = { ...(args[0] ?? {}), client: ctx.trx };
+                args[0] = { ...args[0], client: ctx.trx };
             }
             /**
              * `super.query` keeps `this` bound to the concrete model (e.g. `User`) so its
              * `static table` is used. A bare `superclass.query(...)` binds `this` to the mixin class
-             * and derives a bogus table name from its constructor name — the ignore below stops Biome
-             * "fixing" it into that broken form.
+             * and derives a bogus table name from its constructor name, so this call must not be
+             * "simplified" into that form. Biome's `noThisInStatic` used to suggest exactly that and
+             * was suppressed here; oxlint ships no equivalent rule, so the warning is gone and only
+             * the reasoning needs to survive.
              */
-            // biome-ignore lint/complexity/noThisInStatic: super preserves `this` as the concrete model so the correct table resolves
             return super.query(...args);
         }
     }

@@ -145,7 +145,7 @@ function Leaderboard({
                 ) : (
                     <ol className="flex flex-col gap-2">
                         {rows.map((row, index) => (
-                            // biome-ignore lint/suspicious/noArrayIndexKey: leaderboard rows have no stable id; rank order is the key
+                            // oxlint-disable-next-line react/no-array-index-key -- leaderboard rows have no stable id; rank order is the key
                             <li key={`${row.name}-${index}`} className="flex items-center justify-between gap-3 text-sm">
                                 <span className="flex min-w-0 items-center gap-2">
                                     <span className="grid size-5 shrink-0 place-items-center rounded bg-muted text-[0.7rem] text-muted-foreground tabular-nums">

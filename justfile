@@ -204,7 +204,7 @@ test-e2e-admin *args:
 typecheck:
     pnpm typecheck
 
-# Run all linters (biome + sherif).
+# Run all linters (oxlint + custom @calibra/lint rules + sherif).
 lint:
     pnpm lint
 

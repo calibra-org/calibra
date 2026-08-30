@@ -1,8 +1,8 @@
 import { c } from "../colors";
 
 import { DEMO_TENANT_PASSWORD, DEMO_TENANTS } from "./catalog";
-import { requirePort } from "./ports";
 import type { SpinMeta } from "./meta";
+import { requirePort } from "./ports";
 
 /**
  * The handoff card printed after a successful bring-up. Goes to stdout (it's the command result).

@@ -133,7 +133,7 @@ export function buildReviewColumns(ctx: ColumnContext): ColumnDef<AdminReview>[]
                     <span role="img" className="inline-flex items-center gap-0.5 text-warning" aria-label={`${r.rating} / 5`}>
                         {Array.from({ length: 5 }).map((_, index) => (
                             <Star
-                                // biome-ignore lint/suspicious/noArrayIndexKey: rating stars rendered in fixed order
+                                // oxlint-disable-next-line react/no-array-index-key -- rating stars rendered in fixed order
                                 key={index}
                                 className={cn("size-3.5", index < r.rating ? "fill-current" : "stroke-current opacity-25")}
                                 aria-hidden="true"

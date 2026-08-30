@@ -145,7 +145,7 @@ export function QuickEditForm({ product, onClose }: QuickEditFormProps) {
             {/** Compact header strip — thumb, name + dirty chip, save bar. Stays inline with the table row. */}
             <header className="flex items-center gap-2 border-border border-b px-4 py-2">
                 {product.imageUrl !== null ? (
-                    // biome-ignore lint/performance/noImgElement: mock CDN
+                    // oxlint-disable-next-line nextjs/no-img-element -- mock CDN
                     <img
                         src={product.imageUrl}
                         alt={product.name[locale]}
@@ -543,7 +543,7 @@ function TokenInput({ id, value, onChange, placeholder, icon }: TokenInputProps)
             {ids.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                     {ids.map((id, index) => (
-                        // biome-ignore lint/suspicious/noArrayIndexKey: ids may repeat while the user is mid-typing; the position disambiguates them locally
+                        // oxlint-disable-next-line react/no-array-index-key -- ids may repeat while the user is mid-typing; the position disambiguates them locally
                         <Badge key={`${id}-${index}`} variant="secondary" className="gap-1 ps-2 pe-1">
                             {icon}
                             <span className="font-mono text-[10px]">#{id}</span>
