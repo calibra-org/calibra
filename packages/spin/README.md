@@ -26,17 +26,35 @@ pnpm spin metrics <slug>         # api /metrics to stdout (exit 2 if down)
 pnpm spin alerts <slug>          # Prometheus alerts via Caddy (exit 2 if down)
 pnpm spin seed <slug>            # re-run the demo-tenant seeder
 pnpm spin term [slug]            # interactive Ink terminal dashboard
-pnpm spin trust [--install]      # trust Caddy's local CA so https://*.spin.localhost is green
+pnpm spin trust [--install]      # trust Caddy's local CA so https://*.calibra.localhost is green
+just trust                       # the same thing, the short way (run once per machine)
 ```
 
 Exit-code contract for agents: **0** ok, **2** down/scrape-failed (`doctor`/`status`/`metrics`/`alerts`), non-zero for command errors.
 
 > For machine-readable output, use **`pnpm -s spin … --json`** (or the `just spin-*-json` recipes). Without `-s`, pnpm prints its run banner to stdout ahead of the JSON. Run from the package directly — `node packages/spin/dist/cli.js … --json` — is also clean.
 
+
+## Trusting the local CA
+
+Caddy mints a root CA on first boot and the compose file mounts `~/.calibra/caddy-ca` into its `pki/authorities/local`, so **one root signs every spin on the host**. Trust it once and every current and future spin is covered; it also survives `spin stop --purge`, which only drops per-spin volumes.
+
+```sh
+just trust          # the whole thing
+just trust-linux    # additionally add it to the Linux system store (sudo)
+```
+
+**On WSL the Windows store is the one that matters.** The stack runs in WSL but the browser is a Windows process reading the Windows certificate store, so trusting the CA inside WSL alone leaves Chrome and Edge at `ERR_CERT_AUTHORITY_INVALID`. `just trust` imports into `Cert:\CurrentUser\Root`, which needs no elevation, verifies the import by SHA-1 thumbprint, and no-ops when the cert is already there. Restart the browser afterwards — it caches the store.
+
+Two details worth knowing if it ever misbehaves:
+
+- Caddy writes the CA as root *inside the container*, so on the host it is `-rw------- root` and a plain read fails with `EACCES`. `trust` reads it back through a throwaway container that mounts the same directory, which is why it needs no `sudo`.
+- `wslpath -w` yields a `\\wsl.localhost\…` UNC path that `certutil` frequently cannot read, so the cert is staged into the Windows `%TEMP%` before importing.
+
 ## Surfaces
 
 - **CLI** — `commander`, with a `pnpm spin <slug>` → `start` bare-slug alias.
-- **Web panel** — served at `https://<slug>.spin.localhost` (the dashboard). React 19 is **bundled** into `dist/agent/client.js` (no CDN — works under sanctioned-cloud / offline networks). Shows the service grid, per-tenant shop cards, live SSE logs, and confirm-gated actions (restart / reseed / migrate). Bound to `127.0.0.1`.
+- **Web panel** — served at `https://<slug>.calibra.localhost` (the dashboard). React 19 is **bundled** into `dist/agent/client.js` (no CDN — works under sanctioned-cloud / offline networks). Shows the service grid, per-tenant shop cards, live SSE logs, and confirm-gated actions (restart / reseed / migrate). Bound to `127.0.0.1`.
 - **TUI** — `pnpm spin term`, an Ink (k9s-style) dashboard: sandbox picker → services + tenants + live log pane; `r` restart, `l` logs, `o` open URL, `?` help.
 
 All three render the **same** `buildSnapshot()` contract.
@@ -46,12 +64,12 @@ All three render the **same** `buildSnapshot()` contract.
 A shop's admin/storefront is per-tenant. The canonical operator URL is the Caddy-TLS scheme:
 
 ```
-https://aurora.admin.<slug>.spin.localhost   (admin for shop "aurora")
-https://aurora.web.<slug>.spin.localhost     (storefront for shop "aurora")
-https://console.<slug>.spin.localhost        (platform control plane)
+https://aurora.admin.<slug>.calibra.localhost   (admin for shop "aurora")
+https://aurora.web.<slug>.calibra.localhost     (storefront for shop "aurora")
+https://console.<slug>.calibra.localhost        (platform control plane)
 ```
 
-The bare `admin.<slug>` / `web.<slug>` apex is the platform "unknown shop" page by design. Seeded shops (`aurora`, `mehr`, `kasra`) get explicit Caddy blocks; ad-hoc tenants are issued on-demand certs (authorized by the panel's `/api/caddy/ask`). Run `pnpm spin trust --install` once so the local CA is trusted (untrusted TLS is the usual cause of "multi-tenant looks broken"). `doctor` probes each tenant host through Caddy, so a broken tenant route fails loudly.
+The bare `admin.<slug>` / `web.<slug>` apex is the platform "unknown shop" page by design. Seeded shops (`aurora`, `mehr`, `kasra`) get explicit Caddy blocks; ad-hoc tenants are issued on-demand certs (authorized by the panel's `/api/caddy/ask`). Run `just trust` once per machine so the local CA is trusted (untrusted TLS is the usual cause of "multi-tenant looks broken"). `doctor` probes each tenant host through Caddy, so a broken tenant route fails loudly.
 
 ## Isolation
 
