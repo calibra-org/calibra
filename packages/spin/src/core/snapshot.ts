@@ -19,7 +19,7 @@ import type { SandboxSnapshot, ServiceRow, ServiceStatus, TenantRow } from "./sn
 
 export function dashboardUrl(meta: SpinMeta): string {
     const caddyHttps = effectivePort(meta, "caddyHttps");
-    if (caddyHttps !== null) return `https://${meta.slug}.spin.localhost:${caddyHttps}/`;
+    if (caddyHttps !== null) return `https://${meta.slug}.calibra.localhost:${caddyHttps}/`;
     const agent = effectivePort(meta, "spinAgent");
     return agent !== null ? `http://localhost:${agent}/` : "(no dashboard — legacy meta)";
 }
@@ -30,7 +30,7 @@ export function serviceUrl(meta: SpinMeta, service: ServiceDef): string | null {
         const caddyHttps = effectivePort(meta, "caddyHttps");
         if (caddyHttps !== null) {
             const host = service.caddy.subdomain === "" ? meta.slug : `${service.caddy.subdomain}.${meta.slug}`;
-            return `https://${host}.spin.localhost:${caddyHttps}/`;
+            return `https://${host}.calibra.localhost:${caddyHttps}/`;
         }
     }
     const port = service.portRole ? effectivePort(meta, service.portRole) : null;
@@ -115,8 +115,8 @@ async function buildTenantRows(meta: SpinMeta): Promise<TenantRow[]> {
         DEMO_TENANTS.map(async (tenant): Promise<TenantRow> => ({
             slug: tenant.slug,
             name: tenant.name,
-            adminUrl: `https://${tenant.slug}.admin.${meta.slug}.spin.localhost:${caddyHttps}/`,
-            webUrl: `https://${tenant.slug}.web.${meta.slug}.spin.localhost:${caddyHttps}/`,
+            adminUrl: `https://${tenant.slug}.admin.${meta.slug}.calibra.localhost:${caddyHttps}/`,
+            webUrl: `https://${tenant.slug}.web.${meta.slug}.calibra.localhost:${caddyHttps}/`,
             adminStatus: (await probeTenantViaCaddy(meta, tenant.slug, "admin")) ? "up" : "down",
         })),
     );

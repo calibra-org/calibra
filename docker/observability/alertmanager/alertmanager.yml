@@ -1,6 +1,6 @@
 # Alertmanager — every spin's alerts ship to Mailpit so the operator inspects firing alerts in
 # the same inbox they already use for transactional / dev email. No external dependency, no DSN
-# to copy around — open `mail.<slug>.spin.localhost` and the alert email is there.
+# to copy around — open `mail.<slug>.calibra.localhost` and the alert email is there.
 #
 # Production overrides this file with a Slack / Telegram / PagerDuty receiver; the route name
 # stays `mailpit` and the file shape stays compatible, so a swap is one volume mount away.

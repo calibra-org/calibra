@@ -9,7 +9,7 @@ import { DB_ROLES } from "./secrets";
  *
  * Calibra runs **datastores + observability as containers** and **all apps as host HMR
  * processes** (api/queue/admin/web/platform/agent). Caddy fronts everything over local TLS at
- * `<sub>.<slug>.spin.localhost`; host apps are reached via `host.docker.internal:<port>`.
+ * `<sub>.<slug>.calibra.localhost`; host apps are reached via `host.docker.internal:<port>`.
  */
 
 export { DB_ROLES };
@@ -19,7 +19,7 @@ export type ServiceKind = "container" | "host";
 
 /** How Caddy reverse-proxies a service. */
 export interface CaddyRoute {
-    /** Subdomain label; `""` is the apex `<slug>.spin.localhost`. e.g. `api`, `grafana`, `console`. */
+    /** Subdomain label; `""` is the apex `<slug>.calibra.localhost`. e.g. `api`, `grafana`, `console`. */
     subdomain: string;
     /**
      * Upstream target. `"host"` → `host.docker.internal:<the service's host port>` (host HMR apps);
@@ -27,7 +27,7 @@ export interface CaddyRoute {
      */
     upstream: "host" | { service: string; port: number };
     /**
-     * Also emit a per-tenant wildcard (`*.<subdomain>.<slug>.spin.localhost`) and explicit
+     * Also emit a per-tenant wildcard (`*.<subdomain>.<slug>.calibra.localhost`) and explicit
      * per-seeded-tenant blocks. Only the multi-tenant surfaces (admin, web) set this.
      */
     tenantWildcard?: boolean;
@@ -331,7 +331,7 @@ export interface GrafanaDashboard {
 
 /**
  * The committed Grafana dashboards (`docker/observability/grafana/dashboards/*.json`). The panel
- * deep-links each at `https://grafana.<slug>.spin.localhost:<caddyHttps>/d/<uid>/`. Keep in sync
+ * deep-links each at `https://grafana.<slug>.calibra.localhost:<caddyHttps>/d/<uid>/`. Keep in sync
  * with the dashboard JSON `uid` fields.
  */
 export const GRAFANA_DASHBOARDS: GrafanaDashboard[] = [

@@ -29,12 +29,12 @@ describe("serviceUrl (pure, no probing)", () => {
     const caddyHttps = layoutFromBase(13044).caddyHttps;
 
     it("routes Caddy-fronted services to their https host", () => {
-        expect(serviceUrl(meta, serviceById("grafana")!)).toBe(`https://grafana.demo.spin.localhost:${caddyHttps}/`);
-        expect(serviceUrl(meta, serviceById("api")!)).toBe(`https://api.demo.spin.localhost:${caddyHttps}/`);
+        expect(serviceUrl(meta, serviceById("grafana")!)).toBe(`https://grafana.demo.calibra.localhost:${caddyHttps}/`);
+        expect(serviceUrl(meta, serviceById("api")!)).toBe(`https://api.demo.calibra.localhost:${caddyHttps}/`);
     });
 
     it("uses the apex for the spin agent and the dashboard for caddy", () => {
-        expect(serviceUrl(meta, serviceById("agent")!)).toBe(`https://demo.spin.localhost:${caddyHttps}/`);
+        expect(serviceUrl(meta, serviceById("agent")!)).toBe(`https://demo.calibra.localhost:${caddyHttps}/`);
         expect(serviceUrl(meta, serviceById("caddy")!)).toBe(dashboardUrl(meta));
     });
 
@@ -52,7 +52,7 @@ describe("snapshotHasFailure", () => {
         composeProject: "calibra-spin-demo",
         worktreePath: "/x",
         worktreeExists: true,
-        dashboardUrl: "https://demo.spin.localhost:1/",
+        dashboardUrl: "https://demo.calibra.localhost:1/",
         pr: null,
         prUrl: null,
         ports: layoutFromBase(13044),

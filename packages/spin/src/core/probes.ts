@@ -39,7 +39,7 @@ export async function probeHttp(url: string, acceptStatus: number[] = [200, 204]
 }
 
 function spinHost(meta: SpinMeta, subdomain: string): string {
-    return subdomain === "" ? `${meta.slug}.spin.localhost` : `${subdomain}.${meta.slug}.spin.localhost`;
+    return subdomain === "" ? `${meta.slug}.calibra.localhost` : `${subdomain}.${meta.slug}.calibra.localhost`;
 }
 
 /**
@@ -65,7 +65,7 @@ export async function probeViaCaddy(
 }
 
 /**
- * Probe a per-tenant host (`<tenant>.<app>.<slug>.spin.localhost`) through Caddy. Catches
+ * Probe a per-tenant host (`<tenant>.<app>.<slug>.calibra.localhost`) through Caddy. Catches
  * multi-tenant cert/route/host-resolution failure that an apex-only probe would miss. Any
  * **2xx or 3xx** counts as reachable — the app commonly answers a tenant route with a redirect
  * (next-intl locale, auth), which still proves the cert + Host resolution + routing all work; only
@@ -78,7 +78,7 @@ export async function probeTenantViaCaddy(
     path = "/",
 ): Promise<boolean> {
     const caddyHttps = requirePort(meta, "caddyHttps");
-    const host = `${tenantSlug}.${app}.${meta.slug}.spin.localhost`;
+    const host = `${tenantSlug}.${app}.${meta.slug}.calibra.localhost`;
     const status = await curlStatus([
         "--insecure",
         "--resolve",

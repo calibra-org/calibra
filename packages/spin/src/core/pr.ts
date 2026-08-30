@@ -42,7 +42,7 @@ export async function ensureDraftPr(meta: SpinMeta): Promise<void> {
     const body = [
         `Bootstrapped by \`pnpm spin ${meta.slug}\`.`,
         "",
-        `**Spin dashboard:** https://${meta.slug}.spin.localhost:${caddyHttps}/`,
+        `**Spin dashboard:** https://${meta.slug}.calibra.localhost:${caddyHttps}/`,
         "",
         `<sub>Teardown: \`pnpm spin stop ${meta.slug}\` · containers + processes only. Add \`--purge --remove\` to wipe everything.</sub>`,
     ].join("\n");

@@ -33,24 +33,24 @@ function makeMeta(overrides: Partial<SpinMeta> = {}): SpinMeta {
 describe("renderCaddyfile", () => {
     it("emits apex hosts for the spin agent, api, admin and web", () => {
         const out = renderCaddyfile(makeMeta());
-        expect(out).toContain("demo.spin.localhost {");
-        expect(out).toContain("api.demo.spin.localhost {");
-        expect(out).toContain("admin.demo.spin.localhost {");
-        expect(out).toContain("web.demo.spin.localhost {");
-        expect(out).toContain("console.demo.spin.localhost {");
+        expect(out).toContain("demo.calibra.localhost {");
+        expect(out).toContain("api.demo.calibra.localhost {");
+        expect(out).toContain("admin.demo.calibra.localhost {");
+        expect(out).toContain("web.demo.calibra.localhost {");
+        expect(out).toContain("console.demo.calibra.localhost {");
     });
 
     it("emits an explicit block per seeded tenant (the cert-issuance fix)", () => {
         const out = renderCaddyfile(makeMeta());
         for (const tenant of ["aurora", "mehr", "kasra"]) {
-            expect(out).toContain(`${tenant}.admin.demo.spin.localhost {`);
-            expect(out).toContain(`${tenant}.web.demo.spin.localhost {`);
+            expect(out).toContain(`${tenant}.admin.demo.calibra.localhost {`);
+            expect(out).toContain(`${tenant}.web.demo.calibra.localhost {`);
         }
     });
 
     it("emits an on-demand-TLS wildcard for ad-hoc tenants, with an ask endpoint", () => {
         const out = renderCaddyfile(makeMeta());
-        expect(out).toContain("*.admin.demo.spin.localhost {");
+        expect(out).toContain("*.admin.demo.calibra.localhost {");
         expect(out).toContain("on_demand");
         expect(out).toContain("ask http://host.docker.internal:");
         expect(out).toContain("/api/caddy/ask");
@@ -60,7 +60,7 @@ describe("renderCaddyfile", () => {
         const out = renderCaddyfile(makeMeta());
         expect(out).toContain("reverse_proxy grafana:3000");
         expect(out).toContain("reverse_proxy meilisearch:7700");
-        expect(out).toMatch(/admin\.demo\.spin\.localhost \{[\s\S]*?reverse_proxy host\.docker\.internal:13047/);
+        expect(out).toMatch(/admin\.demo\.calibra\.localhost \{[\s\S]*?reverse_proxy host\.docker\.internal:13047/);
     });
 });
 
@@ -72,7 +72,7 @@ describe("renderApiEnv", () => {
     it("advertises the canonical Caddy-TLS impersonation template", () => {
         const out = renderApiEnv(makeMeta());
         const caddyHttps = layoutFromBase(13044).caddyHttps;
-        expect(out).toContain(`ADMIN_URL_TEMPLATE=https://{slug}.admin.demo.spin.localhost:${caddyHttps}`);
+        expect(out).toContain(`ADMIN_URL_TEMPLATE=https://{slug}.admin.demo.calibra.localhost:${caddyHttps}`);
     });
 
     it("uses the fixed two-role DB split and direct-port api base", () => {
@@ -100,10 +100,10 @@ describe("renderApiEnv", () => {
 describe("nextDevAllowedOrigins", () => {
     it("includes per-tenant hosts in both the Caddy and direct-port schemes", () => {
         const origins = nextDevAllowedOrigins(makeMeta()).split(",");
-        expect(origins).toContain("aurora.admin.demo.spin.localhost");
-        expect(origins).toContain("aurora.web.demo.spin.localhost");
+        expect(origins).toContain("aurora.admin.demo.calibra.localhost");
+        expect(origins).toContain("aurora.web.demo.calibra.localhost");
         expect(origins).toContain("aurora.admin.localhost");
-        expect(origins).toContain("admin.demo.spin.localhost");
+        expect(origins).toContain("admin.demo.calibra.localhost");
     });
 });
 

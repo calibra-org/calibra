@@ -31,7 +31,7 @@ const STORE_KEY = "react-query-cache";
 
 /**
  * Per-origin IDB database name. Different spins / staging / production all hit different
- * origins (`admin.<slug>.spin.localhost:<caddyHttps>`, `admin.staging.example.com`, …); giving
+ * origins (`admin.<slug>.calibra.localhost:<caddyHttps>`, `admin.staging.example.com`, …); giving
  * each its own IDB database prevents one environment's cache from rehydrating into another.
  * Falls back to a stable name on the server (the persister is window-only anyway, but the
  * function gets evaluated during static analysis too).

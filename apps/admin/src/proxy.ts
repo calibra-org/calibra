@@ -9,7 +9,7 @@ const handleI18n = createMiddleware(routing);
 /**
  * Admin request pipeline. Tenant resolution (RULE A) runs in front of next-intl: the admin is
  * per-tenant, so a `Host` that names no shop — the apex/root, bare `localhost`, or the per-spin
- * infra hosts (`*.spin.localhost`) — renders the platform "unknown shop" page instead of any shop's
+ * infra hosts (`*.calibra.localhost`) — renders the platform "unknown shop" page instead of any shop's
  * login or data. A shop host (`<slug>.admin.<root>` or `admin.<domain>`) is delegated to next-intl
  * for locale routing.
  *
