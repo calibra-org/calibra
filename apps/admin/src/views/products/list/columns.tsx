@@ -562,13 +562,13 @@ function TaxonomyChips({ terms, kind, onOpen, t }: TaxonomyChipsProps) {
             {tail.length > 0 && (
                 <HoverCard>
                     <HoverCardTrigger
-                        render={(props) => (
-                            <button {...props} type="button" className={cn("rounded")}>
+                        render={
+                            <button type="button" className={cn("rounded")}>
                                 <Badge variant="secondary" className="text-[10px] tabular-nums">
                                     +{tail.length}
                                 </Badge>
                             </button>
-                        )}
+                        }
                     />
                     <HoverCardContent>
                         <p className="mb-1 font-medium text-xs">{t(`taxonomyAll.${kind}` as never)}</p>

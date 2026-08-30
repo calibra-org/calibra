@@ -3,7 +3,7 @@ import app from "@adonisjs/core/services/app";
 import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { basename, dirname, extname, join, resolve, sep } from "node:path";
-import sharp from "sharp";
+import sharp, { type ResizeOptions } from "sharp";
 
 import { currentTenantId } from "#services/tenant_context";
 import type { VariantSpec } from "#transformers/media_settings_transformer";
@@ -268,9 +268,7 @@ async function generateRenditions(
     const meta = await sharp(originalAbs).metadata();
     const out: Record<string, SavedVariant> = {};
     for (const v of variants) {
-        const fit: sharp.ResizeOptions = v.crop
-            ? { fit: "cover", position: "centre" }
-            : { fit: "inside", withoutEnlargement: true };
+        const fit: ResizeOptions = v.crop ? { fit: "cover", position: "centre" } : { fit: "inside", withoutEnlargement: true };
         const info = await sharp(originalAbs).resize(v.width, v.height, fit).toFile(`${base}-${v.name}${ext}`);
         out[v.name] = { url: variantUrlFor(v.name), width: info.width, height: info.height };
     }

@@ -40,16 +40,15 @@ export function RiskFlagChip({ flag }: RiskFlagChipProps) {
     return (
         <HoverCard>
             <HoverCardTrigger
-                render={(props) => (
+                render={
                     <button
-                        {...props}
                         type="button"
                         className={cn("inline-flex size-5 items-center justify-center rounded-full ring-1 ring-inset", tone)}
                         aria-label={label}
                     >
                         <Icon className="size-3" aria-hidden="true" />
                     </button>
-                )}
+                }
             />
             <HoverCardContent className="text-xs">
                 <p className="mb-1 font-medium">{label}</p>

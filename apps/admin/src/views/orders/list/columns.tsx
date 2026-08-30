@@ -152,14 +152,14 @@ export function buildOrderColumns(ctx: ColumnContext): ColumnDef<AdminOrder>[] {
                 return (
                     <HoverCard>
                         <HoverCardTrigger
-                            render={(props) => (
-                                <button {...props} type="button" className="flex max-w-full flex-col text-start">
+                            render={
+                                <button type="button" className="flex max-w-full flex-col text-start">
                                     <span className="truncate font-medium text-sm hover:underline">{name}</span>
                                     {order.billingEmail.length > 0 && (
                                         <span className="truncate text-muted-foreground text-xs">{order.billingEmail}</span>
                                     )}
                                 </button>
-                            )}
+                            }
                         />
                         <HoverCardContent className="w-64">
                             <div className="flex flex-col gap-1.5 text-xs">

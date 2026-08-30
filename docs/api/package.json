@@ -21,7 +21,7 @@
         "preview": "pnpm build && http-server dist -p 5055 -c-1"
     },
     "devDependencies": {
-        "@redocly/cli": "^2.14.6",
+        "@redocly/cli": "^2.49.0",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "http-server": "^14.1.1"
