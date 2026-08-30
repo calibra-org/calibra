@@ -209,7 +209,7 @@ matches the change:
   (includes performance work that's structurally invisible).
 
 **Title prefix and label are separate decisions.** The title prefix
-describes the *file kind* changed (`docs(agents)` for `.agents/` files,
+describes the *file kind* changed (`docs(agents)` for `.claude/skills/` files,
 `feat(kit)` for kit code, etc.); the label describes the *impact* of the
 change. A `docs(agents)` PR that adds new agent capability is still a
 `Type - Feature`.

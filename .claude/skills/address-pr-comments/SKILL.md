@@ -47,7 +47,7 @@ If missing or unauthenticated, stop and report the blocker clearly.
 Use the helper script for normalized output (run from the repo root):
 
 ```bash
-python3 .agents/skills/address-pr-comments/scripts/list_comments.py --pr <number> --json
+python3 .claude/skills/address-pr-comments/scripts/list_comments.py --pr <number> --json
 ```
 
 The script aggregates:
@@ -59,7 +59,7 @@ The script aggregates:
 To include resolved inline threads too:
 
 ```bash
-python3 .agents/skills/address-pr-comments/scripts/list_comments.py --pr <number> --json --include-resolved
+python3 .claude/skills/address-pr-comments/scripts/list_comments.py --pr <number> --json --include-resolved
 ```
 
 ## 4. Classify + Prioritize
@@ -130,13 +130,13 @@ Provide:
 gh pr view --json number,title,url
 
 # Structured comment dump
-python3 .agents/skills/address-pr-comments/scripts/list_comments.py --json
+python3 .claude/skills/address-pr-comments/scripts/list_comments.py --json
 
 # Structured comment dump for a specific PR
-python3 .agents/skills/address-pr-comments/scripts/list_comments.py --pr <number> --json
+python3 .claude/skills/address-pr-comments/scripts/list_comments.py --pr <number> --json
 
 # Include resolved inline threads
-python3 .agents/skills/address-pr-comments/scripts/list_comments.py --pr <number> --json --include-resolved
+python3 .claude/skills/address-pr-comments/scripts/list_comments.py --pr <number> --json --include-resolved
 
 # Per-comment commit workflow (push once at the end)
 git add <files-for-one-comment>

@@ -47,15 +47,11 @@ dist/
 **/playwright/.cache/
 **/.playwright-cli/
 
-# Claude Code worktrees
-.claude/worktrees
-
-# Local-only research / response captures.
-.claude/research
-.claude/responses
-
-# Per-spin metadata written by scripts/spin.mjs.
-.claude/spin
+# Claude Code: only the shared skills are committed. Everything else under
+# .claude/ is per-developer state (settings, hooks, agents, worktrees, spin
+# metadata, research captures) and stays local.
+.claude/*
+!.claude/skills
 
 # Local backend response captures (not committed)
 tmp/

@@ -3,10 +3,10 @@
 Collect and normalize GitHub PR feedback via gh CLI.
 
 Usage (from the repo root):
-  python3 .agents/skills/address-pr-comments/scripts/list_comments.py
-  python3 .agents/skills/address-pr-comments/scripts/list_comments.py --pr 2781
-  python3 .agents/skills/address-pr-comments/scripts/list_comments.py --json
-  python3 .agents/skills/address-pr-comments/scripts/list_comments.py --include-resolved
+  python3 .claude/skills/address-pr-comments/scripts/list_comments.py
+  python3 .claude/skills/address-pr-comments/scripts/list_comments.py --pr 2781
+  python3 .claude/skills/address-pr-comments/scripts/list_comments.py --json
+  python3 .claude/skills/address-pr-comments/scripts/list_comments.py --include-resolved
 """
 
 from __future__ import annotations

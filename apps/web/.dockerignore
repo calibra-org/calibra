@@ -12,7 +12,4 @@
 .github
 .vscode
 .claude
-.agents
-.codex
-.cursor
 apps/cms

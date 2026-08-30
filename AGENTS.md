@@ -111,9 +111,7 @@ Exception: **AdonisJS app dependencies live directly in `apps/api/package.json` 
 
 Doesn't apply to removing deps, version bumps already discussed, or peer-dep metadata tweaks that don't change the published surface.
 
-The `check-pnpm-add-catalog.sh` PreToolUse hook detects off-catalog `pnpm add` calls and prompts the developer for explicit approval (the AI cannot auto-confirm — a human has to acknowledge the override). Cancel and add the catalog entry first unless this is a deliberate one-off.
-
-A second PreToolUse hook, `enforce-pnpm.sh`, blocks `npm install` / `npm i` / `npm add` (the commands that write a stray `package-lock.json` into this pnpm-managed repo). It is a hard block, not a prompt — swap the command to its pnpm equivalent (`pnpm install`, `pnpm --filter <pkg> add …`) and rerun. Other tools (`yarn`, `bun`, `npx`, unrelated `npm` subcommands) are unaffected.
+This repo is **pnpm-only**. Never run `npm install` / `npm i` / `npm add` — they write a stray `package-lock.json` alongside `pnpm-lock.yaml`. Use the pnpm equivalent (`pnpm install`, `pnpm --filter <pkg> add …`) instead.
 
 ## i18n across the stack
 
@@ -148,7 +146,7 @@ The hook keeps an optimistic `pending` value that renders instantly. Each `setPe
 
 ## Commit messages
 
-Follow Conventional Commits. Default every commit message to **subject-only**; a body must earn its place. See [`.agents/skills/generate-commit-message/SKILL.md`](.agents/skills/generate-commit-message/SKILL.md) for the full guide.
+Follow Conventional Commits. Default every commit message to **subject-only**; a body must earn its place. See [`.claude/skills/generate-commit-message/SKILL.md`](.claude/skills/generate-commit-message/SKILL.md) for the full guide.
 
 Add a body only when the WHY cannot fit in the subject (hidden constraint, subtle invariant, workaround for a specific bug), when a breaking change needs migration notes, or when a non-obvious consequence would otherwise be missed. Cap bodies at 2–4 short lines (or 1–3 bullets). Never include verification logs, CLI output, or full file lists — the diff shows that.
 
@@ -163,17 +161,17 @@ Scopes must be one of the top-level package or app names — never a sub-route o
 - `packages/sdk` → `sdk`
 - `packages/shared` → `ui`
 - `packages/panel-kit` → `panel-kit`
-- `.agents/` / `.claude/` (skills, hooks, settings) → `agents`
+- `.claude/skills/` → `agents`
 
 A change to `apps/web/src/views/cart/...` is still `web`, not `cart`. Confirm by running `git log --oneline -20` if in doubt.
 
 ## Pull requests
 
-See [`.agents/skills/pr-creator/SKILL.md`](.agents/skills/pr-creator/SKILL.md) for title format, body sections, label application, and the `Type - Feature / Type - Fix / Type - Refactor` mapping.
+See [`.claude/skills/pr-creator/SKILL.md`](.claude/skills/pr-creator/SKILL.md) for title format, body sections, label application, and the `Type - Feature / Type - Fix / Type - Refactor` mapping.
 
 ## Code style (repo-wide)
 
-- Never write inline `//` comments in code; use JSDoc (`/** … */`) blocks instead. See [`.agents/skills/polish-comments/SKILL.md`](.agents/skills/polish-comments/SKILL.md) for the full comment-style rules and the `comment-polisher` agent for automated polish.
+- Never write inline `//` comments in code; use JSDoc (`/** … */`) blocks instead. See [`.claude/skills/polish-comments/SKILL.md`](.claude/skills/polish-comments/SKILL.md) for the full comment-style rules.
 - Don't write deeply-nested ternary chains. Two-level cascades (`a ? x : b ? y : z`) are fine inline. Three-level or deeper cascades go in a named helper with early-return `if`/`else` branches — the helper reads like a decision table and accepts new branches cleanly.
 - Frontend styling is **Tailwind v4** across both apps. No CSS-in-JS, no Stylex. Compose classes with `cn()` from `@calibra/shared`. `lucide-react` is allowed for icons.
 - **Storefront (`apps/web`) stays pure Tailwind** — no shadcn, no Radix, no class-variance-authority. Components are written by hand.

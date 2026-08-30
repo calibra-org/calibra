@@ -12,8 +12,5 @@
 .github
 .vscode
 .claude
-.agents
-.codex
-.cursor
 apps/api
 apps/web
