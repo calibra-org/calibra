@@ -386,6 +386,27 @@ html[lang="fa"] {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Chart focus ring                                                            */
+/*                                                                             */
+/*  Recharts' `accessibilityLayer` (on by default since v3) puts `tabIndex=0`   */
+/*  and `role="application"` on the `<svg class="recharts-surface">`, so a      */
+/*  plain click focuses it and the UA paints its default outline — a hard      */
+/*  black rectangle hugging the plot area.                                      */
+/*                                                                             */
+/*  Drop the mouse-click outline but keep a real keyboard ring: `:focus-visible`*/
+/*  is what distinguishes the two, so arrow-key chart navigation stays          */
+/*  discoverable. Do NOT "fix" this by passing `accessibilityLayer={false}` —   */
+/*  that removes the keyboard navigation instead of just its mouse artefact.    */
+/* -------------------------------------------------------------------------- */
+:where(.recharts-surface):focus {
+    outline: none;
+}
+:where(.recharts-surface):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Skeleton shimmer                                                            */
 /*  Loading placeholder. A wide highlight band rides across the muted block via */
 /*  an animated `background-position` sweep (no overlay element, so it composes  */
