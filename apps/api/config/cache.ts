@@ -11,6 +11,15 @@ import env from "#start/env";
  * — its meta-keys snapshot is intentionally per-process (warm restart wins) and doesn't need
  * coherency with other api instances.
  *
+ * **Pinned dependency — `@adonisjs/redis` must stay on a release that uses `ioredis@5`.** Both
+ * driver factories below hand bentocache the live `main` connection, and bentocache decides what to
+ * do with it via `config.connection instanceof IoRedis` against *its own* ioredis copy (peer
+ * `^5.3.2`). `@adonisjs/redis@10.0.1` moved to `ioredis@6`, which makes that check fail across the
+ * two copies — bentocache then treats the client object as a plain options bag, reads no host or
+ * port off it, and silently connects to the ioredis default `127.0.0.1:6379`. Nothing listens
+ * there, so every cache read stalls until `E_FACTORY_HARD_TIMEOUT` and requests hang rather than
+ * error. Re-pin only once bentocache peers `ioredis@6`; see `apps/api/package.json`.
+ *
  * **`CACHE_DRIVER` is load-bearing**: when it's `memory`, the `redis` store is *not declared* at
  * all (not just not-default). Bentocache's `redisBus` subscribes to its pub/sub channel as soon
  * as the store is constructed, so leaving the definition around in a test/CI boot — where Redis

@@ -2,6 +2,7 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 
 import { CardContent, CardRoot } from "#/components/ui/card";
+import { Skeleton } from "#/components/ui/skeleton";
 import { cn } from "#/lib/utils";
 
 /**
@@ -23,6 +24,15 @@ export interface StatCardDelta {
 interface StatCardProps {
     label: string;
     value: string;
+    /**
+     * Render a placeholder bar in the value slot instead of `value`. The tile owns this rather than
+     * letting callers overlay a skeleton on top of it: a card whose value is still empty is shorter
+     * than a loaded one, so an absolutely-positioned overlay lands on the label instead of the
+     * value. Dashboard tiles each have their own query, so they need per-tile loading — a
+     * whole-card skeleton (what the analytics report rows use) would throw away the label and icon
+     * that are already known.
+     */
+    loading?: boolean;
     delta?: StatCardDelta;
     /** Optional one-line caption rendered under the value (or under the delta when both are set). */
     description?: string;
@@ -54,7 +64,16 @@ const ICON_STYLES: Record<StatCardTone, string> = {
  * equalize on the tallest sibling (a tile with a description doesn't make every other tile
  * shorter).
  */
-export function StatCard({ label, value, delta, description, icon: Icon, tone = "default", className }: StatCardProps) {
+export function StatCard({
+    label,
+    value,
+    loading = false,
+    delta,
+    description,
+    icon: Icon,
+    tone = "default",
+    className,
+}: StatCardProps) {
     const trendingUp = (delta?.value ?? 0) >= 0;
     const TrendIcon = trendingUp ? TrendingUp : TrendingDown;
     const formattedDelta = delta
@@ -73,9 +92,14 @@ export function StatCard({ label, value, delta, description, icon: Icon, tone = 
                 )}
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="font-medium text-[0.7rem] text-muted-foreground uppercase tracking-wide">{label}</span>
-                    <span className="truncate font-semibold text-base text-foreground tabular-nums leading-snug tracking-tight">
-                        {value}
-                    </span>
+                    {loading ? (
+                        /** Occupies the value line box exactly (0.1875 + 1 + 0.1875 = 1.375rem = text-base × leading-snug), so a tile is the same height loading and loaded. */
+                        <Skeleton className="my-[0.1875rem] h-4 w-20" />
+                    ) : (
+                        <span className="truncate font-semibold text-base text-foreground tabular-nums leading-snug tracking-tight">
+                            {value}
+                        </span>
+                    )}
                     {delta !== undefined && (
                         <div className="mt-0.5 flex items-center gap-1.5 text-xs">
                             <span

@@ -100,3 +100,13 @@ export function runStatePath(slug: string): string {
 export function spinLogDir(worktreePath: string): string {
     return join(worktreePath, ".spin/logs");
 }
+
+/**
+ * The api's structured pino log. Single source of truth for two call sites that must agree:
+ * `renderApiEnv` advertises it as `SPIN_API_LOG_PATH` (pino opens it in append mode), and
+ * `startHostServers` truncates it when it spawns the api. If those ever drift, the panel silently
+ * grows a log nothing resets — which is how a dead stack's failures end up presented as current.
+ */
+export function apiNdjsonLogFile(worktreePath: string): string {
+    return join(spinLogDir(worktreePath), "api.ndjson");
+}

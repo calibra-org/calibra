@@ -4,6 +4,7 @@ import { servicesForProfile } from "../src/core/catalog";
 import { composeFiles } from "../src/core/compose-assembly";
 import { renderApiEnv } from "../src/core/env-render";
 import type { SpinMeta } from "../src/core/meta";
+import { apiNdjsonLogFile } from "../src/core/paths";
 import { layoutFromBase } from "../src/core/ports";
 
 function meta(overrides: Partial<SpinMeta> = {}): SpinMeta {
@@ -52,15 +53,31 @@ describe("spin profiles", () => {
 
     /** A dead OTLP endpoint would make every span export retry against a port with nothing behind it. */
     it("omits the OTLP endpoint on a lite spin and wires it on a full one", () => {
-        expect(renderApiEnv(meta())).toContain("DEV_OBSERVABILITY=false");
         expect(renderApiEnv(meta())).not.toContain("OTEL_EXPORTER_OTLP_ENDPOINT");
-
-        const full = renderApiEnv(meta({ profile: "full" }));
-        expect(full).toContain("DEV_OBSERVABILITY=true");
-        expect(full).toContain("OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:");
+        expect(renderApiEnv(meta({ profile: "full" }))).toContain("OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:");
     });
 
-    /** The seeder's sharp pass starves `dns.lookup`, so host services must be dialled by IP. */
+    /**
+     * `DEV_OBSERVABILITY` gates the api's ndjson file log, which is the spin panel's log tab — not
+     * only Promtail's input. It must stay on for lite spins or the panel shows nothing at all.
+     */
+    it("keeps the structured file log on in both profiles", () => {
+        expect(renderApiEnv(meta())).toContain("DEV_OBSERVABILITY=true");
+        expect(renderApiEnv(meta({ profile: "full" }))).toContain("DEV_OBSERVABILITY=true");
+    });
+
+    /**
+     * pino appends to this file, so spin truncates it when it spawns the api. The env and the
+     * truncation must name the same path — if they drift, the panel accumulates a log nothing
+     * resets and replays a dead stack's failures as if they were current.
+     */
+    it("advertises the same api log path that spin truncates on spawn", () => {
+        const m = meta();
+        expect(renderApiEnv(m)).toContain(`SPIN_API_LOG_PATH=${apiNdjsonLogFile(m.worktreePath)}`);
+        expect(apiNdjsonLogFile(m.worktreePath)).toBe("/repo/.claude/worktrees/demo/.spin/logs/api.ndjson");
+    });
+
+    /** An IP literal keeps `dns.lookup` (and its libuv threadpool queue) off the connect path. */
     it("dials host-published datastores by loopback IP, never by hostname", () => {
         const env = renderApiEnv(meta());
         expect(env).toContain("REDIS_HOST=127.0.0.1");

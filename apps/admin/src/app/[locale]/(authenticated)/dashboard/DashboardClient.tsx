@@ -152,26 +152,19 @@ interface StatCardWrapperProps {
 }
 
 /**
- * Wraps `StatCard` with a per-card skeleton while loading and a dashed empty value on error. The
- * page-level Refresh button drives recovery, so individual cards stay quiet about retries.
+ * Wraps `StatCard` with a per-card loading state and a dashed empty value on error. The page-level
+ * Refresh button drives recovery, so individual cards stay quiet about retries.
  */
 function StatCardSlot({ label, icon, isPending, isError, value, delta, description }: StatCardWrapperProps) {
-    const displayValue = isPending ? "" : isError ? "—" : value;
     return (
-        <div className="relative h-full">
-            <StatCard
-                label={label}
-                value={displayValue}
-                delta={isPending || isError ? undefined : delta}
-                description={description}
-                icon={icon}
-            />
-            {isPending ? (
-                <div className="pointer-events-none absolute inset-0 flex items-end p-5">
-                    <Skeleton className="h-7 w-24" />
-                </div>
-            ) : null}
-        </div>
+        <StatCard
+            label={label}
+            value={isError ? "—" : value}
+            loading={isPending}
+            delta={isPending || isError ? undefined : delta}
+            description={description}
+            icon={icon}
+        />
     );
 }
 

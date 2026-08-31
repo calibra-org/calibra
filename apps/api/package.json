@@ -59,7 +59,7 @@
         "@adonisjs/mail": "^10.4.0",
         "@adonisjs/otel": "^1.2.3",
         "@adonisjs/queue": "^0.6.2",
-        "@adonisjs/redis": "^10.0.1",
+        "@adonisjs/redis": "10.0.0",
         "@adonisjs/shield": "^9.0.0",
         "@adonisjs/transmit": "^3.0.2",
         "@faker-js/faker": "^10.6.0",

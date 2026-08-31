@@ -6,7 +6,7 @@ import { log } from "../log";
 import { nextDevAllowedOrigins } from "./env-render";
 import { isPidAlive, readPid, startHostProcess, stopHostProcess, waitForPortsFree } from "./host-process";
 import type { SpinMeta } from "./meta";
-import { AGENT_SERVER_ENTRY } from "./paths";
+import { AGENT_SERVER_ENTRY, apiNdjsonLogFile } from "./paths";
 import { effectivePort, requirePort } from "./ports";
 import { isPortListening } from "./probes";
 
@@ -19,8 +19,16 @@ import { isPortListening } from "./probes";
 /** Every host service this spin can run, in teardown order. */
 export const HOST_SERVICE_IDS = ["api", "admin", "queue", "web", "agent", "platform"] as const;
 
-async function spawn(meta: SpinMeta, service: string, cmd: string, args: string[], cwd: string, env: Record<string, string>) {
-    const result = await startHostProcess({ worktreePath: meta.worktreePath, service, cmd, args, cwd, env });
+async function spawn(
+    meta: SpinMeta,
+    service: string,
+    cmd: string,
+    args: string[],
+    cwd: string,
+    env: Record<string, string>,
+    extraLogs?: string[],
+) {
+    const result = await startHostProcess({ worktreePath: meta.worktreePath, service, cmd, args, cwd, env, extraLogs });
     log[result.started ? "step" : "skip"](`${service}${result.started ? ` (pid ${result.pid})` : " already running"}`);
 }
 
@@ -29,10 +37,19 @@ export async function startHostServers(meta: SpinMeta, opts: { withWeb: boolean 
     const wt = meta.worktreePath;
     const origins = nextDevAllowedOrigins(meta);
 
-    await spawn(meta, "api", "pnpm", ["--filter", "@calibra/api", "dev"], wt, {
-        PORT: String(meta.ports.api),
-        HOST: "0.0.0.0",
-    });
+    await spawn(
+        meta,
+        "api",
+        "pnpm",
+        ["--filter", "@calibra/api", "dev"],
+        wt,
+        {
+            PORT: String(meta.ports.api),
+            HOST: "0.0.0.0",
+        },
+        /** Matches `SPIN_API_LOG_PATH` in `renderApiEnv` — pino appends there, so spin resets it. */
+        [apiNdjsonLogFile(wt)],
+    );
     await spawn(
         meta,
         "queue",

@@ -1,20 +1,19 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-
 import { log } from "../log";
 
 import { run } from "./exec";
 import type { SpinMeta } from "./meta";
 
 /**
- * Install dependencies if the worktree has none. A worktree-based spin starts from a fresh
- * checkout with no `node_modules`; the in-place `local` spin reuses the existing install.
+ * Install dependencies. Always runs — the presence of `node_modules` says nothing about whether it
+ * matches the lockfile, and a **stale** tree is worse than a missing one because it fails far from
+ * its cause: a dependency bump lands, the directory still exists, install is skipped, and the app
+ * boots against the previous resolution. That surfaces as an unrelated-looking build error
+ * (`Export X doesn't exist in target module`) or, worse, two copies of a transitive dependency
+ * whose behaviour silently diverges. pnpm is a no-op in a second or two when the tree is already
+ * in sync, so correctness beats the seconds saved — the same trade-off {@link ensureSdkBuild}
+ * makes just below.
  */
 export async function ensureInstall(meta: SpinMeta): Promise<void> {
-    if (existsSync(join(meta.worktreePath, "node_modules"))) {
-        log.skip("install (node_modules present)");
-        return;
-    }
     log.step("install: pnpm install");
     await run("pnpm", ["install"], { cwd: meta.worktreePath });
 }
