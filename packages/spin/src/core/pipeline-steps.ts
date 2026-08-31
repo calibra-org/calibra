@@ -4,7 +4,6 @@ import { ensureInstall, ensureSdkBuild } from "./install";
 import { ensureMigrationsAndSeed } from "./migrate";
 import type { PipelineContext, PipelineStep } from "./pipeline";
 import { effectivePort, requirePort } from "./ports";
-import { ensureDraftPr } from "./pr";
 import { isPortListening, waitForCaddyHttp, waitForHttp, waitForPort, waitForPostgresReady } from "./probes";
 import { startHostServers, waitForServersReady } from "./servers";
 import { ensureWorktree, worktreeExists } from "./worktree";
@@ -18,8 +17,16 @@ async function infraUp(ctx: PipelineContext): Promise<boolean> {
     const { meta } = ctx;
     const foundation = (await isPortListening(meta.ports.db)) && (await isPortListening(meta.ports.pgadmin));
     const caddyHttps = effectivePort(meta, "caddyHttps");
-    const observability = caddyHttps !== null ? await isPortListening(caddyHttps) : true;
-    return foundation && observability;
+    const edge = caddyHttps !== null ? await isPortListening(caddyHttps) : true;
+    if (!foundation || !edge) return false;
+    /**
+     * A lite spin that is being upgraded has its foundation + edge already listening, so the
+     * observability gate is what tells `composeUp` there is still work to do. Probing Prometheus
+     * (the cheapest always-on member of that stack) keeps `upgrade` from short-circuiting.
+     */
+    if (meta.profile !== "full") return true;
+    const prometheus = effectivePort(meta, "prometheus");
+    return prometheus === null || (await isPortListening(prometheus));
 }
 
 async function waitForInfraReady(ctx: PipelineContext): Promise<void> {
@@ -28,6 +35,11 @@ async function waitForInfraReady(ctx: PipelineContext): Promise<void> {
     await waitForPort(requirePort(meta, "redis"), 30_000, "redis");
     await waitForPort(requirePort(meta, "caddyHttps"), 30_000, "caddy");
     await waitForHttp(`http://localhost:${requirePort(meta, "meilisearch")}/health`, 30_000, "meilisearch");
+    /**
+     * Lite spins never start these, and GlitchTip alone can hold a bring-up for three minutes on a
+     * cold image — which is most of why lite exists.
+     */
+    if (meta.profile !== "full") return;
     await waitForCaddyHttp(meta, "prom", "/-/ready", 30_000, "prometheus");
     await waitForCaddyHttp(meta, "grafana", "/api/health", 60_000, "grafana");
     await waitForCaddyHttp(meta, "errors", "/api/0/", 180_000, "glitchtip", [200, 401, 403]);
@@ -35,8 +47,9 @@ async function waitForInfraReady(ctx: PipelineContext): Promise<void> {
 
 /**
  * The ordered bring-up steps. Caddy (edge) comes up with the infra **before** the host processes,
- * and the agent panel is started last (inside `startServers`). Mirrors the legacy ensureX chain but
- * as a resumable, run-state-tracked pipeline.
+ * and the agent panel is started last (inside `startServers`). Every step is idempotent, which is
+ * what lets `spin upgrade` simply flip the profile and re-run the whole pipeline: the unchanged
+ * steps skip themselves and only the compose + readiness steps do real work.
  */
 export function pipelineSteps(): PipelineStep[] {
     return [
@@ -92,12 +105,6 @@ export function pipelineSteps(): PipelineStep[] {
             name: "waitServers",
             describe: () => "Wait for host processes",
             run: (ctx) => waitForServersReady(ctx.meta, { withWeb: ctx.withWeb }),
-        },
-        {
-            name: "draftPr",
-            describe: () => "Ensure draft PR",
-            isComplete: (ctx) => !ctx.worktree || ctx.noPr || Boolean(ctx.meta.prNumber),
-            run: (ctx) => ensureDraftPr(ctx.meta),
         },
     ];
 }

@@ -8,13 +8,13 @@ import { registerList } from "./commands/list";
 import { registerLocal } from "./commands/local";
 import { registerLogs } from "./commands/logs";
 import { registerMetrics } from "./commands/metrics";
-import { registerPr } from "./commands/pr";
 import { registerSeed } from "./commands/seed";
 import { registerStart } from "./commands/start";
 import { registerStatus } from "./commands/status";
 import { registerStop } from "./commands/stop";
 import { registerTerm } from "./commands/term";
 import { registerTrust } from "./commands/trust";
+import { registerUpgrade } from "./commands/upgrade";
 import { registerUrl } from "./commands/url";
 
 /**
@@ -32,7 +32,8 @@ const COMMANDS = new Set([
     "start",
     "local",
     "stop",
-    "pr",
+    "upgrade",
+    "downgrade",
     "list",
     "doctor",
     "status",
@@ -57,7 +58,6 @@ program
 registerStart(program);
 registerLocal(program);
 registerStop(program);
-registerPr(program);
 registerList(program);
 registerDoctor(program);
 registerStatus(program);
@@ -68,6 +68,7 @@ registerAlerts(program);
 registerSeed(program);
 registerTerm(program);
 registerTrust(program);
+registerUpgrade(program);
 
 /**
  * Bare-slug alias: `pnpm spin <slug>` means `pnpm spin start <slug>`. If the first positional isn't

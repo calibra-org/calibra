@@ -17,8 +17,7 @@ function makeMeta(): SpinMeta {
         glitchtipSecretKey: "b".repeat(96),
         meiliMasterKey: "c".repeat(64),
         seeded: false,
-        prNumber: null,
-        observability: true,
+        profile: "full",
         tls: true,
         createdAt: "2026-01-01T00:00:00.000Z",
     };
@@ -53,8 +52,7 @@ describe("snapshotHasFailure", () => {
         worktreePath: "/x",
         worktreeExists: true,
         dashboardUrl: "https://demo.calibra.localhost:1/",
-        pr: null,
-        prUrl: null,
+        profile: "full" as const,
         ports: layoutFromBase(13044),
         services: [
             { id: "api", label: "API", category: "app" as const, kind: "host" as const, url: null, status: "up" as const },

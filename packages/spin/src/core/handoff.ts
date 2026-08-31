@@ -40,13 +40,15 @@ export function printHandoffCard(meta: SpinMeta, opts: { withWeb: boolean }): vo
             );
         }
     }
-    print(`  ${c.bold("observability")}`);
-    const dsnNote = meta.glitchtipDsn ? "DSN wired" : "DSN pending";
-    print(`    grafana ${c.cyan(base("grafana"))}`);
-    print(`    errors  ${c.cyan(base("errors"))} ${c.dim(`(${dsnNote})`)}`);
-    print(`    uptime  ${c.cyan(base("uptime"))}`);
-    print(`    prom    ${c.cyan(base("prom"))}`);
-    print(`    alerts  ${c.cyan(base("alerts"))}`);
+    if (meta.profile === "full") {
+        print(`  ${c.bold("observability")}`);
+        const dsnNote = meta.glitchtipDsn ? "DSN wired" : "DSN pending";
+        print(`    grafana ${c.cyan(base("grafana"))}`);
+        print(`    errors  ${c.cyan(base("errors"))} ${c.dim(`(${dsnNote})`)}`);
+        print(`    uptime  ${c.cyan(base("uptime"))}`);
+        print(`    prom    ${c.cyan(base("prom"))}`);
+        print(`    alerts  ${c.cyan(base("alerts"))}`);
+    }
     print(`  ${c.bold("search")}`);
     print(`    meili   ${c.cyan(base("search"))} ${c.dim(`(key in ${slug}.json)`)}`);
     print(`  ${c.bold("data + dev")}`);
@@ -54,8 +56,8 @@ export function printHandoffCard(meta: SpinMeta, opts: { withWeb: boolean }): vo
     print(`    redis   ${c.cyan(base("redis"))} ${c.dim(`(redis-cli on :${requirePort(meta, "redis")})`)}`);
     print(`    db      ${c.cyan(base("db"))} ${c.dim(`(psql on :${meta.ports.db})`)}`);
     print(`    pgadmin ${c.cyan(`http://localhost:${meta.ports.pgadmin}`)}`);
-    print(`  pr      ${meta.prUrl ?? c.dim(`(skipped — run pnpm spin pr ${slug})`)}`);
     print(`  login   each shop's admin email above / ${c.cyan(DEMO_TENANT_PASSWORD)}`);
+    print(`  profile ${meta.profile}${meta.profile === "lite" ? c.dim(`  (add observability: pnpm spin upgrade ${slug})`) : ""}`);
     print(`  stop    ${c.cyan(`pnpm spin stop ${slug}`)}`);
     print();
     print(

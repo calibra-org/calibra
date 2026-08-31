@@ -1,20 +1,25 @@
 # @calibra/spin
 
-The developer-local stack orchestrator. One `pnpm spin <slug>` brings the whole Calibra stack up in an isolated, per-slug sandbox — datastores + observability in Docker, the apps (api / queue / admin / web / platform) as host HMR processes — fronted by Caddy with local TLS, plus a web panel and an Ink terminal dashboard.
+The developer-local stack orchestrator. One `pnpm spin <slug>` brings the whole Calibra stack up in an isolated, per-slug sandbox — datastores in Docker, the apps (api / queue / admin / web / platform) as host HMR processes — fronted by Caddy with local TLS, plus a web panel and an Ink terminal dashboard.
+
+Spins never touch GitHub: a worktree spin creates a worktree and a branch, and stops there. Opening a PR is yours to do when the work is ready.
 
 This package replaces the legacy `scripts/spin/*.mjs` + `scripts/spin-agent.mjs`. `pnpm spin` and every `just spin*` recipe route through it unchanged.
 
 ## Commands
 
 ```sh
-pnpm spin <slug>                 # worktree spin: fresh branch + dedicated stack + draft PR
+pnpm spin <slug>                 # worktree spin: fresh worktree + branch + dedicated stack
 pnpm spin <slug> --with-web      # also start the storefront (admin always starts)
-pnpm spin <slug> --no-pr         # skip the draft PR
+pnpm spin <slug> --full          # start with observability + error tracking too
+pnpm spin upgrade <slug>         # add observability to a running lite spin (keeps data + ports)
+pnpm spin downgrade <slug>       # remove it again, back to lite
 pnpm spin stop <slug>            # stop containers + host processes (volumes survive)
 pnpm spin stop <slug> --purge --remove   # wipe volumes + drop the worktree/branch
-pnpm spin pr <slug>              # create/recreate the draft PR
 
 just spin                        # in-place spin against the CURRENT checkout (slug = local)
+just spin-upgrade                # promote the in-place spin to full
+just spin-downgrade              # drop it back to lite
 just spin-down                   # tear the in-place spin down (--purge to wipe volumes)
 
 pnpm spin list --json            # every spin + status (starting/running/stopped/failed)
@@ -34,6 +39,43 @@ Exit-code contract for agents: **0** ok, **2** down/scrape-failed (`doctor`/`sta
 
 > For machine-readable output, use **`pnpm -s spin … --json`** (or the `just spin-*-json` recipes). Without `-s`, pnpm prints its run banner to stdout ahead of the JSON. Run from the package directly — `node packages/spin/dist/cli.js … --json` — is also clean.
 
+
+## Profiles: lite (default) and full
+
+A spin is **lite** unless you ask for more. Lite runs only what the product itself needs to serve a
+request, so a bring-up is fast and a spin sitting idle in the background costs little:
+
+| | lite (default) | full (`--full` / `spin upgrade`) |
+| --- | --- | --- |
+| Datastores | Postgres, Redis, Meilisearch | same |
+| Mail + edge | Mailpit, Caddy | same |
+| Browsers | pgAdmin, Adminer, RedisInsight | same |
+| Observability | — | Prometheus, Grafana, Loki, Promtail, Tempo, Alertmanager, Uptime Kuma |
+| Error tracking | — | GlitchTip (+ worker) |
+| Containers | 9 | 18 |
+
+Full roughly doubles the container count, and GlitchTip's health gate alone can hold a cold
+bring-up for three minutes — which is the whole reason lite is the default. Reach for full when you
+are actually working on dashboards, traces, alert rules, or error reporting.
+
+Upgrading is in-place and non-destructive — the database, the seeded tenants and the allocated ports
+all survive, because `upgrade` just flips the persisted profile and re-runs the (idempotent)
+pipeline: the extra compose files come into scope, only the missing containers get created, and the
+api restarts with its OTLP exporter switched on.
+
+```sh
+just spin              # lite, ~9 containers
+just spin-upgrade      # → full, same data, same ports
+just spin-downgrade    # → lite again, observability containers + volumes removed
+```
+
+The split is driven by `category: "observability"` in `src/core/catalog.ts`, so adding a service
+there automatically keeps it out of lite spins — the compose file set, the Caddyfile routes, the
+health gates, and the status/doctor output all read from the same table.
+
+Metas written before profiles existed migrate to **full**, not lite: they were already running the
+whole estate, and silently demoting them would strand those containers outside the compose file set
+where nothing could clean them up. Run `spin downgrade` to move one to lite deliberately.
 
 ## Trusting the local CA
 

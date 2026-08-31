@@ -55,18 +55,27 @@ export function composeEnv(meta: SpinMeta): NodeJS.ProcessEnv {
 }
 
 /**
- * Stacked `-f` flags — the api compose first (the relative-bind base), then caddy + meili +
- * observability + glitchtip on top. compose merges deep, so services extend by name across files.
+ * Stacked `-f` flags — the api compose first (the relative-bind base), then caddy + meili, and on a
+ * `full` spin the observability + glitchtip stacks on top. compose merges deep, so services extend
+ * by name across files.
+ *
+ * The file list is also what `compose down` sees, so it must describe every container the spin
+ * owns. That is why a downgrade is a stop/start rather than an in-place flag flip: dropping the
+ * observability files from a running full spin would orphan those containers instead of removing
+ * them. `spin upgrade` only ever *adds* files, which compose handles by creating the new services
+ * and leaving the existing ones untouched.
  */
 export function composeFiles(meta: SpinMeta): string[] {
     const obsDir = join(meta.worktreePath, "docker/observability");
-    return [
+    const files = [
         join(meta.worktreePath, "apps/api/docker-compose.yml"),
         join(obsDir, "docker-compose.caddy.yml"),
         join(obsDir, "docker-compose.meili.yml"),
-        join(obsDir, "docker-compose.observability.yml"),
-        join(obsDir, "docker-compose.glitchtip.yml"),
     ];
+    if (meta.profile === "full") {
+        files.push(join(obsDir, "docker-compose.observability.yml"), join(obsDir, "docker-compose.glitchtip.yml"));
+    }
+    return files;
 }
 
 /** Build the full {@link ComposeOptions} for a spin. */

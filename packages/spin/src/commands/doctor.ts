@@ -53,9 +53,11 @@ function renderDoctor(s: SandboxSnapshot): void {
         }
     }
     process.stdout.write(`  ${dot(s.queueWorker.status)} ${"queue".padEnd(16)} pid=${s.queueWorker.pid ?? "—"}\n`);
-    process.stdout.write(`  PR           ${s.pr ? `#${s.pr}` : "—"}\n`);
+    process.stdout.write(`  profile      ${s.profile}\n`);
     if (s.legacyDevUi) process.stdout.write(`  ${c.yellow("(legacy shared dev-ui ports — pre-spin layout)")}\n`);
-    if (!s.glitchtipDsn) process.stdout.write(`  ${c.yellow("glitchtip DSN missing — see one-time setup in the panel")}\n`);
+    if (s.profile === "full" && !s.glitchtipDsn) {
+        process.stdout.write(`  ${c.yellow("glitchtip DSN missing — see one-time setup in the panel")}\n`);
+    }
 }
 
 export function registerDoctor(program: Command): void {
