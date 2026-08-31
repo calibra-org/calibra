@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { DB_ROLES, DEMO_TENANTS, servicesForProfile, type ServiceDef } from "./catalog";
 import type { SpinMeta } from "./meta";
-import { SHARED_CADDY_CA_DIR, spinLogDir } from "./paths";
+import { apiNdjsonLogFile, SHARED_CADDY_CA_DIR, spinLogDir } from "./paths";
 import { effectivePort, requirePort } from "./ports";
 
 /**
@@ -21,13 +21,15 @@ import { effectivePort, requirePort } from "./ports";
 
 /**
  * Loopback **IP literal** for every host-published container port the api dials (Postgres, Redis,
- * SMTP, Meilisearch, the OTLP collector). Deliberately not `localhost`: a hostname sends Node
- * through `dns.lookup()`, which runs on the libuv threadpool. The seeder's sharp image pass
- * saturates all four default threadpool slots for minutes at a time, so `getaddrinfo("localhost")`
- * queues behind it and ioredis's 10s `connectTimeout` fires before the socket is even created —
- * surfacing as a storm of `connect ETIMEDOUT` against a Redis that is demonstrably healthy. An IP
- * literal skips the resolver entirely. It also pins the family, so a host that resolves `localhost`
- * to `::1` first can't miss an IPv4-only published port.
+ * SMTP, Meilisearch, the OTLP collector). Deliberately not `localhost`, for two reasons that both
+ * bite only under load or on a mis-set-up host:
+ *
+ * 1. A hostname sends Node through `dns.lookup()`, which runs on the libuv threadpool — the same
+ *    four slots the seeder's sharp image pass saturates for minutes at a time. Measured with the
+ *    pool busy: `connect("localhost")` took 4.8s where `connect("127.0.0.1")` took 1ms. A client
+ *    with a short `connectTimeout` can time out before its socket is even created.
+ * 2. An IP literal pins the address family, so a host that resolves `localhost` to `::1` first
+ *    cannot miss an IPv4-only published port.
  */
 const HOST_LOOPBACK = "127.0.0.1";
 
@@ -136,7 +138,7 @@ export function renderApiEnv(meta: SpinMeta): string {
         `MEILISEARCH_HOST=http://${HOST_LOOPBACK}:${meiliPort}`,
         `MEILISEARCH_API_KEY=${requireSecret(meta, "meiliMasterKey")}`,
         ...observabilityEnv(meta),
-        `SPIN_API_LOG_PATH=${join(spinLogDir(meta.worktreePath), "api.ndjson")}`,
+        `SPIN_API_LOG_PATH=${apiNdjsonLogFile(meta.worktreePath)}`,
         ...(meta.glitchtipDsn ? [`GLITCHTIP_DSN=${meta.glitchtipDsn}`] : []),
         "",
     ];
@@ -144,14 +146,24 @@ export function renderApiEnv(meta: SpinMeta): string {
 }
 
 /**
- * Telemetry env, only on a `full` spin. On a lite spin there is no Tempo to receive spans, so the
- * OTLP endpoint is omitted entirely rather than pointed at a dead port — `start/env.ts` treats a
- * blank endpoint as "skip the exporter", which is exactly the wanted behaviour. `spin upgrade`
- * re-renders this file and restarts the api, so the exporter comes back with the stack.
+ * Telemetry env. Two independent switches that are easy to conflate:
+ *
+ * `DEV_OBSERVABILITY` is **always on** for a spin. Despite the name it only decides whether the api
+ * writes its structured ndjson log to `SPIN_API_LOG_PATH` (`config/logger.ts`), and that file is the
+ * spin panel's own log tab — not just Promtail's input. Turning it off on a lite spin leaves the
+ * operator staring at an empty log pane with no way to tell a quiet stack from a broken one.
+ *
+ * The OTLP endpoint *is* profile-gated: a lite spin has no Tempo to receive spans, so it is omitted
+ * rather than pointed at a dead port — `start/env.ts` treats a blank endpoint as "skip the
+ * exporter". `spin upgrade` re-renders this file and restarts the api, so tracing comes back with
+ * the stack.
  */
 function observabilityEnv(meta: SpinMeta): string[] {
-    if (meta.profile !== "full") return ["DEV_OBSERVABILITY=false"];
-    return ["DEV_OBSERVABILITY=true", `OTEL_EXPORTER_OTLP_ENDPOINT=http://${HOST_LOOPBACK}:${requirePort(meta, "tempo")}`];
+    const lines = ["DEV_OBSERVABILITY=true"];
+    if (meta.profile === "full") {
+        lines.push(`OTEL_EXPORTER_OTLP_ENDPOINT=http://${HOST_LOOPBACK}:${requirePort(meta, "tempo")}`);
+    }
+    return lines;
 }
 
 /** Render `apps/admin/.env.local`. */

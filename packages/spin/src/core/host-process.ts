@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { existsSync, openSync } from "node:fs";
+import { closeSync, existsSync, openSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -43,6 +43,14 @@ export interface StartHostOptions {
     args: string[];
     cwd: string;
     env: Record<string, string>;
+    /**
+     * Extra log files this service writes **itself** (rather than via stdout), truncated on spawn
+     * alongside the stdout log. The api's structured `api.ndjson` is the case that matters: pino
+     * opens it through `SPIN_API_LOG_PATH` and appends, so without this it accumulates across every
+     * spin, teardown and `--purge` — and the panel replays a dead stack's failures as if they were
+     * live. Truncation happens only on a real spawn, never when an existing process is reused.
+     */
+    extraLogs?: string[];
 }
 
 export interface StartHostResult {
@@ -95,6 +103,7 @@ export async function startHostProcess(opts: StartHostOptions): Promise<StartHos
     await mkdir(join(opts.worktreePath, ".spin/spawn"), { recursive: true });
 
     const logPath = hostLogFile(opts.worktreePath, opts.service);
+    for (const extra of opts.extraLogs ?? []) closeSync(openSync(extra, "w"));
     const fd = openSync(logPath, "w");
     const child = spawn(opts.cmd, opts.args, {
         cwd: opts.cwd,

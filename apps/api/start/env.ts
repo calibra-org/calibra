@@ -158,6 +158,11 @@ export default await Env.create(new URL("../", import.meta.url), {
      * Per-spin observability mode. When `true`, `config/logger.ts` adds a JSON-line
      * file target (`SPIN_API_LOG_PATH`) so Promtail can ship logs to Loki. When `false`
      * (production, tests, no-spin dev), only the default transport runs.
+     *
+     * Every spin sets this, including a `lite` one that runs no Promtail or Loki: the file is
+     * also what the spin panel's log tab reads directly. Do not tie it to the observability
+     * stack — an operator with an empty log pane cannot tell a quiet api from a dead one.
+     * Tracing is the separately-gated switch; see `OTEL_EXPORTER_OTLP_ENDPOINT` below.
      */
     DEV_OBSERVABILITY: Env.schema.boolean.optional(),
 
