@@ -65,15 +65,27 @@ db-logs:
 db-shell:
     cd apps/api && docker compose exec db psql -U $${DB_USER:-calibra} -d $${DB_DATABASE:-calibra}
 
-# === spin: prod-parity stack against the current checkout =====================
+# === spin: the stack against the current checkout ==============================
 #
-# `just spin` brings up the FULL stack on the current checkout — no worktree, no branch,
-# no PR. For worktree-based per-task spins (with PRs), use `pnpm spin <slug>` directly;
-# see packages/spin/README.md and the spin-task skill.
+# `just spin` brings the stack up on the current checkout — no worktree, no branch. For
+# worktree-based per-task spins, use `pnpm spin <slug>` directly; see
+# packages/spin/README.md and the spin-task skill.
+#
+# Spins are LITE by default: Postgres, Redis, Meilisearch, Mailpit, the Caddy edge and the
+# datastore browsers — everything the product itself needs, and nothing else. Add the
+# observability estate with `just spin-upgrade` (or start with `just spin --full`).
 
-# Bring up the full prod-parity stack (caddy + observability + meilisearch + …) in-place.
+# Bring up the lite stack (caddy + datastores + meilisearch) in-place. `--full` adds observability.
 spin *args:
     @pnpm spin local {{ args }}
+
+# Promote the in-place spin from lite to full — adds observability + error tracking, keeps the data.
+spin-upgrade *args:
+    @pnpm spin upgrade local {{ args }}
+
+# Drop the in-place spin back to lite — removes observability + error tracking, keeps the data.
+spin-downgrade:
+    @pnpm spin downgrade local
 
 # Tear down the in-place spin. Pass `--purge` to also drop docker volumes.
 spin-down *args:

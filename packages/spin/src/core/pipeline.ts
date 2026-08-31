@@ -16,12 +16,10 @@ import { clearRunState, writeRunState } from "./run-state";
 export interface PipelineContext {
     meta: SpinMeta;
     compose: ComposeOptions;
-    /** True for `start <slug>` (worktree + PR); false for the in-place `local` spin. */
+    /** True for `start <slug>` (dedicated worktree + branch); false for the in-place `local` spin. */
     worktree: boolean;
     /** Start the storefront too (admin always starts; web is opt-in via `--with-web`). */
     withWeb: boolean;
-    /** Skip the draft PR (`--no-pr`). */
-    noPr: boolean;
 }
 
 export interface PipelineStep {

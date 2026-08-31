@@ -15,6 +15,19 @@ import { DB_ROLES } from "./secrets";
 export { DB_ROLES };
 
 export type ServiceCategory = "app" | "datastore" | "observability" | "edge" | "tooling";
+
+/**
+ * How much of the stack a spin runs.
+ *
+ * `lite` (the default) brings up only what the product itself needs to serve a request — Postgres,
+ * Redis, Meilisearch, Mailpit, the Caddy edge — plus the datastore browsers. `full` adds the
+ * observability estate (Prometheus, Grafana, Loki, Promtail, Tempo, Alertmanager, Uptime Kuma) and
+ * GlitchTip. That second set roughly doubles the container count and adds minutes of health-gate
+ * waiting to every bring-up, so it is opt-in: start with `--full`, or promote a running lite spin
+ * in place with `spin upgrade`.
+ */
+export type SpinProfile = "lite" | "full";
+
 export type ServiceKind = "container" | "host";
 
 /** How Caddy reverse-proxies a service. */
@@ -291,6 +304,24 @@ export const SERVICES: ServiceDef[] = [
 ];
 
 /** Look up a service definition by id. */
+/**
+ * The services a profile actually runs. `lite` drops every `observability` service; the categories
+ * in {@link SERVICES} are the single source of truth for that split, so adding an observability
+ * service to the catalog automatically keeps it out of lite spins.
+ */
+export function servicesForProfile(profile: SpinProfile): ServiceDef[] {
+    if (profile === "full") return SERVICES;
+    return SERVICES.filter((service) => service.category !== "observability");
+}
+
+/**
+ * docker-compose service names for the observability estate — exactly the containers a `full` spin
+ * adds over a `lite` one. `spin downgrade` removes these by name.
+ */
+export function observabilityComposeServices(): string[] {
+    return SERVICES.filter((s) => s.category === "observability" && s.composeService).map((s) => s.composeService!);
+}
+
 export function serviceById(id: string): ServiceDef | undefined {
     return SERVICES.find((service) => service.id === id);
 }

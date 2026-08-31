@@ -66,11 +66,22 @@ describe("meta forward-migration", () => {
         expect(migrated.ports.platform).toBeUndefined();
     });
 
+    /**
+     * A meta written before profiles existed ran the whole estate, so it must migrate to `full` —
+     * demoting it would strand its observability containers outside the compose file set.
+     */
+    it("migrates a pre-profile meta to the full profile", () => {
+        expect(MetaSchema.parse(backfillSchema(legacyMeta())).profile).toBe("full");
+    });
+
+    it("honours the legacy observability opt-out as the lite profile", () => {
+        const raw = { ...legacyMeta(), observability: false };
+        expect(MetaSchema.parse(backfillSchema(raw)).profile).toBe("lite");
+    });
+
     it("applies schema defaults for newer flags", () => {
         const migrated = MetaSchema.parse(backfillSchema(legacyMeta()));
-        expect(migrated.observability).toBe(true);
         expect(migrated.tls).toBe(true);
         expect(migrated.seeded).toBe(false);
-        expect(migrated.prNumber).toBeNull();
     });
 });

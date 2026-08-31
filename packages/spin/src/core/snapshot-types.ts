@@ -1,4 +1,4 @@
-import type { ServiceCategory, ServiceKind } from "./catalog";
+import type { ServiceCategory, ServiceKind, SpinProfile } from "./catalog";
 import type { SpinPorts } from "./ports";
 
 /**
@@ -48,8 +48,8 @@ export interface SandboxSnapshot {
     worktreePath: string;
     worktreeExists: boolean;
     dashboardUrl: string;
-    pr: number | null;
-    prUrl: string | null;
+    /** Which slice of the stack this spin runs — `lite` omits every observability service. */
+    profile: SpinProfile;
     ports: SpinPorts;
     services: ServiceRow[];
     tenants: TenantRow[];

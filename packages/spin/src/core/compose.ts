@@ -36,6 +36,21 @@ export async function composeDown(opts: ComposeOptions, removeVolumes = false): 
     await run("docker", args, { env: opts.env });
 }
 
+/**
+ * Stop **and remove** the named services, leaving the rest of the project running. Used by
+ * `spin downgrade`, which must tear the observability containers down while the compose file set
+ * that still declares them is in effect — flipping the profile first would leave compose unable to
+ * name them, and they would linger as orphans.
+ *
+ * `--volumes` drops each container's *anonymous* volumes only; the named ones the compose files
+ * declare (`grafana_data`, `prometheus_data`, …) survive, so a later `spin upgrade` comes back with
+ * its dashboards and metric history intact.
+ */
+export async function composeRemove(opts: ComposeOptions, services: string[]): Promise<void> {
+    if (services.length === 0) return;
+    await run("docker", [...baseArgs(opts), "rm", "--stop", "--force", "--volumes", ...services], { env: opts.env });
+}
+
 /** `docker compose stop` — keeps containers + volumes, just halts them. */
 export async function composeStop(opts: ComposeOptions, services: string[] = []): Promise<void> {
     const args = [...baseArgs(opts), "stop", ...services];

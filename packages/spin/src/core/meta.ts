@@ -4,6 +4,7 @@ import { chmod, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
 
+import type { SpinProfile } from "./catalog";
 import { MAIN_REPO_ROOT, metaPath, STATE_DIR, WORKTREES_DIR } from "./paths";
 import { allocatePorts, layoutFromBase, type SpinPorts } from "./ports";
 import { backfillSecrets, generateSecrets } from "./secrets";
@@ -61,10 +62,11 @@ export const MetaSchema = z.object({
     glitchtipDsn: z.string().optional(),
     /** Whether the database has been seeded (gates re-seed; cleared by `--purge`). */
     seeded: z.boolean().default(false),
-    prNumber: z.number().nullable().default(null),
-    prUrl: z.string().optional(),
-    /** `--no-observability` clears this; persisted so teardown/status see the same view. */
-    observability: z.boolean().default(true),
+    /**
+     * How much of the stack this spin runs — see {@link SpinProfile}. New spins default to `lite`;
+     * persisted so teardown/status/compose all agree on which containers belong to the spin.
+     */
+    profile: z.enum(["lite", "full"]).default("lite"),
     /** `--no-tls` clears this. */
     tls: z.boolean().default(true),
     createdAt: z.string(),
@@ -74,7 +76,7 @@ export const MetaSchema = z.object({
 export type SpinMeta = z.infer<typeof MetaSchema>;
 
 export interface InitMetaOptions {
-    observability?: boolean;
+    profile?: SpinProfile;
     tls?: boolean;
 }
 
@@ -99,13 +101,24 @@ function backfillPorts(raw: Record<string, unknown>): Record<string, unknown> {
 
 /** Forward-migrate the whole record: ports + the flat secret triplet. Exported for tests. */
 export function backfillSchema(raw: Record<string, unknown>): Record<string, unknown> {
-    const out = backfillPorts(raw);
+    const out = backfillProfile(backfillPorts(raw));
     const secrets = backfillSecrets({
         appKey: out.appKey as string | undefined,
         glitchtipSecretKey: out.glitchtipSecretKey as string | undefined,
         meiliMasterKey: out.meiliMasterKey as string | undefined,
     });
     return { ...out, ...secrets };
+}
+
+/**
+ * Forward-migrate the profile. Metas written before profiles existed always ran the whole estate,
+ * so they map to `full` — a silent demotion to `lite` on the next `spin` would strand their
+ * observability containers outside the compose file set and leak them. The `observability: false`
+ * escape hatch those metas carried is the one case that maps to `lite`.
+ */
+function backfillProfile(raw: Record<string, unknown>): Record<string, unknown> {
+    if (raw.profile === "lite" || raw.profile === "full") return raw;
+    return { ...raw, profile: raw.observability === false ? "lite" : "full" };
 }
 
 function migrationChanged(raw: Record<string, unknown>, meta: SpinMeta): boolean {
@@ -115,7 +128,8 @@ function migrationChanged(raw: Record<string, unknown>, meta: SpinMeta): boolean
     return (
         raw.appKey !== meta.appKey ||
         raw.glitchtipSecretKey !== meta.glitchtipSecretKey ||
-        raw.meiliMasterKey !== meta.meiliMasterKey
+        raw.meiliMasterKey !== meta.meiliMasterKey ||
+        raw.profile !== meta.profile
     );
 }
 
@@ -156,7 +170,7 @@ function currentGitBranch(): string {
 
 /**
  * Load the meta for a worktree spin, or allocate fresh state on first run. Re-runs only update
- * persisted flags (observability/tls); ports and secrets stay stable.
+ * persisted flags (profile/tls); ports and secrets stay stable.
  */
 export async function loadOrInitMeta(slug: string, opts: InitMetaOptions = {}): Promise<SpinMeta> {
     const existing = await loadMeta(slug);
@@ -172,8 +186,7 @@ export async function loadOrInitMeta(slug: string, opts: InitMetaOptions = {}): 
         ports,
         ...generateSecrets(),
         seeded: false,
-        prNumber: null,
-        observability: opts.observability ?? true,
+        profile: opts.profile ?? "lite",
         tls: opts.tls ?? true,
         createdAt: now,
         updatedAt: now,
@@ -206,8 +219,7 @@ export async function loadOrInitLocalMeta(opts: InitMetaOptions = {}): Promise<S
         ports,
         ...generateSecrets(),
         seeded: false,
-        prNumber: null,
-        observability: opts.observability ?? true,
+        profile: opts.profile ?? "lite",
         tls: opts.tls ?? true,
         createdAt: now,
         updatedAt: now,
@@ -219,7 +231,7 @@ export async function loadOrInitLocalMeta(opts: InitMetaOptions = {}): Promise<S
 function applyFlags(meta: SpinMeta, opts: InitMetaOptions): SpinMeta {
     return {
         ...meta,
-        observability: opts.observability ?? meta.observability,
+        profile: opts.profile ?? meta.profile,
         tls: opts.tls ?? meta.tls,
     };
 }

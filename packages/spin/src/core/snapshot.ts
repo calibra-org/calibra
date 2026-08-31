@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 
-import { DEMO_TENANTS, SERVICES, type ServiceDef } from "./catalog";
+import { DEMO_TENANTS, servicesForProfile, type ServiceDef } from "./catalog";
 import { type ComposePsRow, composePs } from "./compose";
 import { buildComposeOptions } from "./compose-assembly";
 import { isPidAlive, readPid, readSpawnManifest } from "./host-process";
@@ -128,7 +128,7 @@ export async function buildSnapshot(meta: SpinMeta): Promise<SandboxSnapshot> {
     for (const row of ps) psByService.set(row.Service, row);
 
     const [services, tenants, queuePid, activity] = await Promise.all([
-        Promise.all(SERVICES.map((service) => buildServiceRow(meta, service, psByService))),
+        Promise.all(servicesForProfile(meta.profile).map((service) => buildServiceRow(meta, service, psByService))),
         buildTenantRows(meta),
         readPid(meta.worktreePath, "queue"),
         runActivity(meta.slug),
@@ -141,8 +141,7 @@ export async function buildSnapshot(meta: SpinMeta): Promise<SandboxSnapshot> {
         worktreePath: meta.worktreePath,
         worktreeExists: existsSync(meta.worktreePath),
         dashboardUrl: dashboardUrl(meta),
-        pr: meta.prNumber ?? null,
-        prUrl: meta.prUrl ?? null,
+        profile: meta.profile,
         ports: meta.ports,
         services,
         tenants,

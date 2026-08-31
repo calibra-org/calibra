@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 
 import { c } from "../colors";
+import type { SpinProfile } from "../core/catalog";
 import { listMeta } from "../core/meta";
 import { isPortListening } from "../core/probes";
 import { runActivity } from "../core/run-state";
@@ -13,7 +14,7 @@ interface ListRow {
     status: ListStatus;
     api: number;
     admin: number;
-    pr: number | null;
+    profile: SpinProfile;
     branch: string;
     composeProject: string;
 }
@@ -41,7 +42,7 @@ async function collectRows(): Promise<ListRow[]> {
                 status,
                 api: meta.ports.api,
                 admin: meta.ports.admin,
-                pr: meta.prNumber ?? null,
+                profile: meta.profile,
                 branch: meta.branch,
                 composeProject: meta.composeProject,
             };
@@ -70,9 +71,8 @@ export async function runList(opts: { json?: boolean }): Promise<void> {
     }
     const width = Math.max(...rows.map((row) => row.slug.length));
     for (const row of rows) {
-        const pr = row.pr ? `#${row.pr}` : "—";
         process.stdout.write(
-            `  ${row.slug.padEnd(width)}  ${colourStatus(row.status).padEnd(20)}  admin=${row.admin}  api=${row.api}  pr=${pr}\n`,
+            `  ${row.slug.padEnd(width)}  ${colourStatus(row.status).padEnd(20)}  admin=${row.admin}  api=${row.api}  profile=${row.profile}\n`,
         );
     }
 }
