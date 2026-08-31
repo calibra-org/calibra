@@ -2,7 +2,6 @@
 
 import type { Locale } from "@calibra/shared/i18n";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Row } from "@tanstack/react-table";
 import { PackagePlus, Plus, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { parseAsBoolean, parseAsString } from "nuqs";
@@ -11,6 +10,7 @@ import { useCallback, useMemo, useState } from "react";
 import { ShortcutsDialog } from "#/components/shortcuts-dialog";
 import { Button } from "#/components/ui/button";
 import {
+    type Row,
     ActiveFilterChips,
     type ColumnDef,
     DataTable,

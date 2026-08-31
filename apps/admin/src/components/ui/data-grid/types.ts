@@ -1,7 +1,17 @@
-import type { ColumnDef, Row, Table } from "@tanstack/react-table";
+import type {
+    Cell as CoreCell,
+    Column as CoreColumn,
+    ColumnDef as CoreColumnDef,
+    Header as CoreHeader,
+    Row as CoreRow,
+    RowData,
+    Table as CoreTable,
+} from "@tanstack/react-table";
 import type { ReactNode } from "react";
 
 import type { Calendar, Granularity, Operator } from "#/components/ui/date-picker";
+
+import type { DataGridFeatures } from "./features";
 
 /**
  * Comfort levels for row + cell padding, persisted per table id in `localStorage` under
@@ -73,18 +83,18 @@ export interface DateFacetDef {
 }
 
 /** Card renderer used when the table collapses to a stacked mobile list. */
-export type CardRenderer<TData> = (row: Row<TData>) => ReactNode;
+export type CardRenderer<TData extends RowData> = (row: Row<TData>) => ReactNode;
 
 /** Sub-row renderer (e.g. Quick Edit panel) used when a row is expanded. */
-export type SubRowRenderer<TData> = (row: Row<TData>) => ReactNode;
+export type SubRowRenderer<TData extends RowData> = (row: Row<TData>) => ReactNode;
 
-export interface BulkActionContext<TData> {
+export interface BulkActionContext<TData extends RowData> {
     table: Table<TData>;
     selectedIds: ReadonlySet<string>;
     clearSelection: () => void;
 }
 
-export type BulkActionsRenderer<TData> = (ctx: BulkActionContext<TData>) => ReactNode;
+export type BulkActionsRenderer<TData extends RowData> = (ctx: BulkActionContext<TData>) => ReactNode;
 
 /**
  * Lightweight echo of the API pagination envelope — passed straight from the caller's query
@@ -97,4 +107,18 @@ export interface PaginationMeta {
     lastPage: number;
 }
 
-export type { ColumnDef, Row, Table };
+/**
+ * Feature-bound aliases of the react-table types.
+ *
+ * v9 added `TFeatures` as the FIRST generic of every table type, so upstream `ColumnDef<Product>`
+ * became `ColumnDef<typeof features, Product>`. Binding the feature set once here keeps every call
+ * site at its original arity — a column file writes `ColumnDef<Product>` exactly as before and only
+ * changes which module it imports from. It also means a future feature change is a one-line edit
+ * rather than a sweep across every grid.
+ */
+export type ColumnDef<TData extends RowData, TValue = unknown> = CoreColumnDef<DataGridFeatures, TData, TValue>;
+export type Row<TData extends RowData> = CoreRow<DataGridFeatures, TData>;
+export type Table<TData extends RowData> = CoreTable<DataGridFeatures, TData>;
+export type Column<TData extends RowData, TValue = unknown> = CoreColumn<DataGridFeatures, TData, TValue>;
+export type Cell<TData extends RowData, TValue = unknown> = CoreCell<DataGridFeatures, TData, TValue>;
+export type Header<TData extends RowData, TValue = unknown> = CoreHeader<DataGridFeatures, TData, TValue>;
